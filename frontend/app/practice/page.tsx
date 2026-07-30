@@ -14,17 +14,18 @@ import {
   LayoutGrid,
   Type,
   Database,
-  Sliders,
   TrendingUp,
-  Hash,
-  Binary,
+  Plus,
+  BarChart2,
+  ChevronsDown,
   Target,
-  Sparkles,
+  Grid,
+  Columns,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import SkillDetailDrawer, { SkillStatus } from "@/components/SkillDetailDrawer";
+import SkillDetailDrawer from "@/components/SkillDetailDrawer";
 
-// Beginner Level DSA Tree Node Schema
+// Beginner Level DSA Tree Data Schema
 interface TreeCategory {
   id: string;
   title: string;
@@ -32,7 +33,7 @@ interface TreeCategory {
   nodes: {
     id: string;
     title: string;
-    prefix: string;
+    icon: React.ElementType;
   }[];
 }
 
@@ -42,10 +43,10 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     title: "Arrays",
     icon: LayoutGrid,
     nodes: [
-      { id: "two-pointers", title: "Two Pointers", prefix: "→" },
-      { id: "sliding-window-arr", title: "Sliding Window", prefix: "║" },
-      { id: "prefix-sum", title: "Prefix Sum", prefix: "+" },
-      { id: "kadanes", title: "Kadane's Algorithm", prefix: "📈" },
+      { id: "two-pointers", title: "Two Pointers", icon: ArrowRight },
+      { id: "sliding-window-arr", title: "Sliding Window", icon: Columns },
+      { id: "prefix-sum", title: "Prefix Sum", icon: Plus },
+      { id: "kadanes", title: "Kadane's Algorithm", icon: TrendingUp },
     ],
   },
   {
@@ -53,8 +54,8 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     title: "Strings",
     icon: Type,
     nodes: [
-      { id: "two-pointers-str", title: "Two Pointer", prefix: "→" },
-      { id: "sliding-window-str", title: "Sliding Window", prefix: "║" },
+      { id: "two-pointers-str", title: "Two Pointer", icon: ArrowRight },
+      { id: "sliding-window-str", title: "Sliding Window", icon: Columns },
     ],
   },
   {
@@ -62,8 +63,8 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     title: "Hashmap",
     icon: Database,
     nodes: [
-      { id: "frequency-map", title: "Frequency Map", prefix: "📊" },
-      { id: "prefix-hashmap", title: "Prefix Sum + HashMap", prefix: "+" },
+      { id: "frequency-map", title: "Frequency Map", icon: BarChart2 },
+      { id: "prefix-hashmap", title: "Prefix Sum + HashMap", icon: Plus },
     ],
   },
   {
@@ -71,10 +72,10 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     title: "Binary Search",
     icon: Search,
     nodes: [
-      { id: "classic-bs", title: "Classic Binary Search", prefix: "🔍" },
-      { id: "lower-upper-bound", title: "Lower / Upper Bound", prefix: "⬡" },
-      { id: "bs-on-answers", title: "Binary Search on Answers", prefix: "🎯" },
-      { id: "search-2d-matrix", title: "Search in 2D Matrix", prefix: "田" },
+      { id: "classic-bs", title: "Classic Binary Search", icon: Search },
+      { id: "lower-upper-bound", title: "Lower / Upper Bound", icon: ChevronsDown },
+      { id: "bs-on-answers", title: "Binary Search on Answers", icon: Target },
+      { id: "search-2d-matrix", title: "Search in 2D Matrix", icon: Grid },
     ],
   },
 ];
@@ -292,21 +293,67 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (MATCHING SCREENSHOT) */}
+      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (AUTHENTIC GRAPH WITH SVG LINES) */}
       {selectedMode === "beginner" && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl p-6 sm:p-10 bg-[#090d16] border border-indigo-500/30 shadow-2xl overflow-hidden"
+          className="relative rounded-3xl p-6 sm:p-10 bg-[#070b14] border border-indigo-500/30 shadow-2xl overflow-hidden min-h-[580px]"
           style={{
-            backgroundImage: "radial-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px)",
             backgroundSize: "24px 24px",
           }}
         >
+          {/* SVG Tree Connection Lines Overlay (Desktop 4 Columns) */}
+          <svg className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none z-0">
+            <defs>
+              <linearGradient id="cyanGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#38bdf8" />
+                <stop offset="50%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#818cf8" />
+              </linearGradient>
+              <filter id="svgGlowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            {/* Branching Bezier curves from Foundation center top to 4 column headers */}
+            {/* Top Root: x = 50%, y = 80px. Category headers: y = 180px */}
+            <path
+              d="M 50% 80 C 50% 130, 12.5% 130, 12.5% 180"
+              stroke="url(#cyanGlowGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              filter="url(#svgGlowEffect)"
+            />
+            <path
+              d="M 50% 80 C 50% 130, 37.5% 130, 37.5% 180"
+              stroke="url(#cyanGlowGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              filter="url(#svgGlowEffect)"
+            />
+            <path
+              d="M 50% 80 C 50% 130, 62.5% 130, 62.5% 180"
+              stroke="url(#cyanGlowGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              filter="url(#svgGlowEffect)"
+            />
+            <path
+              d="M 50% 80 C 50% 130, 87.5% 130, 87.5% 180"
+              stroke="url(#cyanGlowGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              filter="url(#svgGlowEffect)"
+            />
+          </svg>
+
           {/* Top Foundation Root Node */}
-          <div className="flex flex-col items-center justify-center relative z-10 mb-12">
+          <div className="flex flex-col items-center justify-center relative z-10 mb-14">
             <motion.div
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.05 }}
               className="px-8 py-3.5 rounded-2xl text-white font-black text-lg flex items-center gap-2.5 shadow-2xl border border-cyan-300/40 cursor-pointer"
               style={{
                 background: "linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #3b82f6 100%)",
@@ -316,9 +363,6 @@ export default function PracticePage() {
               <Layers className="w-5 h-5 text-cyan-200" />
               <span>Foundation</span>
             </motion.div>
-
-            {/* Downward laser connector line */}
-            <div className="w-0.5 h-10 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_12px_#38bdf8]" />
           </div>
 
           {/* 4 Category Columns Grid */}
@@ -327,44 +371,56 @@ export default function PracticePage() {
               const CategoryIcon = cat.icon;
 
               return (
-                <div key={cat.id} className="space-y-6 flex flex-col items-center">
+                <div key={cat.id} className="space-y-4 flex flex-col items-center">
                   {/* Category Header Node */}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
-                    className="w-full py-3 px-5 rounded-2xl bg-[#121929] border border-indigo-500/40 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10 cursor-pointer"
+                    className="w-full py-3.5 px-5 rounded-2xl bg-[#12192e] border border-indigo-500/50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/10 cursor-pointer"
                   >
-                    <CategoryIcon className="w-4 h-4 text-indigo-400" />
+                    <CategoryIcon className="w-4.5 h-4.5 text-indigo-400" />
                     <span>{cat.title}</span>
                   </motion.div>
 
-                  {/* Vertical Connector under Category */}
-                  <div className="w-0.5 h-4 bg-indigo-500/40" />
+                  {/* Vertical Connector Line under Category Header */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-0.5 h-4 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_8px_#38bdf8]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_#38bdf8]" />
+                  </div>
 
-                  {/* Sub-node Items Stack */}
-                  <div className="w-full space-y-4">
-                    {cat.nodes.map((node) => {
+                  {/* Sub-nodes Vertical Flow */}
+                  <div className="w-full space-y-3">
+                    {cat.nodes.map((node, nIdx) => {
+                      const NodeIcon = node.icon;
                       const isDone = !!solvedState[node.id];
 
                       return (
-                        <motion.button
-                          key={node.id}
-                          whileHover={{ scale: 1.03, y: -2 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() =>
-                            setActiveDrawerSkill({
-                              name: node.title,
-                              category: cat.title.toUpperCase(),
-                            })
-                          }
-                          className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2 shadow-md ${
-                            isDone
-                              ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
-                              : "bg-[#111726] border-white/[0.08] hover:border-slate-600 text-slate-200 hover:text-white"
-                          }`}
-                        >
-                          <span className="text-slate-400 font-mono text-xs">{node.prefix}</span>
-                          <span>{node.title}</span>
-                        </motion.button>
+                        <React.Fragment key={node.id}>
+                          {nIdx > 0 && (
+                            <div className="flex flex-col items-center -my-1">
+                              <div className="w-0.5 h-3 bg-indigo-500/40" />
+                              <div className="w-1 h-1 rounded-full bg-indigo-400" />
+                            </div>
+                          )}
+
+                          <motion.button
+                            whileHover={{ scale: 1.03, y: -2 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() =>
+                              setActiveDrawerSkill({
+                                name: node.title,
+                                category: cat.title.toUpperCase(),
+                              })
+                            }
+                            className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md ${
+                              isDone
+                                ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
+                                : "bg-[#111728] border-white/[0.08] hover:border-indigo-500/50 text-slate-200 hover:text-white"
+                            }`}
+                          >
+                            <NodeIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                            <span>{node.title}</span>
+                          </motion.button>
+                        </React.Fragment>
                       );
                     })}
                   </div>
