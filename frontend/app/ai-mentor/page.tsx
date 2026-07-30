@@ -159,6 +159,7 @@ export default function AIMentorPage() {
           <button
             key={q}
             onClick={() => handleSend(q)}
+            suppressHydrationWarning
             className="text-xs font-medium px-3 py-1.5 glass rounded-full text-slate-300 hover:text-white hover:border-blue-500/30 transition-all"
           >
             {q}
@@ -180,12 +181,14 @@ export default function AIMentorPage() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask anything about DSA, System Design, or your Career path..."
           className="input-glass flex-1 px-4 py-3 text-sm"
+          suppressHydrationWarning
         />
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           type="submit"
           disabled={loading}
+          suppressHydrationWarning
           className="btn-primary px-6 py-3 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
