@@ -180,13 +180,13 @@ export default function PracticeTopicDrawer({
           className="fixed inset-0 bg-black/75 backdrop-blur-md transition-opacity"
         />
 
-        {/* Slide-over Drawer Panel matching screenshot */}
+        {/* Slide-over Drawer Panel with wider max-w-5xl layout */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-3xl bg-[#0b101d] border-l border-white/[0.1] text-white shadow-2xl h-full flex flex-col z-50 overflow-hidden"
+          className="relative w-full max-w-4xl xl:max-w-5xl bg-[#0b101d] border-l border-white/[0.1] text-white shadow-2xl h-full flex flex-col z-50 overflow-hidden"
         >
           {/* Header Bar */}
           <div className="p-6 pb-4 border-b border-white/[0.08] bg-[#0e1628] flex items-center justify-between gap-4 shrink-0">
@@ -201,7 +201,7 @@ export default function PracticeTopicDrawer({
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1 rounded-full">
                 Solved: <span className="font-extrabold">({solvedCount} / {data.problems.length})</span>
               </span>
               <button
@@ -217,7 +217,7 @@ export default function PracticeTopicDrawer({
           <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
             {/* Title */}
             <div>
-              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
                 {topicName}
               </h2>
             </div>
@@ -231,9 +231,9 @@ export default function PracticeTopicDrawer({
                 {data.prerequisites.map((pre, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-2xl bg-[#131c30] border border-white/[0.08] space-y-1"
+                    className="p-5 rounded-2xl bg-[#131c30] border border-white/[0.08] space-y-1 shadow-md"
                   >
-                    <div className="font-bold text-white text-sm md:text-base">{pre.title}</div>
+                    <div className="font-bold text-white text-base">{pre.title}</div>
                     <div className="text-xs text-slate-400">{pre.subtitle}</div>
                   </div>
                 ))}
@@ -242,16 +242,16 @@ export default function PracticeTopicDrawer({
 
             {/* Targeted LeetCode Problem Table */}
             <div className="space-y-4">
-              <div className="rounded-2xl border border-white/[0.08] bg-[#111728] overflow-x-auto">
-                <table className="w-full text-left text-xs md:text-sm border-collapse">
+              <div className="rounded-2xl border border-white/[0.08] bg-[#111728] overflow-x-auto shadow-xl">
+                <table className="w-full text-left text-xs md:text-sm border-collapse min-w-[700px]">
                   <thead>
-                    <tr className="border-b border-white/[0.08] text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                      <th className="py-3.5 px-4 text-center w-12">#</th>
-                      <th className="py-3.5 px-4">LeetCode</th>
-                      <th className="py-3.5 px-4">Problem</th>
-                      <th className="py-3.5 px-4">Level</th>
-                      <th className="py-3.5 px-4">Pattern</th>
-                      <th className="py-3.5 px-4 text-center w-16">Status</th>
+                    <tr className="border-b border-white/[0.08] text-slate-400 font-bold uppercase tracking-wider text-[11px] bg-slate-900/40">
+                      <th className="py-4 px-4 text-center w-12">#</th>
+                      <th className="py-4 px-4 w-20">LeetCode</th>
+                      <th className="py-4 px-4">Problem</th>
+                      <th className="py-4 px-4 w-24">Level</th>
+                      <th className="py-4 px-4 w-48">Pattern</th>
+                      <th className="py-4 px-4 text-center w-16">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
@@ -260,21 +260,21 @@ export default function PracticeTopicDrawer({
                       return (
                         <tr
                           key={p.id}
-                          className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
+                          className="hover:bg-white/[0.03] transition-colors group cursor-pointer"
                           onClick={() => toggleSolved(p.id)}
                         >
                           {/* Row Index */}
-                          <td className="py-4 px-4 text-center text-slate-500 font-mono font-bold">
+                          <td className="py-3.5 px-4 text-center text-slate-500 font-mono font-bold whitespace-nowrap">
                             {idx + 1}
                           </td>
 
                           {/* LeetCode Problem Number */}
-                          <td className="py-4 px-4 font-mono font-extrabold text-blue-400 group-hover:text-blue-300">
+                          <td className="py-3.5 px-4 font-mono font-extrabold text-blue-400 group-hover:text-blue-300 whitespace-nowrap">
                             {p.number}
                           </td>
 
                           {/* Problem Title Link */}
-                          <td className="py-4 px-4">
+                          <td className="py-3.5 px-4">
                             <a
                               href={p.url}
                               target="_blank"
@@ -287,14 +287,14 @@ export default function PracticeTopicDrawer({
                               }`}
                             >
                               <span>{p.title}</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400" />
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 shrink-0" />
                             </a>
                           </td>
 
                           {/* Level Badge */}
-                          <td className="py-4 px-4">
+                          <td className="py-3.5 px-4 whitespace-nowrap">
                             <span
-                              className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                              className={`text-xs font-bold px-2.5 py-1 rounded-lg inline-block ${
                                 p.difficulty === "Easy"
                                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                                   : p.difficulty === "Medium"
@@ -307,14 +307,14 @@ export default function PracticeTopicDrawer({
                           </td>
 
                           {/* Algorithm Pattern Badge */}
-                          <td className="py-4 px-4">
-                            <span className="text-xs font-semibold px-3 py-1 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span className="text-xs font-semibold px-3 py-1 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 inline-block">
                               {p.pattern}
                             </span>
                           </td>
 
                           {/* Checkbox Status */}
-                          <td className="py-4 px-4 text-center">
+                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -322,7 +322,7 @@ export default function PracticeTopicDrawer({
                               }}
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mx-auto transition-colors ${
                                 isSolved
-                                  ? "bg-emerald-500 border-emerald-400 text-white"
+                                  ? "bg-emerald-500 border-emerald-400 text-white shadow-md shadow-emerald-500/30"
                                   : "border-slate-600 bg-slate-800/80 text-transparent hover:border-slate-400"
                               }`}
                             >
