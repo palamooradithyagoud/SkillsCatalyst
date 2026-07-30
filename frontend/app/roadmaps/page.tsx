@@ -871,10 +871,10 @@ function RoadmapDetailView({
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: treeContainerRef,
-    offset: ["start 65%", "end 45%"],
+    offset: ["start 75%", "end end"],
   });
-  const scaleY = useSpring(scrollYProgress, { stiffness: 180, damping: 24 });
-  const lightTop = useTransform(scaleY, [0, 1], ["0%", "calc(100% - 12px)"]);
+  const scaleY = useSpring(scrollYProgress, { stiffness: 140, damping: 20 });
+  const lightTop = useTransform(scaleY, [0, 1], ["0px", "calc(100% - 12px)"]);
 
   const allNodes = selectedRoadmap.sections.flatMap((s) => s.nodes);
   const doneCount = allNodes.filter((n) => isNodeDone(selectedRoadmap.title, n, false)).length;
