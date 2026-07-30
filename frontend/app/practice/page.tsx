@@ -23,7 +23,7 @@ import {
   Columns,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import SkillDetailDrawer from "@/components/SkillDetailDrawer";
+import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
 
 // Beginner Level DSA Tree Data Schema
 interface TreeCategory {
@@ -102,10 +102,7 @@ export default function PracticePage() {
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
   const [selectedCompany, setSelectedCompany] = useState("All Giants");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeDrawerSkill, setActiveDrawerSkill] = useState<{
-    name: string;
-    category: string;
-  } | null>(null);
+  const [activePracticeTopic, setActivePracticeTopic] = useState<string | null>(null);
 
   const [solvedState, setSolvedState] = useState<Record<string, boolean>>({
     "two-pointers": true,
@@ -293,7 +290,7 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (AUTHENTIC GRAPH WITH SVG LINES) */}
+      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
       {selectedMode === "beginner" && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -304,7 +301,7 @@ export default function PracticePage() {
             backgroundSize: "24px 24px",
           }}
         >
-          {/* SVG Tree Connection Lines Overlay (Desktop 4 Columns) */}
+          {/* SVG Tree Connection Lines Overlay */}
           <svg className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none z-0">
             <defs>
               <linearGradient id="cyanGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -319,7 +316,6 @@ export default function PracticePage() {
             </defs>
 
             {/* Branching Bezier curves from Foundation center top to 4 column headers */}
-            {/* Top Root: x = 50%, y = 80px. Category headers: y = 180px */}
             <path
               d="M 50% 80 C 50% 130, 12.5% 130, 12.5% 180"
               stroke="url(#cyanGlowGrad)"
@@ -405,12 +401,7 @@ export default function PracticePage() {
                           <motion.button
                             whileHover={{ scale: 1.03, y: -2 }}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() =>
-                              setActiveDrawerSkill({
-                                name: node.title,
-                                category: cat.title.toUpperCase(),
-                              })
-                            }
+                            onClick={() => setActivePracticeTopic(node.title)}
                             className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md ${
                               isDone
                                 ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
@@ -536,27 +527,11 @@ export default function PracticePage() {
         </motion.div>
       )}
 
-      {/* Skill Detail Drawer Overlay for Practice Nodes */}
-      <SkillDetailDrawer
-        isOpen={!!activeDrawerSkill}
-        onClose={() => setActiveDrawerSkill(null)}
-        skillName={activeDrawerSkill?.name || ""}
-        categoryName={activeDrawerSkill?.category || "FOUNDATIONAL DATA STRUCTURES & ALGORITHMS"}
-        roadmapTitle="Beginner Level — DSA Learning Roadmap"
-        status={
-          activeDrawerSkill && solvedState[activeDrawerSkill.name.toLowerCase().replace(/\s+/g, "-")]
-            ? "completed"
-            : "pending"
-        }
-        onStatusChange={(newStatus) => {
-          if (activeDrawerSkill) {
-            const key = activeDrawerSkill.name.toLowerCase().replace(/\s+/g, "-");
-            const isDoneCurrently = !!solvedState[key];
-            if ((newStatus === "completed" && !isDoneCurrently) || (newStatus !== "completed" && isDoneCurrently)) {
-              toggleSolved(key);
-            }
-          }
-        }}
+      {/* Practice Topic Detail Drawer Overlay matching target screenshot */}
+      <PracticeTopicDrawer
+        isOpen={!!activePracticeTopic}
+        onClose={() => setActivePracticeTopic(null)}
+        topicName={activePracticeTopic || ""}
       />
     </motion.div>
   );
