@@ -290,67 +290,25 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
+      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (AUTHENTIC CONNECTED GRAPH) */}
       {selectedMode === "beginner" && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl p-6 sm:p-10 bg-[#070b14] border border-indigo-500/30 shadow-2xl overflow-hidden min-h-[580px]"
+          className="relative rounded-3xl p-6 sm:p-10 bg-[#070b14] border border-indigo-500/30 shadow-2xl overflow-hidden min-h-[620px]"
           style={{
             backgroundImage: "radial-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px)",
             backgroundSize: "24px 24px",
           }}
         >
-          {/* SVG Tree Connection Lines Overlay */}
-          <svg className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none z-0">
-            <defs>
-              <linearGradient id="cyanGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#38bdf8" />
-                <stop offset="50%" stopColor="#6366f1" />
-                <stop offset="100%" stopColor="#818cf8" />
-              </linearGradient>
-              <filter id="svgGlowEffect" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
+          {/* Ambient Glow Aura behind Foundation */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 blur-3xl rounded-full pointer-events-none animate-pulse" />
 
-            {/* Branching Bezier curves from Foundation center top to 4 column headers */}
-            <path
-              d="M 50% 80 C 50% 130, 12.5% 130, 12.5% 180"
-              stroke="url(#cyanGlowGrad)"
-              strokeWidth="2.5"
-              fill="none"
-              filter="url(#svgGlowEffect)"
-            />
-            <path
-              d="M 50% 80 C 50% 130, 37.5% 130, 37.5% 180"
-              stroke="url(#cyanGlowGrad)"
-              strokeWidth="2.5"
-              fill="none"
-              filter="url(#svgGlowEffect)"
-            />
-            <path
-              d="M 50% 80 C 50% 130, 62.5% 130, 62.5% 180"
-              stroke="url(#cyanGlowGrad)"
-              strokeWidth="2.5"
-              fill="none"
-              filter="url(#svgGlowEffect)"
-            />
-            <path
-              d="M 50% 80 C 50% 130, 87.5% 130, 87.5% 180"
-              stroke="url(#cyanGlowGrad)"
-              strokeWidth="2.5"
-              fill="none"
-              filter="url(#svgGlowEffect)"
-            />
-          </svg>
-
-          {/* Top Foundation Root Node */}
-          <div className="flex flex-col items-center justify-center relative z-10 mb-14">
+          {/* Top Foundation Root Node & Branching Tree Structure */}
+          <div className="flex flex-col items-center justify-center relative z-10 mb-8">
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="px-8 py-3.5 rounded-2xl text-white font-black text-lg flex items-center gap-2.5 shadow-2xl border border-cyan-300/40 cursor-pointer"
+              whileHover={{ scale: 1.05, y: -2 }}
+              className="px-8 py-3.5 rounded-2xl text-white font-black text-lg flex items-center gap-2.5 shadow-2xl border border-cyan-300/40 cursor-pointer relative z-20"
               style={{
                 background: "linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #3b82f6 100%)",
                 boxShadow: "0 0 35px rgba(2, 132, 199, 0.5), 0 0 15px rgba(59, 130, 246, 0.4)",
@@ -359,32 +317,60 @@ export default function PracticePage() {
               <Layers className="w-5 h-5 text-cyan-200" />
               <span>Foundation</span>
             </motion.div>
+
+            {/* Vertical trunk line below Foundation */}
+            <div className="w-0.5 h-8 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_12px_#38bdf8]" />
+
+            {/* Horizontal Branch Bar spreading across 4 columns (Desktop) */}
+            <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-cyan-500 shadow-[0_0_12px_#38bdf8] relative">
+              {/* Downward drop 1 (Arrays - 0%) */}
+              <div className="absolute left-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
+              <div className="absolute left-0 top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+
+              {/* Downward drop 2 (Strings - 33.3%) */}
+              <div className="absolute left-[33.33%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
+              <div className="absolute left-[33.33%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+
+              {/* Downward drop 3 (Hashmap - 66.6%) */}
+              <div className="absolute left-[66.66%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
+              <div className="absolute left-[66.66%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+
+              {/* Downward drop 4 (Binary Search - 100%) */}
+              <div className="absolute right-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
+              <div className="absolute right-0 top-7 translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+            </div>
           </div>
 
           {/* 4 Category Columns Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-            {BEGINNER_TREE_DATA.map((cat) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 pt-4">
+            {BEGINNER_TREE_DATA.map((cat, cIdx) => {
               const CategoryIcon = cat.icon;
 
               return (
-                <div key={cat.id} className="space-y-4 flex flex-col items-center">
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: cIdx * 0.1, duration: 0.4 }}
+                  className="space-y-4 flex flex-col items-center relative"
+                >
                   {/* Category Header Node */}
                   <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    className="w-full py-3.5 px-5 rounded-2xl bg-[#12192e] border border-indigo-500/50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/10 cursor-pointer"
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    className="w-full py-3.5 px-5 rounded-2xl bg-[#12192e] border border-indigo-500/50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/15 cursor-pointer relative z-10"
                   >
                     <CategoryIcon className="w-4.5 h-4.5 text-indigo-400" />
                     <span>{cat.title}</span>
                   </motion.div>
 
                   {/* Vertical Connector Line under Category Header */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center my-1 relative z-10">
                     <div className="w-0.5 h-4 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_8px_#38bdf8]" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_#38bdf8]" />
+                    <div className="w-2 h-2 rounded-full bg-cyan-300 border border-white shadow-[0_0_10px_#38bdf8] animate-pulse" />
                   </div>
 
                   {/* Sub-nodes Vertical Flow */}
-                  <div className="w-full space-y-3">
+                  <div className="w-full space-y-3 relative z-10">
                     {cat.nodes.map((node, nIdx) => {
                       const NodeIcon = node.icon;
                       const isDone = !!solvedState[node.id];
@@ -392,20 +378,21 @@ export default function PracticePage() {
                       return (
                         <React.Fragment key={node.id}>
                           {nIdx > 0 && (
-                            <div className="flex flex-col items-center -my-1">
-                              <div className="w-0.5 h-3 bg-indigo-500/40" />
-                              <div className="w-1 h-1 rounded-full bg-indigo-400" />
+                            <div className="flex flex-col items-center my-1">
+                              <div className="w-0.5 h-3 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_6px_#38bdf8]" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 border border-white/50 shadow-[0_0_8px_#38bdf8]" />
+                              <div className="w-0.5 h-3 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_6px_#38bdf8]" />
                             </div>
                           )}
 
                           <motion.button
-                            whileHover={{ scale: 1.03, y: -2 }}
+                            whileHover={{ scale: 1.04, y: -2 }}
                             whileTap={{ scale: 0.97 }}
                             onClick={() => setActivePracticeTopic(node.title)}
                             className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md ${
                               isDone
                                 ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
-                                : "bg-[#111728] border-white/[0.08] hover:border-indigo-500/50 text-slate-200 hover:text-white"
+                                : "bg-[#111728] border-white/[0.08] hover:border-indigo-400 text-slate-200 hover:text-white"
                             }`}
                           >
                             <NodeIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -415,7 +402,7 @@ export default function PracticePage() {
                       );
                     })}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
