@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import dashboard, ai_mentor, learning
+from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile
 
 app = FastAPI(
     title="SkillPath API",
@@ -20,6 +20,9 @@ app.add_middleware(
 app.include_router(dashboard.router)
 app.include_router(ai_mentor.router)
 app.include_router(learning.router)
+app.include_router(resume.router)
+app.include_router(practice.router)
+app.include_router(profile.router)
 
 @app.get("/")
 def root():

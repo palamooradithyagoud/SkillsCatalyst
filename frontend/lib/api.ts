@@ -45,6 +45,61 @@ export async function sendMentorMessage(prompt: string) {
   }
 }
 
+export async function extractResume(file: File): Promise<{ success: boolean; text?: string; filename?: string; char_count?: number; message?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_BASE}/api/resume/extract`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        message: data.message || `Failed to extract resume (HTTP ${res.status})`,
+      };
+    }
+
+    return {
+      success: true,
+      text: data.text,
+      filename: data.filename,
+      char_count: data.char_count,
+    };
+  } catch (error: any) {
+    console.error("Resume extraction network error:", error);
+    return {
+      success: false,
+      message: error?.message || "Failed to reach backend extraction service. Ensure backend is running.",
+    };
+  }
+}
+
+export async function reviewResume(resumeText: string, targetRole: string, yearsExperience: string, companyType: string = "Product-Based", jobDescription: string = "") {
+  try {
+    const res = await fetch(`${API_BASE}/api/ai-mentor/review-resume`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resume_text: resumeText,
+        target_role: targetRole,
+        years_experience: yearsExperience,
+        company_type: companyType,
+        job_description: jobDescription,
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to evaluate resume");
+    return await res.json();
+  } catch (error) {
+    console.error("Resume review error:", error);
+    return { review: "Error: Unable to connect to Groq AI Resume Evaluator. Please ensure the backend is running." };
+  }
+}
+
 // ── Learning API ──────────────────────────────────────────────────────────────
 
 export interface Playlist {
@@ -282,6 +337,143 @@ export async function generateRoadmap(skill: string): Promise<RoadmapData | null
     return data.roadmap ?? null;
   } catch (e) {
     console.warn("Roadmap generation failed:", e);
+    return null;
+  }
+}
+
+// ── Practice / Company Questions API ─────────────────────────────────────────
+
+export interface PracticeQuestion {
+  id: number;
+  title: string;
+  url: string;
+  difficulty: "Easy" | "Medium" | "Hard" | string;
+  acceptance: string;
+  frequency: string;
+}
+
+export interface CompanyQuestionsResult {
+  company: string;
+  period: string;
+  total: number;
+  offset: number;
+  limit: number;
+  questions: PracticeQuestion[];
+}
+
+export type QuestionPeriod =
+  | "all"
+  | "six-months"
+  | "three-months"
+  | "thirty-days"
+  | "more-than-six-months";
+
+/** Fetches the sorted list of all 663 company slugs. */
+export async function fetchPracticeCompanies(): Promise<string[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/practice/companies`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.companies ?? [];
+  } catch (e) {
+    console.warn("Failed to fetch practice companies:", e);
+    return [];
+  }
+}
+
+/** Fetches questions for a specific company with optional filters. */
+export async function fetchCompanyQuestions(
+  company: string,
+  period: QuestionPeriod = "all",
+  difficulty?: string,
+  search?: string,
+  limit = 100,
+  offset = 0,
+): Promise<CompanyQuestionsResult | null> {
+  try {
+    const params = new URLSearchParams({ period, limit: String(limit), offset: String(offset) });
+    if (difficulty) params.set("difficulty", difficulty);
+    if (search) params.set("search", search);
+
+    const res = await fetch(
+      `${API_BASE}/api/practice/questions/${encodeURIComponent(company)}?${params}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn(`Failed to fetch questions for '${company}':`, e);
+    return null;
+  }
+}
+
+// ── Profile & Developer Coding Platforms API ─────────────────────────────────
+
+export interface AcademicProfile {
+  user_id?: string;
+  full_name: string;
+  college: string;
+  department: string;
+  academic_year: string;
+  target_role: string;
+}
+
+export interface CodingProfilesInput {
+  user_id?: string;
+  leetcode?: string;
+  github?: string;
+  hackerrank?: string;
+  codechef?: string;
+  geeksforgeeks?: string;
+  codeforces?: string;
+}
+
+export interface PlatformStat {
+  configured: boolean;
+  username?: string;
+  url?: string;
+  badge?: string;
+  summary?: string;
+  [key: string]: any;
+}
+
+export async function fetchProfileData() {
+  try {
+    const res = await fetch(`${API_BASE}/api/profile`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn("Failed to fetch profile data:", e);
+    return null;
+  }
+}
+
+export async function saveAcademicProfile(data: AcademicProfile) {
+  try {
+    const res = await fetch(`${API_BASE}/api/profile/academic`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn("Failed to save academic profile:", e);
+    return null;
+  }
+}
+
+export async function saveCodingProfiles(data: CodingProfilesInput) {
+  try {
+    const res = await fetch(`${API_BASE}/api/profile/coding`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn("Failed to save coding profiles:", e);
     return null;
   }
 }

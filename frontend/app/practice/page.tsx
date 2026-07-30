@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Clock,
   Briefcase,
@@ -21,9 +21,116 @@ import {
   Target,
   Grid,
   Columns,
+  ExternalLink,
+  Loader2,
+  Filter,
+  Sparkles,
+  ChevronDown,
+  CheckSquare,
+  Square,
+  Trophy,
+  Check,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
+import {
+  fetchPracticeCompanies,
+  fetchCompanyQuestions,
+  PracticeQuestion,
+  QuestionPeriod,
+} from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+
+// Helper for formatting company slug into clean display name
+function formatCompanyName(slug: string): string {
+  if (!slug) return "";
+  const specialMap: Record<string, string> = {
+    "at-t": "AT&T",
+    "bookingcom": "Booking.com",
+    "c3-ai": "C3 AI",
+    "f5-networks": "F5 Networks",
+    "ge-digital": "GE Digital",
+    "ge-healthcare": "GE Healthcare",
+    "hp": "HP",
+    "hpe": "HPE",
+    "hrt": "HRT",
+    "hsbc": "HSBC",
+    "htc": "HTC",
+    "ibm": "IBM",
+    "imc": "IMC",
+    "ivp": "IVP",
+    "ixl": "IXL",
+    "jd": "JD.com",
+    "jpmorgan": "JPMorgan",
+    "jtg": "JTG",
+    "kla": "KLA",
+    "kpit": "KPIT",
+    "kpmg": "KPMG",
+    "lti": "LTI",
+    "maq-software": "MAQ Software",
+    "msci": "MSCI",
+    "nasdaq": "NASDAQ",
+    "ncr": "NCR",
+    "npci": "NPCI",
+    "nvidia": "NVIDIA",
+    "okx": "OKX",
+    "olx": "OLX",
+    "pwc": "PwC",
+    "rbc": "RBC",
+    "sap": "SAP",
+    "sig": "SIG",
+    "tcs": "TCS",
+    "ubs": "UBS",
+    "ukg": "UKG",
+    "ust": "UST",
+    "vk": "VK",
+  };
+  const lower = slug.toLowerCase().trim();
+  if (specialMap[lower]) {
+    return specialMap[lower];
+  }
+  return lower
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getLeetCodeUrl(q: PracticeQuestion): string {
+  if (q.url && q.url.startsWith("http")) return q.url;
+  const slug = q.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `https://leetcode.com/problems/${slug}`;
+}
+
+const TOP_COMPANIES = [
+  "google",
+  "amazon",
+  "meta",
+  "microsoft",
+  "apple",
+  "netflix",
+  "uber",
+  "adobe",
+  "goldman-sachs",
+  "tcs",
+  "accenture",
+  "deloitte",
+  "wipro",
+  "infosys",
+  "flipkart",
+];
+
+const PERIODS: { value: QuestionPeriod; label: string }[] = [
+  { value: "all", label: "All Time" },
+  { value: "thirty-days", label: "30 Days" },
+  { value: "three-months", label: "3 Months" },
+  { value: "six-months", label: "6 Months" },
+  { value: "more-than-six-months", label: "> 6 Months" },
+];
+
+const DIFFICULTIES = ["All", "Easy", "Medium", "Hard"];
 
 // Beginner Level DSA Tree Data Schema
 interface TreeCategory {
@@ -80,46 +187,238 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
   },
 ];
 
-// Company Wise Question Bank Data
-const COMPANY_QUESTIONS = [
-  { id: 1, title: "Two Sum", company: "Google", difficulty: "Easy", topic: "Arrays & Hashing", acceptance: "52%" },
-  { id: 2, title: "LRU Cache", company: "Google", difficulty: "Medium", topic: "Design & Hash", acceptance: "41%" },
-  { id: 3, title: "Trapping Rain Water", company: "Google", difficulty: "Hard", topic: "Two Pointers", acceptance: "60%" },
-  { id: 4, title: "Merge k Sorted Lists", company: "Amazon", difficulty: "Hard", topic: "Heap & Trees", acceptance: "51%" },
-  { id: 5, title: "Course Schedule", company: "Amazon", difficulty: "Medium", topic: "Graph Topological Sort", acceptance: "47%" },
-  { id: 6, title: "Number of Islands", company: "Amazon", difficulty: "Medium", topic: "BFS / DFS", acceptance: "58%" },
-  { id: 7, title: "Subarray Sum Equals K", company: "Meta", difficulty: "Medium", topic: "Prefix Sum", acceptance: "44%" },
-  { id: 8, title: "Valid Palindrome II", company: "Meta", difficulty: "Easy", topic: "Strings", acceptance: "40%" },
-  { id: 9, title: "Serialize and Deserialize Binary Tree", company: "Meta", difficulty: "Hard", topic: "Trees & Design", acceptance: "56%" },
-  { id: 10, title: "Design Search Autocomplete System", company: "Microsoft", difficulty: "Hard", topic: "Trie & Hash", acceptance: "48%" },
-  { id: 11, title: "Reverse Nodes in k-Group", company: "Microsoft", difficulty: "Hard", topic: "Linked Lists", acceptance: "57%" },
-  { id: 12, title: "Word Search II", company: "Microsoft", difficulty: "Hard", topic: "Trie & Backtracking", acceptance: "36%" },
-];
-
-const COMPANIES = ["All Giants", "Google", "Amazon", "Meta", "Microsoft"];
-
 export default function PracticePage() {
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
-  const [selectedCompany, setSelectedCompany] = useState("All Giants");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [companiesList, setCompaniesList] = useState<string[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("google");
+  const [companySearchInput, setCompanySearchInput] = useState<string>("");
+  const [selectedPeriod, setSelectedPeriod] = useState<QuestionPeriod>("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
+  const [selectedStatus, setSelectedStatus] = useState<"All" | "Unsolved" | "Completed">("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [activePracticeTopic, setActivePracticeTopic] = useState<string | null>(null);
+
+  const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [loadingQuestions, setLoadingQuestions] = useState<boolean>(false);
+  const [loadingCompanies, setLoadingCompanies] = useState<boolean>(false);
+  const [limit, setLimit] = useState<number>(100);
 
   const [solvedState, setSolvedState] = useState<Record<string, boolean>>({
     "two-pointers": true,
     "classic-bs": true,
   });
 
-  const toggleSolved = (key: string) => {
-    setSolvedState((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Load solved state from localStorage & Sync from Supabase DB
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("skillscatalyst_solved_questions");
+      if (saved) {
+        setSolvedState(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn("Failed to read solved questions from localStorage", e);
+    }
+
+    async function syncFromSupabase() {
+      try {
+        const { data: leetcodeData } = await supabase
+          .from("leetcode_progress")
+          .select("company_slug, question_id, question_title, status")
+          .eq("user_id", "default_user");
+
+        const { data: roadmapData } = await supabase
+          .from("roadmap_progress")
+          .select("node_id, status")
+          .eq("user_id", "default_user");
+
+        const fetchedState: Record<string, boolean> = {};
+
+        if (leetcodeData) {
+          leetcodeData.forEach((item) => {
+            const key = `q_${item.company_slug}_${item.question_id}_${item.question_title}`;
+            fetchedState[key] = item.status === "solved";
+            fetchedState[item.question_id.toString()] = item.status === "solved";
+          });
+        }
+
+        if (roadmapData) {
+          roadmapData.forEach((item) => {
+            fetchedState[item.node_id] = item.status === "completed";
+          });
+        }
+
+        if (Object.keys(fetchedState).length > 0) {
+          setSolvedState((prev) => {
+            const merged = { ...prev, ...fetchedState };
+            try {
+              localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn("Supabase sync warning:", err);
+      }
+    }
+
+    syncFromSupabase();
+  }, []);
+
+  const toggleSolved = async (
+    key: string,
+    qDetails?: { company: string; id: number; title: string; difficulty: string; acceptance?: string; frequency?: string }
+  ) => {
+    const isCurrentlyDone = !!solvedState[key];
+    const newDoneState = !isCurrentlyDone;
+
+    setSolvedState((prev) => {
+      const updated = { ...prev, [key]: newDoneState };
+      try {
+        localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(updated));
+      } catch (e) {
+        console.warn("Failed to save solved question state", e);
+      }
+      return updated;
+    });
+
+    // Asynchronous background persistence into Supabase tables
+    try {
+      if (qDetails) {
+        if (newDoneState) {
+          await supabase.from("leetcode_progress").upsert(
+            {
+              user_id: "default_user",
+              company_slug: qDetails.company,
+              question_id: qDetails.id,
+              question_title: qDetails.title,
+              difficulty: qDetails.difficulty,
+              acceptance: qDetails.acceptance || "",
+              frequency: qDetails.frequency || "",
+              status: "solved",
+              solved_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,company_slug,question_id" }
+          );
+        } else {
+          await supabase
+            .from("leetcode_progress")
+            .delete()
+            .eq("user_id", "default_user")
+            .eq("company_slug", qDetails.company)
+            .eq("question_id", qDetails.id);
+        }
+      } else {
+        if (newDoneState) {
+          await supabase.from("roadmap_progress").upsert(
+            {
+              user_id: "default_user",
+              roadmap_id: "dsa-beginner",
+              node_id: key,
+              node_title: key,
+              status: "completed",
+              completed_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,roadmap_id,node_id" }
+          );
+        } else {
+          await supabase
+            .from("roadmap_progress")
+            .delete()
+            .eq("user_id", "default_user")
+            .eq("roadmap_id", "dsa-beginner")
+            .eq("node_id", key);
+        }
+      }
+    } catch (err) {
+      console.warn("Supabase background sync error:", err);
+    }
   };
 
-  const filteredCompanyQuestions = COMPANY_QUESTIONS.filter((q) => {
-    const matchesCompany = selectedCompany === "All Giants" || q.company === selectedCompany;
-    const matchesSearch =
-      q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.topic.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCompany && matchesSearch;
-  });
+  // Fetch company list from backend CSV repository
+  useEffect(() => {
+    async function loadCompanies() {
+      setLoadingCompanies(true);
+      const list = await fetchPracticeCompanies();
+      if (list && list.length > 0) {
+        setCompaniesList(list);
+      } else {
+        setCompaniesList(TOP_COMPANIES);
+      }
+      setLoadingCompanies(false);
+    }
+    loadCompanies();
+  }, []);
+
+  // Fetch questions for selected company & filters
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadQuestions() {
+      if (selectedMode !== "company") return;
+      setLoadingQuestions(true);
+
+      const result = await fetchCompanyQuestions(
+        selectedCompany,
+        selectedPeriod,
+        selectedDifficulty === "All" ? undefined : selectedDifficulty,
+        searchQuery.trim() || undefined,
+        limit,
+        0
+      );
+
+      if (!isCancelled) {
+        if (result && Array.isArray(result.questions)) {
+          setQuestions(result.questions);
+          setTotalCount(result.total || result.questions.length);
+        } else {
+          setQuestions([]);
+          setTotalCount(0);
+        }
+        setLoadingQuestions(false);
+      }
+    }
+
+    const timer = setTimeout(() => {
+      loadQuestions();
+    }, 200);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [selectedMode, selectedCompany, selectedPeriod, selectedDifficulty, searchQuery, limit]);
+
+  // Filtered dropdown list of all 660+ companies
+  const filteredCompaniesDropdown = useMemo(() => {
+    if (!companySearchInput) return companiesList;
+    const term = companySearchInput.toLowerCase().trim();
+    return companiesList.filter(
+      (c) => c.toLowerCase().includes(term) || formatCompanyName(c).toLowerCase().includes(term)
+    );
+  }, [companiesList, companySearchInput]);
+
+  // Calculate count of solved questions in loaded list
+  const companySolvedCount = useMemo(() => {
+    return questions.reduce((acc, q) => {
+      const key = `q_${selectedCompany}_${q.id}_${q.title}`;
+      const isDone = !!solvedState[key] || !!solvedState[q.id.toString()];
+      return isDone ? acc + 1 : acc;
+    }, 0);
+  }, [questions, solvedState, selectedCompany]);
+
+  const companyProgressPercent =
+    questions.length > 0 ? Math.round((companySolvedCount / questions.length) * 100) : 0;
+
+  // Filter questions by Status (All vs Unsolved vs Completed)
+  const filteredQuestions = useMemo(() => {
+    if (selectedStatus === "All") return questions;
+    return questions.filter((q) => {
+      const key = `q_${selectedCompany}_${q.id}_${q.title}`;
+      const isDone = !!solvedState[key] || !!solvedState[q.id.toString()];
+      return selectedStatus === "Completed" ? isDone : !isDone;
+    });
+  }, [questions, selectedStatus, solvedState, selectedCompany]);
 
   return (
     <motion.div
@@ -175,10 +474,10 @@ export default function PracticePage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-                Company Wise Questions — LeetCode Question Bank
+                Company Wise Questions — LeetCode CSV Bank
               </h1>
               <p className="text-sm text-slate-400 mt-1">
-                Explore interview questions asked by Google, Amazon, Meta, Microsoft & 600+ companies.
+                Explore real interview questions asked by {companiesList.length || "660+"} top tech companies from curated CSV datasets.
               </p>
             </div>
           </div>
@@ -265,7 +564,7 @@ export default function PracticePage() {
                   2. Company Wise Questions
                 </h3>
                 <p className="text-sm text-slate-400 font-normal leading-relaxed">
-                  Explore LeetCode interview questions asked by top tech giants including Google, Amazon, Meta, Microsoft & 600+ companies.
+                  Explore real LeetCode questions asked by {companiesList.length || "660+"} top tech companies loaded directly from CSV datasets.
                 </p>
               </div>
             </div>
@@ -290,7 +589,7 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (AUTHENTIC CONNECTED GRAPH) */}
+      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
       {selectedMode === "beginner" && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -323,19 +622,15 @@ export default function PracticePage() {
 
             {/* Horizontal Branch Bar spreading across 4 columns (Desktop) */}
             <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-cyan-500 shadow-[0_0_12px_#38bdf8] relative">
-              {/* Downward drop 1 (Arrays - 0%) */}
               <div className="absolute left-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
               <div className="absolute left-0 top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
 
-              {/* Downward drop 2 (Strings - 33.3%) */}
               <div className="absolute left-[33.33%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
               <div className="absolute left-[33.33%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
 
-              {/* Downward drop 3 (Hashmap - 66.6%) */}
               <div className="absolute left-[66.66%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
               <div className="absolute left-[66.66%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
 
-              {/* Downward drop 4 (Binary Search - 100%) */}
               <div className="absolute right-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
               <div className="absolute right-0 top-7 translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
             </div>
@@ -385,19 +680,38 @@ export default function PracticePage() {
                             </div>
                           )}
 
-                          <motion.button
-                            whileHover={{ scale: 1.04, y: -2 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => setActivePracticeTopic(node.title)}
-                            className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md ${
+                          <motion.div
+                            whileHover={{ scale: 1.03, y: -1 }}
+                            className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-between gap-2 shadow-md ${
                               isDone
-                                ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
+                                ? "bg-emerald-950/40 border-emerald-500/60 text-white shadow-emerald-500/20"
                                 : "bg-[#111728] border-white/[0.08] hover:border-indigo-400 text-slate-200 hover:text-white"
                             }`}
                           >
-                            <NodeIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                            <span>{node.title}</span>
-                          </motion.button>
+                            <button
+                              onClick={() => setActivePracticeTopic(node.title)}
+                              className="flex items-center gap-2.5 flex-1 text-left"
+                            >
+                              <NodeIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                              <span>{node.title}</span>
+                            </button>
+
+                            {/* Checkbox for Roadmap Node */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSolved(node.id);
+                              }}
+                              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+                              title={isDone ? "Mark as incomplete" : "Mark as completed"}
+                            >
+                              {isDone ? (
+                                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                              ) : (
+                                <Square className="w-4 h-4 text-slate-500" />
+                              )}
+                            </button>
+                          </motion.div>
                         </React.Fragment>
                       );
                     })}
@@ -409,107 +723,392 @@ export default function PracticePage() {
         </motion.div>
       )}
 
-      {/* ── MODE 2: COMPANY WISE QUESTION BANK */}
+      {/* ── MODE 2: COMPANY WISE QUESTION BANK (FETCHED FROM CSV DATASETS) */}
       {selectedMode === "company" && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          {/* Company Filters & Search Bar */}
-          <div className="glass p-5 rounded-2xl border border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
-              <span className="text-xs font-bold text-slate-400 mr-2 shrink-0">Company:</span>
-              {COMPANIES.map((company) => (
-                <button
-                  key={company}
-                  onClick={() => setSelectedCompany(company)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                    selectedCompany === company
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                      : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/[0.06]"
-                  }`}
-                >
-                  {company}
-                </button>
-              ))}
+          {/* Controls Panel */}
+          <div className="glass p-5 rounded-2xl border border-white/[0.08] space-y-4">
+            {/* Top row: Select Any Company Dropdown + Search bar */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              {/* Dropdown for 660+ companies */}
+              <div className="flex items-center gap-3 flex-1 min-w-[260px]">
+                <Building2 className="w-5 h-5 text-indigo-400 shrink-0" />
+                <div className="relative w-full max-w-md">
+                  <select
+                    value={selectedCompany}
+                    onChange={(e) => {
+                      setSelectedCompany(e.target.value);
+                      setLimit(100);
+                    }}
+                    className="w-full bg-[#0d1424] text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/[0.12] focus:border-indigo-500 outline-none cursor-pointer appearance-none pr-10 shadow-lg"
+                  >
+                    {filteredCompaniesDropdown.map((comp) => (
+                      <option key={comp} value={comp} className="bg-[#0f172a] text-white">
+                        {formatCompanyName(comp)} ({comp})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Company Search Input */}
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  value={companySearchInput}
+                  onChange={(e) => setCompanySearchInput(e.target.value)}
+                  placeholder="Filter 660+ companies..."
+                  className="input-glass w-full pl-10 pr-4 py-2 text-xs rounded-xl"
+                />
+              </div>
+
+              {/* Question Search Input */}
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search question title..."
+                  className="input-glass w-full pl-10 pr-4 py-2 text-xs rounded-xl"
+                />
+              </div>
             </div>
 
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search LeetCode question..."
-                className="input-glass w-full pl-10 pr-4 py-2 text-xs rounded-xl"
-              />
+            {/* Popular Companies Quick Selector Pills */}
+            <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mr-1 shrink-0">
+                Popular:
+              </span>
+              {TOP_COMPANIES.map((slug) => {
+                const isSelected = selectedCompany === slug;
+                return (
+                  <button
+                    key={slug}
+                    onClick={() => {
+                      setSelectedCompany(slug);
+                      setLimit(100);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      isSelected
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 border border-indigo-400/50"
+                        : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/[0.06] hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    {formatCompanyName(slug)}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Filter Row: Time Periods & Difficulties & Status */}
+            <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-4">
+              {/* Time Period Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span className="text-[11px] font-bold text-slate-400 mr-2 shrink-0">Time Frame:</span>
+                {PERIODS.map((p) => {
+                  const isActive = selectedPeriod === p.value;
+                  return (
+                    <button
+                      key={p.value}
+                      onClick={() => {
+                        setSelectedPeriod(p.value);
+                        setLimit(100);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                        isActive
+                          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                          : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Difficulty Filter Tabs */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-400 mr-2">Difficulty:</span>
+                  {DIFFICULTIES.map((d) => {
+                    const isActive = selectedDifficulty === d;
+                    return (
+                      <button
+                        key={d}
+                        onClick={() => setSelectedDifficulty(d)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          isActive
+                            ? d === "Easy"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              : d === "Medium"
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                              : d === "Hard"
+                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                              : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                            : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Completion Status Filter (All / Unsolved / Completed) */}
+                <div className="flex items-center gap-1.5 border-l border-white/[0.08] pl-3">
+                  <span className="text-[11px] font-bold text-slate-400 mr-1">Status:</span>
+                  {(["All", "Unsolved", "Completed"] as const).map((st) => {
+                    const isActive = selectedStatus === st;
+                    return (
+                      <button
+                        key={st}
+                        onClick={() => setSelectedStatus(st)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                          isActive
+                            ? st === "Completed"
+                              ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40"
+                              : st === "Unsolved"
+                              ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/40"
+                              : "bg-white/10 text-white border border-white/20"
+                            : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Tracker Banner */}
+          <div className="glass p-4 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/20 via-[#0d1424] to-indigo-950/20 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+                  <span>{formatCompanyName(selectedCompany)} Progress Tracker</span>
+                  <span className="text-xs font-bold text-emerald-400">
+                    ({companySolvedCount} / {questions.length} Solved)
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Check off questions to save your progress directly into Supabase DB.
+                </p>
+              </div>
+            </div>
+
+            {/* Animated Progress Bar */}
+            <div className="w-full md:w-64 space-y-1.5">
+              <div className="flex justify-between text-xs font-bold">
+                <span className="text-slate-400">Completion</span>
+                <span className="text-emerald-400">{companyProgressPercent}%</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden p-0.5">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  style={{ width: `${companyProgressPercent}%` }}
+                />
+              </div>
             </div>
           </div>
 
           {/* Question List Table */}
-          <div className="glass rounded-2xl p-6 border border-white/[0.08] space-y-3">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-indigo-400" />
-                {selectedCompany} Targeted LeetCode Problem Set
-              </h3>
-              <span className="text-xs text-slate-400 font-medium">
-                {filteredCompanyQuestions.length} Questions Available
-              </span>
-            </div>
+          <div className="glass rounded-2xl p-6 border border-white/[0.08] space-y-4 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+                    <span>{formatCompanyName(selectedCompany)}</span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-800">
+                      {selectedCompany}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Interview questions fetched from CSV dataset ({PERIODS.find((p) => p.value === selectedPeriod)?.label})
+                  </p>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              {filteredCompanyQuestions.map((q) => {
-                const isDone = !!solvedState[q.id.toString()];
-                return (
-                  <div
-                    key={q.id}
-                    onClick={() => toggleSolved(q.id.toString())}
-                    className="flex items-center justify-between p-4 rounded-xl bg-white/[0.025] border border-white/[0.06] hover:border-slate-600 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSolved(q.id.toString());
-                        }}
-                        className={`p-1 rounded-lg transition-colors ${
-                          isDone ? "text-emerald-400 bg-emerald-500/20" : "text-slate-600 hover:text-slate-400"
-                        }`}
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                      </button>
-
-                      <div>
-                        <div className={`text-sm font-bold ${isDone ? "text-slate-400 line-through" : "text-white group-hover:text-indigo-300"}`}>
-                          {q.title}
-                        </div>
-                        <div className="text-xs text-slate-500 mt-0.5">{q.topic}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                        {q.company}
-                      </span>
-                      <span className="text-xs text-slate-400 hidden sm:inline">{q.acceptance} Acc.</span>
-                      <span
-                        className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
-                          q.difficulty === "Easy"
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                            : q.difficulty === "Medium"
-                            ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                            : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                        }`}
-                      >
-                        {q.difficulty}
-                      </span>
-                    </div>
+              <div className="flex items-center gap-3 self-end sm:self-auto">
+                {loadingQuestions ? (
+                  <div className="flex items-center gap-2 text-xs text-indigo-400 font-bold">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Loading CSV data...</span>
                   </div>
-                );
-              })}
+                ) : (
+                  <span className="text-xs text-slate-400 font-bold px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08]">
+                    Showing <strong className="text-white">{filteredQuestions.length}</strong> of{" "}
+                    <strong className="text-indigo-400">{totalCount}</strong> questions
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Questions Table Body */}
+            {loadingQuestions ? (
+              <div className="py-16 text-center space-y-3">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
+                <p className="text-sm font-medium text-slate-400">
+                  Parsing CSV question bank for {formatCompanyName(selectedCompany)}...
+                </p>
+              </div>
+            ) : filteredQuestions.length === 0 ? (
+              <div className="py-16 text-center space-y-3 bg-white/[0.01] rounded-xl border border-white/[0.04]">
+                <Filter className="w-8 h-8 text-slate-600 mx-auto" />
+                <h4 className="text-base font-bold text-white">No questions found</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  No interview questions match your selected status, period, or difficulty filters for {formatCompanyName(selectedCompany)}.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredQuestions.map((q, idx) => {
+                  const key = `q_${selectedCompany}_${q.id}_${q.title}`;
+                  const isDone = !!solvedState[key] || !!solvedState[q.id.toString()];
+                  const leetCodeUrl = getLeetCodeUrl(q);
+
+                  return (
+                    <motion.div
+                      key={`${q.id}-${idx}`}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(idx * 0.02, 0.3) }}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all gap-4 group shadow-md ${
+                        isDone
+                          ? "bg-[#0a1816]/70 border-emerald-500/30"
+                          : "bg-[#0c1220]/80 border-white/[0.06] hover:border-indigo-500/40 hover:bg-[#11192e]"
+                      }`}
+                    >
+                      <div className="flex items-start sm:items-center gap-3.5">
+                        {/* Interactive Checkbox Button with Live Supabase Sync */}
+                        <button
+                          onClick={() =>
+                            toggleSolved(key, {
+                              company: selectedCompany,
+                              id: q.id,
+                              title: q.title,
+                              difficulty: q.difficulty,
+                              acceptance: q.acceptance,
+                              frequency: q.frequency,
+                            })
+                          }
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none shrink-0 ${
+                            isDone
+                              ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                              : "bg-white/[0.02] border-white/[0.12] hover:border-slate-400 text-slate-400 hover:text-white"
+                          }`}
+                          title={isDone ? "Click to mark as incomplete" : "Click to mark as completed"}
+                        >
+                          {isDone ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-500 shrink-0" />
+                          )}
+                          <span className="text-[11px] font-extrabold tracking-wide">
+                            {isDone ? "Completed" : "Mark Solved"}
+                          </span>
+                        </button>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-mono text-slate-500 font-bold">
+                              #{q.id || idx + 1}
+                            </span>
+                            <a
+                              href={leetCodeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm font-bold transition-colors flex items-center gap-1.5 ${
+                                isDone
+                                  ? "text-slate-400 line-through"
+                                  : "text-white group-hover:text-indigo-300"
+                              }`}
+                            >
+                              <span>{q.title}</span>
+                              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-400 transition-opacity" />
+                            </a>
+
+                            {isDone && (
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                Solved
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/[0.04]">
+                        {/* Acceptance Rate */}
+                        {q.acceptance && (
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                            {q.acceptance} Acc.
+                          </span>
+                        )}
+
+                        {/* Frequency Rate */}
+                        {q.frequency && (
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            {q.frequency} Freq.
+                          </span>
+                        )}
+
+                        {/* Difficulty Badge */}
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                            q.difficulty === "Easy"
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              : q.difficulty === "Medium"
+                              ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                              : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                          }`}
+                        >
+                          {q.difficulty}
+                        </span>
+
+                        {/* Solve Button */}
+                        <a
+                          href={leetCodeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 text-xs font-bold transition-all shadow-md"
+                        >
+                          <span>Solve</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Load More Button */}
+            {!loadingQuestions && questions.length < totalCount && (
+              <div className="pt-4 text-center">
+                <button
+                  onClick={() => setLimit((prev) => prev + 100)}
+                  className="px-6 py-2.5 rounded-xl bg-[#131b2e] hover:bg-indigo-950 border border-indigo-500/30 text-indigo-300 hover:text-white text-xs font-bold transition-all shadow-lg inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Load More Questions ({questions.length} / {totalCount})</span>
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
