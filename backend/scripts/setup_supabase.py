@@ -1,37 +1,28 @@
 """
-Run this once to create the saved_playlists table in Supabase.
-Execute: python -m backend.scripts.setup_supabase
+Supabase Schema Generator & Setup Script
 """
+from pathlib import Path
 from backend.services.supabase_service import get_supabase
 
-SQL = """
-create table if not exists public.saved_playlists (
-    id            bigserial primary key,
-    user_id       text not null default 'default_user',
-    playlist_id   text not null,
-    title         text not null,
-    channel       text,
-    description   text,
-    level         text,
-    video_count   text,
-    duration      text,
-    playlist_url  text,
-    thumbnail     text,
-    source        text default 'youtube',
-    skill_query   text,
-    created_at    timestamptz not null default now(),
-    unique(playlist_id, user_id)
-);
-"""
+SCHEMA_FILE = Path(__file__).resolve().parent / "supabase_schema.sql"
 
 if __name__ == "__main__":
-    sb = get_supabase()
-    if sb:
-        try:
-            sb.rpc("exec_sql", {"sql": SQL}).execute()
-            print("✅ saved_playlists table created (or already exists).")
-        except Exception as e:
-            print(f"Could not auto-create table via rpc (normal): {e}")
-            print("👉 Please run the SQL above manually in your Supabase SQL Editor.")
+    if SCHEMA_FILE.exists():
+        sql_content = SCHEMA_FILE.read_text(encoding="utf-8")
+        sb = get_supabase()
+        if sb:
+            try:
+                sb.rpc("exec_sql", {"sql": sql_content}).execute()
+                print("[SUCCESS] All Supabase tables created successfully via RPC!")
+            except Exception:
+                print("[INFO] Please copy and paste the SQL script below into your Supabase SQL Editor:")
+                print("=" * 70)
+                print(sql_content)
+                print("=" * 70)
+        else:
+            print("[INFO] Supabase client not initialized. Copy and paste the SQL script into your Supabase SQL Editor:")
+            print("=" * 70)
+            print(sql_content)
+            print("=" * 70)
     else:
-        print("❌ Supabase client not available. Check your .env keys.")
+        print("[ERROR] Schema file not found.")

@@ -50,6 +50,10 @@ const navItemVariants = {
 export default function Sidebar() {
   const pathname = usePathname();
 
+  if (pathname === "/login") {
+    return null;
+  }
+
   return (
     <motion.aside
       variants={sidebarVariants}
