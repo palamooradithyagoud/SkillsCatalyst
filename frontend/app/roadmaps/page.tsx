@@ -38,6 +38,7 @@ import {
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { generateRoadmap, RoadmapData } from "@/lib/api";
 import PythonGrowthCanvas from "@/components/PythonGrowthCanvas";
+import SkillDetailDrawer from "@/components/SkillDetailDrawer";
 
 interface RoadmapNode {
   name: string;
@@ -868,6 +869,12 @@ function RoadmapDetailView({
   toggleNode: (roadmapKey: string, nodeName: string) => void;
   isNodeDone: (roadmapKey: string, nodeName: string, defaultDone?: boolean) => boolean;
 }) {
+  const [activeDrawerSkill, setActiveDrawerSkill] = useState<{
+    name: string;
+    category: string;
+    roadmapTitle: string;
+  } | null>(null);
+
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: treeContainerRef,
@@ -1144,7 +1151,13 @@ function RoadmapDetailView({
                           key={nIdx}
                           whileHover={{ scale: 1.02, y: -1 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => toggleNode(selectedRoadmap.title, nodeName)}
+                          onClick={() =>
+                            setActiveDrawerSkill({
+                              name: nodeName,
+                              category: section.title.toUpperCase(),
+                              roadmapTitle: selectedRoadmap.displayTitle,
+                            })
+                          }
                           className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all duration-200 shadow-sm ${
                             done
                               ? "bg-indigo-600/20 border-indigo-500 text-white shadow-indigo-500/20"
@@ -1262,6 +1275,28 @@ function RoadmapDetailView({
           </motion.div>
         </div>
       </div>
+
+      {/* Skill Detail Drawer Overlay */}
+      <SkillDetailDrawer
+        isOpen={!!activeDrawerSkill}
+        onClose={() => setActiveDrawerSkill(null)}
+        skillName={activeDrawerSkill?.name || ""}
+        categoryName={activeDrawerSkill?.category || "SOFTWARE ENGINEERING CORE"}
+        roadmapTitle={activeDrawerSkill?.roadmapTitle || selectedRoadmap.displayTitle}
+        status={
+          activeDrawerSkill && isNodeDone(selectedRoadmap.title, activeDrawerSkill.name, false)
+            ? "completed"
+            : "pending"
+        }
+        onStatusChange={(newStatus) => {
+          if (activeDrawerSkill) {
+            const isDoneCurrently = isNodeDone(selectedRoadmap.title, activeDrawerSkill.name, false);
+            if ((newStatus === "completed" && !isDoneCurrently) || (newStatus !== "completed" && isDoneCurrently)) {
+              toggleNode(selectedRoadmap.title, activeDrawerSkill.name);
+            }
+          }
+        }}
+      />
     </motion.div>
   );
 }
