@@ -7,51 +7,74 @@ import {
   ArrowRight,
   ArrowLeft,
   Search,
-  Filter,
   CheckCircle2,
-  Code2,
-  Sparkles,
   Building2,
-  Target,
-  ExternalLink,
-  Flame,
+  Map,
   Layers,
+  LayoutGrid,
+  Type,
+  Database,
+  Sliders,
+  TrendingUp,
+  Hash,
+  Binary,
+  Target,
+  Sparkles,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import SkillDetailDrawer, { SkillStatus } from "@/components/SkillDetailDrawer";
 
-// Beginner Core Concept Modules Data
-const BEGINNER_MODULES = [
+// Beginner Level DSA Tree Node Schema
+interface TreeCategory {
+  id: string;
+  title: string;
+  icon: React.ElementType;
+  nodes: {
+    id: string;
+    title: string;
+    prefix: string;
+  }[];
+}
+
+const BEGINNER_TREE_DATA: TreeCategory[] = [
   {
-    id: "arrays-strings",
-    title: "1. Arrays & Strings Fundamentals",
-    description: "Memory contiguous allocation, 2-pointers, sliding window, and string manipulation.",
-    problems: [
-      { id: 1, title: "Two Sum", difficulty: "Easy", company: "Google / Amazon", status: "Solved" },
-      { id: 2, title: "Valid Anagram", difficulty: "Easy", company: "Meta", status: "Solved" },
-      { id: 3, title: "Container With Most Water", difficulty: "Medium", company: "Amazon", status: "Pending" },
-      { id: 4, title: "Longest Substring Without Repeating Characters", difficulty: "Medium", company: "Microsoft", status: "Pending" },
+    id: "arrays",
+    title: "Arrays",
+    icon: LayoutGrid,
+    nodes: [
+      { id: "two-pointers", title: "Two Pointers", prefix: "→" },
+      { id: "sliding-window-arr", title: "Sliding Window", prefix: "║" },
+      { id: "prefix-sum", title: "Prefix Sum", prefix: "+" },
+      { id: "kadanes", title: "Kadane's Algorithm", prefix: "📈" },
     ],
   },
   {
-    id: "linked-lists",
-    title: "2. Linked Lists & Pointers",
-    description: "Singly linked lists, doubly linked lists, Floyd's cycle detection, and reversal.",
-    problems: [
-      { id: 5, title: "Reverse Linked List", difficulty: "Easy", company: "Google", status: "Solved" },
-      { id: 6, title: "Linked List Cycle", difficulty: "Easy", company: "Amazon", status: "Pending" },
-      { id: 7, title: "Merge Two Sorted Lists", difficulty: "Easy", company: "Meta", status: "Pending" },
-      { id: 8, title: "Reorder List", difficulty: "Medium", company: "Microsoft", status: "Pending" },
+    id: "strings",
+    title: "Strings",
+    icon: Type,
+    nodes: [
+      { id: "two-pointers-str", title: "Two Pointer", prefix: "→" },
+      { id: "sliding-window-str", title: "Sliding Window", prefix: "║" },
     ],
   },
   {
-    id: "trees-graphs",
-    title: "3. Trees & Graph Traversal",
-    description: "Binary search trees, Depth-First Search (DFS), Breadth-First Search (BFS), and recursion.",
-    problems: [
-      { id: 9, title: "Invert Binary Tree", difficulty: "Easy", company: "Google", status: "Solved" },
-      { id: 10, title: "Maximum Depth of Binary Tree", difficulty: "Easy", company: "Amazon", status: "Solved" },
-      { id: 11, title: "Lowest Common Ancestor", difficulty: "Medium", company: "Meta", status: "Pending" },
-      { id: 12, title: "Number of Islands", difficulty: "Medium", company: "Amazon / Microsoft", status: "Pending" },
+    id: "hashmap",
+    title: "Hashmap",
+    icon: Database,
+    nodes: [
+      { id: "frequency-map", title: "Frequency Map", prefix: "📊" },
+      { id: "prefix-hashmap", title: "Prefix Sum + HashMap", prefix: "+" },
+    ],
+  },
+  {
+    id: "binary-search",
+    title: "Binary Search",
+    icon: Search,
+    nodes: [
+      { id: "classic-bs", title: "Classic Binary Search", prefix: "🔍" },
+      { id: "lower-upper-bound", title: "Lower / Upper Bound", prefix: "⬡" },
+      { id: "bs-on-answers", title: "Binary Search on Answers", prefix: "🎯" },
+      { id: "search-2d-matrix", title: "Search in 2D Matrix", prefix: "田" },
     ],
   },
 ];
@@ -78,16 +101,18 @@ export default function PracticePage() {
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
   const [selectedCompany, setSelectedCompany] = useState("All Giants");
   const [searchQuery, setSearchQuery] = useState("");
-  const [solvedState, setSolvedState] = useState<Record<number, boolean>>({
-    1: true,
-    2: true,
-    5: true,
-    9: true,
-    10: true,
+  const [activeDrawerSkill, setActiveDrawerSkill] = useState<{
+    name: string;
+    category: string;
+  } | null>(null);
+
+  const [solvedState, setSolvedState] = useState<Record<string, boolean>>({
+    "two-pointers": true,
+    "classic-bs": true,
   });
 
-  const toggleProblemSolved = (id: number) => {
-    setSolvedState((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleSolved = (key: string) => {
+    setSolvedState((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const filteredCompanyQuestions = COMPANY_QUESTIONS.filter((q) => {
@@ -104,29 +129,73 @@ export default function PracticePage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-8 pb-16 select-none"
     >
-      {/* ── Main Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            Practice & Problem Solving
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Choose your path to practice data structures & algorithms step-by-step or target top companies.
-          </p>
+      {/* ── Top Header */}
+      {selectedMode === "index" && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              Practice & Problem Solving
+            </h1>
+            <p className="text-sm text-slate-400 mt-1">
+              Choose your path to practice data structures & algorithms step-by-step or target top companies.
+            </p>
+          </div>
         </div>
+      )}
 
-        {selectedMode !== "index" && (
+      {selectedMode === "beginner" && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
+              <Map className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                Beginner Level — DSA Learning Roadmap
+              </h1>
+              <p className="text-sm text-slate-400 mt-1">
+                Follow the prerequisite tree from core data structures to advanced algorithm patterns.
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={() => setSelectedMode("index")}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#131b2e] border border-white/[0.08] hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-all shadow-md self-start md:self-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Modes</span>
+            <span>Back to Practice Cards</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* ── MODE SELECTION (MAIN CARDS GRID MATCHING SCREENSHOT) */}
+      {selectedMode === "company" && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-400">
+              <Briefcase className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                Company Wise Questions — LeetCode Question Bank
+              </h1>
+              <p className="text-sm text-slate-400 mt-1">
+                Explore interview questions asked by Google, Amazon, Meta, Microsoft & 600+ companies.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setSelectedMode("index")}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#131b2e] border border-white/[0.08] hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-all shadow-md self-start md:self-auto"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Practice Cards</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── MODE SELECTION: INDEX PAGE CARDS */}
       {selectedMode === "index" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           {/* Card 1: Beginner Level */}
@@ -137,7 +206,6 @@ export default function PracticePage() {
             onClick={() => setSelectedMode("beginner")}
             className="relative rounded-2xl p-6 md:p-8 bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
           >
-            {/* Top Row: Icon + Badge */}
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -148,7 +216,6 @@ export default function PracticePage() {
                 </span>
               </div>
 
-              {/* Title & Description */}
               <div>
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
                   1. Beginner Level
@@ -159,7 +226,6 @@ export default function PracticePage() {
               </div>
             </div>
 
-            {/* Bottom Row Action Bar */}
             <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between gap-4">
               <button
                 onClick={(e) => {
@@ -186,7 +252,6 @@ export default function PracticePage() {
             onClick={() => setSelectedMode("company")}
             className="relative rounded-2xl p-6 md:p-8 bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
           >
-            {/* Top Row: Icon + Badge */}
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -197,7 +262,6 @@ export default function PracticePage() {
                 </span>
               </div>
 
-              {/* Title & Description */}
               <div>
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
                   2. Company Wise Questions
@@ -208,7 +272,6 @@ export default function PracticePage() {
               </div>
             </div>
 
-            {/* Bottom Row Action Bar */}
             <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between gap-4">
               <button
                 onClick={(e) => {
@@ -229,79 +292,85 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── MODE 1: BEGINNER LEVEL CORE CONCEPT MODULES */}
+      {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE (MATCHING SCREENSHOT) */}
       {selectedMode === "beginner" && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="relative rounded-3xl p-6 sm:p-10 bg-[#090d16] border border-indigo-500/30 shadow-2xl overflow-hidden"
+          style={{
+            backgroundImage: "radial-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
         >
-          <div className="glass rounded-2xl p-6 border border-emerald-500/30 bg-emerald-950/10">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
-                <Clock className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Beginner Level DSA Modules</h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Step-by-step foundational modules with curated practice problem sets.
-                </p>
-              </div>
-            </div>
+          {/* Top Foundation Root Node */}
+          <div className="flex flex-col items-center justify-center relative z-10 mb-12">
+            <motion.div
+              whileHover={{ scale: 1.04 }}
+              className="px-8 py-3.5 rounded-2xl text-white font-black text-lg flex items-center gap-2.5 shadow-2xl border border-cyan-300/40 cursor-pointer"
+              style={{
+                background: "linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #3b82f6 100%)",
+                boxShadow: "0 0 35px rgba(2, 132, 199, 0.5), 0 0 15px rgba(59, 130, 246, 0.4)",
+              }}
+            >
+              <Layers className="w-5 h-5 text-cyan-200" />
+              <span>Foundation</span>
+            </motion.div>
+
+            {/* Downward laser connector line */}
+            <div className="w-0.5 h-10 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_12px_#38bdf8]" />
           </div>
 
-          <div className="space-y-6">
-            {BEGINNER_MODULES.map((module) => (
-              <div key={module.id} className="glass rounded-2xl p-6 border border-white/[0.08] space-y-4">
-                <div>
-                  <h3 className="text-lg font-bold text-white">{module.title}</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">{module.description}</p>
-                </div>
+          {/* 4 Category Columns Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+            {BEGINNER_TREE_DATA.map((cat) => {
+              const CategoryIcon = cat.icon;
 
-                <div className="space-y-2">
-                  {module.problems.map((p) => {
-                    const isDone = !!solvedState[p.id];
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => toggleProblemSolved(p.id)}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.025] border border-white/[0.06] hover:border-slate-600 transition-all cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleProblemSolved(p.id);
-                            }}
-                            className={`p-1 rounded-lg transition-colors ${
-                              isDone ? "text-emerald-400 bg-emerald-500/20" : "text-slate-600 hover:text-slate-400"
-                            }`}
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </button>
-                          <span className={`text-sm font-semibold ${isDone ? "text-slate-400 line-through" : "text-white"}`}>
-                            {p.title}
-                          </span>
-                        </div>
+              return (
+                <div key={cat.id} className="space-y-6 flex flex-col items-center">
+                  {/* Category Header Node */}
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    className="w-full py-3 px-5 rounded-2xl bg-[#121929] border border-indigo-500/40 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10 cursor-pointer"
+                  >
+                    <CategoryIcon className="w-4 h-4 text-indigo-400" />
+                    <span>{cat.title}</span>
+                  </motion.div>
 
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-400 hidden sm:inline">{p.company}</span>
-                          <span
-                            className={`text-xs font-bold px-2.5 py-0.5 rounded-md ${
-                              p.difficulty === "Easy"
-                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                                : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                            }`}
-                          >
-                            {p.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {/* Vertical Connector under Category */}
+                  <div className="w-0.5 h-4 bg-indigo-500/40" />
+
+                  {/* Sub-node Items Stack */}
+                  <div className="w-full space-y-4">
+                    {cat.nodes.map((node) => {
+                      const isDone = !!solvedState[node.id];
+
+                      return (
+                        <motion.button
+                          key={node.id}
+                          whileHover={{ scale: 1.03, y: -2 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            setActiveDrawerSkill({
+                              name: node.title,
+                              category: cat.title.toUpperCase(),
+                            })
+                          }
+                          className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-center gap-2 shadow-md ${
+                            isDone
+                              ? "bg-indigo-900/30 border-indigo-500 text-white shadow-indigo-500/20"
+                              : "bg-[#111726] border-white/[0.08] hover:border-slate-600 text-slate-200 hover:text-white"
+                          }`}
+                        >
+                          <span className="text-slate-400 font-mono text-xs">{node.prefix}</span>
+                          <span>{node.title}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
       )}
@@ -358,18 +427,18 @@ export default function PracticePage() {
 
             <div className="space-y-2">
               {filteredCompanyQuestions.map((q) => {
-                const isDone = !!solvedState[q.id];
+                const isDone = !!solvedState[q.id.toString()];
                 return (
                   <div
                     key={q.id}
-                    onClick={() => toggleProblemSolved(q.id)}
+                    onClick={() => toggleSolved(q.id.toString())}
                     className="flex items-center justify-between p-4 rounded-xl bg-white/[0.025] border border-white/[0.06] hover:border-slate-600 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleProblemSolved(q.id);
+                          toggleSolved(q.id.toString());
                         }}
                         className={`p-1 rounded-lg transition-colors ${
                           isDone ? "text-emerald-400 bg-emerald-500/20" : "text-slate-600 hover:text-slate-400"
@@ -410,6 +479,29 @@ export default function PracticePage() {
           </div>
         </motion.div>
       )}
+
+      {/* Skill Detail Drawer Overlay for Practice Nodes */}
+      <SkillDetailDrawer
+        isOpen={!!activeDrawerSkill}
+        onClose={() => setActiveDrawerSkill(null)}
+        skillName={activeDrawerSkill?.name || ""}
+        categoryName={activeDrawerSkill?.category || "FOUNDATIONAL DATA STRUCTURES & ALGORITHMS"}
+        roadmapTitle="Beginner Level — DSA Learning Roadmap"
+        status={
+          activeDrawerSkill && solvedState[activeDrawerSkill.name.toLowerCase().replace(/\s+/g, "-")]
+            ? "completed"
+            : "pending"
+        }
+        onStatusChange={(newStatus) => {
+          if (activeDrawerSkill) {
+            const key = activeDrawerSkill.name.toLowerCase().replace(/\s+/g, "-");
+            const isDoneCurrently = !!solvedState[key];
+            if ((newStatus === "completed" && !isDoneCurrently) || (newStatus !== "completed" && isDoneCurrently)) {
+              toggleSolved(key);
+            }
+          }
+        }}
+      />
     </motion.div>
   );
 }
