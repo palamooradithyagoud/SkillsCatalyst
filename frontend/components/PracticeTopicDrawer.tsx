@@ -23,12 +23,14 @@ export interface PracticeTopicData {
   problems: LeetCodeProblem[];
 }
 
+const COMMON_PREREQS = [
+  { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
+  { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
+];
+
 const TOPIC_DATASET: Record<string, PracticeTopicData> = {
   "two pointers": {
-    prerequisites: [
-      { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
-      { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
-    ],
+    prerequisites: COMMON_PREREQS,
     problems: [
       { id: 26, number: 26, title: "Remove Duplicates from Sorted Array", url: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/", difficulty: "Easy", pattern: "Two Pointers" },
       { id: 27, number: 27, title: "Remove Element", url: "https://leetcode.com/problems/remove-element/", difficulty: "Easy", pattern: "Two Pointers" },
@@ -53,40 +55,27 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 42, number: 42, title: "Trapping Rain Water", url: "https://leetcode.com/problems/trapping-rain-water/", difficulty: "Hard", pattern: "Two Pointers" },
     ],
   },
+
   "two pointer": {
-    prerequisites: [
-      { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
-      { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
-    ],
+    prerequisites: COMMON_PREREQS,
     problems: [
-      { id: 26, number: 26, title: "Remove Duplicates from Sorted Array", url: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 27, number: 27, title: "Remove Element", url: "https://leetcode.com/problems/remove-element/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 88, number: 88, title: "Merge Sorted Array", url: "https://leetcode.com/problems/merge-sorted-array/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 283, number: 283, title: "Move Zeroes", url: "https://leetcode.com/problems/move-zeroes/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 349, number: 349, title: "Intersection of Two Arrays", url: "https://leetcode.com/problems/intersection-of-two-arrays/", difficulty: "Easy", pattern: "Two Pointers + Sorting" },
-      { id: 350, number: 350, title: "Intersection of Two Arrays II", url: "https://leetcode.com/problems/intersection-of-two-arrays-ii/", difficulty: "Easy", pattern: "Two Pointers + Sorting" },
-      { id: 455, number: 455, title: "Assign Cookies", url: "https://leetcode.com/problems/assign-cookies/", difficulty: "Easy", pattern: "Two Pointers + Greedy" },
-      { id: 905, number: 905, title: "Sort Array By Parity", url: "https://leetcode.com/problems/sort-array-by-parity/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 922, number: 922, title: "Sort Array By Parity II", url: "https://leetcode.com/problems/sort-array-by-parity-ii/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 977, number: 977, title: "Squares of a Sorted Array", url: "https://leetcode.com/problems/squares-of-a-sorted-array/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 2460, number: 2460, title: "Apply Operations to an Array", url: "https://leetcode.com/problems/apply-operations-to-an-array/", difficulty: "Easy", pattern: "Two Pointers" },
-      { id: 11, number: 11, title: "Container With Most Water", url: "https://leetcode.com/problems/container-with-most-water/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 15, number: 15, title: "3Sum", url: "https://leetcode.com/problems/3sum/", difficulty: "Medium", pattern: "Two Pointers + Sorting" },
-      { id: 16, number: 16, title: "3Sum Closest", url: "https://leetcode.com/problems/3sum-closest/", difficulty: "Medium", pattern: "Two Pointers + Sorting" },
-      { id: 18, number: 18, title: "4Sum", url: "https://leetcode.com/problems/4sum/", difficulty: "Medium", pattern: "Two Pointers + Sorting" },
-      { id: 80, number: 80, title: "Remove Duplicates from Sorted Array II", url: "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 167, number: 167, title: "Two Sum II – Input Array Is Sorted", url: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 189, number: 189, title: "Rotate Array", url: "https://leetcode.com/problems/rotate-array/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 611, number: 611, title: "Valid Triangle Number", url: "https://leetcode.com/problems/valid-triangle-number/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 881, number: 881, title: "Boats to Save People", url: "https://leetcode.com/problems/boats-to-save-people/", difficulty: "Medium", pattern: "Two Pointers" },
-      { id: 42, number: 42, title: "Trapping Rain Water", url: "https://leetcode.com/problems/trapping-rain-water/", difficulty: "Hard", pattern: "Two Pointers" },
+      { id: 125, number: 125, title: "Valid Palindrome", url: "https://leetcode.com/problems/valid-palindrome/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 344, number: 344, title: "Reverse String", url: "https://leetcode.com/problems/reverse-string/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 345, number: 345, title: "Reverse Vowels of a String", url: "https://leetcode.com/problems/reverse-vowels-of-a-string/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 392, number: 392, title: "Is Subsequence", url: "https://leetcode.com/problems/is-subsequence/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 1768, number: 1768, title: "Merge Strings Alternately", url: "https://leetcode.com/problems/merge-strings-alternately/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 28, number: 28, title: "Find the Index of the First Occurrence in a String", url: "https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/", difficulty: "Easy", pattern: "Two Pointers" },
+      { id: 151, number: 151, title: "Reverse Words in a String", url: "https://leetcode.com/problems/reverse-words-in-a-string/", difficulty: "Medium", pattern: "Two Pointers" },
+      { id: 443, number: 443, title: "String Compression", url: "https://leetcode.com/problems/string-compression/", difficulty: "Medium", pattern: "Two Pointers" },
+      { id: 680, number: 680, title: "Valid Palindrome II", url: "https://leetcode.com/problems/valid-palindrome-ii/", difficulty: "Medium", pattern: "Two Pointers" },
+      { id: 165, number: 165, title: "Compare Version Numbers", url: "https://leetcode.com/problems/compare-version-numbers/", difficulty: "Medium", pattern: "Two Pointers" },
+      { id: 2109, number: 2109, title: "Adding Spaces to a String", url: "https://leetcode.com/problems/adding-spaces-to-a-string/", difficulty: "Medium", pattern: "Two Pointers" },
+      { id: 408, number: 408, title: "Valid Word Abbreviation", url: "https://leetcode.com/problems/valid-word-abbreviation/", difficulty: "Hard", pattern: "Two Pointers" },
     ],
   },
+
   "sliding window": {
-    prerequisites: [
-      { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
-      { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
-    ],
+    prerequisites: COMMON_PREREQS,
     problems: [
       { id: 643, number: 643, title: "Maximum Average Subarray I", url: "https://leetcode.com/problems/maximum-average-subarray-i/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
       { id: 209, number: 209, title: "Minimum Size Subarray Sum", url: "https://leetcode.com/problems/minimum-size-subarray-sum/", difficulty: "Medium", pattern: "Variable Sliding Window" },
@@ -107,11 +96,24 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 992, number: 992, title: "Subarrays with K Different Integers", url: "https://leetcode.com/problems/subarrays-with-k-different-integers/", difficulty: "Hard", pattern: "Variable Sliding Window" },
     ],
   },
-  "prefix sum": {
-    prerequisites: [
-      { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
-      { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
+
+  "string sliding window": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 1456, number: 1456, title: "Maximum Number of Vowels in a Substring of Given Length", url: "https://leetcode.com/problems/maximum-number-of-vowels-in-a-substring-of-given-length/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
+      { id: 2379, number: 2379, title: "Minimum Recolors to Get K Consecutive Black Blocks", url: "https://leetcode.com/problems/minimum-recolors-to-get-k-consecutive-black-blocks/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
+      { id: 3090, number: 3090, title: "Maximum Length Substring With Two Occurrences", url: "https://leetcode.com/problems/maximum-length-substring-with-two-occurrences/", difficulty: "Easy", pattern: "Variable Sliding Window" },
+      { id: 3, number: 3, title: "Longest Substring Without Repeating Characters", url: "https://leetcode.com/problems/longest-substring-without-repeating-characters/", difficulty: "Medium", pattern: "Variable Sliding Window" },
+      { id: 424, number: 424, title: "Longest Repeating Character Replacement", url: "https://leetcode.com/problems/longest-repeating-character-replacement/", difficulty: "Medium", pattern: "Variable Sliding Window" },
+      { id: 438, number: 438, title: "Find All Anagrams in a String", url: "https://leetcode.com/problems/find-all-anagrams-in-a-string/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
+      { id: 567, number: 567, title: "Permutation in String", url: "https://leetcode.com/problems/permutation-in-string/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
+      { id: 2516, number: 2516, title: "Take K of Each Character From Left and Right", url: "https://leetcode.com/problems/take-k-of-each-character-from-left-and-right/", difficulty: "Medium", pattern: "Sliding Window" },
+      { id: 76, number: 76, title: "Minimum Window Substring", url: "https://leetcode.com/problems/minimum-window-substring/", difficulty: "Hard", pattern: "Variable Sliding Window" },
     ],
+  },
+
+  "prefix sum": {
+    prerequisites: COMMON_PREREQS,
     problems: [
       { id: 1480, number: 1480, title: "Running Sum of 1d Array", url: "https://leetcode.com/problems/running-sum-of-1d-array/", difficulty: "Easy", pattern: "Prefix Sum" },
       { id: 724, number: 724, title: "Find Pivot Index", url: "https://leetcode.com/problems/find-pivot-index/", difficulty: "Easy", pattern: "Prefix Sum" },
@@ -131,27 +133,119 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 327, number: 327, title: "Count of Range Sum", url: "https://leetcode.com/problems/count-of-range-sum/", difficulty: "Hard", pattern: "Prefix Sum + Divide & Conquer" },
     ],
   },
+
   "kadane's algorithm": {
-    prerequisites: [
-      { title: "Subarray Sums", subtitle: "DP Subproblem Optimal Choice" },
-      { title: "Local vs Global Max", subtitle: "O(N) Time Complexity" },
-    ],
+    prerequisites: COMMON_PREREQS,
     problems: [
-      { id: 53, number: 53, title: "Maximum Subarray", url: "https://leetcode.com/problems/maximum-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
-      { id: 918, number: 918, title: "Maximum Sum Circular Subarray", url: "https://leetcode.com/problems/maximum-sum-circular-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
-      { id: 152, number: 152, title: "Maximum Product Subarray", url: "https://leetcode.com/problems/maximum-product-subarray/", difficulty: "Medium", pattern: "Kadane's Variant / DP" },
+      { id: 53, number: 53, title: "Maximum Subarray", url: "https://leetcode.com/problems/maximum-subarray/", difficulty: "Easy", pattern: "Kadane's Algorithm" },
+      { id: 918, number: 918, title: "Maximum Sum Circular Subarray", url: "https://leetcode.com/problems/maximum-sum-circular-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm (Circular)" },
+      { id: 1749, number: 1749, title: "Maximum Absolute Sum of Any Subarray", url: "https://leetcode.com/problems/maximum-absolute-sum-of-any-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
+      { id: 1191, number: 1191, title: "K-Concatenation Maximum Sum", url: "https://leetcode.com/problems/k-concatenation-maximum-sum/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
+      { id: 2321, number: 2321, title: "Maximum Score Of Spliced Array", url: "https://leetcode.com/problems/maximum-score-of-spliced-array/", difficulty: "Hard", pattern: "Kadane's Algorithm + Difference Array" },
     ],
   },
-  "classic binary search": {
-    prerequisites: [
-      { title: "Sorted Arrays", subtitle: "Divide & Conquer" },
-      { title: "Logarithmic Scale", subtitle: "O(log N) Reduction" },
+
+  "frequency map": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 1, number: 1, title: "Two Sum", url: "https://leetcode.com/problems/two-sum/", difficulty: "Easy", pattern: "Hash Map" },
+      { id: 217, number: 217, title: "Contains Duplicate", url: "https://leetcode.com/problems/contains-duplicate/", difficulty: "Easy", pattern: "Hash Set / Frequency Map" },
+      { id: 219, number: 219, title: "Contains Duplicate II", url: "https://leetcode.com/problems/contains-duplicate-ii/", difficulty: "Easy", pattern: "Hash Map" },
+      { id: 242, number: 242, title: "Valid Anagram", url: "https://leetcode.com/problems/valid-anagram/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 383, number: 383, title: "Ransom Note", url: "https://leetcode.com/problems/ransom-note/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 387, number: 387, title: "First Unique Character in a String", url: "https://leetcode.com/problems/first-unique-character-in-a-string/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 389, number: 389, title: "Find the Difference", url: "https://leetcode.com/problems/find-the-difference/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 1207, number: 1207, title: "Unique Number of Occurrences", url: "https://leetcode.com/problems/unique-number-of-occurrences/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 1512, number: 1512, title: "Number of Good Pairs", url: "https://leetcode.com/problems/number-of-good-pairs/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 169, number: 169, title: "Majority Element", url: "https://leetcode.com/problems/majority-element/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 1748, number: 1748, title: "Sum of Unique Elements", url: "https://leetcode.com/problems/sum-of-unique-elements/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 350, number: 350, title: "Intersection of Two Arrays II", url: "https://leetcode.com/problems/intersection-of-two-arrays-ii/", difficulty: "Easy", pattern: "Frequency Map" },
+      { id: 49, number: 49, title: "Group Anagrams", url: "https://leetcode.com/problems/group-anagrams/", difficulty: "Medium", pattern: "Frequency Map" },
+      { id: 347, number: 347, title: "Top K Frequent Elements", url: "https://leetcode.com/problems/top-k-frequent-elements/", difficulty: "Medium", pattern: "Frequency Map + Heap" },
+      { id: 451, number: 451, title: "Sort Characters By Frequency", url: "https://leetcode.com/problems/sort-characters-by-frequency/", difficulty: "Medium", pattern: "Frequency Map + Sorting" },
+      { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 659, number: 659, title: "Split Array into Consecutive Subsequences", url: "https://leetcode.com/problems/split-array-into-consecutive-subsequences/", difficulty: "Medium", pattern: "Frequency Map + Greedy" },
+      { id: 692, number: 692, title: "Top K Frequent Words", url: "https://leetcode.com/problems/top-k-frequent-words/", difficulty: "Medium", pattern: "Frequency Map + Heap" },
+      { id: 1636, number: 1636, title: "Sort Array by Increasing Frequency", url: "https://leetcode.com/problems/sort-array-by-increasing-frequency/", difficulty: "Easy", pattern: "Frequency Map + Sorting" },
     ],
+  },
+
+  "prefix sum + hashmap": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 525, number: 525, title: "Contiguous Array", url: "https://leetcode.com/problems/contiguous-array/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 523, number: 523, title: "Continuous Subarray Sum", url: "https://leetcode.com/problems/continuous-subarray-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 974, number: 974, title: "Subarray Sums Divisible by K", url: "https://leetcode.com/problems/subarray-sums-divisible-by-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 930, number: 930, title: "Binary Subarrays With Sum", url: "https://leetcode.com/problems/binary-subarrays-with-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 1248, number: 1248, title: "Count Number of Nice Subarrays", url: "https://leetcode.com/problems/count-number-of-nice-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 1590, number: 1590, title: "Make Sum Divisible by P", url: "https://leetcode.com/problems/make-sum-divisible-by-p/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 2845, number: 2845, title: "Count of Interesting Subarrays", url: "https://leetcode.com/problems/count-of-interesting-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 325, number: 325, title: "Maximum Size Subarray Sum Equals k", url: "https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 437, number: 437, title: "Path Sum III", url: "https://leetcode.com/problems/path-sum-iii/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map (Tree)" },
+    ],
+  },
+
+  "classic binary search": {
+    prerequisites: COMMON_PREREQS,
     problems: [
       { id: 704, number: 704, title: "Binary Search", url: "https://leetcode.com/problems/binary-search/", difficulty: "Easy", pattern: "Classic Binary Search" },
       { id: 35, number: 35, title: "Search Insert Position", url: "https://leetcode.com/problems/search-insert-position/", difficulty: "Easy", pattern: "Classic Binary Search" },
-      { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "2D Binary Search" },
-      { id: 33, number: 33, title: "Search in Rotated Sorted Array", url: "https://leetcode.com/problems/search-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Rotated Binary Search" },
+      { id: 69, number: 69, title: "Sqrt(x)", url: "https://leetcode.com/problems/sqrtx/", difficulty: "Easy", pattern: "Binary Search on Answer" },
+      { id: 278, number: 278, title: "First Bad Version", url: "https://leetcode.com/problems/first-bad-version/", difficulty: "Easy", pattern: "First True Binary Search" },
+      { id: 374, number: 374, title: "Guess Number Higher or Lower", url: "https://leetcode.com/problems/guess-number-higher-or-lower/", difficulty: "Easy", pattern: "Classic Binary Search" },
+      { id: 1539, number: 1539, title: "Kth Missing Positive Number", url: "https://leetcode.com/problems/kth-missing-positive-number/", difficulty: "Easy", pattern: "Binary Search" },
+      { id: 33, number: 33, title: "Search in Rotated Sorted Array", url: "https://leetcode.com/problems/search-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Binary Search (Rotated Array)" },
+      { id: 34, number: 34, title: "Find First and Last Position of Element in Sorted Array", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower Bound & Upper Bound" },
+      { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "Binary Search" },
+      { id: 81, number: 81, title: "Search in Rotated Sorted Array II", url: "https://leetcode.com/problems/search-in-rotated-sorted-array-ii/", difficulty: "Medium", pattern: "Binary Search (Duplicates)" },
+      { id: 153, number: 153, title: "Find Minimum in Rotated Sorted Array", url: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Binary Search" },
+      { id: 162, number: 162, title: "Find Peak Element", url: "https://leetcode.com/problems/find-peak-element/", difficulty: "Medium", pattern: "Binary Search" },
+      { id: 540, number: 540, title: "Single Element in a Sorted Array", url: "https://leetcode.com/problems/single-element-in-a-sorted-array/", difficulty: "Medium", pattern: "Binary Search" },
+      { id: 875, number: 875, title: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1283, number: 1283, title: "Find the Smallest Divisor Given a Threshold", url: "https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2226, number: 2226, title: "Maximum Candies Allocated to K Children", url: "https://leetcode.com/problems/maximum-candies-allocated-to-k-children/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 410, number: 410, title: "Split Array Largest Sum", url: "https://leetcode.com/problems/split-array-largest-sum/", difficulty: "Hard", pattern: "Binary Search on Answer" },
+    ],
+  },
+
+  "lower / upper bound": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 35, number: 35, title: "Search Insert Position", url: "https://leetcode.com/problems/search-insert-position/", difficulty: "Easy", pattern: "Lower Bound" },
+      { id: 744, number: 744, title: "Find Smallest Letter Greater Than Target", url: "https://leetcode.com/problems/find-smallest-letter-greater-than-target/", difficulty: "Easy", pattern: "Upper Bound" },
+      { id: 34, number: 34, title: "Find First and Last Position of Element in Sorted Array", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower Bound + Upper Bound" },
+    ],
+  },
+
+  "binary search on answers": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 69, number: 69, title: "Sqrt(x)", url: "https://leetcode.com/problems/sqrtx/", difficulty: "Easy", pattern: "Binary Search on Answer" },
+      { id: 367, number: 367, title: "Valid Perfect Square", url: "https://leetcode.com/problems/valid-perfect-square/", difficulty: "Easy", pattern: "Binary Search on Answer" },
+      { id: 875, number: 875, title: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1283, number: 1283, title: "Find the Smallest Divisor Given a Threshold", url: "https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1482, number: 1482, title: "Minimum Number of Days to Make m Bouquets", url: "https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1552, number: 1552, title: "Magnetic Force Between Two Balls", url: "https://leetcode.com/problems/magnetic-force-between-two-balls/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1760, number: 1760, title: "Minimum Limit of Balls in a Bag", url: "https://leetcode.com/problems/minimum-limit-of-balls-in-a-bag/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1870, number: 1870, title: "Minimum Speed to Arrive on Time", url: "https://leetcode.com/problems/minimum-speed-to-arrive-on-time/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2187, number: 2187, title: "Minimum Time to Complete Trips", url: "https://leetcode.com/problems/minimum-time-to-complete-trips/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2226, number: 2226, title: "Maximum Candies Allocated to K Children", url: "https://leetcode.com/problems/maximum-candies-allocated-to-k-children/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2251, number: 2251, title: "Number of Flowers in Full Bloom", url: "https://leetcode.com/problems/number-of-flowers-in-full-bloom/", difficulty: "Hard", pattern: "Binary Search on Answer + Events" },
+      { id: 410, number: 410, title: "Split Array Largest Sum", url: "https://leetcode.com/problems/split-array-largest-sum/", difficulty: "Hard", pattern: "Binary Search on Answer" },
+    ],
+  },
+
+  "search in 2d matrix": {
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 240, number: 240, title: "Search a 2D Matrix II", url: "https://leetcode.com/problems/search-a-2d-matrix-ii/", difficulty: "Medium", pattern: "Binary Search / Matrix Search" },
+      { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "Binary Search (Flattened Matrix)" },
+      { id: 1901, number: 1901, title: "Find a Peak Element II", url: "https://leetcode.com/problems/find-a-peak-element-ii/", difficulty: "Medium", pattern: "Binary Search on 2D Matrix" },
+      { id: 1428, number: 1428, title: "Leftmost Column with at Least a One", url: "https://leetcode.com/problems/leftmost-column-with-at-least-a-one/", difficulty: "Medium", pattern: "Binary Search (Interactive)" },
+      { id: 302, number: 302, title: "Smallest Rectangle Enclosing Black Pixels", url: "https://leetcode.com/problems/smallest-rectangle-enclosing-black-pixels/", difficulty: "Hard", pattern: "Binary Search on Rows & Columns" },
     ],
   },
 };
@@ -173,10 +267,7 @@ export default function PracticeTopicDrawer({
 
   const keyLower = topicName.toLowerCase();
   const data = TOPIC_DATASET[keyLower] || {
-    prerequisites: [
-      { title: `${topicName} Fundamentals`, subtitle: "Core Traversal & Concepts" },
-      { title: "Time Complexity Analysis", subtitle: "O(N) & O(log N) Bounds" },
-    ],
+    prerequisites: COMMON_PREREQS,
     problems: [
       { id: 1, number: 1, title: `${topicName} Problem 1`, url: `https://leetcode.com/problemset/all/?search=${encodeURIComponent(topicName)}`, difficulty: "Easy", pattern: topicName },
       { id: 2, number: 2, title: `${topicName} Intermediate Challenge`, url: `https://leetcode.com/problemset/all/?search=${encodeURIComponent(topicName)}`, difficulty: "Medium", pattern: topicName },
@@ -202,7 +293,7 @@ export default function PracticeTopicDrawer({
           className="fixed inset-0 bg-black/75 backdrop-blur-md transition-opacity"
         />
 
-        {/* Slide-over Drawer Panel with wider max-w-5xl layout */}
+        {/* Slide-over Drawer Panel */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
