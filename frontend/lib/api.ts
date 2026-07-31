@@ -31,19 +31,190 @@ function handleUnauthenticated(res: Response) {
 export async function fetchDashboardData() {
   try {
     const authHeaders = await getAuthHeaders();
-    if (!authHeaders.Authorization) {
-      return null;
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/dashboard`, {
+        headers: { ...authHeaders },
+        cache: "no-store",
+      });
+      handleUnauthenticated(res);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.metrics) {
+          return mergeLocalDashboardMetrics(json);
+        }
+      }
     }
-    const res = await fetch(`${API_BASE}/api/dashboard`, {
-      headers: { ...authHeaders },
-      cache: "no-store",
-    });
-    handleUnauthenticated(res);
-    if (!res.ok) return null;
-    return await res.json();
   } catch (error) {
-    return null;
+    console.warn("Backend fetchDashboardData failed, using Supabase/LocalStorage fallback:", error);
   }
+
+  return await getFallbackDashboardData();
+}
+
+function mergeLocalDashboardMetrics(backendData: any) {
+  try {
+    const localProg = getLocalVideoProgress();
+    const localCompleted = Object.values(localProg).filter(Boolean).length;
+    const localSaved = getLocalSavedPlaylists();
+
+    const lp = backendData.metrics?.learningProgress || {};
+    const sp = backendData.metrics?.savedPlaylists || {};
+
+    const completed = Math.max(lp.completedVideos || 0, localCompleted);
+    const savedCount = Math.max(sp.count || 0, localSaved.length);
+
+    let totalVids = lp.totalVideos || 0;
+    if (totalVids === 0 && localSaved.length > 0) {
+      for (const p of localSaved) {
+        const m = String(p.video_count || "0").match(/\d+/);
+        if (m) totalVids += parseInt(m[0], 10);
+      }
+    }
+
+    if (totalVids < completed) totalVids = completed;
+
+    const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : (completed > 0 ? 100 : 0);
+    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
+    const savedPct = Math.min(100, savedCount * 20);
+    const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
+
+    return {
+      ...backendData,
+      metrics: {
+        ...backendData.metrics,
+        learningProgress: {
+          ...lp,
+          percentage: pct,
+          completedVideos: completed,
+          totalVideos: totalVids,
+          subtitle: subtitle,
+        },
+        savedPlaylists: {
+          ...sp,
+          count: savedCount,
+          percentage: savedPct,
+          subtitle: savedSubtitle,
+        },
+      },
+    };
+  } catch {
+    return backendData;
+  }
+}
+
+async function getFallbackDashboardData() {
+  let savedPlaylistsCount = 0;
+  let totalVideos = 0;
+  let completedCount = 0;
+  let userName = "Learner";
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      userName = session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Learner";
+      const userId = session.user.id;
+
+      // Query saved playlists
+      const { data: savedData } = await supabase
+        .from("saved_playlists")
+        .select("video_count")
+        .eq("user_id", userId);
+
+      if (savedData && savedData.length > 0) {
+        savedPlaylistsCount = savedData.length;
+        for (const row of savedData) {
+          const match = String(row.video_count || "0").match(/\d+/);
+          if (match) totalVideos += parseInt(match[0], 10);
+        }
+      }
+
+      // Query completed video progress
+      const { data: progData } = await supabase
+        .from("video_progress")
+        .select("video_id")
+        .eq("user_id", userId)
+        .eq("watched", true);
+
+      if (progData) {
+        completedCount = progData.length;
+      }
+    }
+  } catch (e) {
+    console.warn("Supabase dashboard fallback error:", e);
+  }
+
+  // Merge LocalStorage saved playlists
+  const localSaved = getLocalSavedPlaylists();
+  if (localSaved.length > savedPlaylistsCount) {
+    savedPlaylistsCount = localSaved.length;
+    let localTotal = 0;
+    for (const pl of localSaved) {
+      const match = String(pl.video_count || "0").match(/\d+/);
+      if (match) localTotal += parseInt(match[0], 10);
+    }
+    if (localTotal > totalVideos) totalVideos = localTotal;
+  }
+
+  // Merge LocalStorage completed videos
+  const localProg = getLocalVideoProgress();
+  const localCompletedCount = Object.values(localProg).filter(Boolean).length;
+  if (localCompletedCount > completedCount) {
+    completedCount = localCompletedCount;
+  }
+
+  if (totalVideos < completedCount) {
+    totalVideos = completedCount;
+  }
+
+  const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : (completedCount > 0 ? 100 : 0);
+  const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
+
+  const savedPct = Math.min(100, savedPlaylistsCount * 20);
+  const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
+
+  return {
+    user: {
+      name: userName,
+      status: "ACTIVE",
+      streakDays: 0,
+    },
+    metrics: {
+      learningProgress: {
+        percentage: pct,
+        completedVideos: completedCount,
+        totalVideos: totalVideos,
+        subtitle: subtitle,
+      },
+      resumeReadiness: {
+        percentage: 0,
+        subtitle: "No upload yet",
+      },
+      savedPlaylists: {
+        count: savedPlaylistsCount,
+        percentage: savedPct,
+        subtitle: savedSubtitle,
+      },
+      interviewReadiness: {
+        isLocked: true,
+        subtitle: "Currently Locked",
+      },
+    },
+    upcoming: [],
+    practiceOverview: {
+      problemsSolved: 0,
+      successRate: 0,
+      contests: 0,
+      chartData: [
+        { day: "Mon", solved: 0 },
+        { day: "Tue", solved: 0 },
+        { day: "Wed", solved: 0 },
+        { day: "Thu", solved: 0 },
+        { day: "Fri", solved: 0 },
+        { day: "Sat", solved: 0 },
+        { day: "Sun", solved: 0 },
+      ],
+    },
+  };
 }
 
 
