@@ -1013,12 +1013,18 @@ export default function LearningPage() {
   const [language, setLanguage]         = useState<Lang>("english");
   const [searchTerm, setSearchTerm]     = useState("");
   const [hasSearched, setHasSearched]   = useState(false);
-  const [notification, setNotification] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [notification, setNotification] = useState<{ msg: string; type: "success" | "error"; actionText?: string; onAction?: () => void } | null>(null);
   const [queryError, setQueryError]     = useState<string | null>(null);
 
   // ── Player state
   const [playerPlaylist, setPlayerPlaylist]   = useState<Playlist | null>(null);
   const [playerVideoIndex, setPlayerVideoIndex] = useState(0);
+
+  // ── Helpers
+  const showNotif = useCallback((msg: string, type: "success" | "error", actionText?: string, onAction?: () => void) => {
+    setNotification({ msg, type, actionText, onAction });
+    setTimeout(() => setNotification(null), 4000);
+  }, []);
 
   // ── Queries
   const {
@@ -1045,31 +1051,32 @@ export default function LearningPage() {
   const saveMut = useMutation({
     mutationFn: (pl: Playlist) => savePlaylist(pl, searchTerm),
     onSuccess: (_, pl) => {
-      showNotif(`"${pl.title.slice(0, 40)}..." saved!`, "success");
+      showNotif(
+        `"${pl.title.slice(0, 35)}..." saved to Supabase!`,
+        "success",
+        "View Saved →",
+        () => setActiveCard("saved")
+      );
 
       // Refetch from Supabase database tables immediately
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
+      qc.refetchQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: () => showNotif("Failed to save. Check backend.", "error"),
+    onError: () => showNotif("Failed to save. Check backend connection.", "error"),
   });
 
   const unsaveMut = useMutation({
     mutationFn: (id: string) => unsavePlaylist(id),
     onSuccess: () => {
-      showNotif("Removed from saved.", "success");
+      showNotif("Removed from Supabase saved playlists.", "success");
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
+      qc.refetchQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to remove.", "error"),
   });
 
-
-  // ── Helpers
-  const showNotif = useCallback((msg: string, type: "success" | "error") => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 3200);
-  }, []);
 
   const handleSearch = () => {
     const trimmed = query.trim();
@@ -1137,7 +1144,15 @@ export default function LearningPage() {
               ? <CheckCircle className="w-4 h-4 text-emerald-400" />
               : <X className="w-4 h-4 text-rose-400" />
             }
-            {notification.msg}
+            <span>{notification.msg}</span>
+            {notification.actionText && notification.onAction && (
+              <button
+                onClick={notification.onAction}
+                className="ml-2 px-3 py-1 rounded-lg text-xs font-bold text-white bg-indigo-600/80 hover:bg-indigo-500 border border-indigo-400/40 transition-colors"
+              >
+                {notification.actionText}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
