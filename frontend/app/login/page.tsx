@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   if (isLoading) {
     return (
@@ -44,6 +45,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       if (mode === "signup") {
@@ -52,11 +54,21 @@ export default function LoginPage() {
           password,
           options: {
             data: { full_name: name },
+            emailRedirectTo: `${window.location.origin}/login`,
           },
         });
 
         if (error) {
           setErrorMessage(error.message || "Failed to create account. Please check your credentials.");
+          return;
+        }
+
+        // Check if email confirmation is required (email_confirmed_at is null)
+        const isConfirmed = !!data.user?.email_confirmed_at || data.user?.app_metadata?.provider !== "email";
+        if (!isConfirmed || !data.session) {
+          await supabase.auth.signOut();
+          setSuccessMessage("Account created! Verification link sent to your email. Please verify your email before logging in.");
+          setMode("login");
           return;
         }
 
@@ -75,6 +87,13 @@ export default function LoginPage() {
         }
 
         if (data.user) {
+          const isConfirmed = !!data.user.email_confirmed_at || data.user.app_metadata?.provider !== "email";
+          if (!isConfirmed) {
+            await supabase.auth.signOut();
+            setErrorMessage("Your email address is not verified yet. Please check your inbox and click the verification link before logging in.");
+            return;
+          }
+
           login(data.user.email || email, data.user.id, data.user.user_metadata?.full_name);
         }
       }
@@ -262,6 +281,13 @@ export default function LoginPage() {
                 Sign Up
               </button>
             </div>
+
+            {/* Success banner */}
+            {successMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold text-center leading-relaxed">
+                {successMessage}
+              </div>
+            )}
 
             {/* Error banner */}
             {errorMessage && (
