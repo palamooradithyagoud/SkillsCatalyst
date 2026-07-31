@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { generateRoadmap, RoadmapData } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import PythonGrowthCanvas from "@/components/PythonGrowthCanvas";
 import SkillDetailDrawer from "@/components/SkillDetailDrawer";
 import { useAuth } from "@/lib/auth";
@@ -1706,6 +1707,8 @@ export default function RoadmapsPage() {
     setGenerating(false);
   };
 
+  const queryClient = useQueryClient();
+
   const toggleNode = async (roadmapKey: string, nodeName: string) => {
     const key = `${roadmapKey}-${nodeName}`;
     const isCurrentlyDone = completedState[key] ?? false;
@@ -1736,6 +1739,7 @@ export default function RoadmapsPage() {
           .eq("roadmap_id", roadmapKey)
           .eq("node_id", nodeName);
       }
+      queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
     } catch (err) {
       console.warn("Failed to sync roadmap node completion to Supabase:", err);
     }
@@ -1777,6 +1781,7 @@ export default function RoadmapsPage() {
           },
           { onConflict: "user_id,roadmap_id,node_id" }
         );
+        queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
       } catch (e) {
         console.warn("Failed to mark roadmap started in Supabase:", e);
       }

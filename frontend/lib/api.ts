@@ -51,6 +51,94 @@ export async function fetchDashboardData() {
   return await getFallbackDashboardData();
 }
 
+export async function fetchActiveRoadmap() {
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/dashboard/active-roadmap`, {
+        headers: { ...authHeaders },
+        cache: "no-store",
+      });
+      handleUnauthenticated(res);
+      if (res.ok) {
+        const json = await res.json();
+        if (json) return json;
+      }
+    }
+  } catch (error) {
+    console.warn("Backend fetchActiveRoadmap failed, using local/supabase fallback:", error);
+  }
+
+  return await getFallbackActiveRoadmapData();
+}
+
+export async function getFallbackActiveRoadmapData() {
+  let userId: string | null = null;
+  let rmData: any[] = [];
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      userId = session.user.id;
+      const { data } = await supabase
+        .from("roadmap_progress")
+        .select("roadmap_id, node_id, node_title, status, completed_at")
+        .eq("user_id", userId)
+        .order("completed_at", { ascending: false });
+      if (data) rmData = data;
+    }
+  } catch {}
+
+  let localActiveTitle = "";
+  let localActiveId = "";
+  if (typeof window !== "undefined") {
+    try {
+      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
+      if (rawActive) {
+        const parsed = JSON.parse(rawActive);
+        if (parsed?.title) localActiveTitle = parsed.title;
+        if (parsed?.id) localActiveId = parsed.id;
+      }
+    } catch {}
+  }
+
+  const completedNodes = rmData
+    .filter((r) => r.status === "completed" && r.node_id !== "_roadmap_started")
+    .map((r) => r.node_id || r.node_title);
+
+  const rawId = rmData.length > 0 ? rmData[0].roadmap_id : localActiveId;
+  const rawTitle = localActiveTitle || rawId || "";
+
+  if (!rawId && !rawTitle && completedNodes.length === 0) {
+    return { has_active_roadmap: false };
+  }
+
+  const meta = getRoadmapMeta(rawTitle || rawId, completedNodes);
+  const completedCount = completedNodes.length;
+
+  if (!meta.name && completedCount === 0) {
+    return { has_active_roadmap: false };
+  }
+
+  const title = meta.name || rawTitle || "Active Roadmap";
+  const total = meta.total || 20;
+  const pct = total > 0 ? Math.min(100, Math.round((completedCount / total) * 100)) : 0;
+
+  return {
+    has_active_roadmap: true,
+    roadmap_id: rawId || "active",
+    title: title,
+    progress_percent: pct,
+    completed_milestones: completedCount,
+    total_milestones: total,
+    current_module: null,
+    next_module: {
+      id: meta.nextTopic,
+      title: meta.nextTopic,
+    },
+    last_activity_at: rmData.length > 0 ? rmData[0].completed_at : new Date().toISOString(),
+  };
+}
+
 function getActivePlaylistTotal(): number {
   if (typeof window === "undefined") return 0;
   try {
