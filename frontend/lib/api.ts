@@ -13,10 +13,10 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
   return {};
 }
 
-export async function fetchDashboardData(userId = "default_user") {
+export async function fetchDashboardData() {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/dashboard?user_id=${encodeURIComponent(userId)}`, {
+    const res = await fetch(`${API_BASE}/api/dashboard`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
@@ -162,7 +162,7 @@ export async function searchSkill(
   }
 }
 
-export async function savePlaylist(playlist: Playlist, skillQuery: string, userId = "default_user") {
+export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   const body = {
     playlist_id: playlist.id,
     title: playlist.title,
@@ -175,7 +175,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string, userI
     thumbnail: playlist.thumbnail,
     source: playlist.source,
     skill_query: skillQuery,
-    user_id: userId,
+    // user_id is NOT sent — backend derives identity from Bearer token
   };
   try {
     const authHeaders = await getAuthHeaders();
@@ -192,10 +192,10 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string, userI
   }
 }
 
-export async function unsavePlaylist(playlistId: string, userId = "default_user") {
+export async function unsavePlaylist(playlistId: string) {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/save/${playlistId}?user_id=${userId}`, {
+    const res = await fetch(`${API_BASE}/api/learning/save/${playlistId}`, {
       method: "DELETE",
       headers: { ...authHeaders },
     });
@@ -207,10 +207,10 @@ export async function unsavePlaylist(playlistId: string, userId = "default_user"
   }
 }
 
-export async function fetchSavedPlaylists(userId = "default_user"): Promise<{ saved: Playlist[]; count: number }> {
+export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/saved?user_id=${userId}`, {
+    const res = await fetch(`${API_BASE}/api/learning/saved`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
@@ -240,12 +240,11 @@ export interface PlaylistVideo {
 
 export async function fetchPlaylistVideos(
   playlistId: string,
-  userId = "default_user"
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   try {
     const authHeaders = await getAuthHeaders();
     const res = await fetch(
-      `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}&user_id=${userId}`,
+      `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
       { headers: { ...authHeaders }, cache: "no-store" }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -257,7 +256,6 @@ export async function fetchPlaylistVideos(
 }
 
 export async function markVideoWatched(
-  userId: string,
   playlistId: string,
   videoId: string,
   watched: boolean
@@ -267,7 +265,8 @@ export async function markVideoWatched(
     await fetch(`${API_BASE}/api/learning/video-progress`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({ user_id: userId, playlist_id: playlistId, video_id: videoId, watched }),
+      body: JSON.stringify({ playlist_id: playlistId, video_id: videoId, watched }),
+      // user_id is NOT sent — backend derives identity from Bearer token
     });
   } catch (e) {
     console.warn("Mark video watched failed:", e);
@@ -279,7 +278,6 @@ export async function markVideoWatched(
  * Updates last_position + watch_time WITHOUT touching the `watched` flag.
  */
 export async function saveVideoProgress(
-  userId: string,
   playlistId: string,
   videoId: string,
   lastPosition: number,
@@ -291,7 +289,7 @@ export async function saveVideoProgress(
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
-        user_id:       userId,
+        // user_id is NOT sent — backend derives identity from Bearer token
         playlist_id:   playlistId,
         video_id:      videoId,
         last_position: lastPosition,
@@ -309,7 +307,6 @@ export async function saveVideoProgress(
  * Returns updated playlist statistics for instant UI refresh.
  */
 export async function completeVideo(
-  userId: string,
   playlistId: string,
   videoId: string,
   watchTime: number,
@@ -320,7 +317,7 @@ export async function completeVideo(
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
-        user_id:     userId,
+        // user_id is NOT sent — backend derives identity from Bearer token
         playlist_id: playlistId,
         video_id:    videoId,
         watch_time:  Math.round(watchTime),
@@ -461,10 +458,10 @@ export interface PlatformStat {
   [key: string]: any;
 }
 
-export async function fetchProfileData(userId = "default_user") {
+export async function fetchProfileData() {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/profile?user_id=${encodeURIComponent(userId)}`, {
+    const res = await fetch(`${API_BASE}/api/profile`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });

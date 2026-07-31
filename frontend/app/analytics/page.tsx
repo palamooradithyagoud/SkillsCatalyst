@@ -245,21 +245,21 @@ export default function AnalyticsPage() {
   // Query Dashboard API
   const { data: dashboardData } = useQuery({
     queryKey: ["dashboard", userId],
-    queryFn: () => fetchDashboardData(userId || ""),
+    queryFn: () => fetchDashboardData(),
     enabled: !!session?.user_id,
   });
 
   // Query Saved Playlists API
   const { data: savedPlaylistsData } = useQuery({
     queryKey: ["saved-playlists", userId],
-    queryFn: () => fetchSavedPlaylists(userId || ""),
+    queryFn: () => fetchSavedPlaylists(),
     enabled: !!session?.user_id,
   });
 
   // Query User Profile API (contains extracted LeetCode/GitHub stats)
   const { data: profileData } = useQuery({
     queryKey: ["profile-summary", userId],
-    queryFn: () => fetchProfileData(userId || ""),
+    queryFn: () => fetchProfileData(),
     enabled: !!session?.user_id,
   });
 

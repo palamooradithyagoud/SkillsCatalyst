@@ -101,7 +101,7 @@ export default function PracticeOverview({
       }
       setLoading(true);
       // 1. Fetch extracted coding profiles
-      const profData = await fetchProfileData(userId);
+      const profData = await fetchProfileData();
       if (profData && profData.coding_stats) {
         setCodingStats(profData.coding_stats);
       }

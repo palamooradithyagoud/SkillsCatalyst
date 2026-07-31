@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/profile", tags=["profile"])
 # ── Models ────────────────────────────────────────────────--------------------
 
 class AcademicProfileModel(BaseModel):
-    user_id: Optional[str] = "default_user"
+    # user_id is intentionally excluded — identity comes from verified JWT only
     full_name: str = ""
     college: str = ""
     department: str = ""
@@ -23,7 +23,7 @@ class AcademicProfileModel(BaseModel):
     target_role: str = ""
 
 class CodingProfilesInputModel(BaseModel):
-    user_id: Optional[str] = "default_user"
+    # user_id is intentionally excluded — identity comes from verified JWT only
     leetcode: Optional[str] = ""
     github: Optional[str] = ""
     hackerrank: Optional[str] = ""
@@ -381,7 +381,7 @@ async def get_profile(user_id: str = Depends(get_current_user_id)):
     }
     coding_stats = {}
 
-    if sb and user_id != "default_user":
+    if sb:
         try:
             res_acad = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
             if res_acad.data:
@@ -415,7 +415,7 @@ async def save_academic_profile(
     """
     Save academic profile info into Supabase.
     """
-    user_id = current_user_id if current_user_id != "default_user" else (body.user_id or "default_user")
+    user_id = current_user_id  # Always derived from verified JWT — body user_id is ignored
     sb = get_supabase()
     
     data = {
@@ -428,7 +428,7 @@ async def save_academic_profile(
         # updated_at is auto-managed by Supabase default — do NOT include it
     }
 
-    if sb and user_id != "default_user":
+    if sb:
         try:
             result = sb.from_("user_academic_profile").upsert(data, on_conflict="user_id").execute()
             logger.info(f"Academic profile saved: {result.data}")
@@ -446,7 +446,7 @@ async def save_coding_profiles(
     """
     Save coding profile URLs/handles, automatically extract live stats from public APIs, and update DB.
     """
-    user_id = current_user_id if current_user_id != "default_user" else (body.user_id or "default_user")
+    user_id = current_user_id  # Always derived from verified JWT — body user_id is ignored
     
     # Run extractors concurrently
     lc_task = _extract_leetcode(body.leetcode or "")
@@ -482,8 +482,9 @@ async def save_coding_profiles(
     }
 
     sb = get_supabase()
-    if sb and user_id != "default_user":
+    if sb:
         try:
+            logger.info(f"Saving coding profiles for user_id={user_id}")
             result = sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
             logger.info(f"Coding profiles saved to Supabase: {len(result.data)} rows")
         except Exception as e:

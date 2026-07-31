@@ -312,11 +312,11 @@ class SavePlaylistRequest(BaseModel):
     thumbnail:    Optional[str] = ""
     source:       Optional[str] = "youtube"
     skill_query:  Optional[str] = ""
-    user_id:      Optional[str] = "default_user"
+    # user_id intentionally excluded — derived from JWT only
 
 
 class VideoProgressRequest(BaseModel):
-    user_id:       str   = "default_user"
+    # user_id intentionally excluded — derived from JWT only
     playlist_id:   str
     video_id:      str
     watched:       bool  = True
@@ -326,7 +326,7 @@ class VideoProgressRequest(BaseModel):
 
 class SaveProgressRequest(BaseModel):
     """Periodic progress save — updates position without overwriting watched status."""
-    user_id:       str   = "default_user"
+    # user_id intentionally excluded — derived from JWT only
     playlist_id:   str
     video_id:      str
     last_position: float  # current playback position in seconds
@@ -335,7 +335,7 @@ class SaveProgressRequest(BaseModel):
 
 class CompleteVideoRequest(BaseModel):
     """Fired when player detects ≥95% of a video has been genuinely watched."""
-    user_id:     str  = "default_user"
+    # user_id intentionally excluded — derived from JWT only
     playlist_id: str
     video_id:    str
     watch_time:  int       # seconds actually watched (server-side validation)
@@ -507,7 +507,7 @@ async def save_playlist(
     req: SavePlaylistRequest,
     current_user_id: str = Depends(get_current_user_id)
 ):
-    user_id = current_user_id if current_user_id != "default_user" else req.user_id
+    user_id = current_user_id  # always from verified JWT
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
@@ -557,8 +557,6 @@ async def unsave_playlist(
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
-    if user_id == "default_user":
-        return {"success": True}
     try:
         sb.table("saved_playlists").delete().eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
         return {"success": True}
@@ -569,7 +567,7 @@ async def unsave_playlist(
 @router.get("/saved")
 async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
     sb = get_supabase()
-    if not sb or user_id == "default_user":
+    if not sb:
         return {"saved": [], "count": 0}
     try:
         result = (
@@ -698,8 +696,8 @@ async def update_video_progress(
     current_user_id: str = Depends(get_current_user_id)
 ):
     """Manual mark-as-watched/unwatched. Optionally saves position & watch_time."""
-    user_id = current_user_id if current_user_id != "default_user" else req.user_id
-    if user_id == "default_user":
+    user_id = current_user_id  # always from verified JWT
+    if not user_id:
         return {"success": True}
     sb = get_supabase()
     if not sb:
@@ -733,8 +731,8 @@ async def save_video_progress(
     Periodic resume save (every 10 s) — updates last_position & watch_time
     WITHOUT touching the `watched` flag (prevents anti-cheat bypass).
     """
-    user_id = current_user_id if current_user_id != "default_user" else req.user_id
-    if user_id == "default_user":
+    user_id = current_user_id  # always from verified JWT
+    if not user_id:
         return {"success": True}
     sb = get_supabase()
     if not sb:
@@ -775,8 +773,8 @@ async def complete_video(
     Server validates watch_time > 0 before recording completion.
     Returns updated playlist stats for instant UI update.
     """
-    user_id = current_user_id if current_user_id != "default_user" else req.user_id
-    if user_id == "default_user":
+    user_id = current_user_id  # always from verified JWT
+    if not user_id:
         return {"success": True, "playlist_stats": {"completed_videos": 0}}
     sb = get_supabase()
     if not sb:
@@ -834,8 +832,8 @@ async def complete_video(
 
 # ── Tier 3: Groq AI LLM Roadmap Generation ──────────────────────────────────────
 class RoadmapRequest(BaseModel):
-    skill:   str
-    user_id: Optional[str] = "default_user"
+    skill: str
+    # user_id intentionally excluded — roadmap generation is not user-specific
 
 
 @router.post("/roadmap")
