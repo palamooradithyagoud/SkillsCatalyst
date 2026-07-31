@@ -200,7 +200,22 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                     }
                 }
 
-                spec = ROADMAP_SPECS.get(target_rid)
+                target_clean = str(target_rid).lower().strip()
+                matched_key = None
+                if "c-prog" in target_clean or "c prog" in target_clean or "c programming" in target_clean or "1. c" in target_clean:
+                    matched_key = "c-programming"
+                elif "cpp" in target_clean or "c++" in target_clean or "2. c++" in target_clean:
+                    matched_key = "cpp-programming"
+                elif "python" in target_clean:
+                    matched_key = "python"
+                elif "full" in target_clean or "web" in target_clean or "react" in target_clean:
+                    matched_key = "full-stack"
+                elif "devops" in target_clean or "cloud" in target_clean:
+                    matched_key = "devops"
+                else:
+                    matched_key = target_rid
+
+                spec = ROADMAP_SPECS.get(matched_key)
                 if spec:
                     active_roadmap_name = spec["name"]
                     spec_nodes = spec["nodes"]
@@ -214,12 +229,12 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                             break
 
                     next_topic = next_node if next_node else "Roadmap Completed 🎉"
-                    roadmap_subtitle = f"{active_roadmap_name} • {roadmap_completed_count}/{total_spec} topics"
+                    roadmap_subtitle = f"{active_roadmap_name} • {roadmap_completed_count}/{total_spec} skills"
                 else:
-                    active_roadmap_name = target_rid.replace("-", " ").title()
+                    active_roadmap_name = re.sub(r'^\d+\.\s*', '', str(target_rid)).replace("-", " ").title()
                     roadmap_pct = min(100, round((roadmap_completed_count / 15) * 100))
                     next_topic = "Next Milestone Topic"
-                    roadmap_subtitle = f"{active_roadmap_name} • {roadmap_completed_count} topics"
+                    roadmap_subtitle = f"{active_roadmap_name} • {roadmap_completed_count} skills"
 
         except Exception as e:
             print(f"Dashboard metrics query error: {e}")
