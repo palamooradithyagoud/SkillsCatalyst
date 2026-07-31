@@ -1,8 +1,9 @@
 import logging
 import re
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
+from backend.services.auth_service import get_current_user_id
 from backend.services.groq_service import chat_with_groq
 
 logger = logging.getLogger(__name__)
@@ -206,7 +207,6 @@ async def review_resume(
         f"exp='{years_exp}', resume_chars={len(resume_text)}."
     )
 
-
     system_prompt = (
         "You are an expert ATS Resume Reviewer and Hiring Manager "
         "with 15+ years of experience across tech roles."
@@ -308,9 +308,7 @@ STRICT RULES:
 
     # Persist resume score and review into Supabase
     try:
-        from backend.services.auth_service import get_optional_user_id
         from backend.services.supabase_service import get_supabase
-        import re
         import datetime
 
         sb = get_supabase()
@@ -353,4 +351,3 @@ STRICT RULES:
 
     logger.info(f"Resume review completed ({len(review_text)} chars returned).")
     return {"review": review_text}
-
