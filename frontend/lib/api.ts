@@ -373,6 +373,23 @@ export async function markVideoWatched(
   watched: boolean
 ): Promise<void> {
   try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      await fetch(`${API_BASE}/api/learning/video-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({
+          playlist_id: playlistId,
+          video_id: videoId,
+          watched: watched,
+        }),
+      });
+    }
+  } catch (e) {
+    console.warn("Backend markVideoWatched failed:", e);
+  }
+
+  try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
       const row = {
@@ -403,6 +420,22 @@ export async function saveVideoProgress(
   watchTime: number,
 ): Promise<void> {
   try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      fetch(`${API_BASE}/api/learning/save-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({
+          playlist_id: playlistId,
+          video_id: videoId,
+          last_position: Math.round(lastPosition),
+          watch_time: Math.round(watchTime),
+        }),
+      }).catch(() => {});
+    }
+  } catch {}
+
+  try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
       const row = {
@@ -430,6 +463,26 @@ export async function completeVideo(
   videoId: string,
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({
+          playlist_id: playlistId,
+          video_id: videoId,
+          watch_time: Math.round(watchTime),
+        }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    }
+  } catch (e) {
+    console.warn("Backend completeVideo failed:", e);
+  }
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {

@@ -284,6 +284,20 @@ function SavedPlaylistRow({
   const markMut = useMutation({
     mutationFn: ({ videoId, watched }: { videoId: string; watched: boolean }) =>
       markVideoWatched(ytPlaylistId, videoId, watched),
+    onMutate: async ({ videoId, watched }) => {
+      qc.setQueryData(
+        ["playlist-videos", ytPlaylistId, userId],
+        (old: { videos: any[]; count: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            videos: old.videos.map((v) =>
+              v.videoId === videoId ? { ...v, watched } : v
+            ),
+          };
+        }
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
       qc.invalidateQueries({ queryKey: ["dashboard", userId] });
@@ -548,6 +562,30 @@ function FullPlayerView({
   const markMut = useMutation({
     mutationFn: ({ videoId, watched }: { videoId: string; watched: boolean }) =>
       markVideoWatched(ytPlaylistId, videoId, watched),
+    onMutate: async ({ videoId, watched }) => {
+      setCompletedVideoIds((prev) => {
+        const next = new Set(prev);
+        if (watched) {
+          next.add(videoId);
+        } else {
+          next.delete(videoId);
+        }
+        return next;
+      });
+
+      qc.setQueryData(
+        ["playlist-videos", ytPlaylistId, userId],
+        (old: { videos: any[]; count: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            videos: old.videos.map((v) =>
+              v.videoId === videoId ? { ...v, watched } : v
+            ),
+          };
+        }
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
       qc.invalidateQueries({ queryKey: ["dashboard", userId] });
