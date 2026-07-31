@@ -59,7 +59,11 @@ export default function LoginPage() {
         });
 
         if (error) {
-          setErrorMessage(error.message || "Failed to create account. Please check your credentials.");
+          if (error.message?.toLowerCase().includes("rate limit")) {
+            setErrorMessage("Supabase email rate limit exceeded. Please wait a few minutes, sign in with Google, or disable email confirmation in Supabase Dashboard.");
+          } else {
+            setErrorMessage(error.message || "Failed to create account. Please check your credentials.");
+          }
           return;
         }
 
