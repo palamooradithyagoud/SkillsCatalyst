@@ -56,15 +56,12 @@ export default function LoginPage() {
         });
 
         if (error) {
-          // Fallback if Supabase signup is not configured
-          login(email, `user_${Date.now()}`, name);
+          setErrorMessage(error.message || "Failed to create account. Please check your credentials.");
           return;
         }
 
         if (data.user) {
           login(data.user.email || email, data.user.id, name);
-        } else {
-          login(email, `user_${Date.now()}`, name);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -73,8 +70,7 @@ export default function LoginPage() {
         });
 
         if (error) {
-          // Fallback seamlessly for local dev
-          login(email, email.replace(/[^a-zA-Z0-9]/g, "_"), name || email.split("@")[0]);
+          setErrorMessage(error.message || "Invalid login credentials. Please check your email and password.");
           return;
         }
 
@@ -82,8 +78,8 @@ export default function LoginPage() {
           login(data.user.email || email, data.user.id, data.user.user_metadata?.full_name);
         }
       }
-    } catch {
-      login(email, email.replace(/[^a-zA-Z0-9]/g, "_"), name || email.split("@")[0]);
+    } catch (err: any) {
+      setErrorMessage(err?.message || "An unexpected authentication error occurred.");
     } finally {
       setLoading(false);
     }
