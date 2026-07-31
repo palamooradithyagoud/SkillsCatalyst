@@ -146,7 +146,10 @@ export async function searchSkill(
   language = "english",
   max_results = 10
 ): Promise<SearchResult> {
-  const params = new URLSearchParams({ query, level, language, max_results: String(max_results) });
+  if (!query || !query.trim() || query.trim().length < 2) {
+    return { query, level, language, source: "csv", count: 0, results: [] };
+  }
+  const params = new URLSearchParams({ query: query.trim(), level, language, max_results: String(max_results) });
   try {
     const res = await fetch(`${API_BASE}/api/learning/search?${params}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
