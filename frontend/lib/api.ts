@@ -73,18 +73,16 @@ function mergeLocalDashboardMetrics(backendData: any) {
       if (calcTotal > totalVids) totalVids = calcTotal;
     }
 
-    let pct = 0;
-    let subtitle = "0 videos completed";
-
-    if (totalVids > 0) {
-      if (completed > totalVids) totalVids = completed;
-      pct = Math.round((completed / totalVids) * 100);
-      subtitle = `${completed}/${totalVids} videos completed`;
-    } else if (completed > 0) {
-      pct = Math.min(99, completed * 5);
-      subtitle = `${completed} video${completed !== 1 ? "s" : ""} completed`;
+    if (totalVids === 0 && completed > 0) {
+      totalVids = 50; // Default baseline total video target
     }
 
+    if (totalVids > 0 && completed > totalVids) {
+      totalVids = completed;
+    }
+
+    const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : 0;
+    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : "0 videos completed";
     const savedPct = Math.min(100, savedCount * 20);
     const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
 
@@ -174,17 +172,16 @@ async function getFallbackDashboardData() {
     completedCount = localCompletedCount;
   }
 
-  let pct = 0;
-  let subtitle = "0 videos completed";
-
-  if (totalVideos > 0) {
-    if (completedCount > totalVideos) totalVideos = completedCount;
-    pct = Math.round((completedCount / totalVideos) * 100);
-    subtitle = `${completedCount}/${totalVideos} videos completed`;
-  } else if (completedCount > 0) {
-    pct = Math.min(99, completedCount * 5);
-    subtitle = `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
+  if (totalVideos === 0 && completedCount > 0) {
+    totalVideos = 50; // Default baseline total video target
   }
+
+  if (totalVideos > 0 && completedCount > totalVideos) {
+    totalVideos = completedCount;
+  }
+
+  const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
+  const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : "0 videos completed";
 
   const savedPct = Math.min(100, savedPlaylistsCount * 20);
   const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
