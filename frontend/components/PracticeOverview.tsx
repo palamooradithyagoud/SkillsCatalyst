@@ -135,14 +135,16 @@ export default function PracticeOverview({
     loadData();
   }, [userId]);
 
+  // Connected Platform Badges Count
+  const connectedPlatformsCount = Object.values(codingStats).filter((s) => s && s.configured).length;
+
   // Calculate Aggregated Problems Solved
   const leetcodeSolved = codingStats.leetcode?.total_solved || 0;
   const gfgSolved = codingStats.geeksforgeeks?.total_solved || 0;
   const totalExtractedSolved = leetcodeSolved + gfgSolved + csvSolvedCount;
-  const displayTotalSolved = totalExtractedSolved > 0 ? totalExtractedSolved : problemsSolved;
-
-  // Connected Platform Badges Count
-  const connectedPlatformsCount = Object.values(codingStats).filter((s) => s && s.configured).length;
+  const displayTotalSolved = totalExtractedSolved > 0 
+    ? totalExtractedSolved 
+    : (connectedPlatformsCount > 0 ? problemsSolved : 0);
 
   return (
     <motion.div
@@ -193,7 +195,7 @@ export default function PracticeOverview({
           delay={0.35}
         />
         <StatCard
-          value={codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : `${successRate}%`}
+          value={codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : (displayTotalSolved > 0 ? `${successRate}%` : "0%")}
           label={codingStats.codeforces?.rating ? "Codeforces Rating" : "Success Rate"}
           icon={<Swords className="w-4 h-4 text-purple-400" />}
           color="#8b5cf6"
