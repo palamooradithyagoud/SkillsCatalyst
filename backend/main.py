@@ -22,7 +22,7 @@ app = FastAPI(
 )
 
 # ── CORS Configuration ────────────────────────────────────────────────────────
-_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+_frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
 
 _allowed_origins = [
     "https://skills-catalyst.vercel.app",
@@ -36,6 +36,7 @@ if _frontend_url and _frontend_url not in _allowed_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
