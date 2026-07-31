@@ -64,17 +64,27 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const savedCount = Math.max(sp.count || 0, localSaved.length);
 
     let totalVids = lp.totalVideos || 0;
-    if (totalVids === 0 && localSaved.length > 0) {
+    if (localSaved.length > 0) {
+      let calcTotal = 0;
       for (const p of localSaved) {
         const m = String(p.video_count || "0").match(/\d+/);
-        if (m) totalVids += parseInt(m[0], 10);
+        if (m) calcTotal += parseInt(m[0], 10);
       }
+      if (calcTotal > totalVids) totalVids = calcTotal;
     }
 
-    if (totalVids < completed) totalVids = completed;
+    let pct = 0;
+    let subtitle = "0 videos completed";
 
-    const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : (completed > 0 ? 100 : 0);
-    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
+    if (totalVids > 0) {
+      if (completed > totalVids) totalVids = completed;
+      pct = Math.round((completed / totalVids) * 100);
+      subtitle = `${completed}/${totalVids} videos completed`;
+    } else if (completed > 0) {
+      pct = Math.min(99, completed * 5);
+      subtitle = `${completed} video${completed !== 1 ? "s" : ""} completed`;
+    }
+
     const savedPct = Math.min(100, savedCount * 20);
     const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
 
@@ -145,8 +155,10 @@ async function getFallbackDashboardData() {
 
   // Merge LocalStorage saved playlists
   const localSaved = getLocalSavedPlaylists();
-  if (localSaved.length > savedPlaylistsCount) {
-    savedPlaylistsCount = localSaved.length;
+  if (localSaved.length > 0) {
+    if (localSaved.length > savedPlaylistsCount) {
+      savedPlaylistsCount = localSaved.length;
+    }
     let localTotal = 0;
     for (const pl of localSaved) {
       const match = String(pl.video_count || "0").match(/\d+/);
@@ -162,12 +174,17 @@ async function getFallbackDashboardData() {
     completedCount = localCompletedCount;
   }
 
-  if (totalVideos < completedCount) {
-    totalVideos = completedCount;
-  }
+  let pct = 0;
+  let subtitle = "0 videos completed";
 
-  const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : (completedCount > 0 ? 100 : 0);
-  const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
+  if (totalVideos > 0) {
+    if (completedCount > totalVideos) totalVideos = completedCount;
+    pct = Math.round((completedCount / totalVideos) * 100);
+    subtitle = `${completedCount}/${totalVideos} videos completed`;
+  } else if (completedCount > 0) {
+    pct = Math.min(99, completedCount * 5);
+    subtitle = `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
+  }
 
   const savedPct = Math.min(100, savedPlaylistsCount * 20);
   const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
