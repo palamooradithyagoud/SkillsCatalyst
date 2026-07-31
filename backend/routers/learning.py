@@ -853,6 +853,53 @@ async def complete_video(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class MarkAllWatchedRequest(BaseModel):
+    playlist_id: str
+    watched: bool = True
+
+
+@router.post("/mark-all-watched")
+async def mark_all_watched(
+    req: MarkAllWatchedRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """Mark all videos in a playlist as watched or unwatched in 1 click."""
+    user_id = current_user_id
+    if not user_id:
+        return {"success": True, "count": 0}
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
+
+    videos_res = await get_playlist_videos(playlist_id=clean_playlist_id, user_id=user_id)
+    videos = videos_res.get("videos", [])
+
+    if not videos:
+        return {"success": True, "count": 0}
+
+    now = datetime.now(timezone.utc).isoformat()
+    rows = []
+    for v in videos:
+        rows.append({
+            "user_id": user_id,
+            "playlist_id": clean_playlist_id,
+            "video_id": v["videoId"],
+            "watched": req.watched,
+            "completed_at": now if req.watched else None,
+            "updated_at": now,
+        })
+
+    try:
+        sb.table("video_progress").upsert(
+            rows, on_conflict="user_id,playlist_id,video_id"
+        ).execute()
+        return {"success": True, "count": len(rows)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Tier 3: Groq AI LLM Roadmap Generation ──────────────────────────────────────
 class RoadmapRequest(BaseModel):
     skill: str
