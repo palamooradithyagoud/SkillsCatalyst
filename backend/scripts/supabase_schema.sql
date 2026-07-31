@@ -129,6 +129,20 @@ CREATE TABLE IF NOT EXISTS public.video_progress (
     CONSTRAINT unique_user_playlist_video UNIQUE(user_id, playlist_id, video_id)
 );
 
+-- 9.5 LEARNING PROGRESS JSONB & SESSION TABLE
+CREATE TABLE IF NOT EXISTS public.learning_progress (
+    id BIGSERIAL PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    skill_name TEXT NOT NULL DEFAULT 'saved_playlists',
+    completed_steps JSONB DEFAULT '[]'::jsonb,
+    completion_pct NUMERIC(5, 2) DEFAULT 0.00,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT unique_session_skill UNIQUE(session_id, skill_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_progress_session ON public.learning_progress(session_id);
+
 -- 10. ENABLE RLS & STRICT USER OWNERSHIP POLICIES
 ALTER TABLE public.user_academic_profile ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_coding_profiles ENABLE ROW LEVEL SECURITY;
@@ -138,6 +152,13 @@ ALTER TABLE public.roadmap_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resume_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saved_playlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.video_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_progress ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all on learning_progress" ON public.learning_progress;
+CREATE POLICY "Allow all on learning_progress"
+    ON public.learning_progress FOR ALL
+    USING (true)
+    WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow anon all on user_academic_profile" ON public.user_academic_profile;
 DROP POLICY IF EXISTS "Allow authenticated or anon access on academic_profile" ON public.user_academic_profile;

@@ -668,35 +668,47 @@ async def get_saved_playlists(user_id: str = Depends(get_session_or_user_id)):
         remapped = []
         seen_ids = set()
 
-        if _is_uuid(user_id):
-            result = (
-                sb.table("saved_playlists")
-                .select("*")
-                .eq("user_id", user_id)
-                .order("created_at", desc=True)
+        # 1. Query relational saved_playlists table
+        try:
+            if _is_uuid(user_id):
+                result = (
+                    sb.table("saved_playlists")
+                    .select("*")
+                    .eq("user_id", user_id)
+                    .order("created_at", desc=True)
+                    .execute()
+                )
+                for row in (result.data or []):
+                    pid = row.get("playlist_id", row.get("id", ""))
+                    if pid and pid not in seen_ids:
+                        seen_ids.add(pid)
+                        remapped.append({
+                            "id":           pid,
+                            "title":        row.get("title", ""),
+                            "channel":      row.get("channel", ""),
+                            "description":  row.get("description", ""),
+                            "level":        row.get("level", ""),
+                            "video_count":  row.get("video_count", "?"),
+                            "duration":     row.get("duration", "?"),
+                            "playlist_url": row.get("playlist_url", ""),
+                            "thumbnail":    row.get("thumbnail", ""),
+                            "source":       row.get("source", "youtube"),
+                            "skill_query":  row.get("skill_query", ""),
+                            "created_at":   row.get("created_at", ""),
+                        })
+        except Exception as err:
+            logger.warning(f"Error querying saved_playlists table in /saved: {err}")
+
+        # 2. Query JSONB learning_progress table (supports session_id & guest users)
+        try:
+            res_lp = (
+                sb.table("learning_progress")
+                .select("completed_steps")
+                .eq("session_id", user_id)
+                .eq("skill_name", "saved_playlists")
+                .limit(1)
                 .execute()
             )
-            for row in (result.data or []):
-                pid = row.get("playlist_id", row.get("id", ""))
-                seen_ids.add(pid)
-                remapped.append({
-                    "id":           pid,
-                    "title":        row.get("title", ""),
-                    "channel":      row.get("channel", ""),
-                    "description":  row.get("description", ""),
-                    "level":        row.get("level", ""),
-                    "video_count":  row.get("video_count", "?"),
-                    "duration":     row.get("duration", "?"),
-                    "playlist_url": row.get("playlist_url", ""),
-                    "thumbnail":    row.get("thumbnail", ""),
-                    "source":       row.get("source", "youtube"),
-                    "skill_query":  row.get("skill_query", ""),
-                    "created_at":   row.get("created_at", ""),
-                })
-
-        # Also merge items from learning_progress JSONB column if present (session_id)
-        try:
-            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
             if res_lp.data and len(res_lp.data) > 0:
                 jsonb_items = res_lp.data[0].get("completed_steps", [])
                 for item in jsonb_items:
@@ -722,7 +734,7 @@ async def get_saved_playlists(user_id: str = Depends(get_session_or_user_id)):
 
         return {"saved": remapped, "count": len(remapped)}
     except Exception as e:
-        print(f"Error fetching saved playlists: {e}")
+        logger.error(f"Error fetching saved playlists: {e}")
         return {"saved": [], "count": 0}
 
 

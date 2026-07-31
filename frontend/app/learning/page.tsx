@@ -270,7 +270,7 @@ function SavedPlaylistRow({
   const { data: videoData, isLoading: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
     queryFn: () => fetchPlaylistVideos(ytPlaylistId),
-    enabled: !!session?.user_id,
+    enabled: !!ytPlaylistId,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -546,7 +546,7 @@ function FullPlayerView({
   const { data: videoData, isLoading: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
     queryFn: () => fetchPlaylistVideos(ytPlaylistId),
-    enabled: !!session?.user_id,
+    enabled: !!ytPlaylistId,
     staleTime: 5 * 60 * 1000,
   });
 
