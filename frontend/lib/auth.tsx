@@ -40,13 +40,14 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
   try {
     const fullName = name || email.split("@")[0] || "Learner";
 
+    // Use ignoreDuplicates: true so re-logging in NEVER erases existing college/dept/URLs!
     await supabase.from("user_academic_profile").upsert(
       {
         user_id: userId,
         full_name: fullName,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "user_id", ignoreDuplicates: true }
     );
 
     await supabase.from("user_progress").upsert(
@@ -54,7 +55,7 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
         user_id: userId,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "user_id", ignoreDuplicates: true }
     );
 
     await supabase.from("user_coding_profiles").upsert(
@@ -62,12 +63,13 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
         user_id: userId,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "user_id", ignoreDuplicates: true }
     );
   } catch (err) {
     console.warn("Failed to sync user to Supabase tables:", err);
   }
 }
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -118,12 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function initAuth() {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.warn("Supabase auth error:", error);
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user) {
+          if (mounted) {
+            await supabase.auth.signOut();
+            clearSessionLocal();
+            setIsLoading(false);
+          }
+          return;
         }
 
-        const supaUser = data.session?.user;
+        const supaUser = data.user;
 
         if (supaUser && mounted) {
           const isEmailProvider = supaUser.app_metadata?.provider === "email";
@@ -158,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     }
+
 
     initAuth();
 
@@ -242,8 +250,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmailState(email);
   }, []);
 
-  // When loading or when unauthenticated user is on a protected route, show dark loading screen
-  if (isLoading || (!session && pathname !== "/login")) {
+  // On /login page: ALWAYS render children immediately without showing full-screen loading screen
+  if (pathname === "/login") {
+    return (
+      <AuthContext.Provider
+        value={{
+          session,
+          isLoading,
+          unverifiedEmail,
+          login,
+          logout,
+          clearUnverifiedEmail,
+          setUnverifiedEmail,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  // On protected pages: if loading or unauthenticated, show dark transition screen while redirecting
+  if (isLoading || !session) {
     return (
       <AuthContext.Provider
         value={{
@@ -286,3 +313,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+

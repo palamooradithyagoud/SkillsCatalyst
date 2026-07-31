@@ -24,43 +24,28 @@ function handleUnauthenticated(res: Response) {
         }
       }
     } catch {}
-    if (window.location.pathname !== "/login") {
-      window.location.href = "/login";
-    }
   }
 }
+
 
 export async function fetchDashboardData() {
   try {
     const authHeaders = await getAuthHeaders();
+    if (!authHeaders.Authorization) {
+      return null;
+    }
     const res = await fetch(`${API_BASE}/api/dashboard`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
     handleUnauthenticated(res);
-    if (!res.ok) throw new Error("Failed to fetch dashboard data");
+    if (!res.ok) return null;
     return await res.json();
   } catch (error) {
-    console.warn("FastAPI backend offline, returning fallback schema", error);
-    return {
-      user: { name: "Learner", status: "ACTIVE", streakDays: 0 },
-      metrics: {
-        learningProgress: { percentage: 0, completedVideos: 0, totalVideos: 0, subtitle: "0 videos completed" },
-        resumeReadiness: { percentage: 0, subtitle: "No upload yet" },
-        aiCareerHealth: { percentage: 0, subtitle: "Start learning to build health" },
-        interviewReadiness: { isLocked: true, subtitle: "Currently Locked" },
-      },
-      upcoming: [],
-      practiceOverview: {
-        problemsSolved: 0, successRate: 0, contests: 0,
-        chartData: [
-          { day: "Mon", solved: 0 }, { day: "Tue", solved: 0 }, { day: "Wed", solved: 0 },
-          { day: "Thu", solved: 0 }, { day: "Fri", solved: 0 }, { day: "Sat", solved: 0 }, { day: "Sun", solved: 0 },
-        ],
-      },
-    };
+    return null;
   }
 }
+
 
 export async function sendMentorMessage(prompt: string) {
   try {
@@ -538,17 +523,20 @@ export interface PlatformStat {
 export async function fetchProfileData() {
   try {
     const authHeaders = await getAuthHeaders();
+    if (!authHeaders.Authorization) {
+      return null;
+    }
     const res = await fetch(`${API_BASE}/api/profile`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
-    console.warn("Failed to fetch profile data:", e);
     return null;
   }
 }
+
 
 export async function saveAcademicProfile(data: AcademicProfile) {
   try {
