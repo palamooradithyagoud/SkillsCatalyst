@@ -103,6 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const supaUser = data.session?.user;
 
         if (supaUser && mounted) {
+          const isConfirmed = !!supaUser.email_confirmed_at || supaUser.app_metadata?.provider !== "email";
+          if (!isConfirmed) {
+            await supabase.auth.signOut();
+            setIsLoading(false);
+            return;
+          }
+
           const userEmail = supaUser.email || "";
           const userId = supaUser.id;
           const userName =
@@ -144,6 +151,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, supaSession) => {
       if (supaSession?.user && mounted) {
         const supaUser = supaSession.user;
+        const isConfirmed = !!supaUser.email_confirmed_at || supaUser.app_metadata?.provider !== "email";
+        if (!isConfirmed) {
+          await supabase.auth.signOut();
+          setIsLoading(false);
+          return;
+        }
+
         const userEmail = supaUser.email || "";
         const userId = supaUser.id;
         const userName =
