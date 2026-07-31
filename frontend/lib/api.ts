@@ -798,6 +798,9 @@ export async function unsavePlaylist(playlistId: string) {
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
+  const localList = getLocalSavedPlaylists();
+  let backendSaved: Playlist[] = [];
+
   // 1. Primary: Fetch saved playlists from backend API
   try {
     const authHeaders = await getAuthHeaders();
@@ -809,10 +812,7 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
       if (res.ok) {
         const json = await res.json();
         if (json.saved && Array.isArray(json.saved)) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(json.saved));
-          }
-          return { saved: json.saved, count: json.saved.length };
+          backendSaved = json.saved;
         }
       }
     }
@@ -820,42 +820,63 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
     console.warn("Fetch saved playlists from backend failed:", e);
   }
 
-  // 2. Fallback: Query Supabase saved_playlists directly
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const { data, count } = await supabase
-        .from("saved_playlists")
-        .select("*", { count: "exact" })
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
+  // 2. Fallback: Query Supabase saved_playlists directly if backend returned empty
+  if (backendSaved.length === 0) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data } = await supabase
+          .from("saved_playlists")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false });
 
-      if (data) {
-        const saved = data.map((row: any) => ({
-          id: row.playlist_id,
-          title: row.title,
-          channel: row.channel,
-          description: row.description,
-          level: row.level,
-          video_count: row.video_count,
-          duration: row.duration,
-          playlist_url: row.playlist_url,
-          thumbnail: row.thumbnail,
-          source: row.source,
-        }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(saved));
+        if (data && data.length > 0) {
+          backendSaved = data.map((row: any) => ({
+            id: row.playlist_id,
+            title: row.title,
+            channel: row.channel,
+            description: row.description,
+            level: row.level,
+            video_count: row.video_count,
+            duration: row.duration,
+            playlist_url: row.playlist_url,
+            thumbnail: row.thumbnail,
+            source: row.source,
+          }));
         }
-        return { saved, count: count || saved.length };
       }
+    } catch (e) {
+      console.warn("Fetch saved playlists from Supabase DB failed:", e);
     }
-  } catch (e) {
-    console.warn("Fetch saved playlists from Supabase DB failed:", e);
   }
 
-  const localList = getLocalSavedPlaylists();
-  return { saved: localList, count: localList.length };
+  // Deduplicate and merge backendSaved + localList
+  const mergedMap = new Map<string, Playlist>();
+
+  // Add backend items first
+  backendSaved.forEach((p) => {
+    if (p && p.id) mergedMap.set(p.id, p);
+  });
+
+  // Add local items if not already present
+  localList.forEach((p) => {
+    if (p && p.id && !mergedMap.has(p.id)) {
+      mergedMap.set(p.id, p);
+    }
+  });
+
+  const merged = Array.from(mergedMap.values());
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(merged));
+    } catch {}
+  }
+
+  return { saved: merged, count: merged.length };
 }
+
 
 // ── Video Progress API ─────────────────────────────────────────────────────────
 
