@@ -1,8 +1,25 @@
+import { supabase } from "@/lib/supabase";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch {}
+  return {};
+}
 
 export async function fetchDashboardData(userId = "default_user") {
   try {
-    const res = await fetch(`${API_BASE}/api/dashboard?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
+    const authHeaders = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/dashboard?user_id=${encodeURIComponent(userId)}`, {
+      headers: { ...authHeaders },
+      cache: "no-store",
+    });
     if (!res.ok) throw new Error("Failed to fetch dashboard data");
     return await res.json();
   } catch (error) {
@@ -12,14 +29,10 @@ export async function fetchDashboardData(userId = "default_user") {
       metrics: {
         learningProgress: { percentage: 0, completedVideos: 0, totalVideos: 0, subtitle: "0 videos completed" },
         resumeReadiness: { percentage: 0, subtitle: "No upload yet" },
-        aiCareerHealth: { percentage: 0, subtitle: "Start solving problems to build health" },
+        aiCareerHealth: { percentage: 0, subtitle: "Start learning to build health" },
         interviewReadiness: { isLocked: true, subtitle: "Currently Locked" },
       },
-      upcoming: [
-        { id: "1", title: "Mock Interview", subtitle: "Behavioral Round", date: "May 24, 5:00 PM", type: "calendar" },
-        { id: "2", title: "System Design", subtitle: "Rate Limiter Design", date: "May 26, 7:00 PM", type: "system" },
-        { id: "3", title: "DSA Practice", subtitle: "Arrays & Hashing", date: "May 26, 6:00 PM", type: "code" },
-      ],
+      upcoming: [],
       practiceOverview: {
         problemsSolved: 0, successRate: 0, contests: 0,
         chartData: [
@@ -165,9 +178,10 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string, userI
     user_id: userId,
   };
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/save`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -180,8 +194,10 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string, userI
 
 export async function unsavePlaylist(playlistId: string, userId = "default_user") {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/save/${playlistId}?user_id=${userId}`, {
       method: "DELETE",
+      headers: { ...authHeaders },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
@@ -193,7 +209,11 @@ export async function unsavePlaylist(playlistId: string, userId = "default_user"
 
 export async function fetchSavedPlaylists(userId = "default_user"): Promise<{ saved: Playlist[]; count: number }> {
   try {
-    const res = await fetch(`${API_BASE}/api/learning/saved?user_id=${userId}`, { cache: "no-store" });
+    const authHeaders = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/learning/saved?user_id=${userId}`, {
+      headers: { ...authHeaders },
+      cache: "no-store",
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (e) {
@@ -223,9 +243,10 @@ export async function fetchPlaylistVideos(
   userId = "default_user"
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(
       `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}&user_id=${userId}`,
-      { cache: "no-store" }
+      { headers: { ...authHeaders }, cache: "no-store" }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
@@ -242,9 +263,10 @@ export async function markVideoWatched(
   watched: boolean
 ): Promise<void> {
   try {
+    const authHeaders = await getAuthHeaders();
     await fetch(`${API_BASE}/api/learning/video-progress`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ user_id: userId, playlist_id: playlistId, video_id: videoId, watched }),
     });
   } catch (e) {
@@ -264,9 +286,10 @@ export async function saveVideoProgress(
   watchTime: number,
 ): Promise<void> {
   try {
+    const authHeaders = await getAuthHeaders();
     await fetch(`${API_BASE}/api/learning/save-progress`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         user_id:       userId,
         playlist_id:   playlistId,
@@ -292,9 +315,10 @@ export async function completeVideo(
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         user_id:     userId,
         playlist_id: playlistId,
@@ -439,7 +463,11 @@ export interface PlatformStat {
 
 export async function fetchProfileData(userId = "default_user") {
   try {
-    const res = await fetch(`${API_BASE}/api/profile?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
+    const authHeaders = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/profile?user_id=${encodeURIComponent(userId)}`, {
+      headers: { ...authHeaders },
+      cache: "no-store",
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (e) {
@@ -450,9 +478,10 @@ export async function fetchProfileData(userId = "default_user") {
 
 export async function saveAcademicProfile(data: AcademicProfile) {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/profile/academic`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -465,9 +494,10 @@ export async function saveAcademicProfile(data: AcademicProfile) {
 
 export async function saveCodingProfiles(data: CodingProfilesInput) {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/profile/coding`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

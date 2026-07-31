@@ -236,7 +236,7 @@ function RingProgress({ pct: p, color, size = 80, stroke = 8 }: { pct: number; c
 
 export default function AnalyticsPage() {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
 
   const [timeRange, setTimeRange] = useState("30D");
   const [solvedKeys, setSolvedKeys] = useState<string[]>([]);
@@ -245,23 +245,32 @@ export default function AnalyticsPage() {
   // Query Dashboard API
   const { data: dashboardData } = useQuery({
     queryKey: ["dashboard", userId],
-    queryFn: () => fetchDashboardData(userId),
+    queryFn: () => fetchDashboardData(userId || ""),
+    enabled: !!session?.user_id,
   });
 
   // Query Saved Playlists API
   const { data: savedPlaylistsData } = useQuery({
     queryKey: ["saved-playlists", userId],
-    queryFn: () => fetchSavedPlaylists(userId),
+    queryFn: () => fetchSavedPlaylists(userId || ""),
+    enabled: !!session?.user_id,
   });
 
   // Query User Profile API (contains extracted LeetCode/GitHub stats)
   const { data: profileData } = useQuery({
     queryKey: ["profile-summary", userId],
-    queryFn: () => fetchProfileData(userId),
+    queryFn: () => fetchProfileData(userId || ""),
+    enabled: !!session?.user_id,
   });
 
   // Load local solved state for fallback/activity feed
   useEffect(() => {
+    if (!userId || userId === "default_user") {
+      setSolvedKeys([]);
+      setDbLeetcodeProgress([]);
+      return;
+    }
+
     try {
       const saved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);
       if (saved) {

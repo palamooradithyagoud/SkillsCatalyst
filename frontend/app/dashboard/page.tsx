@@ -12,11 +12,12 @@ import { motion } from "framer-motion";
 
 export default function DashboardPage() {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
 
   const { data } = useQuery({
     queryKey: ["dashboard", userId],
-    queryFn: () => fetchDashboardData(userId),
+    queryFn: () => fetchDashboardData(userId || ""),
+    enabled: !!session?.user_id,
   });
 
   const displayName = session?.name || data?.user?.name || session?.email?.split("@")[0] || "Learner";

@@ -204,7 +204,7 @@ export function useYouTubePlayer({
     // 10 s periodic resume save
     saveIntervalRef.current = setInterval(() => {
       const player = playerRef.current;
-      if (!player) return;
+      if (!player || !userId || userId === "default_user") return;
       saveVideoProgress(
         userId,
         playlistId,
