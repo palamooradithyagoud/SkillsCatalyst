@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BookOpen, Target, Bookmark, Briefcase, Lock } from "lucide-react";
+import { BookOpen, Target, Map, Briefcase, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface MetricCardProps {
@@ -48,44 +48,43 @@ function AnimatedCircle({
     return (
       <div className="relative w-[112px] h-[112px] flex flex-col items-center justify-center">
         <div className="w-[112px] h-[112px] rounded-full flex items-center justify-center bg-white/[0.03] border border-white/[0.06]">
-          <div className="text-center">
-            <Lock className="w-6 h-6 text-slate-600 mx-auto mb-1" />
-            <span className="text-xs font-bold text-slate-500">Locked</span>
-          </div>
+          <Lock className="w-6 h-6 text-slate-500" />
         </div>
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
+          Locked
+        </span>
       </div>
     );
   }
 
   return (
     <div className="relative w-[112px] h-[112px] flex items-center justify-center">
-      <svg className="w-[112px] h-[112px] transform -rotate-90" viewBox="0 0 112 112">
-        {/* Track */}
+      <svg className="w-[112px] h-[112px] -rotate-90" viewBox="0 0 100 100">
         <circle
-          cx="56" cy="56" r={radius}
-          className="progress-ring-track"
-          strokeWidth="7"
-          fill="transparent"
-          stroke="rgba(255,255,255,0.05)"
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.05)"
+          strokeWidth="8"
         />
-        {/* Fill */}
-        <circle
-          cx="56" cy="56" r={radius}
+        <motion.circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
           stroke={ringColor}
-          strokeWidth="7"
+          strokeWidth="8"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           strokeLinecap="round"
-          fill="transparent"
-          className="progress-ring-fill"
           style={{
-            filter: `drop-shadow(0 0 6px ${ringColor}80)`,
+            filter: `drop-shadow(0 0 6px ${ringColor}66)`,
           }}
         />
       </svg>
-      {/* Center label */}
-      <div className="absolute text-center">
-        <span className="text-2xl font-black text-white tabular-nums">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-xl font-bold text-white tracking-tight">
           {current}%
         </span>
       </div>
@@ -106,35 +105,38 @@ function MetricCard({
 }: MetricCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.5, ease: "easeOut" as const }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="glass shimmer-card gradient-border rounded-2xl p-5 flex flex-col items-center justify-between min-h-[220px] relative overflow-hidden"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className={`glass rounded-2xl p-5 flex flex-col items-center justify-between min-h-[220px] transition-all duration-300 hover:border-white/20 ${
+        isLocked ? "opacity-75" : ""
+      }`}
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)",
+        boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.36)",
+      }}
     >
-      {/* Top row */}
-      <div className="w-full flex items-center gap-3">
-        <div className={`p-2 rounded-xl ${iconBg}`}>
-          {icon}
-        </div>
-        <h3 className="text-sm font-bold text-slate-200 leading-tight">{title}</h3>
+      <div className="w-full flex items-center gap-2.5">
+        <div className={`p-2 rounded-xl ${iconBg}`}>{icon}</div>
+        <span className="text-sm font-semibold text-slate-200 tracking-wide">
+          {title}
+        </span>
       </div>
 
-      {/* Ring */}
       <div className="my-2">
-        <AnimatedCircle percentage={percentage} ringColor={ringColor} isLocked={isLocked} />
+        <AnimatedCircle
+          percentage={percentage}
+          ringColor={ringColor}
+          isLocked={isLocked}
+        />
       </div>
 
-      {/* Subtitle */}
-      <div className={`text-xs font-semibold ${subtitleColor}`}>{subtitle}</div>
-
-      {/* Ambient gradient overlay */}
-      <div
-        className="absolute inset-0 rounded-2xl pointer-events-none opacity-20"
-        style={{
-          background: `radial-gradient(ellipse at 50% 120%, ${ringColor}20 0%, transparent 60%)`,
-        }}
-      />
+      <span
+        className={`text-xs font-semibold tracking-wide ${subtitleColor} text-center`}
+      >
+        {subtitle}
+      </span>
     </motion.div>
   );
 }
@@ -146,12 +148,17 @@ export interface MetricsData {
     totalVideos: number;
     subtitle: string;
   };
-  resumeReadiness?: {
+  roadmapProgress?: {
+    count?: number;
     percentage: number;
     subtitle: string;
   };
   savedPlaylists?: {
     count?: number;
+    percentage: number;
+    subtitle: string;
+  };
+  resumeReadiness?: {
     percentage: number;
     subtitle: string;
   };
@@ -163,8 +170,8 @@ export interface MetricsData {
 
 export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const lp = metrics?.learningProgress;
+  const rm = metrics?.roadmapProgress;
   const rr = metrics?.resumeReadiness;
-  const sp = metrics?.savedPlaylists;
   const ir = metrics?.interviewReadiness;
 
   return (
@@ -180,12 +187,12 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         delay={0.1}
       />
       <MetricCard
-        title="Saved Playlists"
-        icon={<Bookmark className="w-4 h-4 text-purple-400" />}
+        title="Roadmap Progress"
+        icon={<Map className="w-4 h-4 text-purple-400" />}
         iconBg="bg-purple-500/10 border border-purple-500/20"
-        percentage={sp?.percentage ?? 0}
+        percentage={rm?.percentage ?? 0}
         ringColor="#a855f7"
-        subtitle={sp?.subtitle ?? "0 playlists saved"}
+        subtitle={rm?.subtitle ?? "0 topics completed"}
         subtitleColor="text-purple-400"
         delay={0.2}
       />
