@@ -1051,11 +1051,21 @@ export default function LearningPage() {
     onSuccess: (_, pl) => {
       setLocalSaved((prev) => new Set([...prev, pl.id]));
       showNotif(`"${pl.title.slice(0, 40)}..." saved!`, "success");
+
+      // Optimistically update React Query cache so it instantly appears in Saved tab
+      qc.setQueryData(["saved-playlists", userId], (old: { saved: Playlist[]; count: number } | undefined) => {
+        const existing = old?.saved ?? [];
+        if (existing.some((p) => p.id === pl.id)) return old;
+        const updated = [pl, ...existing];
+        return { saved: updated, count: updated.length };
+      });
+
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to save. Check backend.", "error"),
   });
+
 
   const unsaveMut = useMutation({
     mutationFn: (id: string) => unsavePlaylist(id),

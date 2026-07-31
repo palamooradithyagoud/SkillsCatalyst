@@ -549,18 +549,62 @@ async def save_playlist(
             "skill_query":  req.skill_query or "",
             "user_id":      user_id,
         }
+        res_data = None
         try:
             result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
-            return {"success": True, "data": result.data}
+            res_data = result.data
         except Exception as upsert_err:
             logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
             existing = sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
             if existing.data and len(existing.data) > 0:
                 res_upd = sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
-                return {"success": True, "data": res_upd.data}
+                res_data = res_upd.data
             else:
                 res_ins = sb.table("saved_playlists").insert(data).execute()
-                return {"success": True, "data": res_ins.data}
+                res_data = res_ins.data
+
+        # Also sync to learning_progress JSONB column
+        try:
+            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            existing_lp = res_lp.data[0].get("completed_steps", []) if (res_lp.data and len(res_lp.data) > 0) else []
+            pl_entry = {
+                "id": req.playlist_id,
+                "title": req.title,
+                "channel": req.channel or "",
+                "description": req.description or "",
+                "level": req.level or "",
+                "video_count": video_count or "?",
+                "duration": req.duration or "?",
+                "playlist_url": req.playlist_url or "",
+                "thumbnail": req.thumbnail or "",
+                "source": req.source or "youtube",
+                "skill_query": req.skill_query or "",
+                "completed": False,
+                "videos": []
+            }
+            if not any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
+                existing_lp.append(pl_entry)
+                sb.table("learning_progress").upsert({
+                    "session_id": user_id,
+                    "user_id": user_id,
+                    "skill_name": "saved_playlists",
+                    "completed_steps": existing_lp,
+                }, on_conflict="session_id, skill_name").execute()
+        except Exception as jsonb_sync_err:
+            logger.warning(f"Error syncing saved playlist to learning_progress: {jsonb_sync_err}")
+
+        # Log event to user_feedback analytics
+        try:
+            sb.table("user_feedback").insert({
+                "user_id": user_id,
+                "action": "save",
+                "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={req.playlist_id}",
+                "metadata": {"playlist_id": req.playlist_id, "title": req.title}
+            }).execute()
+        except Exception:
+            pass
+
+        return {"success": True, "data": res_data}
     except Exception as e:
         logger.error(f"Error saving playlist: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -575,7 +619,24 @@ async def unsave_playlist(
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
-        sb.table("saved_playlists").delete().eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
+        clean_pid = _extract_playlist_id(playlist_id, playlist_id)
+        sb.table("saved_playlists").delete().eq("user_id", user_id).or_(f"playlist_id.eq.{playlist_id},playlist_id.eq.{clean_pid}").execute()
+
+        # Also remove from learning_progress JSONB
+        try:
+            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            if res_lp.data and len(res_lp.data) > 0:
+                existing_lp = res_lp.data[0].get("completed_steps", [])
+                filtered = [p for p in existing_lp if p.get("id") != playlist_id and p.get("id") != clean_pid and p.get("playlist_id") != playlist_id and p.get("playlist_id") != clean_pid]
+                sb.table("learning_progress").upsert({
+                    "session_id": user_id,
+                    "user_id": user_id,
+                    "skill_name": "saved_playlists",
+                    "completed_steps": filtered,
+                }, on_conflict="session_id, skill_name").execute()
+        except Exception as jsonb_err:
+            logger.warning(f"Error removing playlist from learning_progress: {jsonb_err}")
+
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -595,9 +656,12 @@ async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
             .execute()
         )
         remapped = []
-        for row in result.data:
+        seen_ids = set()
+        for row in (result.data or []):
+            pid = row.get("playlist_id", row.get("id", ""))
+            seen_ids.add(pid)
             remapped.append({
-                "id":           row.get("playlist_id", row.get("id", "")),
+                "id":           pid,
                 "title":        row.get("title", ""),
                 "channel":      row.get("channel", ""),
                 "description":  row.get("description", ""),
@@ -610,10 +674,38 @@ async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
                 "skill_query":  row.get("skill_query", ""),
                 "created_at":   row.get("created_at", ""),
             })
+
+        # Also merge items from learning_progress JSONB column if present
+        try:
+            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            if res_lp.data and len(res_lp.data) > 0:
+                jsonb_items = res_lp.data[0].get("completed_steps", [])
+                for item in jsonb_items:
+                    item_id = item.get("id") or item.get("playlist_id")
+                    if item_id and item_id not in seen_ids:
+                        seen_ids.add(item_id)
+                        remapped.append({
+                            "id":           item_id,
+                            "title":        item.get("title", "Untitled Playlist"),
+                            "channel":      item.get("channel", ""),
+                            "description":  item.get("description", ""),
+                            "level":        item.get("level", "all"),
+                            "video_count":  item.get("video_count", "?"),
+                            "duration":     item.get("duration", "?"),
+                            "playlist_url": item.get("playlist_url", ""),
+                            "thumbnail":    item.get("thumbnail", ""),
+                            "source":       item.get("source", "youtube"),
+                            "skill_query":  item.get("skill_query", ""),
+                            "created_at":   item.get("created_at", ""),
+                        })
+        except Exception as jsonb_fetch_err:
+            logger.warning(f"Error fetching JSONB playlists in /saved: {jsonb_fetch_err}")
+
         return {"saved": remapped, "count": len(remapped)}
     except Exception as e:
         print(f"Error fetching saved playlists: {e}")
         return {"saved": [], "count": 0}
+
 
 
 @router.post("/sync-saved-playlists")
