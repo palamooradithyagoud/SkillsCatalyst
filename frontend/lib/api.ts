@@ -853,6 +853,7 @@ export async function fetchPlaylistVideos(
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   const cleanId = cleanPlaylistId(playlistId);
   const sessionId = getGuestSessionId();
+  let resultVideos: PlaylistVideo[] = [];
 
   // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
   try {
@@ -865,7 +866,7 @@ export async function fetchPlaylistVideos(
       const json = await res.json();
       if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
         saveActivePlaylistTotal(json.videos.length);
-        return { videos: json.videos, count: json.videos.length };
+        resultVideos = json.videos;
       }
     }
   } catch (e) {
@@ -873,35 +874,36 @@ export async function fetchPlaylistVideos(
   }
 
   // 2. Direct Supabase DB Query (video_progress table)
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const targetUserId = session?.user?.id;
-    if (targetUserId) {
-      const { data } = await supabase
-        .from("video_progress")
-        .select("*")
-        .eq("user_id", targetUserId)
-        .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
+  if (resultVideos.length === 0) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const targetUserId = session?.user?.id;
+      if (targetUserId) {
+        const { data } = await supabase
+          .from("video_progress")
+          .select("*")
+          .eq("user_id", targetUserId)
+          .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
 
-      if (data && data.length > 0) {
-        const videos: PlaylistVideo[] = data.map((row: any, idx: number) => ({
-          videoId: row.video_id,
-          title: `Video ${idx + 1}`,
-          position: idx + 1,
-          thumbnail: "",
-          watched: !!row.watched,
-          last_position: row.last_position || 0,
-          watch_time: row.watch_time || 0,
-          completed_at: row.completed_at || null,
-        }));
-        return { videos, count: videos.length };
+        if (data && data.length > 0) {
+          resultVideos = data.map((row: any, idx: number) => ({
+            videoId: row.video_id,
+            title: `Video ${idx + 1}`,
+            position: idx + 1,
+            thumbnail: "",
+            watched: !!row.watched,
+            last_position: row.last_position || 0,
+            watch_time: row.watch_time || 0,
+            completed_at: row.completed_at || null,
+          }));
+        }
       }
+    } catch (e) {
+      console.warn("Fetch playlist videos fallback failed:", e);
     }
-  } catch (e) {
-    console.warn("Fetch playlist videos fallback failed:", e);
   }
 
-  // 3. Direct Supabase DB Query (learning_progress JSONB table)
+  // 3. Always merge watched status from learning_progress JSONB table (guest & auth session)
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const sid = session?.user?.id || sessionId;
@@ -916,24 +918,44 @@ export async function fetchPlaylistVideos(
       const playlists = lpData[0].completed_steps || [];
       const match = playlists.find((p: any) => (p.id || p.playlist_id) === cleanId || (p.id || p.playlist_id) === playlistId);
       if (match && match.videos && match.videos.length > 0) {
-        const videos: PlaylistVideo[] = match.videos.map((v: any, idx: number) => ({
-          videoId: v.videoId || v.id || String(idx + 1),
-          title: v.title || `Video ${idx + 1}`,
-          position: idx + 1,
-          thumbnail: v.thumbnail || "",
-          watched: !!(v.completed || v.watched),
-          last_position: v.lastPosition || v.last_position || 0,
-          watch_time: v.watchTime || v.watch_time || 0,
-          completed_at: v.completedAt || v.completed_at || null,
-        }));
-        return { videos, count: videos.length };
+        const lpMap = new Map<string, any>();
+        match.videos.forEach((v: any) => {
+          const vidKey = v.videoId || v.id;
+          if (vidKey) lpMap.set(vidKey, v);
+        });
+
+        if (resultVideos.length > 0) {
+          resultVideos = resultVideos.map((v) => {
+            const lpv = lpMap.get(v.videoId);
+            if (lpv) {
+              return {
+                ...v,
+                watched: v.watched || !!(lpv.completed || lpv.watched),
+                last_position: Math.max(v.last_position || 0, lpv.lastPosition || lpv.last_position || 0),
+                watch_time: Math.max(v.watch_time || 0, lpv.watchTime || lpv.watch_time || 0),
+              };
+            }
+            return v;
+          });
+        } else {
+          resultVideos = match.videos.map((v: any, idx: number) => ({
+            videoId: v.videoId || v.id || String(idx + 1),
+            title: v.title || `Video ${idx + 1}`,
+            position: idx + 1,
+            thumbnail: v.thumbnail || "",
+            watched: !!(v.completed || v.watched),
+            last_position: v.lastPosition || v.last_position || 0,
+            watch_time: v.watchTime || v.watch_time || 0,
+            completed_at: v.completedAt || v.completed_at || null,
+          }));
+        }
       }
     }
   } catch (e) {
     console.warn("Fetch playlist videos from learning_progress failed:", e);
   }
 
-  return { videos: [], count: 0 };
+  return { videos: resultVideos, count: resultVideos.length };
 }
 
 export async function markVideoWatched(
