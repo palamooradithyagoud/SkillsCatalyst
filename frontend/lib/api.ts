@@ -676,52 +676,69 @@ function removeLocalPlaylist(playlistId: string) {
 }
 
 export async function savePlaylist(playlist: Playlist, skillQuery: string) {
+  const cleanId = cleanPlaylistId(playlist.id);
+  const row = {
+    playlist_id: cleanId || playlist.id,
+    title: playlist.title || "Untitled Playlist",
+    channel: playlist.channel || "",
+    description: playlist.description || "",
+    level: playlist.level || "all",
+    video_count: playlist.video_count || "?",
+    duration: playlist.duration || "?",
+    playlist_url: playlist.playlist_url || "",
+    thumbnail: playlist.thumbnail || "",
+    source: playlist.source || "youtube",
+    skill_query: skillQuery || "",
+    created_at: new Date().toISOString(),
+  };
+
+  saveLocalPlaylist({ ...playlist, id: cleanId || playlist.id });
+
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      await fetch(`${API_BASE}/api/learning/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(row),
+      });
+    }
+  } catch (e) {
+    console.warn("Backend save playlist failed:", e);
+  }
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
-      const userId = session.user.id;
-      const row = {
-        user_id: userId,
-        playlist_id: playlist.id,
-        title: playlist.title || "Untitled Playlist",
-        channel: playlist.channel || "",
-        description: playlist.description || "",
-        level: playlist.level || "all",
-        video_count: playlist.video_count || "?",
-        duration: playlist.duration || "?",
-        playlist_url: playlist.playlist_url || "",
-        thumbnail: playlist.thumbnail || "",
-        source: playlist.source || "youtube",
-        skill_query: skillQuery || "",
-        created_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
+      const fullRow = { ...row, user_id: session.user.id };
+      await supabase
         .from("saved_playlists")
-        .upsert(row, { onConflict: "playlist_id,user_id" });
-
-      if (!error) {
-        // Also notify backend if online
-        const authHeaders = await getAuthHeaders();
-        if (authHeaders.Authorization) {
-          fetch(`${API_BASE}/api/learning/save`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeaders },
-            body: JSON.stringify(row),
-          }).catch(() => {});
-        }
-        return { success: true };
-      }
+        .upsert(fullRow, { onConflict: "user_id,playlist_id" });
     }
   } catch (e) {
     console.warn("Save playlist to Supabase DB failed:", e);
   }
 
-  saveLocalPlaylist(playlist);
-  return { success: true, localOnly: true };
+  return { success: true };
 }
 
 export async function unsavePlaylist(playlistId: string) {
+  const cleanId = cleanPlaylistId(playlistId);
+  removeLocalPlaylist(cleanId);
+  removeLocalPlaylist(playlistId);
+
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      await fetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
+        method: "DELETE",
+        headers: { ...authHeaders },
+      });
+    }
+  } catch (e) {
+    console.warn("Backend unsave playlist failed:", e);
+  }
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -729,17 +746,39 @@ export async function unsavePlaylist(playlistId: string) {
         .from("saved_playlists")
         .delete()
         .eq("user_id", session.user.id)
-        .eq("playlist_id", playlistId);
+        .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
     }
   } catch (e) {
     console.warn("Unsave playlist from Supabase DB failed:", e);
   }
 
-  removeLocalPlaylist(playlistId);
   return { success: true };
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
+  // 1. Primary: Fetch saved playlists from backend API
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/learning/saved`, {
+        headers: { ...authHeaders },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.saved && Array.isArray(json.saved)) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(json.saved));
+          }
+          return { saved: json.saved, count: json.saved.length };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Fetch saved playlists from backend failed:", e);
+  }
+
+  // 2. Fallback: Query Supabase saved_playlists directly
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -762,6 +801,9 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
           thumbnail: row.thumbnail,
           source: row.source,
         }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(saved));
+        }
         return { saved, count: count || saved.length };
       }
     }
