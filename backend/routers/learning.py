@@ -816,7 +816,6 @@ async def complete_video(
             "video_id":      req.video_id,
             "watched":       True,
             "watch_time":    req.watch_time,
-            "last_position": 0.0,   # reset so next open starts from beginning
             "completed_at":  now,
         }
         try:

@@ -267,7 +267,7 @@ function SavedPlaylistRow({
   // Use the actual YouTube playlist ID from the URL, not the row rank
   const ytPlaylistId = extractPlaylistId(pl.playlist_url ?? "") ?? pl.id;
 
-  const { data: videoData, isFetching: loadingVideos } = useQuery({
+  const { data: videoData, isLoading: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
     queryFn: () => fetchPlaylistVideos(ytPlaylistId),
     enabled: !!session?.user_id,
@@ -543,7 +543,7 @@ function FullPlayerView({
   const { session } = useAuth();
   const userId = session?.user_id;
 
-  const { data: videoData, isFetching: loadingVideos } = useQuery({
+  const { data: videoData, isLoading: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
     queryFn: () => fetchPlaylistVideos(ytPlaylistId),
     enabled: !!session?.user_id,
