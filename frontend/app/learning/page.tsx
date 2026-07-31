@@ -643,7 +643,7 @@ function FullPlayerView({
     };
   }, []);
 
-  /** Called by the hook when >= 95% genuinely watched */
+  /** Called by the hook when >= 75% genuinely watched */
   const handleVideoComplete = useCallback((watchedSeconds: number) => {
     if (!currentVideo) return;
     const vid = currentVideo.videoId;
@@ -658,19 +658,14 @@ function FullPlayerView({
     // 3. Persist to backend
     completeMut.mutate({ videoId: vid, watchTime: Math.round(watchedSeconds) });
 
-    // 4. Auto-scroll sidebar to next lesson
+    // 4. Auto-scroll sidebar to completed lesson
     setTimeout(() => {
       const nextBtn = sidebarRef.current?.querySelector(
-        `[data-idx="${currentIdx + 1}"]`
+        `[data-idx="${currentIdx}"]`
       ) as HTMLElement | null;
       nextBtn?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 400);
-
-    // 5. Auto-advance after 2 s
-    advanceTimerRef.current = setTimeout(() => {
-      setCurrentIdx((i) => Math.min(i + 1, videos.length - 1));
-    }, 2000);
-  }, [currentVideo, currentIdx, videos.length, completeMut]);
+  }, [currentVideo, currentIdx, completeMut]);
 
   const goNext = () => setCurrentIdx((i) => Math.min(i + 1, videos.length - 1));
   const goPrev = () => setCurrentIdx((i) => Math.max(i - 1, 0));
@@ -711,7 +706,7 @@ function FullPlayerView({
             </motion.div>
             <div>
               <div className="font-bold text-white text-sm">Lesson Completed!</div>
-              <div className="text-emerald-100 text-xs">Auto-advancing to next video…</div>
+              <div className="text-emerald-100 text-xs">75% threshold reached ✓</div>
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-200" />
           </motion.div>
@@ -819,7 +814,7 @@ function FullPlayerView({
                 className="h-full rounded-full"
                 style={{
                   width: `${watchedPct}%`,
-                  background: watchedPct >= 95
+                  background: watchedPct >= 75
                     ? "linear-gradient(90deg, #10b981, #34d399)"
                     : "linear-gradient(90deg, #4f46e5, #818cf8)",
                 }}
@@ -834,10 +829,10 @@ function FullPlayerView({
             </div>
             <div className="flex items-center justify-between -mt-2">
               <span className="text-[11px] text-slate-600 font-medium">
-                {watchedPct < 95 ? `${Math.round(watchedPct)}% watched (anti-cheat tracked)` : "✓ Threshold reached"}
+                {watchedPct < 75 ? `${Math.round(watchedPct)}% watched (75% threshold)` : "✓ Threshold reached"}
               </span>
-              {watchedPct >= 95 && (
-                <span className="text-[11px] text-emerald-400 font-bold">Completion triggered!</span>
+              {watchedPct >= 75 && (
+                <span className="text-[11px] text-emerald-400 font-bold">Lesson Completed!</span>
               )}
             </div>
 
