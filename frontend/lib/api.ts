@@ -227,93 +227,10 @@ export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[
 }
 
 function mergeLocalDashboardMetrics(backendData: any) {
-  try {
-    const localProg = getLocalVideoProgress();
-    const localCompleted = Object.values(localProg).filter(Boolean).length;
-    const localSaved = getLocalSavedPlaylists();
-    const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
-    const localResumeScore = localResumeScoreRaw ? parseInt(localResumeScoreRaw, 10) : 0;
-
-    let localActiveTitle = "";
-    if (typeof window !== "undefined") {
-      try {
-        const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
-        if (rawActive) {
-          const parsed = JSON.parse(rawActive);
-          if (parsed?.title) localActiveTitle = parsed.title;
-        }
-      } catch {}
-    }
-
-    const lp = backendData.metrics?.learningProgress || {};
-    const rm = backendData.metrics?.roadmapProgress || {};
-    const rr = backendData.metrics?.resumeReadiness || {};
-
-    const completed = Math.max(lp.completedVideos || 0, localCompleted);
-    const resumeScore = Math.max(rr.percentage || 0, localResumeScore);
-    const roadmapCount = rm.count || 0;
-
-    const rawRoadmapTitle = rm.roadmapName || localActiveTitle;
-    const meta = getRoadmapMeta(rawRoadmapTitle, []);
-
-    const finalRoadmapName = meta.name || rm.roadmapName || localActiveTitle || "";
-    const finalNextTopic = rm.nextTopic && !rm.nextTopic.includes("Next Topic") ? rm.nextTopic : meta.nextTopic;
-    const finalRoadmapPct = meta.total > 0 && roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / meta.total) * 100)) : (rm.percentage || 0);
-    const finalSubtitle = finalRoadmapName ? `Following: ${finalRoadmapName}` : (roadmapCount > 0 ? `${roadmapCount} topics completed` : "No active roadmap");
-
-    let totalVids = lp.totalVideos || 0;
-    if (localSaved.length > 0) {
-      let calcTotal = 0;
-      for (const p of localSaved) {
-        const m = String(p.video_count || "0").match(/\d+/);
-        if (m) calcTotal += parseInt(m[0], 10);
-      }
-      if (calcTotal > totalVids) totalVids = calcTotal;
-    }
-
-    const activeTotal = getActivePlaylistTotal();
-    if (activeTotal > totalVids) {
-      totalVids = activeTotal;
-    }
-
-    if (totalVids > 0 && completed > totalVids) {
-      totalVids = completed;
-    }
-
-    const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : 0;
-    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
-    const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : (rr.subtitle || "No upload yet");
-
-    return {
-      ...backendData,
-      metrics: {
-        ...backendData.metrics,
-        learningProgress: {
-          ...lp,
-          percentage: pct,
-          completedVideos: completed,
-          totalVideos: totalVids,
-          subtitle: subtitle,
-        },
-        roadmapProgress: {
-          ...rm,
-          count: roadmapCount,
-          percentage: finalRoadmapPct,
-          subtitle: finalSubtitle,
-          roadmapName: finalRoadmapName,
-          nextTopic: finalNextTopic,
-        },
-        resumeReadiness: {
-          ...rr,
-          percentage: resumeScore,
-          subtitle: resumeSubtitle,
-        },
-      },
-    };
-  } catch {
-    return backendData;
-  }
+  if (!backendData || !backendData.metrics) return backendData;
+  return backendData;
 }
+
 
 async function getFallbackDashboardData() {
   let savedPlaylistsCount = 0;
@@ -394,27 +311,6 @@ async function getFallbackDashboardData() {
         }
       }
     } catch {}
-  }
-
-  // Merge LocalStorage saved playlists
-  const localSaved = getLocalSavedPlaylists();
-  if (localSaved.length > 0) {
-    if (localSaved.length > savedPlaylistsCount) {
-      savedPlaylistsCount = localSaved.length;
-    }
-    let localTotal = 0;
-    for (const pl of localSaved) {
-      const match = String(pl.video_count || "0").match(/\d+/);
-      if (match) localTotal += parseInt(match[0], 10);
-    }
-    if (localTotal > totalVideos) totalVideos = localTotal;
-  }
-
-  // Merge LocalStorage completed videos
-  const localProg = getLocalVideoProgress();
-  const localCompletedCount = Object.values(localProg).filter(Boolean).length;
-  if (localCompletedCount > completedCount) {
-    completedCount = localCompletedCount;
   }
 
   const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
@@ -643,38 +539,6 @@ export async function searchSkill(
   }
 }
 
-// LocalStorage helpers for saved playlists fallback/sync
-const LS_SAVED_PLAYLISTS = "skillscatalyst_saved_playlists";
-
-function getLocalSavedPlaylists(): Playlist[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(LS_SAVED_PLAYLISTS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalPlaylist(playlist: Playlist) {
-  if (typeof window === "undefined") return;
-  try {
-    const list = getLocalSavedPlaylists();
-    if (!list.some((p) => p.id === playlist.id)) {
-      list.unshift(playlist);
-      localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(list));
-    }
-  } catch {}
-}
-
-function removeLocalPlaylist(playlistId: string) {
-  if (typeof window === "undefined") return;
-  try {
-    const list = getLocalSavedPlaylists().filter((p) => p.id !== playlistId);
-    localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(list));
-  } catch {}
-}
-
 export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   const cleanId = cleanPlaylistId(playlist.id);
   const row = {
@@ -692,8 +556,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     created_at: new Date().toISOString(),
   };
 
-  saveLocalPlaylist({ ...playlist, id: cleanId || playlist.id });
-
+  // 1. Primary: Save to Supabase via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -707,6 +570,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     console.warn("Backend save playlist failed:", e);
   }
 
+  // 2. Direct Supabase Client DB fallback
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -763,11 +627,8 @@ export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: b
   return { success: false };
 }
 
-
 export async function unsavePlaylist(playlistId: string) {
   const cleanId = cleanPlaylistId(playlistId);
-  removeLocalPlaylist(cleanId);
-  removeLocalPlaylist(playlistId);
 
   try {
     const authHeaders = await getAuthHeaders();
@@ -798,10 +659,7 @@ export async function unsavePlaylist(playlistId: string) {
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
-  const localList = getLocalSavedPlaylists();
-  let backendSaved: Playlist[] = [];
-
-  // 1. Primary: Fetch saved playlists from backend API
+  // 1. Primary: Fetch saved playlists from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -812,7 +670,7 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
       if (res.ok) {
         const json = await res.json();
         if (json.saved && Array.isArray(json.saved)) {
-          backendSaved = json.saved;
+          return { saved: json.saved, count: json.saved.length };
         }
       }
     }
@@ -820,62 +678,39 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
     console.warn("Fetch saved playlists from backend failed:", e);
   }
 
-  // 2. Fallback: Query Supabase saved_playlists directly if backend returned empty
-  if (backendSaved.length === 0) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        const { data } = await supabase
-          .from("saved_playlists")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false });
+  // 2. Direct Supabase DB Query (saved_playlists table)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const { data, count } = await supabase
+        .from("saved_playlists")
+        .select("*", { count: "exact" })
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
 
-        if (data && data.length > 0) {
-          backendSaved = data.map((row: any) => ({
-            id: row.playlist_id,
-            title: row.title,
-            channel: row.channel,
-            description: row.description,
-            level: row.level,
-            video_count: row.video_count,
-            duration: row.duration,
-            playlist_url: row.playlist_url,
-            thumbnail: row.thumbnail,
-            source: row.source,
-          }));
-        }
+      if (data) {
+        const saved = data.map((row: any) => ({
+          id: row.playlist_id,
+          title: row.title,
+          channel: row.channel,
+          description: row.description,
+          level: row.level,
+          video_count: row.video_count,
+          duration: row.duration,
+          playlist_url: row.playlist_url,
+          thumbnail: row.thumbnail,
+          source: row.source,
+        }));
+        return { saved, count: count || saved.length };
       }
-    } catch (e) {
-      console.warn("Fetch saved playlists from Supabase DB failed:", e);
     }
+  } catch (e) {
+    console.warn("Fetch saved playlists from Supabase DB failed:", e);
   }
 
-  // Deduplicate and merge backendSaved + localList
-  const mergedMap = new Map<string, Playlist>();
-
-  // Add backend items first
-  backendSaved.forEach((p) => {
-    if (p && p.id) mergedMap.set(p.id, p);
-  });
-
-  // Add local items if not already present
-  localList.forEach((p) => {
-    if (p && p.id && !mergedMap.has(p.id)) {
-      mergedMap.set(p.id, p);
-    }
-  });
-
-  const merged = Array.from(mergedMap.values());
-
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(merged));
-    } catch {}
-  }
-
-  return { saved: merged, count: merged.length };
+  return { saved: [], count: 0 };
 }
+
 
 
 // ── Video Progress API ─────────────────────────────────────────────────────────
@@ -894,29 +729,6 @@ export interface PlaylistVideo {
   completed_at?: string | null;
 }
 
-// LocalStorage video progress sync
-const LS_VIDEO_PROGRESS = "skillscatalyst_video_progress";
-
-function getLocalVideoProgress(): Record<string, boolean> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(LS_VIDEO_PROGRESS);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-export function saveLocalVideoWatched(playlistId: string, videoId: string, watched: boolean) {
-  if (typeof window === "undefined") return;
-  try {
-    const prog = getLocalVideoProgress();
-    const key = `${playlistId}_${videoId}`;
-    prog[key] = watched;
-    localStorage.setItem(LS_VIDEO_PROGRESS, JSON.stringify(prog));
-  } catch {}
-}
-
 export function cleanPlaylistId(rawIdOrUrl: string): string {
   if (!rawIdOrUrl) return "";
   try {
@@ -929,28 +741,12 @@ export function cleanPlaylistId(rawIdOrUrl: string): string {
   return rawIdOrUrl.replace(/^.*list=/, "").split("&")[0].trim();
 }
 
-function mergeLocalVideoProgress(playlistId: string, videos: PlaylistVideo[]): PlaylistVideo[] {
-  const cleanId = cleanPlaylistId(playlistId);
-  const prog = getLocalVideoProgress();
-  return videos.map((v) => {
-    const key = `${cleanId}_${v.videoId}`;
-    const rawKey = `${playlistId}_${v.videoId}`;
-    if (key in prog) {
-      return { ...v, watched: prog[key] };
-    }
-    if (rawKey in prog) {
-      return { ...v, watched: prog[rawKey] };
-    }
-    return v;
-  });
-}
-
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   const cleanId = cleanPlaylistId(playlistId);
 
-  // 1. Primary: Fetch full YouTube playlist items + merged progress from backend API
+  // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -962,14 +758,7 @@ export async function fetchPlaylistVideos(
         const json = await res.json();
         if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
           saveActivePlaylistTotal(json.videos.length);
-          // Re-hydrate local progress from Supabase DB rows
-          json.videos.forEach((v: PlaylistVideo) => {
-            if (v.watched) {
-              saveLocalVideoWatched(cleanId, v.videoId, true);
-            }
-          });
-          const merged = mergeLocalVideoProgress(cleanId, json.videos);
-          return { videos: merged, count: merged.length };
+          return { videos: json.videos, count: json.videos.length };
         }
       }
     }
@@ -977,7 +766,7 @@ export async function fetchPlaylistVideos(
     console.warn("Fetch playlist videos from backend failed:", e);
   }
 
-  // 2. Fallback: Query Supabase video_progress directly if backend is unreachable
+  // 2. Direct Supabase DB Query (video_progress table)
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -998,13 +787,7 @@ export async function fetchPlaylistVideos(
           watch_time: row.watch_time || 0,
           completed_at: row.completed_at || null,
         }));
-
-        data.forEach((r: any) => {
-          if (r.watched) saveLocalVideoWatched(cleanId, r.video_id, true);
-        });
-
-        const merged = mergeLocalVideoProgress(cleanId, videos);
-        return { videos: merged, count: merged.length };
+        return { videos, count: videos.length };
       }
     }
   } catch (e) {
@@ -1021,9 +804,7 @@ export async function markVideoWatched(
 ): Promise<void> {
   const cleanId = cleanPlaylistId(playlistId);
 
-  // Always update local storage first so UI tick is 100% persistent
-  saveLocalVideoWatched(cleanId, videoId, watched);
-
+  // 1. Save to Supabase via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -1041,6 +822,7 @@ export async function markVideoWatched(
     console.warn("Backend markVideoWatched failed:", e);
   }
 
+  // 2. Direct Supabase DB Client write
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -1060,6 +842,7 @@ export async function markVideoWatched(
     console.warn("Mark video watched in Supabase DB failed:", e);
   }
 }
+
 
 /**
  * Periodic resume save (every 10 s while playing).
@@ -1115,8 +898,6 @@ export async function completeVideo(
   videoId: string,
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
-  saveLocalVideoWatched(playlistId, videoId, true);
-
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -1166,15 +947,6 @@ export async function markAllVideosWatched(
   playlistId: string,
   watched: boolean = true
 ): Promise<{ success: boolean; count: number }> {
-  try {
-    const videosRes = await fetchPlaylistVideos(playlistId);
-    if (videosRes.videos && videosRes.videos.length > 0) {
-      for (const v of videosRes.videos) {
-        saveLocalVideoWatched(playlistId, v.videoId, watched);
-      }
-    }
-  } catch {}
-
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
