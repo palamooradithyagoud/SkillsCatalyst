@@ -14,6 +14,7 @@ interface MetricCardProps {
   subtitleColor: string;
   isLocked?: boolean;
   delay?: number;
+  badge?: string;
 }
 
 function AnimatedCircle({
@@ -102,6 +103,7 @@ function MetricCard({
   subtitleColor,
   isLocked,
   delay = 0,
+  badge,
 }: MetricCardProps) {
   return (
     <motion.div
@@ -124,7 +126,7 @@ function MetricCard({
         </span>
       </div>
 
-      <div className="my-2">
+      <div className="my-1.5 flex flex-col items-center">
         <AnimatedCircle
           percentage={percentage}
           ringColor={ringColor}
@@ -132,11 +134,18 @@ function MetricCard({
         />
       </div>
 
-      <span
-        className={`text-xs font-semibold tracking-wide ${subtitleColor} text-center`}
-      >
-        {subtitle}
-      </span>
+      <div className="flex flex-col items-center w-full min-h-[36px] justify-center">
+        <span
+          className={`text-xs font-semibold tracking-wide ${subtitleColor} text-center truncate max-w-full`}
+        >
+          {subtitle}
+        </span>
+        {badge && (
+          <span className="mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 border border-purple-500/30 text-purple-300 truncate max-w-full">
+            {badge}
+          </span>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -152,6 +161,8 @@ export interface MetricsData {
     count?: number;
     percentage: number;
     subtitle: string;
+    roadmapName?: string;
+    nextTopic?: string;
   };
   savedPlaylists?: {
     count?: number;
@@ -174,6 +185,13 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const rr = metrics?.resumeReadiness;
   const ir = metrics?.interviewReadiness;
 
+  const roadmapSubtitleText = rm?.roadmapName
+    ? `Following: ${rm.roadmapName}`
+    : (rm?.count && rm.count > 0 ? `${rm.count} topics completed` : "No active roadmap");
+  const roadmapNextBadge = rm?.nextTopic
+    ? (rm.nextTopic.startsWith("Next:") || rm.nextTopic.includes("Roadmap Completed") ? rm.nextTopic : `Next: ${rm.nextTopic}`)
+    : "Explore roadmaps on Roadmaps page";
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <MetricCard
@@ -192,8 +210,9 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         iconBg="bg-purple-500/10 border border-purple-500/20"
         percentage={rm?.percentage ?? 0}
         ringColor="#a855f7"
-        subtitle={rm?.subtitle ?? "0 topics completed"}
+        subtitle={roadmapSubtitleText}
         subtitleColor="text-purple-400"
+        badge={roadmapNextBadge}
         delay={0.2}
       />
       <MetricCard

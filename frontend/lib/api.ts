@@ -124,9 +124,12 @@ function mergeLocalDashboardMetrics(backendData: any) {
           subtitle: subtitle,
         },
         roadmapProgress: {
+          ...rm,
           count: roadmapCount,
           percentage: roadmapPct,
           subtitle: roadmapSubtitle,
+          roadmapName: rm.roadmapName || "",
+          nextTopic: rm.nextTopic || (roadmapCount > 0 ? "Next Topic" : "Start a roadmap on Roadmaps page"),
         },
         resumeReadiness: {
           ...rr,
