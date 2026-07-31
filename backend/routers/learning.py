@@ -718,12 +718,18 @@ async def update_video_progress(
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
+        clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         data: dict = {
             "user_id":     user_id,
-            "playlist_id": req.playlist_id,
+            "playlist_id": clean_playlist_id,
             "video_id":    req.video_id,
             "watched":     req.watched,
         }
+        if req.watched:
+            data["completed_at"] = datetime.now(timezone.utc).isoformat()
+        else:
+            data["completed_at"] = None
+
         if req.last_position is not None:
             data["last_position"] = req.last_position
         if req.watch_time is not None:
@@ -753,12 +759,13 @@ async def save_video_progress(
     if not sb:
         return {"success": False, "reason": "Supabase not configured"}
     try:
+        clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         # Try UPDATE first (preserves watched status)
         res = (
             sb.table("video_progress")
             .update({"last_position": req.last_position, "watch_time": req.watch_time})
             .eq("user_id", user_id)
-            .eq("playlist_id", req.playlist_id)
+            .eq("playlist_id", clean_playlist_id)
             .eq("video_id", req.video_id)
             .execute()
         )
@@ -766,7 +773,7 @@ async def save_video_progress(
         if not res.data:
             sb.table("video_progress").insert({
                 "user_id":       user_id,
-                "playlist_id":   req.playlist_id,
+                "playlist_id":   clean_playlist_id,
                 "video_id":      req.video_id,
                 "watched":       False,
                 "last_position": req.last_position,
@@ -799,17 +806,18 @@ async def complete_video(
         raise HTTPException(status_code=400, detail="Invalid watch_time: must be > 0 seconds")
 
     try:
+        clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         now = datetime.now(timezone.utc).isoformat()
 
         # Upsert completion record
         complete_data: dict = {
-            "user_id":      user_id,
-            "playlist_id":  req.playlist_id,
-            "video_id":     req.video_id,
-            "watched":      True,
-            "watch_time":   req.watch_time,
+            "user_id":       user_id,
+            "playlist_id":   clean_playlist_id,
+            "video_id":      req.video_id,
+            "watched":       True,
+            "watch_time":    req.watch_time,
             "last_position": 0.0,   # reset so next open starts from beginning
-            "completed_at": now,
+            "completed_at":  now,
         }
         try:
             # Try with extended columns first
@@ -829,7 +837,7 @@ async def complete_video(
             sb.table("video_progress")
             .select("video_id,watched")
             .eq("user_id", user_id)
-            .eq("playlist_id", req.playlist_id)
+            .eq("playlist_id", clean_playlist_id)
             .execute()
         )
         completed_count = sum(1 for r in (res.data or []) if r.get("watched"))
