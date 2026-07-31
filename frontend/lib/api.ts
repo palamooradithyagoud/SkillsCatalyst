@@ -522,32 +522,80 @@ export interface PlatformStat {
 
 export async function fetchProfileData() {
   try {
-    const authHeaders = await getAuthHeaders();
-    if (!authHeaders.Authorization) {
-      return null;
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.user?.id) return null;
+
+    const userId = session.user.id;
+
+    // Fetch profile data directly from Supabase DB
+    const [academicRes, codingRes] = await Promise.all([
+      supabase.from("user_academic_profile").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_coding_profiles").select("*").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    const academic = academicRes.data || null;
+    const coding = codingRes.data || null;
+
+    let codingInputs: any = null;
+    let codingStats: any = null;
+
+    if (coding) {
+      codingInputs = {
+        leetcode: coding.leetcode_url || "",
+        github: coding.github_url || "",
+        hackerrank: coding.hackerrank_url || "",
+        codechef: coding.codechef_url || "",
+        geeksforgeeks: coding.geeksforgeeks_url || "",
+        codeforces: coding.codeforces_url || "",
+      };
+      codingStats = coding.stats_json || {};
     }
-    const res = await fetch(`${API_BASE}/api/profile`, {
-      headers: { ...authHeaders },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
+
+    return {
+      academic,
+      coding_inputs: codingInputs,
+      coding_stats: codingStats,
+    };
   } catch (e) {
+    console.warn("Failed to fetch profile data:", e);
     return null;
   }
 }
 
-
 export async function saveAcademicProfile(data: AcademicProfile) {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return null;
+
+    const payload = {
+      user_id: session.user.id,
+      full_name: data.full_name || "",
+      college: data.college || "",
+      department: data.department || "",
+      academic_year: data.academic_year || "",
+      target_role: data.target_role || "",
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save directly to Supabase DB
+    const { error } = await supabase
+      .from("user_academic_profile")
+      .upsert(payload, { onConflict: "user_id" });
+
+    if (error) throw error;
+
+    // Async sync to FastAPI backend if online
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/profile/academic`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (authHeaders.Authorization) {
+      fetch(`${API_BASE}/api/profile/academic`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(data),
+      }).catch(() => {});
+    }
+
+    return { success: true };
   } catch (e) {
     console.warn("Failed to save academic profile:", e);
     return null;
@@ -556,16 +604,47 @@ export async function saveAcademicProfile(data: AcademicProfile) {
 
 export async function saveCodingProfiles(data: CodingProfilesInput) {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return null;
+
+    const payload = {
+      user_id: session.user.id,
+      leetcode_url: data.leetcode || "",
+      github_url: data.github || "",
+      hackerrank_url: data.hackerrank || "",
+      codechef_url: data.codechef || "",
+      geeksforgeeks_url: data.geeksforgeeks || "",
+      codeforces_url: data.codeforces || "",
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save directly to Supabase DB
+    const { error } = await supabase
+      .from("user_coding_profiles")
+      .upsert(payload, { onConflict: "user_id" });
+
+    if (error) throw error;
+
+    let extractedStats = {};
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/profile/coding`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (authHeaders.Authorization) {
+      try {
+        const res = await fetch(`${API_BASE}/api/profile/coding`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.stats) extractedStats = json.stats;
+        }
+      } catch {}
+    }
+
+    return { success: true, stats: extractedStats };
   } catch (e) {
     console.warn("Failed to save coding profiles:", e);
     return null;
   }
 }
+
