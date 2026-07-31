@@ -186,8 +186,8 @@ export function useYouTubePlayer({
       const pct = Math.min(100, (watchedSecondsRef.current / duration) * 100);
       onProgressRef.current?.(pct);
 
-      // Auto-completion threshold
-      if (pct >= 95 && !completedRef.current) {
+      // Auto-completion threshold (75% watched)
+      if (pct >= 75 && !completedRef.current) {
         fireComplete();
       }
     }
@@ -265,7 +265,7 @@ export function useYouTubePlayer({
                 const duration = durationRef.current;
                 if (duration > 0) {
                   const pct = (watchedSecondsRef.current / duration) * 100;
-                  if (pct >= 95) fireComplete();
+                  if (pct >= 75) fireComplete();
                 }
               }
             }
