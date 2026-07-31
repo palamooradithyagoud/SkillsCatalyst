@@ -812,12 +812,29 @@ export function saveLocalVideoWatched(playlistId: string, videoId: string, watch
   } catch {}
 }
 
+export function cleanPlaylistId(rawIdOrUrl: string): string {
+  if (!rawIdOrUrl) return "";
+  try {
+    if (rawIdOrUrl.includes("list=")) {
+      const url = new URL(rawIdOrUrl.startsWith("http") ? rawIdOrUrl : `https://${rawIdOrUrl}`);
+      const listParam = url.searchParams.get("list");
+      if (listParam) return listParam;
+    }
+  } catch {}
+  return rawIdOrUrl.replace(/^.*list=/, "").split("&")[0].trim();
+}
+
 function mergeLocalVideoProgress(playlistId: string, videos: PlaylistVideo[]): PlaylistVideo[] {
+  const cleanId = cleanPlaylistId(playlistId);
   const prog = getLocalVideoProgress();
   return videos.map((v) => {
-    const key = `${playlistId}_${v.videoId}`;
+    const key = `${cleanId}_${v.videoId}`;
+    const rawKey = `${playlistId}_${v.videoId}`;
     if (key in prog) {
       return { ...v, watched: prog[key] };
+    }
+    if (rawKey in prog) {
+      return { ...v, watched: prog[rawKey] };
     }
     return v;
   });
@@ -826,19 +843,27 @@ function mergeLocalVideoProgress(playlistId: string, videos: PlaylistVideo[]): P
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
+  const cleanId = cleanPlaylistId(playlistId);
+
   // 1. Primary: Fetch full YouTube playlist items + merged progress from backend API
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
       const res = await fetch(
-        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
+        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
         { headers: { ...authHeaders }, cache: "no-store" }
       );
       if (res.ok) {
         const json = await res.json();
         if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
           saveActivePlaylistTotal(json.videos.length);
-          const merged = mergeLocalVideoProgress(playlistId, json.videos);
+          // Re-hydrate local progress from Supabase DB rows
+          json.videos.forEach((v: PlaylistVideo) => {
+            if (v.watched) {
+              saveLocalVideoWatched(cleanId, v.videoId, true);
+            }
+          });
+          const merged = mergeLocalVideoProgress(cleanId, json.videos);
           return { videos: merged, count: merged.length };
         }
       }
@@ -855,7 +880,7 @@ export async function fetchPlaylistVideos(
         .from("video_progress")
         .select("*")
         .eq("user_id", session.user.id)
-        .eq("playlist_id", playlistId);
+        .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
 
       if (data && data.length > 0) {
         const videos: PlaylistVideo[] = data.map((row: any, idx: number) => ({
@@ -868,7 +893,12 @@ export async function fetchPlaylistVideos(
           watch_time: row.watch_time || 0,
           completed_at: row.completed_at || null,
         }));
-        const merged = mergeLocalVideoProgress(playlistId, videos);
+
+        data.forEach((r: any) => {
+          if (r.watched) saveLocalVideoWatched(cleanId, r.video_id, true);
+        });
+
+        const merged = mergeLocalVideoProgress(cleanId, videos);
         return { videos: merged, count: merged.length };
       }
     }
@@ -884,8 +914,10 @@ export async function markVideoWatched(
   videoId: string,
   watched: boolean
 ): Promise<void> {
+  const cleanId = cleanPlaylistId(playlistId);
+
   // Always update local storage first so UI tick is 100% persistent
-  saveLocalVideoWatched(playlistId, videoId, watched);
+  saveLocalVideoWatched(cleanId, videoId, watched);
 
   try {
     const authHeaders = await getAuthHeaders();
@@ -894,7 +926,7 @@ export async function markVideoWatched(
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
-          playlist_id: playlistId,
+          playlist_id: cleanId,
           video_id: videoId,
           watched: watched,
         }),
@@ -909,7 +941,7 @@ export async function markVideoWatched(
     if (session?.user?.id) {
       const row = {
         user_id: session.user.id,
-        playlist_id: playlistId,
+        playlist_id: cleanId,
         video_id: videoId,
         watched: watched,
         completed_at: watched ? new Date().toISOString() : null,
