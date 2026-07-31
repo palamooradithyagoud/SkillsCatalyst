@@ -104,7 +104,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         pct = round((completed_count / total_videos) * 100)
         subtitle_text = f"{completed_count}/{total_videos} videos completed"
     elif completed_count > 0:
-        pct = 100
+        pct = min(99, completed_count * 5)
         subtitle_text = f"{completed_count} video{'s' if completed_count != 1 else ''} completed"
     else:
         pct = 0
