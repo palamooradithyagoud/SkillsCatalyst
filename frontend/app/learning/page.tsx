@@ -6,7 +6,7 @@ import {
   Search, BookOpen, Bookmark, BookmarkCheck, Play,
   Loader2, ChevronDown, Globe, Database,
   Sparkles, CheckCircle, Trash2, X,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShieldAlert,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -35,6 +35,79 @@ const LANGUAGES: { value: Lang; label: string }[] = [
   { value: "tamil",   label: "Tamil"   },
   { value: "telugu",  label: "Telugu"  },
 ];
+
+// ── Client-side skill-query guard ─────────────────────────────────────────────
+// Lightweight blocklist mirrors backend _LEARNING_OFFTOPIC for fast UX feedback.
+const OFFTOPIC_TERMS = [
+  "movie", "movies", "film", "films", "cinema", "netflix", "disney", "hotstar",
+  "song", "songs", "music", "album", "singer", "celebrity", "bollywood", "hollywood",
+  "anime", "manga", "cartoon", "podcast", "vlog",
+  "cricket", "ipl", "football", "soccer", "nfl", "nba", "sports", "match",
+  "recipe", "food", "cooking", "restaurant", "diet",
+  "girlfriend", "boyfriend", "relationship", "marriage", "wedding", "dating",
+  "joke", "jokes", "meme", "memes", "funny",
+  "politics", "election", "president", "government",
+  "astrology", "horoscope", "zodiac",
+  "weather", "news", "headline",
+];
+
+const SKILL_TERMS = [
+  "python", "java", "javascript", "typescript", "react", "vue", "angular", "node",
+  "django", "flask", "fastapi", "machine learning", "deep learning", "ai", "ml",
+  "data science", "nlp", "llm", "dsa", "algorithm", "data structure", "leetcode",
+  "system design", "cloud", "aws", "azure", "gcp", "devops", "docker", "kubernetes",
+  "sql", "database", "mongodb", "postgres", "api", "rest", "graphql",
+  "html", "css", "frontend", "backend", "fullstack", "git", "github", "linux",
+  "bash", "c++", "golang", "rust", "kotlin", "swift", "flutter", "dart", "php",
+  "cybersecurity", "networking", "programming", "coding", "software", "developer",
+  "engineer", "interview", "resume", "career", "roadmap", "tech", "tutorial", "course",
+];
+
+function isSkillQuery(q: string): boolean {
+  const lower = q.toLowerCase().trim();
+  if (!lower || lower.length < 2) return false;
+  if (/^\d+$/.test(lower)) return false; // numbers-only
+  const hasOffTopic = OFFTOPIC_TERMS.some((t) => lower.includes(t));
+  if (!hasOffTopic) return true;
+  // Off-topic keyword present — only valid if a skill keyword is also present
+  return SKILL_TERMS.some((t) => lower.includes(t));
+}
+
+// ── Client-side skill guard ───────────────────────────────────────────────────
+const _CS_NON_SKILL = [
+  "movie", "movies", "film", "films", "song", "songs", "music", "album",
+  "cricket", "ipl", "football", "soccer", "sports", "match",
+  "recipe", "food", "cooking", "restaurant",
+  "joke", "meme", "funny", "prank",
+  "netflix", "hotstar", "bollywood", "hollywood", "anime", "manga",
+  "relationship", "girlfriend", "boyfriend",
+  "astrology", "horoscope", "zodiac",
+  "news", "politics", "election", "celebrity", "actor", "actress",
+];
+const _CS_SKILL = [
+  "python", "java", "javascript", "typescript", "react", "vue", "angular",
+  "node", "django", "flask", "fastapi", "dsa", "algorithm", "data structure",
+  "machine learning", "deep learning", "ai", "ml", "data science", "nlp",
+  "system design", "cloud", "aws", "azure", "gcp", "devops", "docker",
+  "kubernetes", "sql", "database", "mongodb", "redis", "html", "css",
+  "frontend", "backend", "fullstack", "api", "graphql", "git", "github",
+  "linux", "bash", "c++", "golang", "rust", "kotlin", "swift", "flutter",
+  "cybersecurity", "networking", "programming", "coding", "developer",
+  "software", "engineer", "tutorial", "course", "bootcamp", "leetcode",
+  "competitive", "interview", "career", "resume", "roadmap",
+];
+
+function isNonSkillQuery(q: string): string | null {
+  const lower = q.toLowerCase().trim();
+  if (!lower || lower.length < 2) return "Please enter a skill to search for (e.g. Python, React, DSA).";
+  if (/^[\d\s]+$/.test(lower)) return "Please search for a skill or technology, not a number.";
+  const hasNonSkill = _CS_NON_SKILL.some((kw) => lower.includes(kw));
+  const hasSkill    = _CS_SKILL.some((kw) => lower.includes(kw));
+  if (hasNonSkill && !hasSkill) {
+    return `"${q}" doesn't look like a skill. Try searching for programming languages, frameworks, or tools like "Python", "React", or "DSA".`;
+  }
+  return null;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getLevelStyle(level: string): string {
@@ -863,6 +936,7 @@ export default function LearningPage() {
   const [hasSearched, setHasSearched]   = useState(false);
   const [localSaved, setLocalSaved]     = useState<Set<string>>(new Set());
   const [notification, setNotification] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [queryError, setQueryError]     = useState<string | null>(null);
 
   // ── Player state
   const [playerPlaylist, setPlayerPlaylist]   = useState<Playlist | null>(null);
@@ -922,8 +996,25 @@ export default function LearningPage() {
   }, []);
 
   const handleSearch = () => {
-    if (!query.trim()) return;
-    setSearchTerm(query.trim());
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    // Client-side numbers-only guard
+    if (/^\d+$/.test(trimmed)) {
+      setQueryError("🚫 Numbers alone aren't a skill. Try \"Python\", \"React\", or \"DSA\".");
+      return;
+    }
+
+    // Client-side skill-query guard — fast path before hitting backend
+    if (!isSkillQuery(trimmed)) {
+      setQueryError(
+        `🚫 "${trimmed}" doesn't look like a skill search. Try a programming language, tool, or concept — e.g. "Python", "React", "DSA", or "System Design".`
+      );
+      return;
+    }
+
+    setQueryError(null);
+    setSearchTerm(trimmed);
     setHasSearched(true);
     doSearch();
   };
@@ -1068,10 +1159,12 @@ export default function LearningPage() {
                   <input
                     type="text"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => { setQuery(e.target.value); setQueryError(null); }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    placeholder="What do you want to learn? (e.g. Python, React, DSA)"
-                    className="input-glass w-full pl-11 pr-4 py-3 text-sm"
+                    placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
+                    className={`input-glass w-full pl-11 pr-4 py-3 text-sm ${
+                      queryError ? "border-rose-500/60" : ""
+                    }`}
                   />
                 </div>
                 <SelectDropdown value={level}    options={LEVELS}    onChange={setLevel}    />
@@ -1090,6 +1183,21 @@ export default function LearningPage() {
                   }
                 </motion.button>
               </div>
+
+              {/* Inline query error */}
+              <AnimatePresence>
+                {queryError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="flex items-start gap-2 mt-1 px-4 py-3 rounded-xl text-sm text-rose-300 bg-rose-500/10 border border-rose-500/25"
+                  >
+                    <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <span>{queryError}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Results */}
@@ -1151,21 +1259,24 @@ export default function LearningPage() {
                 </motion.div>
               )}
 
-              {!hasSearched && (
+              {!hasSearched && !queryError && (
                 <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="flex flex-col items-center py-20 gap-3 text-center">
                   <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center mb-2">
                     <Search className="w-8 h-8 text-slate-500" />
                   </div>
                   <div className="text-slate-300 font-semibold text-base">
-                    Enter a skill above to generate your learning path.
+                    Search for a programming skill or technology to get started.
                   </div>
-                  <div className="text-slate-500 text-sm mt-1 flex items-center gap-2 flex-wrap justify-center">
+                  <div className="text-slate-500 text-xs mt-0.5 mb-2">
+                    Only skills, frameworks, and tools — no movies or entertainment.
+                  </div>
+                  <div className="text-slate-500 text-sm flex items-center gap-2 flex-wrap justify-center">
                     Try:{" "}
-                    {["Python", "Java", "C++", "DSA", "React", "System Design"].map((s) => (
+                    {["Python", "Java", "C++", "DSA", "React", "System Design", "Machine Learning", "SQL"].map((s) => (
                       <button
                         key={s}
-                        onClick={() => setQuery(s)}
+                        onClick={() => { setQuery(s); setQueryError(null); }}
                         className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline transition-colors"
                       >
                         {s}

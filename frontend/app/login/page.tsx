@@ -1,26 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import {
   Code2,
   Mail,
   Lock,
   ArrowRight,
-  Sparkles,
   ShieldCheck,
-  CheckCircle2,
   GitBranch,
   Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login, session, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // If already logged in the AuthProvider will auto-redirect,
+  // but render nothing while loading to avoid flash
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,21 +39,18 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMessage("");
 
-    // Simulate login & set session
+    // Simulate auth delay then call login() — which also does router.replace("/dashboard")
     setTimeout(() => {
-      try {
-        localStorage.setItem(
-          "skillscatalyst_user_session",
-          JSON.stringify({
-            email,
-            user_id: "default_user",
-            loggedInAt: new Date().toISOString(),
-          })
-        );
-      } catch (err) {}
       setLoading(false);
-      router.push("/dashboard");
+      login(email, "default_user");
     }, 600);
+  };
+
+  const handleOAuth = (provider: string) => {
+    setLoading(true);
+    setTimeout(() => {
+      login(`${provider}_user@skillpath.app`, `${provider}_user`);
+    }, 400);
   };
 
   return (
@@ -56,7 +61,7 @@ export default function LoginPage() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md glass rounded-3xl p-8 border border-white/[0.1] shadow-2xl space-y-7 relative overflow-hidden"
       >
-        {/* Top ambient glow aura */}
+        {/* Ambient glow */}
         <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none" />
 
         {/* Brand Header */}
@@ -89,6 +94,7 @@ export default function LoginPage() {
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
+                id="login-email"
                 type="email"
                 required
                 value={email}
@@ -106,6 +112,7 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
+                id="login-password"
                 type="password"
                 required
                 value={password}
@@ -119,16 +126,16 @@ export default function LoginPage() {
           <div className="flex items-center justify-between text-xs pt-1">
             <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200">
               <input
+                id="login-remember"
                 type="checkbox"
                 defaultChecked
                 className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 bg-[#0b1222]"
               />
               <span className="font-medium">Remember me</span>
             </label>
-
             <button
               type="button"
-              onClick={() => alert("Password reset link will be sent to your registered email address.")}
+              onClick={() => alert("Password reset coming soon.")}
               className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               Forgot password?
@@ -136,6 +143,7 @@ export default function LoginPage() {
           </div>
 
           <button
+            id="login-submit"
             type="submit"
             disabled={loading}
             className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs tracking-wide transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
@@ -162,14 +170,9 @@ export default function LoginPage() {
         {/* OAuth Buttons */}
         <div className="grid grid-cols-2 gap-3 relative z-10">
           <button
+            id="login-google"
             type="button"
-            onClick={() => {
-              setLoading(true);
-              setTimeout(() => {
-                localStorage.setItem("skillscatalyst_user_session", JSON.stringify({ user_id: "google_user" }));
-                router.push("/dashboard");
-              }, 400);
-            }}
+            onClick={() => handleOAuth("google")}
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-bold text-slate-200 transition-all cursor-pointer"
           >
             <Globe className="w-4 h-4 text-rose-400" />
@@ -177,14 +180,9 @@ export default function LoginPage() {
           </button>
 
           <button
+            id="login-github"
             type="button"
-            onClick={() => {
-              setLoading(true);
-              setTimeout(() => {
-                localStorage.setItem("skillscatalyst_user_session", JSON.stringify({ user_id: "github_user" }));
-                router.push("/dashboard");
-              }, 400);
-            }}
+            onClick={() => handleOAuth("github")}
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-bold text-slate-200 transition-all cursor-pointer"
           >
             <GitBranch className="w-4 h-4 text-slate-300" />
@@ -192,7 +190,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Footer info */}
+        {/* Footer */}
         <div className="pt-2 text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>Protected by Enterprise SSL Encryption</span>

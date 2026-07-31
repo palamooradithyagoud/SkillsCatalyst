@@ -21,8 +21,10 @@ import {
   saveCodingProfiles,
   PlatformStat,
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 export default function SettingsPage() {
+  const { logout } = useAuth();
   // Academic Profile State
   const [fullName, setFullName] = useState("");
   const [college, setCollege] = useState("");
@@ -46,72 +48,119 @@ export default function SettingsPage() {
   const [codingSuccessMsg, setCodingSuccessMsg] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Fetch initial profile & stats from DB
+  // ── localStorage keys ─────────────────────────────────────────────────
+  const LS_ACADEMIC = "sc_academic_profile";
+  const LS_CODING   = "sc_coding_profiles";
+  const LS_STATS    = "sc_coding_stats";
+
+  // Fetch initial profile & stats — DB first, then fall back to localStorage
   useEffect(() => {
     async function loadData() {
       setLoadingProfile(true);
-      const data = await fetchProfileData();
-      if (data) {
-        if (data.academic) {
-          if (data.academic.full_name) setFullName(data.academic.full_name);
-          if (data.academic.college) setCollege(data.academic.college);
-          if (data.academic.department) setDepartment(data.academic.department);
-          if (data.academic.academic_year) setAcademicYear(data.academic.academic_year);
-          if (data.academic.target_role) setTargetRole(data.academic.target_role);
+
+      // ── Step 1: Load from localStorage immediately (instant render) ──
+      try {
+        const cachedAcademic = localStorage.getItem(LS_ACADEMIC);
+        if (cachedAcademic) {
+          const a = JSON.parse(cachedAcademic);
+          if (a.full_name)     setFullName(a.full_name);
+          if (a.college)       setCollege(a.college);
+          if (a.department)    setDepartment(a.department);
+          if (a.academic_year) setAcademicYear(a.academic_year);
+          if (a.target_role)   setTargetRole(a.target_role);
         }
-        if (data.coding_inputs) {
-          if (data.coding_inputs.leetcode) setLeetcodeInput(data.coding_inputs.leetcode);
-          if (data.coding_inputs.github) setGithubInput(data.coding_inputs.github);
-          if (data.coding_inputs.hackerrank) setHackerrankInput(data.coding_inputs.hackerrank);
-          if (data.coding_inputs.codechef) setCodechefInput(data.coding_inputs.codechef);
-          if (data.coding_inputs.geeksforgeeks) setGfgInput(data.coding_inputs.geeksforgeeks);
-          if (data.coding_inputs.codeforces) setCodeforcesInput(data.coding_inputs.codeforces);
+        const cachedCoding = localStorage.getItem(LS_CODING);
+        if (cachedCoding) {
+          const c = JSON.parse(cachedCoding);
+          if (c.leetcode)      setLeetcodeInput(c.leetcode);
+          if (c.github)        setGithubInput(c.github);
+          if (c.hackerrank)    setHackerrankInput(c.hackerrank);
+          if (c.codechef)      setCodechefInput(c.codechef);
+          if (c.geeksforgeeks) setGfgInput(c.geeksforgeeks);
+          if (c.codeforces)    setCodeforcesInput(c.codeforces);
         }
-        if (data.coding_stats) {
-          setCodingStats(data.coding_stats);
+        const cachedStats = localStorage.getItem(LS_STATS);
+        if (cachedStats) {
+          setCodingStats(JSON.parse(cachedStats));
         }
-      }
+      } catch {}
+
+      // ── Step 2: Try Supabase (override localStorage if data exists) ──
+      try {
+        const data = await fetchProfileData();
+        if (data) {
+          if (data.academic) {
+            if (data.academic.full_name)     setFullName(data.academic.full_name);
+            if (data.academic.college)       setCollege(data.academic.college);
+            if (data.academic.department)    setDepartment(data.academic.department);
+            if (data.academic.academic_year) setAcademicYear(data.academic.academic_year);
+            if (data.academic.target_role)   setTargetRole(data.academic.target_role);
+          }
+          if (data.coding_inputs) {
+            if (data.coding_inputs.leetcode)      setLeetcodeInput(data.coding_inputs.leetcode);
+            if (data.coding_inputs.github)        setGithubInput(data.coding_inputs.github);
+            if (data.coding_inputs.hackerrank)    setHackerrankInput(data.coding_inputs.hackerrank);
+            if (data.coding_inputs.codechef)      setCodechefInput(data.coding_inputs.codechef);
+            if (data.coding_inputs.geeksforgeeks) setGfgInput(data.coding_inputs.geeksforgeeks);
+            if (data.coding_inputs.codeforces)    setCodeforcesInput(data.coding_inputs.codeforces);
+          }
+          if (data.coding_stats) {
+            setCodingStats(data.coding_stats);
+          }
+        }
+      } catch {}
+
       setLoadingProfile(false);
     }
     loadData();
   }, []);
 
-  // Save Academic Profile
+  // Save Academic Profile — always writes to localStorage as primary cache
   const handleSaveAcademic = async () => {
     setSavingAcademic(true);
     setAcademicSuccessMsg("");
-    const res = await saveAcademicProfile({
+    const payload = {
       full_name: fullName,
       college: college,
       department: department,
       academic_year: academicYear,
       target_role: targetRole,
-    });
+    };
+    // Always save locally first (instant, reliable)
+    try { localStorage.setItem(LS_ACADEMIC, JSON.stringify(payload)); } catch {}
+    // Then try Supabase (may fail if table not created yet)
+    await saveAcademicProfile(payload).catch(() => {});
     setSavingAcademic(false);
-    if (res && res.success) {
-      setAcademicSuccessMsg("Academic profile saved successfully!");
-      setTimeout(() => setAcademicSuccessMsg(""), 4000);
-    }
+    setAcademicSuccessMsg("Academic profile saved successfully!");
+    setTimeout(() => setAcademicSuccessMsg(""), 4000);
   };
 
   // Save Coding Profiles & Extract Stats automatically
   const handleSaveCoding = async () => {
     setSyncingCoding(true);
     setCodingSuccessMsg("");
-    const res = await saveCodingProfiles({
+    const codingPayload = {
       leetcode: leetcodeInput,
       github: githubInput,
       hackerrank: hackerrankInput,
       codechef: codechefInput,
       geeksforgeeks: gfgInput,
       codeforces: codeforcesInput,
-    });
+    };
+    // Always save inputs locally first
+    try { localStorage.setItem(LS_CODING, JSON.stringify(codingPayload)); } catch {}
+    // Then try Supabase + live stats extraction
+    const res = await saveCodingProfiles(codingPayload).catch(() => null);
     setSyncingCoding(false);
     if (res && res.success && res.stats) {
       setCodingStats(res.stats);
+      try { localStorage.setItem(LS_STATS, JSON.stringify(res.stats)); } catch {}
       setCodingSuccessMsg("Coding profiles saved & live stats extracted!");
-      setTimeout(() => setCodingSuccessMsg(""), 4000);
+    } else {
+      // Even if Supabase failed, inputs are saved locally
+      setCodingSuccessMsg("Profiles saved locally! Stats will sync when Supabase is ready.");
     }
+    setTimeout(() => setCodingSuccessMsg(""), 4000);
   };
 
   return (
@@ -374,14 +423,7 @@ export default function SettingsPage() {
         </div>
 
         <button
-          onClick={() => {
-            if (typeof window !== "undefined") {
-              try {
-                localStorage.removeItem("skillscatalyst_user_session");
-              } catch (e) {}
-              window.location.href = "/login";
-            }
-          }}
+          onClick={logout}
           className="px-5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
         >
           <LogOut className="w-4 h-4" />

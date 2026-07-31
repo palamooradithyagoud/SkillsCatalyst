@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import QueryProvider from "@/lib/query-provider";
+import { AuthProvider } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "SkillPath — Premium Career Accelerator & AI Mentor",
@@ -22,19 +23,20 @@ export default function RootLayout({
       </head>
       <body className="antialiased flex min-h-screen" suppressHydrationWarning>
         <QueryProvider>
-          {/* Subtle ambient orbs in background */}
-          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/8 blur-[120px]" />
-            <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-cyan-600/5 blur-[100px]" />
-          </div>
-          <Sidebar />
-          <main className="relative z-10 flex-1 p-6 md:p-8 lg:p-10 overflow-y-auto">
-            {children}
-          </main>
+          <AuthProvider>
+            {/* Subtle ambient orbs in background */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+              <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]" />
+              <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/8 blur-[120px]" />
+              <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-cyan-600/5 blur-[100px]" />
+            </div>
+            <Sidebar />
+            <main className="relative z-10 flex-1 p-6 md:p-8 lg:p-10 overflow-y-auto">
+              {children}
+            </main>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>
   );
 }
-

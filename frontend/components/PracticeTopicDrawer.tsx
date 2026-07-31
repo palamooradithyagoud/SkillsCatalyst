@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, ExternalLink, Check } from "lucide-react";
+import React from "react";
+import { X, ExternalLink, Check, Video, BookOpen, Clock, Zap, PlayCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface LeetCodeProblem {
@@ -11,6 +11,7 @@ export interface LeetCodeProblem {
   url: string;
   difficulty: "Easy" | "Medium" | "Hard";
   pattern: string;
+  solutionVideoUrl?: string;
 }
 
 export interface Prerequisite {
@@ -19,17 +20,26 @@ export interface Prerequisite {
 }
 
 export interface PracticeTopicData {
+  definition: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+  masterclassVideoUrl: string;
   prerequisites: Prerequisite[];
   problems: LeetCodeProblem[];
 }
 
 const COMMON_PREREQS = [
-  { title: "Arrays & Pointers", subtitle: "Basic Traversal" },
-  { title: "In-Place Swapping", subtitle: "O(1) Space Memory" },
+  { title: "Arrays & Pointers", subtitle: "Basic Traversal & Indexing" },
+  { title: "In-Place Swapping", subtitle: "O(1) Memory Optimization" },
 ];
 
 const TOPIC_DATASET: Record<string, PracticeTopicData> = {
   "two pointers": {
+    definition:
+      "Two Pointers is an optimized algorithm pattern where two references iterate through a data structure (array/string) simultaneously. Pointers can move from opposite ends towards each other or at different speeds (slow/fast) to solve pair-sum, sorting, and partition problems in optimal O(N) time with O(1) space.",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=On03HWe2tZM",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 26, number: 26, title: "Remove Duplicates from Sorted Array", url: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/", difficulty: "Easy", pattern: "Two Pointers" },
@@ -57,6 +67,11 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
   },
 
   "two pointer": {
+    definition:
+      "Two Pointer strategy on strings/sequences uses two indices to check palindromes, reverse subsegments, or match subsequences efficiently in O(N) linear time.",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=On03HWe2tZM",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 125, number: 125, title: "Valid Palindrome", url: "https://leetcode.com/problems/valid-palindrome/", difficulty: "Easy", pattern: "Two Pointers" },
@@ -75,6 +90,11 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
   },
 
   "sliding window": {
+    definition:
+      "Sliding Window maintains a dynamic or fixed subarray boundary between two pointers. By adding new elements on the right and removing invalid ones from the left, it converts O(N²) subarray brute-force problems into O(N) linear time algorithms.",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1) / O(K)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=p-ss2JNynmw",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 643, number: 643, title: "Maximum Average Subarray I", url: "https://leetcode.com/problems/maximum-average-subarray-i/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
@@ -85,7 +105,7 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 1004, number: 1004, title: "Max Consecutive Ones III", url: "https://leetcode.com/problems/max-consecutive-ones-iii/", difficulty: "Medium", pattern: "Variable Sliding Window" },
       { id: 1052, number: 1052, title: "Grumpy Bookstore Owner", url: "https://leetcode.com/problems/grumpy-bookstore-owner/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
       { id: 1248, number: 1248, title: "Count Number of Nice Subarrays", url: "https://leetcode.com/problems/count-number-of-nice-subarrays/", difficulty: "Medium", pattern: "Sliding Window + Prefix Sum" },
-      { id: 1343, number: 1343, title: "Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold", url: "https://leetcode.com/problems/number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
+      { id: 1343, number: 1343, title: "Number of Sub-arrays of Size K", url: "https://leetcode.com/problems/number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
       { id: 1423, number: 1423, title: "Maximum Points You Can Obtain from Cards", url: "https://leetcode.com/problems/maximum-points-you-can-obtain-from-cards/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
       { id: 1493, number: 1493, title: "Longest Subarray of 1's After Deleting One Element", url: "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/", difficulty: "Medium", pattern: "Variable Sliding Window" },
       { id: 1658, number: 1658, title: "Minimum Operations to Reduce X to Zero", url: "https://leetcode.com/problems/minimum-operations-to-reduce-x-to-zero/", difficulty: "Medium", pattern: "Sliding Window" },
@@ -97,22 +117,12 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
     ],
   },
 
-  "string sliding window": {
-    prerequisites: COMMON_PREREQS,
-    problems: [
-      { id: 1456, number: 1456, title: "Maximum Number of Vowels in a Substring of Given Length", url: "https://leetcode.com/problems/maximum-number-of-vowels-in-a-substring-of-given-length/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
-      { id: 2379, number: 2379, title: "Minimum Recolors to Get K Consecutive Black Blocks", url: "https://leetcode.com/problems/minimum-recolors-to-get-k-consecutive-black-blocks/", difficulty: "Easy", pattern: "Fixed Sliding Window" },
-      { id: 3090, number: 3090, title: "Maximum Length Substring With Two Occurrences", url: "https://leetcode.com/problems/maximum-length-substring-with-two-occurrences/", difficulty: "Easy", pattern: "Variable Sliding Window" },
-      { id: 3, number: 3, title: "Longest Substring Without Repeating Characters", url: "https://leetcode.com/problems/longest-substring-without-repeating-characters/", difficulty: "Medium", pattern: "Variable Sliding Window" },
-      { id: 424, number: 424, title: "Longest Repeating Character Replacement", url: "https://leetcode.com/problems/longest-repeating-character-replacement/", difficulty: "Medium", pattern: "Variable Sliding Window" },
-      { id: 438, number: 438, title: "Find All Anagrams in a String", url: "https://leetcode.com/problems/find-all-anagrams-in-a-string/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
-      { id: 567, number: 567, title: "Permutation in String", url: "https://leetcode.com/problems/permutation-in-string/", difficulty: "Medium", pattern: "Fixed Sliding Window" },
-      { id: 2516, number: 2516, title: "Take K of Each Character From Left and Right", url: "https://leetcode.com/problems/take-k-of-each-character-from-left-and-right/", difficulty: "Medium", pattern: "Sliding Window" },
-      { id: 76, number: 76, title: "Minimum Window Substring", url: "https://leetcode.com/problems/minimum-window-substring/", difficulty: "Hard", pattern: "Variable Sliding Window" },
-    ],
-  },
-
   "prefix sum": {
+    definition:
+      "Prefix Sum precomputes cumulative sums into an auxiliary array `P` where `P[i] = A[0] + ... + A[i]`. This enables O(1) range sum queries between indices `i` and `j` via `P[j] - P[i-1]`. Combined with HashMaps, it efficiently solves Subarray Sum Equals K in O(N) time.",
+    timeComplexity: "O(N) Preprocessing, O(1) Query",
+    spaceComplexity: "O(N)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=pVS3yhlzRLQ",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 1480, number: 1480, title: "Running Sum of 1d Array", url: "https://leetcode.com/problems/running-sum-of-1d-array/", difficulty: "Easy", pattern: "Prefix Sum" },
@@ -124,28 +134,34 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
       { id: 525, number: 525, title: "Contiguous Array", url: "https://leetcode.com/problems/contiguous-array/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
       { id: 523, number: 523, title: "Continuous Subarray Sum", url: "https://leetcode.com/problems/continuous-subarray-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 930, number: 930, title: "Binary Subarrays With Sum", url: "https://leetcode.com/problems/binary-subarrays-with-sum/", difficulty: "Medium", pattern: "Prefix Sum" },
       { id: 974, number: 974, title: "Subarray Sums Divisible by K", url: "https://leetcode.com/problems/subarray-sums-divisible-by-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 1248, number: 1248, title: "Count Number of Nice Subarrays", url: "https://leetcode.com/problems/count-number-of-nice-subarrays/", difficulty: "Medium", pattern: "Prefix Sum" },
       { id: 1314, number: 1314, title: "Matrix Block Sum", url: "https://leetcode.com/problems/matrix-block-sum/", difficulty: "Medium", pattern: "2D Prefix Sum" },
       { id: 1352, number: 1352, title: "Product of the Last K Numbers", url: "https://leetcode.com/problems/product-of-the-last-k-numbers/", difficulty: "Medium", pattern: "Prefix Product" },
-      { id: 304, number: 304, title: "Range Sum Query 2D – Immutable", url: "https://leetcode.com/problems/range-sum-query-2d-immutable/", difficulty: "Medium", pattern: "2D Prefix Sum" },
-      { id: 327, number: 327, title: "Count of Range Sum", url: "https://leetcode.com/problems/count-of-range-sum/", difficulty: "Hard", pattern: "Prefix Sum + Divide & Conquer" },
     ],
   },
 
   "kadane's algorithm": {
+    definition:
+      "Kadane's Algorithm finds the maximum sum contiguous subarray in linear O(N) time. By maintaining a running current sum `curr = max(x, curr + x)`, it dynamically decides whether to extend the existing subarray or start fresh from the current element.",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=AHZpyENo7k4",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 53, number: 53, title: "Maximum Subarray", url: "https://leetcode.com/problems/maximum-subarray/", difficulty: "Easy", pattern: "Kadane's Algorithm" },
       { id: 918, number: 918, title: "Maximum Sum Circular Subarray", url: "https://leetcode.com/problems/maximum-sum-circular-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm (Circular)" },
       { id: 1749, number: 1749, title: "Maximum Absolute Sum of Any Subarray", url: "https://leetcode.com/problems/maximum-absolute-sum-of-any-subarray/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
       { id: 1191, number: 1191, title: "K-Concatenation Maximum Sum", url: "https://leetcode.com/problems/k-concatenation-maximum-sum/", difficulty: "Medium", pattern: "Kadane's Algorithm" },
-      { id: 2321, number: 2321, title: "Maximum Score Of Spliced Array", url: "https://leetcode.com/problems/maximum-score-of-spliced-array/", difficulty: "Hard", pattern: "Kadane's Algorithm + Difference Array" },
+      { id: 2321, number: 2321, title: "Maximum Score Of Spliced Array", url: "https://leetcode.com/problems/maximum-score-of-spliced-array/", difficulty: "Hard", pattern: "Kadane's Algorithm" },
     ],
   },
 
   "frequency map": {
+    definition:
+      "Frequency Mapping utilizes Hash Tables or Frequency Arrays to store and retrieve counts of elements in O(1) average time. Essential for anagram matching, two sum lookups, duplicate detection, and top-k frequent element tracking.",
+    timeComplexity: "O(N) Build, O(1) Lookup",
+    spaceComplexity: "O(N)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=KLlXCFG5TnA",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 1, number: 1, title: "Two Sum", url: "https://leetcode.com/problems/two-sum/", difficulty: "Easy", pattern: "Hash Map" },
@@ -158,115 +174,64 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 1207, number: 1207, title: "Unique Number of Occurrences", url: "https://leetcode.com/problems/unique-number-of-occurrences/", difficulty: "Easy", pattern: "Frequency Map" },
       { id: 1512, number: 1512, title: "Number of Good Pairs", url: "https://leetcode.com/problems/number-of-good-pairs/", difficulty: "Easy", pattern: "Frequency Map" },
       { id: 169, number: 169, title: "Majority Element", url: "https://leetcode.com/problems/majority-element/", difficulty: "Easy", pattern: "Frequency Map" },
-      { id: 1748, number: 1748, title: "Sum of Unique Elements", url: "https://leetcode.com/problems/sum-of-unique-elements/", difficulty: "Easy", pattern: "Frequency Map" },
-      { id: 350, number: 350, title: "Intersection of Two Arrays II", url: "https://leetcode.com/problems/intersection-of-two-arrays-ii/", difficulty: "Easy", pattern: "Frequency Map" },
       { id: 49, number: 49, title: "Group Anagrams", url: "https://leetcode.com/problems/group-anagrams/", difficulty: "Medium", pattern: "Frequency Map" },
       { id: 347, number: 347, title: "Top K Frequent Elements", url: "https://leetcode.com/problems/top-k-frequent-elements/", difficulty: "Medium", pattern: "Frequency Map + Heap" },
-      { id: 451, number: 451, title: "Sort Characters By Frequency", url: "https://leetcode.com/problems/sort-characters-by-frequency/", difficulty: "Medium", pattern: "Frequency Map + Sorting" },
-      { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 659, number: 659, title: "Split Array into Consecutive Subsequences", url: "https://leetcode.com/problems/split-array-into-consecutive-subsequences/", difficulty: "Medium", pattern: "Frequency Map + Greedy" },
-      { id: 692, number: 692, title: "Top K Frequent Words", url: "https://leetcode.com/problems/top-k-frequent-words/", difficulty: "Medium", pattern: "Frequency Map + Heap" },
-      { id: 1636, number: 1636, title: "Sort Array by Increasing Frequency", url: "https://leetcode.com/problems/sort-array-by-increasing-frequency/", difficulty: "Easy", pattern: "Frequency Map + Sorting" },
-    ],
-  },
-
-  "prefix sum + hashmap": {
-    prerequisites: COMMON_PREREQS,
-    problems: [
-      { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 525, number: 525, title: "Contiguous Array", url: "https://leetcode.com/problems/contiguous-array/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 523, number: 523, title: "Continuous Subarray Sum", url: "https://leetcode.com/problems/continuous-subarray-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 974, number: 974, title: "Subarray Sums Divisible by K", url: "https://leetcode.com/problems/subarray-sums-divisible-by-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 930, number: 930, title: "Binary Subarrays With Sum", url: "https://leetcode.com/problems/binary-subarrays-with-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 1248, number: 1248, title: "Count Number of Nice Subarrays", url: "https://leetcode.com/problems/count-number-of-nice-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 1590, number: 1590, title: "Make Sum Divisible by P", url: "https://leetcode.com/problems/make-sum-divisible-by-p/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 2845, number: 2845, title: "Count of Interesting Subarrays", url: "https://leetcode.com/problems/count-of-interesting-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 325, number: 325, title: "Maximum Size Subarray Sum Equals k", url: "https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
-      { id: 437, number: 437, title: "Path Sum III", url: "https://leetcode.com/problems/path-sum-iii/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map (Tree)" },
     ],
   },
 
   "classic binary search": {
+    definition:
+      "Classic Binary Search divides a sorted search space in half during each step, comparing the target against `mid = (left + right) / 2`. This reduces search time from linear O(N) to logarithmic O(log N). Also applies to binary search on answer range.",
+    timeComplexity: "O(log N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=s4DPM8ct1pI",
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 704, number: 704, title: "Binary Search", url: "https://leetcode.com/problems/binary-search/", difficulty: "Easy", pattern: "Classic Binary Search" },
       { id: 35, number: 35, title: "Search Insert Position", url: "https://leetcode.com/problems/search-insert-position/", difficulty: "Easy", pattern: "Classic Binary Search" },
       { id: 69, number: 69, title: "Sqrt(x)", url: "https://leetcode.com/problems/sqrtx/", difficulty: "Easy", pattern: "Binary Search on Answer" },
-      { id: 278, number: 278, title: "First Bad Version", url: "https://leetcode.com/problems/first-bad-version/", difficulty: "Easy", pattern: "First True Binary Search" },
+      { id: 278, number: 278, title: "First Bad Version", url: "https://leetcode.com/problems/first-bad-version/", difficulty: "Easy", pattern: "Binary Search" },
       { id: 374, number: 374, title: "Guess Number Higher or Lower", url: "https://leetcode.com/problems/guess-number-higher-or-lower/", difficulty: "Easy", pattern: "Classic Binary Search" },
-      { id: 1539, number: 1539, title: "Kth Missing Positive Number", url: "https://leetcode.com/problems/kth-missing-positive-number/", difficulty: "Easy", pattern: "Binary Search" },
-      { id: 33, number: 33, title: "Search in Rotated Sorted Array", url: "https://leetcode.com/problems/search-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Binary Search (Rotated Array)" },
-      { id: 34, number: 34, title: "Find First and Last Position of Element in Sorted Array", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower Bound & Upper Bound" },
+      { id: 33, number: 33, title: "Search in Rotated Sorted Array", url: "https://leetcode.com/problems/search-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Binary Search (Rotated)" },
+      { id: 34, number: 34, title: "Find First and Last Position of Element", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower/Upper Bound" },
       { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "Binary Search" },
-      { id: 81, number: 81, title: "Search in Rotated Sorted Array II", url: "https://leetcode.com/problems/search-in-rotated-sorted-array-ii/", difficulty: "Medium", pattern: "Binary Search (Duplicates)" },
       { id: 153, number: 153, title: "Find Minimum in Rotated Sorted Array", url: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/", difficulty: "Medium", pattern: "Binary Search" },
       { id: 162, number: 162, title: "Find Peak Element", url: "https://leetcode.com/problems/find-peak-element/", difficulty: "Medium", pattern: "Binary Search" },
-      { id: 540, number: 540, title: "Single Element in a Sorted Array", url: "https://leetcode.com/problems/single-element-in-a-sorted-array/", difficulty: "Medium", pattern: "Binary Search" },
       { id: 875, number: 875, title: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/", difficulty: "Medium", pattern: "Binary Search on Answer" },
       { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1283, number: 1283, title: "Find the Smallest Divisor Given a Threshold", url: "https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 2226, number: 2226, title: "Maximum Candies Allocated to K Children", url: "https://leetcode.com/problems/maximum-candies-allocated-to-k-children/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 410, number: 410, title: "Split Array Largest Sum", url: "https://leetcode.com/problems/split-array-largest-sum/", difficulty: "Hard", pattern: "Binary Search on Answer" },
-    ],
-  },
-
-  "lower / upper bound": {
-    prerequisites: COMMON_PREREQS,
-    problems: [
-      { id: 35, number: 35, title: "Search Insert Position", url: "https://leetcode.com/problems/search-insert-position/", difficulty: "Easy", pattern: "Lower Bound" },
-      { id: 744, number: 744, title: "Find Smallest Letter Greater Than Target", url: "https://leetcode.com/problems/find-smallest-letter-greater-than-target/", difficulty: "Easy", pattern: "Upper Bound" },
-      { id: 34, number: 34, title: "Find First and Last Position of Element in Sorted Array", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower Bound + Upper Bound" },
-    ],
-  },
-
-  "binary search on answers": {
-    prerequisites: COMMON_PREREQS,
-    problems: [
-      { id: 69, number: 69, title: "Sqrt(x)", url: "https://leetcode.com/problems/sqrtx/", difficulty: "Easy", pattern: "Binary Search on Answer" },
-      { id: 367, number: 367, title: "Valid Perfect Square", url: "https://leetcode.com/problems/valid-perfect-square/", difficulty: "Easy", pattern: "Binary Search on Answer" },
-      { id: 875, number: 875, title: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1283, number: 1283, title: "Find the Smallest Divisor Given a Threshold", url: "https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1482, number: 1482, title: "Minimum Number of Days to Make m Bouquets", url: "https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1552, number: 1552, title: "Magnetic Force Between Two Balls", url: "https://leetcode.com/problems/magnetic-force-between-two-balls/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1760, number: 1760, title: "Minimum Limit of Balls in a Bag", url: "https://leetcode.com/problems/minimum-limit-of-balls-in-a-bag/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 1870, number: 1870, title: "Minimum Speed to Arrive on Time", url: "https://leetcode.com/problems/minimum-speed-to-arrive-on-time/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 2187, number: 2187, title: "Minimum Time to Complete Trips", url: "https://leetcode.com/problems/minimum-time-to-complete-trips/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 2226, number: 2226, title: "Maximum Candies Allocated to K Children", url: "https://leetcode.com/problems/maximum-candies-allocated-to-k-children/", difficulty: "Medium", pattern: "Binary Search on Answer" },
-      { id: 2251, number: 2251, title: "Number of Flowers in Full Bloom", url: "https://leetcode.com/problems/number-of-flowers-in-full-bloom/", difficulty: "Hard", pattern: "Binary Search on Answer + Events" },
-      { id: 410, number: 410, title: "Split Array Largest Sum", url: "https://leetcode.com/problems/split-array-largest-sum/", difficulty: "Hard", pattern: "Binary Search on Answer" },
-    ],
-  },
-
-  "search in 2d matrix": {
-    prerequisites: COMMON_PREREQS,
-    problems: [
-      { id: 240, number: 240, title: "Search a 2D Matrix II", url: "https://leetcode.com/problems/search-a-2d-matrix-ii/", difficulty: "Medium", pattern: "Binary Search / Matrix Search" },
-      { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "Binary Search (Flattened Matrix)" },
-      { id: 1901, number: 1901, title: "Find a Peak Element II", url: "https://leetcode.com/problems/find-a-peak-element-ii/", difficulty: "Medium", pattern: "Binary Search on 2D Matrix" },
-      { id: 1428, number: 1428, title: "Leftmost Column with at Least a One", url: "https://leetcode.com/problems/leftmost-column-with-at-least-a-one/", difficulty: "Medium", pattern: "Binary Search (Interactive)" },
-      { id: 302, number: 302, title: "Smallest Rectangle Enclosing Black Pixels", url: "https://leetcode.com/problems/smallest-rectangle-enclosing-black-pixels/", difficulty: "Hard", pattern: "Binary Search on Rows & Columns" },
     ],
   },
 };
+
+// Helper to construct exact YouTube Solution video search URL for any problem
+function getYoutubeSolutionUrl(p: LeetCodeProblem): string {
+  const query = `LeetCode ${p.number} ${p.title} NeetCode solution`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
 
 interface PracticeTopicDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   topicName: string;
+  solvedSet: Record<number, boolean>;
+  onToggleSolved: (id: number, details?: { title: string; difficulty: string; pattern: string }) => void;
 }
 
 export default function PracticeTopicDrawer({
   isOpen,
   onClose,
   topicName,
+  solvedSet,
+  onToggleSolved,
 }: PracticeTopicDrawerProps) {
-  const [solvedSet, setSolvedSet] = useState<Record<number, boolean>>({});
-
   if (!isOpen) return null;
 
   const keyLower = topicName.toLowerCase();
   const data = TOPIC_DATASET[keyLower] || {
+    definition: `${topicName} pattern fundamentals, optimal time and space complexity strategy for data structure problems.`,
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${topicName} DSA tutorial NeetCode`)}`,
     prerequisites: COMMON_PREREQS,
     problems: [
       { id: 1, number: 1, title: `${topicName} Problem 1`, url: `https://leetcode.com/problemset/all/?search=${encodeURIComponent(topicName)}`, difficulty: "Easy", pattern: topicName },
@@ -277,8 +242,8 @@ export default function PracticeTopicDrawer({
 
   const solvedCount = data.problems.filter((p) => solvedSet[p.id]).length;
 
-  const toggleSolved = (id: number) => {
-    setSolvedSet((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleSolved = (p: LeetCodeProblem) => {
+    onToggleSolved(p.id, { title: p.title, difficulty: p.difficulty, pattern: p.pattern });
   };
 
   return (
@@ -290,7 +255,7 @@ export default function PracticeTopicDrawer({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/75 backdrop-blur-md transition-opacity"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         />
 
         {/* Slide-over Drawer Panel */}
@@ -299,10 +264,10 @@ export default function PracticeTopicDrawer({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-4xl xl:max-w-5xl bg-[#0b101d] border-l border-white/[0.1] text-white shadow-2xl h-full flex flex-col z-50 overflow-hidden"
+          className="relative w-full max-w-4xl xl:max-w-5xl bg-[#0a0f1d] border-l border-white/[0.1] text-white shadow-2xl h-full flex flex-col z-50 overflow-hidden"
         >
           {/* Header Bar */}
-          <div className="p-6 pb-4 border-b border-white/[0.08] bg-[#0e1628] flex items-center justify-between gap-4 shrink-0">
+          <div className="p-6 pb-4 border-b border-white/[0.08] bg-[#0d1424] flex items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
@@ -310,7 +275,7 @@ export default function PracticeTopicDrawer({
               >
                 ESC
               </button>
-              <span className="text-xs font-semibold text-slate-400">Target Problem Bank</span>
+              <span className="text-xs font-semibold text-slate-400">Foundation Concept & Problem Bank</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -328,11 +293,40 @@ export default function PracticeTopicDrawer({
 
           {/* Drawer Body Scroll Area */}
           <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-            {/* Title */}
-            <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                {topicName}
-              </h2>
+            {/* Title & Topic Header */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                    {topicName}
+                  </h2>
+                  <p className="text-xs font-semibold text-indigo-300 mt-1 flex items-center gap-3">
+                    <span>Time Complexity: <strong className="text-emerald-400">{data.timeComplexity}</strong></span>
+                    <span>•</span>
+                    <span>Space Complexity: <strong className="text-cyan-400">{data.spaceComplexity}</strong></span>
+                  </p>
+                </div>
+
+                {/* Topic Masterclass YouTube Video Button */}
+                <a
+                  href={data.masterclassVideoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-extrabold text-xs shadow-lg shadow-red-600/30 border border-red-400/40 transition-all self-start sm:self-auto shrink-0 group"
+                >
+                  <Video className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                  <span>Watch Pattern Masterclass 📺</span>
+                </a>
+              </div>
+
+              {/* Concept Definition Box */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#11192e] to-[#141e36] border border-indigo-500/30 text-sm text-slate-200 leading-relaxed shadow-lg">
+                <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-400 uppercase tracking-wider mb-2">
+                  <BookOpen className="w-4 h-4 text-indigo-400" />
+                  <span>Pattern Concept &amp; Definition</span>
+                </div>
+                <p>{data.definition}</p>
+              </div>
             </div>
 
             {/* Prerequisites Cards Grid */}
@@ -344,37 +338,46 @@ export default function PracticeTopicDrawer({
                 {data.prerequisites.map((pre, idx) => (
                   <div
                     key={idx}
-                    className="p-5 rounded-2xl bg-[#131c30] border border-white/[0.08] space-y-1 shadow-md"
+                    className="p-4 rounded-2xl bg-[#12192c] border border-white/[0.08] space-y-1 shadow-md"
                   >
-                    <div className="font-bold text-white text-base">{pre.title}</div>
+                    <div className="font-bold text-white text-sm">{pre.title}</div>
                     <div className="text-xs text-slate-400">{pre.subtitle}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Targeted LeetCode Problem Table */}
+            {/* Targeted LeetCode Problem Table with Video Solutions */}
             <div className="space-y-4">
-              <div className="rounded-2xl border border-white/[0.08] bg-[#111728] overflow-x-auto shadow-xl">
-                <table className="w-full text-left text-xs md:text-sm border-collapse min-w-[700px]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">
+                  PROBLEM BANK &amp; EXACT VIDEO SOLUTIONS
+                </h3>
+                <span className="text-xs text-slate-500 font-medium">Click row or checkmark to toggle solved state</span>
+              </div>
+
+              <div className="rounded-2xl border border-white/[0.08] bg-[#0e1526] overflow-x-auto shadow-xl">
+                <table className="w-full text-left text-xs md:text-sm border-collapse min-w-[760px]">
                   <thead>
-                    <tr className="border-b border-white/[0.08] text-slate-400 font-bold uppercase tracking-wider text-[11px] bg-slate-900/40">
+                    <tr className="border-b border-white/[0.08] text-slate-400 font-bold uppercase tracking-wider text-[11px] bg-slate-900/60">
                       <th className="py-4 px-4 text-center w-12">#</th>
                       <th className="py-4 px-4 w-20">LeetCode</th>
                       <th className="py-4 px-4">Problem</th>
                       <th className="py-4 px-4 w-24">Level</th>
-                      <th className="py-4 px-4 w-48">Pattern</th>
+                      <th className="py-4 px-4 w-40">Video Solution</th>
                       <th className="py-4 px-4 text-center w-16">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
                     {data.problems.map((p, idx) => {
                       const isSolved = !!solvedSet[p.id];
+                      const videoUrl = p.solutionVideoUrl || getYoutubeSolutionUrl(p);
+
                       return (
                         <tr
                           key={p.id}
                           className="hover:bg-white/[0.03] transition-colors group cursor-pointer"
-                          onClick={() => toggleSolved(p.id)}
+                          onClick={() => toggleSolved(p)}
                         >
                           {/* Row Index */}
                           <td className="py-3.5 px-4 text-center text-slate-500 font-mono font-bold whitespace-nowrap">
@@ -383,7 +386,7 @@ export default function PracticeTopicDrawer({
 
                           {/* LeetCode Problem Number */}
                           <td className="py-3.5 px-4 font-mono font-extrabold text-blue-400 group-hover:text-blue-300 whitespace-nowrap">
-                            {p.number}
+                            #{p.number}
                           </td>
 
                           {/* Problem Title Link */}
@@ -419,11 +422,19 @@ export default function PracticeTopicDrawer({
                             </span>
                           </td>
 
-                          {/* Algorithm Pattern Badge */}
+                          {/* Video Solution YouTube Link */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <span className="text-xs font-semibold px-3 py-1 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 inline-block">
-                              {p.pattern}
-                            </span>
+                            <a
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-xs font-extrabold transition-all group/vid"
+                              title={`Watch accurate video solution for ${p.title}`}
+                            >
+                              <PlayCircle className="w-3.5 h-3.5 text-red-400 group-hover/vid:scale-110 transition-transform" />
+                              <span>Solution 📺</span>
+                            </a>
                           </td>
 
                           {/* Checkbox Status */}
@@ -431,7 +442,7 @@ export default function PracticeTopicDrawer({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleSolved(p.id);
+                                toggleSolved(p);
                               }}
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mx-auto transition-colors ${
                                 isSolved

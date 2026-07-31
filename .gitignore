@@ -1,66 +1,41 @@
-# ── Environment Variables ──────────────────────────────────────────────────
+# ── SkillsCatalyst .gitignore ──────────────────────────────────────────────────
+
+# Environment variables — NEVER commit these
 .env
 .env.local
-.env.*
-*.env
-!.env.example
+.env.*.local
 
-# ── Python & FastAPI ────────────────────────────────────────────────────────
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
+*.pyo
+*.pyd
 .Python
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.venv/
-.pytest_cache/
-.coverage
-htmlcov/
 *.egg-info/
-.installed.cfg
-*.egg
-
-# ── Node.js & Next.js ───────────────────────────────────────────────────────
-node_modules/
-frontend/node_modules/
-.next/
-frontend/.next/
-out/
-build/
 dist/
-.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-*.tsbuildinfo
-next-env.d.ts
+build/
+venv/
+.venv/
+env/
 
-# ── Logs & Debugging ────────────────────────────────────────────────────────
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Data folder (660+ CSV files — too large for git)
+data/
+
+# Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
 
-# ── OS & IDE ────────────────────────────────────────────────────────────────
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-.vscode/
+# IDE
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# ── Vercel / Deployment ─────────────────────────────────────────────────────
-.vercel/
+# OS
+.DS_Store
+Thumbs.db

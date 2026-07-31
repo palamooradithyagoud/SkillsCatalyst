@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { reviewResume } from "@/lib/api";
+import PlacementPrepModal from "@/components/PlacementPrepModal";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -165,8 +166,9 @@ function StageIndicator({
 // ---------------------------------------------------------------------------
 
 export default function CareerPage() {
-  // Modal
+  // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
 
   // Configuration (Step 1)
   const [targetRole, setTargetRole] = useState("Fullstack Software Engineer");
@@ -590,7 +592,7 @@ export default function CareerPage() {
       </div>
 
       {/* ── Cards Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Resume Review */}
         <motion.div
           whileHover={{ y: -3 }}
@@ -623,14 +625,50 @@ export default function CareerPage() {
           <button
             id="open-resume-review-modal"
             onClick={() => setIsModalOpen(true)}
-            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm group"
+            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm group cursor-pointer"
           >
             <span>Start Resume Review</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
 
-        {/* Card 2: AI Interviews (Locked) */}
+        {/* Card 2: Placement Prep */}
+        <motion.div
+          whileHover={{ y: -3 }}
+          transition={{ duration: 0.2 }}
+          className="bg-[#0b1329]/90 border border-[#1d2b4a] rounded-2xl p-6 md:p-8 flex flex-col justify-between shadow-xl relative overflow-hidden group"
+        >
+          <div className="absolute -right-16 -top-16 w-40 h-40 rounded-full bg-purple-500/5 blur-3xl group-hover:bg-purple-500/10 transition-all pointer-events-none" />
+
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-300 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                Active Prep Suite
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-white mb-2.5">
+              Placement Prep
+            </h3>
+            <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              Curated company-wise interview problem archives, core DSA pattern benchmarks, and tier-1 company hiring rubrics tailored for placement success.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsPlacementPrepOpen(true)}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 text-sm group cursor-pointer"
+          >
+            <span>Start Placement Prep</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </motion.div>
+
+        {/* Card 3: AI Interviews (Locked) */}
         <motion.div
           whileHover={{ y: -2 }}
           transition={{ duration: 0.2 }}
@@ -1154,6 +1192,12 @@ export default function CareerPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Placement Preparation Modal */}
+      <PlacementPrepModal
+        isOpen={isPlacementPrepOpen}
+        onClose={() => setIsPlacementPrepOpen(false)}
+      />
     </div>
   );
 }
