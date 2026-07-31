@@ -508,6 +508,31 @@ export async function completeVideo(
   return { success: false };
 }
 
+export async function markAllVideosWatched(
+  playlistId: string,
+  watched: boolean = true
+): Promise<{ success: boolean; count: number }> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/learning/mark-all-watched`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({
+          playlist_id: playlistId,
+          watched: watched,
+        }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    }
+  } catch (e) {
+    console.warn("markAllVideosWatched failed:", e);
+  }
+  return { success: false, count: 0 };
+}
+
 
 // ── Tier 3: AI Roadmap API ───────────────────────────────────────────────────
 

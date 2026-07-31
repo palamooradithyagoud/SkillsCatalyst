@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   searchSkill, savePlaylist, unsavePlaylist,
   fetchSavedPlaylists, fetchPlaylistVideos, markVideoWatched,
-  completeVideo,
+  completeVideo, markAllVideosWatched,
   Playlist,
 } from "@/lib/api";
 import { useYouTubePlayer } from "@/lib/useYouTubePlayer";
@@ -602,6 +602,31 @@ function FullPlayerView({
     },
   });
 
+  const markAllMut = useMutation({
+    mutationFn: ({ watched }: { watched: boolean }) =>
+      markAllVideosWatched(ytPlaylistId, watched),
+    onMutate: async ({ watched }) => {
+      setCompletedVideoIds((prev) => {
+        if (!watched) return new Set();
+        return new Set(videos.map((v) => v.videoId));
+      });
+      qc.setQueryData(
+        ["playlist-videos", ytPlaylistId, userId],
+        (old: { videos: any[]; count: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            videos: old.videos.map((v) => ({ ...v, watched })),
+          };
+        }
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", userId] });
+    },
+  });
+
   // Reset live progress when video changes
   useEffect(() => {
     setWatchedPct(0);
@@ -711,7 +736,7 @@ function FullPlayerView({
             </p>
           </div>
         </div>
-        <div className="text-right shrink-0">
+        <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
           <motion.div
             key={pct}
             initial={{ opacity: 0, y: -6 }}
@@ -723,6 +748,17 @@ function FullPlayerView({
           <div className="text-sm text-slate-400">
             {watchedCount} of {videos.length} videos
           </div>
+          {videos.length > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => markAllMut.mutate({ watched: pct < 100 })}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-colors bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 mt-1"
+            >
+              <CheckCircle className="w-3.5 h-3.5 text-indigo-400" />
+              {pct === 100 ? "Unmark All" : "Mark All as Watched"}
+            </motion.button>
+          )}
         </div>
       </div>
 
