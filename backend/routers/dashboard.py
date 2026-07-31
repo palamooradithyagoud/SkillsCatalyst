@@ -100,8 +100,15 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     if total_videos < completed_count:
         total_videos = completed_count
 
-    pct = round((completed_count / total_videos) * 100) if total_videos > 0 else 0
-    subtitle_text = f"{completed_count}/{total_videos} videos completed" if total_videos > 0 else "0 videos completed"
+    if total_videos > 0:
+        pct = round((completed_count / total_videos) * 100)
+        subtitle_text = f"{completed_count}/{total_videos} videos completed"
+    elif completed_count > 0:
+        pct = 100
+        subtitle_text = f"{completed_count} video{'s' if completed_count != 1 else ''} completed"
+    else:
+        pct = 0
+        subtitle_text = "0 videos completed"
 
     # Saved Playlists Metric: Percentage relative to goal (e.g. 5 playlists = 100%) or completion %
     saved_playlists_pct = min(100, saved_playlists_count * 20) if saved_playlists_count > 0 else 0
