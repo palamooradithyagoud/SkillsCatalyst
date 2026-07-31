@@ -76,12 +76,16 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const localProg = getLocalVideoProgress();
     const localCompleted = Object.values(localProg).filter(Boolean).length;
     const localSaved = getLocalSavedPlaylists();
+    const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
+    const localResumeScore = localResumeScoreRaw ? parseInt(localResumeScoreRaw, 10) : 0;
 
     const lp = backendData.metrics?.learningProgress || {};
     const sp = backendData.metrics?.savedPlaylists || {};
+    const rr = backendData.metrics?.resumeReadiness || {};
 
     const completed = Math.max(lp.completedVideos || 0, localCompleted);
     const savedCount = Math.max(sp.count || 0, localSaved.length);
+    const resumeScore = Math.max(rr.percentage || 0, localResumeScore);
 
     let totalVids = lp.totalVideos || 0;
     if (localSaved.length > 0) {
@@ -106,6 +110,7 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
     const savedPct = Math.min(100, savedCount * 20);
     const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
+    const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : (rr.subtitle || "No upload yet");
 
     return {
       ...backendData,
@@ -117,6 +122,11 @@ function mergeLocalDashboardMetrics(backendData: any) {
           completedVideos: completed,
           totalVideos: totalVids,
           subtitle: subtitle,
+        },
+        resumeReadiness: {
+          ...rr,
+          percentage: resumeScore,
+          subtitle: resumeSubtitle,
         },
         savedPlaylists: {
           ...sp,
@@ -135,6 +145,7 @@ async function getFallbackDashboardData() {
   let savedPlaylistsCount = 0;
   let totalVideos = 0;
   let completedCount = 0;
+  let resumeScore = 0;
   let userName = "Learner";
 
   try {
@@ -167,6 +178,19 @@ async function getFallbackDashboardData() {
       if (progData) {
         completedCount = progData.length;
       }
+
+      // Query latest resume score
+      const { data: resumeData } = await supabase
+        .from("resume_scores")
+        .select("overall_score, ats_compatibility_score")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (resumeData && resumeData.length > 0) {
+        const sc = resumeData[0].overall_score || resumeData[0].ats_compatibility_score;
+        if (sc) resumeScore = Math.round(Number(sc));
+      }
     }
   } catch (e) {
     console.warn("Supabase dashboard fallback error:", e);
@@ -193,6 +217,12 @@ async function getFallbackDashboardData() {
     completedCount = localCompletedCount;
   }
 
+  const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
+  if (localResumeScoreRaw) {
+    const lScore = parseInt(localResumeScoreRaw, 10);
+    if (lScore > resumeScore) resumeScore = lScore;
+  }
+
   const activeTotal = getActivePlaylistTotal();
   if (activeTotal > totalVideos) {
     totalVideos = activeTotal;
@@ -207,6 +237,7 @@ async function getFallbackDashboardData() {
 
   const savedPct = Math.min(100, savedPlaylistsCount * 20);
   const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
+  const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : "No upload yet";
 
   return {
     user: {
@@ -222,8 +253,8 @@ async function getFallbackDashboardData() {
         subtitle: subtitle,
       },
       resumeReadiness: {
-        percentage: 0,
-        subtitle: "No upload yet",
+        percentage: resumeScore,
+        subtitle: resumeSubtitle,
       },
       savedPlaylists: {
         count: savedPlaylistsCount,
@@ -304,9 +335,10 @@ export async function extractResume(file: File): Promise<{ success: boolean; tex
 
 export async function reviewResume(resumeText: string, targetRole: string, yearsExperience: string, companyType: string = "Product-Based", jobDescription: string = "") {
   try {
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/ai-mentor/review-resume`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         resume_text: resumeText,
         target_role: targetRole,
@@ -316,7 +348,16 @@ export async function reviewResume(resumeText: string, targetRole: string, years
       }),
     });
     if (!res.ok) throw new Error("Failed to evaluate resume");
-    return await res.json();
+    const data = await res.json();
+    if (data?.review && typeof window !== "undefined") {
+      const match = data.review.match(/(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*\/\s*(100|10)/i) || data.review.match(/(\d+(?:\.\d+)?)\s*\/\s*(100|10)/);
+      if (match) {
+        let val = parseFloat(match[1]);
+        if (match[2] === "10" || val <= 10) val = val * 10;
+        localStorage.setItem("skillscatalyst_latest_resume_score", String(Math.round(val)));
+      }
+    }
+    return data;
   } catch (error) {
     console.error("Resume review error:", error);
     return { review: "Error: Unable to connect to Groq AI Resume Evaluator. Please ensure the backend is running." };
