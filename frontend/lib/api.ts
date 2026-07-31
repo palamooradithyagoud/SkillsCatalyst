@@ -13,6 +13,23 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
   return {};
 }
 
+function handleUnauthenticated(res: Response) {
+  if (res.status === 401 && typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("skillscatalyst_user_session");
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {}
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  }
+}
+
 export async function fetchDashboardData() {
   try {
     const authHeaders = await getAuthHeaders();
@@ -20,6 +37,7 @@ export async function fetchDashboardData() {
       headers: { ...authHeaders },
       cache: "no-store",
     });
+    handleUnauthenticated(res);
     if (!res.ok) throw new Error("Failed to fetch dashboard data");
     return await res.json();
   } catch (error) {
@@ -168,17 +186,16 @@ export async function searchSkill(
 export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   const body = {
     playlist_id: playlist.id,
-    title: playlist.title,
-    channel: playlist.channel,
-    description: playlist.description,
-    level: playlist.level,
-    video_count: playlist.video_count,
-    duration: playlist.duration,
-    playlist_url: playlist.playlist_url,
-    thumbnail: playlist.thumbnail,
-    source: playlist.source,
-    skill_query: skillQuery,
-    // user_id is NOT sent — backend derives identity from Bearer token
+    title: playlist.title || "Untitled Playlist",
+    channel: playlist.channel || "",
+    description: playlist.description || "",
+    level: playlist.level || "all",
+    video_count: playlist.video_count || "?",
+    duration: playlist.duration || "?",
+    playlist_url: playlist.playlist_url || "",
+    thumbnail: playlist.thumbnail || "",
+    source: playlist.source || "youtube",
+    skill_query: skillQuery || "",
   };
   try {
     const authHeaders = await getAuthHeaders();

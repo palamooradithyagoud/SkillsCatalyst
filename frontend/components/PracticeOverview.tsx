@@ -141,10 +141,11 @@ export default function PracticeOverview({
   // Calculate Aggregated Problems Solved
   const leetcodeSolved = codingStats.leetcode?.total_solved || 0;
   const gfgSolved = codingStats.geeksforgeeks?.total_solved || 0;
-  const totalExtractedSolved = leetcodeSolved + gfgSolved + csvSolvedCount;
-  const displayTotalSolved = totalExtractedSolved > 0 
-    ? totalExtractedSolved 
-    : (connectedPlatformsCount > 0 ? problemsSolved : 0);
+  const cfSolved = codingStats.codeforces?.total_solved || 0;
+  const ccSolved = codingStats.codechef?.total_solved || 0;
+  const hrSolved = codingStats.hackerrank?.total_solved || 0;
+  const totalExtractedSolved = leetcodeSolved + gfgSolved + cfSolved + ccSolved + hrSolved + csvSolvedCount;
+  const displayTotalSolved = Math.max(totalExtractedSolved, problemsSolved);
 
   return (
     <motion.div

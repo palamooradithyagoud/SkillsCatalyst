@@ -15,6 +15,7 @@ import {
   Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   fetchProfileData,
   saveAcademicProfile,
@@ -26,6 +27,7 @@ import { useAuth } from "@/lib/auth";
 export default function SettingsPage() {
   const { session, logout } = useAuth();
   const userId = session?.user_id || "default_user";
+  const qc = useQueryClient();
 
   // Academic Profile State
   const [fullName, setFullName] = useState("");
@@ -138,6 +140,8 @@ export default function SettingsPage() {
     try { localStorage.setItem(LS_ACADEMIC, JSON.stringify(payload)); } catch {}
     // Then try Supabase
     await saveAcademicProfile(payload).catch(() => {});
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["profile"] });
     setSavingAcademic(false);
     setAcademicSuccessMsg("Academic profile saved successfully!");
     setTimeout(() => setAcademicSuccessMsg(""), 4000);
@@ -160,6 +164,8 @@ export default function SettingsPage() {
     try { localStorage.setItem(LS_CODING, JSON.stringify(codingPayload)); } catch {}
     // Then try Supabase + live stats extraction
     const res = await saveCodingProfiles(codingPayload).catch(() => null);
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["profile"] });
     setSyncingCoding(false);
     if (res && res.success && res.stats) {
       setCodingStats(res.stats);

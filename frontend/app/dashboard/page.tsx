@@ -30,23 +30,6 @@ export default function DashboardPage() {
       item.title !== "DSA Practice"
   );
 
-  // Compute AI Career Health dynamically (0% when no learning or problem solves exist)
-  const learningPct = data?.metrics?.learningProgress?.percentage ?? 0;
-  const problemsSolved = data?.practiceOverview?.problemsSolved ?? 0;
-  const computedHealth = (learningPct === 0 && problemsSolved === 0)
-    ? 0
-    : Math.min(100, Math.round((learningPct * 0.4) + (Math.min(problemsSolved * 4, 100) * 0.6)));
-
-  const sanitizedMetrics = data?.metrics
-    ? {
-        ...data.metrics,
-        aiCareerHealth: {
-          percentage: computedHealth,
-          subtitle: computedHealth === 0 ? "Start learning to build health" : (data.metrics.aiCareerHealth?.subtitle || "Start learning to build health"),
-        },
-      }
-    : undefined;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -55,7 +38,7 @@ export default function DashboardPage() {
       className="max-w-7xl mx-auto space-y-6"
     >
       <Header userName={displayName} />
-      <MetricCards metrics={sanitizedMetrics} />
+      <MetricCards metrics={data?.metrics} />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         <div className="lg:col-span-5">
           <UpcomingList items={upcomingItems} />

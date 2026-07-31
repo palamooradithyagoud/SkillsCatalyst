@@ -983,8 +983,8 @@ export default function LearningPage() {
     onSuccess: (_, pl) => {
       setLocalSaved((prev) => new Set([...prev, pl.id]));
       showNotif(`"${pl.title.slice(0, 40)}..." saved!`, "success");
-      qc.invalidateQueries({ queryKey: ["saved-playlists", userId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", userId] });
+      qc.invalidateQueries({ queryKey: ["saved-playlists"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to save. Check backend.", "error"),
   });
@@ -994,8 +994,8 @@ export default function LearningPage() {
     onSuccess: (_, id) => {
       setLocalSaved((prev) => { const s = new Set(prev); s.delete(id); return s; });
       showNotif("Removed from saved.", "success");
-      qc.invalidateQueries({ queryKey: ["saved-playlists", userId] });
-      qc.invalidateQueries({ queryKey: ["dashboard", userId] });
+      qc.invalidateQueries({ queryKey: ["saved-playlists"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to remove.", "error"),
   });
