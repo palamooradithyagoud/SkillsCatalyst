@@ -299,6 +299,10 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (75 if problems_solved > 0 else 0)
     resume_subtitle = f"ATS Score: {resume_score}/100" if resume_score > 0 else "No upload yet"
 
+    # Calculate Personal Readiness Index (PRI) with 15% Learning Progress weight
+    coding_score = min(100.0, (problems_solved / 50.0) * 100.0)
+    pri_score = round((resume_score * 0.35) + (coding_score * 0.35) + (pct * 0.15) + (roadmap_pct * 0.15), 1)
+
     return {
         "user": {
             "name": display_name,
@@ -306,6 +310,13 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             "streakDays": 0
         },
         "metrics": {
+            "personalReadinessIndex": {
+                "score": pri_score,
+                "learningWeightPct": 15,
+                "resumeWeightPct": 35,
+                "codingWeightPct": 35,
+                "roadmapWeightPct": 15
+            },
             "learningProgress": {
                 "percentage": pct,
                 "completedVideos": completed_count,

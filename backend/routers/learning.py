@@ -334,12 +334,18 @@ class SaveProgressRequest(BaseModel):
 
 
 class CompleteVideoRequest(BaseModel):
-    """Fired when player detects ≥95% of a video has been genuinely watched."""
+    """Fired when player detects ≥75% of a video has been genuinely watched."""
     # user_id intentionally excluded — derived from JWT only
     playlist_id: str
     video_id:    str
     watch_time:  int       # seconds actually watched (server-side validation)
     completed:   bool = True
+    last_position: Optional[float] = 0.0
+
+
+class SyncSavedPlaylistsRequest(BaseModel):
+    playlists: list[dict]
+
 
 
 REPUTABLE_CHANNELS = {
@@ -610,6 +616,102 @@ async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
         return {"saved": [], "count": 0}
 
 
+@router.post("/sync-saved-playlists")
+async def sync_saved_playlists(
+    req: SyncSavedPlaylistsRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """
+    JSONB storage endpoint for saved playlists. Calculates total completion %
+    and upserts into Supabase `learning_progress` keyed by (session_id, skill_name="saved_playlists").
+    """
+    sb = get_supabase()
+    playlists_list = req.playlists
+    total_videos = sum(len(p.get("videos", [])) for p in playlists_list)
+    completed_videos = sum(len([v for v in p.get("videos", []) if v.get("completed") or v.get("watched")]) for p in playlists_list)
+    pct = round((completed_videos / total_videos) * 100.0, 2) if total_videos > 0 else 0.0
+
+    if sb:
+        try:
+            sb.table("learning_progress").upsert({
+                "session_id": current_user_id,
+                "user_id": current_user_id,
+                "skill_name": "saved_playlists",
+                "completed_steps": playlists_list,
+                "completion_pct": pct
+            }, on_conflict="session_id, skill_name").execute()
+
+            # Record event in user_feedback analytics table
+            try:
+                sb.table("user_feedback").insert({
+                    "user_id": current_user_id,
+                    "action": "save",
+                    "metadata": {"count": len(playlists_list), "completion_pct": pct}
+                }).execute()
+            except Exception:
+                pass
+        except Exception as e:
+            logger.error(f"Error upserting learning_progress JSONB: {e}")
+    return {"success": True, "count": len(playlists_list), "completion_pct": pct}
+
+
+@router.get("/get-saved-playlists")
+async def get_saved_playlists_jsonb(current_user_id: str = Depends(get_current_user_id)):
+    """
+    Retrieves candidate saved playlists directly from JSONB `learning_progress`.
+    """
+    sb = get_supabase()
+    if not sb:
+        return {"success": True, "playlists": [], "completion_pct": 0.0}
+    try:
+        res = (
+            sb.table("learning_progress")
+            .select("completed_steps, completion_pct")
+            .eq("session_id", current_user_id)
+            .eq("skill_name", "saved_playlists")
+            .limit(1)
+            .execute()
+        )
+        if res.data and len(res.data) > 0:
+            playlists = res.data[0].get("completed_steps", [])
+            pct = res.data[0].get("completion_pct", 0.0)
+            return {"success": True, "playlists": playlists, "completion_pct": pct}
+    except Exception as e:
+        logger.error(f"Error reading learning_progress JSONB: {e}")
+    return {"success": True, "playlists": [], "completion_pct": 0.0}
+
+
+@router.get("/resume-progress/{video_id}")
+async def resume_progress(
+    video_id: str,
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """
+    Fetches stored playback resume position and completed state for a video.
+    """
+    sb = get_supabase()
+    if not sb:
+        return {"last_position": 0.0, "completed": False}
+    try:
+        res = (
+            sb.table("video_progress")
+            .select("last_position, watched")
+            .eq("user_id", current_user_id)
+            .eq("video_id", video_id)
+            .limit(1)
+            .execute()
+        )
+        if res.data and len(res.data) > 0:
+            return {
+                "last_position": res.data[0].get("last_position", 0.0),
+                "completed": res.data[0].get("watched", False)
+            }
+    except Exception as e:
+        logger.error(f"Error fetching resume progress: {e}")
+    return {"last_position": 0.0, "completed": False}
+
+
+
 # ── Video List ────────────────────────────────────────────────────────────────
 @router.get("/playlist-videos")
 async def get_playlist_videos(
@@ -786,14 +888,14 @@ async def save_video_progress(
 
 
 @router.post("/complete-video")
+@router.post("/mark-video-complete")
 async def complete_video(
     req: CompleteVideoRequest,
     current_user_id: str = Depends(get_current_user_id)
 ):
     """
-    Auto-completion endpoint. Called when ≥95% of a video is genuinely watched.
-    Server validates watch_time > 0 before recording completion.
-    Returns updated playlist stats for instant UI update.
+    Auto-completion endpoint. Called when ≥75% of a video is genuinely watched.
+    Updates relational `video_progress`, syncs JSONB `learning_progress`, and logs event in `user_feedback`.
     """
     user_id = current_user_id  # always from verified JWT
     if not user_id:
@@ -802,34 +904,80 @@ async def complete_video(
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
 
-    if req.watch_time <= 0:
-        raise HTTPException(status_code=400, detail="Invalid watch_time: must be > 0 seconds")
+    if req.watch_time < 0:
+        raise HTTPException(status_code=400, detail="Invalid watch_time: must be >= 0 seconds")
 
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         now = datetime.now(timezone.utc).isoformat()
 
-        # Upsert completion record
+        # 1. Upsert completion record in video_progress
         complete_data: dict = {
             "user_id":       user_id,
             "playlist_id":   clean_playlist_id,
             "video_id":      req.video_id,
-            "watched":       True,
+            "watched":       req.completed,
             "watch_time":    req.watch_time,
-            "completed_at":  now,
+            "completed_at":  now if req.completed else None,
         }
+        if req.last_position:
+            complete_data["last_position"] = req.last_position
+
         try:
-            # Try with extended columns first
-            complete_data["progress_pct"] = 100.0
             sb.table("video_progress").upsert(
                 complete_data, on_conflict="user_id,playlist_id,video_id"
             ).execute()
+        except Exception as err:
+            logger.warning(f"Error upserting video_progress: {err}")
+
+        # 2. Sync JSONB completed_steps in learning_progress
+        try:
+            lp_res = (
+                sb.table("learning_progress")
+                .select("completed_steps")
+                .eq("session_id", user_id)
+                .eq("skill_name", "saved_playlists")
+                .limit(1)
+                .execute()
+            )
+            if lp_res.data and len(lp_res.data) > 0:
+                playlists = lp_res.data[0].get("completed_steps", [])
+                updated = False
+                for p in playlists:
+                    p_id = p.get("id") or p.get("playlist_id")
+                    if p_id == clean_playlist_id or p_id == req.playlist_id:
+                        for v in p.get("videos", []):
+                            if v.get("videoId") == req.video_id:
+                                v["completed"] = req.completed
+                                v["completedAt"] = now if req.completed else None
+                                if req.last_position:
+                                    v["lastPosition"] = req.last_position
+                                updated = True
+                                break
+                if updated:
+                    total_v = sum(len(p.get("videos", [])) for p in playlists)
+                    comp_v = sum(len([v for v in p.get("videos", []) if v.get("completed")]) for p in playlists)
+                    pct = round((comp_v / total_v) * 100.0, 2) if total_v > 0 else 0.0
+                    sb.table("learning_progress").upsert({
+                        "session_id": user_id,
+                        "user_id": user_id,
+                        "skill_name": "saved_playlists",
+                        "completed_steps": playlists,
+                        "completion_pct": pct
+                    }, on_conflict="session_id, skill_name").execute()
+        except Exception as jsonb_err:
+            logger.warning(f"Error updating learning_progress JSONB: {jsonb_err}")
+
+        # 3. Log event into user_feedback
+        try:
+            sb.table("user_feedback").insert({
+                "user_id": user_id,
+                "action": "complete" if req.completed else "uncomplete",
+                "resource_url": f"https://www.youtube.com/watch?v={req.video_id}",
+                "metadata": {"playlist_id": clean_playlist_id, "video_id": req.video_id}
+            }).execute()
         except Exception:
-            # Fallback: columns may not exist yet — save basics only
-            complete_data.pop("progress_pct", None)
-            sb.table("video_progress").upsert(
-                complete_data, on_conflict="user_id,playlist_id,video_id"
-            ).execute()
+            pass
 
         # Return updated playlist completion stats
         res = (
@@ -850,6 +998,7 @@ async def complete_video(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 class MarkAllWatchedRequest(BaseModel):
