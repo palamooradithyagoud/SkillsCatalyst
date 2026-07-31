@@ -549,16 +549,43 @@ export async function reviewResume(resumeText: string, targetRole: string, years
     });
     if (!res.ok) throw new Error("Failed to evaluate resume");
     const data = await res.json();
-    if (data?.review && typeof window !== "undefined") {
+    if (data?.review) {
       const match = data.review.match(/(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*\/\s*(100|10)/i) || data.review.match(/(\d+(?:\.\d+)?)\s*\/\s*(100|10)/);
       if (match) {
         let val = parseFloat(match[1]);
         if (match[2] === "10" || val <= 10) val = val * 10;
-        localStorage.setItem("skillscatalyst_latest_resume_score", String(Math.round(val)));
+        const scoreVal = Math.round(val);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("skillscatalyst_latest_resume_score", String(scoreVal));
+        }
+
+        // Direct Supabase DB insert for guaranteed persistence across sessions
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            await supabase.from("resume_scores").insert({
+              user_id: session.user.id,
+              filename: "resume.pdf",
+              target_role: targetRole,
+              company_type: companyType,
+              overall_score: scoreVal,
+              ats_compatibility_score: scoreVal,
+              skills_match_score: scoreVal,
+              experience_score: scoreVal,
+              full_review_json: { review: data.review },
+            });
+            await supabase.from("user_progress").upsert({
+              user_id: session.user.id,
+              resume_readiness_score: scoreVal,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+          }
+        } catch (dbErr) {
+          console.warn("Direct Supabase resume_scores insert warning:", dbErr);
+        }
       }
     }
-    return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Resume review error:", error);
     return { review: "Error: Unable to connect to Groq AI Resume Evaluator. Please ensure the backend is running." };
   }
