@@ -201,87 +201,101 @@ function removeLocalPlaylist(playlistId: string) {
 }
 
 export async function savePlaylist(playlist: Playlist, skillQuery: string) {
-  saveLocalPlaylist(playlist);
-
-  const body = {
-    playlist_id: playlist.id,
-    title: playlist.title || "Untitled Playlist",
-    channel: playlist.channel || "",
-    description: playlist.description || "",
-    level: playlist.level || "all",
-    video_count: playlist.video_count || "?",
-    duration: playlist.duration || "?",
-    playlist_url: playlist.playlist_url || "",
-    thumbnail: playlist.thumbnail || "",
-    source: playlist.source || "youtube",
-    skill_query: skillQuery || "",
-  };
-
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/save`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      return await res.json();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const userId = session.user.id;
+      const row = {
+        user_id: userId,
+        playlist_id: playlist.id,
+        title: playlist.title || "Untitled Playlist",
+        channel: playlist.channel || "",
+        description: playlist.description || "",
+        level: playlist.level || "all",
+        video_count: playlist.video_count || "?",
+        duration: playlist.duration || "?",
+        playlist_url: playlist.playlist_url || "",
+        thumbnail: playlist.thumbnail || "",
+        source: playlist.source || "youtube",
+        skill_query: skillQuery || "",
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("saved_playlists")
+        .upsert(row, { onConflict: "playlist_id,user_id" });
+
+      if (!error) {
+        // Also notify backend if online
+        const authHeaders = await getAuthHeaders();
+        if (authHeaders.Authorization) {
+          fetch(`${API_BASE}/api/learning/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders },
+            body: JSON.stringify(row),
+          }).catch(() => {});
+        }
+        return { success: true };
+      }
     }
   } catch (e) {
-    console.warn("Save playlist backend request failed, saved locally:", e);
+    console.warn("Save playlist to Supabase DB failed:", e);
   }
+
+  saveLocalPlaylist(playlist);
   return { success: true, localOnly: true };
 }
 
 export async function unsavePlaylist(playlistId: string) {
-  removeLocalPlaylist(playlistId);
-
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/save/${playlistId}`, {
-      method: "DELETE",
-      headers: { ...authHeaders },
-    });
-    if (res.ok) {
-      return await res.json();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      await supabase
+        .from("saved_playlists")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("playlist_id", playlistId);
     }
   } catch (e) {
-    console.warn("Unsave playlist backend request failed, removed locally:", e);
+    console.warn("Unsave playlist from Supabase DB failed:", e);
   }
+
+  removeLocalPlaylist(playlistId);
   return { success: true };
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
-  const localList = getLocalSavedPlaylists();
-  let backendList: Playlist[] = [];
-
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/saved`, {
-      headers: { ...authHeaders },
-      cache: "no-store",
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.saved)) {
-        backendList = data.saved;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const { data, count } = await supabase
+        .from("saved_playlists")
+        .select("*", { count: "exact" })
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        const saved = data.map((row: any) => ({
+          id: row.playlist_id,
+          title: row.title,
+          channel: row.channel,
+          description: row.description,
+          level: row.level,
+          video_count: row.video_count,
+          duration: row.duration,
+          playlist_url: row.playlist_url,
+          thumbnail: row.thumbnail,
+          source: row.source,
+        }));
+        return { saved, count: count || saved.length };
       }
     }
   } catch (e) {
-    console.warn("Fetch saved playlists backend call failed:", e);
+    console.warn("Fetch saved playlists from Supabase DB failed:", e);
   }
 
-  // Merge backend list + local list (deduping by id)
-  const map = new Map<string, Playlist>();
-  for (const pl of localList) {
-    if (pl && pl.id) map.set(pl.id, pl);
-  }
-  for (const pl of backendList) {
-    if (pl && pl.id) map.set(pl.id, pl);
-  }
-
-  const merged = Array.from(map.values());
-  return { saved: merged, count: merged.length };
+  const localList = getLocalSavedPlaylists();
+  return { saved: localList, count: localList.length };
 }
 
 // ── Video Progress API ─────────────────────────────────────────────────────────
@@ -304,17 +318,44 @@ export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await fetch(
-      `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
-      { headers: { ...authHeaders }, cache: "no-store" }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const { data } = await supabase
+        .from("video_progress")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("playlist_id", playlistId);
+
+      if (data && data.length > 0) {
+        const videos: PlaylistVideo[] = data.map((row: any, idx: number) => ({
+          videoId: row.video_id,
+          title: `Video ${idx + 1}`,
+          position: idx + 1,
+          thumbnail: "",
+          watched: !!row.watched,
+          last_position: row.last_position || 0,
+          watch_time: row.watch_time || 0,
+          completed_at: row.completed_at || null,
+        }));
+        return { videos, count: videos.length };
+      }
+    }
   } catch (e) {
     console.warn("Fetch playlist videos failed:", e);
-    return { videos: [], count: 0 };
   }
+
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(
+        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
+        { headers: { ...authHeaders }, cache: "no-store" }
+      );
+      if (res.ok) return await res.json();
+    }
+  } catch {}
+
+  return { videos: [], count: 0 };
 }
 
 export async function markVideoWatched(
@@ -323,15 +364,22 @@ export async function markVideoWatched(
   watched: boolean
 ): Promise<void> {
   try {
-    const authHeaders = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/learning/video-progress`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({ playlist_id: playlistId, video_id: videoId, watched }),
-      // user_id is NOT sent — backend derives identity from Bearer token
-    });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const row = {
+        user_id: session.user.id,
+        playlist_id: playlistId,
+        video_id: videoId,
+        watched: watched,
+        completed_at: watched ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      };
+      await supabase
+        .from("video_progress")
+        .upsert(row, { onConflict: "user_id,playlist_id,video_id" });
+    }
   } catch (e) {
-    console.warn("Mark video watched failed:", e);
+    console.warn("Mark video watched in Supabase DB failed:", e);
   }
 }
 
@@ -346,21 +394,21 @@ export async function saveVideoProgress(
   watchTime: number,
 ): Promise<void> {
   try {
-    const authHeaders = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/learning/save-progress`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({
-        // user_id is NOT sent — backend derives identity from Bearer token
-        playlist_id:   playlistId,
-        video_id:      videoId,
-        last_position: lastPosition,
-        watch_time:    Math.round(watchTime),
-      }),
-    });
-  } catch {
-    // Non-critical — fail silently to avoid disrupting playback
-  }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const row = {
+        user_id: session.user.id,
+        playlist_id: playlistId,
+        video_id: videoId,
+        last_position: Math.round(lastPosition),
+        watch_time: Math.round(watchTime),
+        updated_at: new Date().toISOString(),
+      };
+      await supabase
+        .from("video_progress")
+        .upsert(row, { onConflict: "user_id,playlist_id,video_id" });
+    }
+  } catch {}
 }
 
 /**
@@ -374,25 +422,30 @@ export async function completeVideo(
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({
-        // user_id is NOT sent — backend derives identity from Bearer token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const nowIso = new Date().toISOString();
+      const row = {
+        user_id: session.user.id,
         playlist_id: playlistId,
-        video_id:    videoId,
-        watch_time:  Math.round(watchTime),
-        completed:   true,
-      }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+        video_id: videoId,
+        watched: true,
+        watch_time: Math.round(watchTime),
+        completed_at: nowIso,
+        updated_at: nowIso,
+      };
+      await supabase
+        .from("video_progress")
+        .upsert(row, { onConflict: "user_id,playlist_id,video_id" });
+
+      return { success: true, completed_at: nowIso };
+    }
   } catch (e) {
     console.warn("completeVideo failed:", e);
-    return { success: false };
   }
+  return { success: false };
 }
+
 
 // ── Tier 3: AI Roadmap API ───────────────────────────────────────────────────
 
