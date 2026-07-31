@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { fetchProfileData, PlatformStat } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
 
 interface PracticeOverviewProps {
   problemsSolved?: number;
@@ -72,10 +73,13 @@ function StatCard({ value, label, icon, color, delay }: StatCardProps) {
 }
 
 export default function PracticeOverview({
-  problemsSolved = 117,
-  successRate = 91,
+  problemsSolved = 0,
+  successRate = 0,
   contests = 0,
 }: PracticeOverviewProps) {
+  const { session } = useAuth();
+  const userId = session?.user_id || "default_user";
+
   const [barsVisible, setBarsVisible] = useState(false);
   const [codingStats, setCodingStats] = useState<Record<string, PlatformStat>>({});
   const [csvSolvedCount, setCsvSolvedCount] = useState<number>(0);
@@ -91,7 +95,7 @@ export default function PracticeOverview({
     async function loadData() {
       setLoading(true);
       // 1. Fetch extracted coding profiles
-      const profData = await fetchProfileData();
+      const profData = await fetchProfileData(userId);
       if (profData && profData.coding_stats) {
         setCodingStats(profData.coding_stats);
       }
@@ -101,14 +105,14 @@ export default function PracticeOverview({
         const { count } = await supabase
           .from("leetcode_progress")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", "default_user")
+          .eq("user_id", userId)
           .eq("status", "solved");
 
         if (count && count > 0) {
           setCsvSolvedCount(count);
         } else {
           // Check localStorage as fallback
-          const saved = localStorage.getItem("skillscatalyst_solved_questions");
+          const saved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);
           if (saved) {
             const parsed = JSON.parse(saved);
             const keys = Object.keys(parsed).filter((k) => parsed[k] && k.startsWith("q_"));
@@ -121,7 +125,7 @@ export default function PracticeOverview({
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [userId]);
 
   // Calculate Aggregated Problems Solved
   const leetcodeSolved = codingStats.leetcode?.total_solved || 0;

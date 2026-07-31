@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData, fetchSavedPlaylists, fetchProfileData } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
 
 // ─── Problem dataset for topic mapping ───────────────────────────────────────
 interface ProblemMeta {
@@ -234,32 +235,35 @@ function RingProgress({ pct: p, color, size = 80, stroke = 8 }: { pct: number; c
 }
 
 export default function AnalyticsPage() {
+  const { session } = useAuth();
+  const userId = session?.user_id || "default_user";
+
   const [timeRange, setTimeRange] = useState("30D");
   const [solvedKeys, setSolvedKeys] = useState<string[]>([]);
   const [dbLeetcodeProgress, setDbLeetcodeProgress] = useState<any[]>([]);
 
   // Query Dashboard API
   const { data: dashboardData } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: fetchDashboardData,
+    queryKey: ["dashboard", userId],
+    queryFn: () => fetchDashboardData(userId),
   });
 
   // Query Saved Playlists API
   const { data: savedPlaylistsData } = useQuery({
-    queryKey: ["saved-playlists"],
-    queryFn: () => fetchSavedPlaylists(),
+    queryKey: ["saved-playlists", userId],
+    queryFn: () => fetchSavedPlaylists(userId),
   });
 
   // Query User Profile API (contains extracted LeetCode/GitHub stats)
   const { data: profileData } = useQuery({
-    queryKey: ["profile-summary"],
-    queryFn: fetchProfileData,
+    queryKey: ["profile-summary", userId],
+    queryFn: () => fetchProfileData(userId),
   });
 
   // Load local solved state for fallback/activity feed
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("skillscatalyst_solved_questions");
+      const saved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);
       if (saved) {
         const parsed = JSON.parse(saved);
         const active = Object.keys(parsed).filter((k) => !!parsed[k]);
@@ -274,7 +278,7 @@ export default function AnalyticsPage() {
         const { data: lc } = await supabase
           .from("leetcode_progress")
           .select("*")
-          .eq("user_id", "default_user");
+          .eq("user_id", userId);
         if (lc) setDbLeetcodeProgress(lc);
       } catch (err) {
         console.warn("Supabase progress load notice:", err);
@@ -282,7 +286,7 @@ export default function AnalyticsPage() {
     }
 
     loadSupabaseProgress();
-  }, []);
+  }, [userId]);
 
   // Compute EXACT statistics strictly from connected coding profile data
   const stats = useMemo(() => {
@@ -366,8 +370,8 @@ export default function AnalyticsPage() {
 
     // Streak and AI Career Health score
     const streakDays = dashboardData?.user?.streakDays || 0;
-    const aiCareerHealth = dashboardData?.metrics?.aiCareerHealth?.percentage || 23;
-    const successRate = dashboardData?.practiceOverview?.successRate || 91;
+    const aiCareerHealth = dashboardData?.metrics?.aiCareerHealth?.percentage || 0;
+    const successRate = dashboardData?.practiceOverview?.successRate || 0;
 
     return {
       problemsSolved: totalProblemsSolved,

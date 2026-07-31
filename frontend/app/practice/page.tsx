@@ -40,6 +40,7 @@ import {
   QuestionPeriod,
 } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
 
 // Helper for formatting company slug into clean display name
 function formatCompanyName(slug: string): string {
@@ -205,6 +206,9 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
 
 
 export default function PracticePage() {
+  const { session } = useAuth();
+  const userId = session?.user_id || "default_user";
+
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
   const [companiesList, setCompaniesList] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("google");
@@ -244,7 +248,7 @@ export default function PracticePage() {
     setDrawerSolved((prev) => {
       const updated = { ...prev, [problemId]: newDoneState };
       try {
-        localStorage.setItem("skillscatalyst_drawer_solved", JSON.stringify(updated));
+        localStorage.setItem(`skillscatalyst_drawer_solved_${userId}`, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -252,7 +256,7 @@ export default function PracticePage() {
     setSolvedState((prev) => {
       const updated = { ...prev, [problemId.toString()]: newDoneState };
       try {
-        localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(updated));
+        localStorage.setItem(`skillscatalyst_solved_questions_${userId}`, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -262,7 +266,7 @@ export default function PracticePage() {
       if (newDoneState) {
         await supabase.from("leetcode_progress").upsert(
           {
-            user_id: "default_user",
+            user_id: userId,
             company_slug: "foundation",
             question_id: problemId,
             question_title: details?.title || `Problem ${problemId}`,
@@ -276,7 +280,7 @@ export default function PracticePage() {
         await supabase
           .from("leetcode_progress")
           .delete()
-          .eq("user_id", "default_user")
+          .eq("user_id", userId)
           .eq("company_slug", "foundation")
           .eq("question_id", problemId);
       }
@@ -288,11 +292,11 @@ export default function PracticePage() {
   // Load solved state from localStorage & Hydrate live from Supabase DB on mount
   useEffect(() => {
     try {
-      const savedSolved = localStorage.getItem("skillscatalyst_solved_questions");
+      const savedSolved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);
       if (savedSolved) {
         setSolvedState(JSON.parse(savedSolved));
       }
-      const savedDrawer = localStorage.getItem("skillscatalyst_drawer_solved");
+      const savedDrawer = localStorage.getItem(`skillscatalyst_drawer_solved_${userId}`);
       if (savedDrawer) {
         setDrawerSolved(JSON.parse(savedDrawer));
       }
@@ -305,12 +309,12 @@ export default function PracticePage() {
         const { data: leetcodeData } = await supabase
           .from("leetcode_progress")
           .select("*")
-          .eq("user_id", "default_user");
+          .eq("user_id", userId);
 
         const { data: roadmapData } = await supabase
           .from("roadmap_progress")
           .select("*")
-          .eq("user_id", "default_user");
+          .eq("user_id", userId);
 
         const fetchedSolvedState: Record<string, boolean> = {};
         const fetchedDrawerState: Record<number, boolean> = {};
@@ -336,36 +340,21 @@ export default function PracticePage() {
 
         if (roadmapData) {
           roadmapData.forEach((item) => {
-            fetchedSolvedState[item.node_id] = item.status === "completed";
+            if (item.status === "completed" && item.node_id) {
+              fetchedSolvedState[item.node_id] = true;
+            }
           });
         }
 
-        if (Object.keys(fetchedDrawerState).length > 0) {
-          setDrawerSolved((prev) => {
-            const merged = { ...prev, ...fetchedDrawerState };
-            try {
-              localStorage.setItem("skillscatalyst_drawer_solved", JSON.stringify(merged));
-            } catch (e) {}
-            return merged;
-          });
-        }
-
-        if (Object.keys(fetchedSolvedState).length > 0) {
-          setSolvedState((prev) => {
-            const merged = { ...prev, ...fetchedSolvedState };
-            try {
-              localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(merged));
-            } catch (e) {}
-            return merged;
-          });
-        }
+        setSolvedState((prev) => ({ ...prev, ...fetchedSolvedState }));
+        setDrawerSolved((prev) => ({ ...prev, ...fetchedDrawerState }));
       } catch (err) {
-        console.warn("Supabase initial sync notice:", err);
+        console.warn("Supabase initial sync error:", err);
       }
     }
 
     syncFromSupabase();
-  }, []);
+  }, [userId]);
 
   const toggleSolved = async (
     key: string,
@@ -377,7 +366,7 @@ export default function PracticePage() {
     setSolvedState((prev) => {
       const updated = { ...prev, [key]: newDoneState };
       try {
-        localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(updated));
+        localStorage.setItem(`skillscatalyst_solved_questions_${userId}`, JSON.stringify(updated));
       } catch (e) {
         console.warn("Failed to save solved question state", e);
       }
@@ -390,7 +379,7 @@ export default function PracticePage() {
         if (newDoneState) {
           await supabase.from("leetcode_progress").upsert(
             {
-              user_id: "default_user",
+              user_id: userId,
               company_slug: qDetails.company,
               question_id: qDetails.id,
               question_title: qDetails.title,
@@ -406,7 +395,7 @@ export default function PracticePage() {
           await supabase
             .from("leetcode_progress")
             .delete()
-            .eq("user_id", "default_user")
+            .eq("user_id", userId)
             .eq("company_slug", qDetails.company)
             .eq("question_id", qDetails.id);
         }
@@ -414,7 +403,7 @@ export default function PracticePage() {
         if (newDoneState) {
           await supabase.from("roadmap_progress").upsert(
             {
-              user_id: "default_user",
+              user_id: userId,
               roadmap_id: "dsa-beginner",
               node_id: key,
               node_title: key,
@@ -427,7 +416,7 @@ export default function PracticePage() {
           await supabase
             .from("roadmap_progress")
             .delete()
-            .eq("user_id", "default_user")
+            .eq("user_id", userId)
             .eq("roadmap_id", "dsa-beginner")
             .eq("node_id", key);
         }

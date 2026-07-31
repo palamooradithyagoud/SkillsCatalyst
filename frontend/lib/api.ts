@@ -1,18 +1,18 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function fetchDashboardData() {
+export async function fetchDashboardData(userId = "default_user") {
   try {
-    const res = await fetch(`${API_BASE}/api/dashboard`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/dashboard?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch dashboard data");
     return await res.json();
   } catch (error) {
     console.warn("FastAPI backend offline, returning fallback schema", error);
     return {
-      user: { name: "Palamoor", status: "ACTIVE", streakDays: 0 },
+      user: { name: "Learner", status: "ACTIVE", streakDays: 0 },
       metrics: {
-        learningProgress: { percentage: 0, completedVideos: 0, totalVideos: 106, subtitle: "0/106 videos completed" },
+        learningProgress: { percentage: 0, completedVideos: 0, totalVideos: 0, subtitle: "0 videos completed" },
         resumeReadiness: { percentage: 0, subtitle: "No upload yet" },
-        aiCareerHealth: { percentage: 23, subtitle: "Progressing well" },
+        aiCareerHealth: { percentage: 0, subtitle: "Start solving problems to build health" },
         interviewReadiness: { isLocked: true, subtitle: "Currently Locked" },
       },
       upcoming: [
@@ -21,10 +21,10 @@ export async function fetchDashboardData() {
         { id: "3", title: "DSA Practice", subtitle: "Arrays & Hashing", date: "May 26, 6:00 PM", type: "code" },
       ],
       practiceOverview: {
-        problemsSolved: 117, successRate: 91, contests: 0,
+        problemsSolved: 0, successRate: 0, contests: 0,
         chartData: [
-          { day: "Mon", solved: 12 }, { day: "Tue", solved: 19 }, { day: "Wed", solved: 15 },
-          { day: "Thu", solved: 28 }, { day: "Fri", solved: 22 }, { day: "Sat", solved: 31 }, { day: "Sun", solved: 25 },
+          { day: "Mon", solved: 0 }, { day: "Tue", solved: 0 }, { day: "Wed", solved: 0 },
+          { day: "Thu", solved: 0 }, { day: "Fri", solved: 0 }, { day: "Sat", solved: 0 }, { day: "Sun", solved: 0 },
         ],
       },
     };
@@ -437,9 +437,9 @@ export interface PlatformStat {
   [key: string]: any;
 }
 
-export async function fetchProfileData() {
+export async function fetchProfileData(userId = "default_user") {
   try {
-    const res = await fetch(`${API_BASE}/api/profile`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/api/profile?user_id=${encodeURIComponent(userId)}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (e) {
