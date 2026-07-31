@@ -1,7 +1,19 @@
 import os
+import sys
+from pathlib import Path
+
+# Ensure root directory is in sys.path for robust module loading
+_root_dir = Path(__file__).resolve().parent.parent
+if str(_root_dir) not in sys.path:
+    sys.path.insert(0, str(_root_dir))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile
+
+try:
+    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile
+except ModuleNotFoundError:
+    from routers import dashboard, ai_mentor, learning, resume, practice, profile
 
 app = FastAPI(
     title="SkillPath API",
@@ -9,18 +21,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS — allow frontend origin via env var (set to Cloud Run URL in production)
-_frontend_url = os.getenv("FRONTEND_URL", "")
+# ── CORS Configuration ────────────────────────────────────────────────────────
+_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+
 _allowed_origins = [
+    "https://skills-catalyst.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-if _frontend_url:
+
+if _frontend_url and _frontend_url not in _allowed_origins:
     _allowed_origins.append(_frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins or ["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
