@@ -967,7 +967,6 @@ export default function LearningPage() {
   const { data: savedData, isFetching: loadingSaved } = useQuery({
     queryKey: ["saved-playlists", userId],
     queryFn:  () => fetchSavedPlaylists(),
-    enabled:  !!session?.user_id,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
