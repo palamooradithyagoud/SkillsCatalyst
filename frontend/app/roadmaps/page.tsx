@@ -40,6 +40,9 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "fra
 import { generateRoadmap, RoadmapData } from "@/lib/api";
 import PythonGrowthCanvas from "@/components/PythonGrowthCanvas";
 import SkillDetailDrawer from "@/components/SkillDetailDrawer";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+
 
 interface RoadmapNode {
   name: string;
@@ -1638,11 +1641,41 @@ function RoadmapDetailView({
 }
 
 export default function RoadmapsPage() {
+  const { session } = useAuth();
+  const userId = session?.user_id;
+
   const [selectedRoadmap, setSelectedRoadmap] = useState<PresetRoadmap | null>(null);
   const [query, setQuery] = useState("");
   const [generating, setGenerating] = useState(false);
   const [customRoadmaps, setCustomRoadmaps] = useState<RoadmapData[]>([]);
   const [completedState, setCompletedState] = useState<Record<string, boolean>>({});
+
+  // Hydrate completed roadmap nodes from Supabase DB on mount
+  React.useEffect(() => {
+    if (!userId) return;
+
+    async function loadRoadmapProgress() {
+      try {
+        const { data } = await supabase
+          .from("roadmap_progress")
+          .select("roadmap_id, node_id, status")
+          .eq("user_id", userId);
+
+        if (data) {
+          const map: Record<string, boolean> = {};
+          data.forEach((row) => {
+            const key = `${row.roadmap_id}-${row.node_id}`;
+            map[key] = row.status === "completed";
+          });
+          setCompletedState((prev) => ({ ...prev, ...map }));
+        }
+      } catch (err) {
+        console.warn("Failed to load roadmap progress from Supabase:", err);
+      }
+    }
+
+    loadRoadmapProgress();
+  }, [userId]);
 
   const handleGenerate = async () => {
     if (!query.trim() || generating) return;
@@ -1655,9 +1688,39 @@ export default function RoadmapsPage() {
     setGenerating(false);
   };
 
-  const toggleNode = (roadmapKey: string, nodeName: string) => {
+  const toggleNode = async (roadmapKey: string, nodeName: string) => {
     const key = `${roadmapKey}-${nodeName}`;
-    setCompletedState((prev) => ({ ...prev, [key]: !prev[key] }));
+    const isCurrentlyDone = completedState[key] ?? false;
+    const newDoneState = !isCurrentlyDone;
+
+    setCompletedState((prev) => ({ ...prev, [key]: newDoneState }));
+
+    if (!userId) return;
+
+    try {
+      if (newDoneState) {
+        await supabase.from("roadmap_progress").upsert(
+          {
+            user_id: userId,
+            roadmap_id: roadmapKey,
+            node_id: nodeName,
+            node_title: nodeName,
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,roadmap_id,node_id" }
+        );
+      } else {
+        await supabase
+          .from("roadmap_progress")
+          .delete()
+          .eq("user_id", userId)
+          .eq("roadmap_id", roadmapKey)
+          .eq("node_id", nodeName);
+      }
+    } catch (err) {
+      console.warn("Failed to sync roadmap node completion to Supabase:", err);
+    }
   };
 
   const isNodeDone = (roadmapKey: string, nodeName: string, defaultDone = false) => {
@@ -1669,6 +1732,7 @@ export default function RoadmapsPage() {
     setSelectedRoadmap(roadmap);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
 
   // If a roadmap is selected (e.g. Python Mastery), render the detail view subcomponent!
   if (selectedRoadmap) {

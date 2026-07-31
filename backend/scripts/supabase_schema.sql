@@ -1,26 +1,15 @@
 -- ====================================================================
--- SKILLSCATALYST / SKILLPATH - SUPABASE COMPLETE DATABASE SCHEMA
--- Safe Drop & Recreate Script for Supabase SQL Editor
+-- SKILLSCATALYST - PRODUCTION SUPABASE DATABASE SCHEMA
+-- ====================================================================
+-- NON-DESTRUCTIVE PRODUCTION SCHEMA (ZERO DROP TABLE STATEMENTS)
 -- ====================================================================
 
--- Enable UUID extension
+-- 1. ENABLE EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop existing tables to ensure clean column definitions and remove stale schemas
-DROP TABLE IF EXISTS public.user_academic_profile CASCADE;
-DROP TABLE IF EXISTS public.user_coding_profiles CASCADE;
-DROP TABLE IF EXISTS public.user_progress CASCADE;
-DROP TABLE IF EXISTS public.leetcode_progress CASCADE;
-DROP TABLE IF EXISTS public.roadmap_progress CASCADE;
-DROP TABLE IF EXISTS public.resume_scores CASCADE;
-DROP TABLE IF EXISTS public.saved_playlists CASCADE;
-DROP TABLE IF EXISTS public.video_progress CASCADE;
-
--- --------------------------------------------------------------------
--- 1. ACADEMIC & INSTITUTIONAL PROFILE TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.user_academic_profile (
-    user_id TEXT PRIMARY KEY DEFAULT 'default_user',
+-- 2. ACADEMIC & INSTITUTIONAL PROFILE TABLE
+CREATE TABLE IF NOT EXISTS public.user_academic_profile (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name TEXT DEFAULT '',
     college TEXT DEFAULT '',
     department TEXT DEFAULT '',
@@ -29,11 +18,9 @@ CREATE TABLE public.user_academic_profile (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- --------------------------------------------------------------------
--- 2. CODING PROFILES & EXTRACTED STATS TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.user_coding_profiles (
-    user_id TEXT PRIMARY KEY DEFAULT 'default_user',
+-- 3. CODING PROFILES & EXTRACTED STATS TABLE
+CREATE TABLE IF NOT EXISTS public.user_coding_profiles (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     leetcode_url TEXT DEFAULT '',
     github_url TEXT DEFAULT '',
     hackerrank_url TEXT DEFAULT '',
@@ -44,11 +31,9 @@ CREATE TABLE public.user_coding_profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- --------------------------------------------------------------------
--- 3. USER OVERALL PROGRESS & STATS TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.user_progress (
-    user_id TEXT PRIMARY KEY DEFAULT 'default_user',
+-- 4. USER OVERALL PROGRESS & STATS TABLE
+CREATE TABLE IF NOT EXISTS public.user_progress (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     problems_solved INTEGER NOT NULL DEFAULT 0,
     success_rate NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
     streak_days INTEGER NOT NULL DEFAULT 0,
@@ -58,54 +43,48 @@ CREATE TABLE public.user_progress (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- --------------------------------------------------------------------
--- 4. LEETCODE & COMPANY-WISE PRACTICE PROGRESS TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.leetcode_progress (
+-- 5. LEETCODE & COMPANY-WISE PRACTICE PROGRESS TABLE
+CREATE TABLE IF NOT EXISTS public.leetcode_progress (
     id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default_user',
-    company_slug TEXT NOT NULL,           -- e.g. 'google', 'amazon', 'meta'
-    question_id INTEGER NOT NULL,          -- e.g. 1, 42, 206
-    question_title TEXT NOT NULL,         -- e.g. 'Two Sum'
-    difficulty TEXT DEFAULT 'Easy',       -- 'Easy', 'Medium', 'Hard'
-    acceptance TEXT,                      -- e.g. '57.1%'
-    frequency TEXT,                       -- e.g. '100.0%'
-    status TEXT NOT NULL DEFAULT 'solved', -- 'solved', 'in_progress'
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    company_slug TEXT NOT NULL,
+    question_id INTEGER NOT NULL,
+    question_title TEXT NOT NULL,
+    difficulty TEXT DEFAULT 'Easy',
+    acceptance TEXT,
+    frequency TEXT,
+    status TEXT NOT NULL DEFAULT 'solved',
     solved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT unique_user_company_question UNIQUE(user_id, company_slug, question_id)
 );
 
-CREATE INDEX idx_leetcode_user ON public.leetcode_progress(user_id);
-CREATE INDEX idx_leetcode_company ON public.leetcode_progress(company_slug);
+CREATE INDEX IF NOT EXISTS idx_leetcode_user ON public.leetcode_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_leetcode_company ON public.leetcode_progress(company_slug);
 
--- --------------------------------------------------------------------
--- 5. ROADMAP PROGRESS TABLE (Beginner DSA & AI Skill Roadmaps)
--- --------------------------------------------------------------------
-CREATE TABLE public.roadmap_progress (
+-- 6. ROADMAP PROGRESS TABLE
+CREATE TABLE IF NOT EXISTS public.roadmap_progress (
     id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default_user',
-    roadmap_id TEXT NOT NULL,             -- e.g. 'dsa-beginner', 'frontend', 'python'
-    node_id TEXT NOT NULL,                -- e.g. 'two-pointers', 'sliding-window'
-    node_title TEXT NOT NULL,             -- e.g. 'Two Pointers'
-    category TEXT,                         -- e.g. 'Arrays', 'Strings'
-    status TEXT NOT NULL DEFAULT 'completed', -- 'completed', 'in_progress'
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    roadmap_id TEXT NOT NULL,
+    node_id TEXT NOT NULL,
+    node_title TEXT NOT NULL,
+    category TEXT,
+    status TEXT NOT NULL DEFAULT 'completed',
     completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT unique_user_roadmap_node UNIQUE(user_id, roadmap_id, node_id)
 );
 
-CREATE INDEX idx_roadmap_user ON public.roadmap_progress(user_id);
-CREATE INDEX idx_roadmap_id ON public.roadmap_progress(roadmap_id);
+CREATE INDEX IF NOT EXISTS idx_roadmap_user ON public.roadmap_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_roadmap_id ON public.roadmap_progress(roadmap_id);
 
--- --------------------------------------------------------------------
--- 6. RESUME SCORES & AI REVIEW HISTORY TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.resume_scores (
+-- 7. RESUME SCORES & AI REVIEW HISTORY TABLE
+CREATE TABLE IF NOT EXISTS public.resume_scores (
     id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default_user',
-    filename TEXT NOT NULL,               -- e.g. 'my_resume.pdf'
-    target_role TEXT NOT NULL,            -- e.g. 'Software Engineer'
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    filename TEXT NOT NULL,
+    target_role TEXT NOT NULL,
     company_type TEXT DEFAULT 'Product-Based',
-    overall_score NUMERIC(5, 2) NOT NULL, -- e.g. 85.0
+    overall_score NUMERIC(5, 2) NOT NULL,
     ats_compatibility_score NUMERIC(5, 2),
     skills_match_score NUMERIC(5, 2),
     experience_score NUMERIC(5, 2),
@@ -115,14 +94,12 @@ CREATE TABLE public.resume_scores (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_resume_user ON public.resume_scores(user_id);
+CREATE INDEX IF NOT EXISTS idx_resume_user ON public.resume_scores(user_id);
 
--- --------------------------------------------------------------------
--- 7. SAVED PLAYLISTS TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.saved_playlists (
+-- 8. SAVED PLAYLISTS TABLE
+CREATE TABLE IF NOT EXISTS public.saved_playlists (
     id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default_user',
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     playlist_id TEXT NOT NULL,
     title TEXT NOT NULL,
     channel TEXT,
@@ -138,25 +115,21 @@ CREATE TABLE public.saved_playlists (
     CONSTRAINT unique_user_playlist UNIQUE(playlist_id, user_id)
 );
 
--- --------------------------------------------------------------------
--- 8. VIDEO WATCH PROGRESS & ANTI-CHEAT TRACKING TABLE
--- --------------------------------------------------------------------
-CREATE TABLE public.video_progress (
+-- 9. VIDEO WATCH PROGRESS TABLE
+CREATE TABLE IF NOT EXISTS public.video_progress (
     id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL DEFAULT 'default_user',
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     playlist_id TEXT NOT NULL,
     video_id TEXT NOT NULL,
     watched BOOLEAN DEFAULT FALSE,
-    last_position INTEGER DEFAULT 0,       -- resume playback position in seconds
-    watch_time INTEGER DEFAULT 0,          -- cumulative seconds watched
+    last_position INTEGER DEFAULT 0,
+    watch_time INTEGER DEFAULT 0,
     completed_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT unique_user_playlist_video UNIQUE(user_id, playlist_id, video_id)
 );
 
--- --------------------------------------------------------------------
--- ENABLE ROW LEVEL SECURITY (RLS) & ANONYMOUS POLICIES
--- --------------------------------------------------------------------
+-- 10. ENABLE RLS & STRICT USER OWNERSHIP POLICIES
 ALTER TABLE public.user_academic_profile ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_coding_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
@@ -166,50 +139,93 @@ ALTER TABLE public.resume_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saved_playlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.video_progress ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow anon all on user_academic_profile" ON public.user_academic_profile FOR ALL USING (true);
-CREATE POLICY "Allow anon all on user_coding_profiles" ON public.user_coding_profiles FOR ALL USING (true);
-CREATE POLICY "Allow anon all on user_progress" ON public.user_progress FOR ALL USING (true);
-CREATE POLICY "Allow anon all on leetcode_progress" ON public.leetcode_progress FOR ALL USING (true);
-CREATE POLICY "Allow anon all on roadmap_progress" ON public.roadmap_progress FOR ALL USING (true);
-CREATE POLICY "Allow anon all on resume_scores" ON public.resume_scores FOR ALL USING (true);
-CREATE POLICY "Allow anon all on saved_playlists" ON public.saved_playlists FOR ALL USING (true);
-CREATE POLICY "Allow anon all on video_progress" ON public.video_progress FOR ALL USING (true);
+DROP POLICY IF EXISTS "Allow anon all on user_academic_profile" ON public.user_academic_profile;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on academic_profile" ON public.user_academic_profile;
+DROP POLICY IF EXISTS "Users can only access own academic profile" ON public.user_academic_profile;
+DROP POLICY IF EXISTS "Strict user ownership on user_academic_profile" ON public.user_academic_profile;
 
--- --------------------------------------------------------------------
--- AUTOMATIC UPSERT STORED PROCEDURE FOR LEETCODE SOLVES
--- --------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.upsert_leetcode_solve(
-    p_user_id TEXT,
-    p_company TEXT,
-    p_question_id INT,
-    p_title TEXT,
-    p_difficulty TEXT
-) RETURNS VOID AS $$
-BEGIN
-    INSERT INTO public.leetcode_progress (user_id, company_slug, question_id, question_title, difficulty, status)
-    VALUES (p_user_id, p_company, p_question_id, p_title, p_difficulty, 'solved')
-    ON CONFLICT (user_id, company_slug, question_id)
-    DO UPDATE SET status = 'solved', solved_at = NOW();
+DROP POLICY IF EXISTS "Allow anon all on user_coding_profiles" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on coding_profiles" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Users can only access own coding profile" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles;
 
-    -- Automatically update overall user problems_solved counter
-    INSERT INTO public.user_progress (user_id, problems_solved, updated_at)
-    VALUES (p_user_id, 1, NOW())
-    ON CONFLICT (user_id)
-    DO UPDATE SET 
-        problems_solved = (SELECT COUNT(*) FROM public.leetcode_progress WHERE user_id = p_user_id AND status = 'solved'),
-        updated_at = NOW();
-END;
-$$ LANGUAGE plpgsql;
+DROP POLICY IF EXISTS "Allow anon all on user_progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on user_progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Users can only access own progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Strict user ownership on user_progress" ON public.user_progress;
 
--- --------------------------------------------------------------------
--- AUTOMATIC PROFILE CREATION TRIGGER FOR AUTH USERS (GOOGLE / EMAIL)
--- --------------------------------------------------------------------
+DROP POLICY IF EXISTS "Allow anon all on leetcode_progress" ON public.leetcode_progress;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on leetcode_progress" ON public.leetcode_progress;
+DROP POLICY IF EXISTS "Users can only access own leetcode progress" ON public.leetcode_progress;
+DROP POLICY IF EXISTS "Strict user ownership on leetcode_progress" ON public.leetcode_progress;
+
+DROP POLICY IF EXISTS "Allow anon all on roadmap_progress" ON public.roadmap_progress;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on roadmap_progress" ON public.roadmap_progress;
+DROP POLICY IF EXISTS "Users can only access own roadmap progress" ON public.roadmap_progress;
+DROP POLICY IF EXISTS "Strict user ownership on roadmap_progress" ON public.roadmap_progress;
+
+DROP POLICY IF EXISTS "Allow anon all on resume_scores" ON public.resume_scores;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on resume_scores" ON public.resume_scores;
+DROP POLICY IF EXISTS "Users can only access own resume scores" ON public.resume_scores;
+DROP POLICY IF EXISTS "Strict user ownership on resume_scores" ON public.resume_scores;
+
+DROP POLICY IF EXISTS "Allow anon all on saved_playlists" ON public.saved_playlists;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on saved_playlists" ON public.saved_playlists;
+DROP POLICY IF EXISTS "Users can only access own saved playlists" ON public.saved_playlists;
+DROP POLICY IF EXISTS "Strict user ownership on saved_playlists" ON public.saved_playlists;
+
+DROP POLICY IF EXISTS "Allow anon all on video_progress" ON public.video_progress;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on video_progress" ON public.video_progress;
+DROP POLICY IF EXISTS "Users can only access own video progress" ON public.video_progress;
+DROP POLICY IF EXISTS "Strict user ownership on video_progress" ON public.video_progress;
+
+CREATE POLICY "Strict user ownership on user_academic_profile"
+    ON public.user_academic_profile FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on user_coding_profiles"
+    ON public.user_coding_profiles FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on user_progress"
+    ON public.user_progress FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on leetcode_progress"
+    ON public.leetcode_progress FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on roadmap_progress"
+    ON public.roadmap_progress FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on resume_scores"
+    ON public.resume_scores FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on saved_playlists"
+    ON public.saved_playlists FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Strict user ownership on video_progress"
+    ON public.video_progress FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+-- 11. AUTOMATIC PROFILE CREATION TRIGGER ON AUTH USER SIGNUP
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.user_academic_profile (user_id, full_name, updated_at)
     VALUES (
-        NEW.id::text,
+        NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
         NOW()
     )
@@ -218,19 +234,51 @@ BEGIN
         updated_at = NOW();
 
     INSERT INTO public.user_progress (user_id, updated_at)
-    VALUES (NEW.id::text, NOW())
+    VALUES (NEW.id, NOW())
     ON CONFLICT (user_id) DO NOTHING;
 
     INSERT INTO public.user_coding_profiles (user_id, updated_at)
-    VALUES (NEW.id::text, NOW())
+    VALUES (NEW.id, NOW())
     ON CONFLICT (user_id) DO NOTHING;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Trigger execution on auth.users insert
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 12. SECURE RPC FUNCTION: DERIVES IDENTITY INTERNALLY FROM AUTH.UID()
+CREATE OR REPLACE FUNCTION public.upsert_leetcode_solve(
+    p_company TEXT,
+    p_question_id INT,
+    p_title TEXT,
+    p_difficulty TEXT
+) RETURNS VOID AS $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    v_user_id := auth.uid();
+    
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'Unauthenticated call to upsert_leetcode_solve';
+    END IF;
+
+    INSERT INTO public.leetcode_progress (user_id, company_slug, question_id, question_title, difficulty, status)
+    VALUES (v_user_id, p_company, p_question_id, p_title, p_difficulty, 'solved')
+    ON CONFLICT (user_id, company_slug, question_id)
+    DO UPDATE SET status = 'solved', solved_at = NOW();
+
+    INSERT INTO public.user_progress (user_id, problems_solved, updated_at)
+    VALUES (v_user_id, 1, NOW())
+    ON CONFLICT (user_id)
+    DO UPDATE SET 
+        problems_solved = (SELECT COUNT(*) FROM public.leetcode_progress WHERE user_id = v_user_id AND status = 'solved'),
+        updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.upsert_leetcode_solve(TEXT, INT, TEXT, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.upsert_leetcode_solve(TEXT, INT, TEXT, TEXT) TO authenticated;

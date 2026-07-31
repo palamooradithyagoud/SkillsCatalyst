@@ -241,7 +241,7 @@ export default function PracticePage() {
     problemId: number,
     details?: { title: string; difficulty: string; pattern: string }
   ) => {
-    if (!userId || userId === "default_user") return;
+    if (!userId) return;
     const isCurrentlyDone = !!drawerSolved[problemId];
     const newDoneState = !isCurrentlyDone;
 
@@ -292,11 +292,12 @@ export default function PracticePage() {
 
   // Load solved state from localStorage & Hydrate live from Supabase DB on mount
   useEffect(() => {
-    if (!userId || userId === "default_user") {
+    if (!userId) {
       setSolvedState({});
       setDrawerSolved({});
       return;
     }
+
 
     try {
       const savedSolved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);

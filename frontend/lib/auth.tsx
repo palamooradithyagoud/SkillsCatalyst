@@ -7,33 +7,39 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
-interface UserSession {
+export interface UserSession {
   email?: string;
   user_id: string;
   name?: string;
   loggedInAt: string;
+  emailConfirmed?: boolean;
 }
 
 interface AuthContextValue {
   session: UserSession | null;
   isLoading: boolean;
+  unverifiedEmail: string | null;
   login: (email: string, userId: string, name?: string) => void;
   logout: () => void;
+  clearUnverifiedEmail: () => void;
+  setUnverifiedEmail: (email: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   session: null,
   isLoading: true,
+  unverifiedEmail: null,
   login: () => {},
   logout: () => {},
+  clearUnverifiedEmail: () => {},
+  setUnverifiedEmail: () => {},
 });
 
-// Helper function to automatically store/upsert new users into user_academic_profile & user_progress
+// Helper function to sync authenticated user to Supabase user_academic_profile & user_progress
 async function syncUserToSupabase(userId: string, email: string, name?: string) {
   try {
     const fullName = name || email.split("@")[0] || "Learner";
 
-    // 1. Upsert academic profile with user_id, full_name, and updated_at
     await supabase.from("user_academic_profile").upsert(
       {
         user_id: userId,
@@ -43,7 +49,6 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
       { onConflict: "user_id" }
     );
 
-    // 2. Ensure initial row in user_progress
     await supabase.from("user_progress").upsert(
       {
         user_id: userId,
@@ -52,7 +57,6 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
       { onConflict: "user_id" }
     );
 
-    // 3. Ensure coding profile row exists
     await supabase.from("user_coding_profiles").upsert(
       {
         user_id: userId,
@@ -68,17 +72,18 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [unverifiedEmail, setUnverifiedEmailState] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Helper to construct and store user session locally and in database
   const setAndStoreSession = useCallback(
-    async (email: string, userId: string, name?: string) => {
+    async (email: string, userId: string, name?: string, confirmed: boolean = true) => {
       const newSession: UserSession = {
         email,
         user_id: userId,
         name: name || email.split("@")[0],
         loggedInAt: new Date().toISOString(),
+        emailConfirmed: confirmed,
       };
 
       try {
@@ -86,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {}
 
       setSession(newSession);
+      setUnverifiedEmailState(null);
 
       // Async database storage
       syncUserToSupabase(userId, email, name);
@@ -93,20 +99,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  // Read session from Supabase auth & localStorage on mount
+  const clearSessionLocal = useCallback(() => {
+    setSession(null);
+    try {
+      localStorage.removeItem(SESSION_KEY);
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Initialize auth state on mount
   useEffect(() => {
     let mounted = true;
 
     async function initAuth() {
       try {
-        // Check current active Supabase session (e.g. after Google OAuth redirect)
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.warn("Supabase auth error:", error);
+        }
+
         const supaUser = data.session?.user;
 
         if (supaUser && mounted) {
-          const isConfirmed = !!supaUser.email_confirmed_at || supaUser.app_metadata?.provider !== "email";
-          if (!isConfirmed) {
-            await supabase.auth.signOut();
+          const isEmailProvider = supaUser.app_metadata?.provider === "email";
+          const isConfirmed = !!supaUser.email_confirmed_at;
+
+          if (isEmailProvider && !isConfirmed) {
+            // Unverified email account
+            setUnverifiedEmailState(supaUser.email || null);
+            clearSessionLocal();
             setIsLoading(false);
             return;
           }
@@ -118,43 +144,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             supaUser.user_metadata?.name ||
             userEmail.split("@")[0];
 
-          await setAndStoreSession(userEmail, userId, userName);
-          setIsLoading(false);
+          await setAndStoreSession(userEmail, userId, userName, true);
+          if (mounted) setIsLoading(false);
           return;
         }
       } catch (err) {
         console.warn("Error checking Supabase auth session:", err);
       }
 
-      // Fallback to local session if no active Supabase OAuth session
-      try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        if (raw && mounted) {
-          const parsed: UserSession = JSON.parse(raw);
-          setSession(parsed);
-          // ensure user exists in DB
-          if (parsed.user_id && parsed.email) {
-            syncUserToSupabase(parsed.user_id, parsed.email, parsed.name);
-          }
-        }
-      } catch {
-        localStorage.removeItem(SESSION_KEY);
+      // If no valid active Supabase OAuth / email session, clear any stale state
+      if (mounted) {
+        clearSessionLocal();
+        setIsLoading(false);
       }
-
-      if (mounted) setIsLoading(false);
     }
 
     initAuth();
 
-    // Listen for auth changes (e.g., Google OAuth sign in callback)
+    // Listen for auth state changes (e.g. after Google OAuth callback or email sign in)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, supaSession) => {
-      if (supaSession?.user && mounted) {
+      if (!mounted) return;
+
+      if (supaSession?.user) {
         const supaUser = supaSession.user;
-        const isConfirmed = !!supaUser.email_confirmed_at || supaUser.app_metadata?.provider !== "email";
-        if (!isConfirmed) {
-          await supabase.auth.signOut();
+        const isEmailProvider = supaUser.app_metadata?.provider === "email";
+        const isConfirmed = !!supaUser.email_confirmed_at;
+
+        if (isEmailProvider && !isConfirmed) {
+          setUnverifiedEmailState(supaUser.email || null);
+          clearSessionLocal();
           setIsLoading(false);
           return;
         }
@@ -166,7 +186,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supaUser.user_metadata?.name ||
           userEmail.split("@")[0];
 
-        await setAndStoreSession(userEmail, userId, userName);
+        await setAndStoreSession(userEmail, userId, userName, true);
+        setIsLoading(false);
+      } else {
+        clearSessionLocal();
         setIsLoading(false);
       }
     });
@@ -175,9 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [setAndStoreSession]);
+  }, [setAndStoreSession, clearSessionLocal]);
 
-  // Route guard: redirect unauthenticated users to /login
+  // Strict route guard
   useEffect(() => {
     if (isLoading) return;
 
@@ -192,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     (email: string, userId: string, name?: string) => {
-      setAndStoreSession(email, userId, name);
+      setAndStoreSession(email, userId, name, true);
       router.replace("/dashboard");
     },
     [setAndStoreSession, router]
@@ -201,38 +224,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
+    clearSessionLocal();
     try {
-      localStorage.removeItem(SESSION_KEY);
-      // Clear all user-specific cached state keys from localStorage
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
-          localStorage.removeItem(key);
-        }
-      }
-      // Clear all React Query in-memory cache to prevent stale data from one user
-      // leaking into another user's session after account switching
       queryClient.clear();
       await supabase.auth.signOut();
     } catch {}
     setSession(null);
+    setUnverifiedEmailState(null);
     router.replace("/login");
-  }, [router, queryClient]);
+  }, [router, queryClient, clearSessionLocal]);
 
-  if (pathname !== "/login") {
-    if (isLoading || !session) {
-      return (
-        <AuthContext.Provider value={{ session, isLoading, login, logout }}>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060a15] text-white">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        </AuthContext.Provider>
-      );
-    }
+  const clearUnverifiedEmail = useCallback(() => {
+    setUnverifiedEmailState(null);
+  }, []);
+
+  const setUnverifiedEmail = useCallback((email: string | null) => {
+    setUnverifiedEmailState(email);
+  }, []);
+
+  // When loading or when unauthenticated user is on a protected route, show dark loading screen
+  if (isLoading || (!session && pathname !== "/login")) {
+    return (
+      <AuthContext.Provider
+        value={{
+          session,
+          isLoading,
+          unverifiedEmail,
+          login,
+          logout,
+          clearUnverifiedEmail,
+          setUnverifiedEmail,
+        }}
+      >
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#060a15] text-white">
+          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xs text-slate-400 font-mono tracking-wider animate-pulse">
+            LOADING SKILLSCATALYST...
+          </p>
+        </div>
+      </AuthContext.Provider>
+    );
   }
 
   return (
-    <AuthContext.Provider value={{ session, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        isLoading,
+        unverifiedEmail,
+        login,
+        logout,
+        clearUnverifiedEmail,
+        setUnverifiedEmail,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

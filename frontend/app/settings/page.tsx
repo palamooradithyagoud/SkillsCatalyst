@@ -26,7 +26,8 @@ import { useAuth } from "@/lib/auth";
 
 export default function SettingsPage() {
   const { session, logout } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
+
   const qc = useQueryClient();
 
   // Academic Profile State

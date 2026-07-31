@@ -93,12 +93,13 @@ export default function PracticeOverview({
   // Fetch coding profile stats from API & Supabase DB
   useEffect(() => {
     async function loadData() {
-      if (!userId || userId === "default_user") {
+      if (!userId) {
         setCodingStats({});
         setCsvSolvedCount(0);
         setLoading(false);
         return;
       }
+
       setLoading(true);
       // 1. Fetch extracted coding profiles
       const profData = await fetchProfileData();
