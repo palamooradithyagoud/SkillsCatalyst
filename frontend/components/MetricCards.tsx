@@ -180,16 +180,6 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         delay={0.1}
       />
       <MetricCard
-        title="Resume Readiness"
-        icon={<Target className="w-4 h-4 text-blue-400" />}
-        iconBg="bg-blue-500/10 border border-blue-500/20"
-        percentage={rr?.percentage ?? 0}
-        ringColor="#3b82f6"
-        subtitle={rr?.subtitle ?? "No upload yet"}
-        subtitleColor="text-blue-400"
-        delay={0.2}
-      />
-      <MetricCard
         title="Saved Playlists"
         icon={<Bookmark className="w-4 h-4 text-purple-400" />}
         iconBg="bg-purple-500/10 border border-purple-500/20"
@@ -197,6 +187,16 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         ringColor="#a855f7"
         subtitle={sp?.subtitle ?? "0 playlists saved"}
         subtitleColor="text-purple-400"
+        delay={0.2}
+      />
+      <MetricCard
+        title="Resume Readiness"
+        icon={<Target className="w-4 h-4 text-blue-400" />}
+        iconBg="bg-blue-500/10 border border-blue-500/20"
+        percentage={rr?.percentage ?? 0}
+        ringColor="#3b82f6"
+        subtitle={rr?.subtitle ?? "No upload yet"}
+        subtitleColor="text-blue-400"
         delay={0.3}
       />
       <MetricCard
