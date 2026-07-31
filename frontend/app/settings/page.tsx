@@ -24,7 +24,9 @@ import {
 import { useAuth } from "@/lib/auth";
 
 export default function SettingsPage() {
-  const { logout } = useAuth();
+  const { session, logout } = useAuth();
+  const userId = session?.user_id || "default_user";
+
   // Academic Profile State
   const [fullName, setFullName] = useState("");
   const [college, setCollege] = useState("");
@@ -49,14 +51,19 @@ export default function SettingsPage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   // ── localStorage keys ─────────────────────────────────────────────────
-  const LS_ACADEMIC = "sc_academic_profile";
-  const LS_CODING   = "sc_coding_profiles";
-  const LS_STATS    = "sc_coding_stats";
+  const LS_ACADEMIC = `sc_academic_profile_${userId}`;
+  const LS_CODING   = `sc_coding_profiles_${userId}`;
+  const LS_STATS    = `sc_coding_stats_${userId}`;
 
   // Fetch initial profile & stats — DB first, then fall back to localStorage
   useEffect(() => {
     async function loadData() {
       setLoadingProfile(true);
+
+      // Default name to logged-in user name/email if blank
+      if (session?.name || session?.email) {
+        setFullName(session.name || (session.email ? session.email.split("@")[0] : ""));
+      }
 
       // ── Step 1: Load from localStorage immediately (instant render) ──
       try {
@@ -87,7 +94,7 @@ export default function SettingsPage() {
 
       // ── Step 2: Try Supabase (override localStorage if data exists) ──
       try {
-        const data = await fetchProfileData();
+        const data = await fetchProfileData(userId);
         if (data) {
           if (data.academic) {
             if (data.academic.full_name)     setFullName(data.academic.full_name);
@@ -113,13 +120,14 @@ export default function SettingsPage() {
       setLoadingProfile(false);
     }
     loadData();
-  }, []);
+  }, [userId, session]);
 
   // Save Academic Profile — always writes to localStorage as primary cache
   const handleSaveAcademic = async () => {
     setSavingAcademic(true);
     setAcademicSuccessMsg("");
     const payload = {
+      user_id: userId,
       full_name: fullName,
       college: college,
       department: department,
@@ -128,7 +136,7 @@ export default function SettingsPage() {
     };
     // Always save locally first (instant, reliable)
     try { localStorage.setItem(LS_ACADEMIC, JSON.stringify(payload)); } catch {}
-    // Then try Supabase (may fail if table not created yet)
+    // Then try Supabase
     await saveAcademicProfile(payload).catch(() => {});
     setSavingAcademic(false);
     setAcademicSuccessMsg("Academic profile saved successfully!");
@@ -140,6 +148,7 @@ export default function SettingsPage() {
     setSyncingCoding(true);
     setCodingSuccessMsg("");
     const codingPayload = {
+      user_id: userId,
       leetcode: leetcodeInput,
       github: githubInput,
       hackerrank: hackerrankInput,

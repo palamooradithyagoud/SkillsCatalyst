@@ -192,10 +192,10 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         title="AI Career Health"
         icon={<Sparkles className="w-4 h-4 text-purple-400" />}
         iconBg="bg-purple-500/10 border border-purple-500/20"
-        percentage={ch?.percentage ?? 23}
+        percentage={ch?.percentage ?? 0}
         ringColor="#3b82f6"
-        subtitle={ch?.subtitle ?? "Progressing well"}
-        subtitleColor="text-emerald-400"
+        subtitle={ch?.subtitle ?? "Start solving problems to build health"}
+        subtitleColor="text-purple-400"
         delay={0.3}
       />
       <MetricCard

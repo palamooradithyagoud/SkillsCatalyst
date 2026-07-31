@@ -7,13 +7,19 @@ import UpcomingList from "@/components/UpcomingList";
 import PracticeOverview from "@/components/PracticeOverview";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
+  const { session } = useAuth();
+  const userId = session?.user_id || "default_user";
+
   const { data } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: fetchDashboardData,
+    queryKey: ["dashboard", userId],
+    queryFn: () => fetchDashboardData(userId),
   });
+
+  const displayName = session?.name || data?.user?.name || session?.email?.split("@")[0] || "Learner";
 
   return (
     <motion.div
@@ -22,7 +28,7 @@ export default function DashboardPage() {
       transition={{ duration: 0.4 }}
       className="max-w-7xl mx-auto space-y-6"
     >
-      <Header userName={data?.user?.name || "Palamoor"} />
+      <Header userName={displayName} />
       <MetricCards metrics={data?.metrics} />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         <div className="lg:col-span-5">
