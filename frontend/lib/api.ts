@@ -942,6 +942,7 @@ export async function markVideoWatched(
   watched: boolean
 ): Promise<void> {
   const cleanId = cleanPlaylistId(playlistId);
+  const sessionId = getGuestSessionId();
 
   // 1. Save to Supabase via FastAPI backend
   try {
@@ -959,12 +960,13 @@ export async function markVideoWatched(
     console.warn("Backend markVideoWatched failed:", e);
   }
 
-  // 2. Direct Supabase DB Client write
+  // 2. Direct Supabase DB Client write (video_progress table)
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
+    const targetUserId = session?.user?.id;
+    if (targetUserId) {
       const row = {
-        user_id: session.user.id,
+        user_id: targetUserId,
         playlist_id: cleanId,
         video_id: videoId,
         watched: watched,
@@ -977,6 +979,57 @@ export async function markVideoWatched(
     }
   } catch (e) {
     console.warn("Mark video watched in Supabase DB failed:", e);
+  }
+
+  // 3. Direct Supabase DB Client write (learning_progress JSONB table)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: lpData } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    if (lpData && lpData.length > 0) {
+      const playlists = lpData[0].completed_steps || [];
+      const plIndex = playlists.findIndex((p: any) => (p.id || p.playlist_id) === cleanId || (p.id || p.playlist_id) === playlistId);
+      if (plIndex !== -1) {
+        const pl = playlists[plIndex];
+        const videos = pl.videos || [];
+        const vIdx = videos.findIndex((v: any) => (v.videoId || v.id) === videoId);
+        if (vIdx !== -1) {
+          videos[vIdx].watched = watched;
+          videos[vIdx].completed = watched;
+          videos[vIdx].completedAt = watched ? new Date().toISOString() : null;
+        } else {
+          videos.push({
+            videoId,
+            id: videoId,
+            watched,
+            completed: watched,
+            completedAt: watched ? new Date().toISOString() : null,
+          });
+        }
+        playlists[plIndex].videos = videos;
+
+        const totalV = videos.length;
+        const compV = videos.filter((v: any) => v.watched || v.completed).length;
+        const pct = totalV > 0 ? Math.round((compV / totalV) * 10000) / 100 : 0;
+
+        await supabase.from("learning_progress").upsert({
+          session_id: sid,
+          user_id: session?.user?.id || null,
+          skill_name: "saved_playlists",
+          completed_steps: playlists,
+          completion_pct: pct,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "session_id,skill_name" });
+      }
+    }
+  } catch (e) {
+    console.warn("Mark video watched in learning_progress JSONB failed:", e);
   }
 }
 
@@ -1033,13 +1086,17 @@ export async function completeVideo(
   videoId: string,
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
+  const cleanId = cleanPlaylistId(playlistId);
+  const sessionId = getGuestSessionId();
+  const nowIso = new Date().toISOString();
+
   try {
     const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
-        playlist_id: playlistId,
+        playlist_id: cleanId,
         video_id: videoId,
         watch_time: Math.round(watchTime),
       }),
@@ -1053,11 +1110,11 @@ export async function completeVideo(
 
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const nowIso = new Date().toISOString();
+    const targetUserId = session?.user?.id;
+    if (targetUserId) {
       const row = {
-        user_id: session.user.id,
-        playlist_id: playlistId,
+        user_id: targetUserId,
+        playlist_id: cleanId,
         video_id: videoId,
         watched: true,
         watch_time: Math.round(watchTime),
@@ -1067,13 +1124,58 @@ export async function completeVideo(
       await supabase
         .from("video_progress")
         .upsert(row, { onConflict: "user_id,playlist_id,video_id" });
-
-      return { success: true, completed_at: nowIso };
     }
   } catch (e) {
-    console.warn("completeVideo failed:", e);
+    console.warn("completeVideo DB failed:", e);
   }
-  return { success: false };
+
+  // Direct update to learning_progress JSONB table
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: lpData } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    if (lpData && lpData.length > 0) {
+      const playlists = lpData[0].completed_steps || [];
+      const plIndex = playlists.findIndex((p: any) => (p.id || p.playlist_id) === cleanId || (p.id || p.playlist_id) === playlistId);
+      if (plIndex !== -1) {
+        const pl = playlists[plIndex];
+        const videos = pl.videos || [];
+        const vIdx = videos.findIndex((v: any) => (v.videoId || v.id) === videoId);
+        if (vIdx !== -1) {
+          videos[vIdx].watched = true;
+          videos[vIdx].completed = true;
+          videos[vIdx].completedAt = nowIso;
+        } else {
+          videos.push({
+            videoId,
+            id: videoId,
+            watched: true,
+            completed: true,
+            completedAt: nowIso,
+          });
+        }
+        playlists[plIndex].videos = videos;
+
+        await supabase.from("learning_progress").upsert({
+          session_id: sid,
+          user_id: session?.user?.id || null,
+          skill_name: "saved_playlists",
+          completed_steps: playlists,
+          updated_at: nowIso
+        }, { onConflict: "session_id,skill_name" });
+      }
+    }
+  } catch (e) {
+    console.warn("completeVideo learning_progress failed:", e);
+  }
+
+  return { success: true, completed_at: nowIso };
 }
 
 export async function markAllVideosWatched(
