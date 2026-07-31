@@ -573,7 +573,9 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     created_at: new Date().toISOString(),
   };
 
-  // 1. Primary: Save to Supabase via FastAPI backend
+  const sessionId = getGuestSessionId();
+
+  // 1. Save via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
     await fetch(`${API_BASE}/api/learning/save`, {
@@ -585,17 +587,43 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     console.warn("Backend save playlist failed:", e);
   }
 
-  // 2. Direct Supabase Client DB fallback
+  // 2. Direct Supabase DB write (saved_playlists table)
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const fullRow = { ...row, user_id: session.user.id };
+    const targetUserId = session?.user?.id;
+    if (targetUserId) {
       await supabase
         .from("saved_playlists")
-        .upsert(fullRow, { onConflict: "user_id,playlist_id" });
+        .upsert({ ...row, user_id: targetUserId }, { onConflict: "user_id,playlist_id" });
     }
   } catch (e) {
     console.warn("Save playlist to Supabase DB failed:", e);
+  }
+
+  // 3. Direct Supabase DB write (learning_progress JSONB table - supports both auth user & guest session)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: existingLp } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    const steps = existingLp && existingLp.length > 0 ? existingLp[0].completed_steps || [] : [];
+    if (!steps.some((p: any) => (p.id || p.playlist_id) === row.playlist_id)) {
+      steps.push({ ...row, id: row.playlist_id, completed: false, videos: [] });
+      await supabase.from("learning_progress").upsert({
+        session_id: sid,
+        user_id: session?.user?.id || null,
+        skill_name: "saved_playlists",
+        completed_steps: steps,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "session_id,skill_name" });
+    }
+  } catch (e) {
+    console.warn("Save playlist to learning_progress JSONB failed:", e);
   }
 
   return { success: true };
@@ -617,23 +645,24 @@ export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: b
   }
 
   try {
+    const sessionId = getGuestSessionId();
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const totalVideos = playlists.reduce((acc, p) => acc + (p.videos?.length || 0), 0);
-      const completedVideos = playlists.reduce((acc, p) => acc + (p.videos?.filter((v: any) => v.completed || v.watched)?.length || 0), 0);
-      const pct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 10000) / 100 : 0;
+    const sid = session?.user?.id || sessionId;
 
-      await supabase.from("learning_progress").upsert({
-        session_id: session.user.id,
-        user_id: session.user.id,
-        skill_name: "saved_playlists",
-        completed_steps: playlists,
-        completion_pct: pct,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "session_id,skill_name" });
+    const totalVideos = playlists.reduce((acc, p) => acc + (p.videos?.length || 0), 0);
+    const completedVideos = playlists.reduce((acc, p) => acc + (p.videos?.filter((v: any) => v.completed || v.watched)?.length || 0), 0);
+    const pct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 10000) / 100 : 0;
 
-      return { success: true, completion_pct: pct };
-    }
+    await supabase.from("learning_progress").upsert({
+      session_id: sid,
+      user_id: session?.user?.id || null,
+      skill_name: "saved_playlists",
+      completed_steps: playlists,
+      completion_pct: pct,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "session_id,skill_name" });
+
+    return { success: true, completion_pct: pct };
   } catch (e) {
     console.warn("Supabase syncSavedPlaylists failed:", e);
   }
@@ -666,10 +695,40 @@ export async function unsavePlaylist(playlistId: string) {
     console.warn("Unsave playlist from Supabase DB failed:", e);
   }
 
+  try {
+    const sessionId = getGuestSessionId();
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: lpData } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    if (lpData && lpData.length > 0) {
+      const steps = (lpData[0].completed_steps || []).filter(
+        (p: any) => (p.id || p.playlist_id) !== cleanId && (p.id || p.playlist_id) !== playlistId
+      );
+      await supabase.from("learning_progress").upsert({
+        session_id: sid,
+        user_id: session?.user?.id || null,
+        skill_name: "saved_playlists",
+        completed_steps: steps,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "session_id,skill_name" });
+    }
+  } catch (e) {
+    console.warn("Unsave playlist from learning_progress failed:", e);
+  }
+
   return { success: true };
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
+  let backendSaved: Playlist[] = [];
+  const sessionId = getGuestSessionId();
+
   // 1. Primary: Fetch saved playlists from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
@@ -679,7 +738,7 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
     });
     if (res.ok) {
       const json = await res.json();
-      if (json.saved && Array.isArray(json.saved)) {
+      if (json.saved && Array.isArray(json.saved) && json.saved.length > 0) {
         return { saved: json.saved, count: json.saved.length };
       }
     }
@@ -690,15 +749,16 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
   // 2. Direct Supabase DB Query (saved_playlists table)
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const { data, count } = await supabase
+    const targetUserId = session?.user?.id;
+    if (targetUserId) {
+      const { data } = await supabase
         .from("saved_playlists")
-        .select("*", { count: "exact" })
-        .eq("user_id", session.user.id)
+        .select("*")
+        .eq("user_id", targetUserId)
         .order("created_at", { ascending: false });
 
-      if (data) {
-        const saved = data.map((row: any) => ({
+      if (data && data.length > 0) {
+        backendSaved = data.map((row: any) => ({
           id: row.playlist_id,
           title: row.title,
           channel: row.channel,
@@ -710,14 +770,52 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
           thumbnail: row.thumbnail,
           source: row.source,
         }));
-        return { saved, count: count || saved.length };
       }
     }
   } catch (e) {
     console.warn("Fetch saved playlists from Supabase DB failed:", e);
   }
 
-  return { saved: [], count: 0 };
+  // 3. Direct Supabase DB Query (learning_progress JSONB table - supports both auth user & guest session)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: lpData } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    if (lpData && lpData.length > 0) {
+      const jsonbItems = lpData[0].completed_steps || [];
+      const seenIds = new Set(backendSaved.map((p) => p.id));
+      for (const item of jsonbItems) {
+        const itemId = item.id || item.playlist_id;
+        if (itemId && !seenIds.has(itemId)) {
+          seenIds.add(itemId);
+          backendSaved.push({
+            id:           itemId,
+            title:        item.title || "Untitled Playlist",
+            channel:      item.channel || "",
+            description:  item.description || "",
+            level:        item.level || "all",
+            video_count:  item.video_count || "?",
+            duration:     item.duration || "?",
+            playlist_url: item.playlist_url || "",
+            thumbnail:    item.thumbnail || "",
+            source:       item.source || "youtube",
+            skill_query:  item.skill_query || "",
+            created_at:   item.created_at || "",
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Fetch saved playlists from learning_progress failed:", e);
+  }
+
+  return { saved: backendSaved, count: backendSaved.length };
 }
 
 
@@ -754,6 +852,7 @@ export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   const cleanId = cleanPlaylistId(playlistId);
+  const sessionId = getGuestSessionId();
 
   // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
   try {
@@ -776,11 +875,12 @@ export async function fetchPlaylistVideos(
   // 2. Direct Supabase DB Query (video_progress table)
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
+    const targetUserId = session?.user?.id;
+    if (targetUserId) {
       const { data } = await supabase
         .from("video_progress")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", targetUserId)
         .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
 
       if (data && data.length > 0) {
@@ -799,6 +899,38 @@ export async function fetchPlaylistVideos(
     }
   } catch (e) {
     console.warn("Fetch playlist videos fallback failed:", e);
+  }
+
+  // 3. Direct Supabase DB Query (learning_progress JSONB table)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sid = session?.user?.id || sessionId;
+    const { data: lpData } = await supabase
+      .from("learning_progress")
+      .select("completed_steps")
+      .eq("session_id", sid)
+      .eq("skill_name", "saved_playlists")
+      .limit(1);
+
+    if (lpData && lpData.length > 0) {
+      const playlists = lpData[0].completed_steps || [];
+      const match = playlists.find((p: any) => (p.id || p.playlist_id) === cleanId || (p.id || p.playlist_id) === playlistId);
+      if (match && match.videos && match.videos.length > 0) {
+        const videos: PlaylistVideo[] = match.videos.map((v: any, idx: number) => ({
+          videoId: v.videoId || v.id || String(idx + 1),
+          title: v.title || `Video ${idx + 1}`,
+          position: idx + 1,
+          thumbnail: v.thumbnail || "",
+          watched: !!(v.completed || v.watched),
+          last_position: v.lastPosition || v.last_position || 0,
+          watch_time: v.watchTime || v.watch_time || 0,
+          completed_at: v.completedAt || v.completed_at || null,
+        }));
+        return { videos, count: videos.length };
+      }
+    }
+  } catch (e) {
+    console.warn("Fetch playlist videos from learning_progress failed:", e);
   }
 
   return { videos: [], count: 0 };
