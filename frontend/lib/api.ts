@@ -722,6 +722,48 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   return { success: true };
 }
 
+export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: boolean; completion_pct?: number }> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(`${API_BASE}/api/learning/sync-saved-playlists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ playlists }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    }
+  } catch (e) {
+    console.warn("Backend syncSavedPlaylists failed:", e);
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const totalVideos = playlists.reduce((acc, p) => acc + (p.videos?.length || 0), 0);
+      const completedVideos = playlists.reduce((acc, p) => acc + (p.videos?.filter((v: any) => v.completed || v.watched)?.length || 0), 0);
+      const pct = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 10000) / 100 : 0;
+
+      await supabase.from("learning_progress").upsert({
+        session_id: session.user.id,
+        user_id: session.user.id,
+        skill_name: "saved_playlists",
+        completed_steps: playlists,
+        completion_pct: pct,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "session_id,skill_name" });
+
+      return { success: true, completion_pct: pct };
+    }
+  } catch (e) {
+    console.warn("Supabase syncSavedPlaylists failed:", e);
+  }
+  return { success: false };
+}
+
+
 export async function unsavePlaylist(playlistId: string) {
   const cleanId = cleanPlaylistId(playlistId);
   removeLocalPlaylist(cleanId);
