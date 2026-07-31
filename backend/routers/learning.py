@@ -617,6 +617,7 @@ async def get_playlist_videos(
     user_id:     str = Depends(get_current_user_id),
 ):
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
+    clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
     if not YOUTUBE_API_KEY:
         return {"videos": [], "count": 0, "error": "YouTube API key not configured"}
 
@@ -624,10 +625,13 @@ async def get_playlist_videos(
     page_token = None
 
     async with httpx.AsyncClient(timeout=20) as client:
-        while True:
+        max_pages = 20
+        page_count = 0
+        while page_count < max_pages:
+            page_count += 1
             params: dict = {
                 "part":       "snippet",
-                "playlistId": playlist_id,
+                "playlistId": clean_playlist_id,
                 "maxResults": 50,
                 "key":        YOUTUBE_API_KEY,
             }
@@ -674,17 +678,16 @@ async def get_playlist_videos(
     if sb and videos and user_id:
         try:
             # Sync verified YouTube video count back to saved_playlists table
-            sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
+            sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
         except Exception:
             pass
-
 
         try:
             res = (
                 sb.table("video_progress")
                 .select("video_id,watched,last_position,watch_time,completed_at")
                 .eq("user_id", user_id)
-                .eq("playlist_id", playlist_id)
+                .eq("playlist_id", clean_playlist_id)
                 .execute()
             )
             prog_map = {r["video_id"]: r for r in (res.data or [])}

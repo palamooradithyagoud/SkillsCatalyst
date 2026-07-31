@@ -317,6 +317,26 @@ export interface PlaylistVideo {
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
+  // 1. Primary: Fetch full YouTube playlist items + merged progress from backend API
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      const res = await fetch(
+        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
+        { headers: { ...authHeaders }, cache: "no-store" }
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
+          return json;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Fetch playlist videos from backend failed:", e);
+  }
+
+  // 2. Fallback: Query Supabase video_progress directly if backend is unreachable
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
@@ -341,19 +361,8 @@ export async function fetchPlaylistVideos(
       }
     }
   } catch (e) {
-    console.warn("Fetch playlist videos failed:", e);
+    console.warn("Fetch playlist videos fallback failed:", e);
   }
-
-  try {
-    const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await fetch(
-        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(playlistId)}`,
-        { headers: { ...authHeaders }, cache: "no-store" }
-      );
-      if (res.ok) return await res.json();
-    }
-  } catch {}
 
   return { videos: [], count: 0 };
 }
