@@ -111,6 +111,18 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             elif res_user_prog.data and res_user_prog.data[0].get("resume_readiness_score"):
                 resume_score = round(float(res_user_prog.data[0].get("resume_readiness_score")))
 
+            # 8. Fetch completed roadmap topics count from roadmap_progress table
+            roadmap_completed_count = 0
+            res_roadmap = (
+                sb.table("roadmap_progress")
+                .select("node_id", count="exact")
+                .eq("user_id", user_id)
+                .eq("status", "completed")
+                .execute()
+            )
+            if res_roadmap.data:
+                roadmap_completed_count = res_roadmap.count or len(res_roadmap.data)
+
         except Exception as e:
             print(f"Dashboard metrics query error: {e}")
 
@@ -126,9 +138,9 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         pct = 0
         subtitle_text = "0 videos completed"
 
-    # Saved Playlists Metric: Percentage relative to goal (e.g. 5 playlists = 100%) or completion %
-    saved_playlists_pct = min(100, saved_playlists_count * 20) if saved_playlists_count > 0 else 0
-    saved_playlists_subtitle = f"{saved_playlists_count} playlist{'s' if saved_playlists_count != 1 else ''} saved" if saved_playlists_count > 0 else "0 playlists saved"
+    # Roadmap Progress Metric: Percentage relative to baseline goal (e.g. 20 topics = 100%)
+    roadmap_pct = min(100, round((roadmap_completed_count / 20) * 100)) if roadmap_completed_count > 0 else 0
+    roadmap_subtitle = f"{roadmap_completed_count} topic{'s' if roadmap_completed_count != 1 else ''} completed" if roadmap_completed_count > 0 else "0 topics completed"
 
     # Dynamic Success Rate (0 if no historical user_success_rate recorded)
     calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (75 if problems_solved > 0 else 0)
@@ -148,14 +160,14 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 "totalVideos": total_videos,
                 "subtitle": subtitle_text
             },
+            "roadmapProgress": {
+                "count": roadmap_completed_count,
+                "percentage": roadmap_pct,
+                "subtitle": roadmap_subtitle
+            },
             "resumeReadiness": {
                 "percentage": resume_score,
                 "subtitle": resume_subtitle
-            },
-            "savedPlaylists": {
-                "count": saved_playlists_count,
-                "percentage": saved_playlists_pct,
-                "subtitle": saved_playlists_subtitle
             },
             "interviewReadiness": {
                 "isLocked": True,

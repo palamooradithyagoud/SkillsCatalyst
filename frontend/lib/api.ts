@@ -80,12 +80,14 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const localResumeScore = localResumeScoreRaw ? parseInt(localResumeScoreRaw, 10) : 0;
 
     const lp = backendData.metrics?.learningProgress || {};
-    const sp = backendData.metrics?.savedPlaylists || {};
+    const rm = backendData.metrics?.roadmapProgress || {};
     const rr = backendData.metrics?.resumeReadiness || {};
 
     const completed = Math.max(lp.completedVideos || 0, localCompleted);
-    const savedCount = Math.max(sp.count || 0, localSaved.length);
     const resumeScore = Math.max(rr.percentage || 0, localResumeScore);
+    const roadmapCount = rm.count || 0;
+    const roadmapPct = rm.percentage || (roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / 20) * 100)) : 0);
+    const roadmapSubtitle = rm.subtitle || (roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed");
 
     let totalVids = lp.totalVideos || 0;
     if (localSaved.length > 0) {
@@ -108,8 +110,6 @@ function mergeLocalDashboardMetrics(backendData: any) {
 
     const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : 0;
     const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
-    const savedPct = Math.min(100, savedCount * 20);
-    const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
     const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : (rr.subtitle || "No upload yet");
 
     return {
@@ -123,16 +123,15 @@ function mergeLocalDashboardMetrics(backendData: any) {
           totalVideos: totalVids,
           subtitle: subtitle,
         },
+        roadmapProgress: {
+          count: roadmapCount,
+          percentage: roadmapPct,
+          subtitle: roadmapSubtitle,
+        },
         resumeReadiness: {
           ...rr,
           percentage: resumeScore,
           subtitle: resumeSubtitle,
-        },
-        savedPlaylists: {
-          ...sp,
-          count: savedCount,
-          percentage: savedPct,
-          subtitle: savedSubtitle,
         },
       },
     };
@@ -146,6 +145,7 @@ async function getFallbackDashboardData() {
   let totalVideos = 0;
   let completedCount = 0;
   let resumeScore = 0;
+  let roadmapCount = 0;
   let userName = "Learner";
 
   try {
@@ -191,6 +191,17 @@ async function getFallbackDashboardData() {
         const sc = resumeData[0].overall_score || resumeData[0].ats_compatibility_score;
         if (sc) resumeScore = Math.round(Number(sc));
       }
+
+      // Query completed roadmap nodes
+      const { data: rmData } = await supabase
+        .from("roadmap_progress")
+        .select("node_id")
+        .eq("user_id", userId)
+        .eq("status", "completed");
+
+      if (rmData) {
+        roadmapCount = rmData.length;
+      }
     }
   } catch (e) {
     console.warn("Supabase dashboard fallback error:", e);
@@ -235,8 +246,8 @@ async function getFallbackDashboardData() {
   const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
   const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
 
-  const savedPct = Math.min(100, savedPlaylistsCount * 20);
-  const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
+  const roadmapPct = roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / 20) * 100)) : 0;
+  const roadmapSubtitle = roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed";
   const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : "No upload yet";
 
   return {
@@ -252,14 +263,14 @@ async function getFallbackDashboardData() {
         totalVideos: totalVideos,
         subtitle: subtitle,
       },
+      roadmapProgress: {
+        count: roadmapCount,
+        percentage: roadmapPct,
+        subtitle: roadmapSubtitle,
+      },
       resumeReadiness: {
         percentage: resumeScore,
         subtitle: resumeSubtitle,
-      },
-      savedPlaylists: {
-        count: savedPlaylistsCount,
-        percentage: savedPct,
-        subtitle: savedSubtitle,
       },
       interviewReadiness: {
         isLocked: true,
