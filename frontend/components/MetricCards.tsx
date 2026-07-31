@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { BookOpen, Target, Map, Briefcase, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface MetricCardProps {
   title: string;
@@ -15,6 +16,7 @@ interface MetricCardProps {
   isLocked?: boolean;
   delay?: number;
   badge?: string;
+  onClick?: () => void;
 }
 
 function AnimatedCircle({
@@ -104,26 +106,35 @@ function MetricCard({
   isLocked,
   delay = 0,
   badge,
+  onClick,
 }: MetricCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className={`glass rounded-2xl p-5 flex flex-col items-center justify-between min-h-[220px] transition-all duration-300 hover:border-white/20 ${
-        isLocked ? "opacity-75" : ""
-      }`}
+      onClick={onClick}
+      className={`glass rounded-2xl p-5 flex flex-col items-center justify-between min-h-[220px] transition-all duration-300 ${
+        onClick ? "cursor-pointer hover:border-purple-500/40 hover:scale-[1.01] active:scale-[0.99]" : "hover:border-white/20"
+      } ${isLocked ? "opacity-75" : ""}`}
       style={{
         background:
           "linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)",
         boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.36)",
       }}
     >
-      <div className="w-full flex items-center gap-2.5">
-        <div className={`p-2 rounded-xl ${iconBg}`}>{icon}</div>
-        <span className="text-sm font-semibold text-slate-200 tracking-wide">
-          {title}
-        </span>
+      <div className="w-full flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className={`p-2 rounded-xl ${iconBg}`}>{icon}</div>
+          <span className="text-sm font-semibold text-slate-200 tracking-wide">
+            {title}
+          </span>
+        </div>
+        {onClick && (
+          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+            Open →
+          </span>
+        )}
       </div>
 
       <div className="my-1.5 flex flex-col items-center">
@@ -163,6 +174,7 @@ export interface MetricsData {
     subtitle: string;
     roadmapName?: string;
     nextTopic?: string;
+    roadmapId?: string;
   };
   savedPlaylists?: {
     count?: number;
@@ -180,6 +192,7 @@ export interface MetricsData {
 }
 
 export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
+  const router = useRouter();
   const lp = metrics?.learningProgress;
   const rm = metrics?.roadmapProgress;
   const rr = metrics?.resumeReadiness;
@@ -191,6 +204,18 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const roadmapNextBadge = rm?.nextTopic
     ? (rm.nextTopic.startsWith("Next:") || rm.nextTopic.includes("Roadmap Completed") ? rm.nextTopic : `Next: ${rm.nextTopic}`)
     : "Explore roadmaps on Roadmaps page";
+
+  const handleRoadmapCardClick = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "skillscatalyst_open_roadmap_id",
+          rm?.roadmapId || "c-programming"
+        );
+      } catch {}
+    }
+    router.push("/roadmaps");
+  };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -214,6 +239,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         subtitleColor="text-purple-400"
         badge={roadmapNextBadge}
         delay={0.2}
+        onClick={handleRoadmapCardClick}
       />
       <MetricCard
         title="Resume Readiness"

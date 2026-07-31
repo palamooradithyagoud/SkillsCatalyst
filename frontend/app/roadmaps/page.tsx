@@ -1650,8 +1650,26 @@ export default function RoadmapsPage() {
   const [customRoadmaps, setCustomRoadmaps] = useState<RoadmapData[]>([]);
   const [completedState, setCompletedState] = useState<Record<string, boolean>>({});
 
-  // Hydrate completed roadmap nodes from Supabase DB on mount
+  // Hydrate completed roadmap nodes from Supabase DB on mount and auto-open target roadmap if set
   React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const openId = localStorage.getItem("skillscatalyst_open_roadmap_id");
+        if (openId) {
+          localStorage.removeItem("skillscatalyst_open_roadmap_id");
+          const found =
+            SKILL_ROADMAPS.find((r) => r.id === openId) ||
+            CAREER_ROADMAPS.find((r) => r.id === openId);
+          if (found) {
+            setSelectedRoadmap(found);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }
+      } catch (e) {
+        console.warn("Auto-open roadmap error:", e);
+      }
+    }
+
     if (!userId) return;
 
     async function loadRoadmapProgress() {
