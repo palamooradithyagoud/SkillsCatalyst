@@ -2,15 +2,32 @@ import { supabase } from "@/lib/supabase";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+export function getGuestSessionId(): string {
+  if (typeof window === "undefined") return "guest_session_default";
+  try {
+    let sid = localStorage.getItem("skillscatalyst_guest_session_id");
+    if (!sid) {
+      sid = "guest_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+      localStorage.setItem("skillscatalyst_guest_session_id", sid);
+    }
+    return sid;
+  } catch {
+    return "guest_session_default";
+  }
+}
+
 export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "x-session-id": getGuestSessionId(),
+  };
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (token) {
-      return { Authorization: `Bearer ${token}` };
+      headers.Authorization = `Bearer ${token}`;
     }
   } catch {}
-  return {};
+  return headers;
 }
 
 function handleUnauthenticated(res: Response) {
@@ -559,13 +576,11 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   // 1. Primary: Save to Supabase via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      await fetch(`${API_BASE}/api/learning/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify(row),
-      });
-    }
+    await fetch(`${API_BASE}/api/learning/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify(row),
+    });
   } catch (e) {
     console.warn("Backend save playlist failed:", e);
   }
@@ -589,15 +604,13 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
 export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: boolean; completion_pct?: number }> {
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/learning/sync-saved-playlists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ playlists }),
-      });
-      if (res.ok) {
-        return await res.json();
-      }
+    const res = await fetch(`${API_BASE}/api/learning/sync-saved-playlists`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ playlists }),
+    });
+    if (res.ok) {
+      return await res.json();
     }
   } catch (e) {
     console.warn("Backend syncSavedPlaylists failed:", e);
@@ -632,12 +645,10 @@ export async function unsavePlaylist(playlistId: string) {
 
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      await fetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
-        method: "DELETE",
-        headers: { ...authHeaders },
-      });
-    }
+    await fetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
+      method: "DELETE",
+      headers: { ...authHeaders },
+    });
   } catch (e) {
     console.warn("Backend unsave playlist failed:", e);
   }
@@ -662,16 +673,14 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
   // 1. Primary: Fetch saved playlists from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/learning/saved`, {
-        headers: { ...authHeaders },
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.saved && Array.isArray(json.saved)) {
-          return { saved: json.saved, count: json.saved.length };
-        }
+    const res = await fetch(`${API_BASE}/api/learning/saved`, {
+      headers: { ...authHeaders },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.saved && Array.isArray(json.saved)) {
+        return { saved: json.saved, count: json.saved.length };
       }
     }
   } catch (e) {
@@ -749,17 +758,15 @@ export async function fetchPlaylistVideos(
   // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await fetch(
-        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
-        { headers: { ...authHeaders }, cache: "no-store" }
-      );
-      if (res.ok) {
-        const json = await res.json();
-        if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
-          saveActivePlaylistTotal(json.videos.length);
-          return { videos: json.videos, count: json.videos.length };
-        }
+    const res = await fetch(
+      `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
+      { headers: { ...authHeaders }, cache: "no-store" }
+    );
+    if (res.ok) {
+      const json = await res.json();
+      if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
+        saveActivePlaylistTotal(json.videos.length);
+        return { videos: json.videos, count: json.videos.length };
       }
     }
   } catch (e) {
@@ -807,17 +814,15 @@ export async function markVideoWatched(
   // 1. Save to Supabase via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      await fetch(`${API_BASE}/api/learning/video-progress`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({
-          playlist_id: cleanId,
-          video_id: videoId,
-          watched: watched,
-        }),
-      });
-    }
+    await fetch(`${API_BASE}/api/learning/video-progress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({
+        playlist_id: cleanId,
+        video_id: videoId,
+        watched: watched,
+      }),
+    });
   } catch (e) {
     console.warn("Backend markVideoWatched failed:", e);
   }
@@ -856,18 +861,16 @@ export async function saveVideoProgress(
 ): Promise<void> {
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      fetch(`${API_BASE}/api/learning/save-progress`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({
-          playlist_id: playlistId,
-          video_id: videoId,
-          last_position: Math.round(lastPosition),
-          watch_time: Math.round(watchTime),
-        }),
-      }).catch(() => {});
-    }
+    fetch(`${API_BASE}/api/learning/save-progress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({
+        playlist_id: playlistId,
+        video_id: videoId,
+        last_position: Math.round(lastPosition),
+        watch_time: Math.round(watchTime),
+      }),
+    }).catch(() => {});
   } catch {}
 
   try {
@@ -900,19 +903,17 @@ export async function completeVideo(
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
   try {
     const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({
-          playlist_id: playlistId,
-          video_id: videoId,
-          watch_time: Math.round(watchTime),
-        }),
-      });
-      if (res.ok) {
-        return await res.json();
-      }
+    const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({
+        playlist_id: playlistId,
+        video_id: videoId,
+        watch_time: Math.round(watchTime),
+      }),
+    });
+    if (res.ok) {
+      return await res.json();
     }
   } catch (e) {
     console.warn("Backend completeVideo failed:", e);

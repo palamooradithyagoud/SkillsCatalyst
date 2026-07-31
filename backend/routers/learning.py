@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import Optional
 from backend.services.supabase_service import get_supabase
-from backend.services.auth_service import get_current_user_id
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.config import YOUTUBE_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,17 @@ def _is_skill_query(query: str) -> bool:
     if _LEARNING_OFFTOPIC.search(stripped):
         # Only allow if user also mentioned a skill (e.g. "cricket data analysis in Python")
         return bool(_LEARNING_SKILL.search(stripped))
-    return True
+import uuid
+
+
+def _is_uuid(val: str) -> bool:
+    if not val:
+        return False
+    try:
+        uuid.UUID(str(val))
+        return True
+    except Exception:
+        return False
 
 
 def _filter_skill_playlists(results: list[dict]) -> list[dict]:
@@ -511,9 +521,9 @@ async def search_skill(
 @router.post("/save")
 async def save_playlist(
     req: SavePlaylistRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
-    user_id = current_user_id  # always from verified JWT
+    user_id = current_user_id
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
@@ -535,35 +545,36 @@ async def save_playlist(
             except Exception as yt_err:
                 print(f"Error fetching exact video count on save: {yt_err}")
 
-        data = {
-            "playlist_id":  req.playlist_id,
-            "title":        req.title,
-            "channel":      req.channel or "",
-            "description":  req.description or "",
-            "level":        req.level or "",
-            "video_count":  video_count or "?",
-            "duration":     req.duration or "?",
-            "playlist_url": req.playlist_url or "",
-            "thumbnail":    req.thumbnail or "",
-            "source":       req.source or "youtube",
-            "skill_query":  req.skill_query or "",
-            "user_id":      user_id,
-        }
         res_data = None
-        try:
-            result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
-            res_data = result.data
-        except Exception as upsert_err:
-            logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
-            existing = sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
-            if existing.data and len(existing.data) > 0:
-                res_upd = sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
-                res_data = res_upd.data
-            else:
-                res_ins = sb.table("saved_playlists").insert(data).execute()
-                res_data = res_ins.data
+        if _is_uuid(user_id):
+            data = {
+                "playlist_id":  req.playlist_id,
+                "title":        req.title,
+                "channel":      req.channel or "",
+                "description":  req.description or "",
+                "level":        req.level or "",
+                "video_count":  video_count or "?",
+                "duration":     req.duration or "?",
+                "playlist_url": req.playlist_url or "",
+                "thumbnail":    req.thumbnail or "",
+                "source":       req.source or "youtube",
+                "skill_query":  req.skill_query or "",
+                "user_id":      user_id,
+            }
+            try:
+                result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
+                res_data = result.data
+            except Exception as upsert_err:
+                logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
+                existing = sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                if existing.data and len(existing.data) > 0:
+                    res_upd = sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                    res_data = res_upd.data
+                else:
+                    res_ins = sb.table("saved_playlists").insert(data).execute()
+                    res_data = res_ins.data
 
-        # Also sync to learning_progress JSONB column
+        # Also sync to learning_progress JSONB column (supports both guest sessions & auth UUIDs)
         try:
             res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
             existing_lp = res_lp.data[0].get("completed_steps", []) if (res_lp.data and len(res_lp.data) > 0) else []
@@ -584,12 +595,14 @@ async def save_playlist(
             }
             if not any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
                 existing_lp.append(pl_entry)
-                sb.table("learning_progress").upsert({
+                lp_row = {
                     "session_id": user_id,
-                    "user_id": user_id,
                     "skill_name": "saved_playlists",
                     "completed_steps": existing_lp,
-                }, on_conflict="session_id, skill_name").execute()
+                }
+                if _is_uuid(user_id):
+                    lp_row["user_id"] = user_id
+                sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
         except Exception as jsonb_sync_err:
             logger.warning(f"Error syncing saved playlist to learning_progress: {jsonb_sync_err}")
 
@@ -613,14 +626,15 @@ async def save_playlist(
 @router.delete("/save/{playlist_id}")
 async def unsave_playlist(
     playlist_id: str,
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(get_session_or_user_id)
 ):
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
         clean_pid = _extract_playlist_id(playlist_id, playlist_id)
-        sb.table("saved_playlists").delete().eq("user_id", user_id).or_(f"playlist_id.eq.{playlist_id},playlist_id.eq.{clean_pid}").execute()
+        if _is_uuid(user_id):
+            sb.table("saved_playlists").delete().eq("user_id", user_id).or_(f"playlist_id.eq.{playlist_id},playlist_id.eq.{clean_pid}").execute()
 
         # Also remove from learning_progress JSONB
         try:
@@ -628,12 +642,14 @@ async def unsave_playlist(
             if res_lp.data and len(res_lp.data) > 0:
                 existing_lp = res_lp.data[0].get("completed_steps", [])
                 filtered = [p for p in existing_lp if p.get("id") != playlist_id and p.get("id") != clean_pid and p.get("playlist_id") != playlist_id and p.get("playlist_id") != clean_pid]
-                sb.table("learning_progress").upsert({
+                lp_row = {
                     "session_id": user_id,
-                    "user_id": user_id,
                     "skill_name": "saved_playlists",
                     "completed_steps": filtered,
-                }, on_conflict="session_id, skill_name").execute()
+                }
+                if _is_uuid(user_id):
+                    lp_row["user_id"] = user_id
+                sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
         except Exception as jsonb_err:
             logger.warning(f"Error removing playlist from learning_progress: {jsonb_err}")
 
@@ -643,39 +659,41 @@ async def unsave_playlist(
 
 
 @router.get("/saved")
-async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
+async def get_saved_playlists(user_id: str = Depends(get_session_or_user_id)):
     sb = get_supabase()
     if not sb:
         return {"saved": [], "count": 0}
     try:
-        result = (
-            sb.table("saved_playlists")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
-            .execute()
-        )
         remapped = []
         seen_ids = set()
-        for row in (result.data or []):
-            pid = row.get("playlist_id", row.get("id", ""))
-            seen_ids.add(pid)
-            remapped.append({
-                "id":           pid,
-                "title":        row.get("title", ""),
-                "channel":      row.get("channel", ""),
-                "description":  row.get("description", ""),
-                "level":        row.get("level", ""),
-                "video_count":  row.get("video_count", "?"),
-                "duration":     row.get("duration", "?"),
-                "playlist_url": row.get("playlist_url", ""),
-                "thumbnail":    row.get("thumbnail", ""),
-                "source":       row.get("source", "youtube"),
-                "skill_query":  row.get("skill_query", ""),
-                "created_at":   row.get("created_at", ""),
-            })
 
-        # Also merge items from learning_progress JSONB column if present
+        if _is_uuid(user_id):
+            result = (
+                sb.table("saved_playlists")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            for row in (result.data or []):
+                pid = row.get("playlist_id", row.get("id", ""))
+                seen_ids.add(pid)
+                remapped.append({
+                    "id":           pid,
+                    "title":        row.get("title", ""),
+                    "channel":      row.get("channel", ""),
+                    "description":  row.get("description", ""),
+                    "level":        row.get("level", ""),
+                    "video_count":  row.get("video_count", "?"),
+                    "duration":     row.get("duration", "?"),
+                    "playlist_url": row.get("playlist_url", ""),
+                    "thumbnail":    row.get("thumbnail", ""),
+                    "source":       row.get("source", "youtube"),
+                    "skill_query":  row.get("skill_query", ""),
+                    "created_at":   row.get("created_at", ""),
+                })
+
+        # Also merge items from learning_progress JSONB column if present (session_id)
         try:
             res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
             if res_lp.data and len(res_lp.data) > 0:
@@ -711,7 +729,7 @@ async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
 @router.post("/sync-saved-playlists")
 async def sync_saved_playlists(
     req: SyncSavedPlaylistsRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
     JSONB storage endpoint for saved playlists. Calculates total completion %
@@ -725,13 +743,15 @@ async def sync_saved_playlists(
 
     if sb:
         try:
-            sb.table("learning_progress").upsert({
+            lp_row = {
                 "session_id": current_user_id,
-                "user_id": current_user_id,
                 "skill_name": "saved_playlists",
                 "completed_steps": playlists_list,
                 "completion_pct": pct
-            }, on_conflict="session_id, skill_name").execute()
+            }
+            if _is_uuid(current_user_id):
+                lp_row["user_id"] = current_user_id
+            sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
 
             # Record event in user_feedback analytics table
             try:
@@ -748,7 +768,7 @@ async def sync_saved_playlists(
 
 
 @router.get("/get-saved-playlists")
-async def get_saved_playlists_jsonb(current_user_id: str = Depends(get_current_user_id)):
+async def get_saved_playlists_jsonb(current_user_id: str = Depends(get_session_or_user_id)):
     """
     Retrieves candidate saved playlists directly from JSONB `learning_progress`.
     """
@@ -776,13 +796,13 @@ async def get_saved_playlists_jsonb(current_user_id: str = Depends(get_current_u
 @router.get("/resume-progress/{video_id}")
 async def resume_progress(
     video_id: str,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
     Fetches stored playback resume position and completed state for a video.
     """
     sb = get_supabase()
-    if not sb:
+    if not sb or not _is_uuid(current_user_id):
         return {"last_position": 0.0, "completed": False}
     try:
         res = (
@@ -808,7 +828,7 @@ async def resume_progress(
 @router.get("/playlist-videos")
 async def get_playlist_videos(
     playlist_id: str = Query(..., description="YouTube playlist list= ID"),
-    user_id:     str = Depends(get_current_user_id),
+    user_id:     str = Depends(get_session_or_user_id),
 ):
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
@@ -870,30 +890,30 @@ async def get_playlist_videos(
     # Merge progress data from Supabase & sync accurate video_count
     sb = get_supabase()
     if sb and videos and user_id:
-        try:
-            # Sync verified YouTube video count back to saved_playlists table
-            sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
-        except Exception:
-            pass
+        if _is_uuid(user_id):
+            try:
+                sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
+            except Exception:
+                pass
 
-        try:
-            res = (
-                sb.table("video_progress")
-                .select("video_id,watched,last_position,watch_time,completed_at")
-                .eq("user_id", user_id)
-                .eq("playlist_id", clean_playlist_id)
-                .execute()
-            )
-            prog_map = {r["video_id"]: r for r in (res.data or [])}
-            for v in videos:
-                prog = prog_map.get(v["videoId"])
-                if prog:
-                    v["watched"]       = prog.get("watched", False)
-                    v["last_position"] = prog.get("last_position") or 0.0
-                    v["watch_time"]    = prog.get("watch_time") or 0
-                    v["completed_at"]  = prog.get("completed_at")
-        except Exception as e:
-            print(f"Video progress merge error: {e}")
+            try:
+                res = (
+                    sb.table("video_progress")
+                    .select("video_id,watched,last_position,watch_time,completed_at")
+                    .eq("user_id", user_id)
+                    .eq("playlist_id", clean_playlist_id)
+                    .execute()
+                )
+                prog_map = {r["video_id"]: r for r in (res.data or [])}
+                for v in videos:
+                    prog = prog_map.get(v["videoId"])
+                    if prog:
+                        v["watched"]       = prog.get("watched", False)
+                        v["last_position"] = prog.get("last_position") or 0.0
+                        v["watch_time"]    = prog.get("watch_time") or 0
+                        v["completed_at"]  = prog.get("completed_at")
+            except Exception as e:
+                print(f"Video progress merge error: {e}")
 
     return {"videos": videos, "count": len(videos)}
 
@@ -902,10 +922,10 @@ async def get_playlist_videos(
 @router.post("/video-progress")
 async def update_video_progress(
     req: VideoProgressRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """Manual mark-as-watched/unwatched. Optionally saves position & watch_time."""
-    user_id = current_user_id  # always from verified JWT
+    user_id = current_user_id
     if not user_id:
         return {"success": True}
     sb = get_supabase()
@@ -913,25 +933,26 @@ async def update_video_progress(
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
-        data: dict = {
-            "user_id":     user_id,
-            "playlist_id": clean_playlist_id,
-            "video_id":    req.video_id,
-            "watched":     req.watched,
-        }
-        if req.watched:
-            data["completed_at"] = datetime.now(timezone.utc).isoformat()
-        else:
-            data["completed_at"] = None
+        if _is_uuid(user_id):
+            data: dict = {
+                "user_id":     user_id,
+                "playlist_id": clean_playlist_id,
+                "video_id":    req.video_id,
+                "watched":     req.watched,
+            }
+            if req.watched:
+                data["completed_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                data["completed_at"] = None
 
-        if req.last_position is not None:
-            data["last_position"] = req.last_position
-        if req.watch_time is not None:
-            data["watch_time"] = req.watch_time
+            if req.last_position is not None:
+                data["last_position"] = req.last_position
+            if req.watch_time is not None:
+                data["watch_time"] = req.watch_time
 
-        sb.table("video_progress").upsert(
-            data, on_conflict="user_id,playlist_id,video_id"
-        ).execute()
+            sb.table("video_progress").upsert(
+                data, on_conflict="user_id,playlist_id,video_id"
+            ).execute()
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -940,21 +961,20 @@ async def update_video_progress(
 @router.post("/save-progress")
 async def save_video_progress(
     req: SaveProgressRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
     Periodic resume save (every 10 s) — updates last_position & watch_time
     WITHOUT touching the `watched` flag (prevents anti-cheat bypass).
     """
-    user_id = current_user_id  # always from verified JWT
-    if not user_id:
+    user_id = current_user_id
+    if not user_id or not _is_uuid(user_id):
         return {"success": True}
     sb = get_supabase()
     if not sb:
         return {"success": False, "reason": "Supabase not configured"}
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
-        # Try UPDATE first (preserves watched status)
         res = (
             sb.table("video_progress")
             .update({"last_position": req.last_position, "watch_time": req.watch_time})
@@ -963,7 +983,6 @@ async def save_video_progress(
             .eq("video_id", req.video_id)
             .execute()
         )
-        # If no row existed, INSERT it (without setting watched=true)
         if not res.data:
             sb.table("video_progress").insert({
                 "user_id":       user_id,
@@ -983,13 +1002,13 @@ async def save_video_progress(
 @router.post("/mark-video-complete")
 async def complete_video(
     req: CompleteVideoRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
     Auto-completion endpoint. Called when ≥75% of a video is genuinely watched.
     Updates relational `video_progress`, syncs JSONB `learning_progress`, and logs event in `user_feedback`.
     """
-    user_id = current_user_id  # always from verified JWT
+    user_id = current_user_id
     if not user_id:
         return {"success": True, "playlist_stats": {"completed_videos": 0}}
     sb = get_supabase()
@@ -1003,24 +1022,25 @@ async def complete_video(
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         now = datetime.now(timezone.utc).isoformat()
 
-        # 1. Upsert completion record in video_progress
-        complete_data: dict = {
-            "user_id":       user_id,
-            "playlist_id":   clean_playlist_id,
-            "video_id":      req.video_id,
-            "watched":       req.completed,
-            "watch_time":    req.watch_time,
-            "completed_at":  now if req.completed else None,
-        }
-        if req.last_position:
-            complete_data["last_position"] = req.last_position
+        # 1. Upsert completion record in video_progress if UUID user
+        if _is_uuid(user_id):
+            complete_data: dict = {
+                "user_id":       user_id,
+                "playlist_id":   clean_playlist_id,
+                "video_id":      req.video_id,
+                "watched":       req.completed,
+                "watch_time":    req.watch_time,
+                "completed_at":  now if req.completed else None,
+            }
+            if req.last_position:
+                complete_data["last_position"] = req.last_position
 
-        try:
-            sb.table("video_progress").upsert(
-                complete_data, on_conflict="user_id,playlist_id,video_id"
-            ).execute()
-        except Exception as err:
-            logger.warning(f"Error upserting video_progress: {err}")
+            try:
+                sb.table("video_progress").upsert(
+                    complete_data, on_conflict="user_id,playlist_id,video_id"
+                ).execute()
+            except Exception as err:
+                logger.warning(f"Error upserting video_progress: {err}")
 
         # 2. Sync JSONB completed_steps in learning_progress
         try:
@@ -1050,13 +1070,15 @@ async def complete_video(
                     total_v = sum(len(p.get("videos", [])) for p in playlists)
                     comp_v = sum(len([v for v in p.get("videos", []) if v.get("completed")]) for p in playlists)
                     pct = round((comp_v / total_v) * 100.0, 2) if total_v > 0 else 0.0
-                    sb.table("learning_progress").upsert({
+                    lp_upd = {
                         "session_id": user_id,
-                        "user_id": user_id,
                         "skill_name": "saved_playlists",
                         "completed_steps": playlists,
                         "completion_pct": pct
-                    }, on_conflict="session_id, skill_name").execute()
+                    }
+                    if _is_uuid(user_id):
+                        lp_upd["user_id"] = user_id
+                    sb.table("learning_progress").upsert(lp_upd, on_conflict="session_id, skill_name").execute()
         except Exception as jsonb_err:
             logger.warning(f"Error updating learning_progress JSONB: {jsonb_err}")
 
@@ -1071,26 +1093,15 @@ async def complete_video(
         except Exception:
             pass
 
-        # Return updated playlist completion stats
-        res = (
-            sb.table("video_progress")
-            .select("video_id,watched")
-            .eq("user_id", user_id)
-            .eq("playlist_id", clean_playlist_id)
-            .execute()
-        )
-        completed_count = sum(1 for r in (res.data or []) if r.get("watched"))
-
         return {
             "success":      True,
             "completed_at": now,
             "playlist_stats": {
-                "completed_videos": completed_count,
+                "completed_videos": 1 if req.completed else 0,
             },
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 class MarkAllWatchedRequest(BaseModel):
@@ -1101,7 +1112,7 @@ class MarkAllWatchedRequest(BaseModel):
 @router.post("/mark-all-watched")
 async def mark_all_watched(
     req: MarkAllWatchedRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_session_or_user_id)
 ):
     """Mark all videos in a playlist as watched or unwatched in 1 click."""
     user_id = current_user_id
