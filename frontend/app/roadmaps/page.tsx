@@ -1728,8 +1728,42 @@ export default function RoadmapsPage() {
     return completedState[key] !== undefined ? completedState[key] : defaultDone;
   };
 
-  const handleCardClick = (roadmap: PresetRoadmap) => {
+  const handleCardClick = async (roadmap: PresetRoadmap) => {
     setSelectedRoadmap(roadmap);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "skillscatalyst_active_roadmap",
+          JSON.stringify({
+            id: roadmap.id,
+            title: roadmap.displayTitle || roadmap.title,
+            rawTitle: roadmap.title,
+            timestamp: Date.now(),
+          })
+        );
+      } catch (e) {
+        console.warn("Failed to save active roadmap locally:", e);
+      }
+    }
+
+    if (userId) {
+      try {
+        await supabase.from("roadmap_progress").upsert(
+          {
+            user_id: userId,
+            roadmap_id: roadmap.id,
+            node_id: "_roadmap_started",
+            node_title: roadmap.displayTitle || roadmap.title,
+            status: "started",
+            completed_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,roadmap_id,node_id" }
+        );
+      } catch (e) {
+        console.warn("Failed to mark roadmap started in Supabase:", e);
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
