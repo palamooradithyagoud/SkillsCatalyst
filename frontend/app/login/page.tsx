@@ -71,7 +71,7 @@ export default function LoginPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">
-              Welcome to SkillPath
+              Welcome to SkillsCatalyst
             </h1>
             <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
               Sign in to access AI mentor guidance, company-wise LeetCode question banks & career analytics.

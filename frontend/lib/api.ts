@@ -41,7 +41,7 @@ export async function sendMentorMessage(prompt: string) {
     if (!res.ok) throw new Error("Failed to reach AI mentor");
     return await res.json();
   } catch {
-    return { reply: "I am your SkillPath AI Mentor powered by Groq. Please start the FastAPI backend to interact live!" };
+    return { reply: "I am your SkillsCatalyst AI Mentor powered by Groq. Please start the FastAPI backend to interact live!" };
   }
 }
 
