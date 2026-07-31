@@ -200,3 +200,37 @@ BEGIN
         updated_at = NOW();
 END;
 $$ LANGUAGE plpgsql;
+
+-- --------------------------------------------------------------------
+-- AUTOMATIC PROFILE CREATION TRIGGER FOR AUTH USERS (GOOGLE / EMAIL)
+-- --------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_academic_profile (user_id, full_name, updated_at)
+    VALUES (
+        NEW.id::text,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+        NOW()
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+        full_name = EXCLUDED.full_name,
+        updated_at = NOW();
+
+    INSERT INTO public.user_progress (user_id, updated_at)
+    VALUES (NEW.id::text, NOW())
+    ON CONFLICT (user_id) DO NOTHING;
+
+    INSERT INTO public.user_coding_profiles (user_id, updated_at)
+    VALUES (NEW.id::text, NOW())
+    ON CONFLICT (user_id) DO NOTHING;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger execution on auth.users insert
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
