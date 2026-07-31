@@ -314,6 +314,40 @@ export interface PlaylistVideo {
   completed_at?: string | null;
 }
 
+// LocalStorage video progress sync
+const LS_VIDEO_PROGRESS = "skillscatalyst_video_progress";
+
+function getLocalVideoProgress(): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(LS_VIDEO_PROGRESS);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveLocalVideoWatched(playlistId: string, videoId: string, watched: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    const prog = getLocalVideoProgress();
+    const key = `${playlistId}_${videoId}`;
+    prog[key] = watched;
+    localStorage.setItem(LS_VIDEO_PROGRESS, JSON.stringify(prog));
+  } catch {}
+}
+
+function mergeLocalVideoProgress(playlistId: string, videos: PlaylistVideo[]): PlaylistVideo[] {
+  const prog = getLocalVideoProgress();
+  return videos.map((v) => {
+    const key = `${playlistId}_${v.videoId}`;
+    if (key in prog) {
+      return { ...v, watched: prog[key] };
+    }
+    return v;
+  });
+}
+
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
@@ -328,7 +362,8 @@ export async function fetchPlaylistVideos(
       if (res.ok) {
         const json = await res.json();
         if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
-          return json;
+          const merged = mergeLocalVideoProgress(playlistId, json.videos);
+          return { videos: merged, count: merged.length };
         }
       }
     }
@@ -357,7 +392,8 @@ export async function fetchPlaylistVideos(
           watch_time: row.watch_time || 0,
           completed_at: row.completed_at || null,
         }));
-        return { videos, count: videos.length };
+        const merged = mergeLocalVideoProgress(playlistId, videos);
+        return { videos: merged, count: merged.length };
       }
     }
   } catch (e) {
@@ -372,6 +408,9 @@ export async function markVideoWatched(
   videoId: string,
   watched: boolean
 ): Promise<void> {
+  // Always update local storage first so UI tick is 100% persistent
+  saveLocalVideoWatched(playlistId, videoId, watched);
+
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -463,6 +502,8 @@ export async function completeVideo(
   videoId: string,
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
+  saveLocalVideoWatched(playlistId, videoId, true);
+
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
@@ -512,6 +553,15 @@ export async function markAllVideosWatched(
   playlistId: string,
   watched: boolean = true
 ): Promise<{ success: boolean; count: number }> {
+  try {
+    const videosRes = await fetchPlaylistVideos(playlistId);
+    if (videosRes.videos && videosRes.videos.length > 0) {
+      for (const v of videosRes.videos) {
+        saveLocalVideoWatched(playlistId, v.videoId, watched);
+      }
+    }
+  } catch {}
+
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
