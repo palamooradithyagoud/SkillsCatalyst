@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
@@ -27,7 +26,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   if (isLoading) {
     return (
@@ -37,7 +35,7 @@ export default function LoginPage() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || (mode === "signup" && !name)) {
       setErrorMessage("Please fill in all required fields.");
@@ -45,91 +43,18 @@ export default function LoginPage() {
     }
     setLoading(true);
     setErrorMessage("");
-    setSuccessMessage("");
 
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
-
-        if (error) {
-          if (error.message?.toLowerCase().includes("rate limit")) {
-            setErrorMessage("Supabase email rate limit exceeded. Please wait a few minutes, sign in with Google, or disable email confirmation in Supabase Dashboard.");
-          } else {
-            setErrorMessage(error.message || "Failed to create account. Please check your credentials.");
-          }
-          return;
-        }
-
-        // Check if email confirmation is required (email_confirmed_at is null)
-        const isConfirmed = !!data.user?.email_confirmed_at || data.user?.app_metadata?.provider !== "email";
-        if (!isConfirmed || !data.session) {
-          await supabase.auth.signOut();
-          setSuccessMessage("Account created! Verification link sent to your email. Please verify your email before logging in.");
-          setMode("login");
-          return;
-        }
-
-        if (data.user) {
-          login(data.user.email || email, data.user.id, name);
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          setErrorMessage(error.message || "Invalid login credentials. Please check your email and password.");
-          return;
-        }
-
-        if (data.user) {
-          const isConfirmed = !!data.user.email_confirmed_at || data.user.app_metadata?.provider !== "email";
-          if (!isConfirmed) {
-            await supabase.auth.signOut();
-            setErrorMessage("Your email address is not verified yet. Please check your inbox and click the verification link before logging in.");
-            return;
-          }
-
-          login(data.user.email || email, data.user.id, data.user.user_metadata?.full_name);
-        }
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected authentication error occurred.");
-    } finally {
+    setTimeout(() => {
       setLoading(false);
-    }
+      login(email, name || email.split("@")[0]);
+    }, 600);
   };
 
-  const handleOAuth = async (provider: string) => {
+  const handleOAuth = (provider: string) => {
     setLoading(true);
-    setErrorMessage("");
-
-    if (provider === "google") {
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-        if (error) throw error;
-      } catch (err: any) {
-        setErrorMessage(err.message || "Google Authentication failed");
-        setLoading(false);
-      }
-    } else {
-      setTimeout(() => {
-        login(`${provider}_user@skillscatalyst.app`, `${provider}_user`, `${provider} User`);
-      }, 400);
-    }
+    setTimeout(() => {
+      login(`${provider}_user@skillscatalyst.app`, `${provider}_user`);
+    }, 400);
   };
 
   return (
@@ -285,13 +210,6 @@ export default function LoginPage() {
                 Sign Up
               </button>
             </div>
-
-            {/* Success banner */}
-            {successMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold text-center leading-relaxed">
-                {successMessage}
-              </div>
-            )}
 
             {/* Error banner */}
             {errorMessage && (
