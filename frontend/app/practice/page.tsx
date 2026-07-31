@@ -207,7 +207,7 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
 
 export default function PracticePage() {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
 
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
   const [companiesList, setCompaniesList] = useState<string[]>([]);
@@ -241,6 +241,7 @@ export default function PracticePage() {
     problemId: number,
     details?: { title: string; difficulty: string; pattern: string }
   ) => {
+    if (!userId || userId === "default_user") return;
     const isCurrentlyDone = !!drawerSolved[problemId];
     const newDoneState = !isCurrentlyDone;
 
@@ -291,6 +292,12 @@ export default function PracticePage() {
 
   // Load solved state from localStorage & Hydrate live from Supabase DB on mount
   useEffect(() => {
+    if (!userId || userId === "default_user") {
+      setSolvedState({});
+      setDrawerSolved({});
+      return;
+    }
+
     try {
       const savedSolved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);
       if (savedSolved) {

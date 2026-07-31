@@ -1,19 +1,22 @@
 import re
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import get_current_user_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("")
-def get_dashboard_data(user_id: str = "default_user"):
+def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     sb = get_supabase()
     completed_count = 0
     total_videos = 0
     problems_solved = 0
     user_success_rate = 0.0
-    display_name = user_id.split("@")[0] if "@" in user_id else user_id
+    display_name = user_id.split("@")[0] if "@" in user_id else (
+        "Learner" if user_id == "default_user" else user_id
+    )
 
-    if sb:
+    if sb and user_id != "default_user":
         try:
             # 1. Count completed videos for this user
             res_completed = (
@@ -78,7 +81,7 @@ def get_dashboard_data(user_id: str = "default_user"):
         total_videos = completed_count
 
     pct = round((completed_count / total_videos) * 100) if total_videos > 0 else 0
-    subtitle_text = f"{completed_count}/{total_videos} videos completed" if total_videos > 0 else f"{completed_count} videos completed"
+    subtitle_text = f"{completed_count}/{total_videos} videos completed" if total_videos > 0 else "0 videos completed"
 
     # Dynamic AI Career Health computation: 40% Learning + 60% Practice
     health_score = min(100, round((pct * 0.4) + (min(problems_solved * 4, 100) * 0.6)))
@@ -92,8 +95,8 @@ def get_dashboard_data(user_id: str = "default_user"):
     else:
         health_subtitle = "Strong career readiness"
 
-    # Dynamic Success Rate
-    calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (90 if problems_solved > 5 else (100 if problems_solved > 0 else 0))
+    # Dynamic Success Rate (0 if no historical user_success_rate recorded)
+    calc_success_rate = round(user_success_rate) if user_success_rate > 0 else 0
 
     return {
         "user": {
@@ -121,29 +124,7 @@ def get_dashboard_data(user_id: str = "default_user"):
                 "subtitle": "Currently Locked"
             }
         },
-        "upcoming": [
-            {
-                "id": "1",
-                "title": "Mock Interview",
-                "subtitle": "Behavioral Round",
-                "date": "May 24, 5:00 PM",
-                "type": "calendar"
-            },
-            {
-                "id": "2",
-                "title": "System Design",
-                "subtitle": "Rate Limiter Design",
-                "date": "May 26, 7:00 PM",
-                "type": "system"
-            },
-            {
-                "id": "3",
-                "title": "DSA Practice",
-                "subtitle": "Arrays & Hashing",
-                "date": "May 26, 6:00 PM",
-                "type": "code"
-            }
-        ],
+        "upcoming": [],
         "practiceOverview": {
             "problemsSolved": problems_solved,
             "successRate": calc_success_rate,
@@ -159,3 +140,4 @@ def get_dashboard_data(user_id: str = "default_user"):
             ]
         }
     }
+

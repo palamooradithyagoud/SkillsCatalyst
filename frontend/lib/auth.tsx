@@ -186,6 +186,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       localStorage.removeItem(SESSION_KEY);
+      // Clear all user-specific cached state keys from localStorage
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
+          localStorage.removeItem(key);
+        }
+      }
       await supabase.auth.signOut();
     } catch {}
     setSession(null);

@@ -4,10 +4,11 @@ import httpx
 import re
 import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import Optional
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import get_current_user_id
 from backend.config import YOUTUBE_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -502,7 +503,11 @@ async def search_skill(
 
 # ── Playlist CRUD ─────────────────────────────────────────────────────────────
 @router.post("/save")
-async def save_playlist(req: SavePlaylistRequest):
+async def save_playlist(
+    req: SavePlaylistRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
+    user_id = current_user_id if current_user_id != "default_user" else req.user_id
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
@@ -536,7 +541,7 @@ async def save_playlist(req: SavePlaylistRequest):
             "thumbnail":    req.thumbnail,
             "source":       req.source,
             "skill_query":  req.skill_query,
-            "user_id":      req.user_id,
+            "user_id":      user_id,
         }
         result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
         return {"success": True, "data": result.data}
@@ -545,10 +550,15 @@ async def save_playlist(req: SavePlaylistRequest):
 
 
 @router.delete("/save/{playlist_id}")
-async def unsave_playlist(playlist_id: str, user_id: str = "default_user"):
+async def unsave_playlist(
+    playlist_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
+    if user_id == "default_user":
+        return {"success": True}
     try:
         sb.table("saved_playlists").delete().eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
         return {"success": True}
@@ -557,9 +567,9 @@ async def unsave_playlist(playlist_id: str, user_id: str = "default_user"):
 
 
 @router.get("/saved")
-async def get_saved_playlists(user_id: str = "default_user"):
+async def get_saved_playlists(user_id: str = Depends(get_current_user_id)):
     sb = get_supabase()
-    if not sb:
+    if not sb or user_id == "default_user":
         return {"saved": [], "count": 0}
     try:
         result = (
@@ -595,7 +605,7 @@ async def get_saved_playlists(user_id: str = "default_user"):
 @router.get("/playlist-videos")
 async def get_playlist_videos(
     playlist_id: str = Query(..., description="YouTube playlist list= ID"),
-    user_id:     str = Query("default_user"),
+    user_id:     str = Depends(get_current_user_id),
 ):
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     if not YOUTUBE_API_KEY:
@@ -652,7 +662,7 @@ async def get_playlist_videos(
 
     # Merge progress data from Supabase & sync accurate video_count
     sb = get_supabase()
-    if sb and videos:
+    if sb and videos and user_id != "default_user":
         try:
             # Sync verified YouTube video count back to saved_playlists table
             sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
@@ -683,14 +693,20 @@ async def get_playlist_videos(
 
 # ── Video Progress Endpoints ──────────────────────────────────────────────────
 @router.post("/video-progress")
-async def update_video_progress(req: VideoProgressRequest):
+async def update_video_progress(
+    req: VideoProgressRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """Manual mark-as-watched/unwatched. Optionally saves position & watch_time."""
+    user_id = current_user_id if current_user_id != "default_user" else req.user_id
+    if user_id == "default_user":
+        return {"success": True}
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
         data: dict = {
-            "user_id":     req.user_id,
+            "user_id":     user_id,
             "playlist_id": req.playlist_id,
             "video_id":    req.video_id,
             "watched":     req.watched,
@@ -709,11 +725,17 @@ async def update_video_progress(req: VideoProgressRequest):
 
 
 @router.post("/save-progress")
-async def save_video_progress(req: SaveProgressRequest):
+async def save_video_progress(
+    req: SaveProgressRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Periodic resume save (every 10 s) — updates last_position & watch_time
     WITHOUT touching the `watched` flag (prevents anti-cheat bypass).
     """
+    user_id = current_user_id if current_user_id != "default_user" else req.user_id
+    if user_id == "default_user":
+        return {"success": True}
     sb = get_supabase()
     if not sb:
         return {"success": False, "reason": "Supabase not configured"}
@@ -722,7 +744,7 @@ async def save_video_progress(req: SaveProgressRequest):
         res = (
             sb.table("video_progress")
             .update({"last_position": req.last_position, "watch_time": req.watch_time})
-            .eq("user_id", req.user_id)
+            .eq("user_id", user_id)
             .eq("playlist_id", req.playlist_id)
             .eq("video_id", req.video_id)
             .execute()
@@ -730,7 +752,7 @@ async def save_video_progress(req: SaveProgressRequest):
         # If no row existed, INSERT it (without setting watched=true)
         if not res.data:
             sb.table("video_progress").insert({
-                "user_id":       req.user_id,
+                "user_id":       user_id,
                 "playlist_id":   req.playlist_id,
                 "video_id":      req.video_id,
                 "watched":       False,
@@ -744,12 +766,18 @@ async def save_video_progress(req: SaveProgressRequest):
 
 
 @router.post("/complete-video")
-async def complete_video(req: CompleteVideoRequest):
+async def complete_video(
+    req: CompleteVideoRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Auto-completion endpoint. Called when ≥95% of a video is genuinely watched.
     Server validates watch_time > 0 before recording completion.
     Returns updated playlist stats for instant UI update.
     """
+    user_id = current_user_id if current_user_id != "default_user" else req.user_id
+    if user_id == "default_user":
+        return {"success": True, "playlist_stats": {"completed_videos": 0}}
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
@@ -762,7 +790,7 @@ async def complete_video(req: CompleteVideoRequest):
 
         # Upsert completion record
         complete_data: dict = {
-            "user_id":      req.user_id,
+            "user_id":      user_id,
             "playlist_id":  req.playlist_id,
             "video_id":     req.video_id,
             "watched":      True,
@@ -787,7 +815,7 @@ async def complete_video(req: CompleteVideoRequest):
         res = (
             sb.table("video_progress")
             .select("video_id,watched")
-            .eq("user_id", req.user_id)
+            .eq("user_id", user_id)
             .eq("playlist_id", req.playlist_id)
             .execute()
         )

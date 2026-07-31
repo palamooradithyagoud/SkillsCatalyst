@@ -2,10 +2,11 @@ import logging
 import asyncio
 import re
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 import httpx
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import get_current_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -357,7 +358,7 @@ async def _extract_hackerrank(input_val: str) -> Dict[str, Any]:
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("")
-async def get_profile(user_id: str = "default_user"):
+async def get_profile(user_id: str = Depends(get_current_user_id)):
     """
     Fetch current user's Academic Profile and Coding Profiles with extracted stats.
     """
@@ -380,7 +381,7 @@ async def get_profile(user_id: str = "default_user"):
     }
     coding_stats = {}
 
-    if sb:
+    if sb and user_id != "default_user":
         try:
             res_acad = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
             if res_acad.data:
@@ -407,11 +408,14 @@ async def get_profile(user_id: str = "default_user"):
 
 
 @router.post("/academic")
-async def save_academic_profile(body: AcademicProfileModel):
+async def save_academic_profile(
+    body: AcademicProfileModel,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Save academic profile info into Supabase.
     """
-    user_id = body.user_id or "default_user"
+    user_id = current_user_id if current_user_id != "default_user" else (body.user_id or "default_user")
     sb = get_supabase()
     
     data = {
@@ -424,23 +428,25 @@ async def save_academic_profile(body: AcademicProfileModel):
         # updated_at is auto-managed by Supabase default — do NOT include it
     }
 
-    if sb:
+    if sb and user_id != "default_user":
         try:
             result = sb.from_("user_academic_profile").upsert(data, on_conflict="user_id").execute()
             logger.info(f"Academic profile saved: {result.data}")
         except Exception as e:
             logger.error(f"Failed to save academic profile: {e}")
-            # still return success=True since localStorage already saved it
 
     return {"success": True, "message": "Academic profile saved successfully", "academic": data}
 
 
 @router.post("/coding")
-async def save_coding_profiles(body: CodingProfilesInputModel):
+async def save_coding_profiles(
+    body: CodingProfilesInputModel,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Save coding profile URLs/handles, automatically extract live stats from public APIs, and update DB.
     """
-    user_id = body.user_id or "default_user"
+    user_id = current_user_id if current_user_id != "default_user" else (body.user_id or "default_user")
     
     # Run extractors concurrently
     lc_task = _extract_leetcode(body.leetcode or "")
@@ -476,7 +482,7 @@ async def save_coding_profiles(body: CodingProfilesInputModel):
     }
 
     sb = get_supabase()
-    if sb:
+    if sb and user_id != "default_user":
         try:
             result = sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
             logger.info(f"Coding profiles saved to Supabase: {len(result.data)} rows")

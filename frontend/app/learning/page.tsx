@@ -260,7 +260,7 @@ function SavedPlaylistRow({
   delay?: number;
 }) {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
 
@@ -269,7 +269,8 @@ function SavedPlaylistRow({
 
   const { data: videoData, isFetching: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
-    queryFn: () => fetchPlaylistVideos(ytPlaylistId, userId),
+    queryFn: () => fetchPlaylistVideos(ytPlaylistId, userId || ""),
+    enabled: !!session?.user_id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -282,7 +283,7 @@ function SavedPlaylistRow({
 
   const markMut = useMutation({
     mutationFn: ({ videoId, watched }: { videoId: string; watched: boolean }) =>
-      markVideoWatched(userId, ytPlaylistId, videoId, watched),
+      markVideoWatched(userId || "", ytPlaylistId, videoId, watched),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
       qc.invalidateQueries({ queryKey: ["dashboard", userId] });
@@ -526,11 +527,12 @@ function FullPlayerView({
   const ytPlaylistId = extractPlaylistId(pl.playlist_url ?? "") ?? pl.id;
 
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
 
   const { data: videoData, isFetching: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
-    queryFn: () => fetchPlaylistVideos(ytPlaylistId, userId),
+    queryFn: () => fetchPlaylistVideos(ytPlaylistId, userId || ""),
+    enabled: !!session?.user_id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -545,7 +547,7 @@ function FullPlayerView({
 
   const markMut = useMutation({
     mutationFn: ({ videoId, watched }: { videoId: string; watched: boolean }) =>
-      markVideoWatched(userId, ytPlaylistId, videoId, watched),
+      markVideoWatched(userId || "", ytPlaylistId, videoId, watched),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
       qc.invalidateQueries({ queryKey: ["dashboard", userId] });
@@ -554,7 +556,7 @@ function FullPlayerView({
 
   const completeMut = useMutation({
     mutationFn: ({ videoId, watchTime }: { videoId: string; watchTime: number }) =>
-      completeVideo(userId, ytPlaylistId, videoId, watchTime),
+      completeVideo(userId || "", ytPlaylistId, videoId, watchTime),
     onSuccess: () => {
       // Refresh sidebar checkmarks & dashboard KPI
       qc.invalidateQueries({ queryKey: ["playlist-videos", ytPlaylistId, userId] });
@@ -933,7 +935,7 @@ function FullPlayerView({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LearningPage() {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
   const qc = useQueryClient();
 
   const [activeCard, setActiveCard]     = useState<ActiveCard>("explore");
@@ -964,7 +966,8 @@ export default function LearningPage() {
 
   const { data: savedData, isFetching: loadingSaved } = useQuery({
     queryKey: ["saved-playlists", userId],
-    queryFn:  () => fetchSavedPlaylists(userId),
+    queryFn:  () => fetchSavedPlaylists(userId || ""),
+    enabled:  !!session?.user_id,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

@@ -26,13 +26,13 @@ interface PracticeOverviewProps {
 }
 
 const chartData = [
-  { day: "Mon", height: 45 },
-  { day: "Tue", height: 70 },
-  { day: "Wed", height: 55 },
-  { day: "Thu", height: 95 },
-  { day: "Fri", height: 80 },
-  { day: "Sat", height: 100 },
-  { day: "Sun", height: 85 },
+  { day: "Mon", height: 0 },
+  { day: "Tue", height: 0 },
+  { day: "Wed", height: 0 },
+  { day: "Thu", height: 0 },
+  { day: "Fri", height: 0 },
+  { day: "Sat", height: 0 },
+  { day: "Sun", height: 0 },
 ];
 
 interface StatCardProps {
@@ -78,7 +78,7 @@ export default function PracticeOverview({
   contests = 0,
 }: PracticeOverviewProps) {
   const { session } = useAuth();
-  const userId = session?.user_id || "default_user";
+  const userId = session?.user_id;
 
   const [barsVisible, setBarsVisible] = useState(false);
   const [codingStats, setCodingStats] = useState<Record<string, PlatformStat>>({});
@@ -93,6 +93,12 @@ export default function PracticeOverview({
   // Fetch coding profile stats from API & Supabase DB
   useEffect(() => {
     async function loadData() {
+      if (!userId || userId === "default_user") {
+        setCodingStats({});
+        setCsvSolvedCount(0);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       // 1. Fetch extracted coding profiles
       const profData = await fetchProfileData(userId);
@@ -117,6 +123,8 @@ export default function PracticeOverview({
             const parsed = JSON.parse(saved);
             const keys = Object.keys(parsed).filter((k) => parsed[k] && k.startsWith("q_"));
             setCsvSolvedCount(keys.length);
+          } else {
+            setCsvSolvedCount(0);
           }
         }
       } catch (e) {
@@ -266,7 +274,7 @@ export default function PracticeOverview({
       <div className="pt-2">
         <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-2">
           <span>Weekly Activity & Problem Solves</span>
-          <span className="text-emerald-400">+28% vs last week</span>
+          <span className="text-slate-400">{displayTotalSolved > 0 ? "Active practice" : "No solves recorded"}</span>
         </div>
 
         <div className="flex items-end justify-between gap-2 h-20 pb-0">
