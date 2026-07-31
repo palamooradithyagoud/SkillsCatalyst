@@ -5,6 +5,162 @@ from backend.services.auth_service import get_current_user_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
+ROADMAP_SPECS = {
+    "c-programming": {
+        "name": "C Programming Mastery",
+        "nodes": [
+            "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program", "Code Editors & IDEs (VSCode / Vim / NVim)",
+            "Variables (Declaration vs Definition)", "Initialization & Printing Variables", "Basic Data Types (int / float / double / char)", "Fixed-Width Integers & Booleans", "Type Conversion & Casting", "Type Qualifiers (const / volatile / restrict / _Atomic)",
+            "Operators (Arithmetic / Comparison / Logical / Ternary / Bitwise)", "Control Flow (if-else / switch)", "Loops (for / while / do-while / break / continue)", "main Function & Command-Line Arguments", "Variable Scopes", "Recursive & Variadic Functions",
+            "Memory Model (Stack vs Heap & Lifetimes)", "Pointer Basics & Syntax", "Null Pointers & void Pointers", "Pointer Arithmetic",
+            "Structs & Typedef", "Unions & Enums", "Arrays & Dynamic Arrays", "Strings & Text Processing", "Linked Lists, Hash Maps & Ring Buffers",
+            "Dynamic Memory Allocation (malloc / calloc / realloc / free)", "Memory Leakage & Valgrind", "Dangling Pointers & Undefined Behavior", "Buffer Overflow Prevention",
+            "Header Files & Code Structure", "Linkage & Storage Classes (static / extern)", "Error Handling (errno & Exit Codes)", "Non-Local Jumps (setjmp / longjmp)",
+            "Streams & File Pointers (stdio.h)", "Binary vs Text File Mode", "Data Utilities & Text Processing (stdlib.h / string.h / ctype.h)", "Math, Time & Diagnostics (math.h / time.h / assert.h)", "OS & Signal Interfaces (signal.h)",
+            "Preprocessor Macros & Conditional Compilation", "Compilers & Optimization (GCC / Clang / TinyCC)", "Symbol Tables, Linking & ABI", "Build Systems (GNU Make / CMake / Ninja / Meson)", "C Package Managers (vcpkg / Conan)",
+            "Debugging (GDB / LLDB / Valgrind / ASan / LSan)", "Testing Frameworks (assert.h / Unity / CMocka / Check)", "Idioms (Function Pointers / Callbacks / Opaque Pointers / OOP C)", "Concurrency & Processes (POSIX Threads / Mutexes / IPC)", "C Standards (C89 / C99 / C11 / C17 / C23)"
+        ]
+    },
+    "cpp-programming": {
+        "name": "C++ Development",
+        "nodes": [
+            "Introduction to Language (What is C++ / Why C++ / C vs C++)", "Setting Up Environment (Installing C++ / IDEs / VSCode)", "Running Your First C++ Program",
+            "Variables & Basic Data Types", "Operators (Arithmetic / Comparison / Logical / Bitwise)", "Control Flow (if-else / switch / loops)",
+            "Functions & Pass-by-Value vs Reference", "Pointers & References", "Dynamic Memory (new / delete)",
+            "Classes & Objects", "Constructors & Destructors", "Inheritance & Polymorphism", "Virtual Functions & Abstract Classes",
+            "STL Vectors & Strings", "STL Maps & Sets", "Iterators & Algorithms",
+            "Templates & Generic Programming", "Smart Pointers (unique_ptr / shared_ptr)", "Lambda Expressions & Move Semantics"
+        ]
+    },
+    "python": {
+        "name": "Python Mastery",
+        "nodes": [
+            "Introduction & Installing Python", "Variables & Data Types", "Control Flow & Loops",
+            "Functions & Lambdas", "Lists, Tuples, Dicts & Sets", "Modules & Imports",
+            "File I/O & Exception Handling", "OOP in Python (Classes & Inheritance)", "Virtual Environments & Pip",
+            "NumPy & Pandas Basics", "FastAPI / Django Web Framework", "PyTest & Unit Testing"
+        ]
+    },
+    "full-stack": {
+        "name": "Full Stack Developer",
+        "nodes": [
+            "HTML5 & Semantic Markup", "CSS3, Flexbox & Grid", "JavaScript ES6+ Fundamentals",
+            "DOM Manipulation & Events", "Async JS, Promises & Fetch", "React.js Components & Hooks",
+            "Next.js App Router & SSR", "TailwindCSS Styling", "Node.js & Express APIs",
+            "Supabase & PostgreSQL Databases", "REST & GraphQL APIs", "Git, GitHub & Vercel Deployment"
+        ]
+    },
+    "devops": {
+        "name": "DevOps & Cloud",
+        "nodes": [
+            "Linux Command Line & Shell Scripting", "Networking & SSH Fundamentals", "Git Version Control & Branching",
+            "Docker Containers & Dockerfile", "Docker Compose Multi-container Setup", "CI/CD Pipelines (GitHub Actions)",
+            "Kubernetes Architecture & Deployments", "Terraform Infrastructure as Code", "AWS / Cloud Services & IAM"
+        ]
+    }
+}
+
+def get_active_roadmap_data(user_id: str) -> dict:
+    sb = get_supabase()
+    if not sb:
+        return {"has_active_roadmap": False}
+
+    try:
+        res_roadmap = (
+            sb.table("roadmap_progress")
+            .select("roadmap_id, node_id, node_title, status, completed_at")
+            .eq("user_id", user_id)
+            .order("completed_at", desc=True)
+            .execute()
+        )
+
+        if not res_roadmap.data or len(res_roadmap.data) == 0:
+            return {"has_active_roadmap": False}
+
+        roadmap_groups = {}
+        latest_roadmap_id = None
+        latest_timestamp = None
+
+        for r in res_roadmap.data:
+            rid = r.get("roadmap_id")
+            if rid and not latest_roadmap_id:
+                latest_roadmap_id = rid
+                latest_timestamp = r.get("completed_at")
+            nid = r.get("node_id") or r.get("node_title")
+            st = r.get("status")
+            if rid:
+                if rid not in roadmap_groups:
+                    roadmap_groups[rid] = set()
+                if nid and nid != "_roadmap_started" and st == "completed":
+                    roadmap_groups[rid].add(nid)
+
+        if not latest_roadmap_id:
+            return {"has_active_roadmap": False}
+
+        target_rid = latest_roadmap_id
+        user_completed_for_active = roadmap_groups.get(target_rid, set())
+        completed_count = len(user_completed_for_active)
+
+        target_clean = str(target_rid).lower().strip()
+        matched_key = None
+        if "c-prog" in target_clean or "c prog" in target_clean or "c programming" in target_clean or "1. c" in target_clean:
+            matched_key = "c-programming"
+        elif "cpp" in target_clean or "c++" in target_clean or "2. c++" in target_clean:
+            matched_key = "cpp-programming"
+        elif "python" in target_clean:
+            matched_key = "python"
+        elif "full" in target_clean or "web" in target_clean or "react" in target_clean:
+            matched_key = "full-stack"
+        elif "devops" in target_clean or "cloud" in target_clean:
+            matched_key = "devops"
+        else:
+            matched_key = target_rid
+
+        spec = ROADMAP_SPECS.get(matched_key)
+        if spec:
+            title = spec["name"]
+            spec_nodes = spec["nodes"]
+            total_milestones = len(spec_nodes)
+            progress_percent = min(100, round((completed_count / max(1, total_milestones)) * 100))
+
+            current_node = None
+            next_node = None
+            for node in spec_nodes:
+                if node in user_completed_for_active or any(c.lower() in node.lower() for c in user_completed_for_active if isinstance(c, str)):
+                    current_node = node
+                elif not next_node:
+                    next_node = node
+
+            current_module = {"id": current_node, "title": current_node} if current_node else None
+            next_module = {"id": next_node, "title": next_node} if next_node else {"id": "completed", "title": "Roadmap Completed 🎉"}
+        else:
+            title = re.sub(r'^\d+\.\s*', '', str(target_rid)).replace("-", " ").title()
+            total_milestones = max(15, completed_count)
+            progress_percent = min(100, round((completed_count / total_milestones) * 100))
+            current_module = None
+            next_module = {"id": "next", "title": "Next Milestone Topic"}
+
+        return {
+            "has_active_roadmap": True,
+            "roadmap_id": target_rid,
+            "title": title,
+            "progress_percent": progress_percent,
+            "completed_milestones": completed_count,
+            "total_milestones": total_milestones,
+            "current_module": current_module,
+            "next_module": next_module,
+            "last_activity_at": latest_timestamp
+        }
+    except Exception as e:
+        print(f"Error getting active roadmap data: {e}")
+        return {"has_active_roadmap": False}
+
+
+@router.get("/active-roadmap")
+def get_active_roadmap_endpoint(user_id: str = Depends(get_current_user_id)):
+    return get_active_roadmap_data(user_id)
+
+
 @router.get("")
 def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     # user_id is now guaranteed to be a valid authenticated Supabase UUID (auth raises 401 otherwise)
@@ -140,9 +296,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         pct = 0
         subtitle_text = "0 videos completed"
 
-    # Dynamic Success Rate (0 if no historical user_success_rate recorded)
     calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (75 if problems_solved > 0 else 0)
-
     resume_subtitle = f"ATS Score: {resume_score}/100" if resume_score > 0 else "No upload yet"
 
     return {
@@ -199,4 +353,3 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             ]
         }
     }
-
