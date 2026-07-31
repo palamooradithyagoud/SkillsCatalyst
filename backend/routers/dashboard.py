@@ -120,23 +120,26 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
 
             res_roadmap = (
                 sb.table("roadmap_progress")
-                .select("roadmap_id, node_id, node_title, completed_at")
+                .select("roadmap_id, node_id, node_title, status, completed_at")
                 .eq("user_id", user_id)
-                .eq("status", "completed")
                 .order("completed_at", desc=True)
                 .execute()
             )
 
             if res_roadmap.data and len(res_roadmap.data) > 0:
                 roadmap_groups = {}
-                latest_roadmap_id = res_roadmap.data[0].get("roadmap_id")
+                latest_roadmap_id = None
                 for r in res_roadmap.data:
                     rid = r.get("roadmap_id")
+                    if rid and not latest_roadmap_id:
+                        latest_roadmap_id = rid
                     nid = r.get("node_id") or r.get("node_title")
-                    if rid and nid:
+                    st = r.get("status")
+                    if rid:
                         if rid not in roadmap_groups:
                             roadmap_groups[rid] = set()
-                        roadmap_groups[rid].add(nid)
+                        if nid and nid != "_roadmap_started" and st == "completed":
+                            roadmap_groups[rid].add(nid)
 
                 target_rid = latest_roadmap_id if latest_roadmap_id in roadmap_groups else list(roadmap_groups.keys())[0]
                 user_completed_for_active = roadmap_groups.get(target_rid, set())

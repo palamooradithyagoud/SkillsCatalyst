@@ -195,19 +195,33 @@ async function getFallbackDashboardData() {
         if (sc) resumeScore = Math.round(Number(sc));
       }
 
-      // Query completed roadmap nodes
+      // Query active roadmap and completed roadmap nodes
       const { data: rmData } = await supabase
         .from("roadmap_progress")
-        .select("node_id")
-        .eq("user_id", userId)
-        .eq("status", "completed");
+        .select("roadmap_id, node_id, status")
+        .eq("user_id", userId);
 
-      if (rmData) {
-        roadmapCount = rmData.length;
+      if (rmData && rmData.length > 0) {
+        const completedNodes = rmData.filter((r) => r.status === "completed" && r.node_id !== "_roadmap_started");
+        roadmapCount = completedNodes.length;
       }
     }
   } catch (e) {
     console.warn("Supabase dashboard fallback error:", e);
+  }
+
+  // Parse active roadmap from localStorage if present
+  let localActiveRoadmapName = "";
+  if (typeof window !== "undefined") {
+    try {
+      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
+      if (rawActive) {
+        const parsed = JSON.parse(rawActive);
+        if (parsed?.title) {
+          localActiveRoadmapName = parsed.title;
+        }
+      }
+    } catch {}
   }
 
   // Merge LocalStorage saved playlists
