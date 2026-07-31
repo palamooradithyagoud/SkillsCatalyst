@@ -87,12 +87,29 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             # 6. Fetch user_progress stats if present
             res_user_prog = (
                 sb.table("user_progress")
-                .select("success_rate")
+                .select("success_rate, resume_readiness_score")
                 .eq("user_id", user_id)
                 .execute()
             )
             if res_user_prog.data:
                 user_success_rate = float(res_user_prog.data[0].get("success_rate") or 0.0)
+
+            # 7. Fetch latest resume score from resume_scores table
+            resume_score = 0
+            res_resume = (
+                sb.table("resume_scores")
+                .select("overall_score, ats_compatibility_score")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            if res_resume.data and res_resume.data[0]:
+                sc = res_resume.data[0].get("overall_score") or res_resume.data[0].get("ats_compatibility_score")
+                if sc is not None:
+                    resume_score = round(float(sc))
+            elif res_user_prog.data and res_user_prog.data[0].get("resume_readiness_score"):
+                resume_score = round(float(res_user_prog.data[0].get("resume_readiness_score")))
 
         except Exception as e:
             print(f"Dashboard metrics query error: {e}")
@@ -116,6 +133,8 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     # Dynamic Success Rate (0 if no historical user_success_rate recorded)
     calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (75 if problems_solved > 0 else 0)
 
+    resume_subtitle = f"ATS Score: {resume_score}/100" if resume_score > 0 else "No upload yet"
+
     return {
         "user": {
             "name": display_name,
@@ -130,8 +149,8 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 "subtitle": subtitle_text
             },
             "resumeReadiness": {
-                "percentage": 0,
-                "subtitle": "No upload yet"
+                "percentage": resume_score,
+                "subtitle": resume_subtitle
             },
             "savedPlaylists": {
                 "count": saved_playlists_count,
