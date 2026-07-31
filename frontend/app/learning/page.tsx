@@ -1013,7 +1013,6 @@ export default function LearningPage() {
   const [language, setLanguage]         = useState<Lang>("english");
   const [searchTerm, setSearchTerm]     = useState("");
   const [hasSearched, setHasSearched]   = useState(false);
-  const [localSaved, setLocalSaved]     = useState<Set<string>>(new Set());
   const [notification, setNotification] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [queryError, setQueryError]     = useState<string | null>(null);
 
@@ -1040,43 +1039,31 @@ export default function LearningPage() {
     refetchOnWindowFocus: true,
   });
 
-  const savedIds = new Set([
-    ...(savedData?.saved?.map((p: Playlist) => p.id) ?? []),
-    ...localSaved,
-  ]);
+  const savedIds = new Set(savedData?.saved?.map((p: Playlist) => p.id) ?? []);
 
   // ── Mutations
   const saveMut = useMutation({
     mutationFn: (pl: Playlist) => savePlaylist(pl, searchTerm),
     onSuccess: (_, pl) => {
-      setLocalSaved((prev) => new Set([...prev, pl.id]));
       showNotif(`"${pl.title.slice(0, 40)}..." saved!`, "success");
 
-      // Optimistically update React Query cache so it instantly appears in Saved tab
-      qc.setQueryData(["saved-playlists", userId], (old: { saved: Playlist[]; count: number } | undefined) => {
-        const existing = old?.saved ?? [];
-        if (existing.some((p) => p.id === pl.id)) return old;
-        const updated = [pl, ...existing];
-        return { saved: updated, count: updated.length };
-      });
-
+      // Refetch from Supabase database tables immediately
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to save. Check backend.", "error"),
   });
 
-
   const unsaveMut = useMutation({
     mutationFn: (id: string) => unsavePlaylist(id),
-    onSuccess: (_, id) => {
-      setLocalSaved((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    onSuccess: () => {
       showNotif("Removed from saved.", "success");
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: () => showNotif("Failed to remove.", "error"),
   });
+
 
   // ── Helpers
   const showNotif = useCallback((msg: string, type: "success" | "error") => {
