@@ -74,7 +74,7 @@ def _is_offtopic(prompt: str) -> bool:
 
 
 _OFFTOPIC_REPLY = (
-    "🎯 I'm **SkillPath AI Mentor** — I'm built exclusively to help you with:\n\n"
+    "🎯 I'm **SkillsCatalyst AI Mentor** — I'm built exclusively to help you with:\n\n"
     "• **Programming & DSA** (Python, Java, C++, Data Structures, Algorithms)\n"
     "• **System Design** (architecture, scalability, databases)\n"
     "• **Interview Prep** (FAANG, product companies, coding rounds)\n"
@@ -135,7 +135,7 @@ class ResumeReviewRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 _SKILLS_SYSTEM_PROMPT = (
-    "You are SkillPath AI Mentor — an expert career coach, DSA instructor, and tech interviewer. "
+    "You are SkillsCatalyst AI Mentor — an expert career coach, DSA instructor, and tech interviewer. "
     "Your ONLY purpose is to help users with:\n"
     "1. Programming languages and concepts (Python, Java, C++, JavaScript, etc.)\n"
     "2. Data Structures & Algorithms (DSA), LeetCode, competitive programming\n"

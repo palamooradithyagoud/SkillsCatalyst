@@ -865,7 +865,7 @@ Respond ONLY with valid JSON in this exact structure:
   ]
 }}
 """
-    sys_prompt = "You are SkillPath AI, an expert tech curriculum generator. Output JSON ONLY, no markdown ticks or extra text."
+    sys_prompt = "You are SkillsCatalyst AI, an expert tech curriculum generator. Output JSON ONLY, no markdown ticks or extra text."
 
     try:
         from backend.services.groq_service import chat_with_groq

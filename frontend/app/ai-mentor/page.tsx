@@ -56,7 +56,7 @@ export default function AIMentorPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "ai",
-      text: "Hello! I'm your **SkillPath AI Mentor** 🎯 — powered by Groq LLM.\n\nI specialise exclusively in:\n• **Programming & DSA** (Python, Java, C++, Algorithms)\n• **System Design** (architecture, scalability, databases)\n• **Interview Prep** (FAANG, coding rounds, HR tips)\n• **Career Guidance** (roadmaps, resume, job hunting)\n• **Tech Tools & Frameworks** (React, Node, Docker, AWS)\n\nWhat skill or career question can I help with today? 🚀",
+      text: "Hello! I'm your **SkillsCatalyst AI Mentor** 🎯 — powered by Groq LLM.\n\nI specialise exclusively in:\n• **Programming & DSA** (Python, Java, C++, Algorithms)\n• **System Design** (architecture, scalability, databases)\n• **Interview Prep** (FAANG, coding rounds, HR tips)\n• **Career Guidance** (roadmaps, resume, job hunting)\n• **Tech Tools & Frameworks** (React, Node, Docker, AWS)\n\nWhat skill or career question can I help with today? 🚀",
     },
   ]);
   const [input, setInput] = useState("");

@@ -5,7 +5,7 @@ import QueryProvider from "@/lib/query-provider";
 import { AuthProvider } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "SkillPath — Premium Career Accelerator & AI Mentor",
+  title: "SkillsCatalyst — Learn Faster. Grow Smarter.",
   description: "Track your progress and get personalized career recommendations powered by AI.",
 };
 

@@ -76,8 +76,8 @@ export default function Sidebar() {
             <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#060c18] animate-pulse" />
           </div>
           <div>
-            <span className="text-lg font-bold tracking-tight text-white gradient-text-blue">SkillPath</span>
-            <div className="text-[10px] text-slate-500 font-medium tracking-wider">CAREER OS</div>
+            <span className="text-lg font-bold tracking-tight text-white gradient-text-blue">SkillsCatalyst</span>
+            <div className="text-[10px] text-slate-400 font-medium tracking-wide">Learn Faster. Grow Smarter.</div>
           </div>
         </motion.div>
 

@@ -18,7 +18,7 @@ else:
 
 def chat_with_groq(
     prompt: str,
-    system_prompt: str = "You are SkillPath AI Mentor, an expert career coach and tech interviewer.",
+    system_prompt: str = "You are SkillsCatalyst AI Mentor, an expert career coach and tech interviewer.",
 ) -> str:
     """
     Sends a prompt to the Groq LLM and returns the text response.

@@ -761,7 +761,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-base font-bold text-white">Real Activity Stream</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Your actual recent actions across SkillPath</p>
+              <p className="text-xs text-slate-500 mt-0.5">Your actual recent actions across SkillsCatalyst</p>
             </div>
           </div>
 

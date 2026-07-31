@@ -16,8 +16,8 @@ except ModuleNotFoundError:
     from routers import dashboard, ai_mentor, learning, resume, practice, profile
 
 app = FastAPI(
-    title="SkillPath API",
-    description="FastAPI Backend for SkillPath Career & AI Learning Platform",
+    title="SkillsCatalyst API",
+    description="FastAPI Backend for SkillsCatalyst Career & AI Learning Platform",
     version="1.0.0"
 )
 
@@ -51,4 +51,4 @@ app.include_router(profile.router)
 
 @app.get("/")
 def root():
-    return {"status": "online", "message": "SkillPath API is running"}
+    return {"status": "online", "message": "SkillsCatalyst API is running"}

@@ -953,7 +953,7 @@ export default function SkillDetailDrawer({
   onClose,
   skillName,
   categoryName = "SOFTWARE ENGINEERING CORE",
-  roadmapTitle = "SkillPath Curriculum",
+  roadmapTitle = "SkillsCatalyst Curriculum",
   status,
   onStatusChange,
 }: SkillDetailDrawerProps) {
