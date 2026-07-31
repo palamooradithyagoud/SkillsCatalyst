@@ -213,6 +213,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.replace("/login");
   }, [router]);
 
+  if (pathname !== "/login") {
+    if (isLoading || !session) {
+      return (
+        <AuthContext.Provider value={{ session, isLoading, login, logout }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060a15] text-white">
+            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </AuthContext.Provider>
+      );
+    }
+  }
+
   return (
     <AuthContext.Provider value={{ session, isLoading, login, logout }}>
       {children}

@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useAuth } from "@/lib/auth";
+
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { name: "Learning", href: "/learning", icon: BookOpen },
@@ -49,8 +51,9 @@ const navItemVariants = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { session, isLoading } = useAuth();
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || isLoading || !session) {
     return null;
   }
 
