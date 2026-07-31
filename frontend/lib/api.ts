@@ -51,6 +51,26 @@ export async function fetchDashboardData() {
   return await getFallbackDashboardData();
 }
 
+function getActivePlaylistTotal(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem("skillscatalyst_active_playlist_total");
+    return raw ? parseInt(raw, 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function saveActivePlaylistTotal(total: number) {
+  if (typeof window === "undefined" || !total || total <= 0) return;
+  try {
+    const current = getActivePlaylistTotal();
+    if (total > current) {
+      localStorage.setItem("skillscatalyst_active_playlist_total", String(total));
+    }
+  } catch {}
+}
+
 function mergeLocalDashboardMetrics(backendData: any) {
   try {
     const localProg = getLocalVideoProgress();
@@ -71,6 +91,11 @@ function mergeLocalDashboardMetrics(backendData: any) {
         if (m) calcTotal += parseInt(m[0], 10);
       }
       if (calcTotal > totalVids) totalVids = calcTotal;
+    }
+
+    const activeTotal = getActivePlaylistTotal();
+    if (activeTotal > totalVids) {
+      totalVids = activeTotal;
     }
 
     if (totalVids > 0 && completed > totalVids) {
@@ -135,7 +160,7 @@ async function getFallbackDashboardData() {
       // Query completed video progress
       const { data: progData } = await supabase
         .from("video_progress")
-        .select("video_id")
+        .select("video_id, playlist_id")
         .eq("user_id", userId)
         .eq("watched", true);
 
@@ -166,6 +191,11 @@ async function getFallbackDashboardData() {
   const localCompletedCount = Object.values(localProg).filter(Boolean).length;
   if (localCompletedCount > completedCount) {
     completedCount = localCompletedCount;
+  }
+
+  const activeTotal = getActivePlaylistTotal();
+  if (activeTotal > totalVideos) {
+    totalVideos = activeTotal;
   }
 
   if (totalVideos > 0 && completedCount > totalVideos) {
@@ -539,6 +569,7 @@ export async function fetchPlaylistVideos(
       if (res.ok) {
         const json = await res.json();
         if (json.videos && Array.isArray(json.videos) && json.videos.length > 0) {
+          saveActivePlaylistTotal(json.videos.length);
           const merged = mergeLocalVideoProgress(playlistId, json.videos);
           return { videos: merged, count: merged.length };
         }
