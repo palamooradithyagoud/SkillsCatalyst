@@ -71,6 +71,70 @@ export function saveActivePlaylistTotal(total: number) {
   } catch {}
 }
 
+export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[] = []) {
+  if (!rawTitleOrId) return { name: "", nextTopic: "Explore roadmaps on Roadmaps page", total: 20 };
+
+  const clean = rawTitleOrId.toLowerCase().trim();
+
+  if (clean.includes("c-prog") || clean.includes("c prog") || clean.includes("systems c") || clean.includes("c programming") || clean === "1. c programming") {
+    const nodes = [
+      "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program",
+      "Code Editors & IDEs", "Variables (Declaration vs Definition)", "Basic Data Types",
+      "Operators & Control Flow", "Loops & main Function", "Pointers & Memory Model",
+      "Null & void Pointers", "Pointer Arithmetic", "Structs & Typedef",
+      "Unions & Enums", "Arrays & Strings", "Dynamic Memory Allocation (malloc/free)",
+      "Memory Leakage & Valgrind", "Header Files & Libraries", "File I/O Streams",
+      "Preprocessor Macros", "Build Systems (Make/CMake)", "GDB & Debugging"
+    ];
+    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: "C Programming", nextTopic: next, total: nodes.length };
+  }
+
+  if (clean.includes("cpp") || clean.includes("c++")) {
+    const nodes = [
+      "Introduction to C++", "Setting Up Environment", "Running First C++ Program",
+      "Variables & Basic Data Types", "Operators & Control Flow", "Functions & Pass-by-Reference",
+      "Pointers & References", "Dynamic Memory (new/delete)", "Classes & Objects",
+      "Constructors & Destructors", "Inheritance & Polymorphism", "STL Vectors & Strings",
+      "STL Maps & Iterators", "Templates & Smart Pointers", "Move Semantics & Lambdas"
+    ];
+    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: "C++ Development", nextTopic: next, total: nodes.length };
+  }
+
+  if (clean.includes("python")) {
+    const nodes = [
+      "Introduction & Installing Python", "Variables & Data Types", "Control Flow & Loops",
+      "Functions & Lambdas", "Lists, Dicts & Sets", "OOP in Python",
+      "File I/O & Exceptions", "FastAPI / Django Web Framework", "NumPy & Pandas Basics"
+    ];
+    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: "Python Mastery", nextTopic: next, total: nodes.length };
+  }
+
+  if (clean.includes("full") || clean.includes("web") || clean.includes("react")) {
+    const nodes = [
+      "HTML5 & Semantic Markup", "CSS3 & Flexbox/Grid", "JavaScript ES6+ Fundamentals",
+      "DOM Manipulation & Events", "Async JS & Promises", "React.js Components & Hooks",
+      "Next.js App Router", "Node.js & Express APIs", "Supabase & PostgreSQL", "Vercel Deployment"
+    ];
+    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: "Full Stack Web Dev", nextTopic: next, total: nodes.length };
+  }
+
+  if (clean.includes("devops") || clean.includes("cloud")) {
+    const nodes = [
+      "Linux Command Line & Shell", "Git & GitHub Version Control", "Docker Containers",
+      "Docker Compose", "CI/CD GitHub Actions", "Kubernetes Fundamentals", "AWS Infrastructure"
+    ];
+    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: "DevOps & Cloud", nextTopic: next, total: nodes.length };
+  }
+
+  const formattedName = rawTitleOrId.replace(/^\d+\.\s*/, "").replace(/-/g, " ").trim();
+  return { name: formattedName, nextTopic: "Next Milestone Topic", total: 15 };
+}
+
 function mergeLocalDashboardMetrics(backendData: any) {
   try {
     const localProg = getLocalVideoProgress();
@@ -79,6 +143,17 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
     const localResumeScore = localResumeScoreRaw ? parseInt(localResumeScoreRaw, 10) : 0;
 
+    let localActiveTitle = "";
+    if (typeof window !== "undefined") {
+      try {
+        const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
+        if (rawActive) {
+          const parsed = JSON.parse(rawActive);
+          if (parsed?.title) localActiveTitle = parsed.title;
+        }
+      } catch {}
+    }
+
     const lp = backendData.metrics?.learningProgress || {};
     const rm = backendData.metrics?.roadmapProgress || {};
     const rr = backendData.metrics?.resumeReadiness || {};
@@ -86,8 +161,14 @@ function mergeLocalDashboardMetrics(backendData: any) {
     const completed = Math.max(lp.completedVideos || 0, localCompleted);
     const resumeScore = Math.max(rr.percentage || 0, localResumeScore);
     const roadmapCount = rm.count || 0;
-    const roadmapPct = rm.percentage || (roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / 20) * 100)) : 0);
-    const roadmapSubtitle = rm.subtitle || (roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed");
+
+    const rawRoadmapTitle = rm.roadmapName || localActiveTitle;
+    const meta = getRoadmapMeta(rawRoadmapTitle, []);
+
+    const finalRoadmapName = meta.name || rm.roadmapName || localActiveTitle || "";
+    const finalNextTopic = rm.nextTopic && !rm.nextTopic.includes("Next Topic") ? rm.nextTopic : meta.nextTopic;
+    const finalRoadmapPct = meta.total > 0 && roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / meta.total) * 100)) : (rm.percentage || 0);
+    const finalSubtitle = finalRoadmapName ? `Following: ${finalRoadmapName}` : (roadmapCount > 0 ? `${roadmapCount} topics completed` : "No active roadmap");
 
     let totalVids = lp.totalVideos || 0;
     if (localSaved.length > 0) {
@@ -126,10 +207,10 @@ function mergeLocalDashboardMetrics(backendData: any) {
         roadmapProgress: {
           ...rm,
           count: roadmapCount,
-          percentage: roadmapPct,
-          subtitle: roadmapSubtitle,
-          roadmapName: rm.roadmapName || "",
-          nextTopic: rm.nextTopic || (roadmapCount > 0 ? "Next Topic" : "Start a roadmap on Roadmaps page"),
+          percentage: finalRoadmapPct,
+          subtitle: finalSubtitle,
+          roadmapName: finalRoadmapName,
+          nextTopic: finalNextTopic,
         },
         resumeReadiness: {
           ...rr,
