@@ -125,7 +125,6 @@ export function useYouTubePlayer({
   containerId,
   videoId,
   startAt = 0,
-  userId = "default_user",
   playlistId,
   onProgressUpdate,
   onComplete,
@@ -204,16 +203,15 @@ export function useYouTubePlayer({
     // 10 s periodic resume save
     saveIntervalRef.current = setInterval(() => {
       const player = playerRef.current;
-      if (!player || !userId || userId === "default_user") return;
+      if (!player) return;
       saveVideoProgress(
-        userId,
         playlistId,
         videoId,
         player.getCurrentTime(),
         Math.round(watchedSecondsRef.current),
       );
     }, 10_000);
-  }, [tick, userId, playlistId, videoId]);
+  }, [tick, playlistId, videoId]);
 
   useEffect(() => {
     // Reset anti-cheat state on videoId change

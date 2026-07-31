@@ -7,16 +7,15 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("")
 def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
+    # user_id is now guaranteed to be a valid authenticated Supabase UUID (auth raises 401 otherwise)
     sb = get_supabase()
     completed_count = 0
     total_videos = 0
     problems_solved = 0
     user_success_rate = 0.0
-    display_name = user_id.split("@")[0] if "@" in user_id else (
-        "Learner" if user_id == "default_user" else user_id
-    )
+    display_name = user_id.split("@")[0] if "@" in user_id else user_id
 
-    if sb and user_id != "default_user":
+    if sb:
         try:
             # 1. Count completed videos for this user
             res_completed = (

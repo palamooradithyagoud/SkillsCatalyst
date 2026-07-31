@@ -94,7 +94,7 @@ export default function SettingsPage() {
 
       // ── Step 2: Try Supabase (override localStorage if data exists) ──
       try {
-        const data = await fetchProfileData(userId);
+        const data = await fetchProfileData();
         if (data) {
           if (data.academic) {
             if (data.academic.full_name)     setFullName(data.academic.full_name);

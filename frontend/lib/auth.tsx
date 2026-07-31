@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
@@ -16,7 +17,7 @@ interface UserSession {
 interface AuthContextValue {
   session: UserSession | null;
   isLoading: boolean;
-  login: (email: string, userId?: string, name?: string) => void;
+  login: (email: string, userId: string, name?: string) => void;
   logout: () => void;
 }
 
@@ -190,12 +191,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session, isLoading, pathname, router]);
 
   const login = useCallback(
-    (email: string, userId = "default_user", name?: string) => {
+    (email: string, userId: string, name?: string) => {
       setAndStoreSession(email, userId, name);
       router.replace("/dashboard");
     },
     [setAndStoreSession, router]
   );
+
+  const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
     try {
@@ -207,11 +210,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem(key);
         }
       }
+      // Clear all React Query in-memory cache to prevent stale data from one user
+      // leaking into another user's session after account switching
+      queryClient.clear();
       await supabase.auth.signOut();
     } catch {}
     setSession(null);
     router.replace("/login");
-  }, [router]);
+  }, [router, queryClient]);
 
   if (pathname !== "/login") {
     if (isLoading || !session) {

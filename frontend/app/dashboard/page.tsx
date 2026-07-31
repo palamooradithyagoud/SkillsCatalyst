@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   const { data } = useQuery({
     queryKey: ["dashboard", userId],
-    queryFn: () => fetchDashboardData(userId || ""),
+    queryFn: () => fetchDashboardData(),
     enabled: !!session?.user_id,
   });
 
