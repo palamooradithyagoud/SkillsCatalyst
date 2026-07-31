@@ -183,7 +183,41 @@ export async function searchSkill(
   }
 }
 
+// LocalStorage helpers for saved playlists fallback/sync
+const LS_SAVED_PLAYLISTS = "skillscatalyst_saved_playlists";
+
+function getLocalSavedPlaylists(): Playlist[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LS_SAVED_PLAYLISTS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalPlaylist(playlist: Playlist) {
+  if (typeof window === "undefined") return;
+  try {
+    const list = getLocalSavedPlaylists();
+    if (!list.some((p) => p.id === playlist.id)) {
+      list.unshift(playlist);
+      localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(list));
+    }
+  } catch {}
+}
+
+function removeLocalPlaylist(playlistId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const list = getLocalSavedPlaylists().filter((p) => p.id !== playlistId);
+    localStorage.setItem(LS_SAVED_PLAYLISTS, JSON.stringify(list));
+  } catch {}
+}
+
 export async function savePlaylist(playlist: Playlist, skillQuery: string) {
+  saveLocalPlaylist(playlist);
+
   const body = {
     playlist_id: playlist.id,
     title: playlist.title || "Untitled Playlist",
@@ -197,6 +231,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     source: playlist.source || "youtube",
     skill_query: skillQuery || "",
   };
+
   try {
     const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/save`, {
@@ -204,42 +239,64 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (res.ok) {
+      return await res.json();
+    }
   } catch (e) {
-    console.warn("Save playlist failed:", e);
-    return null;
+    console.warn("Save playlist backend request failed, saved locally:", e);
   }
+  return { success: true, localOnly: true };
 }
 
 export async function unsavePlaylist(playlistId: string) {
+  removeLocalPlaylist(playlistId);
+
   try {
     const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/save/${playlistId}`, {
       method: "DELETE",
       headers: { ...authHeaders },
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (res.ok) {
+      return await res.json();
+    }
   } catch (e) {
-    console.warn("Unsave playlist failed:", e);
-    return null;
+    console.warn("Unsave playlist backend request failed, removed locally:", e);
   }
+  return { success: true };
 }
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
+  const localList = getLocalSavedPlaylists();
+  let backendList: Playlist[] = [];
+
   try {
     const authHeaders = await getAuthHeaders();
     const res = await fetch(`${API_BASE}/api/learning/saved`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.saved)) {
+        backendList = data.saved;
+      }
+    }
   } catch (e) {
-    console.warn("Fetch saved playlists failed:", e);
-    return { saved: [], count: 0 };
+    console.warn("Fetch saved playlists backend call failed:", e);
   }
+
+  // Merge backend list + local list (deduping by id)
+  const map = new Map<string, Playlist>();
+  for (const pl of localList) {
+    if (pl && pl.id) map.set(pl.id, pl);
+  }
+  for (const pl of backendList) {
+    if (pl && pl.id) map.set(pl.id, pl);
+  }
+
+  const merged = Array.from(map.values());
+  return { saved: merged, count: merged.length };
 }
 
 // ── Video Progress API ─────────────────────────────────────────────────────────
