@@ -166,16 +166,19 @@ export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[
 
   if (clean.includes("c-prog") || clean.includes("c prog") || clean.includes("systems c") || clean.includes("c programming") || clean === "1. c programming") {
     const nodes = [
-      "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program",
-      "Code Editors & IDEs", "Variables (Declaration vs Definition)", "Basic Data Types",
-      "Operators & Control Flow", "Loops & main Function", "Pointers & Memory Model",
-      "Null & void Pointers", "Pointer Arithmetic", "Structs & Typedef",
-      "Unions & Enums", "Arrays & Strings", "Dynamic Memory Allocation (malloc/free)",
-      "Memory Leakage & Valgrind", "Header Files & Libraries", "File I/O Streams",
-      "Preprocessor Macros", "Build Systems (Make/CMake)", "GDB & Debugging"
+      "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program", "Code Editors & IDEs (VSCode / Vim / NVim)",
+      "Variables (Declaration vs Definition)", "Initialization & Printing Variables", "Basic Data Types (int / float / double / char)", "Fixed-Width Integers & Booleans", "Type Conversion & Casting", "Type Qualifiers (const / volatile / restrict / _Atomic)",
+      "Operators (Arithmetic / Comparison / Logical / Ternary / Bitwise)", "Control Flow (if-else / switch)", "Loops (for / while / do-while / break / continue)", "main Function & Command-Line Arguments", "Variable Scopes", "Recursive & Variadic Functions",
+      "Memory Model (Stack vs Heap & Lifetimes)", "Pointer Basics & Syntax", "Null Pointers & void Pointers", "Pointer Arithmetic",
+      "Structs & Typedef", "Unions & Enums", "Arrays & Dynamic Arrays", "Strings & Text Processing", "Linked Lists, Hash Maps & Ring Buffers",
+      "Dynamic Memory Allocation (malloc / calloc / realloc / free)", "Memory Leakage & Valgrind", "Dangling Pointers & Undefined Behavior", "Buffer Overflow Prevention",
+      "Header Files & Code Structure", "Linkage & Storage Classes (static / extern)", "Error Handling (errno & Exit Codes)", "Non-Local Jumps (setjmp / longjmp)",
+      "Streams & File Pointers (stdio.h)", "Binary vs Text File Mode", "Data Utilities & Text Processing (stdlib.h / string.h / ctype.h)", "Math, Time & Diagnostics (math.h / time.h / assert.h)", "OS & Signal Interfaces (signal.h)",
+      "Preprocessor Macros & Conditional Compilation", "Compilers & Optimization (GCC / Clang / TinyCC)", "Symbol Tables, Linking & ABI", "Build Systems (GNU Make / CMake / Ninja / Meson)", "C Package Managers (vcpkg / Conan)",
+      "Debugging (GDB / LLDB / Valgrind / ASan / LSan)", "Testing Frameworks (assert.h / Unity / CMocka / Check)", "Idioms (Function Pointers / Callbacks / Opaque Pointers / OOP C)", "Concurrency & Processes (POSIX Threads / Mutexes / IPC)", "C Standards (C89 / C99 / C11 / C17 / C23)"
     ];
     const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "C Programming", nextTopic: next, total: nodes.length };
+    return { name: "C Programming Mastery", nextTopic: next, total: nodes.length };
   }
 
   if (clean.includes("cpp") || clean.includes("c++")) {
