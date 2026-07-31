@@ -220,7 +220,6 @@ export default function PracticeOverview({
             url={codingStats.leetcode?.url || "https://leetcode.com"}
             dotColor="bg-amber-400"
             stat={codingStats.leetcode}
-            fallbackText="242 Solved | Easy: 33, Med: 148, Hard: 61"
           />
 
           {/* GitHub */}
@@ -229,7 +228,6 @@ export default function PracticeOverview({
             url={codingStats.github?.url || "https://github.com"}
             dotColor="bg-slate-200"
             stat={codingStats.github}
-            fallbackText="8 Repos | 21.8k Stars | 23k Followers"
           />
 
           {/* Codeforces */}
@@ -238,7 +236,6 @@ export default function PracticeOverview({
             url={codingStats.codeforces?.url || "https://codeforces.com"}
             dotColor="bg-blue-400"
             stat={codingStats.codeforces}
-            fallbackText="3530 Rating (Legendary Grandmaster)"
           />
 
           {/* CodeChef */}
@@ -247,7 +244,6 @@ export default function PracticeOverview({
             url={codingStats.codechef?.url || "https://codechef.com"}
             dotColor="bg-amber-600"
             stat={codingStats.codechef}
-            fallbackText="1650 Rating (3★) | Global Rank #12k"
           />
 
           {/* GeeksforGeeks */}
@@ -256,7 +252,6 @@ export default function PracticeOverview({
             url={codingStats.geeksforgeeks?.url || "https://geeksforgeeks.org"}
             dotColor="bg-emerald-500"
             stat={codingStats.geeksforgeeks}
-            fallbackText="120 Solved | Overall Score 450"
           />
 
           {/* HackerRank */}
@@ -265,7 +260,6 @@ export default function PracticeOverview({
             url={codingStats.hackerrank?.url || "https://hackerrank.com"}
             dotColor="bg-emerald-400"
             stat={codingStats.hackerrank}
-            fallbackText="Active Hacker | Certified Badges"
           />
         </div>
       </div>
@@ -309,10 +303,9 @@ interface PlatformStatItemProps {
   url: string;
   dotColor: string;
   stat?: PlatformStat;
-  fallbackText: string;
 }
 
-function PlatformStatItem({ title, url, dotColor, stat, fallbackText }: PlatformStatItemProps) {
+function PlatformStatItem({ title, url, dotColor, stat }: PlatformStatItemProps) {
   const isConfigured = !!(stat && stat.configured);
 
   return (

@@ -22,7 +22,7 @@ def get_current_user_id(
                 sb = get_supabase()
                 if sb:
                     try:
-                        res = sb.auth.get_user(token)
+                        res = sb.auth.get_user(jwt=token)
                         if res and res.user and res.user.id:
                             return str(res.user.id)
                     except Exception:
