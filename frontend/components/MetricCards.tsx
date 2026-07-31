@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BookOpen, Target, Sparkles, Briefcase, Lock } from "lucide-react";
+import { BookOpen, Target, Bookmark, Briefcase, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface MetricCardProps {
@@ -150,7 +150,8 @@ export interface MetricsData {
     percentage: number;
     subtitle: string;
   };
-  aiCareerHealth?: {
+  savedPlaylists?: {
+    count?: number;
     percentage: number;
     subtitle: string;
   };
@@ -163,7 +164,7 @@ export interface MetricsData {
 export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const lp = metrics?.learningProgress;
   const rr = metrics?.resumeReadiness;
-  const ch = metrics?.aiCareerHealth;
+  const sp = metrics?.savedPlaylists;
   const ir = metrics?.interviewReadiness;
 
   return (
@@ -189,12 +190,12 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         delay={0.2}
       />
       <MetricCard
-        title="AI Career Health"
-        icon={<Sparkles className="w-4 h-4 text-purple-400" />}
+        title="Saved Playlists"
+        icon={<Bookmark className="w-4 h-4 text-purple-400" />}
         iconBg="bg-purple-500/10 border border-purple-500/20"
-        percentage={ch?.percentage ?? 0}
-        ringColor="#3b82f6"
-        subtitle={ch?.subtitle ?? "Start solving problems to build health"}
+        percentage={sp?.percentage ?? 0}
+        ringColor="#a855f7"
+        subtitle={sp?.subtitle ?? "0 playlists saved"}
         subtitleColor="text-purple-400"
         delay={0.3}
       />

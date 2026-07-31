@@ -303,12 +303,12 @@ async def _search_youtube(
 class SavePlaylistRequest(BaseModel):
     playlist_id:  str
     title:        str
-    channel:      str
+    channel:      Optional[str] = ""
     description:  Optional[str] = ""
     level:        Optional[str] = ""
     video_count:  Optional[str] = "?"
     duration:     Optional[str] = "?"
-    playlist_url: str
+    playlist_url: Optional[str] = ""
     thumbnail:    Optional[str] = ""
     source:       Optional[str] = "youtube"
     skill_query:  Optional[str] = ""
@@ -532,20 +532,31 @@ async def save_playlist(
         data = {
             "playlist_id":  req.playlist_id,
             "title":        req.title,
-            "channel":      req.channel,
-            "description":  req.description,
-            "level":        req.level,
-            "video_count":  video_count,
-            "duration":     req.duration,
-            "playlist_url": req.playlist_url,
-            "thumbnail":    req.thumbnail,
-            "source":       req.source,
-            "skill_query":  req.skill_query,
+            "channel":      req.channel or "",
+            "description":  req.description or "",
+            "level":        req.level or "",
+            "video_count":  video_count or "?",
+            "duration":     req.duration or "?",
+            "playlist_url": req.playlist_url or "",
+            "thumbnail":    req.thumbnail or "",
+            "source":       req.source or "youtube",
+            "skill_query":  req.skill_query or "",
             "user_id":      user_id,
         }
-        result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
-        return {"success": True, "data": result.data}
+        try:
+            result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
+            return {"success": True, "data": result.data}
+        except Exception as upsert_err:
+            logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
+            existing = sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+            if existing.data and len(existing.data) > 0:
+                res_upd = sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                return {"success": True, "data": res_upd.data}
+            else:
+                res_ins = sb.table("saved_playlists").insert(data).execute()
+                return {"success": True, "data": res_ins.data}
     except Exception as e:
+        logger.error(f"Error saving playlist: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

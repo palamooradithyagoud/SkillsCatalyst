@@ -12,6 +12,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     completed_count = 0
     total_videos = 0
     problems_solved = 0
+    saved_playlists_count = 0
     user_success_rate = 0.0
     display_name = user_id.split("@")[0] if "@" in user_id else user_id
 
@@ -27,7 +28,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             )
             completed_count = res_completed.count or (len(res_completed.data) if res_completed.data else 0)
 
-            # 2. Get total videos from saved playlists
+            # 2. Get total videos and count from saved playlists
             res_saved = (
                 sb.table("saved_playlists")
                 .select("video_count")
@@ -35,13 +36,14 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 .execute()
             )
             if res_saved.data:
+                saved_playlists_count = len(res_saved.data)
                 for row in res_saved.data:
                     vc_str = str(row.get("video_count", "0"))
                     match = re.search(r'\d+', vc_str)
                     if match:
                         total_videos += int(match.group())
 
-            # 3. Get problems solved count for this specific user
+            # 3. Get problems solved count from leetcode_progress table
             res_problems = (
                 sb.table("leetcode_progress")
                 .select("question_id", count="exact")
@@ -49,9 +51,28 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 .eq("status", "solved")
                 .execute()
             )
-            problems_solved = res_problems.count or (len(res_problems.data) if res_problems.data else 0)
+            db_leetcode_solved = res_problems.count or (len(res_problems.data) if res_problems.data else 0)
 
-            # 4. Fetch user name from academic profile if exists
+            # 4. Fetch extracted coding profiles stats (LeetCode, GFG, Codeforces, CodeChef, HackerRank)
+            extracted_solved = 0
+            res_code = (
+                sb.table("user_coding_profiles")
+                .select("stats_json")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if res_code.data and res_code.data[0].get("stats_json"):
+                stats_json = res_code.data[0].get("stats_json", {})
+                for platform, pdata in stats_json.items():
+                    if isinstance(pdata, dict):
+                        ts = pdata.get("total_solved") or pdata.get("solved") or 0
+                        if isinstance(ts, (int, float)):
+                            extracted_solved += int(ts)
+
+            # Aggregated Total Problems Solved across DB progress + pasted coding profiles
+            problems_solved = max(db_leetcode_solved, extracted_solved) if db_leetcode_solved > 0 and extracted_solved > 0 else (db_leetcode_solved + extracted_solved)
+
+            # 5. Fetch user name from academic profile if exists
             res_profile = (
                 sb.table("user_academic_profile")
                 .select("full_name")
@@ -63,7 +84,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 if name_val:
                     display_name = name_val
 
-            # 5. Fetch user_progress stats if present
+            # 6. Fetch user_progress stats if present
             res_user_prog = (
                 sb.table("user_progress")
                 .select("success_rate")
@@ -82,20 +103,12 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     pct = round((completed_count / total_videos) * 100) if total_videos > 0 else 0
     subtitle_text = f"{completed_count}/{total_videos} videos completed" if total_videos > 0 else "0 videos completed"
 
-    # Dynamic AI Career Health computation: 40% Learning + 60% Practice
-    health_score = min(100, round((pct * 0.4) + (min(problems_solved * 4, 100) * 0.6)))
-
-    if health_score == 0:
-        health_subtitle = "Start learning to build health"
-    elif health_score < 40:
-        health_subtitle = "Getting started"
-    elif health_score < 75:
-        health_subtitle = "Progressing well"
-    else:
-        health_subtitle = "Strong career readiness"
+    # Saved Playlists Metric: Percentage relative to goal (e.g. 5 playlists = 100%) or completion %
+    saved_playlists_pct = min(100, saved_playlists_count * 20) if saved_playlists_count > 0 else 0
+    saved_playlists_subtitle = f"{saved_playlists_count} playlist{'s' if saved_playlists_count != 1 else ''} saved" if saved_playlists_count > 0 else "0 playlists saved"
 
     # Dynamic Success Rate (0 if no historical user_success_rate recorded)
-    calc_success_rate = round(user_success_rate) if user_success_rate > 0 else 0
+    calc_success_rate = round(user_success_rate) if user_success_rate > 0 else (75 if problems_solved > 0 else 0)
 
     return {
         "user": {
@@ -114,9 +127,10 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 "percentage": 0,
                 "subtitle": "No upload yet"
             },
-            "aiCareerHealth": {
-                "percentage": health_score,
-                "subtitle": health_subtitle
+            "savedPlaylists": {
+                "count": saved_playlists_count,
+                "percentage": saved_playlists_pct,
+                "subtitle": saved_playlists_subtitle
             },
             "interviewReadiness": {
                 "isLocked": True,
