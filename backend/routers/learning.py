@@ -958,6 +958,21 @@ async def get_playlist_videos(
             except Exception as e:
                 print(f"Video progress merge error: {e}")
 
+        # Also merge video watch status from learning_progress JSONB table (session_id & guests)
+        try:
+            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            if res_lp.data and len(res_lp.data) > 0:
+                steps = res_lp.data[0].get("completed_steps", [])
+                match_pl = next((p for p in steps if (p.get("id") == clean_playlist_id or p.get("playlist_id") == clean_playlist_id or p.get("id") == playlist_id)), None)
+                if match_pl and match_pl.get("videos"):
+                    lp_prog_map = { (v.get("videoId") or v.get("id")): v for v in match_pl.get("videos") }
+                    for v in videos:
+                        lp_v = lp_prog_map.get(v["videoId"])
+                        if lp_v:
+                            v["watched"] = v["watched"] or bool(lp_v.get("watched") or lp_v.get("completed"))
+        except Exception as lp_err:
+            logger.warning(f"Error merging JSONB progress in get_playlist_videos: {lp_err}")
+
     return {"videos": videos, "count": len(videos)}
 
 
