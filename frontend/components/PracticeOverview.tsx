@@ -145,8 +145,18 @@ export default function PracticeOverview({
   const cfSolved = codingStats.codeforces?.total_solved || 0;
   const ccSolved = codingStats.codechef?.total_solved || 0;
   const hrSolved = codingStats.hackerrank?.total_solved || 0;
-  const totalExtractedSolved = leetcodeSolved + gfgSolved + cfSolved + ccSolved + hrSolved + csvSolvedCount;
-  const displayTotalSolved = Math.max(totalExtractedSolved, problemsSolved);
+
+  const hasConnectedPlatforms = connectedPlatformsCount > 0;
+  const totalExtractedSolved = leetcodeSolved + gfgSolved + cfSolved + ccSolved + hrSolved;
+
+  // For a new user with 0 connected profiles and 0 DB solved questions, display 0
+  const displayTotalSolved = (hasConnectedPlatforms || csvSolvedCount > 0)
+    ? Math.max(totalExtractedSolved + csvSolvedCount, problemsSolved)
+    : (csvSolvedCount > 0 ? csvSolvedCount : 0);
+
+  const displaySuccessRate = displayTotalSolved > 0
+    ? (codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : `${successRate}%`)
+    : "0%";
 
   return (
     <motion.div
@@ -197,13 +207,14 @@ export default function PracticeOverview({
           delay={0.35}
         />
         <StatCard
-          value={codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : (displayTotalSolved > 0 ? `${successRate}%` : "0%")}
+          value={displaySuccessRate}
           label={codingStats.codeforces?.rating ? "Codeforces Rating" : "Success Rate"}
           icon={<Swords className="w-4 h-4 text-purple-400" />}
           color="#8b5cf6"
           delay={0.4}
         />
       </div>
+
 
       {/* ── Extracted Coding Profiles Live Stats Grid ── */}
       <div className="space-y-3">
