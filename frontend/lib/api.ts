@@ -73,16 +73,12 @@ function mergeLocalDashboardMetrics(backendData: any) {
       if (calcTotal > totalVids) totalVids = calcTotal;
     }
 
-    if (totalVids === 0 && completed > 0) {
-      totalVids = 50; // Default baseline total video target
-    }
-
     if (totalVids > 0 && completed > totalVids) {
       totalVids = completed;
     }
 
     const pct = totalVids > 0 ? Math.round((completed / totalVids) * 100) : 0;
-    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : "0 videos completed";
+    const subtitle = totalVids > 0 ? `${completed}/${totalVids} videos completed` : `${completed} video${completed !== 1 ? "s" : ""} completed`;
     const savedPct = Math.min(100, savedCount * 20);
     const savedSubtitle = savedCount > 0 ? `${savedCount} playlist${savedCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
 
@@ -122,7 +118,7 @@ async function getFallbackDashboardData() {
       userName = session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Learner";
       const userId = session.user.id;
 
-      // Query saved playlists
+      // Query saved playlists for dynamic total video counts
       const { data: savedData } = await supabase
         .from("saved_playlists")
         .select("video_count")
@@ -172,16 +168,12 @@ async function getFallbackDashboardData() {
     completedCount = localCompletedCount;
   }
 
-  if (totalVideos === 0 && completedCount > 0) {
-    totalVideos = 50; // Default baseline total video target
-  }
-
   if (totalVideos > 0 && completedCount > totalVideos) {
     totalVideos = completedCount;
   }
 
   const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
-  const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : "0 videos completed";
+  const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
 
   const savedPct = Math.min(100, savedPlaylistsCount * 20);
   const savedSubtitle = savedPlaylistsCount > 0 ? `${savedPlaylistsCount} playlist${savedPlaylistsCount !== 1 ? "s" : ""} saved` : "0 playlists saved";
