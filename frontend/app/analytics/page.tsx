@@ -265,11 +265,12 @@ export default function AnalyticsPage() {
 
   // Load local solved state for fallback/activity feed
   useEffect(() => {
-    if (!userId || userId === "default_user") {
+    if (!userId) {
       setSolvedKeys([]);
       setDbLeetcodeProgress([]);
       return;
     }
+
 
     try {
       const saved = localStorage.getItem(`skillscatalyst_solved_questions_${userId}`);

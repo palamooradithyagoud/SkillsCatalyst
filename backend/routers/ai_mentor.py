@@ -184,13 +184,12 @@ async def chat_mentor(req: PromptRequest):
 
 
 @router.post("/review-resume")
-async def review_resume(req: ResumeReviewRequest):
+async def review_resume(
+    req: ResumeReviewRequest,
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
-    Performs a full AI-powered resume review using Groq LLM.
-
-    Accepts clean plain text (extracted by /api/resume/extract), plus
-    context about the target role, experience level, and company type.
-    Never receives or processes binary file data.
+    Performs a full AI-powered resume review using Groq LLM and persists score into Supabase.
     """
     target_role = req.target_role
     years_exp = req.years_experience or "1-3 years"
@@ -203,9 +202,10 @@ async def review_resume(req: ResumeReviewRequest):
     resume_text = req.resume_text
 
     logger.info(
-        f"Resume review requested: role='{target_role}', company='{company_type}', "
+        f"Resume review requested: user='{current_user_id}', role='{target_role}', company='{company_type}', "
         f"exp='{years_exp}', resume_chars={len(resume_text)}."
     )
+
 
     system_prompt = (
         "You are an expert ATS Resume Reviewer and Hiring Manager "
@@ -306,5 +306,51 @@ STRICT RULES:
             },
         )
 
+    # Persist resume score and review into Supabase
+    try:
+        from backend.services.auth_service import get_optional_user_id
+        from backend.services.supabase_service import get_supabase
+        import re
+        import datetime
+
+        sb = get_supabase()
+        if sb:
+            user_id = current_user_id
+
+            # Extract numerical score (0-10 or 0-100)
+            overall_score = 80.0
+            match = re.search(r"Final Score:\s*(\d+(?:\.\d+)?)\s*/\s*10", review_text, re.IGNORECASE)
+            if not match:
+                match = re.search(r"(\d+(?:\.\d+)?)\s*/\s*10", review_text)
+            if match:
+                val = float(match.group(1))
+                overall_score = val * 10.0 if val <= 10.0 else val
+
+            score_record = {
+                "user_id": user_id,
+                "filename": "resume.pdf",
+                "target_role": target_role,
+                "company_type": company_type,
+                "overall_score": overall_score,
+                "ats_compatibility_score": overall_score,
+                "skills_match_score": overall_score,
+                "experience_score": overall_score,
+                "full_review_json": {"review": review_text},
+            }
+            sb.table("resume_scores").insert(score_record).execute()
+
+            # Update overall user progress resume readiness score
+            sb.table("user_progress").upsert(
+                {
+                    "user_id": user_id,
+                    "resume_readiness_score": overall_score,
+                    "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                },
+                on_conflict="user_id"
+            ).execute()
+    except Exception as save_err:
+        logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
+
     logger.info(f"Resume review completed ({len(review_text)} chars returned).")
     return {"review": review_text}
+

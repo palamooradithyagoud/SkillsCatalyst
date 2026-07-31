@@ -671,12 +671,13 @@ async def get_playlist_videos(
 
     # Merge progress data from Supabase & sync accurate video_count
     sb = get_supabase()
-    if sb and videos and user_id != "default_user":
+    if sb and videos and user_id:
         try:
             # Sync verified YouTube video count back to saved_playlists table
             sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", playlist_id).eq("user_id", user_id).execute()
         except Exception:
             pass
+
 
         try:
             res = (
