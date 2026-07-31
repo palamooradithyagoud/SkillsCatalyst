@@ -144,6 +144,22 @@ interface TreeCategory {
   }[];
 }
 
+// Problem IDs per node — used to compute solve % for the progress fill on each node button
+const NODE_PROBLEM_IDS: Record<string, number[]> = {
+  "two-pointers":     [26,27,88,283,349,350,455,905,922,977,2460,11,15,16,18,80,167,189,611,881,42],
+  "sliding-window-arr": [643,209,713,904,930,1004,1052,1248,1343,1423,1493,1658,1695,1838,2024,2958,992],
+  "prefix-sum":       [1480,724,303,1732,1991,238,560,525,523,930,974,1248,1314,1352,304,327],
+  "kadanes":          [53,918,1749,1191,2321],
+  "two-pointers-str": [125,344,345,392,1768,28,151,443,680,165,2109,408],
+  "sliding-window-str": [1456,2379,3090,3,424,438,567,2516,76],
+  "frequency-map":    [1,217,219,242,383,387,389,1207,1512,169,1748,350,49,347,451,560,659,692,1636],
+  "prefix-hashmap":   [560,525,523,974,930,1248,1590,2845,325,437],
+  "classic-bs":       [704,35,69,278,374,1539,33,34,74,81,153,162,540,875,1011,1283,2226,410],
+  "lower-upper-bound": [35,744,34],
+  "bs-on-answers":    [69,367,875,1011,1283,1482,1552,1760,1870,2187,2226,2251,410],
+  "search-2d-matrix": [240,74,1901,1428,302],
+};
+
 const BEGINNER_TREE_DATA: TreeCategory[] = [
   {
     id: "arrays",
@@ -187,6 +203,7 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
   },
 ];
 
+
 export default function PracticePage() {
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
   const [companiesList, setCompaniesList] = useState<string[]>([]);
@@ -204,53 +221,138 @@ export default function PracticePage() {
   const [loadingCompanies, setLoadingCompanies] = useState<boolean>(false);
   const [limit, setLimit] = useState<number>(100);
 
-  const [solvedState, setSolvedState] = useState<Record<string, boolean>>({
-    "two-pointers": true,
-    "classic-bs": true,
-  });
+  const [solvedState, setSolvedState] = useState<Record<string, boolean>>({});
+  const [drawerSolved, setDrawerSolved] = useState<Record<number, boolean>>({});
 
-  // Load solved state from localStorage & Sync from Supabase DB
+  // Compute per-node solve percentage from individual problem IDs
+  const getNodeProgress = (nodeId: string): { solved: number; total: number; pct: number } => {
+    const ids = NODE_PROBLEM_IDS[nodeId] ?? [];
+    if (!ids.length) return { solved: 0, total: 0, pct: 0 };
+    const solved = ids.filter((id) => !!drawerSolved[id]).length;
+    return { solved, total: ids.length, pct: Math.round((solved / ids.length) * 100) };
+  };
+
+  // Toggle individual problem in Foundation drawer & sync directly to Supabase + localStorage
+  const toggleDrawerProblem = async (
+    problemId: number,
+    details?: { title: string; difficulty: string; pattern: string }
+  ) => {
+    const isCurrentlyDone = !!drawerSolved[problemId];
+    const newDoneState = !isCurrentlyDone;
+
+    // 1. Local state update
+    setDrawerSolved((prev) => {
+      const updated = { ...prev, [problemId]: newDoneState };
+      try {
+        localStorage.setItem("skillscatalyst_drawer_solved", JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    setSolvedState((prev) => {
+      const updated = { ...prev, [problemId.toString()]: newDoneState };
+      try {
+        localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // 2. Supabase DB Persistence
+    try {
+      if (newDoneState) {
+        await supabase.from("leetcode_progress").upsert(
+          {
+            user_id: "default_user",
+            company_slug: "foundation",
+            question_id: problemId,
+            question_title: details?.title || `Problem ${problemId}`,
+            difficulty: details?.difficulty || "Easy",
+            status: "solved",
+            solved_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,company_slug,question_id" }
+        );
+      } else {
+        await supabase
+          .from("leetcode_progress")
+          .delete()
+          .eq("user_id", "default_user")
+          .eq("company_slug", "foundation")
+          .eq("question_id", problemId);
+      }
+    } catch (err) {
+      console.warn("Supabase foundation problem sync warning:", err);
+    }
+  };
+
+  // Load solved state from localStorage & Hydrate live from Supabase DB on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("skillscatalyst_solved_questions");
-      if (saved) {
-        setSolvedState(JSON.parse(saved));
+      const savedSolved = localStorage.getItem("skillscatalyst_solved_questions");
+      if (savedSolved) {
+        setSolvedState(JSON.parse(savedSolved));
+      }
+      const savedDrawer = localStorage.getItem("skillscatalyst_drawer_solved");
+      if (savedDrawer) {
+        setDrawerSolved(JSON.parse(savedDrawer));
       }
     } catch (e) {
-      console.warn("Failed to read solved questions from localStorage", e);
+      console.warn("Failed to read solved state from localStorage", e);
     }
 
     async function syncFromSupabase() {
       try {
         const { data: leetcodeData } = await supabase
           .from("leetcode_progress")
-          .select("company_slug, question_id, question_title, status")
+          .select("*")
           .eq("user_id", "default_user");
 
         const { data: roadmapData } = await supabase
           .from("roadmap_progress")
-          .select("node_id, status")
+          .select("*")
           .eq("user_id", "default_user");
 
-        const fetchedState: Record<string, boolean> = {};
+        const fetchedSolvedState: Record<string, boolean> = {};
+        const fetchedDrawerState: Record<number, boolean> = {};
 
         if (leetcodeData) {
           leetcodeData.forEach((item) => {
-            const key = `q_${item.company_slug}_${item.question_id}_${item.question_title}`;
-            fetchedState[key] = item.status === "solved";
-            fetchedState[item.question_id.toString()] = item.status === "solved";
+            const isSolved = item.status === "solved";
+            const qIdStr = item.question_id ? item.question_id.toString() : "";
+
+            if (qIdStr) {
+              fetchedSolvedState[qIdStr] = isSolved;
+              const qIdNum = Number(item.question_id);
+              if (!isNaN(qIdNum)) {
+                fetchedDrawerState[qIdNum] = isSolved;
+              }
+            }
+            if (item.company_slug && item.question_id && item.question_title) {
+              const key = `q_${item.company_slug}_${item.question_id}_${item.question_title}`;
+              fetchedSolvedState[key] = isSolved;
+            }
           });
         }
 
         if (roadmapData) {
           roadmapData.forEach((item) => {
-            fetchedState[item.node_id] = item.status === "completed";
+            fetchedSolvedState[item.node_id] = item.status === "completed";
           });
         }
 
-        if (Object.keys(fetchedState).length > 0) {
+        if (Object.keys(fetchedDrawerState).length > 0) {
+          setDrawerSolved((prev) => {
+            const merged = { ...prev, ...fetchedDrawerState };
+            try {
+              localStorage.setItem("skillscatalyst_drawer_solved", JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
+        }
+
+        if (Object.keys(fetchedSolvedState).length > 0) {
           setSolvedState((prev) => {
-            const merged = { ...prev, ...fetchedState };
+            const merged = { ...prev, ...fetchedSolvedState };
             try {
               localStorage.setItem("skillscatalyst_solved_questions", JSON.stringify(merged));
             } catch (e) {}
@@ -258,7 +360,7 @@ export default function PracticePage() {
           });
         }
       } catch (err) {
-        console.warn("Supabase sync warning:", err);
+        console.warn("Supabase initial sync notice:", err);
       }
     }
 
@@ -668,7 +770,8 @@ export default function PracticePage() {
                   <div className="w-full space-y-3 relative z-10">
                     {cat.nodes.map((node, nIdx) => {
                       const NodeIcon = node.icon;
-                      const isDone = !!solvedState[node.id];
+                      const { solved, total, pct } = getNodeProgress(node.id);
+                      const isComplete = total > 0 && pct === 100;
 
                       return (
                         <React.Fragment key={node.id}>
@@ -680,38 +783,65 @@ export default function PracticePage() {
                             </div>
                           )}
 
-                          <motion.div
+                          {/* Node Button — green fill reflects solve progress */}
+                          <motion.button
                             whileHover={{ scale: 1.03, y: -1 }}
-                            className={`w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center justify-between gap-2 shadow-md ${
-                              isDone
-                                ? "bg-emerald-950/40 border-emerald-500/60 text-white shadow-emerald-500/20"
-                                : "bg-[#111728] border-white/[0.08] hover:border-indigo-400 text-slate-200 hover:text-white"
-                            }`}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setActivePracticeTopic(node.title)}
+                            className="w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-2.5 shadow-md relative overflow-hidden"
+                            style={{
+                              borderColor: isComplete
+                                ? "rgba(52,211,153,0.7)"
+                                : pct > 0
+                                ? "rgba(52,211,153,0.4)"
+                                : "rgba(255,255,255,0.08)",
+                              background: "#111728",
+                            }}
                           >
-                            <button
-                              onClick={() => setActivePracticeTopic(node.title)}
-                              className="flex items-center gap-2.5 flex-1 text-left"
-                            >
-                              <NodeIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                              <span>{node.title}</span>
-                            </button>
+                            {/* Green progress fill behind label */}
+                            {pct > 0 && (
+                              <motion.div
+                                className="absolute inset-0 rounded-2xl pointer-events-none"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${pct}%` }}
+                                transition={{ duration: 0.7, ease: "easeOut" }}
+                                style={{
+                                  background: isComplete
+                                    ? "linear-gradient(90deg, rgba(16,185,129,0.35) 0%, rgba(52,211,153,0.25) 100%)"
+                                    : "linear-gradient(90deg, rgba(16,185,129,0.22) 0%, rgba(52,211,153,0.12) 100%)",
+                                }}
+                              />
+                            )}
 
-                            {/* Checkbox for Roadmap Node */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleSolved(node.id);
-                              }}
-                              className="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
-                              title={isDone ? "Mark as incomplete" : "Mark as completed"}
+                            {/* Icon + label (above the fill) */}
+                            <NodeIcon
+                              className={`w-3.5 h-3.5 shrink-0 relative z-10 ${
+                                pct > 0 ? "text-emerald-400" : "text-indigo-400"
+                              }`}
+                            />
+                            <span
+                              className={`flex-1 text-left relative z-10 ${
+                                pct > 0 ? "text-white" : "text-slate-200"
+                              }`}
                             >
-                              {isDone ? (
-                                <CheckSquare className="w-4 h-4 text-emerald-400" />
-                              ) : (
-                                <Square className="w-4 h-4 text-slate-500" />
-                              )}
-                            </button>
-                          </motion.div>
+                              {node.title}
+                            </span>
+
+                            {/* Progress counter badge */}
+                            {total > 0 && (
+                              <span
+                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums ${
+                                  isComplete
+                                    ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40"
+                                    : pct > 0
+                                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                                    : "bg-slate-700/60 text-slate-500 border border-slate-600/40"
+                                }`}
+                              >
+                                {solved}/{total}
+                              </span>
+                            )}
+                          </motion.button>
                         </React.Fragment>
                       );
                     })}
@@ -1113,11 +1243,13 @@ export default function PracticePage() {
         </motion.div>
       )}
 
-      {/* Practice Topic Detail Drawer Overlay matching target screenshot */}
+      {/* Practice Topic Detail Drawer Overlay — passes shared solved state for progress tracking */}
       <PracticeTopicDrawer
         isOpen={!!activePracticeTopic}
         onClose={() => setActivePracticeTopic(null)}
         topicName={activePracticeTopic || ""}
+        solvedSet={drawerSolved}
+        onToggleSolved={toggleDrawerProblem}
       />
     </motion.div>
   );

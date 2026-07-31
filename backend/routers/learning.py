@@ -2,6 +2,7 @@ import os
 import csv
 import httpx
 import re
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -9,7 +10,102 @@ from typing import Optional
 from backend.services.supabase_service import get_supabase
 from backend.config import YOUTUBE_API_KEY
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/learning", tags=["learning"])
+
+# ---------------------------------------------------------------------------
+# Skills-only guard — keeps the search strictly on tech/career topics
+# ---------------------------------------------------------------------------
+
+# Blocklist: domains clearly outside skills/tech/career
+_LEARNING_OFFTOPIC = re.compile(
+    r"\b("
+    # Entertainment
+    r"movie|movies|film|films|cinema|series|web.?series|netflix|amazon.?prime|disney|hotstar|ott|"
+    r"song|songs|music|album|band|singer|singer|actor|actress|celebrity|bollywood|hollywood|"
+    r"anime|manga|cartoon|podcast|vlog|vlogger|reality.?show|"
+    # Sports
+    r"cricket|ipl|football|soccer|nfl|nba|sports|match|tournament|stadium|player|scorer|"
+    # Food / lifestyle
+    r"recipe|food|cook|cooking|restaurant|dish|eat|meal|diet|fitness.?workout|"
+    # Personal / relationships
+    r"girlfriend|boyfriend|relationship|marriage|wedding|love|dating|breakup|"
+    r"joke|meme|funny|prank|entertainment|"
+    # News / politics
+    r"politics|election|president|prime.?minister|government|modi|trump|biden|parliament|"
+    r"news|headline|current.?affairs|weather|forecast|"
+    # Other off-topic
+    r"astrology|horoscope|zodiac|religion|god|prayer|"
+    r"stock|crypto|bitcoin|forex"
+    r")\b",
+    re.IGNORECASE,
+)
+
+# Allowlist: if any of these skill/career terms appear, permit even if an off-topic
+# keyword also matched (e.g. "cricket data analysis in Python" is valid)
+_LEARNING_SKILL = re.compile(
+    r"\b("
+    r"python|java|javascript|typescript|react|vue|angular|node|django|flask|fastapi|"
+    r"machine.?learning|deep.?learning|ai|ml|data.?science|nlp|llm|neural|tensorflow|pytorch|"
+    r"dsa|algorithm|data.?structure|leetcode|competitive.?programming|sorting|searching|"
+    r"system.?design|cloud|aws|azure|gcp|devops|docker|kubernetes|terraform|"
+    r"sql|database|mongodb|postgres|redis|mysql|sqlite|"
+    r"interview|resume|career|job|internship|salary|roadmap|skill|course|tutorial|playlist|"
+    r"html|css|frontend|backend|fullstack|api|rest|graphql|web.?dev|"
+    r"git|github|ci.?cd|linux|bash|shell|terminal|"
+    r"c\+\+|golang|rust|kotlin|swift|flutter|dart|php|ruby|"
+    r"cybersecurity|networking|os|operating.?system|computer.?science|"
+    r"project|portfolio|startup|tech|software|engineer|developer|programmer|coding|programming"
+    r")\b",
+    re.IGNORECASE,
+)
+
+# Keywords in YT result titles/descriptions that signal non-skill content
+_ENTERTAINMENT_TITLE_BLOCKLIST = [
+    "podcast", "vlog", "daily vlog", "comedy", "funny", "reaction",
+    "movie review", "film review", "music video", "music playlist",
+    "cooking", "recipe", "food", "sports highlights", "cricket highlights",
+    "ipl highlights", "match recap", "songs playlist", "top 10 songs",
+    "best movies", "series review", "web series",
+]
+
+
+def _is_skill_query(query: str) -> bool:
+    """
+    Returns True if the query is a valid skill/tech/career search.
+    A query is invalid (non-skill) when:
+      - It matches the off-topic domain blocklist, AND
+      - It does NOT contain any recognised skill/career keyword.
+    """
+    stripped = query.strip()
+    if not stripped:
+        return False
+    if _LEARNING_OFFTOPIC.search(stripped):
+        # Only allow if user also mentioned a skill (e.g. "cricket data analysis in Python")
+        return bool(_LEARNING_SKILL.search(stripped))
+    return True
+
+
+def _filter_skill_playlists(results: list[dict]) -> list[dict]:
+    """
+    Post-filter YouTube results: remove playlists whose title or description
+    contain entertainment blocklist keywords (reduces noise from YouTube API).
+    CSV-sourced results are always trusted and pass through unchanged.
+    """
+    filtered = []
+    for pl in results:
+        # Always keep curated CSV-sourced playlists
+        if pl.get("source") == "csv":
+            filtered.append(pl)
+            continue
+        title_desc = f"{pl.get('title', '')} {pl.get('description', '')}".lower()
+        if any(kw in title_desc for kw in _ENTERTAINMENT_TITLE_BLOCKLIST):
+            logger.debug(f"Filtered out non-skill YT playlist: '{pl.get('title', '')}'")
+            continue
+        filtered.append(pl)
+    return filtered
+
 
 # ── Path to the data directory ──────────────────────────────────────────────
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
@@ -320,28 +416,81 @@ async def search_skill(
 ):
     """
     Search playlists with quality ranking & limit strictly to TOP 10 best playlists.
+    Guards against non-skill queries before hitting YouTube API.
     """
     if not isinstance(level, str):
         level = getattr(level, "default", "all") or "all"
     if not isinstance(language, str):
         language = getattr(language, "default", "english") or "english"
 
+    # ── Input sanitisation: strip HTML tags (XSS / injection guard)
+    sanitised = re.sub(r"<[^>]+>", "", query).strip()
+
+    # ── Validate: empty / whitespace
+    if not sanitised:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "empty_query", "message": "Search query cannot be empty."},
+        )
+
+    # ── Validate: too short (< 2 meaningful chars)
+    if len(sanitised) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "query_too_short",
+                "message": "Please enter at least 2 characters to search.",
+            },
+        )
+
+    # ── Validate: numbers-only query (e.g. "123", "99")
+    if re.fullmatch(r"[\d\s]+", sanitised):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "not_skill",
+                "message": "Numbers alone aren't a skill query. Try \"Python\", \"React\", or \"DSA\".",
+            },
+        )
+
+    # ── Skill-only guard: block entertainment / off-topic queries
+    if not _is_skill_query(sanitised):
+        logger.info(f"Non-skill search blocked: '{sanitised[:80]}'")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "not_skill",
+                "message": (
+                    f"\"{ sanitised }\" doesn't look like a skill or tech topic. "
+                    "Try searching for a programming language, tool, or concept — "
+                    "e.g. \"Python\", \"React\", \"System Design\", or \"DSA\"."
+                ),
+            },
+        )
+
     # Enforce top 10 limit
     limit = 10 if (max_results is None or max_results <= 0) else min(max_results, 10)
 
-    csv_rows = _search_csv_playlists(query, level)
+    csv_rows = _search_csv_playlists(sanitised, level)
     source_used = "csv" if csv_rows else "youtube"
 
     yt_rows: list[dict] = []
     if len(csv_rows) < 10:
-        yt_rows = await _search_youtube(query, level, language, max_results=20)
+        yt_rows = await _search_youtube(sanitised, level, language, max_results=20)
+        # Post-filter: remove entertainment results that slipped through YouTube API
+        yt_rows = _filter_skill_playlists(yt_rows)
 
     combined = csv_rows + yt_rows
-    ranked = _score_and_rank_playlists(combined, query, level)
+    ranked = _score_and_rank_playlists(combined, sanitised, level)
     top_10 = ranked[:limit]
 
+    logger.info(
+        f"Search '{sanitised}' → {len(top_10)} results "
+        f"(csv={len(csv_rows)}, yt={len(yt_rows)}, level={level})."
+    )
+
     return {
-        "query": query,
+        "query": sanitised,
         "level": level,
         "language": language,
         "source": source_used,

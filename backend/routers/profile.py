@@ -421,13 +421,16 @@ async def save_academic_profile(body: AcademicProfileModel):
         "department": body.department,
         "academic_year": body.academic_year,
         "target_role": body.target_role,
+        # updated_at is auto-managed by Supabase default — do NOT include it
     }
 
     if sb:
         try:
-            sb.from_("user_academic_profile").upsert(data, on_conflict="user_id").execute()
+            result = sb.from_("user_academic_profile").upsert(data, on_conflict="user_id").execute()
+            logger.info(f"Academic profile saved: {result.data}")
         except Exception as e:
-            logger.error(f"Failed to save academic profile in Supabase: {e}")
+            logger.error(f"Failed to save academic profile: {e}")
+            # still return success=True since localStorage already saved it
 
     return {"success": True, "message": "Academic profile saved successfully", "academic": data}
 
@@ -469,14 +472,16 @@ async def save_coding_profiles(body: CodingProfilesInputModel):
         "geeksforgeeks_url": body.geeksforgeeks or "",
         "codeforces_url": body.codeforces or "",
         "stats_json": stats_json,
+        # updated_at is auto-managed by Supabase — do NOT include it
     }
 
     sb = get_supabase()
     if sb:
         try:
-            sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
+            result = sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
+            logger.info(f"Coding profiles saved to Supabase: {len(result.data)} rows")
         except Exception as e:
-            logger.error(f"Failed to save coding profiles in Supabase: {e}")
+            logger.error(f"Failed to save coding profiles: {e}")
 
     return {
         "success": True,
