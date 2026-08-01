@@ -35,6 +35,9 @@ import {
   Play,
   CheckCircle,
   Globe,
+  GraduationCap,
+  BookmarkPlus,
+  UserPlus,
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { generateRoadmap, RoadmapData } from "@/lib/api";
@@ -1426,11 +1429,92 @@ function RoadmapDetailView({
   toggleNode: (roadmapKey: string, nodeName: string) => void;
   isNodeDone: (roadmapKey: string, nodeName: string, defaultDone?: boolean) => boolean;
 }) {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const userId = session?.user_id;
+
   const [activeDrawerSkill, setActiveDrawerSkill] = useState<{
     name: string;
     category: string;
     roadmapTitle: string;
   } | null>(null);
+
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
+        if (raw) {
+          const list = JSON.parse(raw);
+          return list.some(
+            (item: any) =>
+              item.id === selectedRoadmap.id ||
+              item.title === (selectedRoadmap.displayTitle || selectedRoadmap.title)
+          );
+        }
+      } catch {}
+    }
+    return false;
+  });
+
+  const handleEnrollClick = async () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "skillscatalyst_active_roadmap",
+          JSON.stringify({
+            id: selectedRoadmap.id,
+            title: selectedRoadmap.displayTitle || selectedRoadmap.title,
+            rawTitle: selectedRoadmap.title,
+            timestamp: Date.now(),
+          })
+        );
+        const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps") || "[]";
+        const list = JSON.parse(rawEnrolled);
+        if (!list.some((item: any) => item.id === selectedRoadmap.id)) {
+          list.push({
+            id: selectedRoadmap.id,
+            title: selectedRoadmap.displayTitle || selectedRoadmap.title,
+          });
+          localStorage.setItem("skillscatalyst_enrolled_roadmaps", JSON.stringify(list));
+        }
+
+        const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps") || "[]";
+        const removedList: string[] = JSON.parse(rawRemoved);
+        const normId = selectedRoadmap.id.toLowerCase().trim();
+        const updatedRemoved = removedList.filter(
+          (id) => id !== normId && !normId.includes(id)
+        );
+        localStorage.setItem(
+          "skillscatalyst_removed_roadmaps",
+          JSON.stringify(updatedRemoved)
+        );
+      } catch (e) {
+        console.warn("Failed to save active roadmap locally:", e);
+      }
+    }
+
+    if (userId) {
+      try {
+        await supabase.from("roadmap_progress").upsert(
+          {
+            user_id: userId,
+            roadmap_id: selectedRoadmap.id,
+            node_id: "_roadmap_started",
+            node_title: selectedRoadmap.displayTitle || selectedRoadmap.title,
+            status: "started",
+            completed_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,roadmap_id,node_id" }
+        );
+      } catch (e) {
+        console.warn("Failed to mark roadmap started in Supabase:", e);
+      }
+    }
+
+    setIsEnrolled(true);
+    queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  };
 
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -1578,17 +1662,33 @@ function RoadmapDetailView({
             </div>
           </div>
 
-          {/* Start Learning Button */}
+          {/* Enroll / Enrolled Symbol Button */}
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="px-6 py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-            }}
+            onClick={handleEnrollClick}
+            className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shrink-0 transition-all ${
+              isEnrolled
+                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-emerald-500/10 hover:bg-emerald-500/30"
+                : "text-white shadow-indigo-500/25"
+            }`}
+            style={
+              isEnrolled
+                ? {}
+                : { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }
+            }
           >
-            <span>{doneCount > 0 ? "Continue Learning" : "Start Learning"}</span>
-            <Play className="w-4 h-4 fill-white" />
+            {isEnrolled ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Enrolled</span>
+              </>
+            ) : (
+              <>
+                <GraduationCap className="w-4 h-4 text-indigo-100" />
+                <span>Enroll in Track</span>
+              </>
+            )}
           </motion.button>
         </div>
 
@@ -1867,11 +1967,19 @@ export default function RoadmapsPage() {
   const [generating, setGenerating] = useState(false);
   const [customRoadmaps, setCustomRoadmaps] = useState<RoadmapData[]>([]);
   const [completedState, setCompletedState] = useState<Record<string, boolean>>({});
+  const [enrolledIds, setEnrolledIds] = useState<Set<string>>(new Set());
 
   // Hydrate completed roadmap nodes from Supabase DB on mount and auto-open target roadmap if set
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       try {
+        const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
+        if (rawEnrolled) {
+          const list = JSON.parse(rawEnrolled);
+          const ids = new Set<string>(list.map((item: any) => item.id));
+          setEnrolledIds(ids);
+        }
+
         const openId = localStorage.getItem("skillscatalyst_open_roadmap_id");
         if (openId) {
           localStorage.removeItem("skillscatalyst_open_roadmap_id");
@@ -1977,8 +2085,14 @@ export default function RoadmapsPage() {
     return completedState[key] !== undefined ? completedState[key] : defaultDone;
   };
 
-  const handleCardClick = async (roadmap: PresetRoadmap) => {
+  const handleCardClick = (roadmap: PresetRoadmap) => {
     setSelectedRoadmap(roadmap);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleEnrollRoadmap = async (roadmap: PresetRoadmap, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEnrolledIds((prev) => new Set(prev).add(roadmap.id));
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(
@@ -2002,8 +2116,8 @@ export default function RoadmapsPage() {
         const normId = roadmap.id.toLowerCase().trim();
         const updatedRemoved = removedList.filter((id) => id !== normId && !normId.includes(id));
         localStorage.setItem("skillscatalyst_removed_roadmaps", JSON.stringify(updatedRemoved));
-      } catch (e) {
-        console.warn("Failed to save active roadmap locally:", e);
+      } catch (err) {
+        console.warn("Failed to save active roadmap locally:", err);
       }
     }
 
@@ -2020,13 +2134,13 @@ export default function RoadmapsPage() {
           },
           { onConflict: "user_id,roadmap_id,node_id" }
         );
-      } catch (e) {
-        console.warn("Failed to mark roadmap started in Supabase:", e);
+      } catch (err) {
+        console.warn("Failed to mark roadmap started in Supabase:", err);
       }
     }
 
     queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   };
 
 
@@ -2198,11 +2312,25 @@ export default function RoadmapsPage() {
                 className="relative rounded-2xl p-5 sm:p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between group bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
               >
                 <div>
-                  {/* Icon Badge */}
-                  <div
-                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
-                  >
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  {/* Icon Badge & Enroll Symbol */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
+                    >
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    {enrolledIds.has(item.id) ? (
+                      <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => handleEnrollRoadmap(item, e)}
+                        className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30 hover:scale-105 transition-all z-10"
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" /> Enroll
+                      </button>
+                    )}
                   </div>
 
                   {/* Title */}
@@ -2249,11 +2377,25 @@ export default function RoadmapsPage() {
                 className="relative rounded-2xl p-5 sm:p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between group bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
               >
                 <div>
-                  {/* Icon Badge */}
-                  <div
-                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
-                  >
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  {/* Icon Badge & Enroll Symbol */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
+                    >
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    {enrolledIds.has(item.id) ? (
+                      <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => handleEnrollRoadmap(item, e)}
+                        className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30 hover:scale-105 transition-all z-10"
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" /> Enroll
+                      </button>
+                    )}
                   </div>
 
                   {/* Title */}
