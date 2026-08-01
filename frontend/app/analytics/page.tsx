@@ -234,6 +234,57 @@ function RingProgress({ pct: p, color, size = 80, stroke = 8 }: { pct: number; c
   );
 }
 
+function formatCompanyName(slug: string): string {
+  if (!slug) return "";
+  const specialMap: Record<string, string> = {
+    "at-t": "AT&T",
+    "bookingcom": "Booking.com",
+    "c3-ai": "C3 AI",
+    "f5-networks": "F5 Networks",
+    "ge-digital": "GE Digital",
+    "ge-healthcare": "GE Healthcare",
+    "hp": "HP",
+    "hpe": "HPE",
+    "hrt": "HRT",
+    "hsbc": "HSBC",
+    "htc": "HTC",
+    "ibm": "IBM",
+    "imc": "IMC",
+    "ivp": "IVP",
+    "ixl": "IXL",
+    "jd": "JD.com",
+    "jpmorgan": "JPMorgan",
+    "jtg": "JTG",
+    "kla": "KLA",
+    "kpit": "KPIT",
+    "kpmg": "KPMG",
+    "lti": "LTI",
+    "maq-software": "MAQ Software",
+    "msci": "MSCI",
+    "nasdaq": "NASDAQ",
+    "ncr": "NCR",
+    "npci": "NPCI",
+    "nvidia": "NVIDIA",
+    "okx": "OKX",
+    "olx": "OLX",
+    "pwc": "PwC",
+    "rbc": "RBC",
+    "sap": "SAP",
+    "sig": "SIG",
+    "tcs": "TCS",
+    "ubs": "UBS",
+    "ukg": "UKG",
+    "ust": "UST",
+    "vk": "VK",
+  };
+  const lower = slug.toLowerCase().trim();
+  if (specialMap[lower]) return specialMap[lower];
+  return lower
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function AnalyticsPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
@@ -348,28 +399,91 @@ export default function AnalyticsPage() {
     const mediumPct = totalProblemsSolved > 0 ? Math.round((mediumCount / totalProblemsSolved) * 100) : 0;
     const hardPct = totalProblemsSolved > 0 ? Math.max(0, 100 - easyPct - mediumPct) : 0;
 
-    // Calculate Topic Mastery breakdown for local pattern radar
-    const topicSolvedCounts: Record<string, number> = {
-      "Two Pointers": 0,
-      "Sliding Window": 0,
-      "Prefix Sum": 0,
-      "Kadane's Algo": 0,
-      "Frequency Map": 0,
-      "Binary Search": 0,
-    };
+    // Collect deduplicated set of solved problem IDs from localStorage drawer solved & Supabase
+    const solvedDrawerIds = new Set<number>();
+    const companySolvedMap: Record<string, Set<string>> = {};
 
-    solvedKeys.forEach((key) => {
-      const meta = ALL_PROBLEMS_MAP[key];
-      if (meta && topicSolvedCounts[meta.topic] !== undefined) {
-        topicSolvedCounts[meta.topic]++;
+    // 1. Process dbLeetcodeProgress from Supabase
+    dbLeetcodeProgress.forEach((item) => {
+      if (item.status === "solved" || item.status === "completed" || item.completed === true) {
+        if (item.question_id) {
+          const num = Number(item.question_id);
+          if (!isNaN(num)) solvedDrawerIds.add(num);
+        }
+
+        const comp = (item.company_slug || "").toLowerCase().trim();
+        if (comp && comp !== "foundation") {
+          const qid = item.question_id ? String(item.question_id) : (item.question_title || "");
+          if (qid) {
+            if (!companySolvedMap[comp]) companySolvedMap[comp] = new Set();
+            companySolvedMap[comp].add(qid);
+          }
+        }
       }
     });
 
-    const topicRadarData = Object.keys(TOPIC_TOTALS).map((tName) => {
-      const solved = topicSolvedCounts[tName] || 0;
-      const total = TOPIC_TOTALS[tName];
-      const score = Math.min(100, Math.round((solved / total) * 100));
-      return { label: tName, score, solved, total };
+    // 2. Process localStorage drawer solved & solvedKeys
+    if (typeof window !== "undefined" && userId) {
+      try {
+        const rawDrawer = localStorage.getItem(`skillscatalyst_drawer_solved_${userId}`);
+        if (rawDrawer) {
+          const parsed = JSON.parse(rawDrawer);
+          Object.keys(parsed).forEach((pidStr) => {
+            if (parsed[pidStr]) {
+              const num = Number(pidStr);
+              if (!isNaN(num)) solvedDrawerIds.add(num);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+    solvedKeys.forEach((key) => {
+      const match = key.match(/^q_([a-z0-9-]+)_(\d+)_(.+)$/i);
+      if (match) {
+        const comp = match[1].toLowerCase().trim();
+        const qid = match[2];
+        if (comp && comp !== "foundation") {
+          if (!companySolvedMap[comp]) companySolvedMap[comp] = new Set();
+          companySolvedMap[comp].add(qid);
+        }
+      } else {
+        const num = Number(key.replace(/^q_/, ""));
+        if (!isNaN(num)) solvedDrawerIds.add(num);
+      }
+    });
+
+    // 3. Exact 12 tree node specifications matching Beginner Tree Data from Practice page
+    const NODE_SPECS = [
+      { id: "two-pointers", label: "Two Pointers (Arrays)", total: 21, ids: [26,27,88,283,349,350,455,905,922,977,2460,11,15,16,18,80,167,189,611,881,42] },
+      { id: "sliding-window-arr", label: "Sliding Window (Arrays)", total: 17, ids: [643,209,713,904,930,1004,1052,1248,1343,1423,1493,1658,1695,1838,2024,2958,992] },
+      { id: "prefix-sum", label: "Prefix Sum", total: 16, ids: [1480,724,303,1732,1991,238,560,525,523,930,974,1248,1314,1352,304,327] },
+      { id: "kadanes", label: "Kadane's Algorithm", total: 5, ids: [53,918,1749,1191,2321] },
+      { id: "two-pointers-str", label: "Two Pointer (Strings)", total: 12, ids: [125,344,345,392,1768,28,151,443,680,165,2109,408] },
+      { id: "sliding-window-str", label: "Sliding Window (Strings)", total: 9, ids: [1456,2379,3090,3,424,438,567,2516,76] },
+      { id: "frequency-map", label: "Frequency Map", total: 19, ids: [1,217,219,242,383,387,389,1207,1512,169,1748,350,49,347,451,560,659,692,1636] },
+      { id: "prefix-hashmap", label: "Prefix Sum + HashMap", total: 10, ids: [560,525,523,974,930,1248,1590,2845,325,437] },
+      { id: "classic-bs", label: "Classic Binary Search", total: 18, ids: [704,35,69,278,374,1539,33,34,74,81,153,162,540,875,1011,1283,2226,410] },
+      { id: "lower-upper-bound", label: "Lower / Upper Bound", total: 3, ids: [35,744,34] },
+      { id: "bs-on-answers", label: "Binary Search on Answers", total: 13, ids: [69,367,875,1011,1283,1482,1552,1760,1870,2187,2226,2251,410] },
+      { id: "search-2d-matrix", label: "Search in 2D Matrix", total: 5, ids: [240,74,1901,1428,302] },
+    ];
+
+    const topicRadarData = NODE_SPECS.map((spec) => {
+      const solved = spec.ids.filter((id) => solvedDrawerIds.has(id)).length;
+      const score = spec.total > 0 ? Math.min(100, Math.round((solved / spec.total) * 100)) : 0;
+      return { label: spec.label, score, solved, total: spec.total };
+    });
+
+    // Company list with exact deduplicated solved counts
+    const companyList = [
+      "amazon", "google", "meta", "microsoft", "apple", "netflix",
+      "uber", "tcs", "infosys", "accenture", "wipro", "flipkart",
+      "adobe", "goldman-sachs", "deloitte"
+    ].map((slug) => {
+      const count = companySolvedMap[slug] ? companySolvedMap[slug].size : 0;
+      const name = formatCompanyName(slug);
+      return { slug, name, count };
     });
 
     // Real video learning metrics from dashboard API
@@ -392,6 +506,7 @@ export default function AnalyticsPage() {
       mediumPct,
       hardPct,
       topicRadarData,
+      companyList,
       completedVideos,
       totalVideos,
       learningPct,
@@ -615,12 +730,18 @@ export default function AnalyticsPage() {
           <p className="text-xs text-slate-500 mb-4">Topic distribution</p>
           <RadarChart data={stats.topicRadarData} />
           <div className="grid grid-cols-2 gap-2 mt-4">
-            {stats.topicRadarData.map((s) => (
-              <div key={s.label} className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">{s.label}</span>
-                <span className="font-black text-indigo-300 tabular-nums">{s.score}%</span>
+            {stats.topicRadarData.filter((t) => t.solved > 0).length > 0 ? (
+              stats.topicRadarData.filter((t) => t.solved > 0).map((s) => (
+                <div key={s.label} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">{s.label}</span>
+                  <span className="font-black text-indigo-300 tabular-nums">{s.score}%</span>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 text-center text-xs text-slate-500 font-medium py-2">
+                0% Active Coverage
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
 
@@ -709,27 +830,80 @@ export default function AnalyticsPage() {
           <p className="text-xs text-slate-500 mb-5">Practice pattern coverage</p>
 
           <div className="space-y-4">
-            {stats.topicRadarData.map((t) => (
-              <div key={t.label}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-slate-300">{t.label}</span>
-                  <span className="text-xs font-black tabular-nums text-indigo-300">
-                    {t.solved}/{t.total} ({t.score}%)
-                  </span>
+            {stats.topicRadarData.filter((t) => t.solved > 0).length > 0 ? (
+              stats.topicRadarData.filter((t) => t.solved > 0).map((t) => (
+                <div key={t.label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-slate-300">{t.label}</span>
+                    <span className="text-xs font-black tabular-nums text-indigo-300">
+                      {t.solved}/{t.total} ({t.score}%)
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden bg-slate-800">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${t.score}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400"
+                    />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full overflow-hidden bg-slate-800">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${t.score}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400"
-                  />
-                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-xs text-slate-500 font-medium">
+                No active topic progress yet. Solve practice problems to unlock pattern metrics!
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
       </div>
+
+      {/* ── ROW 3: COMPANY TARGET SOLVED OVERVIEW ──────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="rounded-2xl p-6 bg-[#0d1428] border border-white/[0.08]"
+      >
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <span>Company Target Solved Overview</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Real-time solved problem counts aggregated per target company track
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {stats.companyList.map((comp) => (
+            <div
+              key={comp.slug}
+              className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+                comp.count > 0
+                  ? "bg-indigo-500/10 border-indigo-500/30 shadow-md shadow-indigo-500/5"
+                  : "bg-white/[0.02] border-white/[0.06]"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-white truncate">{comp.name}</span>
+                {comp.count > 0 ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0" />
+                )}
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-slate-400 font-medium">Solved</span>
+                <span className={`text-sm font-black tabular-nums ${comp.count > 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                  {comp.count}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
       {/* ── ROW 3: REAL RECENT ACTIVITY & AI CAREER HEALTH SUMMARY ───────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
