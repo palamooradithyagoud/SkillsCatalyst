@@ -1716,33 +1716,43 @@ export default function RoadmapsPage() {
 
     setCompletedState((prev) => ({ ...prev, [key]: newDoneState }));
 
-    if (!userId) return;
-
-    try {
-      if (newDoneState) {
-        await supabase.from("roadmap_progress").upsert(
-          {
-            user_id: userId,
-            roadmap_id: roadmapKey,
-            node_id: nodeName,
-            node_title: nodeName,
-            status: "completed",
-            completed_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,roadmap_id,node_id" }
-        );
-      } else {
-        await supabase
-          .from("roadmap_progress")
-          .delete()
-          .eq("user_id", userId)
-          .eq("roadmap_id", roadmapKey)
-          .eq("node_id", nodeName);
-      }
-      queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
-    } catch (err) {
-      console.warn("Failed to sync roadmap node completion to Supabase:", err);
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("skillscatalyst_roadmap_completed_nodes") || "{}";
+        const parsed = JSON.parse(raw);
+        parsed[key] = newDoneState;
+        localStorage.setItem("skillscatalyst_roadmap_completed_nodes", JSON.stringify(parsed));
+      } catch (e) {}
     }
+
+    if (userId) {
+      try {
+        if (newDoneState) {
+          await supabase.from("roadmap_progress").upsert(
+            {
+              user_id: userId,
+              roadmap_id: roadmapKey,
+              node_id: nodeName,
+              node_title: nodeName,
+              status: "completed",
+              completed_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,roadmap_id,node_id" }
+          );
+        } else {
+          await supabase
+            .from("roadmap_progress")
+            .delete()
+            .eq("user_id", userId)
+            .eq("roadmap_id", roadmapKey)
+            .eq("node_id", nodeName);
+        }
+      } catch (err) {
+        console.warn("Failed to sync roadmap node completion to Supabase:", err);
+      }
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
   };
 
   const isNodeDone = (roadmapKey: string, nodeName: string, defaultDone = false) => {
@@ -1763,6 +1773,18 @@ export default function RoadmapsPage() {
             timestamp: Date.now(),
           })
         );
+        const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps") || "[]";
+        const list = JSON.parse(rawEnrolled);
+        if (!list.some((item: any) => item.id === roadmap.id)) {
+          list.push({ id: roadmap.id, title: roadmap.displayTitle || roadmap.title });
+          localStorage.setItem("skillscatalyst_enrolled_roadmaps", JSON.stringify(list));
+        }
+
+        const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps") || "[]";
+        const removedList: string[] = JSON.parse(rawRemoved);
+        const normId = roadmap.id.toLowerCase().trim();
+        const updatedRemoved = removedList.filter((id) => id !== normId && !normId.includes(id));
+        localStorage.setItem("skillscatalyst_removed_roadmaps", JSON.stringify(updatedRemoved));
       } catch (e) {
         console.warn("Failed to save active roadmap locally:", e);
       }
@@ -1781,12 +1803,12 @@ export default function RoadmapsPage() {
           },
           { onConflict: "user_id,roadmap_id,node_id" }
         );
-        queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
       } catch (e) {
         console.warn("Failed to mark roadmap started in Supabase:", e);
       }
     }
 
+    queryClient.invalidateQueries({ queryKey: ["active-roadmap"] });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

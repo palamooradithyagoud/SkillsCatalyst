@@ -57,7 +57,7 @@ export async function fetchDashboardData() {
       if (res.ok) {
         const json = await res.json();
         if (json && json.metrics) {
-          return mergeLocalDashboardMetrics(json);
+          return await mergeLocalDashboardMetrics(json);
         }
       }
     }
@@ -89,6 +89,111 @@ export async function fetchActiveRoadmap() {
   return await getFallbackActiveRoadmapData();
 }
 
+export async function removeEnrolledRoadmap(roadmapId: string) {
+  const normId = normalizeRoadmapId(roadmapId);
+  try {
+    const authHeaders = await getAuthHeaders();
+    if (authHeaders.Authorization) {
+      await fetch(`${API_BASE}/api/dashboard/active-roadmap/${encodeURIComponent(normId)}`, {
+        method: "DELETE",
+        headers: { ...authHeaders },
+      });
+    }
+  } catch (e) {
+    console.warn("Backend removeEnrolledRoadmap failed:", e);
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      const userId = session.user.id;
+      await supabase
+        .from("roadmap_progress")
+        .delete()
+        .eq("user_id", userId)
+        .or(`roadmap_id.eq.${normId},roadmap_id.ilike.%${roadmapId}%`);
+    }
+  } catch (err) {
+    console.warn("Supabase removeEnrolledRoadmap failed:", err);
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps") || "[]";
+      const removedList: string[] = JSON.parse(rawRemoved);
+      if (!removedList.includes(normId)) {
+        removedList.push(normId);
+        localStorage.setItem("skillscatalyst_removed_roadmaps", JSON.stringify(removedList));
+      }
+
+      const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
+      if (rawEnrolled) {
+        const list = JSON.parse(rawEnrolled);
+        const filtered = list.filter((item: any) => normalizeRoadmapId(item.id || item.title) !== normId);
+        localStorage.setItem("skillscatalyst_enrolled_roadmaps", JSON.stringify(filtered));
+      }
+
+      const rawNodes = localStorage.getItem("skillscatalyst_roadmap_completed_nodes");
+      if (rawNodes) {
+        const nodesMap = JSON.parse(rawNodes);
+        const updatedMap: Record<string, boolean> = {};
+        for (const [key, val] of Object.entries(nodesMap)) {
+          const firstDash = key.indexOf("-");
+          const keyRid = firstDash > 0 ? key.substring(0, firstDash) : key;
+          if (normalizeRoadmapId(keyRid) !== normId) {
+            updatedMap[key] = val as boolean;
+          }
+        }
+        localStorage.setItem("skillscatalyst_roadmap_completed_nodes", JSON.stringify(updatedMap));
+      }
+    } catch {}
+  }
+
+  return { success: true };
+}
+
+export function normalizeRoadmapId(rawId: string): string {
+  if (!rawId) return "c-programming";
+  const clean = rawId.toLowerCase().trim();
+  if (clean.includes("cpp") || clean.includes("c++") || clean.includes("2. c++")) {
+    return "cpp-programming";
+  }
+  if (clean.includes("c-prog") || clean.includes("c prog") || clean.includes("systems c") || clean.includes("c programming") || clean.includes("1. c")) {
+    return "c-programming";
+  }
+  if (clean.includes("python")) {
+    return "python-mastery";
+  }
+  if (clean.includes("java") || clean.includes("spring")) {
+    return "java-spring-boot";
+  }
+  if (clean.includes("react") && !clean.includes("native")) {
+    return "react-development";
+  }
+  if (clean.includes("next")) {
+    return "nextjs-framework";
+  }
+  if (clean.includes("ai") || clean.includes("ml") || clean.includes("machine learning")) {
+    return "aiml-engineer";
+  }
+  if (clean.includes("data analyst") || clean.includes("analyst")) {
+    return "data-analyst";
+  }
+  if (clean.includes("data scientist") || clean.includes("scientist")) {
+    return "data-scientist";
+  }
+  if (clean.includes("cyber") || clean.includes("security") || clean.includes("hacking")) {
+    return "cybersecurity";
+  }
+  if (clean.includes("devops") || clean.includes("cloud")) {
+    return "devops-engineer";
+  }
+  if (clean.includes("full") || clean.includes("web")) {
+    return "full-stack-developer";
+  }
+  return clean;
+}
+
 export async function getFallbackActiveRoadmapData() {
   let userId: string | null = null;
   let rmData: any[] = [];
@@ -107,6 +212,10 @@ export async function getFallbackActiveRoadmapData() {
 
   let localActiveTitle = "";
   let localActiveId = "";
+  let localEnrolled: any[] = [];
+  let localCompletedMap: Record<string, boolean> = {};
+
+  let localRemovedList: string[] = [];
   if (typeof window !== "undefined") {
     try {
       const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
@@ -115,44 +224,100 @@ export async function getFallbackActiveRoadmapData() {
         if (parsed?.title) localActiveTitle = parsed.title;
         if (parsed?.id) localActiveId = parsed.id;
       }
+      const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
+      if (rawEnrolled) localEnrolled = JSON.parse(rawEnrolled);
+      const rawNodes = localStorage.getItem("skillscatalyst_roadmap_completed_nodes");
+      if (rawNodes) localCompletedMap = JSON.parse(rawNodes);
+      const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps");
+      if (rawRemoved) localRemovedList = JSON.parse(rawRemoved);
     } catch {}
   }
 
-  const completedNodes = rmData
-    .filter((r) => r.status === "completed" && r.node_id !== "_roadmap_started")
-    .map((r) => r.node_id || r.node_title);
+  const groups: Record<string, { completedNodes: string[]; lastActivity: string }> = {};
+  const orderedIds: string[] = [];
 
-  const rawId = rmData.length > 0 ? rmData[0].roadmap_id : localActiveId;
-  const rawTitle = localActiveTitle || rawId || "";
+  const addRidGroup = (rawRid: string, activityTime = new Date().toISOString()) => {
+    if (!rawRid) return null;
+    const rid = normalizeRoadmapId(rawRid);
+    if (localRemovedList.includes(rid)) return null;
+    if (!groups[rid]) {
+      groups[rid] = { completedNodes: [], lastActivity: activityTime };
+      orderedIds.push(rid);
+    }
+    return rid;
+  };
 
-  if (!rawId && !rawTitle && completedNodes.length === 0) {
+  for (const r of rmData) {
+    const rawRid = r.roadmap_id;
+    if (!rawRid) continue;
+    const rid = addRidGroup(rawRid, r.completed_at || new Date().toISOString());
+    if (rid && r.status === "completed" && r.node_id !== "_roadmap_started") {
+      const nid = r.node_id || r.node_title;
+      if (nid && !groups[rid].completedNodes.includes(nid)) {
+        groups[rid].completedNodes.push(nid);
+      }
+    }
+  }
+
+  if (localActiveId) addRidGroup(localActiveId);
+  for (const e of localEnrolled) {
+    if (e?.id) addRidGroup(e.id);
+  }
+
+  // Aggregate local completed nodes
+  for (const [key, isDone] of Object.entries(localCompletedMap)) {
+    if (!isDone) continue;
+    const firstDash = key.indexOf("-");
+    if (firstDash > 0) {
+      const rawRid = key.substring(0, firstDash);
+      const nid = key.substring(firstDash + 1);
+      const rid = addRidGroup(rawRid);
+      if (rid && nid && !groups[rid].completedNodes.includes(nid)) {
+        groups[rid].completedNodes.push(nid);
+      }
+    }
+  }
+
+  if (orderedIds.length === 0) {
     return { has_active_roadmap: false };
   }
 
-  const meta = getRoadmapMeta(rawTitle || rawId, completedNodes);
-  const completedCount = completedNodes.length;
+  const roadmaps = orderedIds.map((rid) => {
+    const g = groups[rid];
+    const meta = getRoadmapMeta(rid, g.completedNodes);
+    const completedCount = g.completedNodes.length;
+    const title = meta.name || localActiveTitle || rid;
+    const total = meta.total || 20;
+    const pct = total > 0 ? Math.min(100, Math.round((completedCount / total) * 100)) : 0;
 
-  if (!meta.name && completedCount === 0) {
-    return { has_active_roadmap: false };
-  }
+    return {
+      roadmap_id: rid,
+      title: title,
+      progress_percent: pct,
+      completed_milestones: completedCount,
+      total_milestones: total,
+      current_module: null,
+      next_module: {
+        id: meta.nextTopic,
+        title: meta.nextTopic,
+      },
+      last_activity_at: g.lastActivity,
+    };
+  });
 
-  const title = meta.name || rawTitle || "Active Roadmap";
-  const total = meta.total || 20;
-  const pct = total > 0 ? Math.min(100, Math.round((completedCount / total) * 100)) : 0;
+  const first = roadmaps[0];
 
   return {
     has_active_roadmap: true,
-    roadmap_id: rawId || "active",
-    title: title,
-    progress_percent: pct,
-    completed_milestones: completedCount,
-    total_milestones: total,
-    current_module: null,
-    next_module: {
-      id: meta.nextTopic,
-      title: meta.nextTopic,
-    },
-    last_activity_at: rmData.length > 0 ? rmData[0].completed_at : new Date().toISOString(),
+    roadmaps,
+    roadmap_id: first.roadmap_id,
+    title: first.title,
+    progress_percent: first.progress_percent,
+    completed_milestones: first.completed_milestones,
+    total_milestones: first.total_milestones,
+    current_module: first.current_module,
+    next_module: first.next_module,
+    last_activity_at: first.last_activity_at,
   };
 }
 
@@ -179,72 +344,182 @@ export function saveActivePlaylistTotal(total: number) {
 export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[] = []) {
   if (!rawTitleOrId) return { name: "", nextTopic: "Explore roadmaps on Roadmaps page", total: 20 };
 
-  const clean = rawTitleOrId.toLowerCase().trim();
+  const norm = normalizeRoadmapId(rawTitleOrId);
 
-  if (clean.includes("c-prog") || clean.includes("c prog") || clean.includes("systems c") || clean.includes("c programming") || clean === "1. c programming") {
-    const nodes = [
-      "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program", "Code Editors & IDEs (VSCode / Vim / NVim)",
-      "Variables (Declaration vs Definition)", "Initialization & Printing Variables", "Basic Data Types (int / float / double / char)", "Fixed-Width Integers & Booleans", "Type Conversion & Casting", "Type Qualifiers (const / volatile / restrict / _Atomic)",
-      "Operators (Arithmetic / Comparison / Logical / Ternary / Bitwise)", "Control Flow (if-else / switch)", "Loops (for / while / do-while / break / continue)", "main Function & Command-Line Arguments", "Variable Scopes", "Recursive & Variadic Functions",
-      "Memory Model (Stack vs Heap & Lifetimes)", "Pointer Basics & Syntax", "Null Pointers & void Pointers", "Pointer Arithmetic",
-      "Structs & Typedef", "Unions & Enums", "Arrays & Dynamic Arrays", "Strings & Text Processing", "Linked Lists, Hash Maps & Ring Buffers",
-      "Dynamic Memory Allocation (malloc / calloc / realloc / free)", "Memory Leakage & Valgrind", "Dangling Pointers & Undefined Behavior", "Buffer Overflow Prevention",
-      "Header Files & Code Structure", "Linkage & Storage Classes (static / extern)", "Error Handling (errno & Exit Codes)", "Non-Local Jumps (setjmp / longjmp)",
-      "Streams & File Pointers (stdio.h)", "Binary vs Text File Mode", "Data Utilities & Text Processing (stdlib.h / string.h / ctype.h)", "Math, Time & Diagnostics (math.h / time.h / assert.h)", "OS & Signal Interfaces (signal.h)",
-      "Preprocessor Macros & Conditional Compilation", "Compilers & Optimization (GCC / Clang / TinyCC)", "Symbol Tables, Linking & ABI", "Build Systems (GNU Make / CMake / Ninja / Meson)", "C Package Managers (vcpkg / Conan)",
-      "Debugging (GDB / LLDB / Valgrind / ASan / LSan)", "Testing Frameworks (assert.h / Unity / CMocka / Check)", "Idioms (Function Pointers / Callbacks / Opaque Pointers / OOP C)", "Concurrency & Processes (POSIX Threads / Mutexes / IPC)", "C Standards (C89 / C99 / C11 / C17 / C23)"
-    ];
-    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "C Programming Mastery", nextTopic: next, total: nodes.length };
-  }
+  const ROADMAP_MAP: Record<string, { name: string; nodes: string[] }> = {
+    "c-programming": {
+      name: "C Programming Mastery",
+      nodes: [
+        "Introduction (C vs Assembly / C vs C++)", "Installing C & Toolchains", "Running Your First C Program", "Code Editors & IDEs (VSCode / Vim / NVim)",
+        "Variables (Declaration vs Definition)", "Initialization & Printing Variables", "Basic Data Types (int / float / double / char)", "Fixed-Width Integers & Booleans", "Type Conversion & Casting", "Type Qualifiers (const / volatile / restrict / _Atomic)",
+        "Operators (Arithmetic / Comparison / Logical / Ternary / Bitwise)", "Control Flow (if-else / switch)", "Loops (for / while / do-while / break / continue)", "main Function & Command-Line Arguments", "Variable Scopes", "Recursive & Variadic Functions",
+        "Memory Model (Stack vs Heap & Lifetimes)", "Pointer Basics & Syntax", "Null Pointers & void Pointers", "Pointer Arithmetic",
+        "Structs & Typedef", "Unions & Enums", "Arrays & Dynamic Arrays", "Strings & Text Processing", "Linked Lists, Hash Maps & Ring Buffers",
+        "Dynamic Memory Allocation (malloc / calloc / realloc / free)", "Memory Leakage & Valgrind", "Dangling Pointers & Undefined Behavior", "Buffer Overflow Prevention",
+        "Header Files & Code Structure", "Linkage & Storage Classes (static / extern)", "Error Handling (errno & Exit Codes)", "Non-Local Jumps (setjmp / longjmp)",
+        "Streams & File Pointers (stdio.h)", "Binary vs Text File Mode", "Data Utilities & Text Processing (stdlib.h / string.h / ctype.h)", "Math, Time & Diagnostics (math.h / time.h / assert.h)", "OS & Signal Interfaces (signal.h)",
+        "Preprocessor Macros & Conditional Compilation", "Compilers & Optimization (GCC / Clang / TinyCC)", "Symbol Tables, Linking & ABI", "Build Systems (GNU Make / CMake / Ninja / Meson)", "C Package Managers (vcpkg / Conan)",
+        "Debugging (GDB / LLDB / Valgrind / ASan / LSan)", "Testing Frameworks (assert.h / Unity / CMocka / Check)", "Idioms (Function Pointers / Callbacks / Opaque Pointers / OOP C)", "Concurrency & Processes (POSIX Threads / Mutexes / IPC)", "C Standards (C89 / C99 / C11 / C17 / C23)"
+      ]
+    },
+    "cpp-programming": {
+      name: "C++ Development Mastery",
+      nodes: [
+        "Introduction to Language (What is C++ / Why C++ / C vs C++)", "Setting Up Environment (Installing C++ / IDEs / VSCode)", "Running Your First C++ Program",
+        "Basic Operations (Arithmetic / Logical / Bitwise Operators)", "Control Flow & Statements (if-else / switch / goto / loops)", "Data Types (Static vs Dynamic Typing & RTTI)", "Language Concepts (auto / Type Casting static_cast & dynamic_cast)", "Undefined Behavior (UB), ADL & Name Mangling",
+        "Functions & Function Overloading", "Operator Overloading", "Lambda Expressions & Functional Tools", "Static Polymorphism",
+        "Pointers & References (References / Memory Model / Object Lifetimes)", "Raw Pointers & New/Delete Operators", "Memory Leakage Prevention", "Smart Pointers (unique_ptr / shared_ptr / weak_ptr)",
+        "Structuring Codebase (Headers & CPP Files / Forward Declarations / Namespaces)", "Structures and Classes", "Object Oriented Programming & Dynamic Polymorphism (Virtual Methods & VTables)", "Inheritance (Multiple & Diamond Inheritance)", "Rule of Zero, Three, and Five",
+        "Templates & Template Specialization (Full & Partial)", "Variadic Templates", "Type Traits & SFINAE",
+        "STL Containers (vector / map / set / deque)", "STL Algorithms & Date/Time", "Multithreading & Concurrency", "Exception Handling (Exceptions / Exit Codes / Access Violations)",
+        "C++ Idioms (RAII / Pimpl / CRTP / Copy-and-Swap / Erase-Remove)", "Non-Copyable & Non-Moveable Idioms", "C++ Standards Evolution (C++11 / C++14 / C++17 / C++20 / C++23)",
+        "Compilers & Compiler Stages (GCC / Clang++ / MSVC / MinGW)", "Debuggers & Symbols (GDB / WinDbg / Debugger Messages)", "Build Systems (CMake / Makefile / Ninja)", "Package Managers (vcpkg / Conan / Spack / NuGet)",
+        "Popular Libraries (Boost / POCO / protobuf / gRPC / fmt / ranges_v3 / OpenCV)", "Testing & UI Frameworks (gtest / gmock / Catch2 / Qt / PyTorch C++)"
+      ]
+    },
+    "python-mastery": {
+      name: "Python Mastery",
+      nodes: [
+        "Basic Syntax", "Variables and Data Types", "Operators", "Working with Strings", "Conditionals", "Loops", "Lists, Tuples, Sets", "Dictionaries", "Type Casting", "Functions, Builtin Functions", "Exceptions", "Comments & Type Annotations",
+        "Arrays and Linked Lists", "HashMaps", "Heaps, Stacks and Queues", "Binary Search Tree", "Recursion", "Sorting Algorithms",
+        "Builtin & Custom Modules", "Variable Scope", "List Comprehensions", "Generator Expressions", "Lambdas", "Decorators", "Iterators", "Context Manager", "Regular Expressions", "Paradigms",
+        "Classes", "Methods", "Inheritance", "Encapsulation",
+        "PyPI & Pip", "Poetry, Conda, uv & pdm", "pyproject.toml & Configuration", "Common Packages", "Environments (virtualenv / pyenv / Pipenv)",
+        "Static Typing (typing / mypy / pyright / pyre)", "Pydantic Data Validation", "Code Formatting (black / ruff / yapf)",
+        "Multiprocessing", "Asynchrony & AsyncIO", "Threading", "Global Interpreter Lock (GIL)",
+        "File Handling", "glob Pattern Matching", "Sphinx & Documentation",
+        "unittest / pyUnit", "doctest", "pytest", "tox",
+        "FastAPI", "Django", "Flask", "Sanic, Tornado & gevent", "aiohttp & Pyramid", "Plotly Dash"
+      ]
+    },
+    "java-spring-boot": {
+      name: "Java & Spring Boot Mastery",
+      nodes: [
+        "Basic Syntax", "Lifecycle of a Program", "Data Types & Variables", "Type Casting", "Strings and Methods", "Math Operations", "Arrays", "Conditionals & Loops", "Basics of OOP",
+        "Classes and Objects", "Attributes and Methods", "Access Specifiers", "Static & Final Keywords", "Nested Classes & Packages", "Object Lifecycle & Method Chaining", "Inheritance & Encapsulation", "Abstraction & Interfaces", "Method Overloading / Overriding", "Enums & Records", "Initializer Block & Binding (Static vs Dynamic)", "Pass by Value / Pass by Reference",
+        "Exception Handling", "Lambda Expressions", "Annotations", "Modules", "Optionals", "Functional Programming (High Order Functions & Interfaces)", "Stream API", "Regular Expressions & Cryptography", "Date and Time API", "Networking",
+        "Array vs ArrayList", "Set & Map", "Queue & Deque", "Stack & Iterator", "Generic Collections",
+        "volatile keyword", "Java Memory Model", "Threads & Multithreading", "Virtual Threads (Project Loom)", "Concurrency Utilities",
+        "I/O Operations", "File Operations", "Dependency Injection",
+        "Maven", "Gradle", "Bazel",
+        "Spring (Spring Boot)", "Quarkus", "Javalin", "Play Framework",
+        "JDBC", "Hibernate ORM", "Spring Data JPA", "EBean",
+        "Javadoc & Documentation", "Logging Frameworks (SLF4J / Log4j2 / Logback / TinyLog)", "Unit Testing (JUnit & TestNG)", "Integration Testing (REST Assured & JMeter)"
+      ]
+    },
+    "react-development": {
+      name: "React Mastery",
+      nodes: [
+        "CLI Tools (Vite)", "Functional Components & JSX", "Props vs State & Component Lifecycle", "Conditional Rendering & Composition", "Lists, Keys & Event Handling", "Render Props & High Order Components (HOC)",
+        "Basic Hooks (useState / useEffect / useRef)", "Performance Hooks (useMemo / useCallback)", "State & Context Hooks (useReducer / useContext)", "Creating Custom Hooks & Hooks Best Practices",
+        "Routers (React Router / Tanstack Router)", "State Management (Context API / Zustand / Jotai / MobX)", "Writing CSS (Tailwind CSS / CSS Modules / Panda CSS)",
+        "UI Component Libraries (Shadcn UI / Material UI / Chakra UI)", "Headless UI Components (Radix UI / React Aria / Ark UI)",
+        "REST API Calls (TanStack Query / Axios / SWR / RTK Query)", "GraphQL APIs (Apollo Client / Relay / urql)",
+        "Form Libraries (React Hook Form / Formik)", "TypeScript Integration with React", "Schema Validation (Zod)",
+        "Unit Testing Tools (Vitest / Jest)", "Component Testing (React Testing Library)", "End-to-End Testing (Playwright / Cypress)",
+        "Framer Motion", "React Spring & GSAP",
+        "Error Boundaries", "Portals & Modal Overlays", "Suspense Boundaries & Server APIs",
+        "React Frameworks (Next.js / Astro / React Router)", "Mobile Applications (React Native)"
+      ]
+    },
+    "nextjs-framework": {
+      name: "Next.js Mastery",
+      nodes: [
+        "Introduction (Why Next.js / Next.js vs Remix / SPA vs SSR)", "Rendering Strategies (SSR / SSG / CSR / SPA)", "Getting Started (create-next-app)",
+        "Types of Routers (Pages Router vs App Router)", "Routing Terminology & Rendering Pages", "Layouts and Templates", "Loading, Streaming & Error States", "Routing Patterns (Parallel Routes & Intercepting Routes)",
+        "Middleware (Route Matcher / Cookies / Setting Headers)", "Structuring Routes & Use Cases", "API Endpoints (Static vs Dynamic / Caching / Streaming / Redirects)", "Internationalization (i18n)",
+        "Fetching Locations (Client vs Server Data Fetching)", "Data Fetching Patterns (Parallel vs Sequential & Preloading Data)", "Handling Sensitive Data", "Server Actions & Mutations",
+        "Caching Data (Fetch Memoization / React Cache / Revalidating Data)", "Revalidation & Error Recovery", "Runtimes (Node.js Runtime vs Edge Runtime)", "Rendering Composition (Client Rendered vs Server Rendered)",
+        "Global CSS & CSS Modules", "Tailwind CSS & Sass", "CSS-in-JS Solutions",
+        "Image, Video & Font Optimization (next/image / next/font)", "Metadata API & SEO Optimization", "Package Bundling & Lazy Loading", "Scripts & Third-Party Library Optimizations", "Memory Usage Optimization",
+        "Setting Up Tooling (TypeScript / ESLint / Prettier)", "Environment Variables", "Markdown and MDX Integration", "Custom Server Setup",
+        "Analytics & Instrumentation (OpenTelemetry & Vercel Analytics)", "Testing Frameworks (Vitest / Jest)", "End-to-End Testing (Playwright / Cypress)",
+        "Preparing for Production", "Deployment Options (Node.js Server / Docker Container / Static Export / Adapters)"
+      ]
+    },
+    "full-stack-developer": {
+      name: "Full Stack Developer Track",
+      nodes: [
+        "HTML5 & Modern CSS", "TypeScript Essentials", "Git & Version Control",
+        "React 19 & Next.js 16", "FastAPI & Python", "PostgreSQL & Supabase",
+        "Arrays & Hashing", "API Rate Limiting Design", "Database Indexing",
+        "Full-Stack SaaS Platform", "CI/CD Pipeline Automation",
+        "Microservices Architecture", "Redis Caching & Queue Workers"
+      ]
+    },
+    "aiml-engineer": {
+      name: "AI/ML Engineer Track",
+      nodes: [
+        "Python for AI", "NumPy & Pandas Dataframes", "Linear Algebra & Calculus",
+        "Scikit-Learn Classifiers", "PyTorch Fundamentals", "Convolutional Networks (CNNs)",
+        "LLM Architecture", "RAG Pipeline Design", "Vector Embeddings & Pinecone",
+        "Groq LLM Integration", "Agentic RAG Engine",
+        "LoRA / QLoRA Tuning", "vLLM Production Serving"
+      ]
+    },
+    "data-analyst": {
+      name: "Data Analyst Track",
+      nodes: [
+        "SQL Joins & Aggregations", "Window Functions (RANK)", "Subqueries & CTEs", "Database Normalization",
+        "Pandas Data Wrangling", "Data Cleaning & Imputation", "Matplotlib & Seaborn", "Exploratory Analysis",
+        "PowerBI Dashboard Design", "Tableau Calculated Fields", "Interactive Filtering", "DAX Formulas",
+        "Hypothesis Testing (t-test)", "A/B Testing Methodology", "Correlation Analysis", "Probability Distributions",
+        "Automated Reports", "Executive KPI Scorecards", "Data Storytelling"
+      ]
+    },
+    "data-scientist": {
+      name: "Data Scientist Track",
+      nodes: [
+        "Inferential Statistics", "Bayesian Probability", "Confidence Intervals", "Sampling Methods",
+        "Feature Engineering", "XGBoost & Random Forests", "Hyperparameter Tuning", "ROC-AUC Scoring",
+        "Neural Net Architectures", "Time Series Forecasting", "Text Mining & Sentiment",
+        "PySpark MLlib", "BigQuery ML", "Distributed Feature Store",
+        "FastAPI Model Endpoint", "A/B Test Deployment", "Model Drift Tracking"
+      ]
+    },
+    "devops-engineer": {
+      name: "DevOps Engineer Track",
+      nodes: [
+        "Bash Scripting", "Linux Admin & Processes", "SSH & Firewall Rules", "Networking (IP/Subnets)",
+        "Docker Image Optimization", "Docker Compose", "Container Security Scan",
+        "GitHub Actions Workflows", "Automated Testing Sprints", "Docker Hub / ECR Registry",
+        "Terraform AWS Provisioning", "Ansible Config Mgmt", "Cloud Security IAM",
+        "Kubernetes Pods & Deploy", "Helm Charts", "Prometheus & Grafana", "Log Aggregation"
+      ]
+    },
+    "cybersecurity": {
+      name: "Cybersecurity Specialist Track",
+      nodes: [
+        "TCP/IP & SSL/TLS Protocols", "Linux Security Hardening", "PKI & Encryption",
+        "Nmap Reconnaissance", "Metasploit Exploitation", "Burp Suite Web Security", "OWASP Top 10",
+        "Firewall & IDS/IPS Config", "Zero Trust Architecture", "VPN & Tunnels", "Endpoint Protection",
+        "Splunk / Elastic SIEM", "Wireshark Packet Analysis", "Threat Hunting Playbooks",
+        "SOC2 & ISO 27001 Audit", "PCI-DSS Security Controls", "PenTest Final Reports"
+      ]
+    }
+  };
 
-  if (clean.includes("cpp") || clean.includes("c++")) {
-    const nodes = [
-      "Introduction to C++", "Setting Up Environment", "Running First C++ Program",
-      "Variables & Basic Data Types", "Operators & Control Flow", "Functions & Pass-by-Reference",
-      "Pointers & References", "Dynamic Memory (new/delete)", "Classes & Objects",
-      "Constructors & Destructors", "Inheritance & Polymorphism", "STL Vectors & Strings",
-      "STL Maps & Iterators", "Templates & Smart Pointers", "Move Semantics & Lambdas"
-    ];
-    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "C++ Development", nextTopic: next, total: nodes.length };
-  }
-
-  if (clean.includes("python")) {
-    const nodes = [
-      "Introduction & Installing Python", "Variables & Data Types", "Control Flow & Loops",
-      "Functions & Lambdas", "Lists, Dicts & Sets", "OOP in Python",
-      "File I/O & Exceptions", "FastAPI / Django Web Framework", "NumPy & Pandas Basics"
-    ];
-    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "Python Mastery", nextTopic: next, total: nodes.length };
-  }
-
-  if (clean.includes("full") || clean.includes("web") || clean.includes("react")) {
-    const nodes = [
-      "HTML5 & Semantic Markup", "CSS3 & Flexbox/Grid", "JavaScript ES6+ Fundamentals",
-      "DOM Manipulation & Events", "Async JS & Promises", "React.js Components & Hooks",
-      "Next.js App Router", "Node.js & Express APIs", "Supabase & PostgreSQL", "Vercel Deployment"
-    ];
-    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "Full Stack Web Dev", nextTopic: next, total: nodes.length };
-  }
-
-  if (clean.includes("devops") || clean.includes("cloud")) {
-    const nodes = [
-      "Linux Command Line & Shell", "Git & GitHub Version Control", "Docker Containers",
-      "Docker Compose", "CI/CD GitHub Actions", "Kubernetes Fundamentals", "AWS Infrastructure"
-    ];
-    const next = nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
-    return { name: "DevOps & Cloud", nextTopic: next, total: nodes.length };
+  const matched = ROADMAP_MAP[norm];
+  if (matched) {
+    const next = matched.nodes.find((n) => !userCompletedNodes.some((c) => c.toLowerCase().includes(n.toLowerCase()))) || "Roadmap Completed 🎉";
+    return { name: matched.name, nextTopic: next, total: matched.nodes.length };
   }
 
   const formattedName = rawTitleOrId.replace(/^\d+\.\s*/, "").replace(/-/g, " ").trim();
   return { name: formattedName, nextTopic: "Next Milestone Topic", total: 15 };
 }
 
-function mergeLocalDashboardMetrics(backendData: any) {
+async function mergeLocalDashboardMetrics(backendData: any) {
   if (!backendData || !backendData.metrics) return backendData;
+  if (!backendData.metrics.roadmapProgress?.roadmaps) {
+    const activeRm = await getFallbackActiveRoadmapData();
+    if (activeRm && activeRm.roadmaps) {
+      backendData.metrics.roadmapProgress = {
+        ...backendData.metrics.roadmapProgress,
+        roadmaps: activeRm.roadmaps,
+      };
+    }
+  }
   return backendData;
 }
 
@@ -352,6 +627,8 @@ async function getFallbackDashboardData() {
   const roadmapSubtitle = roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed";
   const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : "No upload yet";
 
+  const activeRm = await getFallbackActiveRoadmapData();
+
   return {
     user: {
       name: userName,
@@ -366,9 +643,14 @@ async function getFallbackDashboardData() {
         subtitle: subtitle,
       },
       roadmapProgress: {
-        count: roadmapCount,
-        percentage: roadmapPct,
-        subtitle: roadmapSubtitle,
+        has_active_roadmap: activeRm.has_active_roadmap,
+        roadmaps: activeRm.roadmaps || [],
+        count: activeRm.completed_milestones ?? roadmapCount,
+        percentage: activeRm.progress_percent ?? 0,
+        subtitle: activeRm.title ? `Following: ${activeRm.title}` : "No active roadmap",
+        roadmapName: activeRm.title,
+        nextTopic: activeRm.next_module?.title || "",
+        roadmapId: activeRm.roadmap_id,
       },
       resumeReadiness: {
         percentage: resumeScore,

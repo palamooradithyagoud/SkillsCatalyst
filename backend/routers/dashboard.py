@@ -22,43 +22,212 @@ ROADMAP_SPECS = {
         ]
     },
     "cpp-programming": {
-        "name": "C++ Development",
+        "name": "C++ Development Mastery",
         "nodes": [
             "Introduction to Language (What is C++ / Why C++ / C vs C++)", "Setting Up Environment (Installing C++ / IDEs / VSCode)", "Running Your First C++ Program",
-            "Variables & Basic Data Types", "Operators (Arithmetic / Comparison / Logical / Bitwise)", "Control Flow (if-else / switch / loops)",
-            "Functions & Pass-by-Value vs Reference", "Pointers & References", "Dynamic Memory (new / delete)",
-            "Classes & Objects", "Constructors & Destructors", "Inheritance & Polymorphism", "Virtual Functions & Abstract Classes",
-            "STL Vectors & Strings", "STL Maps & Sets", "Iterators & Algorithms",
-            "Templates & Generic Programming", "Smart Pointers (unique_ptr / shared_ptr)", "Lambda Expressions & Move Semantics"
+            "Basic Operations (Arithmetic / Logical / Bitwise Operators)", "Control Flow & Statements (if-else / switch / goto / loops)", "Data Types (Static vs Dynamic Typing & RTTI)", "Language Concepts (auto / Type Casting static_cast & dynamic_cast)", "Undefined Behavior (UB), ADL & Name Mangling",
+            "Functions & Function Overloading", "Operator Overloading", "Lambda Expressions & Functional Tools", "Static Polymorphism",
+            "Pointers & References (References / Memory Model / Object Lifetimes)", "Raw Pointers & New/Delete Operators", "Memory Leakage Prevention", "Smart Pointers (unique_ptr / shared_ptr / weak_ptr)",
+            "Structuring Codebase (Headers & CPP Files / Forward Declarations / Namespaces)", "Structures and Classes", "Object Oriented Programming & Dynamic Polymorphism (Virtual Methods & VTables)", "Inheritance (Multiple & Diamond Inheritance)", "Rule of Zero, Three, and Five",
+            "Templates & Template Specialization (Full & Partial)", "Variadic Templates", "Type Traits & SFINAE",
+            "STL Containers (vector / map / set / deque)", "STL Algorithms & Date/Time", "Multithreading & Concurrency", "Exception Handling (Exceptions / Exit Codes / Access Violations)",
+            "C++ Idioms (RAII / Pimpl / CRTP / Copy-and-Swap / Erase-Remove)", "Non-Copyable & Non-Moveable Idioms", "C++ Standards Evolution (C++11 / C++14 / C++17 / C++20 / C++23)",
+            "Compilers & Compiler Stages (GCC / Clang++ / MSVC / MinGW)", "Debuggers & Symbols (GDB / WinDbg / Debugger Messages)", "Build Systems (CMake / Makefile / Ninja)", "Package Managers (vcpkg / Conan / Spack / NuGet)",
+            "Popular Libraries (Boost / POCO / protobuf / gRPC / fmt / ranges_v3 / OpenCV)", "Testing & UI Frameworks (gtest / gmock / Catch2 / Qt / PyTorch C++)"
         ]
     },
-    "python": {
+    "python-mastery": {
         "name": "Python Mastery",
         "nodes": [
-            "Introduction & Installing Python", "Variables & Data Types", "Control Flow & Loops",
-            "Functions & Lambdas", "Lists, Tuples, Dicts & Sets", "Modules & Imports",
-            "File I/O & Exception Handling", "OOP in Python (Classes & Inheritance)", "Virtual Environments & Pip",
-            "NumPy & Pandas Basics", "FastAPI / Django Web Framework", "PyTest & Unit Testing"
+            "Basic Syntax", "Variables and Data Types", "Operators", "Working with Strings", "Conditionals", "Loops", "Lists, Tuples, Sets", "Dictionaries", "Type Casting", "Functions, Builtin Functions", "Exceptions", "Comments & Type Annotations",
+            "Arrays and Linked Lists", "HashMaps", "Heaps, Stacks and Queues", "Binary Search Tree", "Recursion", "Sorting Algorithms",
+            "Builtin & Custom Modules", "Variable Scope", "List Comprehensions", "Generator Expressions", "Lambdas", "Decorators", "Iterators", "Context Manager", "Regular Expressions", "Paradigms",
+            "Classes", "Methods", "Inheritance", "Encapsulation",
+            "PyPI & Pip", "Poetry, Conda, uv & pdm", "pyproject.toml & Configuration", "Common Packages", "Environments (virtualenv / pyenv / Pipenv)",
+            "Static Typing (typing / mypy / pyright / pyre)", "Pydantic Data Validation", "Code Formatting (black / ruff / yapf)",
+            "Multiprocessing", "Asynchrony & AsyncIO", "Threading", "Global Interpreter Lock (GIL)",
+            "File Handling", "glob Pattern Matching", "Sphinx & Documentation",
+            "unittest / pyUnit", "doctest", "pytest", "tox",
+            "FastAPI", "Django", "Flask", "Sanic, Tornado & gevent", "aiohttp & Pyramid", "Plotly Dash"
         ]
     },
-    "full-stack": {
-        "name": "Full Stack Developer",
+    "java-spring-boot": {
+        "name": "Java & Spring Boot Mastery",
         "nodes": [
-            "HTML5 & Semantic Markup", "CSS3, Flexbox & Grid", "JavaScript ES6+ Fundamentals",
-            "DOM Manipulation & Events", "Async JS, Promises & Fetch", "React.js Components & Hooks",
-            "Next.js App Router & SSR", "TailwindCSS Styling", "Node.js & Express APIs",
-            "Supabase & PostgreSQL Databases", "REST & GraphQL APIs", "Git, GitHub & Vercel Deployment"
+            "Basic Syntax", "Lifecycle of a Program", "Data Types & Variables", "Type Casting", "Strings and Methods", "Math Operations", "Arrays", "Conditionals & Loops", "Basics of OOP",
+            "Classes and Objects", "Attributes and Methods", "Access Specifiers", "Static & Final Keywords", "Nested Classes & Packages", "Object Lifecycle & Method Chaining", "Inheritance & Encapsulation", "Abstraction & Interfaces", "Method Overloading / Overriding", "Enums & Records", "Initializer Block & Binding (Static vs Dynamic)", "Pass by Value / Pass by Reference",
+            "Exception Handling", "Lambda Expressions", "Annotations", "Modules", "Optionals", "Functional Programming (High Order Functions & Interfaces)", "Stream API", "Regular Expressions & Cryptography", "Date and Time API", "Networking",
+            "Array vs ArrayList", "Set & Map", "Queue & Deque", "Stack & Iterator", "Generic Collections",
+            "volatile keyword", "Java Memory Model", "Threads & Multithreading", "Virtual Threads (Project Loom)", "Concurrency Utilities",
+            "I/O Operations", "File Operations", "Dependency Injection",
+            "Maven", "Gradle", "Bazel",
+            "Spring (Spring Boot)", "Quarkus", "Javalin", "Play Framework",
+            "JDBC", "Hibernate ORM", "Spring Data JPA", "EBean",
+            "Javadoc & Documentation", "Logging Frameworks (SLF4J / Log4j2 / Logback / TinyLog)", "Unit Testing (JUnit & TestNG)", "Integration Testing (REST Assured & JMeter)"
         ]
     },
-    "devops": {
-        "name": "DevOps & Cloud",
+    "react-development": {
+        "name": "React Mastery",
         "nodes": [
-            "Linux Command Line & Shell Scripting", "Networking & SSH Fundamentals", "Git Version Control & Branching",
-            "Docker Containers & Dockerfile", "Docker Compose Multi-container Setup", "CI/CD Pipelines (GitHub Actions)",
-            "Kubernetes Architecture & Deployments", "Terraform Infrastructure as Code", "AWS / Cloud Services & IAM"
+            "CLI Tools (Vite)", "Functional Components & JSX", "Props vs State & Component Lifecycle", "Conditional Rendering & Composition", "Lists, Keys & Event Handling", "Render Props & High Order Components (HOC)",
+            "Basic Hooks (useState / useEffect / useRef)", "Performance Hooks (useMemo / useCallback)", "State & Context Hooks (useReducer / useContext)", "Creating Custom Hooks & Hooks Best Practices",
+            "Routers (React Router / Tanstack Router)", "State Management (Context API / Zustand / Jotai / MobX)", "Writing CSS (Tailwind CSS / CSS Modules / Panda CSS)",
+            "UI Component Libraries (Shadcn UI / Material UI / Chakra UI)", "Headless UI Components (Radix UI / React Aria / Ark UI)",
+            "REST API Calls (TanStack Query / Axios / SWR / RTK Query)", "GraphQL APIs (Apollo Client / Relay / urql)",
+            "Form Libraries (React Hook Form / Formik)", "TypeScript Integration with React", "Schema Validation (Zod)",
+            "Unit Testing Tools (Vitest / Jest)", "Component Testing (React Testing Library)", "End-to-End Testing (Playwright / Cypress)",
+            "Framer Motion", "React Spring & GSAP",
+            "Error Boundaries", "Portals & Modal Overlays", "Suspense Boundaries & Server APIs",
+            "React Frameworks (Next.js / Astro / React Router)", "Mobile Applications (React Native)"
+        ]
+    },
+    "nextjs-framework": {
+        "name": "Next.js Mastery",
+        "nodes": [
+            "Introduction (Why Next.js / Next.js vs Remix / SPA vs SSR)", "Rendering Strategies (SSR / SSG / CSR / SPA)", "Getting Started (create-next-app)",
+            "Types of Routers (Pages Router vs App Router)", "Routing Terminology & Rendering Pages", "Layouts and Templates", "Loading, Streaming & Error States", "Routing Patterns (Parallel Routes & Intercepting Routes)",
+            "Middleware (Route Matcher / Cookies / Setting Headers)", "Structuring Routes & Use Cases", "API Endpoints (Static vs Dynamic / Caching / Streaming / Redirects)", "Internationalization (i18n)",
+            "Fetching Locations (Client vs Server Data Fetching)", "Data Fetching Patterns (Parallel vs Sequential & Preloading Data)", "Handling Sensitive Data", "Server Actions & Mutations",
+            "Caching Data (Fetch Memoization / React Cache / Revalidating Data)", "Revalidation & Error Recovery", "Runtimes (Node.js Runtime vs Edge Runtime)", "Rendering Composition (Client Rendered vs Server Rendered)",
+            "Global CSS & CSS Modules", "Tailwind CSS & Sass", "CSS-in-JS Solutions",
+            "Image, Video & Font Optimization (next/image / next/font)", "Metadata API & SEO Optimization", "Package Bundling & Lazy Loading", "Scripts & Third-Party Library Optimizations", "Memory Usage Optimization",
+            "Setting Up Tooling (TypeScript / ESLint / Prettier)", "Environment Variables", "Markdown and MDX Integration", "Custom Server Setup",
+            "Analytics & Instrumentation (OpenTelemetry & Vercel Analytics)", "Testing Frameworks (Vitest / Jest)", "End-to-End Testing (Playwright / Cypress)",
+            "Preparing for Production", "Deployment Options (Node.js Server / Docker Container / Static Export / Adapters)"
+        ]
+    },
+    "full-stack-developer": {
+        "name": "Full Stack Developer Track",
+        "nodes": [
+            "HTML5 & Modern CSS", "TypeScript Essentials", "Git & Version Control",
+            "React 19 & Next.js 16", "FastAPI & Python", "PostgreSQL & Supabase",
+            "Arrays & Hashing", "API Rate Limiting Design", "Database Indexing",
+            "Full-Stack SaaS Platform", "CI/CD Pipeline Automation",
+            "Microservices Architecture", "Redis Caching & Queue Workers"
+        ]
+    },
+    "aiml-engineer": {
+        "name": "AI/ML Engineer Track",
+        "nodes": [
+            "Python for AI", "NumPy & Pandas Dataframes", "Linear Algebra & Calculus",
+            "Scikit-Learn Classifiers", "PyTorch Fundamentals", "Convolutional Networks (CNNs)",
+            "LLM Architecture", "RAG Pipeline Design", "Vector Embeddings & Pinecone",
+            "Groq LLM Integration", "Agentic RAG Engine",
+            "LoRA / QLoRA Tuning", "vLLM Production Serving"
+        ]
+    },
+    "data-analyst": {
+        "name": "Data Analyst Track",
+        "nodes": [
+            "SQL Joins & Aggregations", "Window Functions (RANK)", "Subqueries & CTEs", "Database Normalization",
+            "Pandas Data Wrangling", "Data Cleaning & Imputation", "Matplotlib & Seaborn", "Exploratory Analysis",
+            "PowerBI Dashboard Design", "Tableau Calculated Fields", "Interactive Filtering", "DAX Formulas",
+            "Hypothesis Testing (t-test)", "A/B Testing Methodology", "Correlation Analysis", "Probability Distributions",
+            "Automated Reports", "Executive KPI Scorecards", "Data Storytelling"
+        ]
+    },
+    "data-scientist": {
+        "name": "Data Scientist Track",
+        "nodes": [
+            "Inferential Statistics", "Bayesian Probability", "Confidence Intervals", "Sampling Methods",
+            "Feature Engineering", "XGBoost & Random Forests", "Hyperparameter Tuning", "ROC-AUC Scoring",
+            "Neural Net Architectures", "Time Series Forecasting", "Text Mining & Sentiment",
+            "PySpark MLlib", "BigQuery ML", "Distributed Feature Store",
+            "FastAPI Model Endpoint", "A/B Test Deployment", "Model Drift Tracking"
+        ]
+    },
+    "devops-engineer": {
+        "name": "DevOps Engineer Track",
+        "nodes": [
+            "Bash Scripting", "Linux Admin & Processes", "SSH & Firewall Rules", "Networking (IP/Subnets)",
+            "Docker Image Optimization", "Docker Compose", "Container Security Scan",
+            "GitHub Actions Workflows", "Automated Testing Sprints", "Docker Hub / ECR Registry",
+            "Terraform AWS Provisioning", "Ansible Config Mgmt", "Cloud Security IAM",
+            "Kubernetes Pods & Deploy", "Helm Charts", "Prometheus & Grafana", "Log Aggregation"
+        ]
+    },
+    "cybersecurity": {
+        "name": "Cybersecurity Specialist Track",
+        "nodes": [
+            "TCP/IP & SSL/TLS Protocols", "Linux Security Hardening", "PKI & Encryption",
+            "Nmap Reconnaissance", "Metasploit Exploitation", "Burp Suite Web Security", "OWASP Top 10",
+            "Firewall & IDS/IPS Config", "Zero Trust Architecture", "VPN & Tunnels", "Endpoint Protection",
+            "Splunk / Elastic SIEM", "Wireshark Packet Analysis", "Threat Hunting Playbooks",
+            "SOC2 & ISO 27001 Audit", "PCI-DSS Security Controls", "PenTest Final Reports"
         ]
     }
 }
+
+def _normalize_rid(rid: str) -> str:
+    if not rid:
+        return "c-programming"
+    clean = str(rid).lower().strip()
+    if "cpp" in clean or "c++" in clean or "2. c++" in clean:
+        return "cpp-programming"
+    if "c-prog" in clean or "c prog" in clean or "systems c" in clean or "c programming" in clean or "1. c" in clean:
+        return "c-programming"
+    if "python" in clean:
+        return "python-mastery"
+    if "java" in clean or "spring" in clean:
+        return "java-spring-boot"
+    if "react" in clean and "native" not in clean:
+        return "react-development"
+    if "next" in clean:
+        return "nextjs-framework"
+    if "ai" in clean or "ml" in clean or "machine learning" in clean:
+        return "aiml-engineer"
+    if "data analyst" in clean or "analyst" in clean:
+        return "data-analyst"
+    if "data scientist" in clean or "scientist" in clean:
+        return "data-scientist"
+    if "cyber" in clean or "security" in clean or "hacking" in clean:
+        return "cybersecurity"
+    if "devops" in clean or "cloud" in clean:
+        return "devops-engineer"
+    if "full" in clean or "web" in clean:
+        return "full-stack-developer"
+    return clean
+
+
+def _build_roadmap_item(rid: str, completed_set: set, last_timestamp: str = None) -> dict:
+    completed_count = len(completed_set)
+    matched_key = _normalize_rid(rid)
+
+    spec = ROADMAP_SPECS.get(matched_key)
+    if spec:
+        title = spec["name"]
+        spec_nodes = spec["nodes"]
+        total_milestones = len(spec_nodes)
+        progress_percent = min(100, round((completed_count / max(1, total_milestones)) * 100))
+
+        current_node = None
+        next_node = None
+        for node in spec_nodes:
+            if node in completed_set or any(c.lower() in node.lower() for c in completed_set if isinstance(c, str)):
+                current_node = node
+            elif not next_node:
+                next_node = node
+
+        current_module = {"id": current_node, "title": current_node} if current_node else None
+        next_module = {"id": next_node, "title": next_node} if next_node else {"id": "completed", "title": "Roadmap Completed 🎉"}
+    else:
+        title = re.sub(r'^\d+\.\s*', '', str(rid)).replace("-", " ").title()
+        total_milestones = max(15, completed_count)
+        progress_percent = min(100, round((completed_count / total_milestones) * 100))
+        current_module = None
+        next_module = {"id": "next", "title": "Next Milestone Topic"}
+
+    return {
+        "roadmap_id": matched_key,
+        "title": title,
+        "progress_percent": progress_percent,
+        "completed_milestones": completed_count,
+        "total_milestones": total_milestones,
+        "current_module": current_module,
+        "next_module": next_module,
+        "last_activity_at": last_timestamp
+    }
+
 
 def get_active_roadmap_data(user_id: str) -> dict:
     sb = get_supabase()
@@ -78,78 +247,43 @@ def get_active_roadmap_data(user_id: str) -> dict:
             return {"has_active_roadmap": False}
 
         roadmap_groups = {}
-        latest_roadmap_id = None
-        latest_timestamp = None
+        ordered_rids = []
+        timestamps = {}
 
         for r in res_roadmap.data:
-            rid = r.get("roadmap_id")
-            if rid and not latest_roadmap_id:
-                latest_roadmap_id = rid
-                latest_timestamp = r.get("completed_at")
+            raw_rid = r.get("roadmap_id")
+            if not raw_rid:
+                continue
+            norm_rid = _normalize_rid(raw_rid)
+            if norm_rid not in roadmap_groups:
+                roadmap_groups[norm_rid] = set()
+                ordered_rids.append(norm_rid)
+                timestamps[norm_rid] = r.get("completed_at")
             nid = r.get("node_id") or r.get("node_title")
             st = r.get("status")
-            if rid:
-                if rid not in roadmap_groups:
-                    roadmap_groups[rid] = set()
-                if nid and nid != "_roadmap_started" and st == "completed":
-                    roadmap_groups[rid].add(nid)
+            if nid and nid != "_roadmap_started" and st == "completed":
+                roadmap_groups[norm_rid].add(nid)
 
-        if not latest_roadmap_id:
+        if not ordered_rids:
             return {"has_active_roadmap": False}
 
-        target_rid = latest_roadmap_id
-        user_completed_for_active = roadmap_groups.get(target_rid, set())
-        completed_count = len(user_completed_for_active)
+        active_items = []
+        for rid in ordered_rids:
+            item = _build_roadmap_item(rid, roadmap_groups.get(rid, set()), timestamps.get(rid))
+            active_items.append(item)
 
-        target_clean = str(target_rid).lower().strip()
-        matched_key = None
-        if "c-prog" in target_clean or "c prog" in target_clean or "c programming" in target_clean or "1. c" in target_clean:
-            matched_key = "c-programming"
-        elif "cpp" in target_clean or "c++" in target_clean or "2. c++" in target_clean:
-            matched_key = "cpp-programming"
-        elif "python" in target_clean:
-            matched_key = "python"
-        elif "full" in target_clean or "web" in target_clean or "react" in target_clean:
-            matched_key = "full-stack"
-        elif "devops" in target_clean or "cloud" in target_clean:
-            matched_key = "devops"
-        else:
-            matched_key = target_rid
-
-        spec = ROADMAP_SPECS.get(matched_key)
-        if spec:
-            title = spec["name"]
-            spec_nodes = spec["nodes"]
-            total_milestones = len(spec_nodes)
-            progress_percent = min(100, round((completed_count / max(1, total_milestones)) * 100))
-
-            current_node = None
-            next_node = None
-            for node in spec_nodes:
-                if node in user_completed_for_active or any(c.lower() in node.lower() for c in user_completed_for_active if isinstance(c, str)):
-                    current_node = node
-                elif not next_node:
-                    next_node = node
-
-            current_module = {"id": current_node, "title": current_node} if current_node else None
-            next_module = {"id": next_node, "title": next_node} if next_node else {"id": "completed", "title": "Roadmap Completed 🎉"}
-        else:
-            title = re.sub(r'^\d+\.\s*', '', str(target_rid)).replace("-", " ").title()
-            total_milestones = max(15, completed_count)
-            progress_percent = min(100, round((completed_count / total_milestones) * 100))
-            current_module = None
-            next_module = {"id": "next", "title": "Next Milestone Topic"}
-
+        first = active_items[0]
         return {
             "has_active_roadmap": True,
-            "roadmap_id": target_rid,
-            "title": title,
-            "progress_percent": progress_percent,
-            "completed_milestones": completed_count,
-            "total_milestones": total_milestones,
-            "current_module": current_module,
-            "next_module": next_module,
-            "last_activity_at": latest_timestamp
+            "roadmaps": active_items,
+            "roadmap_id": first.get("roadmap_id"),
+            "title": first.get("title"),
+            "progress_percent": first.get("progress_percent", 0),
+            "completed_milestones": first.get("completed_milestones", 0),
+            "total_milestones": first.get("total_milestones", 20),
+            "current_module": first.get("current_module"),
+            "next_module": first.get("next_module"),
+            "last_activity_at": first.get("last_activity_at")
         }
     except Exception as e:
         print(f"Error getting active roadmap data: {e}")
@@ -159,6 +293,20 @@ def get_active_roadmap_data(user_id: str) -> dict:
 @router.get("/active-roadmap")
 def get_active_roadmap_endpoint(user_id: str = Depends(get_current_user_id)):
     return get_active_roadmap_data(user_id)
+
+
+@router.delete("/active-roadmap/{roadmap_id}")
+def delete_active_roadmap_endpoint(roadmap_id: str, user_id: str = Depends(get_current_user_id)):
+    sb = get_supabase()
+    if not sb:
+        return {"success": False, "message": "Database error"}
+    try:
+        norm_id = _normalize_rid(roadmap_id)
+        sb.table("roadmap_progress").delete().eq("user_id", user_id).or_(f"roadmap_id.eq.{roadmap_id},roadmap_id.eq.{norm_id}").execute()
+        return {"success": True, "message": f"Removed roadmap {roadmap_id}"}
+    except Exception as e:
+        print(f"Error removing roadmap {roadmap_id}: {e}")
+        return {"success": False, "message": str(e)}
 
 
 @router.get("")
@@ -330,7 +478,8 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 "subtitle": roadmap_subtitle,
                 "roadmapName": active_roadmap_name,
                 "nextTopic": next_topic,
-                "roadmapId": active_rm.get("roadmap_id")
+                "roadmapId": active_rm.get("roadmap_id"),
+                "roadmaps": active_rm.get("roadmaps", [])
             },
             "resumeReadiness": {
                 "percentage": resume_score,
