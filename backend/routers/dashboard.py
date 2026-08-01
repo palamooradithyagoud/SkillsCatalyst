@@ -99,31 +99,38 @@ ROADMAP_SPECS = {
     "full-stack-developer": {
         "name": "Full Stack Developer Track",
         "nodes": [
-            "HTML5 & Modern CSS", "TypeScript Essentials", "Git & Version Control",
-            "React 19 & Next.js 16", "FastAPI & Python", "PostgreSQL & Supabase",
-            "Arrays & Hashing", "API Rate Limiting Design", "Database Indexing",
-            "Full-Stack SaaS Platform", "CI/CD Pipeline Automation",
-            "Microservices Architecture", "Redis Caching & Queue Workers"
+            "HTML", "CSS", "JavaScript", "Checkpoint - Static Webpages", "Checkpoint - Interactivity",
+            "Git", "GitHub", "Checkpoint - Collaborative Work", "npm", "Checkpoint - External Packages",
+            "React", "Tailwind CSS", "Checkpoint - Frontend Apps",
+            "Node.js", "Checkpoint - CLI Apps", "PostgreSQL", "Checkpoint - Simple CRUD Apps",
+            "RESTful APIs", "JWT Auth", "Redis", "Checkpoint - Complete App",
+            "Linux Basics", "Basic AWS Services (EC2, S3, VPC, Route53, SES)", "Checkpoint - Deployment",
+            "Monit", "Checkpoint - Monitoring", "GitHub Actions", "Checkpoint - CI / CD",
+            "Ansible", "Checkpoint - Automation", "Terraform", "Checkpoint - Infrastructure"
         ]
     },
-    "aiml-engineer": {
-        "name": "AI/ML Engineer Track",
+    "ai-engineer": {
+        "name": "AI Engineer Track",
         "nodes": [
-            "Python for AI", "NumPy & Pandas Dataframes", "Linear Algebra & Calculus",
-            "Scikit-Learn Classifiers", "PyTorch Fundamentals", "Convolutional Networks (CNNs)",
-            "LLM Architecture", "RAG Pipeline Design", "Vector Embeddings & Pinecone",
-            "Groq LLM Integration", "Agentic RAG Engine",
-            "LoRA / QLoRA Tuning", "vLLM Production Serving"
+            "Introduction to AI Engineering", "LLM Fundamentals & Tokenization", "Sampling Parameters (Temperature, Top-K, Top-P)",
+            "Prompting Techniques (Zero-Shot, Few-Shot, ReAct, CoT)", "Prompt Anatomy & System Prompting", "Model Interaction (Function Calling, Streaming)",
+            "Context Engineering & Compaction", "Closed Models (Claude, Gemini, GPT-4o, Cohere)", "Open Source Models (Llama 3, DeepSeek, Qwen)",
+            "Hugging Face Ecosystem & Transformers.js", "Local LLM Runtimes (Ollama, LM Studio)", "APIs & SDKs (OpenAI, Anthropic, Gemini)",
+            "What are Embeddings & Semantic Search", "Embedding Models (OpenAI, Sentence Transformers)", "Popular Vector DBs (Pinecone, Chroma, Supabase, FAISS)", "Implementing Vector Search & Indexing",
+            "What are RAGs & RAG Usecases", "Chunking & Retrieval Pipelines", "RAG Frameworks (LangChain, LlamaIndex, RAGFlow)", "RAG vs Fine-tuning",
+            "AI Agents & Multi-Agent Workflows", "Agent SDKs & Tools Calling", "Model Context Protocol (MCP Host, Client, Server)", "Building & Connecting MCP Servers (Local & Remote)",
+            "AI Safety, Bias & Prompt Injection Attacks", "Safety Best Practices & Content Moderation APIs", "LLM Observability & Tracing (LangSmith, Langfuse, Helicone)", "LLM Evaluations & Regression Testing (DeepEval, RAGAS)",
+            "Multimodal AI (Vision, DALL-E, Whisper, Speech-to-Text)", "Multimodal Application Frameworks", "AI Coding & Dev Tools (Claude Code, Cursor, Windsurf)"
         ]
     },
     "data-analyst": {
         "name": "Data Analyst Track",
         "nodes": [
-            "SQL Joins & Aggregations", "Window Functions (RANK)", "Subqueries & CTEs", "Database Normalization",
-            "Pandas Data Wrangling", "Data Cleaning & Imputation", "Matplotlib & Seaborn", "Exploratory Analysis",
-            "PowerBI Dashboard Design", "Tableau Calculated Fields", "Interactive Filtering", "DAX Formulas",
-            "Hypothesis Testing (t-test)", "A/B Testing Methodology", "Correlation Analysis", "Probability Distributions",
-            "Automated Reports", "Executive KPI Scorecards", "Data Storytelling"
+            "Introduction & Types of Data Analytics", "Key Concepts of Data (Collection, Cleanup, Exploration)", "Excel Analysis & Functions (VLOOKUP, IF, CONCAT, TRIM)", "Excel Charting & Pivot Tables",
+            "SQL Database Querying (Joins, CTEs, Aggregations)", "Data Collection (CSV, APIs, Web Scraping)", "Data Cleanup & Transformation (Pandas, Dplyr)", "Handling Missing Data, Outliers & Duplicates",
+            "Measures of Central Tendency & Dispersion (Mean, Std Dev, Variance)", "Distribution Shapes (Skewness, Kurtosis)", "Descriptive & Exploratory Analysis", "Statistical Analysis (Hypothesis Testing, Correlation, Regression)",
+            "BI Dashboarding (Power BI & Tableau)", "Data Visualization Libraries (Matplotlib, Seaborn, ggplot2)", "Chart Types (Bar, Histograms, Line, Heatmaps, Funnel)",
+            "Machine Learning Fundamentals (Supervised & Unsupervised)", "Popular ML Algorithms (Decision Trees, KNN, K-Means, Logistic Regression)", "Model Evaluation Techniques", "Big Data Technologies (Hadoop, Spark, MapReduce)", "Portfolio Projects & Kaggle Competitions"
         ]
     },
     "data-scientist": {
@@ -139,11 +146,11 @@ ROADMAP_SPECS = {
     "devops-engineer": {
         "name": "DevOps Engineer Track",
         "nodes": [
-            "Bash Scripting", "Linux Admin & Processes", "SSH & Firewall Rules", "Networking (IP/Subnets)",
-            "Docker Image Optimization", "Docker Compose", "Container Security Scan",
-            "GitHub Actions Workflows", "Automated Testing Sprints", "Docker Hub / ECR Registry",
-            "Terraform AWS Provisioning", "Ansible Config Mgmt", "Cloud Security IAM",
-            "Kubernetes Pods & Deploy", "Helm Charts", "Prometheus & Grafana", "Log Aggregation"
+            "Programming Languages (Python, Go, Node.js)", "Operating Systems (Linux Ubuntu/Debian, RHEL, Windows)", "Terminal Knowledge & Utilities (Process/Performance Monitoring)", "Shell Scripting (Bash & PowerShell)", "Version Control & Hosting (Git, GitHub, GitLab)",
+            "Networking & Protocols (HTTP/S, SSH, SSL/TLS, DNS, OSI)", "Web Servers & Reverse Proxies (Nginx, Apache, Caddy, Load Balancers)", "Containers (Docker & LXC)", "Cloud Providers (AWS, GCP, Azure, DigitalOcean)", "Serverless Compute (AWS Lambda, Cloudflare Workers, Vercel)",
+            "Infrastructure Provisioning (Terraform, AWS CDK, Pulumi)", "Configuration Management (Ansible, Chef, Puppet)", "Secret Management (HashiCorp Vault, Sealed Secrets)",
+            "CI/CD Automation (GitHub Actions, GitLab CI, Jenkins, CircleCI)", "Artifact Management (JFrog Artifactory, Sonatype Nexus)", "GitOps Workflows (ArgoCD & FluxCD)",
+            "Container Orchestration (Kubernetes, EKS/GKE/AKS, Helm)", "Infrastructure Monitoring (Prometheus & Grafana)", "Log Management (Elastic Stack ELK, Loki, Splunk)", "Observability & Distributed Tracing (OpenTelemetry, Jaeger)", "Service Mesh (Istio, Consul, Envoy)", "Cloud Architecture & Design Patterns"
         ]
     },
     "cybersecurity": {
@@ -154,6 +161,16 @@ ROADMAP_SPECS = {
             "Firewall & IDS/IPS Config", "Zero Trust Architecture", "VPN & Tunnels", "Endpoint Protection",
             "Splunk / Elastic SIEM", "Wireshark Packet Analysis", "Threat Hunting Playbooks",
             "SOC2 & ISO 27001 Audit", "PCI-DSS Security Controls", "PenTest Final Reports"
+        ]
+    },
+    "machine-learning": {
+        "name": "Machine Learning Engineer Track",
+        "nodes": [
+            "Calculus (Derivatives, Partial Derivatives, Gradients, Jacobian, Hessian)", "Linear Algebra (Vectors, Matrices, SVD, Eigenvalues, Diagonalization)", "Probability & Statistics (Bayes Theorem, Random Variables, Distributions)", "Python Programming & OOP Syntax", "Essential Libraries (NumPy, Pandas, Matplotlib, Seaborn)",
+            "Data Sources & Formats (SQL/NoSQL, APIs, CSV, JSON, Parquet)", "Data Preprocessing & Cleaning Techniques", "Feature Engineering, Selection & Scaling", "Dimensionality Reduction (PCA, Autoencoders)",
+            "Supervised Classification (KNN, Logistic Regression, SVM, Decision Trees, Random Forest, XGBoost)", "Supervised Regression (Linear, Polynomial, Lasso, Ridge, ElasticNet)", "Unsupervised Clustering (Exclusive, Overlapping, Hierarchical, Probabilistic)", "Reinforcement Learning (DQN, Policy Gradient, Actor-Critic, Q-Learning)", "Scikit-Learn ML Pipelines (Train-Test Split, Tuning, Model Selection)",
+            "Model Evaluation Metrics (Accuracy, Precision, Recall, F1, ROC-AUC, Confusion Matrix)", "Validation Techniques (K-Fold Cross Validation, LOOCV)", "Neural Network Basics (Perceptrons, Backpropagation, Activations, Loss Functions)", "Deep Learning Frameworks (PyTorch, TensorFlow, Keras)", "Convolutional Neural Networks (CNNs) & Applications", "Recurrent Neural Networks (RNN, GRU, LSTM)",
+            "Attention Mechanisms & Transformers (Self-Attention, Multi-Head)", "Generative Adversarial Networks (GANs) & Autoencoders", "Natural Language Processing (Tokenization, Lemmatization, Embeddings)", "Explainable AI (XAI)"
         ]
     }
 }
@@ -174,8 +191,10 @@ def _normalize_rid(rid: str) -> str:
         return "react-development"
     if "next" in clean:
         return "nextjs-framework"
-    if "ai" in clean or "ml" in clean or "machine learning" in clean:
-        return "aiml-engineer"
+    if "machine learning" in clean or "ml engineer" in clean or "machine-learning" in clean:
+        return "machine-learning"
+    if "ai" in clean or "ai engineer" in clean:
+        return "ai-engineer"
     if "data analyst" in clean or "analyst" in clean:
         return "data-analyst"
     if "data scientist" in clean or "scientist" in clean:
