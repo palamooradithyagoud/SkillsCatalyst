@@ -149,10 +149,10 @@ export default function PracticeOverview({
   const hasConnectedPlatforms = connectedPlatformsCount > 0;
   const totalExtractedSolved = leetcodeSolved + gfgSolved + cfSolved + ccSolved + hrSolved;
 
-  // For a new user with 0 connected profiles and 0 DB solved questions, display 0
-  const displayTotalSolved = (hasConnectedPlatforms || csvSolvedCount > 0)
-    ? Math.max(totalExtractedSolved + csvSolvedCount, problemsSolved)
-    : (csvSolvedCount > 0 ? csvSolvedCount : 0);
+  // Display total solved problems exclusively from connected coding platforms (LeetCode, GFG, Codeforces, CodeChef, HackerRank)
+  const displayTotalSolved = hasConnectedPlatforms
+    ? Math.max(totalExtractedSolved, problemsSolved)
+    : (problemsSolved > 0 ? problemsSolved : 0);
 
   const displaySuccessRate = displayTotalSolved > 0
     ? (codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : `${successRate}%`)
