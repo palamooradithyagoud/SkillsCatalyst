@@ -1695,22 +1695,24 @@ function RoadmapDetailView({
           </motion.button>
         </div>
 
-        {/* Market Demand & Salary Row */}
-        <div className="mt-6 pt-4 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-slate-300">5-Year Market Demand (2021–2026):</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30">
-              {selectedRoadmap.growth}
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-bold border border-blue-500/30">
-              {selectedRoadmap.roles}
-            </span>
-          </div>
+        {/* Market Demand & Salary Row — Hidden for Skill Roadmaps */}
+        {selectedRoadmap.category !== "skill" && (
+          <div className="mt-6 pt-4 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-slate-300">5-Year Market Demand (2021–2026):</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30">
+                {selectedRoadmap.growth}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-bold border border-blue-500/30">
+                {selectedRoadmap.roles}
+              </span>
+            </div>
 
-          <div>
-            Average Salary: <span className="font-bold text-white text-sm ml-1">{selectedRoadmap.salary}</span>
+            <div>
+              Average Salary: <span className="font-bold text-white text-sm ml-1">{selectedRoadmap.salary}</span>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
 
       {/* ── Timeline Tree + Realistic Growth Widget Grid */}
