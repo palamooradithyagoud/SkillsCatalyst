@@ -216,6 +216,17 @@ body {
 
 .input-glass::placeholder { color: var(--text-muted); }
 
+/* ────────────── BROWSER AUTOFILL OVERRIDE (NO WHITE BG) ────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px #090e1a inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  transition: background-color 50000s ease-in-out 0s;
+}
+
 /* ────────────── BTN PRIMARY ────────────── */
 .btn-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);

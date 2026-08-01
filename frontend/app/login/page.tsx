@@ -17,6 +17,7 @@ import {
   Target,
   Eye,
   EyeOff,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -500,14 +501,20 @@ export default function LoginPage() {
 
                     {/* Remember Me & Forgot Password Row */}
                     <div className="flex items-center justify-between text-[11px] pt-1">
-                      <label className="flex items-center gap-2 font-bold text-slate-400 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                          className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5"
-                        />
-                        <span>REMEMBER ME</span>
+                      <label className="flex items-center gap-2 font-bold text-slate-400 cursor-pointer select-none group">
+                        <div
+                          onClick={() => setRememberMe(!rememberMe)}
+                          className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${
+                            rememberMe
+                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-500/50"
+                              : "bg-slate-900/90 border-white/20 group-hover:border-white/40 text-transparent"
+                          }`}
+                        >
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                        <span className="text-[11px] font-bold tracking-wider text-slate-400 group-hover:text-slate-200 transition-colors">
+                          REMEMBER ME
+                        </span>
                       </label>
                       <a
                         href="#"
