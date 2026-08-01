@@ -250,6 +250,46 @@ function RoadmapMetricCard({ fallbackData }: { fallbackData?: any }) {
     }
   }
 
+  // Also hydrate locally enrolled and active roadmaps from localStorage
+  if (typeof window !== "undefined") {
+    try {
+      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
+      if (rawActive) {
+        const parsed = JSON.parse(rawActive);
+        const normId = normalizeRoadmapId(parsed?.id || parsed?.title);
+        if (normId && !removedRoadmaps.includes(normId) && !listMap.has(normId)) {
+          const meta = getRoadmapMeta(normId);
+          listMap.set(normId, {
+            roadmap_id: normId,
+            title: parsed.title || meta.name,
+            progress_percent: 0,
+            completed_milestones: 0,
+            total_milestones: meta.total || 20,
+            next_module: { title: meta.nextTopic },
+          });
+        }
+      }
+      const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
+      if (rawEnrolled) {
+        const enrolledList = JSON.parse(rawEnrolled);
+        enrolledList.forEach((e: any) => {
+          const normId = normalizeRoadmapId(e?.id || e?.title);
+          if (normId && !removedRoadmaps.includes(normId) && !listMap.has(normId)) {
+            const meta = getRoadmapMeta(normId);
+            listMap.set(normId, {
+              roadmap_id: normId,
+              title: e.title || meta.name,
+              progress_percent: 0,
+              completed_milestones: 0,
+              total_milestones: meta.total || 20,
+              next_module: { title: meta.nextTopic },
+            });
+          }
+        });
+      }
+    } catch (err) {}
+  }
+
   const list = Array.from(listMap.values());
   const listLength = list.length;
 
