@@ -8,6 +8,8 @@ import {
   Sparkles, CheckCircle, Trash2, X,
   ChevronLeft, ChevronRight, ShieldAlert,
 } from "lucide-react";
+import MagnifierIcon from "@/components/icons/MagnifierIcon";
+import SaveIcon from "@/components/icons/SaveIcon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   searchSkill, savePlaylist, unsavePlaylist,
@@ -1178,7 +1180,7 @@ export default function LearningPage() {
           <div className="text-[10px] font-bold text-indigo-400 tracking-widest uppercase mb-3">CARD 1</div>
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/25 shrink-0">
-              <Search className="w-6 h-6 text-indigo-400" />
+              <MagnifierIcon size={24} className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white mb-1">Explore Skills &amp; Courses</h3>
@@ -1210,13 +1212,13 @@ export default function LearningPage() {
             className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
             style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)", color: "#93c5fd" }}
           >
-            <Bookmark className="w-3 h-3" />
+            <SaveIcon size={14} className="w-3.5 h-3.5" />
             {savedData?.count ?? 0} Saved
           </div>
           <div className="text-[10px] font-bold text-purple-400 tracking-widest uppercase mb-3">CARD 2</div>
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-xl bg-purple-500/[0.12] border border-purple-500/[0.22] shrink-0">
-              <BookOpen className="w-6 h-6 text-purple-400" />
+              <SaveIcon size={24} className="w-6 h-6 text-purple-400" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white mb-1">Saved Playlists &amp; Player</h3>
@@ -1246,7 +1248,7 @@ export default function LearningPage() {
             >
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <MagnifierIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
                     type="text"
                     value={query}
@@ -1398,7 +1400,7 @@ export default function LearningPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2.5 mb-1">
-                    <BookmarkCheck className="w-5 h-5 text-purple-400" />
+                    <SaveIcon size={20} className="w-5 h-5 text-purple-400" />
                     <h2 className="text-base font-bold text-white">Saved Playlists &amp; Progress</h2>
                     {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />}
                   </div>

@@ -42,6 +42,9 @@ import {
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { generateRoadmap, RoadmapData } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import BrandReactIcon from "@/components/icons/BrandReactIcon";
+import PythonIcon from "@/components/icons/PythonIcon";
+import BrandNextjsIcon from "@/components/icons/BrandNextjsIcon";
 import PythonGrowthCanvas from "@/components/PythonGrowthCanvas";
 import SkillDetailDrawer from "@/components/SkillDetailDrawer";
 import { useAuth } from "@/lib/auth";
@@ -67,7 +70,7 @@ interface PresetRoadmap {
   displayTitle: string;
   subtitle: string;
   timelineSubtitle: string;
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
   color: string;
   bgBadge: string;
   borderBadge: string;
@@ -351,7 +354,7 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     displayTitle: "Python Mastery",
     subtitle: "Here's a timeline of the Python Developer learning path.",
     timelineSubtitle: "Here's a timeline of the Python Developer learning path.",
-    icon: Layers,
+    icon: PythonIcon,
     color: "#10b981",
     bgBadge: "bg-amber-500/10",
     borderBadge: "border-amber-500/20",
@@ -659,7 +662,7 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     displayTitle: "React Mastery",
     subtitle: "Here's a timeline of the React 19 Frontend Developer path.",
     timelineSubtitle: "Here's a timeline of the React 19 Frontend Developer path.",
-    icon: Atom,
+    icon: BrandReactIcon,
     color: "#06b6d4",
     bgBadge: "bg-cyan-500/10",
     borderBadge: "border-cyan-500/20",
@@ -775,7 +778,7 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     displayTitle: "Next.js Mastery",
     subtitle: "Here's a timeline of the Modern Next.js Fullstack App Router path.",
     timelineSubtitle: "Here's a timeline of the Modern Next.js Fullstack App Router path.",
-    icon: Globe,
+    icon: BrandNextjsIcon,
     color: "#38bdf8",
     bgBadge: "bg-sky-500/10",
     borderBadge: "border-sky-500/20",
@@ -1602,11 +1605,11 @@ function RoadmapDetailView({
           </div>
 
           {/* Right Graphic Box */}
-          <div className="hidden sm:flex items-center justify-center p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl relative w-full lg:w-72 h-44 shrink-0 overflow-hidden">
+          <div className="hidden sm:flex items-center justify-center p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl relative w-full lg:w-72 h-48 shrink-0 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
-            <div className="text-center space-y-2 relative z-10">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/20">
-                <selectedRoadmap.icon className="w-7 h-7" />
+            <div className="text-center space-y-3 relative z-10">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-xl shadow-indigo-500/20">
+                <selectedRoadmap.icon size={44} className="w-11 h-11" />
               </div>
               <div className="text-xs font-mono font-bold text-slate-300 tracking-wider">
                 &lt;F&gt; {selectedRoadmap.id.toUpperCase().slice(0, 8)}
@@ -2315,9 +2318,9 @@ export default function RoadmapsPage() {
                   {/* Icon Badge & Enroll Symbol */}
                   <div className="flex items-center justify-between mb-4">
                     <div
-                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
+                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
                     >
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Icon size={28} className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                     {enrolledIds.has(item.id) ? (
                       <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">

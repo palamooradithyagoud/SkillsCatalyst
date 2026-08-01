@@ -1,17 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
-  BookOpen,
   Map,
   Target,
   Briefcase,
   Sparkles,
   BarChart3,
-  Settings,
   Code2,
   Flame,
   Zap,
@@ -19,16 +17,19 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAuth } from "@/lib/auth";
+import BookIcon from "@/components/icons/BookIcon";
+import UserIcon from "@/components/icons/UserIcon";
+import type { AnimatedIconHandle } from "@/components/icons/types";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-  { name: "Learning", href: "/learning", icon: BookOpen },
+  { name: "Learning", href: "/learning", icon: BookIcon },
   { name: "Roadmaps", href: "/roadmaps", icon: Map },
   { name: "Practice", href: "/practice", icon: Target },
   { name: "Career", href: "/career", icon: Briefcase },
   { name: "AI Mentor", href: "/ai-mentor", icon: Sparkles },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Profile", href: "/settings", icon: UserIcon },
 ];
 
 const sidebarVariants = {
@@ -52,6 +53,8 @@ const navItemVariants = {
 export default function Sidebar() {
   const pathname = usePathname();
   const { session, isLoading } = useAuth();
+  const learningIconRef = useRef<AnimatedIconHandle>(null);
+  const profileIconRef = useRef<AnimatedIconHandle>(null);
 
   if (pathname === "/login" || isLoading || !session) {
     return null;
@@ -91,6 +94,8 @@ export default function Sidebar() {
               pathname === item.href ||
               (pathname === "/" && item.href === "/dashboard");
             const Icon = item.icon;
+            const isLearning = item.name === "Learning";
+            const isProfile = item.name === "Profile";
 
             return (
               <motion.div
@@ -100,7 +105,18 @@ export default function Sidebar() {
                 initial="hidden"
                 animate="visible"
               >
-                <Link href={item.href} className="relative block rounded-xl group">
+                <Link
+                  href={item.href}
+                  className="relative block rounded-xl group"
+                  onMouseEnter={() => {
+                    if (isLearning) learningIconRef.current?.startAnimation();
+                    if (isProfile) profileIconRef.current?.startAnimation();
+                  }}
+                  onMouseLeave={() => {
+                    if (isLearning) learningIconRef.current?.stopAnimation();
+                    if (isProfile) profileIconRef.current?.stopAnimation();
+                  }}
+                >
                   {/* Active background pill */}
                   <AnimatePresence>
                     {isActive && (
@@ -129,7 +145,21 @@ export default function Sidebar() {
                       whileHover={{ scale: 1.1, rotate: isActive ? 0 : 5 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     >
-                      <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`} />
+                      {isLearning ? (
+                        <BookIcon
+                          ref={learningIconRef}
+                          size={18}
+                          className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`}
+                        />
+                      ) : isProfile ? (
+                        <UserIcon
+                          ref={profileIconRef}
+                          size={18}
+                          className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`}
+                        />
+                      ) : (
+                        <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`} />
+                      )}
                     </motion.div>
                     <span className="font-[500]">{item.name}</span>
                     {item.name === "AI Mentor" && (
