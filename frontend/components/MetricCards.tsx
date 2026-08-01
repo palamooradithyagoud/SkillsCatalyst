@@ -250,15 +250,6 @@ function RoadmapMetricCard({ fallbackData }: { fallbackData?: any }) {
     }
   }
 
-  if (listMap.size === 0 && (!rawList || rawList.length === 0)) {
-    if (!removedRoadmaps.includes("c-programming")) {
-      listMap.set("c-programming", presetDefaults["c-programming"]);
-    }
-    if (!removedRoadmaps.includes("cpp-programming")) {
-      listMap.set("cpp-programming", presetDefaults["cpp-programming"]);
-    }
-  }
-
   const list = Array.from(listMap.values());
   const listLength = list.length;
 
