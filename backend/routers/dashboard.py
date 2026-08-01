@@ -373,8 +373,8 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                         if isinstance(ts, (int, float)):
                             extracted_solved += int(ts)
 
-            # Aggregated Total Problems Solved across DB progress + pasted coding profiles
-            problems_solved = max(db_leetcode_solved, extracted_solved) if db_leetcode_solved > 0 and extracted_solved > 0 else (db_leetcode_solved + extracted_solved)
+            # Problems solved strictly reflects connected external coding platform stats
+            problems_solved = extracted_solved
 
             # 5. Fetch user name from academic profile if exists
             res_profile = (
