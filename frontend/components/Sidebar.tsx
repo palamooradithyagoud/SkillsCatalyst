@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
+import ExploreIcon from "@/components/icons/ExploreIcon";
 import type { AnimatedIconHandle } from "@/components/icons/types";
 
 const navItems = [
@@ -27,7 +28,7 @@ const navItems = [
   { name: "Roadmaps", href: "/roadmaps", icon: Map },
   { name: "Practice", href: "/practice", icon: Target },
   { name: "Career", href: "/career", icon: Briefcase },
-  { name: "AI Mentor", href: "/ai-mentor", icon: Sparkles },
+  { name: "Explore", href: "/explore", icon: ExploreIcon },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Profile", href: "/settings", icon: UserIcon },
 ];
@@ -96,6 +97,7 @@ export default function Sidebar() {
             const Icon = item.icon;
             const isLearning = item.name === "Learning";
             const isProfile = item.name === "Profile";
+            const isExplore = item.name === "Explore";
 
             return (
               <motion.div
@@ -157,16 +159,13 @@ export default function Sidebar() {
                           size={18}
                           className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`}
                         />
+                      ) : isExplore ? (
+                        <ExploreIcon size={20} />
                       ) : (
                         <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`} />
                       )}
                     </motion.div>
                     <span className="font-[500]">{item.name}</span>
-                    {item.name === "AI Mentor" && (
-                      <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/20">
-                        AI
-                      </span>
-                    )}
                   </div>
                 </Link>
               </motion.div>

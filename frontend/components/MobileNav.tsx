@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
+import ExploreIcon from "@/components/icons/ExploreIcon";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
@@ -28,7 +29,7 @@ const navItems = [
   { name: "Roadmaps", href: "/roadmaps", icon: Map },
   { name: "Practice", href: "/practice", icon: Target },
   { name: "Career", href: "/career", icon: Briefcase },
-  { name: "AI Mentor", href: "/ai-mentor", icon: Sparkles },
+  { name: "Explore", href: "/explore", icon: ExploreIcon },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Profile", href: "/settings", icon: UserIcon },
 ];
@@ -37,7 +38,7 @@ const navItems = [
 const bottomBarItems = [
   { name: "Home", href: "/dashboard", icon: LayoutGrid },
   { name: "Learn", href: "/learning", icon: BookIcon },
-  { name: "AI Mentor", href: "/ai-mentor", icon: Sparkles },
+  { name: "Explore", href: "/explore", icon: ExploreIcon },
   { name: "Practice", href: "/practice", icon: Target },
   { name: "Profile", href: "/settings", icon: UserIcon },
 ];
@@ -124,25 +125,25 @@ export default function MobileNav() {
                       pathname === item.href ||
                       (pathname === "/" && item.href === "/dashboard");
                     const Icon = item.icon;
+                    const isExplore = item.name === "Explore";
 
                     return (
                       <Link
                         key={item.name}
                         href={item.href}
                         onClick={() => setDrawerOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all min-h-[44px] ${
+                        className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all min-h-[44px] ${
                           isActive
                             ? "bg-blue-600/20 text-white border border-blue-500/30"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
-                        <span>{item.name}</span>
-                        {item.name === "AI Mentor" && (
-                          <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/20">
-                            AI
-                          </span>
+                        {isExplore ? (
+                          <ExploreIcon size={18} />
+                        ) : (
+                          <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
                         )}
+                        <span>{item.name}</span>
                       </Link>
                     );
                   })}
@@ -174,12 +175,13 @@ export default function MobileNav() {
             pathname === item.href ||
             (pathname === "/" && item.href === "/dashboard");
           const Icon = item.icon;
+          const isExplore = item.name === "Explore";
 
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center py-1 px-2 min-w-[56px] min-h-[48px] rounded-xl transition-all ${
+              className={`group relative flex flex-col items-center justify-center py-1 px-2 min-w-[56px] min-h-[48px] rounded-xl transition-all ${
                 isActive ? "text-blue-400 font-semibold" : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -190,7 +192,11 @@ export default function MobileNav() {
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <Icon className={`w-5 h-5 relative z-10 ${isActive ? "text-blue-400 scale-110" : "text-slate-400"}`} />
+              {isExplore ? (
+                <ExploreIcon size={20} className="relative z-10" />
+              ) : (
+                <Icon className={`w-5 h-5 relative z-10 ${isActive ? "text-blue-400 scale-110" : "text-slate-400"}`} />
+              )}
               <span className="text-[10px] tracking-tight mt-0.5 relative z-10">{item.name}</span>
             </Link>
           );
