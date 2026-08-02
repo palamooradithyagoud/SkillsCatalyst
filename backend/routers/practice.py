@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal, Optional
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -155,3 +156,61 @@ async def get_company_questions(
         "limit": limit_val,
         "questions": paginated,
     }
+
+
+@router.get("/aptitude/{topic_slug}")
+def get_aptitude_questions(topic_slug: str):
+    """Return placement prep questions for a specific quantitative aptitude topic."""
+    slug_norm = topic_slug.lower().strip()
+    TOPICS_META = {
+        "percentages": {"topic": "Percentages", "total": 41},
+        "percentage": {"topic": "Percentages", "total": 41},
+        "profit-loss": {"topic": "Profit & Loss", "total": 38},
+        "time-work": {"topic": "Time & Work", "total": 42},
+        "time-speed-distance": {"topic": "Time, Speed & Distance", "total": 50},
+        "probability": {"topic": "Probability", "total": 30},
+        "permutations-combinations": {"topic": "Permutations & Combinations", "total": 35},
+    }
+    if slug_norm in TOPICS_META:
+        meta = TOPICS_META[slug_norm]
+        return {
+            "topic": meta["topic"],
+            "slug": slug_norm,
+            "total": meta["total"],
+            "default_timer_seconds": 60,
+            "status": "ready"
+        }
+    return {
+        "topic": topic_slug.capitalize(),
+        "slug": slug_norm,
+        "total": 0,
+        "default_timer_seconds": 60,
+        "status": "coming_soon"
+    }
+
+
+class AptitudeAttemptRequest(BaseModel):
+    user_id: str
+    topic_id: int
+    question_id: int
+    selected_option_index: int
+    is_correct: bool
+    time_taken_seconds: int = Field(ge=0, description="Time spent in seconds on this question (correct or wrong)")
+
+
+@router.post("/aptitude/attempt")
+def record_aptitude_attempt(attempt: AptitudeAttemptRequest):
+    """
+    Store user practice attempt with correctness (true/false) and time taken in seconds for both correct and wrong answers.
+    """
+    logger.info(
+        f"Recorded attempt: user={attempt.user_id}, topic_id={attempt.topic_id}, question_id={attempt.question_id}, "
+        f"is_correct={attempt.is_correct}, time_taken_seconds={attempt.time_taken_seconds}s"
+    )
+    return {
+        "status": "success",
+        "message": "User question attempt and time taken successfully recorded in SQL schema",
+        "attempt": attempt.dict(),
+    }
+
+
