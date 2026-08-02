@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { reviewResume, getAuthHeaders, handleGuestTokenFromResponse } from "@/lib/api";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
+import FloatingCTA from "@/components/mobile/FloatingCTA";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1203,6 +1204,15 @@ export default function CareerPage() {
       <PlacementPrepModal
         isOpen={isPlacementPrepOpen}
         onClose={() => setIsPlacementPrepOpen(false)}
+      />
+
+      {/* Native Smartphone Floating CTA */}
+      <FloatingCTA
+        onClick={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        icon={<Upload className="w-5 h-5 text-white" />}
+        label="Analyze Resume"
       />
     </div>
   );
