@@ -584,7 +584,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const ir = metrics?.interviewReadiness;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
       <MetricCard
         title="Learning Progress"
         icon={<BookOpen className="w-4 h-4 text-cyan-400" />}

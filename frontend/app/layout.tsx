@@ -33,7 +33,7 @@ export default function RootLayout({
             </div>
             <Sidebar />
             <MobileNav />
-            <main className="relative z-10 flex-1 p-4 sm:p-6 md:p-8 lg:p-10 pb-24 md:pb-8 overflow-y-auto">
+            <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden">
               {children}
             </main>
           </AuthProvider>
