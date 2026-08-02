@@ -19,13 +19,13 @@ export default function Header({ userName = "Palamoor" }: HeaderProps) {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" as const }}
-      className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8"
+      className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6 mb-5 sm:mb-8"
     >
       {/* Left: Title block */}
       <div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
           <motion.h1
-            className="text-3xl md:text-4xl font-black tracking-tight text-white"
+            className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}

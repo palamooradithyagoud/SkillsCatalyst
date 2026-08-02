@@ -113,21 +113,21 @@ export default function AIMentorPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-6rem)] gap-4"
+      className="max-w-4xl mx-auto flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100vh-6rem)] gap-3 sm:gap-4"
     >
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" as const }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 animate-pulse-glow">
-            <Sparkles className="w-6 h-6" />
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 animate-pulse-glow">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">AI Career Mentor</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">AI Career Mentor</h1>
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mt-0.5">
               <Zap className="w-3 h-3 text-amber-400" />
               Powered by Groq · llama-3.3-70b
@@ -136,7 +136,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* Status badges */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Skills Only badge */}
           <div className="px-3 py-1.5 glass rounded-full text-xs font-semibold text-indigo-300 border border-indigo-500/25 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />

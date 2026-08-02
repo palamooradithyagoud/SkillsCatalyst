@@ -65,7 +65,7 @@ export default function Sidebar() {
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"
-      className="glass-sidebar w-64 flex flex-col justify-between h-screen sticky top-0 p-5 select-none z-30 shrink-0"
+      className="glass-sidebar w-64 hidden md:flex flex-col justify-between h-screen sticky top-0 p-5 select-none z-30 shrink-0"
     >
       <div>
         {/* ── Brand Logo ── */}
