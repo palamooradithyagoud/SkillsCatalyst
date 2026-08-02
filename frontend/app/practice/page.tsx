@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
+import FloatingCTA from "@/components/mobile/FloatingCTA";
 import {
   fetchPracticeCompanies,
   fetchCompanyQuestions,
@@ -1248,6 +1249,15 @@ export default function PracticePage() {
         solvedSet={drawerSolved}
         onToggleSolved={toggleDrawerProblem}
       />
+
+      {/* Native Smartphone Floating Action Button */}
+      {selectedMode !== "index" && (
+        <FloatingCTA
+          onClick={() => setSelectedMode("index")}
+          icon={<ArrowLeft className="w-5 h-5 text-white" />}
+          label="Practice Modes"
+        />
+      )}
     </motion.div>
   );
 }
