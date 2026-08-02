@@ -51,6 +51,11 @@ app = FastAPI(
     redoc_url=None,
 )
 
+import contextvars
+
+# ContextVar for request correlation tracking across async tasks
+request_id_ctx_var: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="n/a")
+
 # ── CORS Configuration ────────────────────────────────────────────────────────
 _allowed_origins = [
     "https://skills-catalyst.vercel.app",
@@ -65,10 +70,11 @@ if _env_frontend and _env_frontend not in _allowed_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://skills-catalyst.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "x-session-id", "X-Request-ID", "Accept", "Origin"],
+    expose_headers=["X-Request-ID", "X-Guest-Session-Token", "x-session-id"],
 )
 
 # ── Production Security & Telemetry Middlewares ────────────────────────────────
@@ -76,13 +82,15 @@ app.add_middleware(
 async def production_hardening_middleware(request: Request, call_next):
     """
     Production Telemetry & Security Headers Middleware.
-    - Generates and attaches X-Request-ID.
+    - Generates and attaches X-Request-ID (ContextVar bound).
     - Measures request processing latency.
     - Emits structured Railway-friendly log telemetries without exposing secrets/PII.
-    - Attaches safe production security headers.
+    - Attaches modern production security headers (COOP, CORP, Permissions-Policy, HSTS).
+    - Resolves and attaches X-Guest-Session-Token for guest users.
     """
     start_time = time.time()
-    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    req_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    request_id_ctx_var.set(req_id)
     
     # Process request
     try:
@@ -90,23 +98,38 @@ async def production_hardening_middleware(request: Request, call_next):
     except Exception as e:
         process_time_ms = round((time.time() - start_time) * 1000, 2)
         logger.error(
-            f"Unhandled Request Error | ID: {request_id} | Method: {request.method} | Path: {request.url.path} | Latency: {process_time_ms}ms | Error: {str(e)}",
+            f"[SYSTEM_ERROR] Unhandled Request Error | ID: {req_id} | Method: {request.method} | Path: {request.url.path} | Latency: {process_time_ms}ms | Error: {str(e)}",
             exc_info=True
         )
         raise e
 
     process_time_ms = round((time.time() - start_time) * 1000, 2)
 
-    # Attach Request ID and Production Security Headers
-    response.headers["X-Request-ID"] = request_id
+    # Attach Request ID & Modern Production Security Headers
+    response.headers["X-Request-ID"] = req_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "1; mode=block"
 
+    # Objective 4: Modern Security Headers
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+    if ENVIRONMENT.lower() in ("production", "prod"):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    # Auto-issue signed guest session token for non-authenticated guest requests
+    raw_sid = request.headers.get("x-session-id")
+    auth_hdr = request.headers.get("authorization")
+    if not auth_hdr:
+        from backend.services.auth_service import sanitize_or_generate_guest_id
+        resolved_sid, _ = sanitize_or_generate_guest_id(raw_sid)
+        response.headers["X-Guest-Session-Token"] = resolved_sid
+
     # Structured Railway Telemetry Log
     logger.info(
-        f"HTTP {request.method} {request.url.path} -> {response.status_code} | Latency: {process_time_ms}ms | ID: {request_id} | Env: {ENVIRONMENT}"
+        f"HTTP {request.method} {request.url.path} -> {response.status_code} | Latency: {process_time_ms}ms | ID: {req_id} | Env: {ENVIRONMENT}"
     )
 
     return response
