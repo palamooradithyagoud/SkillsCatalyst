@@ -5,10 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id
 from backend.services.groq_service import chat_with_groq
+from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai-mentor", tags=["ai-mentor"])
+
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +162,7 @@ _SKILLS_SYSTEM_PROMPT = (
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@router.post("/chat")
+@router.post("/chat", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def chat_mentor(req: PromptRequest):
     """
     Skills-only AI mentor chat endpoint.
@@ -184,7 +186,7 @@ async def chat_mentor(req: PromptRequest):
     return {"reply": response}
 
 
-@router.post("/review-resume")
+@router.post("/review-resume", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def review_resume(
     req: ResumeReviewRequest,
     current_user_id: str = Depends(get_current_user_id)

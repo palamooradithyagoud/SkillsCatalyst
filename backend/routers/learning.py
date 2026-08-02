@@ -10,6 +10,7 @@ from typing import Optional
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.config import YOUTUBE_API_KEY
+from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_SEARCH_RPM
 
 logger = logging.getLogger(__name__)
 
@@ -425,7 +426,7 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
 
 
 # ── Search ────────────────────────────────────────────────────────────────────
-@router.get("/search")
+@router.get("/search", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_SEARCH_RPM))])
 async def search_skill(
     query:       str = Query(..., description="Skill keyword e.g. Python, React, DSA"),
     level:       str = Query("all",     description="beginner | intermediate | advanced | all"),
