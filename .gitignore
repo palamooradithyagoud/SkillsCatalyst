@@ -24,7 +24,7 @@ frontend/out/
 frontend/node_modules/
 
 # Data folder (660+ CSV files — too large for git)
-data/
+/data/
 
 # Logs
 *.log
