@@ -3,9 +3,10 @@ import logging
 import os
 from pathlib import Path
 from typing import Literal, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from backend.services.auth_service import get_session_or_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +205,7 @@ def get_aptitude_questions(topic_slug: str):
 
 
 class AptitudeAttemptRequest(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
     topic_id: int
     question_id: int
     selected_option_index: int
@@ -213,18 +214,25 @@ class AptitudeAttemptRequest(BaseModel):
 
 
 @router.post("/aptitude/attempt")
-def record_aptitude_attempt(attempt: AptitudeAttemptRequest):
+def record_aptitude_attempt(
+    attempt: AptitudeAttemptRequest,
+    current_user_id: str = Depends(get_session_or_user_id)
+):
     """
     Store user practice attempt with correctness (true/false) and time taken in seconds for both correct and wrong answers.
+    Binds attempt user_id strictly to verified JWT identity or session resolver to prevent IDOR / client identity spoofing.
     """
+    attempt_dict = attempt.dict()
+    attempt_dict["user_id"] = current_user_id
+
     logger.info(
-        f"Recorded attempt: user={attempt.user_id}, topic_id={attempt.topic_id}, question_id={attempt.question_id}, "
+        f"Recorded attempt: user={attempt_dict['user_id']}, topic_id={attempt.topic_id}, question_id={attempt.question_id}, "
         f"is_correct={attempt.is_correct}, time_taken_seconds={attempt.time_taken_seconds}s"
     )
     return {
         "status": "success",
         "message": "User question attempt and time taken successfully recorded in SQL schema",
-        "attempt": attempt.dict(),
+        "attempt": attempt_dict,
     }
 
 
