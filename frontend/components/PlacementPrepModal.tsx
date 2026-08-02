@@ -26,12 +26,26 @@ import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } f
 import { supabase } from "@/lib/supabase";
 
 const TOPIC_ID_MAP: Record<string, number> = {
+  // Quantitative Aptitude
   "Percentages": 1,
   "Profit & Loss": 2,
   "Time & Work": 3,
   "Time, Speed & Distance": 4,
   "Probability": 5,
   "Permutations & Combinations": 6,
+
+  // Logical Reasoning
+  "Blood Relations": 7,
+  "Seating Arrangement": 8,
+  "Coding-Decoding": 9,
+  "Syllogisms": 10,
+  "Puzzles": 11,
+
+  // Verbal Ability
+  "Grammar": 12,
+  "Reading Comprehension": 13,
+  "Vocabulary": 14,
+  "Sentence Correction": 15,
 };
 
 interface PlacementPrepModalProps {

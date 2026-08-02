@@ -163,6 +163,7 @@ def get_aptitude_questions(topic_slug: str):
     """Return placement prep questions for a specific quantitative aptitude topic."""
     slug_norm = topic_slug.lower().strip()
     TOPICS_META = {
+        # Quantitative Aptitude
         "percentages": {"topic": "Percentages", "total": 41},
         "percentage": {"topic": "Percentages", "total": 41},
         "profit-loss": {"topic": "Profit & Loss", "total": 38},
@@ -170,6 +171,19 @@ def get_aptitude_questions(topic_slug: str):
         "time-speed-distance": {"topic": "Time, Speed & Distance", "total": 50},
         "probability": {"topic": "Probability", "total": 30},
         "permutations-combinations": {"topic": "Permutations & Combinations", "total": 35},
+
+        # Logical Reasoning
+        "blood-relations": {"topic": "Blood Relations", "total": 28},
+        "seating-arrangement": {"topic": "Seating Arrangement", "total": 34},
+        "coding-decoding": {"topic": "Coding-Decoding", "total": 40},
+        "syllogisms": {"topic": "Syllogisms", "total": 25},
+        "puzzles": {"topic": "Puzzles", "total": 32},
+
+        # Verbal Ability
+        "grammar": {"topic": "Grammar", "total": 60},
+        "reading-comprehension": {"topic": "Reading Comprehension", "total": 20},
+        "vocabulary": {"topic": "Vocabulary", "total": 100},
+        "sentence-correction": {"topic": "Sentence Correction", "total": 45},
     }
     if slug_norm in TOPICS_META:
         meta = TOPICS_META[slug_norm]
