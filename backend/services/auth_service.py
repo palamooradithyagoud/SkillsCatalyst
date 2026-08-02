@@ -23,7 +23,10 @@ def _sign_guest_id(guest_hex: str) -> str:
 
 
 def _verify_guest_id(signed_guest_id: str) -> Optional[str]:
-    """Verifies HMAC signature of a guest session ID token."""
+    """
+    Verifies HMAC signature of a guest session ID token.
+    Returns the underlying raw guest ID if valid, else None.
+    """
     if not signed_guest_id or "." not in signed_guest_id:
         return None
     parts = signed_guest_id.rsplit(".", 1)
@@ -32,7 +35,7 @@ def _verify_guest_id(signed_guest_id: str) -> Optional[str]:
     guest_hex, sig = parts[0], parts[1]
     expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), guest_hex.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
     if hmac.compare_digest(sig, expected_sig):
-        return signed_guest_id
+        return guest_hex
     return None
 
 
@@ -64,10 +67,11 @@ def get_current_user_id(
     )
 
 
-def sanitize_or_generate_guest_id(raw_session_id: Optional[str]) -> Tuple[str, bool]:
+def sanitize_or_generate_guest_id(raw_session_id: Optional[str]) -> Tuple[str, str]:
     """
     Sanitizes client-provided x-session-id or generates a cryptographically isolated signed guest ID.
-    Returns (resolved_session_id, is_newly_issued).
+    Returns (raw_session_id_for_db, signed_session_token_for_client).
+
     - Checks HMAC signature for modern signed guest tokens (`guest_<hex>.<sig>`).
     - Accepts legacy unauthenticated guest IDs (`guest_...`) for full backward compatibility & zero data loss.
     - Prevents raw UUID impersonation without Bearer JWT (maps raw unauthenticated UUIDs to guest namespace).
@@ -78,24 +82,26 @@ def sanitize_or_generate_guest_id(raw_session_id: Optional[str]) -> Tuple[str, b
         if cleaned not in ("undefined", "null", "", "guest_session_default"):
             # 1. Verify signed HMAC guest token
             if "." in cleaned and cleaned.startswith("guest_"):
-                verified = _verify_guest_id(cleaned)
-                if verified:
-                    return verified, False
+                raw_id = _verify_guest_id(cleaned)
+                if raw_id:
+                    return raw_id, cleaned
 
             # 2. Legacy guest token support (backward compatibility for active guest sessions)
+            # CLEANUP_PHASE_3: In Phase 3 after all active clients have migrated, remove unsigned legacy token support.
             if cleaned.startswith("guest_") and _SAFE_GUEST_REGEX.match(cleaned):
-                return cleaned, False
+                signed_token = _sign_guest_id(cleaned)
+                return cleaned, signed_token
 
             # 3. Unauthenticated raw UUID attempt — namespace to guest to prevent IDOR spoofing
             if _UUID_REGEX.match(cleaned):
                 namespaced_guest_hex = f"guest_{cleaned.replace('-', '')[:24]}"
-                signed_id = _sign_guest_id(namespaced_guest_hex)
-                return signed_id, True
+                signed_token = _sign_guest_id(namespaced_guest_hex)
+                return namespaced_guest_hex, signed_token
 
     # 4. Generate fresh HMAC-signed guest session token
     new_guest_hex = f"guest_{secrets.token_hex(16)}"
-    signed_id = _sign_guest_id(new_guest_hex)
-    return signed_id, True
+    signed_token = _sign_guest_id(new_guest_hex)
+    return new_guest_hex, signed_token
 
 
 def get_session_or_user_id(
@@ -120,8 +126,8 @@ def get_session_or_user_id(
                 except Exception as e:
                     logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
 
-    session_id, _ = sanitize_or_generate_guest_id(x_session_id)
-    return session_id
+    raw_db_id, _ = sanitize_or_generate_guest_id(x_session_id)
+    return raw_db_id
 
 
 def get_optional_user_id(

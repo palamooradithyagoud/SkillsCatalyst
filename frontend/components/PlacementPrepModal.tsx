@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
 import { supabase } from "@/lib/supabase";
+import { getAuthHeaders, apiFetch } from "@/lib/api";
 
 const TOPIC_ID_MAP: Record<string, number> = {
   // Quantitative Aptitude
@@ -274,18 +275,20 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
       const userId = authData.user?.id || "guest_user";
       const topicId = TOPIC_ID_MAP[topicName] || 1;
 
-      fetch("/api/practice/attempt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          topic_id: topicId,
-          question_id: questionId,
-          selected_option_index: optionIdx,
-          is_correct: isCorrect,
-          time_taken_seconds: timeSpentSec,
-        }),
-      }).catch(() => {});
+      getAuthHeaders().then((headers) => {
+        apiFetch("/api/practice/attempt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...headers },
+          body: JSON.stringify({
+            user_id: userId,
+            topic_id: topicId,
+            question_id: questionId,
+            selected_option_index: optionIdx,
+            is_correct: isCorrect,
+            time_taken_seconds: timeSpentSec,
+          }),
+        }).catch(() => {});
+      });
 
       if (authData.user?.id) {
         await supabase.from("user_aptitude_attempts").upsert(
