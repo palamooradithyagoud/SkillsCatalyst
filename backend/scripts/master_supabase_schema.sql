@@ -221,8 +221,19 @@ CREATE POLICY "Strict user ownership on saved_playlists" ON public.saved_playlis
 DROP POLICY IF EXISTS "Strict user ownership on video_progress" ON public.video_progress;
 CREATE POLICY "Strict user ownership on video_progress" ON public.video_progress FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Allow all on learning_progress" ON public.learning_progress;
 DROP POLICY IF EXISTS "Allow session owner access on learning_progress" ON public.learning_progress;
-CREATE POLICY "Allow session owner access on learning_progress" ON public.learning_progress FOR ALL USING (session_id = (auth.uid())::text OR user_id = auth.uid() OR auth.role() = 'service_role' OR auth.role() = 'anon') WITH CHECK (session_id = (auth.uid())::text OR user_id = auth.uid() OR auth.role() = 'service_role' OR auth.role() = 'anon');
+DROP POLICY IF EXISTS "Users own learning progress" ON public.learning_progress;
+DROP POLICY IF EXISTS "Strict user ownership on learning_progress" ON public.learning_progress;
+DROP POLICY IF EXISTS "Service role full access on learning_progress" ON public.learning_progress;
+
+CREATE POLICY "Strict user ownership on learning_progress"
+    ON public.learning_progress FOR ALL TO authenticated
+    USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Service role full access on learning_progress"
+    ON public.learning_progress FOR ALL TO service_role
+    USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow read skills_cache" ON public.skills_cache;
 CREATE POLICY "Allow read skills_cache" ON public.skills_cache FOR SELECT USING (true);
