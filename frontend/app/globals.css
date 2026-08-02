@@ -293,3 +293,51 @@ input:-webkit-autofill:active {
 /* ────────────── CIRCULAR PROGRESS ────────────── */
 .progress-ring-track { stroke: rgba(255,255,255,0.05); }
 .progress-ring-fill { transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ────────────── EXPLORE BUTTON (From Uiverse.io by vinodjangid07) ────────────── */
+.Explore-Button {
+  width: fit-content;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 15px;
+  gap: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  background: linear-gradient(120deg, rgb(65, 43, 95), rgb(96, 51, 154));
+}
+.IconContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+}
+.telescope {
+  width: 100%;
+  height: auto;
+  transform-origin: center;
+  transition: all 1s;
+  transform: rotate(20deg);
+}
+.tripod {
+  width: 60%;
+  height: auto;
+}
+.text {
+  color: rgb(240, 240, 240);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+.Explore-Button:hover .telescope,
+.group:hover .telescope {
+  transform: rotate(-35deg);
+}
+
+
+
