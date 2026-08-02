@@ -120,12 +120,13 @@ async def production_hardening_middleware(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
     # Auto-issue signed guest session token for non-authenticated guest requests
-    raw_sid = request.headers.get("x-session-id")
     auth_hdr = request.headers.get("authorization")
-    if not auth_hdr:
-        from backend.services.auth_service import sanitize_or_generate_guest_id
-        resolved_sid, _ = sanitize_or_generate_guest_id(raw_sid)
-        response.headers["X-Guest-Session-Token"] = resolved_sid
+    from backend.services.auth_service import get_optional_user_id, sanitize_or_generate_guest_id
+    user_id = get_optional_user_id(authorization=auth_hdr)
+    if not user_id:
+        raw_sid = request.headers.get("x-session-id")
+        _, signed_token = sanitize_or_generate_guest_id(raw_sid)
+        response.headers["X-Guest-Session-Token"] = signed_token
 
     # Structured Railway Telemetry Log
     logger.info(

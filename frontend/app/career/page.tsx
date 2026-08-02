@@ -23,7 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { reviewResume } from "@/lib/api";
+import { reviewResume, getAuthHeaders, handleGuestTokenFromResponse } from "@/lib/api";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
 
 // ---------------------------------------------------------------------------
@@ -265,6 +265,7 @@ export default function CareerPage() {
     };
 
     xhr.onload = () => {
+      handleGuestTokenFromResponse(xhr);
       try {
         const data = JSON.parse(xhr.responseText);
         if (xhr.status >= 200 && xhr.status < 300 && data.success) {
@@ -299,7 +300,12 @@ export default function CareerPage() {
       setUploadStage("upload_error");
     };
 
-    xhr.send(formData);
+    getAuthHeaders().then((headers) => {
+      Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+      xhr.send(formData);
+    }).catch(() => {
+      xhr.send(formData);
+    });
   }, []);
 
   // -------------------------------------------------------------------------

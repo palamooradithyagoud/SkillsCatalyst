@@ -6,7 +6,7 @@ export function getGuestSessionId(): string {
   if (typeof window === "undefined") return "guest_session_default";
   try {
     let sid = localStorage.getItem("skillscatalyst_guest_session_id");
-    if (!sid) {
+    if (!sid || sid === "undefined" || sid === "null") {
       sid = "guest_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
       localStorage.setItem("skillscatalyst_guest_session_id", sid);
     }
@@ -14,6 +14,61 @@ export function getGuestSessionId(): string {
   } catch {
     return "guest_session_default";
   }
+}
+
+/**
+ * Extracts raw underlying guest ID without signature for direct Supabase DB queries
+ * (e.g., 'guest_abc123' from 'guest_abc123.signature').
+ */
+export function getRawGuestSessionId(): string {
+  const sid = getGuestSessionId();
+  if (sid && sid.startsWith("guest_") && sid.includes(".")) {
+    return sid.split(".")[0];
+  }
+  return sid;
+}
+
+/**
+ * Stores HMAC-signed guest session token issued by FastAPI backend.
+ * Never generates a fresh client ID once a signed token exists.
+ */
+export function storeGuestSessionToken(token: string | null | undefined): void {
+  if (typeof window === "undefined" || !token) return;
+  const cleaned = token.trim();
+  if (cleaned && cleaned !== "undefined" && cleaned !== "null" && cleaned !== "guest_session_default") {
+    try {
+      localStorage.setItem("skillscatalyst_guest_session_id", cleaned);
+    } catch {}
+  }
+}
+
+/**
+ * Inspects response headers for 'X-Guest-Session-Token' and updates local storage if present.
+ */
+export function handleGuestTokenFromResponse(res: Response | XMLHttpRequest | null | undefined): void {
+  if (typeof window === "undefined" || !res) return;
+  try {
+    let token: string | null = null;
+    if ("headers" in res && res.headers && typeof res.headers.get === "function") {
+      token = res.headers.get("X-Guest-Session-Token") || res.headers.get("x-guest-session-token");
+    } else if ("getResponseHeader" in res && typeof (res as XMLHttpRequest).getResponseHeader === "function") {
+      token = (res as XMLHttpRequest).getResponseHeader("X-Guest-Session-Token") || (res as XMLHttpRequest).getResponseHeader("x-guest-session-token");
+    }
+    if (token) {
+      storeGuestSessionToken(token);
+    }
+  } catch {}
+}
+
+/**
+ * Centralized fetch wrapper for FastAPI backend API calls.
+ * Automatically captures X-Guest-Session-Token and handles 401 unauthenticated cleanup.
+ */
+export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const res = await fetch(input, init);
+  handleGuestTokenFromResponse(res);
+  handleUnauthenticated(res);
+  return res;
 }
 
 export async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -49,11 +104,10 @@ export async function fetchDashboardData() {
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/dashboard`, {
+      const res = await apiFetch(`${API_BASE}/api/dashboard`, {
         headers: { ...authHeaders },
         cache: "no-store",
       });
-      handleUnauthenticated(res);
       if (res.ok) {
         const json = await res.json();
         if (json && json.metrics) {
@@ -72,11 +126,10 @@ export async function fetchActiveRoadmap() {
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/dashboard/active-roadmap`, {
+      const res = await apiFetch(`${API_BASE}/api/dashboard/active-roadmap`, {
         headers: { ...authHeaders },
         cache: "no-store",
       });
-      handleUnauthenticated(res);
       if (res.ok) {
         const json = await res.json();
         if (json) return json;
@@ -94,7 +147,7 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
-      await fetch(`${API_BASE}/api/dashboard/active-roadmap/${encodeURIComponent(normId)}`, {
+      await apiFetch(`${API_BASE}/api/dashboard/active-roadmap/${encodeURIComponent(normId)}`, {
         method: "DELETE",
         headers: { ...authHeaders },
       });
@@ -702,9 +755,10 @@ async function getFallbackDashboardData() {
 
 export async function sendMentorMessage(prompt: string) {
   try {
-    const res = await fetch(`${API_BASE}/api/ai-mentor/chat`, {
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ prompt }),
     });
     if (!res.ok) throw new Error("Failed to reach AI mentor");
@@ -718,9 +772,11 @@ export async function extractResume(file: File): Promise<{ success: boolean; tex
   try {
     const formData = new FormData();
     formData.append("file", file);
+    const authHeaders = await getAuthHeaders();
 
-    const res = await fetch(`${API_BASE}/api/resume/extract`, {
+    const res = await apiFetch(`${API_BASE}/api/resume/extract`, {
       method: "POST",
+      headers: { ...authHeaders },
       body: formData,
     });
 
@@ -751,7 +807,7 @@ export async function extractResume(file: File): Promise<{ success: boolean; tex
 export async function reviewResume(resumeText: string, targetRole: string, yearsExperience: string, companyType: string = "Product-Based", jobDescription: string = "") {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/ai-mentor/review-resume`, {
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/review-resume`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
@@ -844,7 +900,8 @@ export async function searchSkill(
   }
   const params = new URLSearchParams({ query: query.trim(), level, language, max_results: String(max_results) });
   try {
-    const res = await fetch(`${API_BASE}/api/learning/search?${params}`, { cache: "no-store" });
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/learning/search?${params}`, { headers: { ...authHeaders }, cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.results && Array.isArray(data.results)) {
@@ -875,12 +932,12 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
     created_at: new Date().toISOString(),
   };
 
-  const sessionId = getGuestSessionId();
+  const sessionId = getRawGuestSessionId();
 
   // 1. Save via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/learning/save`, {
+    await apiFetch(`${API_BASE}/api/learning/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(row),
@@ -934,7 +991,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
 export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: boolean; completion_pct?: number }> {
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/sync-saved-playlists`, {
+    const res = await apiFetch(`${API_BASE}/api/learning/sync-saved-playlists`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ playlists }),
@@ -947,7 +1004,7 @@ export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: b
   }
 
   try {
-    const sessionId = getGuestSessionId();
+    const sessionId = getRawGuestSessionId();
     const { data: { session } } = await supabase.auth.getSession();
     const sid = session?.user?.id || sessionId;
 
@@ -976,7 +1033,7 @@ export async function unsavePlaylist(playlistId: string) {
 
   try {
     const authHeaders = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
+    await apiFetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
       method: "DELETE",
       headers: { ...authHeaders },
     });
@@ -998,7 +1055,7 @@ export async function unsavePlaylist(playlistId: string) {
   }
 
   try {
-    const sessionId = getGuestSessionId();
+    const sessionId = getRawGuestSessionId();
     const { data: { session } } = await supabase.auth.getSession();
     const sid = session?.user?.id || sessionId;
     const { data: lpData } = await supabase
@@ -1029,12 +1086,12 @@ export async function unsavePlaylist(playlistId: string) {
 
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
   let backendSaved: Playlist[] = [];
-  const sessionId = getGuestSessionId();
+  const sessionId = getRawGuestSessionId();
 
   // 1. Primary: Fetch saved playlists from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/saved`, {
+    const res = await apiFetch(`${API_BASE}/api/learning/saved`, {
       headers: { ...authHeaders },
       cache: "no-store",
     });
@@ -1154,13 +1211,13 @@ export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   const cleanId = cleanPlaylistId(playlistId);
-  const sessionId = getGuestSessionId();
+  const sessionId = getRawGuestSessionId();
   let resultVideos: PlaylistVideo[] = [];
 
   // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(
+    const res = await apiFetch(
       `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
       { headers: { ...authHeaders }, cache: "no-store" }
     );
@@ -1266,12 +1323,12 @@ export async function markVideoWatched(
   watched: boolean
 ): Promise<void> {
   const cleanId = cleanPlaylistId(playlistId);
-  const sessionId = getGuestSessionId();
+  const sessionId = getRawGuestSessionId();
 
   // 1. Save to Supabase via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/learning/video-progress`, {
+    await apiFetch(`${API_BASE}/api/learning/video-progress`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
@@ -1370,7 +1427,7 @@ export async function saveVideoProgress(
 ): Promise<void> {
   try {
     const authHeaders = await getAuthHeaders();
-    fetch(`${API_BASE}/api/learning/save-progress`, {
+    apiFetch(`${API_BASE}/api/learning/save-progress`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
@@ -1411,12 +1468,12 @@ export async function completeVideo(
   watchTime: number,
 ): Promise<{ success: boolean; completed_at?: string; playlist_stats?: { completed_videos: number } }> {
   const cleanId = cleanPlaylistId(playlistId);
-  const sessionId = getGuestSessionId();
+  const sessionId = getRawGuestSessionId();
   const nowIso = new Date().toISOString();
 
   try {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(`${API_BASE}/api/learning/complete-video`, {
+    const res = await apiFetch(`${API_BASE}/api/learning/complete-video`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
@@ -1509,7 +1566,7 @@ export async function markAllVideosWatched(
   try {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
-      const res = await fetch(`${API_BASE}/api/learning/mark-all-watched`, {
+      const res = await apiFetch(`${API_BASE}/api/learning/mark-all-watched`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
@@ -1544,9 +1601,10 @@ export interface RoadmapData {
 
 export async function generateRoadmap(skill: string): Promise<RoadmapData | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/learning/roadmap`, {
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/learning/roadmap`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ skill }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1588,7 +1646,8 @@ export type QuestionPeriod =
 /** Fetches the sorted list of all 663 company slugs. */
 export async function fetchPracticeCompanies(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/practice/companies`, { cache: "no-store" });
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/practice/companies`, { headers: { ...authHeaders }, cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data.companies ?? [];
@@ -1612,9 +1671,10 @@ export async function fetchCompanyQuestions(
     if (difficulty) params.set("difficulty", difficulty);
     if (search) params.set("search", search);
 
-    const res = await fetch(
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(
       `${API_BASE}/api/practice/questions/${encodeURIComponent(company)}?${params}`,
-      { cache: "no-store" },
+      { headers: { ...authHeaders }, cache: "no-store" },
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
@@ -1722,7 +1782,7 @@ export async function saveAcademicProfile(data: AcademicProfile) {
     // Async sync to FastAPI backend if online
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
-      fetch(`${API_BASE}/api/profile/academic`, {
+      apiFetch(`${API_BASE}/api/profile/academic`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify(data),
@@ -1763,7 +1823,7 @@ export async function saveCodingProfiles(data: CodingProfilesInput) {
     const authHeaders = await getAuthHeaders();
     if (authHeaders.Authorization) {
       try {
-        const res = await fetch(`${API_BASE}/api/profile/coding`, {
+        const res = await apiFetch(`${API_BASE}/api/profile/coding`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders },
           body: JSON.stringify(data),
