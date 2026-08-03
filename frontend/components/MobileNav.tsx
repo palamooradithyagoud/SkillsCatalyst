@@ -225,8 +225,8 @@ export default function MobileNav() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Sticky Bottom Navigation Bar (Visible on smartphone < md) ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 mobile-bottom-nav glass-strong border-t border-white/10 px-3 py-1.5 flex items-center justify-around backdrop-blur-2xl bg-[#060c18]/92">
+      {/* ── Mobile Native Floating Glass Pill Navigation Bar (Visible on smartphone < md) ── */}
+      <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-full border border-white/15 bg-[#091122]/92 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] px-2 py-1.5 flex items-center justify-around">
         {bottomBarItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -238,33 +238,33 @@ export default function MobileNav() {
             <Link
               key={item.name}
               href={item.href}
-              className="relative flex flex-col items-center justify-center py-1 px-3 min-w-[60px] min-h-[52px] rounded-2xl transition-all"
+              className="relative flex flex-col items-center justify-center py-1.5 px-3 min-w-[56px] min-h-[46px] rounded-full transition-all select-none"
             >
               {isActive && (
                 <motion.div
                   layoutId="mobileBottomNavActive"
-                  className="absolute inset-0 bg-gradient-to-tr from-blue-600/25 to-purple-600/20 rounded-2xl border border-blue-500/35 shadow-lg shadow-blue-500/20"
-                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600/35 via-purple-600/30 to-blue-500/25 rounded-full border border-blue-400/40 shadow-lg shadow-blue-500/30"
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
                 />
               )}
               <motion.div
-                whileTap={{ scale: 0.85 }}
-                className={`relative z-10 flex flex-col items-center justify-center ${
-                  isActive ? "text-blue-400" : "text-slate-400"
+                whileTap={{ scale: 0.86 }}
+                className={`relative z-10 flex flex-col items-center justify-center transition-colors duration-200 ${
+                  isActive ? "text-cyan-300" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 {isExplore ? (
-                  <ExploreIcon size={20} className="relative z-10" />
+                  <ExploreIcon size={20} className={`relative z-10 transition-transform duration-200 ${isActive ? "scale-110 text-cyan-300" : ""}`} />
                 ) : (
                   <Icon
-                    className={`w-5 h-5 relative z-10 transition-transform ${
-                      isActive ? "text-blue-400 scale-110" : "text-slate-400"
+                    className={`w-5 h-5 relative z-10 transition-all duration-200 ${
+                      isActive ? "text-cyan-300 scale-110" : "text-slate-400"
                     }`}
                   />
                 )}
                 <span
-                  className={`text-[10px] tracking-tight font-medium mt-1 relative z-10 ${
-                    isActive ? "text-white font-bold" : "text-slate-400"
+                  className={`text-[10px] tracking-tight font-medium mt-0.5 relative z-10 transition-all duration-200 ${
+                    isActive ? "text-white font-bold opacity-100 scale-105" : "text-slate-400 opacity-80"
                   }`}
                 >
                   {item.name}

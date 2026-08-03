@@ -584,39 +584,98 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const ir = metrics?.interviewReadiness;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-      <MetricCard
-        title="Learning Progress"
-        icon={<BookOpen className="w-4 h-4 text-cyan-400" />}
-        iconBg="bg-cyan-500/10 border border-cyan-500/20"
-        percentage={lp?.percentage ?? 0}
-        ringColor="#06b6d4"
-        subtitle={lp?.subtitle ?? "0 videos completed"}
-        subtitleColor="text-cyan-400"
-        delay={0.1}
-      />
-      <RoadmapMetricCard fallbackData={metrics?.roadmapProgress} />
-      <MetricCard
-        title="Resume Readiness"
-        icon={<Target className="w-4 h-4 text-blue-400" />}
-        iconBg="bg-blue-500/10 border border-blue-500/20"
-        percentage={rr?.percentage ?? 0}
-        ringColor="#3b82f6"
-        subtitle={rr?.subtitle ?? "No upload yet"}
-        subtitleColor="text-blue-400"
-        delay={0.3}
-      />
-      <MetricCard
-        title="Interview Readiness"
-        icon={<Briefcase className="w-4 h-4 text-rose-400" />}
-        iconBg="bg-rose-500/10 border border-rose-500/20"
-        percentage={ir?.isLocked ? 0 : 75}
-        ringColor="#f43f5e"
-        subtitle={ir?.subtitle ?? "Currently Locked"}
-        subtitleColor="text-slate-500"
-        isLocked={ir?.isLocked ?? true}
-        delay={0.4}
-      />
+    <div className="mb-5 sm:mb-8">
+      {/* ── Mobile Layout (< md): Smooth Horizontal Carousel with Compact Cards ── */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between px-1 mb-2">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            Your Metric Progress
+          </span>
+          <span className="text-[10px] text-slate-500 font-medium">Swipe →</span>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto no-scrollbar mobile-touch-scroll pb-2 snap-x snap-mandatory px-0.5">
+          <div className="snap-start flex-shrink-0 w-[240px]">
+            <MetricCard
+              title="Learning Progress"
+              icon={<BookOpen className="w-4 h-4 text-cyan-400" />}
+              iconBg="bg-cyan-500/10 border border-cyan-500/20"
+              percentage={lp?.percentage ?? 0}
+              ringColor="#06b6d4"
+              subtitle={lp?.subtitle ? (lp.subtitle.length > 25 ? `${lp.completedVideos || 0}/${lp.totalVideos || 0} Videos` : lp.subtitle) : "0 videos"}
+              subtitleColor="text-cyan-400"
+              delay={0.1}
+            />
+          </div>
+
+          <div className="snap-start flex-shrink-0 w-[260px]">
+            <RoadmapMetricCard fallbackData={metrics?.roadmapProgress} />
+          </div>
+
+          <div className="snap-start flex-shrink-0 w-[240px]">
+            <MetricCard
+              title="Resume Readiness"
+              icon={<Target className="w-4 h-4 text-blue-400" />}
+              iconBg="bg-blue-500/10 border border-blue-500/20"
+              percentage={rr?.percentage ?? 0}
+              ringColor="#3b82f6"
+              subtitle={rr?.subtitle ?? "Upload Resume"}
+              subtitleColor="text-blue-400"
+              delay={0.3}
+            />
+          </div>
+
+          <div className="snap-start flex-shrink-0 w-[240px]">
+            <MetricCard
+              title="Interview Prep"
+              icon={<Briefcase className="w-4 h-4 text-rose-400" />}
+              iconBg="bg-rose-500/10 border border-rose-500/20"
+              percentage={ir?.isLocked ? 0 : 75}
+              ringColor="#f43f5e"
+              subtitle={ir?.subtitle ?? "Locked"}
+              subtitleColor="text-slate-500"
+              isLocked={ir?.isLocked ?? true}
+              delay={0.4}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop Layout (>= md): Original 4-Column Grid ── */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          title="Learning Progress"
+          icon={<BookOpen className="w-4 h-4 text-cyan-400" />}
+          iconBg="bg-cyan-500/10 border border-cyan-500/20"
+          percentage={lp?.percentage ?? 0}
+          ringColor="#06b6d4"
+          subtitle={lp?.subtitle ?? "0 videos completed"}
+          subtitleColor="text-cyan-400"
+          delay={0.1}
+        />
+        <RoadmapMetricCard fallbackData={metrics?.roadmapProgress} />
+        <MetricCard
+          title="Resume Readiness"
+          icon={<Target className="w-4 h-4 text-blue-400" />}
+          iconBg="bg-blue-500/10 border border-blue-500/20"
+          percentage={rr?.percentage ?? 0}
+          ringColor="#3b82f6"
+          subtitle={rr?.subtitle ?? "No upload yet"}
+          subtitleColor="text-blue-400"
+          delay={0.3}
+        />
+        <MetricCard
+          title="Interview Readiness"
+          icon={<Briefcase className="w-4 h-4 text-rose-400" />}
+          iconBg="bg-rose-500/10 border border-rose-500/20"
+          percentage={ir?.isLocked ? 0 : 75}
+          ringColor="#f43f5e"
+          subtitle={ir?.subtitle ?? "Currently Locked"}
+          subtitleColor="text-slate-500"
+          isLocked={ir?.isLocked ?? true}
+          delay={0.4}
+        />
+      </div>
     </div>
   );
 }

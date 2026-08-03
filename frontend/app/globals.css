@@ -418,7 +418,17 @@ input:-webkit-autofill:active {
   .mobile-touch-scroll {
     -webkit-overflow-scrolling: touch;
   }
+
+  /* No Scrollbar Utility for Mobile Horizontal Carousels */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
+
 
 
 

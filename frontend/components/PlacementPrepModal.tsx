@@ -20,6 +20,8 @@ import {
   Lightbulb,
   Check,
   Zap,
+  Grid,
+  LayoutGrid,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
@@ -151,6 +153,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
   const [showSolutionMap, setShowSolutionMap] = useState<Record<number, boolean>>({});
   const [practiceViewMode, setPracticeViewMode] = useState<"card" | "sheet">("card");
   const [quizFinished, setQuizFinished] = useState<boolean>(false);
+  const [mobileGridOpen, setMobileGridOpen] = useState<boolean>(false);
 
   // Per-Question Stopwatch (Unlimited timer - counts up time spent on current question)
   const [questionTimerSeconds, setQuestionTimerSeconds] = useState<number>(0);
@@ -633,15 +636,17 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                       <div className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col justify-between space-y-6">
                         <div>
                           {/* Top Practice Progress Bar & Stopwatch */}
-                          <div className="space-y-2 mb-6">
+                          <div className="space-y-2.5 mb-6">
                             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-slate-400">
                               <span>Question {currentIndex + 1} of {totalQuestions}</span>
-                              <div className="flex items-center gap-3">
-                                <span className="flex items-center gap-1.5 text-amber-300 bg-amber-500/15 px-3 py-1 rounded-full border border-amber-500/30 font-extrabold text-xs shadow-sm">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="flex items-center gap-1 text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-full border border-amber-500/30 font-extrabold text-[11px] sm:text-xs shadow-sm">
                                   <Clock className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>Time Spent: {formatTimer(questionTimerSeconds)}</span>
+                                  <span>{formatTimer(questionTimerSeconds)}</span>
                                 </span>
-                                <span className="text-purple-400 font-extrabold">Practiced: {answeredCount} / {totalQuestions}</span>
+                                <span className="text-purple-400 font-extrabold text-xs">
+                                  {answeredCount}/{totalQuestions}
+                                </span>
                               </div>
                             </div>
                             <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -651,6 +656,39 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                                 animate={{ width: `${progressPercent}%` }}
                                 transition={{ duration: 0.3 }}
                               />
+                            </div>
+
+                            {/* Mobile Horizontal Question Selector Chips (Visible < lg) */}
+                            <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 mobile-touch-scroll">
+                              <button
+                                onClick={() => setMobileGridOpen(true)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-bold shrink-0"
+                              >
+                                <Grid className="w-3.5 h-3.5 text-purple-300" />
+                                <span>All ({totalQuestions})</span>
+                              </button>
+                              {questionsList.map((q, idx) => {
+                                const hasAns = userAnswers[q.id] !== undefined;
+                                const isCorr = userAnswers[q.id] === q.correctIndex;
+                                const isCur = idx === currentIndex;
+
+                                let chipStyle = "bg-slate-800/80 text-slate-400 border-white/10";
+                                if (hasAns) {
+                                  chipStyle = isCorr ? "bg-emerald-600 text-white border-emerald-400" : "bg-rose-600 text-white border-rose-400";
+                                }
+
+                                return (
+                                  <button
+                                    key={q.id}
+                                    onClick={() => setCurrentIndex(idx)}
+                                    className={`w-8 h-8 rounded-lg text-xs font-bold border shrink-0 transition-all flex items-center justify-center ${chipStyle} ${
+                                      isCur ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-[#060c18] scale-105" : ""
+                                    }`}
+                                  >
+                                    {q.id}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
 
@@ -822,8 +860,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                         </div>
                       </div>
 
-                      {/* Right Question Index Palette Drawer */}
-                      <div className="w-full lg:w-72 bg-[#090e1c] border-t lg:border-t-0 lg:border-l border-white/[0.08] p-5 flex flex-col justify-between shrink-0">
+                      {/* Right Question Index Palette (Sidebar on Desktop lg:, Bottom Sheet Modal on Mobile) */}
+                      <div className="hidden lg:flex lg:w-72 bg-[#090e1c] border-l border-white/[0.08] p-5 flex-col justify-between shrink-0">
                         <div>
                           <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-4 flex items-center justify-between">
                             <span>Practice Questions Index</span>
@@ -831,7 +869,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                           </h4>
 
                           {/* Question Grid Numbers */}
-                          <div className="grid grid-cols-6 sm:grid-cols-9 lg:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                             {questionsList.map((q, idx) => {
                               const hasAns = userAnswers[q.id] !== undefined;
                               const isCorr = userAnswers[q.id] === q.correctIndex;
@@ -868,6 +906,81 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                           </button>
                         </div>
                       </div>
+
+                      {/* Mobile Bottom Sheet Modal for Full 41-Question Grid (< lg) */}
+                      <AnimatePresence>
+                        {mobileGridOpen && (
+                          <>
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => setMobileGridOpen(false)}
+                              className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 lg:hidden"
+                            />
+                            <motion.div
+                              initial={{ y: "100%" }}
+                              animate={{ y: 0 }}
+                              exit={{ y: "100%" }}
+                              transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                              className="fixed bottom-0 inset-x-0 bg-[#090e1c] border-t border-white/15 rounded-t-3xl p-6 z-50 max-h-[85vh] overflow-y-auto lg:hidden"
+                            >
+                              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+                                <div className="font-extrabold text-white text-sm flex items-center gap-2">
+                                  <Grid className="w-4 h-4 text-purple-400" />
+                                  <span>Questions Index ({answeredCount}/{totalQuestions} Practiced)</span>
+                                </div>
+                                <button
+                                  onClick={() => setMobileGridOpen(false)}
+                                  className="p-2 rounded-xl glass text-slate-400 hover:text-white"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-6 gap-2 mb-6">
+                                {questionsList.map((q, idx) => {
+                                  const hasAns = userAnswers[q.id] !== undefined;
+                                  const isCorr = userAnswers[q.id] === q.correctIndex;
+                                  const isCur = idx === currentIndex;
+
+                                  let gridStyle = "bg-slate-800/60 text-slate-400 border-white/[0.05]";
+                                  if (hasAns) {
+                                    gridStyle = isCorr
+                                      ? "bg-emerald-600 text-white border-emerald-400"
+                                      : "bg-rose-600 text-white border-rose-400";
+                                  }
+
+                                  return (
+                                    <button
+                                      key={q.id}
+                                      onClick={() => {
+                                        setCurrentIndex(idx);
+                                        setMobileGridOpen(false);
+                                      }}
+                                      className={`h-10 rounded-xl text-xs font-black border transition-all flex items-center justify-center ${gridStyle} ${
+                                        isCur ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-[#090e1c] scale-105" : ""
+                                      }`}
+                                    >
+                                      {q.id}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  setMobileGridOpen(false);
+                                  setQuizFinished(true);
+                                }}
+                                className="w-full py-3.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-extrabold text-white shadow-lg shadow-purple-600/30"
+                              >
+                                Finish &amp; View Summary
+                              </button>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
 

@@ -41,42 +41,61 @@ export default function DashboardPage() {
     >
       <Header userName={displayName} />
 
-      {/* ── Native Smartphone Quick Action Chips (Mobile < md only) ── */}
+      {/* ── Native Smartphone Quick Action Shortcuts (2-row iOS-style Grid < md) ── */}
       <div className="md:hidden">
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-          Quick Actions
+        <div className="flex items-center justify-between px-1 mb-2">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            Quick Actions
+          </span>
+          <span className="text-[10px] text-slate-500 font-medium">Shortcuts</span>
         </div>
-        <div className="mobile-chip-scroll flex items-center gap-2.5 overflow-x-auto pb-1">
+        <div className="grid grid-cols-4 gap-3 bg-white/[0.02] border border-white/10 rounded-2xl p-3.5 backdrop-blur-xl">
           <Link
             href="/practice"
-            className="mobile-chip-item flex items-center gap-2 px-3.5 py-2.5 rounded-2xl glass hover:bg-blue-500/20 text-xs font-bold text-blue-300 border border-blue-500/30 whitespace-nowrap min-h-[44px] shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 group select-none"
           >
-            <Target className="w-4 h-4 text-blue-400" />
-            <span>Practice Problems</span>
+            <div className="w-13 h-13 rounded-full bg-gradient-to-br from-blue-500/25 to-indigo-600/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-md shadow-blue-500/10 group-active:scale-90 transition-transform">
+              <Target className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white text-center tracking-tight">
+              Practice
+            </span>
           </Link>
 
           <Link
             href="/career"
-            className="mobile-chip-item flex items-center gap-2 px-3.5 py-2.5 rounded-2xl glass hover:bg-purple-500/20 text-xs font-bold text-purple-300 border border-purple-500/30 whitespace-nowrap min-h-[44px] shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 group select-none"
           >
-            <FileText className="w-4 h-4 text-purple-400" />
-            <span>Resume Review</span>
+            <div className="w-13 h-13 rounded-full bg-gradient-to-br from-purple-500/25 to-pink-600/20 border border-purple-400/30 flex items-center justify-center text-purple-400 shadow-md shadow-purple-500/10 group-active:scale-90 transition-transform">
+              <FileText className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white text-center tracking-tight">
+              Resume
+            </span>
           </Link>
 
           <Link
             href="/roadmaps"
-            className="mobile-chip-item flex items-center gap-2 px-3.5 py-2.5 rounded-2xl glass hover:bg-emerald-500/20 text-xs font-bold text-emerald-300 border border-emerald-500/30 whitespace-nowrap min-h-[44px] shadow-sm"
+            className="flex flex-col items-center justify-center gap-1.5 group select-none"
           >
-            <Map className="w-4 h-4 text-emerald-400" />
-            <span>Explore Roadmaps</span>
+            <div className="w-13 h-13 rounded-full bg-gradient-to-br from-emerald-500/25 to-teal-600/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-md shadow-emerald-500/10 group-active:scale-90 transition-transform">
+              <Map className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white text-center tracking-tight">
+              Roadmaps
+            </span>
           </Link>
 
           <Link
-            href="/explore"
-            className="mobile-chip-item flex items-center gap-2 px-3.5 py-2.5 rounded-2xl glass hover:bg-cyan-500/20 text-xs font-bold text-cyan-300 border border-cyan-500/30 whitespace-nowrap min-h-[44px] shadow-sm"
+            href="/ai-mentor"
+            className="flex flex-col items-center justify-center gap-1.5 group select-none"
           >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span>AI Mentor Chat</span>
+            <div className="w-13 h-13 rounded-full bg-gradient-to-br from-cyan-500/25 to-blue-600/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/10 group-active:scale-90 transition-transform">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white text-center tracking-tight">
+              AI Mentor
+            </span>
           </Link>
         </div>
       </div>
