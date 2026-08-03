@@ -716,44 +716,46 @@ function FullPlayerView({
       </AnimatePresence>
 
       {/* ── Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5 sm:mb-6">
+        <div className="flex items-start gap-3">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors px-4 py-2 glass rounded-xl shrink-0 mt-1"
+            className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-colors px-3 py-2 glass rounded-xl shrink-0 mt-0.5"
           >
-            <ChevronLeft className="w-4 h-4" /> Back to Saved Playlists
+            <ChevronLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back to Saved Playlists</span><span className="sm:hidden">Back</span>
           </motion.button>
           <div>
-            <h1 className="text-2xl font-bold text-white">{pl.title}</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <h1 className="text-lg sm:text-2xl font-bold text-white leading-snug">{pl.title}</h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
               {[pl.channel, pl.skill_query, pl.level].filter(Boolean).join(" • ")}
             </p>
           </div>
         </div>
-        <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-          <motion.div
-            key={pct}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold text-indigo-400"
-          >
-            {pct}% Completed
-          </motion.div>
-          <div className="text-sm text-slate-400">
-            {watchedCount} of {videos.length} videos
+        <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t border-white/10 pt-3 sm:pt-0 sm:border-0 shrink-0">
+          <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+            <motion.div
+              key={pct}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-lg sm:text-2xl font-bold text-indigo-400"
+            >
+              {pct}% Completed
+            </motion.div>
+            <div className="text-xs sm:text-sm text-slate-400">
+              {watchedCount} of {videos.length} videos
+            </div>
           </div>
           {videos.length > 0 && (
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => markAllMut.mutate({ watched: pct < 100 })}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-colors bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 mt-1"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20"
             >
               <CheckCircle className="w-3.5 h-3.5 text-indigo-400" />
-              {pct === 100 ? "Unmark All" : "Mark All as Watched"}
+              {pct === 100 ? "Unmark All" : "Mark All"}
             </motion.button>
           )}
         </div>
@@ -776,8 +778,7 @@ function FullPlayerView({
               src={`https://www.youtube.com/embed/videoseries?list=${ytPlaylistId}&autoplay=1&rel=0&modestbranding=1`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-              className="w-full"
-              style={{ height: 520 }}
+              className="w-full h-[320px] sm:h-[520px]"
             />
           ) : (
             <div className="h-64 flex items-center justify-center text-slate-500">
@@ -786,7 +787,7 @@ function FullPlayerView({
           )}
         </div>
       ) : (
-        <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 360px" }}>
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_360px] gap-5">
           {/* ── Left: Video + Controls */}
           <div className="flex flex-col gap-4">
             {/* YouTube Player */}

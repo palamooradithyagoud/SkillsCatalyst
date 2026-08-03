@@ -183,8 +183,92 @@ export default function SettingsPage() {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-8 pb-16 select-none"
+      className="max-w-7xl mx-auto space-y-6 pb-16 select-none"
     >
+      {/* ── Native Smartphone User Profile Hero Card ── */}
+      <div className="glass p-5 sm:p-7 rounded-3xl border border-white/10 relative overflow-hidden bg-gradient-to-br from-[#0d1730] via-[#091122] to-[#120b29] shadow-2xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+          {/* Avatar Container */}
+          <div className="relative">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-500 via-purple-600 to-cyan-400 p-1 shadow-xl shadow-blue-500/20">
+              <div className="w-full h-full rounded-full bg-[#060c18] flex items-center justify-center text-white font-black text-2xl sm:text-3xl">
+                {fullName ? fullName.charAt(0).toUpperCase() : "P"}
+              </div>
+            </div>
+            <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-slate-950 border border-emerald-300 shadow">
+              Lvl 12
+            </span>
+          </div>
+
+          {/* User Details & XP Bar */}
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {fullName || "Palamoor Adithya"}
+                </h1>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                  {session?.email || "adithya@example.com"} • {college || "Vardhaman College"}
+                </p>
+              </div>
+
+              <button
+                onClick={logout}
+                className="self-center sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </div>
+
+            {/* XP Level Bar */}
+            <div className="space-y-1 max-w-md">
+              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-400">
+                <span className="text-purple-300 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" /> 2,850 / 3,000 XP
+                </span>
+                <span className="text-cyan-400">Level 13 Next</span>
+              </div>
+              <div className="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400 rounded-full w-[85%]" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Quick Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-6 pt-5 border-t border-white/10">
+          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-extrabold text-orange-400 flex items-center gap-1">
+              🔥 14 Days
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium mt-0.5">Streak</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-extrabold text-purple-400 flex items-center gap-1">
+              🏆 18 Badges
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium mt-0.5">Earned</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-extrabold text-cyan-400 flex items-center gap-1">
+              🎯 92% ATS
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium mt-0.5">Resume Score</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-extrabold text-emerald-400 flex items-center gap-1">
+              💻 41 Solved
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium mt-0.5">Practice Qs</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── Main 2-Column Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Column: Academic & Institutional Profile */}
