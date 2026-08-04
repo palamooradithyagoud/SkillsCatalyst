@@ -382,12 +382,27 @@ function RoadmapMetricCard({ fallbackData }: { fallbackData?: any }) {
 
   const activeIndex = currentIndex % list.length;
   const currentItem = list[activeIndex] || list[0];
+  const normId = normalizeRoadmapId(currentItem?.roadmap_id || currentItem?.title);
 
-  const pct = currentItem?.progress_percent ?? 0;
-  const title = currentItem?.title || "Active Roadmap";
-  const completed = currentItem?.completed_milestones ?? 0;
-  const total = currentItem?.total_milestones ?? 20;
-  const nextTopic = currentItem?.next_module?.title || "";
+  let completedNodesObj: Record<string, boolean> = {};
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("skillscatalyst_roadmap_completed_nodes");
+      if (raw) completedNodesObj = JSON.parse(raw);
+    } catch {}
+  }
+
+  const completedForThisRoadmap = Object.entries(completedNodesObj)
+    .filter(([k, isDone]) => isDone && (k.toLowerCase().includes(normId) || k.toLowerCase().includes((currentItem?.title || "").toLowerCase())))
+    .map(([k]) => k.split("-").slice(1).join("-") || k);
+
+  const meta = getRoadmapMeta(normId, completedForThisRoadmap);
+  const localCompletedCount = completedForThisRoadmap.length;
+  const completed = Math.max(currentItem?.completed_milestones ?? 0, localCompletedCount);
+  const total = meta.total > 0 ? meta.total : (currentItem?.total_milestones ?? 20);
+  const pct = Math.min(100, Math.round((completed / total) * 100));
+  const title = currentItem?.title || meta.name || "Active Roadmap";
+  const nextTopic = meta.nextTopic || currentItem?.next_module?.title || "";
 
   const handleContinue = (targetId?: string) => {
     const rid = targetId || currentItem?.roadmap_id || "c-programming";

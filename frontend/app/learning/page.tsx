@@ -1023,6 +1023,20 @@ export default function LearningPage() {
   const [playerPlaylist, setPlayerPlaylist]   = useState<Playlist | null>(null);
   const [playerVideoIndex, setPlayerVideoIndex] = useState(0);
 
+  // ── Auto-search from URL query param (e.g. /learning?query=Python)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const qParam = params.get("query") || params.get("topic") || params.get("q");
+      if (qParam && qParam.trim()) {
+        const cleanQ = qParam.trim();
+        setQuery(cleanQ);
+        setSearchTerm(cleanQ);
+        setHasSearched(true);
+      }
+    }
+  }, []);
+
   // ── Helpers
   const showNotif = useCallback((msg: string, type: "success" | "error", actionText?: string, onAction?: () => void) => {
     setNotification({ msg, type, actionText, onAction });
