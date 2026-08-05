@@ -77,7 +77,23 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
   };
   try {
     const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    let session = data.session;
+
+    // Auto-refresh token if expired or expiring within 30 seconds
+    if (session && session.expires_at) {
+      const isExpiringSoon = Date.now() / 1000 >= session.expires_at - 30;
+      if (isExpiringSoon) {
+        const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+        if (!refreshErr && refreshed.session) {
+          session = refreshed.session;
+        } else {
+          session = null;
+          await supabase.auth.signOut().catch(() => {});
+        }
+      }
+    }
+
+    const token = session?.access_token;
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -86,7 +102,7 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 function handleUnauthenticated(res: Response) {
-  if (res.status === 401 && typeof window !== "undefined") {
+  if ((res.status === 401 || res.status === 403) && typeof window !== "undefined") {
     try {
       localStorage.removeItem("skillscatalyst_user_session");
       for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -95,6 +111,7 @@ function handleUnauthenticated(res: Response) {
           localStorage.removeItem(key);
         }
       }
+      supabase.auth.signOut().catch(() => {});
     } catch {}
   }
 }
