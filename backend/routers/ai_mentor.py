@@ -3,7 +3,7 @@ import re
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
-from backend.services.auth_service import get_current_user_id
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.services.groq_service import chat_with_groq
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 
@@ -163,7 +163,10 @@ _SKILLS_SYSTEM_PROMPT = (
 # ---------------------------------------------------------------------------
 
 @router.post("/chat", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
-async def chat_mentor(req: PromptRequest):
+async def chat_mentor(
+    req: PromptRequest,
+    current_user_id: str = Depends(get_session_or_user_id)
+):
     """
     Skills-only AI mentor chat endpoint.
     Guards against off-topic queries before hitting the LLM.

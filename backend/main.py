@@ -67,10 +67,15 @@ _env_frontend = FRONTEND_URL.strip().rstrip("/")
 if _env_frontend and _env_frontend not in _allowed_origins:
     _allowed_origins.append(_env_frontend)
 
+_extra_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+for _orig in _extra_origins:
+    _o = _orig.strip().rstrip("/")
+    if _o and _o not in _allowed_origins:
+        _allowed_origins.append(_o)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_origin_regex=r"https://skills-catalyst.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Authorization", "Content-Type", "x-session-id", "X-Request-ID", "Accept", "Origin"],

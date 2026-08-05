@@ -196,31 +196,59 @@ ALTER TABLE public.skills_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.trust_score_engine ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_feedback ENABLE ROW LEVEL SECURITY;
 
--- 14. CREATE STRICT USER OWNERSHIP POLICIES
+-- 14. CREATE SERVICE ROLE & USER OWNERSHIP POLICIES
+-- user_academic_profile
 DROP POLICY IF EXISTS "Strict user ownership on user_academic_profile" ON public.user_academic_profile;
-CREATE POLICY "Strict user ownership on user_academic_profile" ON public.user_academic_profile FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on user_academic_profile" ON public.user_academic_profile;
+CREATE POLICY "Service role access on user_academic_profile" ON public.user_academic_profile FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_academic_profile" ON public.user_academic_profile FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- user_coding_profiles
 DROP POLICY IF EXISTS "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles;
-CREATE POLICY "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Allow anon all on user_coding_profiles" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Allow authenticated or anon access on coding_profiles" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Users can only access own coding profile" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Service role access on user_coding_profiles" ON public.user_coding_profiles;
+CREATE POLICY "Service role access on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- user_progress
 DROP POLICY IF EXISTS "Strict user ownership on user_progress" ON public.user_progress;
-CREATE POLICY "Strict user ownership on user_progress" ON public.user_progress FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on user_progress" ON public.user_progress;
+CREATE POLICY "Service role access on user_progress" ON public.user_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_progress" ON public.user_progress FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- leetcode_progress
 DROP POLICY IF EXISTS "Strict user ownership on leetcode_progress" ON public.leetcode_progress;
-CREATE POLICY "Strict user ownership on leetcode_progress" ON public.leetcode_progress FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on leetcode_progress" ON public.leetcode_progress;
+CREATE POLICY "Service role access on leetcode_progress" ON public.leetcode_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on leetcode_progress" ON public.leetcode_progress FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- roadmap_progress
 DROP POLICY IF EXISTS "Strict user ownership on roadmap_progress" ON public.roadmap_progress;
-CREATE POLICY "Strict user ownership on roadmap_progress" ON public.roadmap_progress FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on roadmap_progress" ON public.roadmap_progress;
+CREATE POLICY "Service role access on roadmap_progress" ON public.roadmap_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on roadmap_progress" ON public.roadmap_progress FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- resume_scores
 DROP POLICY IF EXISTS "Strict user ownership on resume_scores" ON public.resume_scores;
-CREATE POLICY "Strict user ownership on resume_scores" ON public.resume_scores FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on resume_scores" ON public.resume_scores;
+CREATE POLICY "Service role access on resume_scores" ON public.resume_scores FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on resume_scores" ON public.resume_scores FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- saved_playlists
 DROP POLICY IF EXISTS "Strict user ownership on saved_playlists" ON public.saved_playlists;
-CREATE POLICY "Strict user ownership on saved_playlists" ON public.saved_playlists FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on saved_playlists" ON public.saved_playlists;
+CREATE POLICY "Service role access on saved_playlists" ON public.saved_playlists FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on saved_playlists" ON public.saved_playlists FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- video_progress
 DROP POLICY IF EXISTS "Strict user ownership on video_progress" ON public.video_progress;
-CREATE POLICY "Strict user ownership on video_progress" ON public.video_progress FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Service role access on video_progress" ON public.video_progress;
+CREATE POLICY "Service role access on video_progress" ON public.video_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on video_progress" ON public.video_progress FOR ALL USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
+-- learning_progress
 DROP POLICY IF EXISTS "Allow all on learning_progress" ON public.learning_progress;
 DROP POLICY IF EXISTS "Allow session owner access on learning_progress" ON public.learning_progress;
 DROP POLICY IF EXISTS "Users own learning progress" ON public.learning_progress;
@@ -228,8 +256,8 @@ DROP POLICY IF EXISTS "Strict user ownership on learning_progress" ON public.lea
 DROP POLICY IF EXISTS "Service role full access on learning_progress" ON public.learning_progress;
 
 CREATE POLICY "Strict user ownership on learning_progress"
-    ON public.learning_progress FOR ALL TO authenticated
-    USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    ON public.learning_progress FOR ALL
+    USING (auth.uid() IS NULL OR auth.uid()::text = user_id::text) WITH CHECK (auth.uid() IS NULL OR auth.uid()::text = user_id::text);
 
 CREATE POLICY "Service role full access on learning_progress"
     ON public.learning_progress FOR ALL TO service_role

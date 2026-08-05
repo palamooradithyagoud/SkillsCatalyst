@@ -26,30 +26,28 @@ def test_secure_guest_sessions():
     print("Testing secure guest session architecture...")
     
     # 1. Fresh signed guest ID generation
-    signed_id, is_new = sanitize_or_generate_guest_id(None)
-    assert is_new == True
-    assert signed_id.startswith("guest_")
-    assert "." in signed_id
-    assert _verify_guest_id(signed_id) == signed_id
+    raw_id, signed_token = sanitize_or_generate_guest_id(None)
+    assert raw_id.startswith("guest_")
+    assert signed_token.startswith("guest_")
+    assert "." in signed_token
+    assert _verify_guest_id(signed_token) == raw_id
 
     # 2. Re-verification of valid signed guest ID
-    verified_id, is_new_2 = sanitize_or_generate_guest_id(signed_id)
-    assert is_new_2 == False
-    assert verified_id == signed_id
+    v_raw, v_signed = sanitize_or_generate_guest_id(signed_token)
+    assert v_raw == raw_id
+    assert v_signed == signed_token
 
     # 3. Tampered signature rejection & new token issuance
-    tampered_id = signed_id[:-4] + "0000"
-    reissued_id, is_new_3 = sanitize_or_generate_guest_id(tampered_id)
-    assert is_new_3 == True
-    assert reissued_id != tampered_id
-    assert _verify_guest_id(reissued_id) == reissued_id
+    tampered_id = signed_token[:-4] + "0000"
+    re_raw, re_signed = sanitize_or_generate_guest_id(tampered_id)
+    assert re_signed != tampered_id
+    assert _verify_guest_id(re_signed) == re_raw
 
     # 4. Raw UUID namespacing (prevents unauthenticated UUID spoofing)
     raw_uuid = "123e4567-e89b-12d3-a456-426614174000"
-    namespaced_id, is_new_4 = sanitize_or_generate_guest_id(raw_uuid)
-    assert is_new_4 == True
-    assert raw_uuid not in namespaced_id
-    assert namespaced_id.startswith("guest_")
+    ns_raw, ns_signed = sanitize_or_generate_guest_id(raw_uuid)
+    assert raw_uuid not in ns_raw
+    assert ns_raw.startswith("guest_")
 
     print("[OK] Guest session security & HMAC signing passed!")
 
@@ -69,16 +67,26 @@ def test_security_headers_and_cors():
     assert "X-Request-ID" in headers
     assert "X-Guest-Session-Token" in headers
     
-    # CORS Origin validation
+    # Valid explicit CORS Origin validation
     cors_resp = client.options(
         "/health",
         headers={
-            "Origin": "https://skills-catalyst-git-main.vercel.app",
+            "Origin": "https://skills-catalyst.vercel.app",
             "Access-Control-Request-Method": "GET",
         }
     )
     assert cors_resp.status_code == 200
-    assert cors_resp.headers.get("access-control-allow-origin") == "https://skills-catalyst-git-main.vercel.app"
+    assert cors_resp.headers.get("access-control-allow-origin") == "https://skills-catalyst.vercel.app"
+
+    # Disallowed wildcard/subdomain Origin rejected
+    invalid_cors = client.options(
+        "/health",
+        headers={
+            "Origin": "https://skills-catalyst-unauthorized.vercel.app",
+            "Access-Control-Request-Method": "GET",
+        }
+    )
+    assert invalid_cors.status_code == 400
 
     print("[OK] CORS & Security Headers tests passed!")
 
