@@ -43,7 +43,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
-import { generateRoadmap, RoadmapData } from "@/lib/api";
+import { generateRoadmap, normalizeRoadmapId, RoadmapData } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import BrandReactIcon from "@/components/icons/BrandReactIcon";
 import PythonIcon from "@/components/icons/PythonIcon";
@@ -3684,125 +3684,65 @@ const NEXTJS_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
   },
 };
 
-function getRightBranchesForNode(nodeName: string): NodeTreeBranches {
-  if (NEXTJS_NODE_TREE_BRANCHES[nodeName]) {
-    return NEXTJS_NODE_TREE_BRANCHES[nodeName];
-  }
-  const strippedNextNum = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (NEXTJS_NODE_TREE_BRANCHES[strippedNextNum]) {
-    return NEXTJS_NODE_TREE_BRANCHES[strippedNextNum];
-  }
-  for (const [key, value] of Object.entries(NEXTJS_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
+function getRightBranchesForNode(nodeName: string, roadmapId?: string): NodeTreeBranches {
+  const normRid = roadmapId ? normalizeRoadmapId(roadmapId) : "";
+
+  const matchInDict = (dict: Record<string, NodeTreeBranches>): NodeTreeBranches | null => {
+    if (dict[nodeName]) return dict[nodeName];
+    const strippedNum = nodeName.replace(/^\d+\.\s*/, "").trim();
+    if (dict[strippedNum]) return dict[strippedNum];
+    for (const [key, value] of Object.entries(dict)) {
+      const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase().trim();
+      const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase().trim();
+      if (cleanKey === cleanNode) {
+        return value;
+      }
     }
+    return null;
+  };
+
+  // Prioritize dictionary of the currently viewed roadmap
+  if (normRid === "c-programming") {
+    const found = matchInDict(C_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "cpp-programming") {
+    const found = matchInDict(CPP_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "python-mastery") {
+    const found = matchInDict(PYTHON_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "java-spring-boot") {
+    const found = matchInDict(JAVA_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "react-development") {
+    const found = matchInDict(REACT_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "nextjs-framework") {
+    const found = matchInDict(NEXTJS_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "nodejs-runtime") {
+    const found = matchInDict(NODEJS_NODE_TREE_BRANCHES);
+    if (found) return found;
+  } else if (normRid === "devops-engineer") {
+    const found = matchInDict(DEVOPS_NODE_TREE_BRANCHES);
+    if (found) return found;
   }
 
-  if (NODEJS_NODE_TREE_BRANCHES[nodeName]) {
-    return NODEJS_NODE_TREE_BRANCHES[nodeName];
-  }
-  const strippedNodeNum = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (NODEJS_NODE_TREE_BRANCHES[strippedNodeNum]) {
-    return NODEJS_NODE_TREE_BRANCHES[strippedNodeNum];
-  }
-  for (const [key, value] of Object.entries(NODEJS_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
+  // Fallback checks across all dictionaries if roadmapId not specified
+  const fallbackOrder = [
+    C_NODE_TREE_BRANCHES,
+    CPP_NODE_TREE_BRANCHES,
+    PYTHON_NODE_TREE_BRANCHES,
+    JAVA_NODE_TREE_BRANCHES,
+    REACT_NODE_TREE_BRANCHES,
+    NEXTJS_NODE_TREE_BRANCHES,
+    NODEJS_NODE_TREE_BRANCHES,
+    DEVOPS_NODE_TREE_BRANCHES,
+  ];
 
-  if (REACT_NODE_TREE_BRANCHES[nodeName]) {
-    return REACT_NODE_TREE_BRANCHES[nodeName];
-  }
-  const strippedReactNum = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (REACT_NODE_TREE_BRANCHES[strippedReactNum]) {
-    return REACT_NODE_TREE_BRANCHES[strippedReactNum];
-  }
-  for (const [key, value] of Object.entries(REACT_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
-
-  if (JAVA_NODE_TREE_BRANCHES[nodeName]) {
-    return JAVA_NODE_TREE_BRANCHES[nodeName];
-  }
-  const strippedNum = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (JAVA_NODE_TREE_BRANCHES[strippedNum]) {
-    return JAVA_NODE_TREE_BRANCHES[strippedNum];
-  }
-  for (const [key, value] of Object.entries(JAVA_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
-
-  if (C_NODE_TREE_BRANCHES[nodeName]) {
-    return C_NODE_TREE_BRANCHES[nodeName];
-  }
-  const strippedCNum = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (C_NODE_TREE_BRANCHES[strippedCNum]) {
-    return C_NODE_TREE_BRANCHES[strippedCNum];
-  }
-  for (const [key, value] of Object.entries(C_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
-
-  if (CPP_NODE_TREE_BRANCHES[nodeName]) {
-    return CPP_NODE_TREE_BRANCHES[nodeName];
-  }
-  if (CPP_NODE_TREE_BRANCHES[strippedCNum]) {
-    return CPP_NODE_TREE_BRANCHES[strippedCNum];
-  }
-  for (const [key, value] of Object.entries(CPP_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
-
-  if (PYTHON_NODE_TREE_BRANCHES[nodeName]) {
-    return PYTHON_NODE_TREE_BRANCHES[nodeName];
-  }
-  if (PYTHON_NODE_TREE_BRANCHES[strippedCNum]) {
-    return PYTHON_NODE_TREE_BRANCHES[strippedCNum];
-  }
-  for (const [key, value] of Object.entries(PYTHON_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
-  }
-
-  if (DEVOPS_NODE_TREE_BRANCHES[nodeName]) {
-    return DEVOPS_NODE_TREE_BRANCHES[nodeName];
-  }
-
-  const strippedNumber = nodeName.replace(/^\d+\.\s*/, "").trim();
-  if (DEVOPS_NODE_TREE_BRANCHES[strippedNumber]) {
-    return DEVOPS_NODE_TREE_BRANCHES[strippedNumber];
-  }
-
-  for (const [key, value] of Object.entries(DEVOPS_NODE_TREE_BRANCHES)) {
-    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
-    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
-    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
-      return value;
-    }
+  for (const dict of fallbackOrder) {
+    const found = matchInDict(dict);
+    if (found) return found;
   }
 
   const clean = nodeName.replace(/\([^)]*\)/g, "").replace(/^\d+\.\s*/, "").trim();
@@ -3846,7 +3786,7 @@ function RoadmapDetailView({
     const updatedSubtopics = { ...completedSubtopics, [subtopicId]: !isCurrentlyDone };
     setCompletedSubtopics(updatedSubtopics);
 
-    const branchData = getRightBranchesForNode(nodeName);
+    const branchData = getRightBranchesForNode(nodeName, selectedRoadmap.id);
     const allTopics = branchData.groups.flatMap((g) => g.topics);
     const purpleTopics = isCareerRoadmap ? allTopics.filter((t) => t.isRecommended) : [];
     const requiredTopics = purpleTopics.length > 0 ? purpleTopics : allTopics;
@@ -4226,7 +4166,7 @@ function RoadmapDetailView({
                     {section.nodes.map((nodeName, nIdx) => {
                       const done = isNodeDone(selectedRoadmap.title, nodeName, false);
                       const isExpanded = expandedNodeName === nodeName;
-                      const branchData = getRightBranchesForNode(nodeName);
+                      const branchData = getRightBranchesForNode(nodeName, selectedRoadmap.id);
 
                       return (
                         <div key={nIdx} className="w-full relative">
