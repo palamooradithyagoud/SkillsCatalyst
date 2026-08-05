@@ -536,122 +536,78 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     sections: [
       {
         title: "1. Learn the Basics",
-        subtitle: "Master Java fundamental syntax, program lifecycle, variables, data types, operators, and control flow.",
-        nodes: [
-          "Basic Syntax",
-          "Lifecycle of a Program",
-          "Data Types & Variables",
-          "Type Casting",
-          "Strings and Methods",
-          "Math Operations",
-          "Arrays",
-          "Conditionals & Loops",
-          "Basics of OOP",
-        ],
+        subtitle: "Click to explore Basic Syntax, Program Lifecycle, Data Types, Variables & Scopes, Type Casting, Strings, Math, Arrays, Conditionals, Loops, and Basics of OOP on the right.",
+        nodes: ["1. Learn the Basics"],
       },
       {
-        title: "2. Object Oriented Programming (OOP)",
-        subtitle: "Understand core OOP concepts, inheritance, polymorphism, encapsulation, abstraction, and records.",
-        nodes: [
-          "Classes and Objects",
-          "Attributes and Methods",
-          "Access Specifiers",
-          "Static & Final Keywords",
-          "Nested Classes & Packages",
-          "Object Lifecycle & Method Chaining",
-          "Inheritance & Encapsulation",
-          "Abstraction & Interfaces",
-          "Method Overloading / Overriding",
-          "Enums & Records",
-          "Initializer Block & Binding (Static vs Dynamic)",
-          "Pass by Value / Pass by Reference",
-        ],
+        title: "2. Object Oriented Programming",
+        subtitle: "Click to explore Classes & Objects, Access Specifiers, Static & Final, Nested Classes, Packages, Object Lifecycle, Enums, Records, Inheritance, Encapsulation, Binding, Abstraction, and Interfaces on the right.",
+        nodes: ["2. Object Oriented Programming"],
       },
       {
-        title: "3. Advanced Language & Core Features",
-        subtitle: "Master exceptions, lambdas, annotations, module systems, Optionals, and functional streams.",
-        nodes: [
-          "Exception Handling",
-          "Lambda Expressions",
-          "Annotations",
-          "Modules",
-          "Optionals",
-          "Functional Programming (High Order Functions & Interfaces)",
-          "Stream API",
-          "Regular Expressions & Cryptography",
-          "Date and Time API",
-          "Networking",
-        ],
+        title: "3. Exception Handling",
+        subtitle: "Click to explore Checked & Unchecked exceptions, try-catch-finally, try-with-resources, and custom exception handling on the right.",
+        nodes: ["3. Exception Handling"],
       },
       {
-        title: "4. Collections Framework",
-        subtitle: "Implement Java collection interfaces, list structures, sets, maps, queues, and generic types.",
-        nodes: [
-          "Array vs ArrayList",
-          "Set & Map",
-          "Queue & Deque",
-          "Stack & Iterator",
-          "Generic Collections",
-        ],
+        title: "4. Lambda & Modern Java",
+        subtitle: "Click to explore Lambda Expressions, Annotations, JPMS Modules, and Optionals on the right.",
+        nodes: ["4. Lambda & Modern Java"],
       },
       {
-        title: "5. Memory & Concurrency",
-        subtitle: "Understand thread management, synchronization, volatile fields, JVM memory model, and virtual threads.",
-        nodes: [
-          "volatile keyword",
-          "Java Memory Model",
-          "Threads & Multithreading",
-          "Virtual Threads (Project Loom)",
-          "Concurrency Utilities",
-        ],
+        title: "5. Collections",
+        subtitle: "Click to explore Array vs ArrayList, Set, Map, Queue, Dequeue, Stack, Iterator, and Generic Collections on the right.",
+        nodes: ["5. Collections"],
       },
       {
-        title: "6. I/O, Files & Dependency Injection",
-        subtitle: "Perform file I/O operations, stream handling, and leverage dependency injection patterns.",
-        nodes: [
-          "I/O Operations",
-          "File Operations",
-          "Dependency Injection",
-        ],
+        title: "6. Dependency Injection",
+        subtitle: "Click to explore Inversion of Control (IoC), Constructor/Field Injection, and framework wiring on the right.",
+        nodes: ["6. Dependency Injection"],
       },
       {
-        title: "7. Build Tools & Package Management",
-        subtitle: "Automate Java project compilation, dependency resolution, and builds with Maven and Gradle.",
-        nodes: [
-          "Maven",
-          "Gradle",
-          "Bazel",
-        ],
+        title: "7. I/O Operations",
+        subtitle: "Click to explore Byte/Character Streams, Readers/Writers, NIO.2, and File Operations on the right.",
+        nodes: ["7. I/O Operations"],
       },
       {
-        title: "8. Web Frameworks",
-        subtitle: "Develop microservices and web APIs using Spring Boot, Quarkus, Javalin, and Play Framework.",
-        nodes: [
-          "Spring (Spring Boot)",
-          "Quarkus",
-          "Javalin",
-          "Play Framework",
-        ],
+        title: "8. Concurrency",
+        subtitle: "Click to explore Threads, Virtual Threads (Project Loom), Java Memory Model, and volatile keyword on the right.",
+        nodes: ["8. Concurrency"],
       },
       {
-        title: "9. Database Access & Persistence",
-        subtitle: "Connect Java applications to relational databases with JDBC, Hibernate, and Spring Data JPA.",
-        nodes: [
-          "JDBC",
-          "Hibernate ORM",
-          "Spring Data JPA",
-          "EBean",
-        ],
+        title: "9. Core Java Utilities",
+        subtitle: "Click to explore Cryptography, Date and Time (java.time), Networking (HttpClient), and Regular Expressions on the right.",
+        nodes: ["9. Core Java Utilities"],
       },
       {
-        title: "10. Logging, Documentation & Testing",
-        subtitle: "Write unit tests, integration tests, behavior tests, Javadoc, and manage application logs.",
-        nodes: [
-          "Javadoc & Documentation",
-          "Logging Frameworks (SLF4J / Log4j2 / Logback / TinyLog)",
-          "Unit Testing (JUnit & TestNG)",
-          "Integration Testing (REST Assured & JMeter)",
-        ],
+        title: "10. Functional Programming",
+        subtitle: "Click to explore High Order Functions, Functional Interfaces, Functional Composition, and Stream API on the right.",
+        nodes: ["10. Functional Programming"],
+      },
+      {
+        title: "11. Build Tools",
+        subtitle: "Click to explore Maven, Gradle, and Bazel build automation systems on the right.",
+        nodes: ["11. Build Tools"],
+      },
+      {
+        title: "12. Web Frameworks",
+        subtitle: "Click to explore Spring (Spring Boot) [Recommended], Quarkus, Play Framework, and Javalin on the right.",
+        nodes: ["12. Web Frameworks"],
+      },
+      {
+        title: "13. Database Access",
+        subtitle: "Click to explore JDBC, EBean, Hibernate ORM, and Spring Data JPA on the right.",
+        nodes: ["13. Database Access"],
+      },
+      {
+        title: "14. Logging Frameworks",
+        subtitle: "Click to explore Logback, Log4j2, SLF4J, and TinyLog logging frameworks on the right.",
+        nodes: ["14. Logging Frameworks"],
+      },
+      {
+        title: "15. Testing",
+        subtitle: "Click to explore Unit Testing (JUnit, TestNG), Integration Testing (REST Assured, JMeter), Behavior Testing (Cucumber-JVM), and Mocking (Mockito) on the right.",
+        nodes: ["15. Testing"],
       },
     ],
   },
@@ -680,94 +636,79 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     ],
     sections: [
       {
-        title: "1. Components & Rendering Basics",
-        subtitle: "Master CLI tools, functional components, JSX, props vs state, rendering rules, and composition.",
-        nodes: [
-          "CLI Tools (Vite)",
-          "Functional Components & JSX",
-          "Props vs State & Component Lifecycle",
-          "Conditional Rendering & Composition",
-          "Lists, Keys & Event Handling",
-          "Render Props & High Order Components (HOC)",
-        ],
+        title: "1. CLI Tools",
+        subtitle: "Click to explore Vite and modern React build tools on the right.",
+        nodes: ["1. CLI Tools"],
       },
       {
-        title: "2. Core React Hooks",
-        subtitle: "Master standard state, effect, ref, reducer, memoization, context hooks, and custom hooks.",
-        nodes: [
-          "Basic Hooks (useState / useEffect / useRef)",
-          "Performance Hooks (useMemo / useCallback)",
-          "State & Context Hooks (useReducer / useContext)",
-          "Creating Custom Hooks & Hooks Best Practices",
-        ],
+        title: "2. Components",
+        subtitle: "Click to explore Functional Components, JSX, Props vs State, Conditional Rendering, Composition, Rendering, Lifecycle, Lists & Keys, Render Props, Refs, Events, and HOCs on the right.",
+        nodes: ["2. Components"],
       },
       {
-        title: "3. Routers & State Management",
-        subtitle: "Implement client-side routing, global state stores, and modular CSS styling.",
-        nodes: [
-          "Routers (React Router / Tanstack Router)",
-          "State Management (Context API / Zustand / Jotai / MobX)",
-          "Writing CSS (Tailwind CSS / CSS Modules / Panda CSS)",
-        ],
+        title: "3. Hooks",
+        subtitle: "Click to explore Basic Hooks (useState, useEffect), Common Hooks (useCallback, useRef, useReducer, useMemo, useContext), and Custom Hooks on the right.",
+        nodes: ["3. Hooks"],
       },
       {
-        title: "4. Component Libraries & Headless UI",
-        subtitle: "Utilize opinionated component libraries and unstyled headless UI primitives.",
-        nodes: [
-          "UI Component Libraries (Shadcn UI / Material UI / Chakra UI)",
-          "Headless UI Components (Radix UI / React Aria / Ark UI)",
-        ],
+        title: "4. Routers",
+        subtitle: "Click to explore React Router and Tanstack Router on the right.",
+        nodes: ["4. Routers"],
       },
       {
-        title: "5. API Calls & Data Fetching",
-        subtitle: "Connect React apps to REST and GraphQL APIs with robust caching engines.",
-        nodes: [
-          "REST API Calls (TanStack Query / Axios / SWR / RTK Query)",
-          "GraphQL APIs (Apollo Client / Relay / urql)",
-        ],
+        title: "5. State Management",
+        subtitle: "Click to explore Context, Zustand, Jotai, and MobX on the right.",
+        nodes: ["5. State Management"],
       },
       {
-        title: "6. Forms, Types & Schema Validation",
-        subtitle: "Build validated form interfaces with strong TypeScript types and Zod schemas.",
-        nodes: [
-          "Form Libraries (React Hook Form / Formik)",
-          "TypeScript Integration with React",
-          "Schema Validation (Zod)",
-        ],
+        title: "6. Writing CSS",
+        subtitle: "Click to explore Tailwind CSS, CSS Modules, and Panda CSS on the right.",
+        nodes: ["6. Writing CSS"],
       },
       {
-        title: "7. Testing & Quality Assurance",
-        subtitle: "Write unit tests, component tests, and end-to-end user flows.",
-        nodes: [
-          "Unit Testing Tools (Vitest / Jest)",
-          "Component Testing (React Testing Library)",
-          "End-to-End Testing (Playwright / Cypress)",
-        ],
+        title: "7. Component Libraries",
+        subtitle: "Click to explore Shadcn UI, Material UI, and Chakra UI on the right.",
+        nodes: ["7. Component Libraries"],
       },
       {
-        title: "8. Animations & Micro-Interactions",
-        subtitle: "Create smooth 60fps UI animations, gestures, and physics-based transitions.",
-        nodes: [
-          "Framer Motion",
-          "React Spring & GSAP",
-        ],
+        title: "8. Headless Component Libraries",
+        subtitle: "Click to explore Radix UI, React Aria, and Ark UI on the right.",
+        nodes: ["8. Headless Component Libraries"],
       },
       {
-        title: "9. Advanced React Concepts",
-        subtitle: "Handle errors gracefully, work with DOM portals, suspense boundaries, and server APIs.",
-        nodes: [
-          "Error Boundaries",
-          "Portals & Modal Overlays",
-          "Suspense Boundaries & Server APIs",
-        ],
+        title: "9. API Calls",
+        subtitle: "Click to explore REST (react-query, Axios, swr, rtk-query) and GraphQL (Apollo, Relay, urql) on the right.",
+        nodes: ["9. API Calls"],
       },
       {
-        title: "10. Frameworks & Mobile Ecosystem",
-        subtitle: "Scale React applications into fullstack web frameworks and mobile apps.",
-        nodes: [
-          "React Frameworks (Next.js / Astro / React Router)",
-          "Mobile Applications (React Native)",
-        ],
+        title: "10. Testing",
+        subtitle: "Click to explore Vitest, Jest, react-testing-library, Cypress, and Playwright on the right.",
+        nodes: ["10. Testing"],
+      },
+      {
+        title: "11. Frameworks",
+        subtitle: "Click to explore Next.js, Astro, and react-router on the right.",
+        nodes: ["11. Frameworks"],
+      },
+      {
+        title: "12. Forms",
+        subtitle: "Click to explore React Hook Form and Formik on the right.",
+        nodes: ["12. Forms"],
+      },
+      {
+        title: "13. Types & Validation",
+        subtitle: "Click to explore TypeScript and Zod schema validation on the right.",
+        nodes: ["13. Types & Validation"],
+      },
+      {
+        title: "14. Advanced Topics",
+        subtitle: "Click to explore Animations (Framer Motion, react spring, GSAP), Server APIs, Suspense, Portals, and Error Boundaries on the right.",
+        nodes: ["14. Advanced Topics"],
+      },
+      {
+        title: "15. Mobile Applications",
+        subtitle: "Click to explore React Native mobile development on the right.",
+        nodes: ["15. Mobile Applications"],
       },
     ],
   },
@@ -796,101 +737,150 @@ const SKILL_ROADMAPS: PresetRoadmap[] = [
     ],
     sections: [
       {
-        title: "1. Introduction & Getting Started",
-        subtitle: "Understand why Next.js, Next.js vs Remix, rendering strategies (SSR/SSG/CSR/SPA), and create-next-app.",
-        nodes: [
-          "Introduction (Why Next.js / Next.js vs Remix / SPA vs SSR)",
-          "Rendering Strategies (SSR / SSG / CSR / SPA)",
-          "Getting Started (create-next-app)",
-        ],
+        title: "1. Introduction",
+        subtitle: "Click to explore JavaScript Basics, Why Frontend Frameworks, Why React, SPA vs SSR, and React Frameworks on the right.",
+        nodes: ["1. Introduction"],
       },
       {
-        title: "2. App Router & Types of Routers",
-        subtitle: "Master Pages Router vs App Router, routing terminology, layouts/templates, streaming, and parallel routes.",
-        nodes: [
-          "Types of Routers (Pages Router vs App Router)",
-          "Routing Terminology & Rendering Pages",
-          "Layouts and Templates",
-          "Loading, Streaming & Error States",
-          "Routing Patterns (Parallel Routes & Intercepting Routes)",
-        ],
+        title: "2. Getting Started",
+        subtitle: "Click to explore create-next-app and Rendering Strategies (SSR, SPA, CSR, SSG) on the right.",
+        nodes: ["2. Getting Started"],
       },
       {
-        title: "3. Middleware & Route Structuring",
-        subtitle: "Configure Edge middleware, route matching, headers, cookies, API endpoints, and internationalization (i18n).",
-        nodes: [
-          "Middleware (Route Matcher / Cookies / Setting Headers)",
-          "Structuring Routes & Use Cases",
-          "API Endpoints (Static vs Dynamic / Caching / Streaming / Redirects)",
-          "Internationalization (i18n)",
-        ],
+        title: "3. Routing",
+        subtitle: "Click to explore Routing Basics, Types of routers (Pages vs App), Routing Terminology, Layouts, Streaming, and Routing Patterns on the right.",
+        nodes: ["3. Routing"],
       },
       {
-        title: "4. Data Fetching Patterns & Server Actions",
-        subtitle: "Master client vs server fetching, parallel vs sequential fetching, sensitive data, and Server Actions.",
-        nodes: [
-          "Fetching Locations (Client vs Server Data Fetching)",
-          "Data Fetching Patterns (Parallel vs Sequential & Preloading Data)",
-          "Handling Sensitive Data",
-          "Server Actions & Mutations",
-        ],
+        title: "4. Structuring Routes",
+        subtitle: "Click to explore API Endpoints (Route Handlers), Middleware, and Internationalization (i18n) on the right.",
+        nodes: ["4. Structuring Routes"],
       },
       {
-        title: "5. Caching & Runtimes",
-        subtitle: "Manage fetch memoization, React Cache, revalidation, Node.js vs Edge runtimes, and component composition.",
-        nodes: [
-          "Caching Data (Fetch Memoization / React Cache / Revalidating Data)",
-          "Revalidation & Error Recovery",
-          "Runtimes (Node.js Runtime vs Edge Runtime)",
-          "Rendering Composition (Client Rendered vs Server Rendered)",
-        ],
+        title: "5. Working with data",
+        subtitle: "Click to explore Fetching Locations, Data Fetching Patterns, Server Actions, Caching Data, and Revalidation on the right.",
+        nodes: ["5. Working with data"],
       },
       {
-        title: "6. Writing CSS & Styling",
-        subtitle: "Implement styling with Global CSS, CSS Modules, Tailwind CSS, Sass, and CSS-in-JS solutions.",
-        nodes: [
-          "Global CSS & CSS Modules",
-          "Tailwind CSS & Sass",
-          "CSS-in-JS Solutions",
-        ],
+        title: "6. Rendering & Runtimes",
+        subtitle: "Click to explore Client Rendered vs Server Rendered Composition and Node.js vs Edge Runtimes on the right.",
+        nodes: ["6. Rendering & Runtimes"],
       },
       {
-        title: "7. Asset & Performance Optimizations",
-        subtitle: "Optimize images, videos, fonts, metadata SEO, package bundling, lazy loading, and third-party scripts.",
-        nodes: [
-          "Image, Video & Font Optimization (next/image / next/font)",
-          "Metadata API & SEO Optimization",
-          "Package Bundling & Lazy Loading",
-          "Scripts & Third-Party Library Optimizations",
-          "Memory Usage Optimization",
-        ],
+        title: "7. Writing CSS",
+        subtitle: "Click to explore Ways to Write CSS (Global CSS, CSS Modules, Tailwind CSS, Sass, CSS in JS) on the right.",
+        nodes: ["7. Writing CSS"],
       },
       {
-        title: "8. Configuration & Tooling",
-        subtitle: "Configure TypeScript, ESLint, Prettier, environment variables, MDX markdown, and custom servers.",
-        nodes: [
-          "Setting Up Tooling (TypeScript / ESLint / Prettier)",
-          "Environment Variables",
-          "Markdown and MDX Integration",
-          "Custom Server Setup",
-        ],
+        title: "8. Optimizations",
+        subtitle: "Click to explore Images, Videos, Fonts, Metadata SEO, Package Bundling, Lazy Loading, Analytics, OpenTelemetry, and Memory Usage on the right.",
+        nodes: ["8. Optimizations"],
       },
       {
-        title: "9. Telemetry, Analytics & Testing",
-        subtitle: "Integrate OpenTelemetry, Vercel Analytics, Vitest, Jest, Playwright, and Cypress testing frameworks.",
-        nodes: [
-          "Analytics & Instrumentation (OpenTelemetry & Vercel Analytics)",
-          "Testing Frameworks (Vitest / Jest)",
-          "End-to-End Testing (Playwright / Cypress)",
-        ],
+        title: "9. Configuring",
+        subtitle: "Click to explore Setting things Up (TypeScript, ESLint, Prettier), Environment Variables, Markdown/MDX, and Custom Server on the right.",
+        nodes: ["9. Configuring"],
       },
       {
-        title: "10. Production & Deployment",
-        subtitle: "Prepare Next.js applications for production and deploy with Node.js servers, Docker, or static exports.",
-        nodes: [
-          "Preparing for Production",
-          "Deployment Options (Node.js Server / Docker Container / Static Export / Adapters)",
-        ],
+        title: "10. Testing",
+        subtitle: "Click to explore Testing Frameworks (Vitest, Jest, Playwright, Cypress) on the right.",
+        nodes: ["10. Testing"],
+      },
+      {
+        title: "11. Deployment",
+        subtitle: "Click to explore Preparing for Production and Deployment Options (Node.js Server, Docker, Static Export, Adapters) on the right.",
+        nodes: ["11. Deployment"],
+      },
+    ],
+  },
+  {
+    id: "nodejs-runtime",
+    category: "skill",
+    number: 7,
+    title: "7. Node.js Runtime",
+    displayTitle: "Node.js Architecture Mastery",
+    subtitle: "Here's a timeline of the Node.js Server & Backend Engineering path.",
+    timelineSubtitle: "Here's a timeline of the Node.js Server & Backend Engineering path.",
+    icon: Server,
+    color: "#22c55e",
+    bgBadge: "bg-emerald-500/10",
+    borderBadge: "border-emerald-500/20",
+    textBadge: "text-emerald-400",
+    ratings: "4.9 (21.5K Ratings)",
+    salary: "₹9 – 32 LPA",
+    growth: "+46.3% Growth",
+    roles: "185,000+ Active Roles",
+    growthPhases: [
+      { phase: "PHASE 1: NODE INITIATE", title: "Node Initiate", description: "Node.js CLI, V8 engine & CommonJS/ESM modules", color: "#4ade80" },
+      { phase: "PHASE 2: ASYNC & STREAMS ARCHITECT", title: "Async & Streams Architect", description: "Event Loop, Event Emitter, Promises & Buffer Streams", color: "#22c55e" },
+      { phase: "PHASE 3: BACKEND API SPECIALIST", title: "Backend API Specialist", description: "Express/Fastify APIs, JWT Auth & Database ORMs", color: "#16a34a" },
+      { phase: "PHASE 4: LEGENDARY NODE CLUSTER GOD", title: "Legendary Node Cluster God", description: "Worker Threads, Clustering, APM & Garbage Collection tuning", color: "#15803d" },
+    ],
+    sections: [
+      {
+        title: "1. Introduction to Node.js",
+        subtitle: "Click to explore What is Node.js, Why use Node.js, History of Node.js, Node.js vs Browser, and Running Node.js Code on the right.",
+        nodes: ["1. Introduction to Node.js"],
+      },
+      {
+        title: "2. Modules",
+        subtitle: "Click to explore CommonJS, ESM, Creating & Importing, and [global] keyword on the right.",
+        nodes: ["2. Modules"],
+      },
+      {
+        title: "3. Package Management (npm & npx)",
+        subtitle: "Click to explore Global/Local Installation, Installing/Updating Packages, Running Scripts, npm workspaces, Creating Packages, Semantic Versioning, and npx on the right.",
+        nodes: ["3. Package Management (npm & npx)"],
+      },
+      {
+        title: "4. Async Programming",
+        subtitle: "Click to explore Promises, async/await, Callbacks, setTimeout, setInterval, setImmediate, process.nextTick, Writing Async Code, Event Emitter, and Event Loop on the right.",
+        nodes: ["4. Async Programming"],
+      },
+      {
+        title: "5. Error Handling",
+        subtitle: "Click to explore System Errors, User Specified Errors, Assertion Errors, JavaScript Errors, Types of Errors, Uncaught Exceptions, Handling Async Errors, Callstack/Stack Trace, and Using Debugger on the right.",
+        nodes: ["5. Error Handling"],
+      },
+      {
+        title: "6. Working with Files",
+        subtitle: "Click to explore process.cwd(), path module, fs module, __dirname, __filename, glob/globby, and fs-extra/chokidar opensource packages on the right.",
+        nodes: ["6. Working with Files"],
+      },
+      {
+        title: "7. Command Line Apps",
+        subtitle: "Click to explore Exiting/Exit Codes, Environment Variables (process.env, dotenv), Taking Input (process.stdin, Inquirer, prompts), Printing Output (stdout/stderr, chalk, figlet, cli-progress), and Command Line Args (process.argv, commander) on the right.",
+        nodes: ["7. Command Line Apps"],
+      },
+      {
+        title: "8. Building & Consuming APIs",
+        subtitle: "Click to explore Frameworks (Express.js, Fastify, NestJS, Hono), Making API Calls (http module, axios, ky, fetch, got package), and Authentication (jsonwebtoken, passport.js) on the right.",
+        nodes: ["8. Building & Consuming APIs"],
+      },
+      {
+        title: "9. Development & Templating Tools",
+        subtitle: "Click to explore Monitor Changes (--watch, nodemon) and Template Engines (ejs, pug, marko) on the right.",
+        nodes: ["9. Development & Templating Tools"],
+      },
+      {
+        title: "10. Working with Databases",
+        subtitle: "Click to explore NoSQL DBs (Mongoose, Prisma, Native Drivers) and Relational DBs (Drizzle, TypeORM, Knex, Sequelize, Prisma, Native Drivers) on the right.",
+        nodes: ["10. Working with Databases"],
+      },
+      {
+        title: "11. Process & App Management",
+        subtitle: "Click to explore Keep app Running (pm2), Threads (Child Process, Cluster, Worker Threads), and Streams on the right.",
+        nodes: ["11. Process & App Management"],
+      },
+      {
+        title: "12. Testing & Logging",
+        subtitle: "Click to explore Testing (Vitest, Jest, node:test, Cypress, Playwright) and Logging (Winston, Morgan) on the right.",
+        nodes: ["12. Testing & Logging"],
+      },
+      {
+        title: "13. Debugging & Performance",
+        subtitle: "Click to explore Memory Leaks, node --inspect, Using APM, Garbage Collection, and Common Built-in Modules on the right.",
+        nodes: ["13. Debugging & Performance"],
       },
     ],
   },
@@ -2813,7 +2803,948 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
   },
 };
 
+const JAVA_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
+  "1. Learn the Basics": {
+    description: "Fundamental Java syntax, program execution lifecycle, data types, variables & scopes, arrays, conditionals, loops, and OOP basics.",
+    groups: [
+      {
+        topics: [
+          { id: "java-syntax", name: "Basic Syntax", desc: "Main entry point, statements, semicolons, and comments", isRecommended: true },
+          { id: "java-lifecycle", name: "Lifecycle of a Program", desc: "Compilation (.java -> .class bytecode) and JVM execution", isRecommended: true },
+          { id: "java-datatypes", name: "Data Types", desc: "Primitive types (int, double, boolean) vs Reference types", isRecommended: true },
+          { id: "java-variables", name: "Variables and Scopes", desc: "Local, instance, and static variable scoping rules", isRecommended: true },
+          { id: "java-typecasting", name: "Type Casting", desc: "Implicit widening and explicit narrowing casts", isRecommended: true },
+          { id: "java-strings", name: "Strings and Methods", desc: "String immutability, pool, and StringBuilder utilities", isRecommended: true },
+          { id: "java-math", name: "Math Operations", desc: "Arithmetic, bitwise operations, and java.lang.Math", isRecommended: true },
+          { id: "java-arrays", name: "Arrays", desc: "Single-dimensional and multi-dimensional fixed arrays", isRecommended: true },
+          { id: "java-conditionals", name: "Conditionals", desc: "if/else, ternary operators, and switch expressions", isRecommended: true },
+          { id: "java-loops", name: "Loops", desc: "for, enhanced for-each, while, and do-while loops", isRecommended: true },
+          { id: "java-basics-oop", name: "Basics of OOP", desc: "Introduction to bundling state and behavior", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "2. Object Oriented Programming": {
+    description: "Classes and objects, attributes & methods, access specifiers, static & final keywords, nested classes, packages, object lifecycle, method chaining, enums, record, initializer block, pass-by-value/reference, inheritance, encapsulation, method overloading/overriding, static vs dynamic binding, abstraction, and interfaces.",
+    groups: [
+      {
+        groupName: "Class Structure & Modifiers",
+        topics: [
+          { id: "java-oop-basics", name: "Basics of OOP", desc: "Object-oriented design principles", isRecommended: true },
+          { id: "java-classes-objects", name: "Classes and Objects", desc: "Class blueprints and concrete heap object instances", isRecommended: true },
+          { id: "java-attrs-methods", name: "Attributes and Methods", desc: "Fields, parameters, return types, and method signatures", isRecommended: true },
+          { id: "java-access-spec", name: "Access Specifiers", desc: "private, default, protected, and public visibility", isRecommended: true },
+          { id: "java-static-kw", name: "Static Keyword", desc: "Class-level fields, static methods, and static blocks", isRecommended: true },
+          { id: "java-final-kw", name: "Final Keyword", desc: "Constant variables, un-overridable methods, and final classes", isRecommended: true },
+          { id: "java-nested-classes", name: "Nested Classes", desc: "Static nested classes, inner classes, and anonymous classes", isRecommended: true },
+          { id: "java-packages", name: "Packages", desc: "Namespace organization and package imports", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Advanced OOP & Language Features",
+        topics: [
+          { id: "java-more-oop", name: "More about OOP", desc: "Deep dive into object relationship patterns", isRecommended: true },
+          { id: "java-obj-lifecycle", name: "Object Lifecycle", desc: "Instantiation, initialization, heap lifetime, and garbage collection", isRecommended: true },
+          { id: "java-method-chaining", name: "Method Chaining", desc: "Returning 'this' for fluent builder APIs", isRecommended: true },
+          { id: "java-enums", name: "Enums", desc: "Strongly-typed enumeration constants with fields and methods", isRecommended: true },
+          { id: "java-records", name: "Record", desc: "Immutable data carrier classes (Java 16+)", isRecommended: true },
+          { id: "java-init-blocks", name: "Initializer Block", desc: "Instance and static initialization blocks", isRecommended: true },
+          { id: "java-pass-val-ref", name: "Pass by Value / Pass by Reference", desc: "Strict pass-by-value semantics in Java reference copies", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Pillars of OOP",
+        topics: [
+          { id: "java-inheritance", name: "Inheritance", desc: "Extending superclasses and reusability", isRecommended: true },
+          { id: "java-encapsulation", name: "Encapsulation", desc: "Hiding state with private fields and getters/setters", isRecommended: true },
+          { id: "java-overloading-overriding", name: "Method Overloading / Overriding", desc: "Compile-time vs runtime method polymorphism", isRecommended: true },
+          { id: "java-binding", name: "Static vs Dynamic Binding", desc: "Compile-time binding vs runtime virtual method resolution", isRecommended: true },
+          { id: "java-abstraction", name: "Abstraction", desc: "Hiding complexity using abstract classes and interfaces", isRecommended: true },
+          { id: "java-interfaces", name: "Interfaces", desc: "Contracts with abstract, default, static, and private methods", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "3. Exception Handling": {
+    description: "Robust exception handling mechanisms, checked vs unchecked exceptions, and try-with-resources.",
+    groups: [
+      {
+        topics: [
+          { id: "java-exception-handling", name: "Exception Handling", desc: "Throwable hierarchy, try-catch-finally, try-with-resources, and custom exceptions", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "4. Lambda & Modern Java": {
+    description: "Modern Java language features including Lambda Expressions, Annotations, JPMS Modules, and Optionals.",
+    groups: [
+      {
+        topics: [
+          { id: "java-lambdas", name: "Lambda Expressions", desc: "Functional expressions for single abstract method interfaces", isRecommended: true },
+          { id: "java-annotations", name: "Annotations", desc: "Built-in and custom metadata annotations", isRecommended: true },
+          { id: "java-modules", name: "Modules", desc: "Java Platform Module System (JPMS) and module-info.java", isRecommended: true },
+          { id: "java-optionals", name: "Optionals", desc: "Null-safe Optional<T> wrapper to prevent NullPointerExceptions", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "5. Collections": {
+    description: "Array vs ArrayList, Set, Map, Queue, Dequeue, Stack, Iterator, and Generic Collections.",
+    groups: [
+      {
+        topics: [
+          { id: "java-arr-vs-arrlist", name: "Array vs ArrayList", desc: "Fixed primitive arrays vs dynamically resizing ArrayLists", isRecommended: true },
+          { id: "java-set", name: "Set", desc: "Unique element collections (HashSet, TreeSet, LinkedHashSet)", isRecommended: true },
+          { id: "java-map", name: "Map", desc: "Key-value mappings (HashMap, TreeMap, ConcurrentHashMap)", isRecommended: true },
+          { id: "java-queue", name: "Queue", desc: "FIFO queue structures and PriorityQueue", isRecommended: true },
+          { id: "java-dequeue", name: "Dequeue", desc: "Double-ended queues (ArrayDeque)", isRecommended: true },
+          { id: "java-stack", name: "Stack", desc: "LIFO stack operations using ArrayDeque", isRecommended: true },
+          { id: "java-iterator", name: "Iterator", desc: "Fail-fast iterator protocol for Collection traversal", isRecommended: true },
+          { id: "java-generics", name: "Generic Collections", desc: "Compile-time type safety with generic type parameters <T>", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "6. Dependency Injection": {
+    description: "Inversion of Control (IoC), loose coupling, and Dependency Injection wiring patterns.",
+    groups: [
+      {
+        topics: [
+          { id: "java-di", name: "Dependency Injection", desc: "Inversion of Control (IoC), constructor injection, field injection, and component wiring", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "7. I/O Operations": {
+    description: "Input/output stream handling, Readers/Writers, NIO.2 file channels, and File Operations.",
+    groups: [
+      {
+        topics: [
+          { id: "java-io-ops", name: "I/O Operations", desc: "Byte Streams (InputStream/OutputStream) and Character Streams (Reader/Writer)", isRecommended: true },
+          { id: "java-file-ops", name: "File Operations", desc: "NIO.2 Path, Paths, and Files utility methods", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "8. Concurrency": {
+    description: "Threads, Virtual Threads (Project Loom), Java Memory Model, and volatile keyword.",
+    groups: [
+      {
+        topics: [
+          { id: "java-threads", name: "Threads", desc: "Thread creation, Runnable, Callable, Executors, and thread pools", isRecommended: true },
+          { id: "java-virtual-threads", name: "Virtual Threads", desc: "Project Loom lightweight JVM-managed threads (Java 21+)", isRecommended: true },
+          { id: "java-jmm", name: "Java Memory Model", desc: "Heap memory, thread stacks, memory barriers, and visibility rules", isRecommended: true },
+          { id: "java-volatile", name: "volatile keyword", desc: "Direct main memory read/write visibility guarantees", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "9. Core Java Utilities": {
+    description: "Cryptography, Date and Time (java.time), Networking (HttpClient), and Regular Expressions.",
+    groups: [
+      {
+        topics: [
+          { id: "java-crypto", name: "Cryptography", desc: "SHA-256 digests, AES Ciphers, and SecretKey generation", isRecommended: true },
+          { id: "java-datetime", name: "Date and Time", desc: "Thread-safe java.time API (LocalDate, Instant, Duration)", isRecommended: true },
+          { id: "java-networking", name: "Networking", desc: "Modern HttpClient, HttpRequest, HttpResponse, and Sockets", isRecommended: true },
+          { id: "java-regex", name: "Regular Expressions", desc: "Pattern matching and extraction with java.util.regex", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "10. Functional Programming": {
+    description: "High Order Functions, Functional Interfaces, Functional Composition, and Stream API.",
+    groups: [
+      {
+        topics: [
+          { id: "java-higher-order-fn", name: "High Order Functions", desc: "Functions accepting or returning other functions", isRecommended: true },
+          { id: "java-fn-interfaces", name: "Functional Interfaces", desc: "Function, Predicate, Consumer, and Supplier interfaces", isRecommended: true },
+          { id: "java-fn-composition", name: "Functional Composition", desc: "Chaining functions with .andThen() and .compose()", isRecommended: true },
+          { id: "java-stream-api", name: "Stream API", desc: "Declarative data pipelines with filter, map, reduce, and collect", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "11. Build Tools": {
+    description: "Maven, Gradle, and Bazel build automation systems.",
+    groups: [
+      {
+        topics: [
+          { id: "java-maven", name: "Maven", desc: "Standard XML pom.xml builds and conventional lifecycle phases", isRecommended: true },
+          { id: "java-gradle", name: "Gradle", desc: "Groovy/Kotlin DSL build scripts with fast incremental compilation", isRecommended: true },
+          { id: "java-bazel", name: "Bazel", desc: "Scalable multi-language deterministic build system", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "12. Web Frameworks": {
+    description: "Spring (Spring Boot) [Recommended], Quarkus, Play Framework, and Javalin.",
+    groups: [
+      {
+        topics: [
+          { id: "java-spring-boot-fw", name: "Spring (Spring Boot)", desc: "Industry-standard enterprise framework (Recommended)", isRecommended: true },
+          { id: "java-quarkus", name: "Quarkus", desc: "Kubernetes-native Java framework optimized for GraalVM Native Images", isAlternative: true },
+          { id: "java-play-fw", name: "Play Framework", desc: "Lightweight reactive web framework", isAlternative: true },
+          { id: "java-javalin", name: "Javalin", desc: "Minimalist web micro-framework for Java/Kotlin", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "13. Database Access": {
+    description: "JDBC, EBean, Hibernate ORM, and Spring Data JPA.",
+    groups: [
+      {
+        topics: [
+          { id: "java-jdbc", name: "JDBC", desc: "Low-level database connection, PreparedStatement, and ResultSet", isRecommended: true },
+          { id: "java-ebean", name: "EBean", desc: "Active-record ORM layer with query beans", isAlternative: true },
+          { id: "java-hibernate", name: "Hibernate", desc: "Full-featured ORM framework managing entity lifecycle and HQL", isRecommended: true },
+          { id: "java-spring-data-jpa", name: "Spring Data JPA", desc: "High-level repository abstraction over JPA/Hibernate (Recommended)", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "14. Logging Frameworks": {
+    description: "Logback, Log4j2, SLF4J, and TinyLog logging frameworks.",
+    groups: [
+      {
+        topics: [
+          { id: "java-logback", name: "Logback", desc: "Native SLF4J logging framework (Recommended)", isRecommended: true },
+          { id: "java-log4j2", name: "Log4j2", desc: "High-performance enterprise logging framework with async loggers", isRecommended: true },
+          { id: "java-slf4j", name: "SLF4J", desc: "Simple Logging Facade for Java abstraction layer", isRecommended: true },
+          { id: "java-tinylog", name: "TinyLog", desc: "Lightweight, zero-dependency logging framework", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "15. Testing": {
+    description: "Unit Testing (JUnit, TestNG), Integration Testing (REST Assured, JMeter), Behavior Testing (Cucumber-JVM), and Mocking (Mockito).",
+    groups: [
+      {
+        groupName: "Unit Testing & Mocking",
+        topics: [
+          { id: "java-unit-testing", name: "Unit Testing", desc: "Writing test cases for individual units of code", isRecommended: true },
+          { id: "java-junit", name: "JUnit", desc: "Industry standard unit testing framework (JUnit 5)", isRecommended: true },
+          { id: "java-testng", name: "TestNG", desc: "Testing framework with advanced grouping and parameterization", isAlternative: true },
+          { id: "java-mocking", name: "Mocking", desc: "Creating test doubles to isolate unit under test", isRecommended: true },
+          { id: "java-mockito", name: "Mockito", desc: "Popular Java mocking framework for stubbing and verification", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Integration & Behavior Testing",
+        topics: [
+          { id: "java-integration-testing", name: "Integration Testing", desc: "Testing component interactions and API integrations", isRecommended: true },
+          { id: "java-rest-assured", name: "REST Assured", desc: "Fluent DSL for testing RESTful web services", isRecommended: true },
+          { id: "java-jmeter", name: "JMeter", desc: "Performance and API load testing tool", isAlternative: true },
+          { id: "java-behavior-testing", name: "Behavior Testing", desc: "Specification by example and user scenario testing", isRecommended: true },
+          { id: "java-cucumber-jvm", name: "Cucumber-JVM", desc: "Behavior-Driven Development (BDD) framework using Gherkin syntax", isRecommended: true },
+        ],
+      },
+    ],
+  },
+};
+
+const REACT_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
+  "1. CLI Tools": {
+    description: "Modern CLI build tools and development environments for React applications.",
+    groups: [
+      {
+        topics: [
+          { id: "react-vite", name: "Vite", desc: "Next Generation Frontend Tooling with instant HMR and ES modules", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "2. Components": {
+    description: "Functional Components, Component Basics, JSX, Props vs State, Conditional Rendering, Composition, Rendering, Component Lifecycle, Lists & Keys, Render Props, Refs, Events, and HOCs.",
+    groups: [
+      {
+        groupName: "Component Core & JSX",
+        topics: [
+          { id: "react-fn-comp", name: "Functional Components", desc: "Pure functions returning JSX elements", isRecommended: true },
+          { id: "react-comp-basics", name: "Component Basics", desc: "Building blocks of React UI interfaces", isRecommended: true },
+          { id: "react-jsx", name: "JSX", desc: "JavaScript XML syntax extension for React", isRecommended: true },
+          { id: "react-props-state", name: "Props vs State", desc: "External component arguments vs internal reactive state", isRecommended: true },
+          { id: "react-cond-render", name: "Conditional Rendering", desc: "Rendering elements based on condition states", isRecommended: true },
+          { id: "react-composition", name: "Composition", desc: "Combining components via children prop and slots", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Rendering & Advanced Component Patterns",
+        topics: [
+          { id: "react-rendering", name: "Rendering", desc: "React Virtual DOM reconciliation and render cycles", isRecommended: true },
+          { id: "react-lifecycle", name: "Component Lifecycle", desc: "Mounting, updating, and unmounting phases", isRecommended: true },
+          { id: "react-lists-keys", name: "Lists and Keys", desc: "Mapping arrays to elements with unique key identifiers", isRecommended: true },
+          { id: "react-render-props", name: "Render Props", desc: "Sharing code between components using a prop whose value is a function", isAlternative: true },
+          { id: "react-refs", name: "Refs", desc: "Accessing underlying DOM nodes directly", isRecommended: true },
+          { id: "react-events", name: "Events", desc: "Synthetic event handling in React", isRecommended: true },
+          { id: "react-hoc", name: "High Order Components", desc: "Advanced pattern for reusing component logic (HOC)", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "3. Hooks": {
+    description: "Basic Hooks (useState, useEffect), Common Hooks (useCallback, useRef, useReducer, useMemo, useContext), and Custom Hooks.",
+    groups: [
+      {
+        groupName: "Basic Hooks",
+        topics: [
+          { id: "react-usestate", name: "useState", desc: "State hook for managing local component state", isRecommended: true },
+          { id: "react-useeffect", name: "useEffect", desc: "Side effect hook for data fetching, subscriptions, and DOM updates", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Common Hooks",
+        topics: [
+          { id: "react-usecallback", name: "useCallback", desc: "Memoize callback functions across renders", isRecommended: true },
+          { id: "react-useref", name: "useRef", desc: "Persist mutable values without triggering re-renders", isRecommended: true },
+          { id: "react-usereducer", name: "useReducer", desc: "Manage complex state logic via reducer actions", isRecommended: true },
+          { id: "react-usememo", name: "useMemo", desc: "Memoize expensive calculation results", isRecommended: true },
+          { id: "react-usecontext", name: "useContext", desc: "Consume React Context values cleanly", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Custom Hooks",
+        topics: [
+          { id: "react-create-custom-hooks", name: "Creating Custom Hooks", desc: "Extracting reusable stateful logic into custom use* functions", isRecommended: true },
+          { id: "react-hooks-best-practices", name: "Hooks Best Practices", desc: "Rules of hooks, dependency arrays, and stale closures", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "4. Routers": {
+    description: "Client-side routing libraries for React applications.",
+    groups: [
+      {
+        topics: [
+          { id: "react-router", name: "React Router", desc: "Standard declarative routing library for React", isRecommended: true },
+          { id: "react-tanstack-router", name: "Tanstack Router", desc: "Type-safe, search-param-first router for React", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "5. State Management": {
+    description: "Context, Zustand, Jotai, and MobX global state management solutions.",
+    groups: [
+      {
+        topics: [
+          { id: "react-context-api", name: "Context", desc: "React built-in Context API for prop drilling prevention", isRecommended: true },
+          { id: "react-zustand", name: "Zustand", desc: "Small, fast, and scalable bear-necessities state management", isRecommended: true },
+          { id: "react-jotai", name: "Jotai", desc: "Primitive and flexible atomic state management", isAlternative: true },
+          { id: "react-mobx", name: "MobX", desc: "Simple, scalable observable state management", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "6. Writing CSS": {
+    description: "Tailwind CSS, CSS Modules, and Panda CSS styling methodologies.",
+    groups: [
+      {
+        topics: [
+          { id: "react-tailwind", name: "Tailwind CSS", desc: "Utility-first CSS framework for rapid UI development (Recommended)", isRecommended: true },
+          { id: "react-css-modules", name: "CSS Modules", desc: "Scoped CSS file imports preventing global class leaks", isRecommended: true },
+          { id: "react-panda-css", name: "Panda CSS", desc: "Build-time CSS-in-JS engine generating atomic CSS", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "7. Component Libraries": {
+    description: "Pre-styled component suites for React applications.",
+    groups: [
+      {
+        topics: [
+          { id: "react-shadcn", name: "Shadcn UI", desc: "Re-usable components built with Radix UI and Tailwind (Recommended)", isRecommended: true },
+          { id: "react-mui", name: "Material UI", desc: "Google Material Design component library", isRecommended: true },
+          { id: "react-chakra", name: "Chakra UI", desc: "Simple, modular, and accessible component library", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "8. Headless Component Libraries": {
+    description: "Unstyled, fully accessible UI component primitives.",
+    groups: [
+      {
+        topics: [
+          { id: "react-radix", name: "Radix UI", desc: "Unstyled, accessible component primitives for React (Recommended)", isRecommended: true },
+          { id: "react-aria", name: "React Aria", desc: "Adobe hooks and primitives for accessible UI components", isRecommended: true },
+          { id: "react-ark", name: "Ark UI", desc: "Headless UI components powered by Zag.js state machines", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "9. API Calls": {
+    description: "REST (react-query, Axios, swr, rtk-query) and GraphQL (Apollo, Relay, urql) clients.",
+    groups: [
+      {
+        groupName: "REST API Clients",
+        topics: [
+          { id: "react-query", name: "react-query", desc: "TanStack Query async state management for REST APIs (Recommended)", isRecommended: true },
+          { id: "react-axios", name: "Axios", desc: "Promise-based HTTP client for browser & node", isRecommended: true },
+          { id: "react-swr", name: "swr", desc: "Stale-While-Revalidate data fetching library by Vercel", isRecommended: true },
+          { id: "react-rtk-query", name: "rtk-query", desc: "Redux Toolkit data fetching and caching tool", isAlternative: true },
+        ],
+      },
+      {
+        groupName: "GraphQL Clients",
+        topics: [
+          { id: "react-apollo", name: "Apollo", desc: "Comprehensive GraphQL client for React", isRecommended: true },
+          { id: "react-relay", name: "Relay", desc: "Meta framework for data-driven GraphQL applications", isAlternative: true },
+          { id: "react-urql", name: "urql", desc: "Highly customizable and lightweight GraphQL client", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "10. Testing": {
+    description: "Vitest, Jest, react-testing-library, Cypress, and Playwright.",
+    groups: [
+      {
+        topics: [
+          { id: "react-vitest", name: "Vitest", desc: "Blazing fast Vite-native unit test runner (Recommended)", isRecommended: true },
+          { id: "react-jest", name: "Jest", desc: "Delightful JavaScript testing framework", isRecommended: true },
+          { id: "react-rtl", name: "react-testing-library", desc: "Lightweight utility for testing React components", isRecommended: true },
+          { id: "react-cypress", name: "Cypress", desc: "Fast, easy, and reliable E2E testing framework", isRecommended: true },
+          { id: "react-playwright", name: "Playwright", desc: "Reliable end-to-end testing for modern web apps", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "11. Frameworks": {
+    description: "Next.js, Astro, and react-router production web frameworks.",
+    groups: [
+      {
+        topics: [
+          { id: "react-nextjs", name: "Next.js", desc: "The React Framework for the Web (App Router, Server Components) [Recommended]", isRecommended: true },
+          { id: "react-astro", name: "Astro", desc: "Content-driven web framework supporting React islands", isRecommended: true },
+          { id: "react-fw-router", name: "react-router", desc: "Fullstack web framework powered by React Router v7", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "12. Forms": {
+    description: "React Hook Form and Formik input state & submission management.",
+    groups: [
+      {
+        topics: [
+          { id: "react-hook-form", name: "React Hook Form", desc: "Performant, flexible, and extensible forms with easy validation (Recommended)", isRecommended: true },
+          { id: "react-formik", name: "Formik", desc: "Popular form library for React", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "13. Types & Validation": {
+    description: "TypeScript type safety and Zod runtime schema validation.",
+    groups: [
+      {
+        topics: [
+          { id: "react-ts", name: "TypeScript", desc: "Typed superset of JavaScript for type-safe React development", isRecommended: true },
+          { id: "react-zod", name: "Zod", desc: "TypeScript-first schema declaration and validation library", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "14. Advanced Topics": {
+    description: "Animations (Framer Motion, react spring, GSAP), Server APIs, Suspense, Portals, and Error Boundaries.",
+    groups: [
+      {
+        groupName: "Animation",
+        topics: [
+          { id: "react-framer-motion", name: "Framer Motion", desc: "Production-ready motion library for React (Recommended)", isRecommended: true },
+          { id: "react-spring", name: "react spring", desc: "Physics-based animation library", isAlternative: true },
+          { id: "react-gsap", name: "GSAP", desc: "GreenSock Animation Platform for high-performance animations", isAlternative: true },
+        ],
+      },
+      {
+        groupName: "Advanced React APIs",
+        topics: [
+          { id: "react-server-apis", name: "Server APIs", desc: "React Server Components and Server Actions", isRecommended: true },
+          { id: "react-suspense", name: "Suspense", desc: "Declarative fallback state handling while child components load", isRecommended: true },
+          { id: "react-portals", name: "Portals", desc: "Rendering children into a DOM node outside parent hierarchy", isRecommended: true },
+          { id: "react-error-boundaries", name: "Error Boundaries", desc: "Catch JavaScript errors anywhere in child component trees", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "15. Mobile Applications": {
+    description: "Cross-platform mobile development using React Native.",
+    groups: [
+      {
+        topics: [
+          { id: "react-native", name: "React Native", desc: "Build native Android and iOS apps using React", isRecommended: true },
+        ],
+      },
+    ],
+  },
+};
+
+const NODEJS_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
+  "1. Introduction to Node.js": {
+    description: "What is Node.js, Why use Node.js, History of Node.js, Node.js vs Browser, and Running Node.js Code.",
+    groups: [
+      {
+        topics: [
+          { id: "node-what-is", name: "What is Node.js?", desc: "Asynchronous event-driven JavaScript runtime environment", isRecommended: true },
+          { id: "node-why-use", name: "Why use Node.js?", desc: "Single-threaded non-blocking I/O and shared JS language stack", isRecommended: true },
+          { id: "node-history", name: "History of Node.js", desc: "Created by Ryan Dahl in 2009 powered by V8 engine", isRecommended: true },
+          { id: "node-vs-browser", name: "Node.js vs Browser", desc: "DOM/Window globals vs process, fs, and OS system APIs", isRecommended: true },
+          { id: "node-running-code", name: "Running Node.js Code", desc: "Executing JS scripts via node CLI executable", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "2. Modules": {
+    description: "CommonJS, ESM, Creating & Importing, and [global] keyword.",
+    groups: [
+      {
+        topics: [
+          { id: "node-commonjs", name: "CommonJS", desc: "require() and module.exports module standard", isRecommended: true },
+          { id: "node-esm", name: "ESM", desc: "ES6 import and export module standard (.mjs / package.json type: module)", isRecommended: true },
+          { id: "node-create-import", name: "Creating & Importing", desc: "Authoring custom local modules and package imports", isRecommended: true },
+          { id: "node-global-kw", name: "[global] keyword", desc: "Node.js global namespace object and global scope variables", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "3. Package Management (npm & npx)": {
+    description: "Global & Local Installation, Installing/Updating Packages, Running Scripts, npm workspaces, Creating Packages, Semantic Versioning, and npx.",
+    groups: [
+      {
+        groupName: "npm Basics & Installation",
+        topics: [
+          { id: "node-global-inst", name: "Global Installation", desc: "npm install -g for global CLI tools", isRecommended: true },
+          { id: "node-local-inst", name: "Local Installation", desc: "npm install --save and --save-dev project dependencies", isRecommended: true },
+          { id: "node-inst-pkg", name: "Installing Packages", desc: "Fetching libraries from npm registry", isRecommended: true },
+          { id: "node-upd-pkg", name: "Updating Packages", desc: "npm update and dependency version upgrades", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Workspaces, Packaging & npx",
+        topics: [
+          { id: "node-run-scripts", name: "Running Scripts", desc: "Executing npm run scripts defined in package.json", isRecommended: true },
+          { id: "node-workspaces", name: "npm workspaces", desc: "Monorepo dependency management across multiple packages", isRecommended: true },
+          { id: "node-create-pkg", name: "Creating Packages", desc: "npm init, package.json configuration, and npm publish", isRecommended: true },
+          { id: "node-semver", name: "Semantic Versioning", desc: "Major.Minor.Patch version rules (^, ~, exact)", isRecommended: true },
+          { id: "node-npx", name: "npx", desc: "Executing npm package binaries directly without permanent install", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "4. Async Programming": {
+    description: "Promises, async/await, Callbacks, setTimeout, setInterval, setImmediate, process.nextTick, Writing Async Code, Event Emitter, and Event Loop.",
+    groups: [
+      {
+        groupName: "Writing Async Code",
+        topics: [
+          { id: "node-promises", name: "Promises", desc: "Pending, fulfilled, rejected Promise states and chaining", isRecommended: true },
+          { id: "node-async-await", name: "async/await", desc: "Syntactic sugar over Promises for readable async control flow", isRecommended: true },
+          { id: "node-callbacks", name: "Callbacks", desc: "Node.js error-first callback conventions (err, res)", isRecommended: true },
+          { id: "node-settimeout", name: "setTimeout", desc: "Scheduling execution after a delay timer", isRecommended: true },
+          { id: "node-setinterval", name: "setInterval", desc: "Scheduling recurring execution at fixed intervals", isRecommended: true },
+          { id: "node-setimmediate", name: "setImmediate", desc: "Executing callbacks in the Check phase of event loop", isRecommended: true },
+          { id: "node-nexttick", name: "process.nextTick", desc: "Executing microtasks before next event loop phase", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Architecture Mechanics",
+        topics: [
+          { id: "node-event-emitter", name: "Event Emitter", desc: "EventEmitter class, .on(), .emit(), and custom events", isRecommended: true },
+          { id: "node-event-loop", name: "Event Loop", desc: "Timers, Pending I/O, Poll, Check, and Close phases in libuv", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "5. Error Handling": {
+    description: "System Errors, User Specified Errors, Assertion Errors, JavaScript Errors, Types of Errors, Uncaught Exceptions, Handling Async Errors, Callstack/Stack Trace, and Using Debugger.",
+    groups: [
+      {
+        groupName: "Types of Errors",
+        topics: [
+          { id: "node-sys-errors", name: "System Errors", desc: "OS level operational errors (ENOENT, ECONNREFUSED, EADDRINUSE)", isRecommended: true },
+          { id: "node-user-errors", name: "User Specified Errors", desc: "Custom business logic application errors", isRecommended: true },
+          { id: "node-assert-errors", name: "Assertion Errors", desc: "Invariant failures thrown by assert module", isRecommended: true },
+          { id: "node-js-errors", name: "JavaScript Errors", desc: "TypeError, ReferenceError, SyntaxError, RangeError", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Handling & Debugging",
+        topics: [
+          { id: "node-uncaught-exc", name: "Uncaught Exceptions", desc: "process.on('uncaughtException') and unhandledRejection", isRecommended: true },
+          { id: "node-handle-async-err", name: "Handling Async Errors", desc: "Catching rejected promises and try-catch in async functions", isRecommended: true },
+          { id: "node-callstack", name: "Callstack / Stack Trace", desc: "Inspecting Error.stack trace details", isRecommended: true },
+          { id: "node-debugger", name: "Using Debugger", desc: "Node inspector, VS Code debugger, and debugger; statements", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "6. Working with Files": {
+    description: "process.cwd(), path module, fs module, __dirname, __filename, and opensource packages (glob/globby, fs-extra, chokidar).",
+    groups: [
+      {
+        groupName: "Core File & Path Modules",
+        topics: [
+          { id: "node-process-cwd", name: "process.cwd()", desc: "Current working directory of Node process", isRecommended: true },
+          { id: "node-path-mod", name: "path module", desc: "path.join(), path.resolve(), path.extname(), path.parse()", isRecommended: true },
+          { id: "node-fs-mod", name: "fs module", desc: "File system read/write/delete operations (fs.promises)", isRecommended: true },
+          { id: "node-dirname", name: "__dirname", desc: "Directory path of current module", isRecommended: true },
+          { id: "node-filename", name: "__filename", desc: "Absolute file path of current module", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Opensource Packages",
+        topics: [
+          { id: "node-glob", name: "glob / globby", desc: "Matching file paths using wildcard glob patterns", isRecommended: true },
+          { id: "node-fs-extra", name: "fs-extra / chokidar", desc: "Enhanced fs methods and file system watcher events", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "7. Command Line Apps": {
+    description: "Exit codes, Environment Variables, Taking Input, Printing Output, and Command line args.",
+    groups: [
+      {
+        topics: [
+          { id: "node-env-vars", name: "Environment Variables (dotenv & process.env)", desc: "process.env configuration and .env file loading", isRecommended: true },
+          { id: "node-exit-codes", name: "Exiting / Exit Codes", desc: "process.exit(0) success vs process.exit(1) failure codes", isRecommended: true },
+          { id: "node-taking-input", name: "Taking Input (process.stdin / Inquirer / prompts)", desc: "Interactive CLI prompts and user keyboard input", isRecommended: true },
+          { id: "node-printing-output", name: "Printing Output (stdout/stderr / chalk / figlet / cli-progress)", desc: "Terminal formatting, colors, progress bars, and banners", isRecommended: true },
+          { id: "node-cli-args", name: "Command Line Args (process.argv / commander)", desc: "Parsing CLI flags and options", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "8. Building & Consuming APIs": {
+    description: "Frameworks (Express.js, Fastify, NestJS, Hono), Making API Calls (http, axios, ky, fetch, got), and Authentication (jsonwebtoken, passport.js).",
+    groups: [
+      {
+        groupName: "Frameworks",
+        topics: [
+          { id: "node-express", name: "Express.js", desc: "Fast, unopinionated, minimalist web framework (Recommended)", isRecommended: true },
+          { id: "node-fastify", name: "fastify", desc: "High performance low overhead web framework", isRecommended: true },
+          { id: "node-nestjs", name: "NestJS", desc: "Progressive TypeScript framework for scalable server apps", isRecommended: true },
+          { id: "node-hono", name: "Hono", desc: "Ultrafast web framework for multi-runtime environments", isAlternative: true },
+        ],
+      },
+      {
+        groupName: "Making API Calls",
+        topics: [
+          { id: "node-http-mod", name: "http module", desc: "Built-in Node.js HTTP server and client module", isRecommended: true },
+          { id: "node-axios-ky", name: "axios / ky", desc: "Promise-based HTTP clients for Node.js", isRecommended: true },
+          { id: "node-fetch", name: "fetch", desc: "Native fetch API in Node.js 18+", isRecommended: true },
+          { id: "node-got-pkg", name: "got package", desc: "Human-friendly HTTP request library for Node.js", isAlternative: true },
+        ],
+      },
+      {
+        groupName: "Authentication",
+        topics: [
+          { id: "node-jwt", name: "jsonwebtoken", desc: "JSON Web Token signing and verification", isRecommended: true },
+          { id: "node-passport", name: "passport.js", desc: "Unobtrusive authentication middleware for Node.js", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "9. Development & Templating Tools": {
+    description: "Monitor Changes (--watch, nodemon) and Template Engines (ejs, pug, marko).",
+    groups: [
+      {
+        topics: [
+          { id: "node-dev-watch", name: "Monitor Changes (--watch / nodemon)", desc: "Automatic server restart on file saves", isRecommended: true },
+          { id: "node-template-engines", name: "Template Engines (ejs / pug / marko)", desc: "Server-side HTML template rendering", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "10. Working with Databases": {
+    description: "NoSQL DBs (Mongoose, Prisma, Native Drivers) and Relational DBs (Drizzle, TypeORM, Knex, Sequelize, Prisma, Native Drivers).",
+    groups: [
+      {
+        groupName: "NoSQL DBs",
+        topics: [
+          { id: "node-mongoose", name: "Mongoose", desc: "MongoDB object modeling for Node.js", isRecommended: true },
+          { id: "node-prisma-nosql", name: "Prisma (NoSQL)", desc: "Next-generation ORM for MongoDB", isRecommended: true },
+          { id: "node-native-drivers-nosql", name: "Native Drivers (MongoDB)", desc: "Low-level mongodb driver client", isAlternative: true },
+        ],
+      },
+      {
+        groupName: "Relational DBs",
+        topics: [
+          { id: "node-drizzle", name: "Drizzle", desc: "TypeScript ORM with maximum performance and type safety", isRecommended: true },
+          { id: "node-typeorm", name: "TypeORM", desc: "ORM supporting Active Record and Data Mapper patterns", isRecommended: true },
+          { id: "node-knex", name: "Knex", desc: "SQL query builder for PostgreSQL, MySQL, SQLite", isRecommended: true },
+          { id: "node-sequelize", name: "Sequelize", desc: "Promise-based Node.js ORM for Postgres, MySQL, SQLite", isRecommended: true },
+          { id: "node-prisma-relational", name: "Prisma (Relational)", desc: "Automated type-safe database client for PostgreSQL/MySQL", isRecommended: true },
+          { id: "node-native-drivers-relational", name: "Native Drivers (pg / mysql2)", desc: "Direct database driver connections", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "11. Process & App Management": {
+    description: "Keep app Running (pm2), Threads (Child Process, Cluster, Worker Threads), and Streams.",
+    groups: [
+      {
+        topics: [
+          { id: "node-pm2", name: "Keep app Running (pm2)", desc: "Production process manager for Node.js applications", isRecommended: true },
+          { id: "node-child-proc", name: "Child Process", desc: "child_process.exec, spawn, and fork for external processes", isRecommended: true },
+          { id: "node-cluster", name: "Cluster", desc: "Multi-process load balancing across CPU cores", isRecommended: true },
+          { id: "node-worker-threads", name: "Worker Threads", desc: "Executing CPU-intensive JavaScript in parallel threads", isRecommended: true },
+          { id: "node-streams", name: "Streams", desc: "Readable, Writable, Transform, and Duplex data streams", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "12. Testing & Logging": {
+    description: "Testing (Vitest, Jest, node:test, Cypress, Playwright) and Logging (Winston, Morgan).",
+    groups: [
+      {
+        groupName: "Testing",
+        topics: [
+          { id: "node-vitest", name: "Vitest", desc: "Vite-native unit testing runner", isRecommended: true },
+          { id: "node-jest", name: "Jest", desc: "Comprehensive JS test runner", isRecommended: true },
+          { id: "node-test-runner", name: "node:test", desc: "Native Node.js built-in test runner module", isRecommended: true },
+          { id: "node-cypress", name: "Cypress", desc: "End-to-end integration testing", isRecommended: true },
+          { id: "node-playwright", name: "Playwright", desc: "Automated browser end-to-end testing", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Logging",
+        topics: [
+          { id: "node-winston", name: "Winston", desc: "Multi-transport asynchronous logger for Node.js", isRecommended: true },
+          { id: "node-morgan", name: "Morgan", desc: "HTTP request logger middleware for Node.js", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "13. Debugging & Performance": {
+    description: "Memory Leaks, node --inspect, Using APM, Garbage Collection, and Common Built-in Modules.",
+    groups: [
+      {
+        topics: [
+          { id: "node-memory-leaks", name: "Memory Leaks", desc: "Identifying heap memory leaks and retaining paths", isRecommended: true },
+          { id: "node-inspect-flag", name: "node --inspect", desc: "Attaching Chrome DevTools debugger to Node runtime", isRecommended: true },
+          { id: "node-apm", name: "Using APM", desc: "Application Performance Monitoring (Datadog, NewRelic, Elastic APM)", isRecommended: true },
+          { id: "node-gc", name: "Garbage Collection", desc: "V8 Scavenge and Mark-Sweep garbage collector internals", isRecommended: true },
+          { id: "node-builtin-mods", name: "Common Built-in Modules", desc: "util, events, crypto, buffer, stream, net, tls, os, url", isRecommended: true },
+        ],
+      },
+    ],
+  },
+};
+
+const NEXTJS_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
+  "1. Introduction": {
+    description: "JavaScript Basics, Why Frontend Frameworks, Why React, SPA vs SSR, and React Frameworks (Next.js & Remix).",
+    groups: [
+      {
+        topics: [
+          { id: "next-js-basics", name: "JavaScript Basics", desc: "Core JS fundamentals for framework concepts", isRecommended: true },
+          { id: "next-why-fw", name: "Why Frontend Frameworks", desc: "Benefits of component-driven client architecture", isRecommended: true },
+          { id: "next-why-react", name: "Why React", desc: "Declarative UI rendering and virtual DOM reconciliation", isRecommended: true },
+          { id: "next-spa-vs-ssr", name: "SPA vs SSR", desc: "Single Page App vs Server-Side Rendering tradeoffs", isRecommended: true },
+          { id: "next-react-fws", name: "React Frameworks (Next.js & Remix)", desc: "Fullstack production frameworks built on React", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "2. Getting Started": {
+    description: "create-next-app initializer and rendering strategies (SSR, SPA, CSR, SSG).",
+    groups: [
+      {
+        topics: [
+          { id: "next-create-app", name: "create-next-app", desc: "Interactive CLI bootstrapper for Next.js projects", isRecommended: true },
+          { id: "next-render-strategies", name: "Rendering Strategies (SSR / SPA / CSR / SSG)", desc: "Server-side, static site, and client-side rendering modes", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "3. Routing": {
+    description: "Next.js Routing Basics, Pages vs App Router, Layouts, Streaming, Error States, and Routing Patterns.",
+    groups: [
+      {
+        groupName: "Router Architecture",
+        topics: [
+          { id: "next-routing-basics", name: "Next.js Routing Basics", desc: "File-system based routing fundamentals", isRecommended: true },
+          { id: "next-types-routers", name: "Types of routers (Pages vs App Router)", desc: "Legacy Pages Router vs modern React Server Components App Router", isRecommended: true },
+          { id: "next-why-app-router", name: "Why use App Router?", desc: "Server components, nested layouts, streaming, and co-located loading states", isRecommended: true },
+          { id: "next-routing-terms", name: "Routing Terminology", desc: "Tree, Subtree, Root Segment, and Path segments", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Layouts & Advanced Routing Patterns",
+        topics: [
+          { id: "next-rendering-pages", name: "Rendering Pages", desc: "page.tsx routing entrypoints", isRecommended: true },
+          { id: "next-layouts-templates", name: "Layouts and Templates", desc: "Shared UI wrappers (layout.tsx) vs non-preserved templates (template.tsx)", isRecommended: true },
+          { id: "next-loading-streaming", name: "Loading and Streaming", desc: "loading.tsx fallbacks and React Suspense UI streaming", isRecommended: true },
+          { id: "next-error-states", name: "Error States", desc: "error.tsx error boundaries and global-error.tsx", isRecommended: true },
+          { id: "next-routing-patterns", name: "Routing Patterns (Parallel & Intercepting Routes)", desc: "@folder parallel slots and (..) intercepting modals", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "4. Structuring Routes": {
+    description: "API Endpoints (Static/Dynamic, Caching, Streaming, Redirects), Middleware, and Internationalization.",
+    groups: [
+      {
+        topics: [
+          { id: "next-api-endpoints", name: "API Endpoints (Route Handlers)", desc: "route.ts HTTP handlers for GET, POST, PUT, DELETE with caching and streaming", isRecommended: true },
+          { id: "next-middleware", name: "Middleware (Route Matcher / Cookies / Setting Headers)", desc: "Edge middleware intercepting requests before completion", isRecommended: true },
+          { id: "next-i18n", name: "Internationalization", desc: "Locale subpath routing and multi-language content translation", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "5. Working with data": {
+    description: "Fetching Locations, Data Fetching Patterns, Server Actions, and Caching Data.",
+    groups: [
+      {
+        groupName: "Fetching Locations & Patterns",
+        topics: [
+          { id: "next-fetch-locations", name: "Fetching Locations (Client vs Server)", desc: "Fetching data directly in Server Components vs SWR/React Query in Client", isRecommended: true },
+          { id: "next-fetch-patterns", name: "Data Fetching Patterns", desc: "Parallel vs Sequential fetching and Preloading Data", isRecommended: true },
+          { id: "next-sensitive-data", name: "Handling Sensitive Data", desc: "Keeping API tokens secret with server-only packages", isRecommended: true },
+          { id: "next-server-actions", name: "Server Actions", desc: "Asynchronous server functions called directly from client forms", isRecommended: true },
+        ],
+      },
+      {
+        groupName: "Caching & Revalidation",
+        topics: [
+          { id: "next-caching-data", name: "Caching Data", desc: "Next.js Data Cache, Request Memoization, and Full Route Cache", isRecommended: true },
+          { id: "next-fetch-memo", name: "Memoization in Fetch", desc: "Automatic duplicate request deduping during rendering", isRecommended: true },
+          { id: "next-react-cache", name: "React Cache", desc: "cache() wrapper for non-fetch data request deduping", isRecommended: true },
+          { id: "next-reval-cached", name: "Revalidating Cached Data", desc: "Time-based (revalidatePath) and tag-based (revalidateTag) invalidation", isRecommended: true },
+          { id: "next-reval-errors", name: "Revalidation Errors", desc: "Handling stale data fallback when revalidation fails", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "6. Rendering & Runtimes": {
+    description: "Client Rendered, Server Rendered, Composition, and Node.js vs Edge runtimes.",
+    groups: [
+      {
+        topics: [
+          { id: "next-rendering-modes", name: "Rendering (Client / Server / Composition)", desc: "'use client' boundary interleaving with Server Components", isRecommended: true },
+          { id: "next-runtimes", name: "Runtimes and Types (Node.js vs Edge)", desc: "Full Node.js environment vs lightweight V8 Edge worker runtime", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "7. Writing CSS": {
+    description: "Ways to Write CSS: Global CSS, CSS Modules, Tailwind CSS, Sass, and CSS in JS.",
+    groups: [
+      {
+        topics: [
+          { id: "next-css-ways", name: "Ways to Write CSS", desc: "Global CSS, CSS Modules, Tailwind CSS, Sass, and CSS in JS", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "8. Optimizations": {
+    description: "Images, Videos, Fonts, Metadata, Package Bundling, Lazy Loading, Analytics, OpenTelemetry, and Memory Usage.",
+    groups: [
+      {
+        topics: [
+          { id: "next-opt-assets", name: "Assets & Resource Optimizations", desc: "next/image, next/font, and video player optimizations", isRecommended: true },
+          { id: "next-opt-metadata", name: "Metadata & SEO", desc: "Dynamic metadata generation, OpenGraph images, and sitemaps", isRecommended: true },
+          { id: "next-opt-bundling", name: "Package Bundling & Lazy Loading", desc: "Tree shaking, dynamic() imports, and bundle analyzer", isRecommended: true },
+          { id: "next-opt-analytics", name: "Analytics, Instrumentation & OpenTelemetry", desc: "Vercel Web Vitals and OpenTelemetry tracing", isRecommended: true },
+          { id: "next-opt-memory", name: "Memory Usage & Third Party Libraries", desc: "Optimizing memory footprints and @next/third-parties scripts", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "9. Configuring": {
+    description: "Setting things Up (TypeScript, ESLint, Prettier), Environment Variables, Markdown/MDX, and Custom Server.",
+    groups: [
+      {
+        topics: [
+          { id: "next-cfg-tooling", name: "Setting things Up (TypeScript / ESLint / Prettier)", desc: "Compiler configuration and code formatting rules", isRecommended: true },
+          { id: "next-cfg-env", name: "Environment Variables", desc: ".env, .env.local, and NEXT_PUBLIC_ client exposure rules", isRecommended: true },
+          { id: "next-cfg-mdx", name: "Markdown and MDX", desc: "Rendering JSX components directly inside markdown files", isRecommended: true },
+          { id: "next-cfg-custom-server", name: "Custom Server", desc: "Custom Express/Node.js server running Next.js programmatically", isAlternative: true },
+        ],
+      },
+    ],
+  },
+  "10. Testing": {
+    description: "Testing Frameworks (Vitest, Jest, Playwright, Cypress).",
+    groups: [
+      {
+        topics: [
+          { id: "next-test-fws", name: "Testing Frameworks (Vitest / Jest / Playwright / Cypress)", desc: "Unit testing React components and end-to-end browser flows", isRecommended: true },
+        ],
+      },
+    ],
+  },
+  "11. Deployment": {
+    description: "Preparing for Production and Deployment Options (Node.js Server, Docker Container, Static Export, Adapters).",
+    groups: [
+      {
+        topics: [
+          { id: "next-prep-prod", name: "Preparing for Production", desc: "next build optimization, environment audits, and security headers", isRecommended: true },
+          { id: "next-deploy-options", name: "Deployment Options (Node.js / Docker / Static Export / Adapters)", desc: "Deploying to Vercel, Docker containers, AWS, or static hosting", isRecommended: true },
+        ],
+      },
+    ],
+  },
+};
+
 function getRightBranchesForNode(nodeName: string): NodeTreeBranches {
+  if (NEXTJS_NODE_TREE_BRANCHES[nodeName]) {
+    return NEXTJS_NODE_TREE_BRANCHES[nodeName];
+  }
+  const strippedNextNum = nodeName.replace(/^\d+\.\s*/, "").trim();
+  if (NEXTJS_NODE_TREE_BRANCHES[strippedNextNum]) {
+    return NEXTJS_NODE_TREE_BRANCHES[strippedNextNum];
+  }
+  for (const [key, value] of Object.entries(NEXTJS_NODE_TREE_BRANCHES)) {
+    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
+    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
+    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
+      return value;
+    }
+  }
+
+  if (NODEJS_NODE_TREE_BRANCHES[nodeName]) {
+    return NODEJS_NODE_TREE_BRANCHES[nodeName];
+  }
+  const strippedNodeNum = nodeName.replace(/^\d+\.\s*/, "").trim();
+  if (NODEJS_NODE_TREE_BRANCHES[strippedNodeNum]) {
+    return NODEJS_NODE_TREE_BRANCHES[strippedNodeNum];
+  }
+  for (const [key, value] of Object.entries(NODEJS_NODE_TREE_BRANCHES)) {
+    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
+    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
+    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
+      return value;
+    }
+  }
+
+  if (REACT_NODE_TREE_BRANCHES[nodeName]) {
+    return REACT_NODE_TREE_BRANCHES[nodeName];
+  }
+  const strippedReactNum = nodeName.replace(/^\d+\.\s*/, "").trim();
+  if (REACT_NODE_TREE_BRANCHES[strippedReactNum]) {
+    return REACT_NODE_TREE_BRANCHES[strippedReactNum];
+  }
+  for (const [key, value] of Object.entries(REACT_NODE_TREE_BRANCHES)) {
+    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
+    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
+    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
+      return value;
+    }
+  }
+
+  if (JAVA_NODE_TREE_BRANCHES[nodeName]) {
+    return JAVA_NODE_TREE_BRANCHES[nodeName];
+  }
+  const strippedNum = nodeName.replace(/^\d+\.\s*/, "").trim();
+  if (JAVA_NODE_TREE_BRANCHES[strippedNum]) {
+    return JAVA_NODE_TREE_BRANCHES[strippedNum];
+  }
+  for (const [key, value] of Object.entries(JAVA_NODE_TREE_BRANCHES)) {
+    const cleanKey = key.replace(/^\d+\.\s*/, "").toLowerCase();
+    const cleanNode = nodeName.replace(/^\d+\.\s*/, "").toLowerCase();
+    if (cleanKey === cleanNode || cleanKey.includes(cleanNode) || cleanNode.includes(cleanKey)) {
+      return value;
+    }
+  }
+
   if (C_NODE_TREE_BRANCHES[nodeName]) {
     return C_NODE_TREE_BRANCHES[nodeName];
   }
@@ -3804,58 +4735,7 @@ export default function RoadmapsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-10 pb-16"
     >
-      {/* ── Top Bar: Search & AI Custom Generator */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="glass p-4 sm:p-5 rounded-2xl border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4"
-      >
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
-            <BrainCircuit className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white">AI Custom Roadmap Generator</h2>
-            <p className="text-xs text-slate-400">Generate a 5-tier curriculum for any tech stack</p>
-          </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto flex-1 sm:max-w-xl">
-          <div className="relative flex-1">
-            <Sparkles className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              placeholder="Enter skill (e.g. Rust, Go, Solana, Cloud Native)..."
-              className="input-glass w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-xl"
-            />
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleGenerate}
-            disabled={generating || !query.trim()}
-            className="px-5 py-2.5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-              boxShadow: "0 4px 15px rgba(79,70,229,0.3)",
-            }}
-          >
-            {generating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" /> Generate AI Roadmap
-              </>
-            )}
-          </motion.button>
-        </div>
-      </motion.div>
 
       {/* ── Generated Custom Roadmaps */}
       <AnimatePresence>
