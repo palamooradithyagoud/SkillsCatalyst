@@ -188,24 +188,24 @@ function RoadmapMetricCard({ fallbackData }: { fallbackData?: any }) {
       title: "C Programming Mastery",
       progress_percent: 0,
       completed_milestones: 0,
-      total_milestones: 48,
-      next_module: { title: "Introduction (C vs Assembly / C vs C++)" }
+      total_milestones: 22,
+      next_module: { title: "1. Introduction" }
     },
     "cpp-programming": {
       roadmap_id: "cpp-programming",
       title: "C++ Development Mastery",
       progress_percent: 0,
       completed_milestones: 0,
-      total_milestones: 37,
-      next_module: { title: "Introduction to Language (What is C++ / Why C++ / C vs C++)" }
+      total_milestones: 21,
+      next_module: { title: "1. Introduction to Language" }
     },
     "python-mastery": {
       roadmap_id: "python-mastery",
       title: "Python Mastery",
       progress_percent: 0,
       completed_milestones: 0,
-      total_milestones: 57,
-      next_module: { title: "Basic Syntax" }
+      total_milestones: 21,
+      next_module: { title: "1. Learn the Basics" }
     }
   };
 

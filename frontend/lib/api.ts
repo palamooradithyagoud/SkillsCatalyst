@@ -160,11 +160,35 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
       const userId = session.user.id;
-      await supabase
+      const { data: userRows } = await supabase
         .from("roadmap_progress")
-        .delete()
-        .eq("user_id", userId)
-        .or(`roadmap_id.eq.${normId},roadmap_id.ilike.%${roadmapId}%`);
+        .select("id, roadmap_id")
+        .eq("user_id", userId);
+
+      if (userRows && userRows.length > 0) {
+        const targetClean = roadmapId.toLowerCase().replace(/-/g, " ").trim();
+        const idsToDelete = userRows
+          .filter((row) => {
+            const rawRid = row.roadmap_id || "";
+            const rowNorm = normalizeRoadmapId(rawRid);
+            const rowClean = rawRid.toLowerCase().replace(/-/g, " ").trim();
+            return (
+              rowNorm === normId ||
+              rawRid.toLowerCase() === roadmapId.toLowerCase() ||
+              rawRid.toLowerCase() === normId ||
+              rowClean.includes(targetClean) ||
+              targetClean.includes(rowClean)
+            );
+          })
+          .map((row) => row.id);
+
+        if (idsToDelete.length > 0) {
+          await supabase
+            .from("roadmap_progress")
+            .delete()
+            .in("id", idsToDelete);
+        }
+      }
     }
   } catch (err) {
     console.warn("Supabase removeEnrolledRoadmap failed:", err);
@@ -177,6 +201,15 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
       if (!removedList.includes(normId)) {
         removedList.push(normId);
         localStorage.setItem("skillscatalyst_removed_roadmaps", JSON.stringify(removedList));
+      }
+
+      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
+      if (rawActive) {
+        const parsed = JSON.parse(rawActive);
+        const activeNorm = normalizeRoadmapId(parsed?.id || parsed?.title);
+        if (activeNorm === normId) {
+          localStorage.removeItem("skillscatalyst_active_roadmap");
+        }
       }
 
       const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
@@ -416,76 +449,37 @@ export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[
     "cpp-programming": {
       name: "C++ Development Mastery",
       nodes: [
-        "Introduction to Language (What is C++ / Why C++ / C vs C++)", "Setting Up Environment (Installing C++ / IDEs / VSCode)", "Running Your First C++ Program",
-        "Basic Operations (Arithmetic / Logical / Bitwise Operators)", "Control Flow & Statements (if-else / switch / goto / loops)", "Data Types (Static vs Dynamic Typing & RTTI)", "Language Concepts (auto / Type Casting static_cast & dynamic_cast)", "Undefined Behavior (UB), ADL & Name Mangling",
-        "Functions & Function Overloading", "Operator Overloading", "Lambda Expressions & Functional Tools", "Static Polymorphism",
-        "Pointers & References (References / Memory Model / Object Lifetimes)", "Raw Pointers & New/Delete Operators", "Memory Leakage Prevention", "Smart Pointers (unique_ptr / shared_ptr / weak_ptr)",
-        "Structuring Codebase (Headers & CPP Files / Forward Declarations / Namespaces)", "Structures and Classes", "Object Oriented Programming & Dynamic Polymorphism (Virtual Methods & VTables)", "Inheritance (Multiple & Diamond Inheritance)", "Rule of Zero, Three, and Five",
-        "Templates & Template Specialization (Full & Partial)", "Variadic Templates", "Type Traits & SFINAE",
-        "STL Containers (vector / map / set / deque)", "STL Algorithms & Date/Time", "Multithreading & Concurrency", "Exception Handling (Exceptions / Exit Codes / Access Violations)",
-        "C++ Idioms (RAII / Pimpl / CRTP / Copy-and-Swap / Erase-Remove)", "Non-Copyable & Non-Moveable Idioms", "C++ Standards Evolution (C++11 / C++14 / C++17 / C++20 / C++23)",
-        "Compilers & Compiler Stages (GCC / Clang++ / MSVC / MinGW)", "Debuggers & Symbols (GDB / WinDbg / Debugger Messages)", "Build Systems (CMake / Makefile / Ninja)", "Package Managers (vcpkg / Conan / Spack / NuGet)",
-        "Popular Libraries (Boost / POCO / protobuf / gRPC / fmt / ranges_v3 / OpenCV)", "Testing & UI Frameworks (gtest / gmock / Catch2 / Qt / PyTorch C++)"
+        "1. Introduction to Language", "2. Setting up your Environment", "3. Basic Operations", "4. Control Flow & Statements", "5. Functions", "6. Data Types", "7. Pointers and References", "8. Structuring Codebase", "9. Structures and Classes", "10. Templates", "11. Language Concepts", "12. Exception Handling", "13. Standard Library + STL", "14. Debuggers", "15. Compilers", "16. Build Systems", "17. Package Managers", "18. Working with Libraries", "19. Frameworks", "20. Idioms", "21. Standards"
       ]
     },
     "python-mastery": {
       name: "Python Mastery",
       nodes: [
-        "Basic Syntax", "Variables and Data Types", "Operators", "Working with Strings", "Conditionals", "Loops", "Lists, Tuples, Sets", "Dictionaries", "Type Casting", "Functions, Builtin Functions", "Exceptions", "Comments & Type Annotations",
-        "Arrays and Linked Lists", "HashMaps", "Heaps, Stacks and Queues", "Binary Search Tree", "Recursion", "Sorting Algorithms",
-        "Builtin & Custom Modules", "Variable Scope", "List Comprehensions", "Generator Expressions", "Lambdas", "Decorators", "Iterators", "Context Manager", "Regular Expressions", "Paradigms",
-        "Classes", "Methods", "Inheritance", "Encapsulation",
-        "PyPI & Pip", "Poetry, Conda, uv & pdm", "pyproject.toml & Configuration", "Common Packages", "Environments (virtualenv / pyenv / Pipenv)",
-        "Static Typing (typing / mypy / pyright / pyre)", "Pydantic Data Validation", "Code Formatting (black / ruff / yapf)",
-        "Multiprocessing", "Asynchrony & AsyncIO", "Threading", "Global Interpreter Lock (GIL)",
-        "File Handling", "glob Pattern Matching", "Sphinx & Documentation",
-        "unittest / pyUnit", "doctest", "pytest", "tox",
-        "FastAPI", "Django", "Flask", "Sanic, Tornado & gevent", "aiohttp & Pyramid", "Plotly Dash"
+        "1. Learn the Basics", "2. Data Structures & Algorithms", "3. Modules", "4. Lambdas", "5. Decorators", "6. Iterators", "7. Regular Expressions", "8. Object Oriented Programming", "9. Package Managers", "10. Common Packages", "11. List Comprehensions", "12. Generator Expressions", "13. Paradigms", "14. Context Manager", "15. Learn a Framework", "16. Concurrency", "17. Environments", "18. Static Typing", "19. Code Formatting", "20. Documentation", "21. Testing"
       ]
     },
     "java-spring-boot": {
       name: "Java & Spring Boot Mastery",
       nodes: [
-        "Basic Syntax", "Lifecycle of a Program", "Data Types & Variables", "Type Casting", "Strings and Methods", "Math Operations", "Arrays", "Conditionals & Loops", "Basics of OOP",
-        "Classes and Objects", "Attributes and Methods", "Access Specifiers", "Static & Final Keywords", "Nested Classes & Packages", "Object Lifecycle & Method Chaining", "Inheritance & Encapsulation", "Abstraction & Interfaces", "Method Overloading / Overriding", "Enums & Records", "Initializer Block & Binding (Static vs Dynamic)", "Pass by Value / Pass by Reference",
-        "Exception Handling", "Lambda Expressions", "Annotations", "Modules", "Optionals", "Functional Programming (High Order Functions & Interfaces)", "Stream API", "Regular Expressions & Cryptography", "Date and Time API", "Networking",
-        "Array vs ArrayList", "Set & Map", "Queue & Deque", "Stack & Iterator", "Generic Collections",
-        "volatile keyword", "Java Memory Model", "Threads & Multithreading", "Virtual Threads (Project Loom)", "Concurrency Utilities",
-        "I/O Operations", "File Operations", "Dependency Injection",
-        "Maven", "Gradle", "Bazel",
-        "Spring (Spring Boot)", "Quarkus", "Javalin", "Play Framework",
-        "JDBC", "Hibernate ORM", "Spring Data JPA", "EBean",
-        "Javadoc & Documentation", "Logging Frameworks (SLF4J / Log4j2 / Logback / TinyLog)", "Unit Testing (JUnit & TestNG)", "Integration Testing (REST Assured & JMeter)"
+        "1. Learn the Basics", "2. Object Oriented Programming", "3. Exception Handling", "4. Lambda & Modern Java", "5. Collections", "6. Dependency Injection", "7. I/O Operations", "8. Concurrency", "9. Core Java Utilities", "10. Functional Programming", "11. Build Tools", "12. Web Frameworks", "13. Database Access", "14. Logging Frameworks", "15. Testing"
       ]
     },
     "react-development": {
       name: "React Mastery",
       nodes: [
-        "CLI Tools (Vite)", "Functional Components & JSX", "Props vs State & Component Lifecycle", "Conditional Rendering & Composition", "Lists, Keys & Event Handling", "Render Props & High Order Components (HOC)",
-        "Basic Hooks (useState / useEffect / useRef)", "Performance Hooks (useMemo / useCallback)", "State & Context Hooks (useReducer / useContext)", "Creating Custom Hooks & Hooks Best Practices",
-        "Routers (React Router / Tanstack Router)", "State Management (Context API / Zustand / Jotai / MobX)", "Writing CSS (Tailwind CSS / CSS Modules / Panda CSS)",
-        "UI Component Libraries (Shadcn UI / Material UI / Chakra UI)", "Headless UI Components (Radix UI / React Aria / Ark UI)",
-        "REST API Calls (TanStack Query / Axios / SWR / RTK Query)", "GraphQL APIs (Apollo Client / Relay / urql)",
-        "Form Libraries (React Hook Form / Formik)", "TypeScript Integration with React", "Schema Validation (Zod)",
-        "Unit Testing Tools (Vitest / Jest)", "Component Testing (React Testing Library)", "End-to-End Testing (Playwright / Cypress)",
-        "Framer Motion", "React Spring & GSAP",
-        "Error Boundaries", "Portals & Modal Overlays", "Suspense Boundaries & Server APIs",
-        "React Frameworks (Next.js / Astro / React Router)", "Mobile Applications (React Native)"
+        "1. CLI Tools", "2. Components", "3. Hooks", "4. Routers", "5. State Management", "6. Writing CSS", "7. Component Libraries", "8. Headless Component Libraries", "9. API Calls", "10. Testing", "11. Frameworks", "12. Forms", "13. Types & Validation", "14. Advanced Topics", "15. Mobile Applications"
       ]
     },
     "nextjs-framework": {
       name: "Next.js Mastery",
       nodes: [
-        "Introduction (Why Next.js / Next.js vs Remix / SPA vs SSR)", "Rendering Strategies (SSR / SSG / CSR / SPA)", "Getting Started (create-next-app)",
-        "Types of Routers (Pages Router vs App Router)", "Routing Terminology & Rendering Pages", "Layouts and Templates", "Loading, Streaming & Error States", "Routing Patterns (Parallel Routes & Intercepting Routes)",
-        "Middleware (Route Matcher / Cookies / Setting Headers)", "Structuring Routes & Use Cases", "API Endpoints (Static vs Dynamic / Caching / Streaming / Redirects)", "Internationalization (i18n)",
-        "Fetching Locations (Client vs Server Data Fetching)", "Data Fetching Patterns (Parallel vs Sequential & Preloading Data)", "Handling Sensitive Data", "Server Actions & Mutations",
-        "Caching Data (Fetch Memoization / React Cache / Revalidating Data)", "Revalidation & Error Recovery", "Runtimes (Node.js Runtime vs Edge Runtime)", "Rendering Composition (Client Rendered vs Server Rendered)",
-        "Global CSS & CSS Modules", "Tailwind CSS & Sass", "CSS-in-JS Solutions",
-        "Image, Video & Font Optimization (next/image / next/font)", "Metadata API & SEO Optimization", "Package Bundling & Lazy Loading", "Scripts & Third-Party Library Optimizations", "Memory Usage Optimization",
-        "Setting Up Tooling (TypeScript / ESLint / Prettier)", "Environment Variables", "Markdown and MDX Integration", "Custom Server Setup",
-        "Analytics & Instrumentation (OpenTelemetry & Vercel Analytics)", "Testing Frameworks (Vitest / Jest)", "End-to-End Testing (Playwright / Cypress)",
-        "Preparing for Production", "Deployment Options (Node.js Server / Docker Container / Static Export / Adapters)"
+        "1. Introduction", "2. Getting Started", "3. Routing", "4. Structuring Routes", "5. Working with data", "6. Rendering & Runtimes", "7. Writing CSS", "8. Optimizations", "9. Configuring", "10. Testing", "11. Deployment"
+      ]
+    },
+    "nodejs-runtime": {
+      name: "Node.js Architecture Mastery",
+      nodes: [
+        "1. Introduction to Node.js", "2. Modules", "3. Package Management (npm & npx)", "4. Async Programming", "5. Error Handling", "6. Working with Files", "7. Command Line Apps", "8. Building & Consuming APIs", "9. Development & Templating Tools", "10. Working with Databases", "11. Process & App Management", "12. Testing & Logging", "13. Debugging & Performance"
       ]
     },
     "full-stack-developer": {
@@ -538,11 +532,7 @@ export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[
     "devops-engineer": {
       name: "DevOps Engineer Track",
       nodes: [
-        "Programming Languages (Python, Go, Node.js)", "Operating Systems (Linux Ubuntu/Debian, RHEL, Windows)", "Terminal Knowledge & Utilities (Process/Performance Monitoring)", "Shell Scripting (Bash & PowerShell)", "Version Control & Hosting (Git, GitHub, GitLab)",
-        "Networking & Protocols (HTTP/S, SSH, SSL/TLS, DNS, OSI)", "Web Servers & Reverse Proxies (Nginx, Apache, Caddy, Load Balancers)", "Containers (Docker & LXC)", "Cloud Providers (AWS, GCP, Azure, DigitalOcean)", "Serverless Compute (AWS Lambda, Cloudflare Workers, Vercel)",
-        "Infrastructure Provisioning (Terraform, AWS CDK, Pulumi)", "Configuration Management (Ansible, Chef, Puppet)", "Secret Management (HashiCorp Vault, Sealed Secrets)",
-        "CI/CD Automation (GitHub Actions, GitLab CI, Jenkins, CircleCI)", "Artifact Management (JFrog Artifactory, Sonatype Nexus)", "GitOps Workflows (ArgoCD & FluxCD)",
-        "Container Orchestration (Kubernetes, EKS/GKE/AKS, Helm)", "Infrastructure Monitoring (Prometheus & Grafana)", "Log Management (Elastic Stack ELK, Loki, Splunk)", "Observability & Distributed Tracing (OpenTelemetry, Jaeger)", "Service Mesh (Istio, Consul, Envoy)", "Cloud Architecture & Design Patterns"
+        "1. Learn a Programming Language", "2. Operating System", "3. Terminal Knowledge", "4. Version Control Systems", "5. VCS Hosting", "6. Containers", "7. What is and how to setup X ?", "8. Networking & Protocols", "9. Cloud Providers", "10. Serverless", "11. Provisioning", "12. Configuration Management", "13. CI / CD Tools", "14. Secret Management", "15. Infrastructure Monitoring", "16. Logs Management", "17. Container Orchestration", "18. Observability & Application Monitoring", "19. Artifact Management", "20. GitOps", "21. Service Mesh"
       ]
     },
     "cybersecurity": {
