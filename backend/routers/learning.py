@@ -636,7 +636,7 @@ async def unsave_playlist(
     try:
         clean_pid = _extract_playlist_id(playlist_id, playlist_id)
         if _is_uuid(user_id):
-            sb.table("saved_playlists").delete().eq("user_id", user_id).or_(f"playlist_id.eq.{playlist_id},playlist_id.eq.{clean_pid}").execute()
+            sb.table("saved_playlists").delete().eq("user_id", user_id).in_("playlist_id", [playlist_id, clean_pid]).execute()
 
         # Also remove from learning_progress JSONB
         try:

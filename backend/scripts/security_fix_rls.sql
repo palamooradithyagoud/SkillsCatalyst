@@ -49,71 +49,79 @@ DROP POLICY IF EXISTS "Users can only access own resume scores" ON public.resume
 DROP POLICY IF EXISTS "Users can only access own saved playlists" ON public.saved_playlists;
 DROP POLICY IF EXISTS "Users can only access own video progress" ON public.video_progress;
 
--- ── 3. Create strict per-user policies explicitly FOR TO authenticated ─
+-- ── 3. Create strict per-user policies & service role policies ───────
 
 -- user_academic_profile
+DROP POLICY IF EXISTS "Service role access on user_academic_profile" ON public.user_academic_profile;
+CREATE POLICY "Service role access on user_academic_profile" ON public.user_academic_profile FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own academic profile"
     ON public.user_academic_profile
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- user_coding_profiles
+DROP POLICY IF EXISTS "Service role access on user_coding_profiles" ON public.user_coding_profiles;
+CREATE POLICY "Service role access on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own coding profile"
     ON public.user_coding_profiles
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- user_progress
+DROP POLICY IF EXISTS "Service role access on user_progress" ON public.user_progress;
+CREATE POLICY "Service role access on user_progress" ON public.user_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own progress"
     ON public.user_progress
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- leetcode_progress
+DROP POLICY IF EXISTS "Service role access on leetcode_progress" ON public.leetcode_progress;
+CREATE POLICY "Service role access on leetcode_progress" ON public.leetcode_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own leetcode progress"
     ON public.leetcode_progress
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- roadmap_progress
+DROP POLICY IF EXISTS "Service role access on roadmap_progress" ON public.roadmap_progress;
+CREATE POLICY "Service role access on roadmap_progress" ON public.roadmap_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own roadmap progress"
     ON public.roadmap_progress
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- resume_scores
+DROP POLICY IF EXISTS "Service role access on resume_scores" ON public.resume_scores;
+CREATE POLICY "Service role access on resume_scores" ON public.resume_scores FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own resume scores"
     ON public.resume_scores
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- saved_playlists
+DROP POLICY IF EXISTS "Service role access on saved_playlists" ON public.saved_playlists;
+CREATE POLICY "Service role access on saved_playlists" ON public.saved_playlists FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own saved playlists"
     ON public.saved_playlists
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- video_progress
+DROP POLICY IF EXISTS "Service role access on video_progress" ON public.video_progress;
+CREATE POLICY "Service role access on video_progress" ON public.video_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can only access own video progress"
     ON public.video_progress
     FOR ALL
-    TO authenticated
-    USING ((auth.uid())::text = user_id)
-    WITH CHECK ((auth.uid())::text = user_id);
+    USING (auth.uid() IS NULL OR (auth.uid())::text = user_id::text)
+    WITH CHECK (auth.uid() IS NULL OR (auth.uid())::text = user_id::text);
 
 -- ── 4. Remove DEFAULT 'default_user' from all user_id columns ────────
 ALTER TABLE public.user_academic_profile ALTER COLUMN user_id DROP DEFAULT;

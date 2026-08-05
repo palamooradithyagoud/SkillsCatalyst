@@ -109,13 +109,14 @@ async def get_company_questions(
     - **limit** / **offset**: pagination
     """
     company_slug = company.lower().strip()
-    csv_path = _csv_path(company_slug, period)
-
-    if not _company_dir(company_slug).exists():
+    valid_companies = set(c.lower() for c in _list_companies())
+    if company_slug not in valid_companies:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Company '{company}' not found. Use GET /api/practice/companies to list all available companies.",
         )
+
+    csv_path = _csv_path(company_slug, period)
 
     if not csv_path.exists():
         # Fallback to all.csv if requested period file doesn't exist

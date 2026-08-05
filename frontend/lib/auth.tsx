@@ -37,10 +37,9 @@ const AuthContext = createContext<AuthContextValue>({
 
 // Helper function to sync authenticated user to Supabase user_academic_profile & user_progress
 async function syncUserToSupabase(userId: string, email: string, name?: string) {
-  try {
-    const fullName = name || email.split("@")[0] || "Learner";
+  const fullName = name || email.split("@")[0] || "Learner";
 
-    // Use ignoreDuplicates: true so re-logging in NEVER erases existing college/dept/URLs!
+  try {
     await supabase.from("user_academic_profile").upsert(
       {
         user_id: userId,
@@ -49,7 +48,11 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
       },
       { onConflict: "user_id", ignoreDuplicates: true }
     );
+  } catch (err) {
+    console.warn("Failed to sync user_academic_profile:", err);
+  }
 
+  try {
     await supabase.from("user_progress").upsert(
       {
         user_id: userId,
@@ -57,7 +60,11 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
       },
       { onConflict: "user_id", ignoreDuplicates: true }
     );
+  } catch (err) {
+    console.warn("Failed to sync user_progress:", err);
+  }
 
+  try {
     await supabase.from("user_coding_profiles").upsert(
       {
         user_id: userId,
@@ -66,7 +73,7 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
       { onConflict: "user_id", ignoreDuplicates: true }
     );
   } catch (err) {
-    console.warn("Failed to sync user to Supabase tables:", err);
+    console.warn("Failed to sync user_coding_profiles:", err);
   }
 }
 
