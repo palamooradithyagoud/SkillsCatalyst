@@ -93,16 +93,29 @@ ALTER TABLE public.user_aptitude_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_quiz_results ENABLE ROW LEVEL SECURITY;
 
 -- Public read-only access for categories, topics, and questions
+DROP POLICY IF EXISTS "Public read aptitude categories" ON public.aptitude_categories;
 CREATE POLICY "Public read aptitude categories" ON public.aptitude_categories FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read aptitude topics" ON public.aptitude_topics;
 CREATE POLICY "Public read aptitude topics" ON public.aptitude_topics FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public read aptitude questions" ON public.aptitude_questions;
 CREATE POLICY "Public read aptitude questions" ON public.aptitude_questions FOR SELECT USING (true);
 
 -- User-isolated access for attempts & quiz results
+DROP POLICY IF EXISTS "Users view own attempts" ON public.user_aptitude_attempts;
 CREATE POLICY "Users view own attempts" ON public.user_aptitude_attempts FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users insert own attempts" ON public.user_aptitude_attempts;
 CREATE POLICY "Users insert own attempts" ON public.user_aptitude_attempts FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users update own attempts" ON public.user_aptitude_attempts;
 CREATE POLICY "Users update own attempts" ON public.user_aptitude_attempts FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users view own quiz results" ON public.user_quiz_results;
 CREATE POLICY "Users view own quiz results" ON public.user_quiz_results FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users insert own quiz results" ON public.user_quiz_results;
 CREATE POLICY "Users insert own quiz results" ON public.user_quiz_results FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ====================================================================
@@ -276,8 +289,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- Analytics View: Summarizes Correct & Wrong Answers, Accuracy, and Average Time Spent per Category
-CREATE OR REPLACE VIEW public.user_aptitude_question_analytics AS
+-- Analytics View: Summarizes Correct & Wrong Answers, Accuracy, and Average Time Spent per Category (Security Invoker enabled for RLS compliance)
+CREATE OR REPLACE VIEW public.user_aptitude_question_analytics 
+WITH (security_invoker = true) 
+AS
 SELECT 
     a.user_id,
     a.topic_id,
@@ -299,4 +314,6 @@ SELECT
 FROM public.user_aptitude_attempts a
 JOIN public.aptitude_topics t ON t.id = a.topic_id
 GROUP BY a.user_id, a.topic_id, t.topic_name;
+
+ALTER VIEW public.user_aptitude_question_analytics SET (security_invoker = true);
 
