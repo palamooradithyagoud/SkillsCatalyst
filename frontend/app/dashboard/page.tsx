@@ -51,7 +51,7 @@ export default function DashboardPage() {
       y: 0,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 320,
         damping: 25,
       },
@@ -64,7 +64,7 @@ export default function DashboardPage() {
       opacity: 1,
       x: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 26,
         delay: 0.25,
