@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { reviewResume, getAuthHeaders, handleGuestTokenFromResponse } from "@/lib/api";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
+import BorderGlow from "@/components/BorderGlow";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -584,17 +585,24 @@ export default function CareerPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* ── Page Header ── */}
-      <div className="flex items-center gap-3.5">
-        <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-          <Briefcase className="w-6 h-6" />
-        </div>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            Career Acceleration
-          </h1>
-          <p className="text-sm text-slate-400">
-            Multi-stage AI resume evaluation and interview readiness.
-          </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 shrink-0">
+            <Briefcase className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                Career Acceleration
+              </h1>
+              <span className="px-3 py-0.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-black tracking-wider uppercase shadow-xs">
+                AI Career Suite
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
+              Multi-stage AI resume evaluation and interview readiness.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -602,113 +610,159 @@ export default function CareerPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Resume Review */}
         <motion.div
-          whileHover={{ y: -3 }}
+          whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
-          className="bg-[#0b1329]/90 border border-[#1d2b4a] rounded-2xl p-6 md:p-8 flex flex-col justify-between shadow-xl relative overflow-hidden group"
+          className="h-full group cursor-pointer"
+          onClick={() => setIsModalOpen(true)}
         >
-          <div className="absolute -right-16 -top-16 w-40 h-40 rounded-full bg-indigo-500/5 blur-3xl group-hover:bg-indigo-500/10 transition-all pointer-events-none" />
-
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Active AI Evaluator
-              </div>
-            </div>
-
-            <h3 className="text-xl font-bold text-white mb-2.5">
-              Resume Review
-            </h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-6">
-              Calibrated AI scanner for Product-Based vs. Service-Based roles.
-              Analyzes ATS compatibility, recruiter impression, line-by-line
-              bullet rewrites, and missing skills.
-            </p>
-          </div>
-
-          <button
-            id="open-resume-review-modal"
-            onClick={() => setIsModalOpen(true)}
-            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm group cursor-pointer"
+          <BorderGlow
+            edgeSensitivity={30}
+            glowColor="16 185 129"
+            backgroundColor="#ffffff"
+            borderRadius={28}
+            glowRadius={35}
+            glowIntensity={1.2}
+            animated={false}
+            colors={['#10b981', '#06b6d4', '#6366f1']}
+            className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-slate-200/90"
           >
-            <span>Start Resume Review</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+            <div className="flex flex-col justify-between h-full space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500 text-white flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                    Active AI Evaluator
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
+                  Resume Review
+                </h3>
+                <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                  Calibrated AI scanner for Product-Based vs. Service-Based roles.
+                  Analyzes ATS compatibility, recruiter impression, line-by-line
+                  bullet rewrites, and missing skills.
+                </p>
+              </div>
+
+              <button
+                id="open-resume-review-modal"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsModalOpen(true);
+                }}
+                className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold py-3 rounded-xl transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 text-xs group/btn cursor-pointer"
+              >
+                <span>Start Resume Review</span>
+                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </BorderGlow>
         </motion.div>
 
         {/* Card 2: Placement Prep */}
         <motion.div
-          whileHover={{ y: -3 }}
+          whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
-          className="bg-[#0b1329]/90 border border-[#1d2b4a] rounded-2xl p-6 md:p-8 flex flex-col justify-between shadow-xl relative overflow-hidden group"
+          className="h-full group cursor-pointer"
+          onClick={() => setIsPlacementPrepOpen(true)}
         >
-          <div className="absolute -right-16 -top-16 w-40 h-40 rounded-full bg-purple-500/5 blur-3xl group-hover:bg-purple-500/10 transition-all pointer-events-none" />
-
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <div className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-300 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                Active Prep Suite
-              </div>
-            </div>
-
-            <h3 className="text-xl font-bold text-white mb-2.5">
-              Placement Prep
-            </h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-6">
-              Curated company-wise interview problem archives, core DSA pattern benchmarks, and tier-1 company hiring rubrics tailored for placement success.
-            </p>
-          </div>
-
-          <button
-            onClick={() => setIsPlacementPrepOpen(true)}
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 text-sm group cursor-pointer"
+          <BorderGlow
+            edgeSensitivity={30}
+            glowColor="147 51 234"
+            backgroundColor="#ffffff"
+            borderRadius={28}
+            glowRadius={35}
+            glowIntensity={1.2}
+            animated={false}
+            colors={['#8b5cf6', '#c084fc', '#38bdf8']}
+            className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-slate-200/90"
           >
-            <span>Start Placement Prep</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+            <div className="flex flex-col justify-between h-full space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-violet-500/30 group-hover:scale-105 transition-transform">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-purple-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                    Active Prep Suite
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">
+                  Placement Prep
+                </h3>
+                <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                  Curated company-wise interview problem archives, core DSA pattern benchmarks, and tier-1 company hiring rubrics tailored for placement success.
+                </p>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlacementPrepOpen(true);
+                }}
+                className="w-full bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 text-xs group/btn cursor-pointer"
+              >
+                <span>Start Placement Prep</span>
+                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </BorderGlow>
         </motion.div>
 
         {/* Card 3: AI Interviews (Locked) */}
         <motion.div
           whileHover={{ y: -2 }}
           transition={{ duration: 0.2 }}
-          className="bg-[#0b1329]/50 border border-slate-800/80 rounded-2xl p-6 md:p-8 flex flex-col justify-between shadow-xl relative overflow-hidden"
+          className="h-full group"
         >
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-                <Lock className="w-6 h-6" />
-              </div>
-              <div className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-1.5">
-                <Lock className="w-3 h-3" />
-                LOCKED
-              </div>
-            </div>
-
-            <h3 className="text-xl font-bold text-white mb-2.5">
-              AI Interviews
-            </h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-6">
-              Real-time AI voice & technical mock interview simulation suite.
-              Locked for platform updates. Complete 5 DSA practice problems to
-              unlock.
-            </p>
-          </div>
-
-          <button
-            disabled
-            className="w-full bg-[#1b1524] border border-rose-500/20 text-rose-400/80 font-medium py-3 rounded-xl flex items-center justify-center gap-2 text-sm cursor-not-allowed opacity-90"
+          <BorderGlow
+            edgeSensitivity={30}
+            glowColor="244 63 94"
+            backgroundColor="#ffffff"
+            borderRadius={28}
+            glowRadius={35}
+            glowIntensity={1.0}
+            animated={false}
+            colors={['#f43f5e', '#fb7185', '#cbd5e1']}
+            className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm border border-slate-200/90"
           >
-            <Lock className="w-4 h-4 text-rose-400" />
-            <span>AI Interviews Locked</span>
-          </button>
+            <div className="flex flex-col justify-between h-full space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-rose-500/30">
+                    <Lock className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-rose-500 text-white flex items-center gap-1.5 shadow-xs">
+                    <Lock className="w-3.5 h-3.5" />
+                    LOCKED
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2">
+                  AI Interviews
+                </h3>
+                <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
+                  Real-time AI voice &amp; technical mock interview simulation suite.
+                  Locked for platform updates. Complete 5 DSA practice problems to
+                  unlock.
+                </p>
+              </div>
+
+              <button
+                disabled
+                className="w-full bg-slate-100 border border-slate-200/80 text-slate-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-xs cursor-not-allowed"
+              >
+                <Lock className="w-4 h-4 text-slate-400" />
+                <span>AI Interviews Locked</span>
+              </button>
+            </div>
+          </BorderGlow>
         </motion.div>
       </div>
 

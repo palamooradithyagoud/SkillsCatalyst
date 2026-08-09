@@ -264,27 +264,27 @@ export default function PracticeTopicDrawer({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-4xl xl:max-w-5xl bg-[#0a0f1d] border-l border-white/[0.1] text-white shadow-2xl h-full flex flex-col z-50 overflow-hidden"
+          className="relative w-full max-w-4xl xl:max-w-5xl bg-white border-l border-slate-200 text-slate-900 shadow-2xl h-full flex flex-col z-50 overflow-hidden"
         >
           {/* Header Bar */}
-          <div className="p-6 pb-4 border-b border-white/[0.08] bg-[#0d1424] flex items-center justify-between gap-4 shrink-0">
+          <div className="p-6 pb-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-mono text-slate-300 font-bold transition-colors"
+                className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-mono text-slate-700 font-bold transition-colors"
               >
                 ESC
               </button>
-              <span className="text-xs font-semibold text-slate-400">Foundation Concept & Problem Bank</span>
+              <span className="text-xs font-semibold text-slate-500">Foundation Concept & Problem Bank</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1 rounded-full">
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3.5 py-1 rounded-full">
                 Solved: <span className="font-extrabold">({solvedCount} / {data.problems.length})</span>
               </span>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -297,13 +297,13 @@ export default function PracticeTopicDrawer({
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                  <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
                     {topicName}
                   </h2>
-                  <p className="text-xs font-semibold text-indigo-300 mt-1 flex items-center gap-3">
-                    <span>Time Complexity: <strong className="text-emerald-400">{data.timeComplexity}</strong></span>
+                  <p className="text-xs font-bold text-slate-600 mt-1 flex items-center gap-3">
+                    <span>Time Complexity: <strong className="text-emerald-700">{data.timeComplexity}</strong></span>
                     <span>•</span>
-                    <span>Space Complexity: <strong className="text-cyan-400">{data.spaceComplexity}</strong></span>
+                    <span>Space Complexity: <strong className="text-blue-700">{data.spaceComplexity}</strong></span>
                   </p>
                 </div>
 
@@ -312,7 +312,7 @@ export default function PracticeTopicDrawer({
                   href={data.masterclassVideoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-extrabold text-xs shadow-lg shadow-red-600/30 border border-red-400/40 transition-all self-start sm:self-auto shrink-0 group"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs border border-rose-500 transition-all self-start sm:self-auto shrink-0 group cursor-pointer"
                 >
                   <Video className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
                   <span>Watch Pattern Masterclass 📺</span>
@@ -320,28 +320,28 @@ export default function PracticeTopicDrawer({
               </div>
 
               {/* Concept Definition Box */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#11192e] to-[#141e36] border border-indigo-500/30 text-sm text-slate-200 leading-relaxed shadow-lg">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-400 uppercase tracking-wider mb-2">
-                  <BookOpen className="w-4 h-4 text-indigo-400" />
+              <div className="p-6 rounded-[24px] bg-emerald-50/60 border border-emerald-200/80 text-sm text-slate-800 leading-relaxed shadow-xs">
+                <div className="flex items-center gap-2 text-xs font-extrabold text-[#234B3B] uppercase tracking-wider mb-2">
+                  <BookOpen className="w-4 h-4 text-[#234B3B]" />
                   <span>Pattern Concept &amp; Definition</span>
                 </div>
-                <p>{data.definition}</p>
+                <p className="font-medium text-slate-700">{data.definition}</p>
               </div>
             </div>
 
             {/* Prerequisites Cards Grid */}
             <div className="space-y-3">
-              <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">
+              <h3 className="text-xs font-extrabold tracking-widest text-slate-500 uppercase">
                 PREREQUISITES
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {data.prerequisites.map((pre, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-2xl bg-[#12192c] border border-white/[0.08] space-y-1 shadow-md"
+                    className="p-5 rounded-2xl bg-white border border-slate-200/80 space-y-1 shadow-xs"
                   >
-                    <div className="font-bold text-white text-sm">{pre.title}</div>
-                    <div className="text-xs text-slate-400">{pre.subtitle}</div>
+                    <div className="font-extrabold text-slate-900 text-sm">{pre.title}</div>
+                    <div className="text-xs text-slate-500 font-medium">{pre.subtitle}</div>
                   </div>
                 ))}
               </div>
@@ -350,16 +350,16 @@ export default function PracticeTopicDrawer({
             {/* Targeted LeetCode Problem Table with Video Solutions */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">
+                <h3 className="text-xs font-extrabold tracking-widest text-slate-500 uppercase">
                   PROBLEM BANK &amp; EXACT VIDEO SOLUTIONS
                 </h3>
                 <span className="text-xs text-slate-500 font-medium">Click row or checkmark to toggle solved state</span>
               </div>
 
-              <div className="rounded-2xl border border-white/[0.08] bg-[#0e1526] overflow-x-auto shadow-xl">
+              <div className="rounded-[24px] border border-slate-200 bg-white overflow-x-auto shadow-xs">
                 <table className="w-full text-left text-xs md:text-sm border-collapse min-w-[760px]">
                   <thead>
-                    <tr className="border-b border-white/[0.08] text-slate-400 font-bold uppercase tracking-wider text-[11px] bg-slate-900/60">
+                    <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px] bg-slate-50">
                       <th className="py-4 px-4 text-center w-12">#</th>
                       <th className="py-4 px-4 w-20">LeetCode</th>
                       <th className="py-4 px-4">Problem</th>
@@ -368,7 +368,7 @@ export default function PracticeTopicDrawer({
                       <th className="py-4 px-4 text-center w-16">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.05]">
+                  <tbody className="divide-y divide-slate-100">
                     {data.problems.map((p, idx) => {
                       const isSolved = !!solvedSet[p.id];
                       const videoUrl = p.solutionVideoUrl || getYoutubeSolutionUrl(p);
@@ -376,16 +376,16 @@ export default function PracticeTopicDrawer({
                       return (
                         <tr
                           key={p.id}
-                          className="hover:bg-white/[0.03] transition-colors group cursor-pointer"
+                          className="hover:bg-slate-50 transition-colors group cursor-pointer"
                           onClick={() => toggleSolved(p)}
                         >
                           {/* Row Index */}
-                          <td className="py-3.5 px-4 text-center text-slate-500 font-mono font-bold whitespace-nowrap">
+                          <td className="py-3.5 px-4 text-center text-slate-400 font-mono font-bold whitespace-nowrap">
                             {idx + 1}
                           </td>
 
                           {/* LeetCode Problem Number */}
-                          <td className="py-3.5 px-4 font-mono font-extrabold text-blue-400 group-hover:text-blue-300 whitespace-nowrap">
+                          <td className="py-3.5 px-4 font-mono font-extrabold text-blue-700 whitespace-nowrap">
                             #{p.number}
                           </td>
 
@@ -399,23 +399,23 @@ export default function PracticeTopicDrawer({
                               className={`font-bold inline-flex items-center gap-1.5 transition-colors ${
                                 isSolved
                                   ? "text-slate-400 line-through"
-                                  : "text-slate-200 group-hover:text-white"
+                                  : "text-slate-900 group-hover:text-[#234B3B]"
                               }`}
                             >
                               <span>{p.title}</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 shrink-0" />
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#234B3B] shrink-0" />
                             </a>
                           </td>
 
                           {/* Level Badge */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             <span
-                              className={`text-xs font-bold px-2.5 py-1 rounded-lg inline-block ${
+                              className={`text-xs font-bold px-3 py-1 rounded-full inline-block ${
                                 p.difficulty === "Easy"
-                                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                   : p.difficulty === "Medium"
-                                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                                  : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                                  ? "bg-amber-100 text-amber-900 border border-amber-200"
+                                  : "bg-rose-100 text-rose-800 border border-rose-200"
                               }`}
                             >
                               {p.difficulty}
@@ -429,10 +429,10 @@ export default function PracticeTopicDrawer({
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-xs font-extrabold transition-all group/vid"
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold transition-all group/vid"
                               title={`Watch accurate video solution for ${p.title}`}
                             >
-                              <PlayCircle className="w-3.5 h-3.5 text-red-400 group-hover/vid:scale-110 transition-transform" />
+                              <PlayCircle className="w-3.5 h-3.5 text-rose-600 group-hover/vid:scale-110 transition-transform" />
                               <span>Solution 📺</span>
                             </a>
                           </td>
@@ -444,10 +444,10 @@ export default function PracticeTopicDrawer({
                                 e.stopPropagation();
                                 toggleSolved(p);
                               }}
-                              className={`w-5 h-5 rounded-md border flex items-center justify-center mx-auto transition-colors ${
+                              className={`w-5 h-5 rounded-md border flex items-center justify-center mx-auto transition-colors cursor-pointer ${
                                 isSolved
-                                  ? "bg-emerald-500 border-emerald-400 text-white shadow-md shadow-emerald-500/30"
-                                  : "border-slate-600 bg-slate-800/80 text-transparent hover:border-slate-400"
+                                  ? "bg-[#234B3B] border-[#234B3B] text-white shadow-xs"
+                                  : "border-slate-300 bg-white text-transparent hover:border-[#234B3B]"
                               }`}
                             >
                               <Check className="w-3.5 h-3.5 stroke-[3]" />

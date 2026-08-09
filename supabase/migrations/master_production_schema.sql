@@ -253,7 +253,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 DROP TRIGGER IF EXISTS trg_set_updated_at_user_academic ON public.user_academic_profile;
 CREATE TRIGGER trg_set_updated_at_user_academic BEFORE UPDATE ON public.user_academic_profile FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -303,7 +303,7 @@ BEGIN
 
     RETURN v_result;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public;
 
 REVOKE EXECUTE ON FUNCTION public.upsert_user_aptitude_attempt(UUID, INTEGER, INTEGER, INTEGER, BOOLEAN, INTEGER) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.upsert_user_aptitude_attempt(UUID, INTEGER, INTEGER, INTEGER, BOOLEAN, INTEGER) TO authenticated, service_role;

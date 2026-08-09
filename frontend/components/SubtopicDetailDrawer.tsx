@@ -429,22 +429,22 @@ export default function SubtopicDetailDrawer({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="w-screen max-w-xl bg-[#0a0f1d] border-l border-cyan-500/20 shadow-2xl flex flex-col overflow-hidden text-slate-100"
+              className="w-screen max-w-xl bg-white border-l border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900"
             >
               {/* Header */}
-              <div className="p-5 sm:p-6 border-b border-white/[0.08] bg-[#0d1427] flex items-start justify-between gap-4">
+              <div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50 flex items-start justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 border border-emerald-200 text-[#234B3B]">
                       {subtopic.parentName}
                     </span>
                     {subtopic.isRecommended && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-purple-400" /> RECOMMENDED
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-600" /> RECOMMENDED
                       </span>
                     )}
                     {subtopic.isAlternative && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
                         ALTERNATIVE CHOICE
                       </span>
                     )}
