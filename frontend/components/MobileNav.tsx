@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
+import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -61,45 +62,32 @@ export default function MobileNav() {
   return (
     <>
       {/* ── Mobile Native Top App Bar (Visible on smartphone < md) ── */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 mobile-top-header bg-[#060c18]/85 border-b border-white/10 backdrop-blur-2xl">
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 mobile-top-header bg-white/85 border-b border-slate-200/80 backdrop-blur-2xl text-slate-900 shadow-sm">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 flex items-center justify-center text-white shadow-md shadow-blue-500/30">
-                <Code2 className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#060c18] animate-pulse" />
-            </div>
-            <div>
-              <span className="text-base font-bold tracking-tight text-white gradient-text-blue block leading-none">
-                SkillsCatalyst
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                Native SaaS App
-              </span>
-            </div>
+          <Link href="/dashboard">
+            <SkillsCatalystLogo size="sm" showText animated />
           </Link>
         </div>
 
         <div className="flex items-center gap-1.5">
           <Link
             href="/explore"
-            className="w-10 h-10 rounded-xl glass hover:bg-white/10 text-slate-300 flex items-center justify-center mobile-touch-target"
+            className="w-10 h-10 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/80 text-slate-700 flex items-center justify-center mobile-touch-target transition-all"
             aria-label="Quick Search"
           >
-            <Search className="w-4 h-4 text-slate-300" />
+            <Search className="w-4 h-4 text-slate-700" />
           </Link>
 
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setDrawerOpen(!drawerOpen)}
-            className="w-10 h-10 rounded-xl glass hover:bg-white/10 text-slate-200 flex items-center justify-center mobile-touch-target relative"
+            className="w-10 h-10 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/80 text-slate-800 flex items-center justify-center mobile-touch-target relative transition-all"
             aria-label="Toggle Navigation Drawer"
           >
             {drawerOpen ? (
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 text-slate-900" />
             ) : (
-              <Menu className="w-5 h-5 text-white" />
+              <Menu className="w-5 h-5 text-slate-900" />
             )}
           </motion.button>
         </div>
@@ -115,7 +103,7 @@ export default function MobileNav() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setDrawerOpen(false)}
-              className="fixed inset-0 bg-black/75 backdrop-blur-md z-40 md:hidden"
+              className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
             />
 
             {/* Slide-in Panel from Right */}
@@ -124,27 +112,27 @@ export default function MobileNav() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 350, damping: 32 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm glass-strong bg-[#091122]/95 border-l border-white/10 z-50 p-5 flex flex-col justify-between overflow-y-auto mobile-touch-scroll md:hidden"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white/95 border-l border-slate-200 z-50 p-5 flex flex-col justify-between overflow-y-auto mobile-touch-scroll md:hidden shadow-2xl text-slate-900"
             >
               <div>
                 {/* Drawer Header */}
-                <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/10">
+                <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#234b3b] to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                       {userInitial}
                     </div>
                     <div>
-                      <div className="font-bold text-white text-sm truncate max-w-[170px]">
+                      <div className="font-bold text-slate-900 text-sm truncate max-w-[170px]">
                         {userEmail.split("@")[0]}
                       </div>
-                      <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active Session
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active Session
                       </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setDrawerOpen(false)}
-                    className="p-2.5 rounded-xl glass hover:bg-white/10 text-slate-400 hover:text-white mobile-touch-target"
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -166,16 +154,16 @@ export default function MobileNav() {
                         onClick={() => setDrawerOpen(false)}
                         className={`group flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all mobile-touch-target ${
                           isActive
-                            ? "bg-gradient-to-r from-blue-600/30 to-purple-600/20 text-white border border-blue-500/40 shadow-lg shadow-blue-500/10"
-                            : "text-slate-300 hover:text-white hover:bg-white/5 border border-transparent"
+                            ? "bg-[#234b3b] text-white shadow-md shadow-[#234b3b]/20"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                               isActive
-                                ? "bg-blue-500 text-white shadow-md shadow-blue-500/30"
-                                : "bg-white/5 text-slate-400 group-hover:text-white"
+                                ? "bg-white/20 text-white"
+                                : "bg-slate-100 text-slate-600 group-hover:text-slate-900"
                             }`}
                           >
                             {isExplore ? (
@@ -185,17 +173,17 @@ export default function MobileNav() {
                             )}
                           </div>
                           <div>
-                            <span className="block font-medium leading-none text-white">
+                            <span className={`block font-bold leading-none ${isActive ? "text-white" : "text-slate-900"}`}>
                               {item.name}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-normal mt-0.5 block">
+                            <span className={`text-[10px] font-medium mt-0.5 block ${isActive ? "text-emerald-100" : "text-slate-500"}`}>
                               {item.desc}
                             </span>
                           </div>
                         </div>
                         <ChevronRight
                           className={`w-4 h-4 ${
-                            isActive ? "text-blue-400" : "text-slate-600 group-hover:text-slate-400"
+                            isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
                           }`}
                         />
                       </Link>
@@ -205,19 +193,19 @@ export default function MobileNav() {
               </div>
 
               {/* Drawer Footer: Streak Badge */}
-              <div className="glass rounded-2xl p-4 mt-6 border border-white/10 bg-white/[0.02]">
+              <div className="rounded-2xl p-4 mt-6 border border-slate-200 bg-slate-50">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                    <Flame className="w-4 h-4 text-orange-400 fill-orange-400/30" />
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    <Flame className="w-4 h-4 text-orange-500 fill-orange-500/30" />
                     Daily Learning Streak
                   </div>
-                  <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
+                  <Zap className="w-4 h-4 text-amber-500 animate-bounce" />
                 </div>
-                <div className="text-2xl font-black text-white tracking-tight">
-                  0 <span className="text-xs font-semibold text-slate-400">days active</span>
+                <div className="text-2xl font-black text-slate-900 tracking-tight">
+                  0 <span className="text-xs font-semibold text-slate-500">days active</span>
                 </div>
-                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
-                  <div className="streak-bar h-full w-[10%]" />
+                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-2">
+                  <div className="bg-[#234b3b] h-full w-[10%]" />
                 </div>
               </div>
             </motion.div>
@@ -225,8 +213,8 @@ export default function MobileNav() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Native Floating Glass Pill Navigation Bar (Visible on smartphone < md) ── */}
-      <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-full border border-white/15 bg-[#091122]/92 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] px-2 py-1.5 flex items-center justify-around">
+      {/* ── Mobile Native Floating Light Glass Pill Navigation Bar (Visible on smartphone < md) ── */}
+      <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-full border border-slate-200/90 bg-white/90 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-2 py-1.5 flex items-center justify-around">
         {bottomBarItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -243,28 +231,28 @@ export default function MobileNav() {
               {isActive && (
                 <motion.div
                   layoutId="mobileBottomNavActive"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600/35 via-purple-600/30 to-blue-500/25 rounded-full border border-blue-400/40 shadow-lg shadow-blue-500/30"
+                  className="absolute inset-0 bg-[#234b3b] rounded-full shadow-md shadow-[#234b3b]/30"
                   transition={{ type: "spring", stiffness: 450, damping: 30 }}
                 />
               )}
               <motion.div
                 whileTap={{ scale: 0.86 }}
                 className={`relative z-10 flex flex-col items-center justify-center transition-colors duration-200 ${
-                  isActive ? "text-cyan-300" : "text-slate-400 hover:text-slate-200"
+                  isActive ? "text-white" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {isExplore ? (
-                  <ExploreIcon size={20} className={`relative z-10 transition-transform duration-200 ${isActive ? "scale-110 text-cyan-300" : ""}`} />
+                  <ExploreIcon size={20} className={`relative z-10 transition-transform duration-200 ${isActive ? "scale-110 text-white" : "text-slate-500"}`} />
                 ) : (
                   <Icon
                     className={`w-5 h-5 relative z-10 transition-all duration-200 ${
-                      isActive ? "text-cyan-300 scale-110" : "text-slate-400"
+                      isActive ? "text-white scale-110" : "text-slate-500"
                     }`}
                   />
                 )}
                 <span
                   className={`text-[10px] tracking-tight font-medium mt-0.5 relative z-10 transition-all duration-200 ${
-                    isActive ? "text-white font-bold opacity-100 scale-105" : "text-slate-400 opacity-80"
+                    isActive ? "text-white font-bold opacity-100 scale-105" : "text-slate-500 opacity-90"
                   }`}
                 >
                   {item.name}

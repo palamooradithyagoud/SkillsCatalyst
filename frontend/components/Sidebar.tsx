@@ -8,19 +8,17 @@ import {
   Map,
   Target,
   Briefcase,
-  Sparkles,
   BarChart3,
-  Code2,
-  Flame,
-  Zap,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import type { AnimatedIconHandle } from "@/components/icons/types";
+
+import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
@@ -47,7 +45,7 @@ const navItemVariants = {
   visible: (i: number) => ({
     x: 0,
     opacity: 1,
-    transition: { delay: 0.1 + i * 0.06, duration: 0.4, ease: "easeOut" as const },
+    transition: { delay: 0.05 + i * 0.05, duration: 0.4, ease: "easeOut" as const },
   }),
 };
 
@@ -66,35 +64,27 @@ export default function Sidebar() {
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"
-      className="glass-sidebar w-64 hidden md:flex flex-col justify-between h-screen sticky top-0 p-5 select-none z-30 shrink-0"
+      className="w-20 lg:w-24 hidden md:flex flex-col items-center justify-between h-screen sticky top-0 py-6 px-2 select-none z-30 shrink-0 bg-white/70 backdrop-blur-2xl border-r border-slate-200/80 shadow-[4px_0_24px_rgba(0,0,0,0.03)] overflow-visible"
     >
-      <div>
+      <div className="flex flex-col items-center gap-6 w-full">
         {/* ── Brand Logo ── */}
         <motion.div
-          className="flex items-center gap-3 mb-8 px-2"
+          className="flex items-center justify-center pt-1"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 animate-pulse-glow">
-              <Code2 className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#060c18] animate-pulse" />
-          </div>
-          <div>
-            <span className="text-lg font-bold tracking-tight text-white gradient-text-blue">SkillsCatalyst</span>
-            <div className="text-[10px] text-slate-400 font-medium tracking-wide">Learn Faster. Grow Smarter.</div>
-          </div>
+          <Link href="/dashboard" title="SkillsCatalyst Home" className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100 transition-all shadow-sm">
+            <SkillsCatalystLogo size="sm" animated />
+          </Link>
         </motion.div>
 
-        {/* ── Nav Items ── */}
-        <nav className="space-y-1">
+        {/* ── Nav Items with 3D Glass Icons ── */}
+        <nav className="flex flex-col items-center gap-5 w-full mt-2 overflow-visible">
           {navItems.map((item, i) => {
             const isActive =
               pathname === item.href ||
               (pathname === "/" && item.href === "/dashboard");
-            const Icon = item.icon;
             const isLearning = item.name === "Learning";
             const isProfile = item.name === "Profile";
             const isExplore = item.name === "Explore";
@@ -106,10 +96,12 @@ export default function Sidebar() {
                 variants={navItemVariants}
                 initial="hidden"
                 animate="visible"
+                className="w-full flex justify-center"
               >
                 <Link
                   href={item.href}
-                  className="relative block rounded-xl group"
+                  aria-label={item.name}
+                  className="relative bg-transparent outline-none border-none cursor-pointer w-12 h-12 text-[15px] [perspective:24em] [transform-style:preserve-3d] [-webkit-tap-highlight-color:transparent] group flex items-center justify-center"
                   onMouseEnter={() => {
                     if (isLearning) learningIconRef.current?.startAnimation();
                     if (isProfile) profileIconRef.current?.startAnimation();
@@ -119,54 +111,62 @@ export default function Sidebar() {
                     if (isProfile) profileIconRef.current?.stopAnimation();
                   }}
                 >
-                  {/* Active background pill */}
-                  <AnimatePresence>
-                    {isActive && (
-                      <motion.div
-                        layoutId="activePill"
-                        className="absolute inset-0 nav-active-pill rounded-xl"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                  </AnimatePresence>
-
-                  {/* Hover glow effect */}
-                  {!isActive && (
-                    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/[0.03]" />
-                  )}
-
-                  <div
-                    className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                  {/* 3D Back Layer */}
+                  <span
+                    className={`absolute top-0 left-0 w-full h-full rounded-[1.1em] block border transition-[opacity,transform,background-color,border-color] duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[100%_100%] [will-change:transform] ${
+                      isActive
+                        ? "rotate-[20deg] scale-105 opacity-100 group-hover:[transform:rotate(28deg)_translate3d(-0.4em,-0.4em,0.4em)] border-[#234B3B]/40"
+                        : "bg-slate-100 border-slate-200/80 rotate-[15deg] opacity-70 group-hover:opacity-100 group-hover:bg-slate-200/70 group-hover:border-slate-300/80 group-hover:[transform:rotate(25deg)_translate3d(-0.4em,-0.4em,0.4em)]"
                     }`}
+                    style={{
+                      ...(isActive ? { background: 'linear-gradient(135deg, #234B3B, #1b3b2e)' } : {}),
+                      boxShadow: isActive
+                        ? "0.4em -0.4em 1em rgba(35, 75, 59, 0.35), 0 0 15px rgba(35, 75, 59, 0.2)"
+                        : "0.4em -0.4em 0.75em rgba(0,0,0,0.06)",
+                    }}
+                  />
+
+                  {/* 3D Front Glass Layer */}
+                  <span
+                    className={`absolute top-0 left-0 w-full h-full rounded-[1.1em] transition-[opacity,transform,background-color,border-color] duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[80%_50%] flex backdrop-blur-xl [-webkit-backdrop-filter:blur(0.75em)] [-moz-backdrop-filter:blur(0.75em)] [will-change:transform] transform ${
+                      isActive
+                        ? "bg-white/90 border border-white [transform:translate3d(0,0,0.8em)] group-hover:[transform:translate3d(0,0,2em)]"
+                        : "bg-white/70 border border-white/80 group-hover:[transform:translate3d(0,0,2em)] group-hover:bg-white/90"
+                    }`}
+                    style={{
+                      boxShadow: isActive
+                        ? "0 0 0 0.12em rgba(255, 255, 255, 0.9) inset, 0 6px 16px rgba(16, 185, 129, 0.15)"
+                        : "0 0 0 0.1em rgba(255, 255, 255, 0.9) inset, 0 4px 12px rgba(0,0,0,0.04)",
+                    }}
                   >
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: isActive ? 0 : 5 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    >
+                    <span className="m-auto w-[1.5em] h-[1.5em] flex items-center justify-center drop-shadow-sm" aria-hidden="true">
                       {isLearning ? (
                         <BookIcon
                           ref={learningIconRef}
-                          size={18}
-                          className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`}
+                          size={20}
+                          className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`}
                         />
                       ) : isProfile ? (
                         <UserIcon
                           ref={profileIconRef}
-                          size={18}
-                          className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`}
+                          size={20}
+                          className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`}
                         />
                       ) : isExplore ? (
-                        <ExploreIcon size={20} />
+                        <ExploreIcon size={20} className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`} />
                       ) : (
-                        <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"}`} />
+                        <item.icon className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`} />
                       )}
-                    </motion.div>
-                    <span className="font-[500]">{item.name}</span>
-                  </div>
+                    </span>
+                  </span>
+
+                  {/* Sidebar Tooltip Label on Hover */}
+                  <span className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 pointer-events-none shadow-xl border border-slate-800 backdrop-blur-xl z-50 flex items-center gap-1.5">
+                    {item.name}
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    )}
+                  </span>
                 </Link>
               </motion.div>
             );
@@ -174,39 +174,39 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* ── Streak Widget ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.5, ease: "easeOut" as const }}
-        className="glass rounded-2xl p-4 relative overflow-hidden"
-      >
-        {/* Ambient glow behind widget */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent rounded-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-            <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400/30" />
-            Current Streak
-          </div>
-          <Zap className="w-3.5 h-3.5 text-amber-400" />
-        </div>
-
-        <div className="text-2xl font-black text-white tracking-tight mb-3">
-          0 <span className="text-sm font-semibold text-slate-400">days</span>
-        </div>
-
-        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-          <motion.div
-            className="streak-bar h-full"
-            initial={{ width: "0%" }}
-            animate={{ width: "5%" }}
-            transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
+      {/* ── Profile Avatar at Bottom ── */}
+      <div className="flex flex-col items-center gap-3 w-full">
+        <Link
+          href="/settings"
+          aria-label="Profile Settings"
+          className="relative bg-transparent outline-none border-none cursor-pointer w-11 h-11 text-[15px] [perspective:24em] [transform-style:preserve-3d] [-webkit-tap-highlight-color:transparent] group flex items-center justify-center"
+        >
+          <span
+            className="absolute top-0 left-0 w-full h-full rounded-[1.1em] block border border-slate-200/80 bg-slate-100 transition-[opacity,transform,background-color] duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[100%_100%] rotate-[15deg] opacity-70 group-hover:opacity-100 group-hover:bg-slate-200/80 group-hover:[transform:rotate(25deg)_translate3d(-0.4em,-0.4em,0.4em)]"
+            style={{
+              boxShadow: '0.4em -0.4em 0.75em rgba(0,0,0,0.06)'
+            }}
           />
-        </div>
-        <div className="text-[10px] text-slate-500 mt-2">Complete a task to start your streak! 🚀</div>
-      </motion.div>
+          <span
+            className="absolute top-0 left-0 w-full h-full rounded-[1.1em] bg-white/80 border border-white transition-[opacity,transform,background-color] duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[80%_50%] flex backdrop-blur-xl [will-change:transform] transform group-hover:bg-white group-hover:[transform:translate3d(0,0,2em)]"
+            style={{
+              boxShadow: '0 0 0 0.1em rgba(255, 255, 255, 0.9) inset, 0 4px 12px rgba(0,0,0,0.04)'
+            }}
+          >
+            <span className="m-auto text-slate-700 group-hover:text-slate-900 font-bold text-xs tracking-wider">
+              AD
+            </span>
+          </span>
+          <span className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 pointer-events-none shadow-xl border border-slate-800 backdrop-blur-xl z-50">
+            Settings & Profile
+          </span>
+        </Link>
+      </div>
     </motion.aside>
   );
 }
+
+
+
+
 

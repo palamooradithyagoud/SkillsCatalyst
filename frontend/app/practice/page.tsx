@@ -139,6 +139,9 @@ interface TreeCategory {
   id: string;
   title: string;
   icon: React.ElementType;
+  color: string;
+  gradient: string;
+  badgeStyle: string;
   nodes: {
     id: string;
     title: string;
@@ -167,6 +170,9 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     id: "arrays",
     title: "Arrays",
     icon: LayoutGrid,
+    color: "#10b981",
+    gradient: "from-emerald-600 to-teal-600",
+    badgeStyle: "bg-emerald-50 text-emerald-700 border-emerald-200/90",
     nodes: [
       { id: "two-pointers", title: "Two Pointers", icon: ArrowRight },
       { id: "sliding-window-arr", title: "Sliding Window", icon: Columns },
@@ -178,6 +184,9 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     id: "strings",
     title: "Strings",
     icon: Type,
+    color: "#8b5cf6",
+    gradient: "from-violet-600 to-purple-600",
+    badgeStyle: "bg-purple-50 text-purple-700 border-purple-200/90",
     nodes: [
       { id: "two-pointers-str", title: "Two Pointer", icon: ArrowRight },
       { id: "sliding-window-str", title: "Sliding Window", icon: Columns },
@@ -187,6 +196,9 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     id: "hashmap",
     title: "Hashmap",
     icon: Database,
+    color: "#f59e0b",
+    gradient: "from-amber-500 to-orange-600",
+    badgeStyle: "bg-amber-50 text-amber-700 border-amber-200/90",
     nodes: [
       { id: "frequency-map", title: "Frequency Map", icon: BarChart2 },
       { id: "prefix-hashmap", title: "Prefix Sum + HashMap", icon: Plus },
@@ -196,6 +208,9 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
     id: "binary-search",
     title: "Binary Search",
     icon: Search,
+    color: "#0284c7",
+    gradient: "from-sky-500 to-blue-600",
+    badgeStyle: "bg-sky-50 text-sky-700 border-sky-200/90",
     nodes: [
       { id: "classic-bs", title: "Classic Binary Search", icon: Search },
       { id: "lower-upper-bound", title: "Lower / Upper Bound", icon: ChevronsDown },
@@ -530,10 +545,10 @@ export default function PracticePage() {
       {selectedMode === "index" && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               Practice & Problem Solving
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Choose your path to practice data structures & algorithms step-by-step or target top companies.
             </p>
           </div>
@@ -543,14 +558,14 @@ export default function PracticePage() {
       {selectedMode === "beginner" && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
+            <div className="p-3 rounded-2xl bg-emerald-100 border border-emerald-200 text-[#234B3B]">
               <Map className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Beginner Level — DSA Learning Roadmap
               </h1>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Follow the prerequisite tree from core data structures to advanced algorithm patterns.
               </p>
             </div>
@@ -558,7 +573,7 @@ export default function PracticePage() {
 
           <button
             onClick={() => setSelectedMode("index")}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#131b2e] border border-white/[0.08] hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-all shadow-md self-start md:self-auto"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm transition-all shadow-sm self-start md:self-auto"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Practice Cards</span>
@@ -568,15 +583,20 @@ export default function PracticePage() {
 
       {selectedMode === "company" && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-400">
-              <Briefcase className="w-6 h-6" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
+              <Briefcase className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-                Company Wise Questions — LeetCode CSV Bank
-              </h1>
-              <p className="text-sm text-slate-400 mt-1">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                  Company Wise Questions
+                </h1>
+                <span className="px-3 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-black tracking-wider uppercase shadow-xs">
+                  LeetCode CSV Bank
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
                 Explore real interview questions asked by {companiesList.length || "660+"} top tech companies from curated CSV datasets.
               </p>
             </div>
@@ -584,59 +604,59 @@ export default function PracticePage() {
 
           <button
             onClick={() => setSelectedMode("index")}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#131b2e] border border-white/[0.08] hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-all shadow-md self-start md:self-auto"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-extrabold text-xs transition-all shadow-sm hover:shadow-md cursor-pointer self-start md:self-auto"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-slate-600" />
             <span>Back to Practice Cards</span>
           </button>
         </div>
       )}
 
-      {/* ── MODE SELECTION: INDEX PAGE CARDS */}
+      {/* ── MODE SELECTION: INDEX PAGE CARDS (Side-by-Side on Smartphones) */}
       {selectedMode === "index" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 pt-2">
           {/* Card 1: Beginner Level */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             onClick={() => setSelectedMode("beginner")}
-            className="relative rounded-2xl p-6 md:p-8 bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+            className="relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
           >
-            <div className="space-y-5">
+            <div className="space-y-3 sm:space-y-5">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Clock className="w-6 h-6" />
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-100 text-[#234B3B] flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                  <Clock className="w-4 h-4 sm:w-6 sm:h-6" />
                 </div>
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black tracking-widest uppercase">
+                <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-100 text-[#234B3B] text-[9px] sm:text-[10px] font-black tracking-widest uppercase">
                   FOUNDATIONS
                 </span>
               </div>
 
               <div>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+                <h3 className="text-xs sm:text-2xl font-bold text-slate-900 mb-1 sm:mb-2 group-hover:text-[#234B3B] transition-colors leading-snug">
                   1. Beginner Level
                 </h3>
-                <p className="text-sm text-slate-400 font-normal leading-relaxed">
-                  Master foundational data structures & algorithms concepts, core patterns, and time complexities.
+                <p className="text-[11px] sm:text-sm text-slate-500 font-normal leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  Master foundational data structures &amp; core patterns.
                 </p>
               </div>
             </div>
 
-            <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between gap-4">
+            <div className="mt-4 sm:mt-8 pt-3 sm:pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedMode("beginner");
                 }}
-                className="px-4 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/90 text-indigo-300 border border-indigo-700/50 text-xs font-bold transition-all"
+                className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#234B3B] text-white text-[10px] sm:text-xs font-bold transition-all shadow-sm hover:bg-[#1b3b2e]"
               >
-                Core Concept Modules
+                Core Concepts
               </button>
 
-              <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                <span>View Concepts</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <div className="flex items-center justify-end sm:justify-start gap-1 text-[10px] sm:text-xs font-bold text-[#234B3B] transition-colors">
+                <span>View</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
           </motion.div>
@@ -647,42 +667,42 @@ export default function PracticePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.4 }}
             onClick={() => setSelectedMode("company")}
-            className="relative rounded-2xl p-6 md:p-8 bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+            className="relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
           >
-            <div className="space-y-5">
+            <div className="space-y-3 sm:space-y-5">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Briefcase className="w-6 h-6" />
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                  <Briefcase className="w-4 h-4 sm:w-6 sm:h-6" />
                 </div>
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-black tracking-widest uppercase">
+                <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-100 text-blue-800 text-[9px] sm:text-[10px] font-black tracking-widest uppercase">
                   INTERVIEW PREP
                 </span>
               </div>
 
               <div>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
-                  2. Company Wise Questions
+                <h3 className="text-xs sm:text-2xl font-bold text-slate-900 mb-1 sm:mb-2 group-hover:text-blue-700 transition-colors leading-snug">
+                  2. Company Questions
                 </h3>
-                <p className="text-sm text-slate-400 font-normal leading-relaxed">
-                  Explore real LeetCode questions asked by {companiesList.length || "660+"} top tech companies loaded directly from CSV datasets.
+                <p className="text-[11px] sm:text-sm text-slate-500 font-normal leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  LeetCode questions from {companiesList.length || "660+"} top tech companies.
                 </p>
               </div>
             </div>
 
-            <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between gap-4">
+            <div className="mt-4 sm:mt-8 pt-3 sm:pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedMode("company");
                 }}
-                className="px-4 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/90 text-indigo-300 border border-indigo-700/50 text-xs font-bold transition-all"
+                className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-blue-600 text-white text-[10px] sm:text-xs font-bold transition-all shadow-sm hover:bg-blue-700"
               >
-                LeetCode Question Bank
+                Question Bank
               </button>
 
-              <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                <span>Explore Questions</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <div className="flex items-center justify-end sm:justify-start gap-1 text-[10px] sm:text-xs font-bold text-blue-600 transition-colors">
+                <span>View</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
           </motion.div>
@@ -694,50 +714,42 @@ export default function PracticePage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl p-6 sm:p-10 bg-[#070b14] border border-indigo-500/30 shadow-2xl overflow-hidden min-h-[620px]"
-          style={{
-            backgroundImage: "radial-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
+          className="relative rounded-[28px] p-6 sm:p-10 bg-white border border-slate-100 shadow-xs overflow-hidden min-h-[620px]"
         >
           {/* Ambient Glow Aura behind Foundation */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 blur-3xl rounded-full pointer-events-none animate-pulse" />
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 blur-3xl rounded-full pointer-events-none" />
 
           {/* Top Foundation Root Node & Branching Tree Structure */}
           <div className="flex flex-col items-center justify-center relative z-10 mb-8">
             <motion.div
               whileHover={{ scale: 1.05, y: -2 }}
-              className="px-8 py-3.5 rounded-2xl text-white font-black text-lg flex items-center gap-2.5 shadow-2xl border border-cyan-300/40 cursor-pointer relative z-20"
-              style={{
-                background: "linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #3b82f6 100%)",
-                boxShadow: "0 0 35px rgba(2, 132, 199, 0.5), 0 0 15px rgba(59, 130, 246, 0.4)",
-              }}
+              className="px-8 py-3.5 rounded-full text-white font-black text-lg flex items-center gap-2.5 shadow-lg bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] border border-emerald-400/40 cursor-pointer relative z-20"
             >
-              <Layers className="w-5 h-5 text-cyan-200" />
+              <Layers className="w-5 h-5 text-emerald-300" />
               <span>Foundation</span>
             </motion.div>
 
             {/* Vertical trunk line below Foundation */}
-            <div className="w-0.5 h-8 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_12px_#38bdf8]" />
+            <div className="w-0.5 h-8 bg-emerald-700" />
 
             {/* Horizontal Branch Bar spreading across 4 columns (Desktop) */}
-            <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-cyan-500 shadow-[0_0_12px_#38bdf8] relative">
-              <div className="absolute left-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
-              <div className="absolute left-0 top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+            <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-emerald-500 via-purple-500 to-sky-500 relative">
+              <div className="absolute left-0 top-0 w-0.5 h-7 bg-emerald-600" />
+              <div className="absolute left-0 top-7 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-xs" />
 
-              <div className="absolute left-[33.33%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
-              <div className="absolute left-[33.33%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+              <div className="absolute left-[33.33%] top-0 w-0.5 h-7 bg-purple-600" />
+              <div className="absolute left-[33.33%] top-7 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-purple-600 shadow-xs" />
 
-              <div className="absolute left-[66.66%] top-0 w-0.5 h-7 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_10px_#38bdf8]" />
-              <div className="absolute left-[66.66%] top-7 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+              <div className="absolute left-[66.66%] top-0 w-0.5 h-7 bg-amber-500" />
+              <div className="absolute left-[66.66%] top-7 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" />
 
-              <div className="absolute right-0 top-0 w-0.5 h-7 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_10px_#38bdf8]" />
-              <div className="absolute right-0 top-7 translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+              <div className="absolute right-0 top-0 w-0.5 h-7 bg-sky-500" />
+              <div className="absolute right-0 top-7 translate-x-1/2 w-2.5 h-2.5 rounded-full bg-sky-500 shadow-xs" />
             </div>
           </div>
 
-          {/* 4 Category Columns Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 pt-4">
+          {/* 4 Category Columns Grid (Side-by-Side on Smartphones) */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8 relative z-10 pt-4">
             {BEGINNER_TREE_DATA.map((cat, cIdx) => {
               const CategoryIcon = cat.icon;
 
@@ -752,16 +764,16 @@ export default function PracticePage() {
                   {/* Category Header Node */}
                   <motion.div
                     whileHover={{ scale: 1.04, y: -2 }}
-                    className="w-full py-3.5 px-5 rounded-2xl bg-[#12192e] border border-indigo-500/50 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/15 cursor-pointer relative z-10"
+                    className={`w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r ${cat.gradient} text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer relative z-10 border border-white/20`}
                   >
-                    <CategoryIcon className="w-4.5 h-4.5 text-indigo-400" />
+                    <CategoryIcon className="w-4.5 h-4.5 text-white" />
                     <span>{cat.title}</span>
                   </motion.div>
 
                   {/* Vertical Connector Line under Category Header */}
                   <div className="flex flex-col items-center my-1 relative z-10">
-                    <div className="w-0.5 h-4 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_8px_#38bdf8]" />
-                    <div className="w-2 h-2 rounded-full bg-cyan-300 border border-white shadow-[0_0_10px_#38bdf8] animate-pulse" />
+                    <div className="w-0.5 h-4" style={{ backgroundColor: cat.color }} />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
                   </div>
 
                   {/* Sub-nodes Vertical Flow */}
@@ -775,28 +787,28 @@ export default function PracticePage() {
                         <React.Fragment key={node.id}>
                           {nIdx > 0 && (
                             <div className="flex flex-col items-center my-1">
-                              <div className="w-0.5 h-3 bg-gradient-to-b from-indigo-500 to-cyan-400 shadow-[0_0_6px_#38bdf8]" />
-                              <div className="w-1.5 h-1.5 rounded-full bg-cyan-300 border border-white/50 shadow-[0_0_8px_#38bdf8]" />
-                              <div className="w-0.5 h-3 bg-gradient-to-b from-cyan-400 to-indigo-500 shadow-[0_0_6px_#38bdf8]" />
+                              <div className="w-0.5 h-3" style={{ backgroundColor: `${cat.color}60` }} />
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                              <div className="w-0.5 h-3" style={{ backgroundColor: `${cat.color}60` }} />
                             </div>
                           )}
 
-                          {/* Node Button — green fill reflects solve progress */}
+                          {/* Node Button — vibrant card styling */}
                           <motion.button
                             whileHover={{ scale: 1.03, y: -1 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setActivePracticeTopic(node.title)}
-                            className="w-full py-3 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-2.5 shadow-md relative overflow-hidden"
+                            className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md relative overflow-hidden text-slate-900 cursor-pointer group"
                             style={{
-                              borderColor: isComplete
-                                ? "rgba(52,211,153,0.7)"
-                                : pct > 0
-                                ? "rgba(52,211,153,0.4)"
-                                : "rgba(255,255,255,0.08)",
-                              background: "#111728",
+                              background: `linear-gradient(135deg, ${cat.color}14 0%, #ffffff 85%)`,
+                              borderTopColor: `${cat.color}45`,
+                              borderRightColor: `${cat.color}45`,
+                              borderBottomColor: `${cat.color}45`,
+                              borderLeftColor: cat.color,
+                              borderLeftWidth: "4px",
                             }}
                           >
-                            {/* Green progress fill behind label */}
+                            {/* Color progress fill behind label */}
                             {pct > 0 && (
                               <motion.div
                                 className="absolute inset-0 rounded-2xl pointer-events-none"
@@ -804,37 +816,44 @@ export default function PracticePage() {
                                 animate={{ width: `${pct}%` }}
                                 transition={{ duration: 0.7, ease: "easeOut" }}
                                 style={{
-                                  background: isComplete
-                                    ? "linear-gradient(90deg, rgba(16,185,129,0.35) 0%, rgba(52,211,153,0.25) 100%)"
-                                    : "linear-gradient(90deg, rgba(16,185,129,0.22) 0%, rgba(52,211,153,0.12) 100%)",
+                                  background: `${cat.color}22`,
                                 }}
                               />
                             )}
 
-                            {/* Icon + label (above the fill) */}
-                            <NodeIcon
-                              className={`w-3.5 h-3.5 shrink-0 relative z-10 ${
-                                pct > 0 ? "text-emerald-400" : "text-indigo-400"
-                              }`}
-                            />
-                            <span
-                              className={`flex-1 text-left relative z-10 ${
-                                pct > 0 ? "text-white" : "text-slate-200"
-                              }`}
+                            {/* Solid Brand Icon Badge */}
+                            <div
+                              className="w-7 h-7 rounded-xl flex items-center justify-center relative z-10 transition-transform group-hover:scale-110 shrink-0"
+                              style={{
+                                background: `linear-gradient(135deg, ${cat.color}, ${cat.color}dd)`,
+                                color: "#ffffff",
+                                boxShadow: `0 3px 10px ${cat.color}40`,
+                              }}
                             >
+                              <NodeIcon className="w-3.5 h-3.5 text-white" />
+                            </div>
+
+                            <span className="flex-1 text-left relative z-10 text-slate-900 font-extrabold group-hover:text-slate-950 text-xs">
                               {node.title}
                             </span>
 
                             {/* Progress counter badge */}
                             {total > 0 && (
                               <span
-                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums ${
-                                  isComplete
-                                    ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40"
-                                    : pct > 0
-                                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
-                                    : "bg-slate-700/60 text-slate-500 border border-slate-600/40"
-                                }`}
+                                className="text-[10px] font-black px-2.5 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums"
+                                style={
+                                  pct > 0
+                                    ? {
+                                        background: `linear-gradient(135deg, ${cat.color}, ${cat.color}ee)`,
+                                        color: "#ffffff",
+                                        boxShadow: `0 2px 8px ${cat.color}35`,
+                                      }
+                                    : {
+                                        backgroundColor: "#f1f5f9",
+                                        color: "#475569",
+                                        border: "1px solid #e2e8f0",
+                                      }
+                                }
                               >
                                 {solved}/{total}
                               </span>
@@ -859,12 +878,16 @@ export default function PracticePage() {
           className="space-y-6"
         >
           {/* Controls Panel */}
-          <div className="glass p-5 rounded-2xl border border-white/[0.08] space-y-4">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-md space-y-5 relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-44 h-44 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+
             {/* Top row: Select Any Company Dropdown + Search bar */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 relative z-10">
               {/* Dropdown for 660+ companies */}
               <div className="flex items-center gap-3 flex-1 min-w-[260px]">
-                <Building2 className="w-5 h-5 text-indigo-400 shrink-0" />
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Building2 className="w-5 h-5 text-indigo-600" />
+                </div>
                 <div className="relative w-full max-w-md">
                   <select
                     value={selectedCompany}
@@ -872,10 +895,10 @@ export default function PracticePage() {
                       setSelectedCompany(e.target.value);
                       setLimit(100);
                     }}
-                    className="w-full bg-[#0d1424] text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/[0.12] focus:border-indigo-500 outline-none cursor-pointer appearance-none pr-10 shadow-lg"
+                    className="w-full bg-slate-900 text-white text-xs font-black px-4 py-2.5 rounded-xl border border-slate-800 focus:border-indigo-500 outline-none cursor-pointer appearance-none pr-10 shadow-md transition-all"
                   >
                     {filteredCompaniesDropdown.map((comp) => (
-                      <option key={comp} value={comp} className="bg-[#0f172a] text-white">
+                      <option key={comp} value={comp} className="bg-slate-900 text-white font-semibold">
                         {formatCompanyName(comp)} ({comp})
                       </option>
                     ))}
@@ -886,33 +909,33 @@ export default function PracticePage() {
 
               {/* Company Search Input */}
               <div className="relative w-full md:w-64">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={companySearchInput}
                   onChange={(e) => setCompanySearchInput(e.target.value)}
                   placeholder="Filter 660+ companies..."
-                  className="input-glass w-full pl-10 pr-4 py-2 text-xs rounded-xl"
+                  className="w-full bg-slate-50 border border-slate-200/90 focus:border-indigo-500 focus:bg-white text-slate-900 placeholder:text-slate-400 text-xs font-bold pl-10 pr-4 py-2.5 rounded-xl transition-all shadow-2xs outline-none"
                 />
               </div>
 
               {/* Question Search Input */}
               <div className="relative w-full md:w-64">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search question title..."
-                  className="input-glass w-full pl-10 pr-4 py-2 text-xs rounded-xl"
+                  className="w-full bg-slate-50 border border-slate-200/90 focus:border-indigo-500 focus:bg-white text-slate-900 placeholder:text-slate-400 text-xs font-bold pl-10 pr-4 py-2.5 rounded-xl transition-all shadow-2xs outline-none"
                 />
               </div>
             </div>
 
             {/* Popular Companies Quick Selector Pills */}
-            <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-              <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mr-1 shrink-0">
-                Popular:
+            <div className="pt-3 border-t border-slate-100 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin relative z-10">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">
+                POPULAR:
               </span>
               {TOP_COMPANIES.map((slug) => {
                 const isSelected = selectedCompany === slug;
@@ -923,10 +946,10 @@ export default function PracticePage() {
                       setSelectedCompany(slug);
                       setLimit(100);
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 cursor-pointer ${
                       isSelected
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 border border-indigo-400/50"
-                        : "bg-white/[0.04] text-slate-400 hover:text-white border border-white/[0.06] hover:bg-white/[0.08]"
+                        ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white shadow-md shadow-indigo-600/30 border border-indigo-400 font-black scale-105"
+                        : "bg-slate-100/90 text-slate-700 hover:bg-slate-200/90 hover:text-slate-900 border border-slate-200/80 shadow-2xs"
                     }`}
                   >
                     {formatCompanyName(slug)}
@@ -936,10 +959,10 @@ export default function PracticePage() {
             </div>
 
             {/* Filter Row: Time Periods & Difficulties & Status */}
-            <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-4">
+            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 relative z-10">
               {/* Time Period Tabs */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                <span className="text-[11px] font-bold text-slate-400 mr-2 shrink-0">Time Frame:</span>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">TIME FRAME:</span>
                 {PERIODS.map((p) => {
                   const isActive = selectedPeriod === p.value;
                   return (
@@ -949,10 +972,10 @@ export default function PracticePage() {
                         setSelectedPeriod(p.value);
                         setLimit(100);
                       }}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 cursor-pointer ${
                         isActive
-                          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
-                          : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                          ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xs font-black border border-sky-400"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/70"
                       }`}
                     >
                       {p.label}
@@ -963,24 +986,24 @@ export default function PracticePage() {
 
               <div className="flex items-center gap-4 flex-wrap">
                 {/* Difficulty Filter Tabs */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-slate-400 mr-2">Difficulty:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-1">DIFFICULTY:</span>
                   {DIFFICULTIES.map((d) => {
                     const isActive = selectedDifficulty === d;
                     return (
                       <button
                         key={d}
                         onClick={() => setSelectedDifficulty(d)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                           isActive
                             ? d === "Easy"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              ? "bg-emerald-500 text-white font-black shadow-xs border border-emerald-400"
                               : d === "Medium"
-                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                              ? "bg-amber-500 text-white font-black shadow-xs border border-amber-400"
                               : d === "Hard"
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                              : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
-                            : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                              ? "bg-rose-500 text-white font-black shadow-xs border border-rose-400"
+                              : "bg-indigo-600 text-white font-black shadow-xs border border-indigo-400"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/70"
                         }`}
                       >
                         {d}
@@ -990,22 +1013,22 @@ export default function PracticePage() {
                 </div>
 
                 {/* Completion Status Filter (All / Unsolved / Completed) */}
-                <div className="flex items-center gap-1.5 border-l border-white/[0.08] pl-3">
-                  <span className="text-[11px] font-bold text-slate-400 mr-1">Status:</span>
+                <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
+                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-1">STATUS:</span>
                   {(["All", "Unsolved", "Completed"] as const).map((st) => {
                     const isActive = selectedStatus === st;
                     return (
                       <button
                         key={st}
                         onClick={() => setSelectedStatus(st)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                           isActive
                             ? st === "Completed"
-                              ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40"
+                              ? "bg-emerald-600 text-white font-black shadow-xs border border-emerald-400"
                               : st === "Unsolved"
-                              ? "bg-indigo-500/25 text-indigo-300 border border-indigo-500/40"
-                              : "bg-white/10 text-white border border-white/20"
-                            : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border border-transparent"
+                              ? "bg-indigo-600 text-white font-black shadow-xs border border-indigo-400"
+                              : "bg-slate-800 text-white font-black shadow-xs border border-slate-700"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/70"
                         }`}
                       >
                         {st}
@@ -1017,20 +1040,20 @@ export default function PracticePage() {
             </div>
           </div>
 
-          {/* Progress Tracker Banner */}
-          <div className="glass p-4 rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/20 via-[#0d1424] to-indigo-950/20 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5" />
+          {/* Progress Tracker Banner (Forest Green Hero) */}
+          <div className="relative overflow-hidden rounded-[28px] bg-[#234B3B] p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#234B3B] flex items-center justify-center shrink-0">
+                <Trophy className="w-6 h-6 text-[#234B3B]" />
               </div>
-              <div>
-                <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <div className="space-y-0.5">
+                <h4 className="text-lg font-extrabold text-white flex items-center gap-2">
                   <span>{formatCompanyName(selectedCompany)} Progress Tracker</span>
-                  <span className="text-xs font-bold text-emerald-400">
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900">
                     ({companySolvedCount} / {questions.length} Solved)
                   </span>
                 </h4>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-emerald-100/80 font-medium">
                   Check off questions to save your progress directly into Supabase DB.
                 </p>
               </div>
@@ -1038,34 +1061,34 @@ export default function PracticePage() {
 
             {/* Animated Progress Bar */}
             <div className="w-full md:w-64 space-y-1.5">
-              <div className="flex justify-between text-xs font-bold">
-                <span className="text-slate-400">Completion</span>
-                <span className="text-emerald-400">{companyProgressPercent}%</span>
+              <div className="flex justify-between text-xs font-extrabold">
+                <span className="text-emerald-100">Completion Rate</span>
+                <span className="text-amber-300">{companyProgressPercent}%</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden p-0.5">
+              <div className="w-full h-2.5 rounded-full bg-white/20 overflow-hidden p-0.5 backdrop-blur-xs">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  className="h-full rounded-full bg-amber-300 transition-all duration-500 shadow-xs"
                   style={{ width: `${companyProgressPercent}%` }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Question List Table */}
-          <div className="glass rounded-2xl p-6 border border-white/[0.08] space-y-4 shadow-2xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
+          {/* Question List Table Container */}
+          <div className="bg-white rounded-[28px] p-6 border border-slate-100 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-                  <Building2 className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                  <Building2 className="w-5 h-5 text-blue-800" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+                  <h3 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                     <span>{formatCompanyName(selectedCompany)}</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-800">
+                    <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                       {selectedCompany}
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
                     Interview questions fetched from CSV dataset ({PERIODS.find((p) => p.value === selectedPeriod)?.label})
                   </p>
                 </div>
@@ -1073,14 +1096,14 @@ export default function PracticePage() {
 
               <div className="flex items-center gap-3 self-end sm:self-auto">
                 {loadingQuestions ? (
-                  <div className="flex items-center gap-2 text-xs text-indigo-400 font-bold">
+                  <div className="flex items-center gap-2 text-xs text-[#234B3B] font-bold">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Loading CSV data...</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-400 font-bold px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08]">
-                    Showing <strong className="text-white">{filteredQuestions.length}</strong> of{" "}
-                    <strong className="text-indigo-400">{totalCount}</strong> questions
+                  <span className="text-xs text-slate-500 font-bold px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+                    Showing <strong className="text-slate-900">{filteredQuestions.length}</strong> of{" "}
+                    <strong className="text-[#234B3B]">{totalCount}</strong> questions
                   </span>
                 )}
               </div>
@@ -1089,16 +1112,16 @@ export default function PracticePage() {
             {/* Questions Table Body */}
             {loadingQuestions ? (
               <div className="py-16 text-center space-y-3">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
-                <p className="text-sm font-medium text-slate-400">
+                <Loader2 className="w-8 h-8 text-[#234B3B] animate-spin mx-auto" />
+                <p className="text-sm font-medium text-slate-500">
                   Parsing CSV question bank for {formatCompanyName(selectedCompany)}...
                 </p>
               </div>
             ) : filteredQuestions.length === 0 ? (
-              <div className="py-16 text-center space-y-3 bg-white/[0.01] rounded-xl border border-white/[0.04]">
-                <Filter className="w-8 h-8 text-slate-600 mx-auto" />
-                <h4 className="text-base font-bold text-white">No questions found</h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <div className="py-16 text-center space-y-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+                <Filter className="w-8 h-8 text-slate-400 mx-auto" />
+                <h4 className="text-base font-bold text-slate-900">No questions found</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
                   No interview questions match your selected status, period, or difficulty filters for {formatCompanyName(selectedCompany)}.
                 </p>
               </div>
@@ -1115,10 +1138,10 @@ export default function PracticePage() {
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all gap-4 group shadow-md ${
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border transition-all gap-4 group shadow-xs ${
                         isDone
-                          ? "bg-[#0a1816]/70 border-emerald-500/30"
-                          : "bg-[#0c1220]/80 border-white/[0.06] hover:border-indigo-500/40 hover:bg-[#11192e]"
+                          ? "bg-emerald-50/60 border-emerald-200"
+                          : "bg-white border-slate-100 hover:border-slate-200 hover:shadow-md"
                       }`}
                     >
                       <div className="flex items-start sm:items-center gap-3.5">
@@ -1134,17 +1157,17 @@ export default function PracticePage() {
                               frequency: q.frequency,
                             })
                           }
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none shrink-0 ${
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer select-none shrink-0 ${
                             isDone
-                              ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                              : "bg-white/[0.02] border-white/[0.12] hover:border-slate-400 text-slate-400 hover:text-white"
+                              ? "bg-emerald-100 border-emerald-300 text-emerald-800 font-bold"
+                              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold"
                           }`}
                           title={isDone ? "Click to mark as incomplete" : "Click to mark as completed"}
                         >
                           {isDone ? (
-                            <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <CheckSquare className="w-4 h-4 text-emerald-700 shrink-0" />
                           ) : (
-                            <Square className="w-4 h-4 text-slate-500 shrink-0" />
+                            <Square className="w-4 h-4 text-slate-400 shrink-0" />
                           )}
                           <span className="text-[11px] font-extrabold tracking-wide">
                             {isDone ? "Completed" : "Mark Solved"}
@@ -1153,7 +1176,7 @@ export default function PracticePage() {
 
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-mono text-slate-500 font-bold">
+                            <span className="text-xs font-mono text-slate-400 font-bold">
                               #{q.id || idx + 1}
                             </span>
                             <a
@@ -1163,16 +1186,16 @@ export default function PracticePage() {
                               className={`text-sm font-bold transition-colors flex items-center gap-1.5 ${
                                 isDone
                                   ? "text-slate-400 line-through"
-                                  : "text-white group-hover:text-indigo-300"
+                                  : "text-slate-900 group-hover:text-[#234B3B]"
                               }`}
                             >
                               <span>{q.title}</span>
-                              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-400 transition-opacity" />
+                              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#234B3B] transition-opacity" />
                             </a>
 
                             {isDone && (
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                <Check className="w-3 h-3" />
+                              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                <Check className="w-3 h-3 text-emerald-700" />
                                 Solved
                               </span>
                             )}
@@ -1180,40 +1203,40 @@ export default function PracticePage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/[0.04]">
+                      <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                         {/* Acceptance Rate */}
                         {q.acceptance && (
-                          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
                             {q.acceptance} Acc.
                           </span>
                         )}
 
                         {/* Frequency Rate */}
                         {q.frequency && (
-                          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
                             {q.frequency} Freq.
                           </span>
                         )}
 
                         {/* Difficulty Badge */}
                         <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                          className={`text-xs font-bold px-3 py-1 rounded-full ${
                             q.difficulty === "Easy"
-                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                               : q.difficulty === "Medium"
-                              ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                              : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                              ? "bg-amber-100 text-amber-900 border border-amber-200"
+                              : "bg-rose-100 text-rose-800 border border-rose-200"
                           }`}
                         >
                           {q.difficulty}
                         </span>
 
-                        {/* Solve Button */}
+                        {/* Direct LeetCode External Link Button */}
                         <a
                           href={leetCodeUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 text-xs font-bold transition-all shadow-md"
+                          className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#234B3B] hover:bg-[#1b3b2e] shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
                         >
                           <span>Solve</span>
                           <ExternalLink className="w-3 h-3" />

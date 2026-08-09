@@ -52,6 +52,8 @@ import PythonGrowthCanvas from "@/components/PythonGrowthCanvas";
 import SubtopicDetailDrawer, { SubtopicDetailInfo } from "@/components/SubtopicDetailDrawer";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import BorderGlow from "@/components/BorderGlow";
+import LogoLoop, { LogoItem } from "@/components/LogoLoop";
 
 
 interface RoadmapNode {
@@ -3909,116 +3911,116 @@ function RoadmapDetailView({
       <div>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#131b2e] border border-white/[0.08] hover:border-slate-600 text-slate-300 hover:text-white font-medium text-sm transition-all shadow-md group"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-[#234B3B] font-bold text-xs transition-all shadow-xs group cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           <span>Back to All Roadmaps</span>
         </button>
       </div>
 
-      {/* ── Top Hero Card */}
+      {/* ── Top Hero Card (Elite Emerald Gradient) */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-2xl p-6 md:p-8 border border-white/[0.08] overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, rgba(19,27,46,0.95) 0%, rgba(10,15,28,0.98) 100%)",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
-        }}
+        className="relative rounded-[28px] p-6 md:p-8 bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] text-white shadow-lg overflow-hidden"
       >
-        {/* Ambient glow behind card */}
-        <div
-          className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-[100px] pointer-events-none opacity-20"
-          style={{ background: selectedRoadmap.color }}
-        />
+        <div className="absolute -right-16 -top-16 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
+          <div className="w-44 h-44 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-300 to-amber-300 blur-2xl animate-pulse" />
+        </div>
 
         <div className="flex flex-col lg:flex-row items-start justify-between gap-6 relative z-10">
           {/* Left Hero info */}
           <div className="space-y-4 max-w-2xl">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black tracking-widest uppercase">
+              <span className="px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold tracking-widest uppercase shadow-xs">
                 ROADMAP
               </span>
-              <span className="text-xs font-semibold text-slate-400">Verified Curriculum</span>
+              <span className="text-xs font-semibold text-emerald-100/90">Verified Curriculum</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
               {selectedRoadmap.displayTitle}
             </h1>
 
-            <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+            <p className="text-emerald-100/90 text-sm md:text-base leading-relaxed font-medium">
               {selectedRoadmap.subtitle}
             </p>
 
             {/* Ratings and Certificate Pill */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400 text-slate-900 text-xs font-bold shadow-xs">
+                <Star className="w-3.5 h-3.5 fill-slate-900 text-slate-900" />
                 {selectedRoadmap.ratings}
               </div>
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold">
+              <div className="px-3.5 py-1 rounded-full bg-white/20 text-white text-xs font-bold backdrop-blur-xs border border-white/20">
                 Certificate Included
               </div>
             </div>
           </div>
 
           {/* Right Graphic Box */}
-          <div className="hidden sm:flex items-center justify-center p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl relative w-full lg:w-72 h-48 shrink-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
+          <div className="hidden sm:flex items-center justify-center p-6 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md relative w-full lg:w-72 h-48 shrink-0 overflow-hidden shadow-inner">
             <div className="text-center space-y-3 relative z-10">
-              <div className="w-20 h-20 mx-auto rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-xl shadow-indigo-500/20">
-                <selectedRoadmap.icon size={44} className="w-11 h-11" />
+              <div
+                className="w-20 h-20 mx-auto rounded-2xl text-white flex items-center justify-center shadow-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${selectedRoadmap.color || "#10b981"}, ${selectedRoadmap.color || "#10b981"}cc)`,
+                  boxShadow: `0 8px 24px ${(selectedRoadmap.color || "#10b981")}50`,
+                }}
+              >
+                <selectedRoadmap.icon size={40} className="w-10 h-10 text-white" />
               </div>
-              <div className="text-xs font-mono font-bold text-slate-300 tracking-wider">
+              <div className="text-xs font-mono font-bold text-white tracking-wider">
                 &lt;F&gt; {selectedRoadmap.id.toUpperCase().slice(0, 8)}
               </div>
-              <div className="text-[10px] text-slate-500 font-mono">100% HANDS-ON PRACTICE</div>
+              <div className="text-[10px] text-emerald-200/90 font-mono">100% HANDS-ON PRACTICE</div>
             </div>
           </div>
         </div>
 
         {/* Metrics & Progress Row */}
-        <div className="mt-8 pt-6 border-t border-white/[0.08] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+        <div className="mt-8 pt-6 border-t border-white/[0.12] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
           <div className="flex flex-wrap items-center gap-6">
             {/* Progress Wheel */}
             <div className="flex items-center gap-3">
-              <div className="relative w-14 h-14 rounded-full bg-slate-800/80 border-2 border-indigo-500/40 flex items-center justify-center text-white font-extrabold text-sm shadow-inner">
+              <div className="relative w-14 h-14 rounded-full bg-black/40 border-2 border-emerald-400/50 flex items-center justify-center text-white font-extrabold text-sm shadow-inner">
                 {progressPct}%
               </div>
               <div>
                 <div className="text-sm font-bold text-white">Your Progress</div>
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-emerald-100/90 font-medium">
                   {doneCount} of {allNodes.length} Skills Completed
                 </div>
               </div>
             </div>
 
             {/* Career Mastery Tree Widget */}
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
-              <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400">
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/30 border border-white/15 backdrop-blur-md">
+              <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-300">
                 <Trees className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-xs font-bold text-white">Career Mastery Tree</div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-emerald-100/80">
                   {doneCount} completed • {allNodes.length - doneCount} in progress
                 </div>
               </div>
             </div>
 
             {/* Quick Badges */}
-            <div className="hidden xl:flex items-center gap-3 text-xs font-medium text-slate-400">
-              <span className="flex items-center gap-1 bg-white/5 px-2.5 py-1 rounded-lg">
+            <div className="hidden xl:flex items-center gap-3 text-xs font-medium text-slate-300">
+              <span className="flex items-center gap-1 bg-white/10 border border-white/15 px-3 py-1 rounded-lg">
                 <Flame className="w-3.5 h-3.5 text-orange-400" /> 0 Day Streak
               </span>
-              <span className="flex items-center gap-1 bg-white/5 px-2.5 py-1 rounded-lg">
-                <Zap className="w-3.5 h-3.5 text-amber-400" /> {doneCount * 50} XP
+              <span className="flex items-center gap-1 bg-white/10 border border-white/15 px-3 py-1 rounded-lg">
+                <Zap className="w-3.5 h-3.5 text-amber-300" /> {doneCount * 50} XP
               </span>
-              <span className="flex items-center gap-1 bg-white/5 px-2.5 py-1 rounded-lg">
-                <Book className="w-3.5 h-3.5 text-cyan-400" /> {allNodes.length} Lessons
+              <span className="flex items-center gap-1 bg-white/10 border border-white/15 px-3 py-1 rounded-lg">
+                <Book className="w-3.5 h-3.5 text-emerald-300" /> {allNodes.length} Lessons
               </span>
-              <span className="flex items-center gap-1 bg-white/5 px-2.5 py-1 rounded-lg">
-                <Trophy className="w-3.5 h-3.5 text-purple-400" /> {phaseIndex} Badges
+              <span className="flex items-center gap-1 bg-white/10 border border-white/15 px-3 py-1 rounded-lg">
+                <Trophy className="w-3.5 h-3.5 text-purple-300" /> {phaseIndex} Badges
               </span>
             </div>
           </div>
@@ -4028,25 +4030,20 @@ function RoadmapDetailView({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={handleEnrollClick}
-            className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shrink-0 transition-all ${
+            className={`px-6 py-3 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-md shrink-0 transition-all cursor-pointer ${
               isEnrolled
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-emerald-500/10 hover:bg-emerald-500/30"
-                : "text-white shadow-indigo-500/25"
+                ? "bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200"
+                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/30"
             }`}
-            style={
-              isEnrolled
-                ? {}
-                : { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }
-            }
           >
             {isEnrolled ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 <span>Enrolled</span>
               </>
             ) : (
               <>
-                <GraduationCap className="w-4 h-4 text-indigo-100" />
+                <GraduationCap className="w-4 h-4 text-white" />
                 <span>Enroll in Track</span>
               </>
             )}
@@ -4055,23 +4052,24 @@ function RoadmapDetailView({
 
         {/* Market Demand & Salary Row — Hidden for Skill Roadmaps */}
         {selectedRoadmap.category !== "skill" && (
-          <div className="mt-6 pt-4 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-slate-300">5-Year Market Demand (2021–2026):</span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30">
+              <span className="font-semibold text-slate-700">5-Year Market Demand (2021–2026):</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
                 {selectedRoadmap.growth}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-bold border border-blue-500/30">
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold border border-blue-200">
                 {selectedRoadmap.roles}
               </span>
             </div>
 
             <div>
-              Average Salary: <span className="font-bold text-white text-sm ml-1">{selectedRoadmap.salary}</span>
+              Average Salary: <span className="font-bold text-slate-900 text-sm ml-1">{selectedRoadmap.salary}</span>
             </div>
           </div>
         )}
       </motion.div>
+
 
       {/* ── Timeline Tree + Realistic Growth Widget Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -4079,16 +4077,16 @@ function RoadmapDetailView({
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl md:text-2xl font-extrabold text-white">
+              <h2 className="text-xl md:text-2xl font-extrabold text-slate-900">
                 {selectedRoadmap.displayTitle} Timeline Tree
               </h2>
-              <p className="text-xs md:text-sm text-slate-400 mt-0.5">
+              <p className="text-xs md:text-sm text-slate-500 mt-0.5">
                 {selectedRoadmap.timelineSubtitle}
               </p>
             </div>
 
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
               Interactive Learning Path
             </span>
           </div>
@@ -4096,24 +4094,22 @@ function RoadmapDetailView({
           {/* Vertical Tree Container with Scroll-Animated Laser Light */}
           <div ref={treeContainerRef} className="relative pl-7 space-y-10">
             {/* Background dim track line - centered at 13px */}
-            <div className="absolute left-[12px] top-[18px] bottom-[18px] w-0.5 bg-slate-800/90 rounded-full pointer-events-none" />
+            <div className="absolute left-[12px] top-[18px] bottom-[18px] w-0.5 bg-slate-200 rounded-full pointer-events-none" />
 
             {/* Illuminated Laser beam scaling down as you scroll - centered at 13px */}
             <motion.div
               className="absolute left-[11px] top-[18px] bottom-[18px] w-1 rounded-full origin-top pointer-events-none z-10"
               style={{
                 scaleY,
-                background: "linear-gradient(180deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)",
-                boxShadow: "0 0 14px #38bdf8, 0 0 28px #818cf8",
+                background: "linear-gradient(180deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%)",
               }}
             />
 
             {/* Travelling Light Orb following scroll down the tree - centered at 13px */}
             <motion.div
-              className="absolute left-[7px] w-3 h-3 rounded-full bg-cyan-300 z-20 pointer-events-none"
+              className="absolute left-[7px] w-3 h-3 rounded-full bg-emerald-500 z-20 pointer-events-none"
               style={{
                 top: lightTop,
-                boxShadow: "0 0 16px 5px #38bdf8, 0 0 32px 10px #818cf8",
               }}
             />
 
@@ -4135,28 +4131,28 @@ function RoadmapDetailView({
                   <div
                     className={`absolute -left-[27px] top-1.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-20 ${
                       isSectionComplete
-                        ? "bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/50"
-                        : "bg-[#0b0f19] border-indigo-400 text-indigo-400 shadow-md ring-4 ring-indigo-500/20"
+                        ? "bg-emerald-500 border-emerald-400 text-white shadow-md"
+                        : "bg-white border-emerald-600 text-emerald-700 shadow-sm"
                     }`}
                   >
                     {isSectionComplete ? (
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     ) : (
-                      <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                      <div className="w-2 h-2 rounded-full bg-emerald-600" />
                     )}
                   </div>
 
                   {/* Section Header */}
                   <div>
-                    <h3 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2">
+                    <h3 className="text-lg md:text-xl font-extrabold text-slate-900 flex items-center gap-2">
                       <span>{section.title}</span>
                       {isSectionComplete && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
                           COMPLETED
                         </span>
                       )}
                     </h3>
-                    <p className="text-xs md:text-sm text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">
                       {section.subtitle}
                     </p>
                   </div>
@@ -4178,22 +4174,22 @@ function RoadmapDetailView({
                               onClick={() =>
                                 setExpandedNodeName(isExpanded ? null : nodeName)
                               }
-                              className={`relative flex items-center justify-between gap-3 px-4.5 py-3.5 rounded-2xl text-xs font-bold transition-all duration-200 shadow-md cursor-pointer border overflow-hidden shrink-0 lg:w-96 ${
+                              className={`relative flex items-center justify-between gap-3 px-4.5 py-3.5 rounded-2xl text-xs font-bold transition-all duration-200 shadow-sm cursor-pointer border overflow-hidden shrink-0 lg:w-96 ${
                                 isExpanded
-                                  ? "bg-[#141d33] border-cyan-400 text-white ring-2 ring-cyan-500/40 shadow-[0_0_25px_rgba(56,189,248,0.25)]"
+                                  ? "bg-emerald-100/90 border-2 border-emerald-600 text-emerald-950 ring-2 ring-emerald-400/40 shadow-md"
                                   : done
-                                  ? "bg-indigo-600/20 border-indigo-500 text-white shadow-indigo-500/10 hover:border-indigo-400"
-                                  : "bg-[#131b2e]/90 border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white"
+                                  ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-xs hover:border-emerald-400"
+                                  : "bg-white border-slate-200/90 hover:border-slate-300 text-slate-900 hover:shadow-md"
                               }`}
                             >
                               {/* Left accent bar */}
                               <div
                                 className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all ${
                                   isExpanded
-                                    ? "bg-gradient-to-b from-cyan-400 via-indigo-500 to-purple-500 shadow-[0_0_12px_#38bdf8]"
+                                    ? "bg-gradient-to-b from-emerald-500 via-teal-500 to-indigo-600 shadow-[0_0_12px_#10b981]"
                                     : done
-                                    ? "bg-emerald-400"
-                                    : "bg-indigo-500/60"
+                                    ? "bg-emerald-500"
+                                    : "bg-emerald-600/70"
                                 }`}
                               />
 
@@ -4201,32 +4197,38 @@ function RoadmapDetailView({
                                 <div
                                   className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${
                                     done
-                                      ? "bg-emerald-500 text-white"
+                                      ? "bg-emerald-600 text-white"
                                       : isExpanded
-                                      ? "bg-cyan-400 text-slate-950 font-bold"
-                                      : "bg-slate-800 text-slate-400"
+                                      ? "bg-emerald-600 text-white font-bold"
+                                      : "bg-emerald-100 text-emerald-800"
                                   }`}
                                 >
                                   <Terminal className="w-3.5 h-3.5" />
                                 </div>
 
-                                <span className="font-extrabold text-sm tracking-tight text-white">{nodeName}</span>
+                                <span className={`font-extrabold text-sm tracking-tight ${
+                                  isExpanded ? "text-emerald-950" : done ? "text-emerald-950" : "text-slate-900"
+                                }`}>
+                                  {nodeName}
+                                </span>
                               </div>
 
                               <div className="flex items-center gap-2">
                                 <span
                                   className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold transition-colors ${
                                     done
-                                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                                      : "bg-slate-800/80 text-slate-400 border border-slate-700/60"
+                                      ? "bg-emerald-500 text-white font-extrabold shadow-2xs"
+                                      : isExpanded
+                                      ? "bg-emerald-600 text-white font-extrabold"
+                                      : "bg-slate-100 text-slate-600 border border-slate-200"
                                   }`}
                                 >
-                                  {done ? "Completed" : "Pending"}
+                                  {done ? "✓ Completed" : "Pending"}
                                 </span>
 
                                 <ChevronRight
                                   className={`w-4 h-4 transition-transform ${
-                                    isExpanded ? "rotate-90 text-cyan-400" : "text-slate-500"
+                                    isExpanded ? "rotate-90 text-emerald-600" : "text-slate-400"
                                   }`}
                                 />
                               </div>
@@ -4675,7 +4677,77 @@ export default function RoadmapsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-10 pb-16"
     >
+      {/* ── Roadmaps Hero Header Banner */}
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] p-6 sm:p-10 text-white shadow-lg">
+        <div className="absolute -right-16 -top-16 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
+          <div className="w-44 h-44 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-300 to-amber-300 blur-2xl animate-pulse" />
+        </div>
 
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-emerald-300 uppercase">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 shadow-xs">
+                CAREER &amp; SKILL PATHWAYS
+              </span>
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+              Developer Roadmaps
+            </h1>
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
+              Step-by-step career learning paths curated by industry experts. Pick a technology or career domain to track your mastery from novice to senior architect.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-center">
+              <div className="text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">SKILL TRACKS</div>
+              <div className="text-2xl font-black text-white">{SKILL_ROADMAPS.length}</div>
+            </div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-center">
+              <div className="text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">CAREER PATHS</div>
+              <div className="text-2xl font-black text-amber-300">{CAREER_ROADMAPS.length}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Partner & Technology Logo Loop (Downside Main Banner) */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="py-3 px-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm"
+      >
+        <div className="flex items-center gap-5">
+          <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 shrink-0 hidden md:inline-block">
+            ECOSYSTEM &amp; TOOLS
+          </span>
+          <div className="flex-1 overflow-hidden">
+            <LogoLoop
+              logos={[
+                { node: <span className="font-extrabold text-xs tracking-wider text-slate-800 bg-slate-100 border border-slate-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚡ Python 3.12</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-[#00599C] bg-blue-50 border border-blue-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚙️ Modern C++20</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-[#087ea4] bg-cyan-50 border border-cyan-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚛️ React 19</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-slate-900 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl shadow-2xs">▲ Next.js 15</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-3 py-1.5 rounded-xl shadow-2xs">💚 Node.js</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-orange-600 bg-amber-50 border border-amber-200/90 px-3 py-1.5 rounded-xl shadow-2xs">☕ Java Spring Boot</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-sky-600 bg-sky-50 border border-sky-200/90 px-3 py-1.5 rounded-xl shadow-2xs">💻 Systems C</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🚀 LeetCode Verified</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-purple-700 bg-purple-50 border border-purple-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🧠 AI Career Assistant</span> },
+                { node: <span className="font-extrabold text-xs tracking-wider text-teal-700 bg-teal-50 border border-teal-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🛠️ Hands-on Sandbox</span> },
+              ]}
+              speed={75}
+              logoHeight={32}
+              gap={24}
+              pauseOnHover
+              scaleOnHover
+              fadeOut
+              fadeOutColor="#ffffff"
+            />
+          </div>
+        </div>
+      </motion.div>
 
       {/* ── Generated Custom Roadmaps */}
       <AnimatePresence>
@@ -4746,22 +4818,25 @@ export default function RoadmapsPage() {
       </AnimatePresence>
 
       {/* ── SECTION 1: SKILL ROADMAPS */}
-      <section className="space-y-5">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <BookOpen className="w-6 h-6 text-indigo-400 shrink-0" />
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-              Skill Roadmaps
-            </h1>
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <BookOpen className="w-6 h-6 text-emerald-700 shrink-0" />
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                Skill Roadmaps
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 font-semibold ml-8">
+              Select a core programming language or framework learning path.
+            </p>
           </div>
-          <p className="text-sm text-slate-400 ml-9">
-            Select a core technical skill below to open its dedicated learning path.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {SKILL_ROADMAPS.map((item, idx) => {
             const Icon = item.icon;
+            const itemColor = item.color || "#10b981";
 
             return (
               <motion.div
@@ -4770,40 +4845,85 @@ export default function RoadmapsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.4 }}
                 onClick={() => handleCardClick(item)}
-                className="relative rounded-2xl p-5 sm:p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between group bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
+                className="h-full cursor-pointer group"
               >
-                <div>
-                  {/* Icon Badge & Enroll Symbol */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
-                    >
-                      <Icon size={28} className="w-6 h-6 sm:w-7 sm:h-7" />
+                <BorderGlow
+                  edgeSensitivity={30}
+                  glowColor="160 84 39"
+                  backgroundColor="#ffffff"
+                  borderRadius={28}
+                  glowRadius={35}
+                  glowIntensity={1.2}
+                  coneSpread={25}
+                  animated={false}
+                  colors={[itemColor, '#10b981', '#6366f1']}
+                  className="h-full p-6 transition-all duration-300 hover:-translate-y-1.5 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                >
+                  <div className="flex flex-col justify-between h-full space-y-5">
+                    <div>
+                      {/* Top Bar Badges */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div
+                          className="w-14 h-14 rounded-2xl text-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md"
+                          style={{
+                            background: `linear-gradient(135deg, ${itemColor}, ${itemColor}cc)`,
+                            boxShadow: `0 6px 18px ${itemColor}40`,
+                          }}
+                        >
+                          <Icon size={26} className="w-6 h-6 text-white" />
+                        </div>
+
+                        {enrolledIds.has(item.id) ? (
+                          <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Enrolled
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => handleEnrollRoadmap(item, e)}
+                            className="flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/20 hover:scale-105 transition-all z-10 cursor-pointer"
+                          >
+                            <GraduationCap className="w-3.5 h-3.5 text-white" /> Enroll
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-extrabold text-slate-900 mb-1.5 group-hover:text-emerald-700 transition-colors leading-snug">
+                        {item.title}
+                      </h3>
+
+                      {/* Subtitle */}
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
+                        {item.subtitle}
+                      </p>
                     </div>
-                    {enrolledIds.has(item.id) ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled
-                      </span>
-                    ) : (
-                      <button
-                        onClick={(e) => handleEnrollRoadmap(item, e)}
-                        className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30 hover:scale-105 transition-all z-10"
-                      >
-                        <GraduationCap className="w-3.5 h-3.5" /> Enroll
-                      </button>
-                    )}
+
+                    {/* Rich Metadata Section */}
+                    <div className="space-y-3 pt-3 border-t border-slate-100">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-amber-600 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                          ★ {item.ratings || "4.9 Rating"}
+                        </span>
+                        <span className="font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
+                          ⚡ {item.sections ? `${item.sections.length} Modules` : "20+ Modules"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                        {item.salary && (
+                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 text-slate-800 shadow-2xs">
+                            💼 {item.salary}
+                          </span>
+                        )}
+                        {item.growth && (
+                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-2xs">
+                            📈 {item.growth}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Title */}
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-1.5 group-hover:text-indigo-300 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  {/* Subtitle */}
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-normal">
-                    {item.subtitle}
-                  </p>
-                </div>
+                </BorderGlow>
               </motion.div>
             );
           })}
@@ -4811,22 +4931,23 @@ export default function RoadmapsPage() {
       </section>
 
       {/* ── SECTION 2: CAREER ROADMAPS */}
-      <section className="space-y-5">
+      <section className="space-y-6">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <BookOpen className="w-6 h-6 text-indigo-400 shrink-0" />
-            <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+          <div className="flex items-center gap-2.5 mb-1">
+            <Briefcase className="w-6 h-6 text-emerald-700 shrink-0" />
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
               Career Roadmaps
             </h2>
           </div>
-          <p className="text-sm text-slate-400 ml-9">
-            Select a career domain below to open its dedicated learning roadmap.
+          <p className="text-xs sm:text-sm text-slate-500 font-semibold ml-8">
+            Select a specialized career domain to launch your professional engineering journey.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {CAREER_ROADMAPS.map((item, idx) => {
             const Icon = item.icon;
+            const itemColor = item.color || "#0284c7";
 
             return (
               <motion.div
@@ -4835,40 +4956,85 @@ export default function RoadmapsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.4 }}
                 onClick={() => handleCardClick(item)}
-                className="relative rounded-2xl p-5 sm:p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between group bg-[#131b2e] border border-white/[0.08] hover:border-indigo-500/40 hover:bg-[#18233c] hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/5"
+                className="h-full cursor-pointer group"
               >
-                <div>
-                  {/* Icon Badge & Enroll Symbol */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${item.bgBadge} border ${item.borderBadge} ${item.textBadge}`}
-                    >
-                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <BorderGlow
+                  edgeSensitivity={30}
+                  glowColor="217 91 60"
+                  backgroundColor="#ffffff"
+                  borderRadius={28}
+                  glowRadius={35}
+                  glowIntensity={1.2}
+                  coneSpread={25}
+                  animated={false}
+                  colors={[itemColor, '#38bdf8', '#6366f1']}
+                  className="h-full p-6 transition-all duration-300 hover:-translate-y-1.5 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                >
+                  <div className="flex flex-col justify-between h-full space-y-5">
+                    <div>
+                      {/* Top Bar Badges */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div
+                          className="w-14 h-14 rounded-2xl text-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md"
+                          style={{
+                            background: `linear-gradient(135deg, ${itemColor}, ${itemColor}cc)`,
+                            boxShadow: `0 6px 18px ${itemColor}40`,
+                          }}
+                        >
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+
+                        {enrolledIds.has(item.id) ? (
+                          <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Enrolled
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => handleEnrollRoadmap(item, e)}
+                            className="flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/20 hover:scale-105 transition-all z-10 cursor-pointer"
+                          >
+                            <GraduationCap className="w-3.5 h-3.5 text-white" /> Enroll
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-extrabold text-slate-900 mb-1.5 group-hover:text-sky-700 transition-colors leading-snug">
+                        {item.title}
+                      </h3>
+
+                      {/* Subtitle */}
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
+                        {item.subtitle}
+                      </p>
                     </div>
-                    {enrolledIds.has(item.id) ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled
-                      </span>
-                    ) : (
-                      <button
-                        onClick={(e) => handleEnrollRoadmap(item, e)}
-                        className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30 hover:scale-105 transition-all z-10"
-                      >
-                        <GraduationCap className="w-3.5 h-3.5" /> Enroll
-                      </button>
-                    )}
+
+                    {/* Rich Metadata Section */}
+                    <div className="space-y-3 pt-3 border-t border-slate-100">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-amber-600 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                          ★ {item.ratings || "4.9 Rating"}
+                        </span>
+                        <span className="font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
+                          ⚡ {item.sections ? `${item.sections.length} Modules` : "18+ Modules"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                        {item.salary && (
+                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 text-slate-800 shadow-2xs">
+                            💼 {item.salary}
+                          </span>
+                        )}
+                        {item.growth && (
+                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200/90 text-sky-700 shadow-2xs">
+                            📈 {item.growth}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Title */}
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-1.5 group-hover:text-indigo-300 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  {/* Subtitle */}
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-normal">
-                    {item.subtitle}
-                  </p>
-                </div>
+                </BorderGlow>
               </motion.div>
             );
           })}
