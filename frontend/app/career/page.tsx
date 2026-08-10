@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Briefcase,
   FileText,
@@ -15,6 +16,7 @@ import {
   Building2,
   UserCheck,
   ChevronRight,
+  ChevronLeft,
   RotateCcw,
   Edit3,
   FileCheck,
@@ -171,6 +173,23 @@ export default function CareerPage() {
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+    if (isModalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
 
   // Configuration (Step 1)
   const [targetRole, setTargetRole] = useState("Fullstack Software Engineer");
@@ -767,56 +786,65 @@ export default function CareerPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          Resume Review Modal
+          Resume Review Modal (Mounted via React Portal)
       ══════════════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+      {isModalOpen && mounted && createPortal(
+        <AnimatePresence>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md overflow-hidden select-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2 }}
-              className="bg-[#0b1329] border border-[#1e2d4a] w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+              className="bg-[#0b1329] border-0 sm:border border-[#1e2d4a] w-full h-full sm:h-auto sm:max-w-4xl sm:max-h-[92vh] sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[10000]"
             >
               {/* Modal Header */}
-              <div className="p-5 md:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                    <Sparkles className="w-5 h-5" />
+              <div className="p-3.5 sm:p-5 md:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0 gap-3">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <button
+                    onClick={closeModal}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors flex items-center gap-1 text-xs font-bold shrink-0 border border-slate-700 active:scale-95 cursor-pointer shadow-xs"
+                    aria-label="Back"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-indigo-400" />
+                    <span className="hidden sm:inline">Back</span>
+                  </button>
+                  <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-lg font-bold text-white truncate leading-tight">
                       AI Resume Evaluator
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      Calibrated for specific Target Role & Company Type
+                    <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden sm:block mt-0.5">
+                      Calibrated for specific Target Role &amp; Company Type
                     </p>
                   </div>
                 </div>
 
                 {/* Progress steps */}
-                <div className="hidden sm:flex items-center gap-3 mr-4">
+                <div className="hidden md:flex items-center gap-3 mr-2 shrink-0">
                   <StageIndicator stage={1} currentStage={stageNum} label="Configure" />
-                  <div className="w-6 h-px bg-slate-700" />
+                  <div className="w-4 h-px bg-slate-700" />
                   <StageIndicator stage={2} currentStage={stageNum} label="Upload" />
-                  <div className="w-6 h-px bg-slate-700" />
+                  <div className="w-4 h-px bg-slate-700" />
                   <StageIndicator stage={3} currentStage={stageNum} label="Review" />
-                  <div className="w-6 h-px bg-slate-700" />
+                  <div className="w-4 h-px bg-slate-700" />
                   <StageIndicator stage={4} currentStage={stageNum} label="Evaluate" />
                 </div>
 
                 <button
                   id="close-resume-modal"
                   onClick={closeModal}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
+                  aria-label="Close modal"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 pb-28 sm:pb-8">
 
                 {/* ──────────────────────────────────────────────────────────
                     SECTION A: Configuration (always visible until done)
@@ -829,7 +857,7 @@ export default function CareerPage() {
                     <div className="space-y-3">
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                         <Briefcase className="w-4 h-4 text-indigo-400" />
-                        1. Target Role & Job Description
+                        1. Target Role &amp; Job Description
                       </label>
                       <input
                         id="target-role-input"
@@ -909,7 +937,7 @@ export default function CareerPage() {
                               key={exp.id}
                               type="button"
                               onClick={() => setYearsExperience(exp.id)}
-                              className={`p-2.5 rounded-xl text-xs font-semibold text-center border transition-all ${
+                              className={`p-2.5 rounded-xl text-xs font-semibold text-center border transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/20"
                                   : "bg-[#070d1d] border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
@@ -1069,7 +1097,7 @@ export default function CareerPage() {
                           </label>
                           <button
                             onClick={resetAll}
-                            className="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
+                            className="text-[10px] text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <RotateCcw className="w-3 h-3" />
                             Upload different file
@@ -1135,7 +1163,7 @@ export default function CareerPage() {
                           type="button"
                           onClick={handleRunEvaluation}
                           disabled={!editedText.trim() || editedText.length < 50}
-                          className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 text-sm"
+                          className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 text-sm cursor-pointer"
                         >
                           <Sparkles className="w-4 h-4" />
                           <span>Evaluate Resume with Groq AI</span>
@@ -1234,7 +1262,7 @@ export default function CareerPage() {
                       <button
                         id="modify-parameters-btn"
                         onClick={resetAll}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs rounded-lg transition-colors flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Start New Review
@@ -1251,8 +1279,9 @@ export default function CareerPage() {
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Placement Preparation Modal */}
       <PlacementPrepModal

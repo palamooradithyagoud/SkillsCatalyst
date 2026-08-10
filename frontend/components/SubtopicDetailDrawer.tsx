@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -16,6 +17,7 @@ import {
   ShieldCheck,
   Zap,
   Tv,
+  ChevronLeft,
 } from "lucide-react";
 
 export interface SubtopicDetailInfo {
@@ -375,8 +377,26 @@ export default function SubtopicDetailDrawer({
   onToggleStatus,
 }: SubtopicDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<"about" | "resources">("about");
+  const [mounted, setMounted] = useState(false);
 
-  if (!subtopic) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle ESC key press to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!subtopic || !mounted) return null;
 
   // Get the exact YouTube URL for this subtopic (user-provided) — no fallback to /learning
   const ytUrl = SUBTOPIC_YT_LINKS[subtopic.id] ?? null;
@@ -409,237 +429,253 @@ export default function SubtopicDetailDrawer({
     ],
   };
 
-  return (
+  const portalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[9999] overflow-hidden flex justify-end">
+          {/* Darkened Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[10000]"
           />
 
-          {/* Slide-over Panel */}
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="w-screen max-w-xl bg-white border-l border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900"
-            >
-              {/* Header */}
-              <div className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50 flex items-start justify-between gap-4">
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 border border-emerald-200 text-[#234B3B]">
+          {/* Slide-over Panel mounted at document body root */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            className="relative z-[10001] w-full sm:w-[540px] md:w-[600px] max-w-full h-full bg-[#0b1329] border-l border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-100"
+          >
+            {/* Header with Mobile Back Button & Close Button */}
+            <div className="p-3.5 sm:p-5 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {/* Dedicated Mobile Back Button */}
+                <button
+                  onClick={onClose}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 active:scale-95 shadow-sm"
+                  aria-label="Back to Roadmap"
+                >
+                  <ChevronLeft className="w-4 h-4 text-emerald-400" />
+                  <span>Back</span>
+                </button>
+
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-emerald-300 border border-slate-700">
                       {subtopic.parentName}
                     </span>
                     {subtopic.isRecommended && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-purple-600" /> RECOMMENDED
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-400" /> RECOMMENDED
                       </span>
                     )}
                     {subtopic.isAlternative && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
-                        ALTERNATIVE CHOICE
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        ALTERNATIVE
                       </span>
                     )}
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                    <Terminal className="w-6 h-6 text-cyan-400 shrink-0" />
-                    <span>{subtopic.name}</span>
+                  <h2 className="text-base sm:text-xl font-black text-white tracking-tight flex items-center gap-2 leading-tight">
+                    <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 shrink-0" />
+                    <span className="truncate">{subtopic.name}</span>
                   </h2>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all shrink-0 cursor-pointer"
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all shrink-0 cursor-pointer shadow-md active:scale-95"
+                aria-label="Close subtopic drawer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Action Banner */}
+            <div className="px-4 py-3 sm:px-6 sm:py-3.5 bg-[#080d19] border-b border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+              {/* YouTube button */}
+              {ytUrl ? (
+                <a
+                  href={ytUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 flex items-center justify-center sm:justify-start gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
                 >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                  <Tv className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span className="truncate">Watch {subtopic.name} on YouTube</span>
+                  <ExternalLink className="w-3 h-3 text-rose-300 shrink-0" />
+                </a>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
 
-              {/* Action Banner */}
-              <div className="px-5 py-3.5 bg-[#10172a] border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3">
-                {/* YouTube button — opens exact provided link, or hidden if none provided */}
-                {ytUrl ? (
-                  <a
-                    href={ytUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-rose-950/40"
-                  >
-                    <Tv className="w-4 h-4 text-rose-400" />
-                    <span>Watch {subtopic.name} on YouTube</span>
-                    <ExternalLink className="w-3 h-3 text-rose-300" />
-                  </a>
-                ) : (
-                  <div /> // spacer when no YT link provided
-                )}
-
-                {/* Status Toggle */}
-                <div className="flex items-center gap-2 ml-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => onToggleStatus(subtopic.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      !isCompleted
-                        ? "bg-amber-400/20 border border-amber-400 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.3)]"
-                        : "bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700"
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Pending</span>
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => onToggleStatus(subtopic.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      isCompleted
-                        ? "bg-emerald-500 border border-emerald-400 text-slate-950 font-extrabold shadow-[0_0_15px_rgba(16,185,129,0.4)]"
-                        : "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
-                    }`}
-                  >
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Completed</span>
-                  </motion.button>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex items-center border-b border-white/[0.08] bg-[#0c1222] px-5 pt-2">
-                <button
-                  onClick={() => setActiveTab("about")}
-                  className={`px-4 py-2.5 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                    activeTab === "about"
-                      ? "border-cyan-400 text-cyan-300"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
+              {/* Status Toggle Buttons */}
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onToggleStatus(subtopic.id)}
+                  className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    !isCompleted
+                      ? "bg-amber-400/20 border border-amber-400/60 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                      : "bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700"
                   }`}
                 >
-                  <BookOpen className="w-4 h-4" />
-                  <span>About</span>
-                </button>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Pending</span>
+                </motion.button>
 
-                <button
-                  onClick={() => setActiveTab("resources")}
-                  className={`px-4 py-2.5 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                    activeTab === "resources"
-                      ? "border-cyan-400 text-cyan-300"
-                      : "border-transparent text-slate-400 hover:text-slate-200"
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onToggleStatus(subtopic.id)}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isCompleted
+                      ? "bg-emerald-500 border border-emerald-400 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                      : "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 text-cyan-400" />
-                  <span>Resources & Docs</span>
-                </button>
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Completed</span>
+                </motion.button>
               </div>
+            </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-                {activeTab === "about" ? (
-                  <div className="space-y-6">
-                    {/* Summary */}
-                    <div className="p-4 rounded-xl bg-slate-900/90 border border-white/10 space-y-2">
-                      <h4 className="text-xs font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5" /> Overview
-                      </h4>
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                        {knowledge.summary}
-                      </p>
+            {/* Tabs */}
+            <div className="flex items-center border-b border-slate-800 bg-[#070b14] px-4 sm:px-6 pt-2 gap-2 shrink-0">
+              <button
+                onClick={() => setActiveTab("about")}
+                className={`px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                  activeTab === "about"
+                    ? "border-cyan-400 text-cyan-300"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>About</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("resources")}
+                className={`px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                  activeTab === "resources"
+                    ? "border-cyan-400 text-cyan-300"
+                    : "border-transparent text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-cyan-400" />
+                <span>Resources & Docs</span>
+              </button>
+            </div>
+
+            {/* Content Area with Extra Scroll Space at Bottom */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 pb-28 sm:pb-8">
+              {activeTab === "about" ? (
+                <div className="space-y-6">
+                  {/* Summary */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#0f172a] border border-slate-800/90 space-y-2 shadow-sm">
+                    <h4 className="text-xs font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5" /> Overview
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      {knowledge.summary}
+                    </p>
+                  </div>
+
+                  {/* Key Concepts */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-indigo-400" /> Key Concepts & Learning Pillars
+                    </h4>
+                    <div className="space-y-2">
+                      {knowledge.keyConcepts.map((concept, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl bg-[#0c1324] border border-slate-800/80 text-xs sm:text-sm font-semibold text-slate-200 flex items-start gap-3 shadow-xs"
+                        >
+                          <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-[10px] font-extrabold shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-snug">{concept}</span>
+                        </div>
+                      ))}
                     </div>
+                  </div>
 
-                    {/* Key Concepts */}
-                    <div className="space-y-3">
+                  {/* Cheat Sheet */}
+                  {knowledge.cheatSheet && (
+                    <div className="space-y-2.5">
                       <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-indigo-400" /> Key Concepts & Learning Pillars
+                        <Code2 className="w-3.5 h-3.5 text-emerald-400" /> Actionable Cheat Sheet / Code Example
                       </h4>
-                      <div className="space-y-2">
-                        {knowledge.keyConcepts.map((concept, idx) => (
+                      <pre className="p-4 rounded-xl bg-[#050914] border border-slate-800 font-mono text-xs sm:text-sm text-cyan-300 overflow-x-auto leading-relaxed shadow-inner">
+                        <code>{knowledge.cheatSheet}</code>
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Use Cases */}
+                  {knowledge.useCases && (
+                    <div className="space-y-2.5">
+                      <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-purple-400" /> Production DevOps Use Cases
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {knowledge.useCases.map((useCase, idx) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg bg-[#111827] border border-slate-800 text-xs font-semibold text-slate-200 flex items-start gap-2.5"
+                            className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/30 text-xs font-bold text-purple-200 flex items-center gap-2"
                           >
-                            <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] shrink-0 mt-0.5">
-                              {idx + 1}
-                            </span>
-                            <span>{concept}</span>
+                            <span>🚀</span>
+                            <span>{useCase}</span>
                           </div>
                         ))}
                       </div>
                     </div>
+                  )}
+                </div>
+              ) : (
+                /* Resources Tab — docs only */
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                    <Bookmark className="w-3.5 h-3.5 text-cyan-400" /> Official Documentation & References
+                  </h4>
 
-                    {/* Cheat Sheet */}
-                    {knowledge.cheatSheet && (
-                      <div className="space-y-2.5">
-                        <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                          <Code2 className="w-3.5 h-3.5 text-emerald-400" /> Actionable Cheat Sheet / Code Example
-                        </h4>
-                        <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] sm:text-xs font-mono text-cyan-200 overflow-x-auto leading-relaxed shadow-inner">
-                          <code>{knowledge.cheatSheet}</code>
-                        </pre>
+                  {knowledge.resources.map((res, rIdx) => (
+                    <a
+                      key={rIdx}
+                      href={res.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block p-4 rounded-2xl border transition-all space-y-1.5 cursor-pointer bg-[#0c1324] border-slate-800/80 hover:border-cyan-500/50 hover:bg-[#101a30] shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs sm:text-sm font-extrabold flex items-center gap-2 text-white group-hover:text-cyan-300">
+                          <span>{res.title}</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-cyan-400 opacity-80 group-hover:opacity-100 shrink-0" />
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-cyan-500/20 text-cyan-300 border-cyan-500/30 shrink-0">
+                          {res.type}
+                        </span>
                       </div>
-                    )}
-
-                    {/* Use Cases */}
-                    {knowledge.useCases && (
-                      <div className="space-y-2.5">
-                        <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-purple-400" /> Production DevOps Use Cases
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          {knowledge.useCases.map((useCase, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs font-bold text-purple-200"
-                            >
-                              🚀 {useCase}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* Resources Tab — docs only */
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                      <Bookmark className="w-3.5 h-3.5 text-cyan-400" /> Official Documentation & References
-                    </h4>
-
-                    {knowledge.resources.map((res, rIdx) => (
-                      <a
-                        key={rIdx}
-                        href={res.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group block p-4 rounded-xl border transition-all space-y-1.5 cursor-pointer bg-[#12192e] border-white/[0.08] hover:border-cyan-500/50 hover:bg-[#16203a]"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-extrabold flex items-center gap-2 text-white group-hover:text-cyan-300">
-                            <span>{res.title}</span>
-                            <ExternalLink className="w-3.5 h-3.5 text-cyan-400 opacity-80 group-hover:opacity-100" />
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
-                            {res.type}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 font-normal leading-relaxed">
-                          {res.desc}
-                        </p>
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
+                      <p className="text-xs text-slate-400 font-normal leading-relaxed">
+                        {res.desc}
+                      </p>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
+
+  return createPortal(portalContent, document.body);
 }
