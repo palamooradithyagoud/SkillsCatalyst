@@ -88,6 +88,7 @@ export default function Sidebar() {
             const isLearning = item.name === "Learning";
             const isProfile = item.name === "Profile";
             const isExplore = item.name === "Explore";
+            const IconComponent = item.icon;
 
             return (
               <motion.div
@@ -155,7 +156,7 @@ export default function Sidebar() {
                       ) : isExplore ? (
                         <ExploreIcon size={20} className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`} />
                       ) : (
-                        <item.icon className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`} />
+                        <IconComponent className={`w-5 h-5 transition-colors ${isActive ? "text-emerald-700 font-bold" : "text-slate-500 group-hover:text-slate-900"}`} />
                       )}
                     </span>
                   </span>
@@ -205,8 +206,3 @@ export default function Sidebar() {
     </motion.aside>
   );
 }
-
-
-
-
-

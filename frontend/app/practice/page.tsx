@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Clock,
   Briefcase,
@@ -226,6 +227,22 @@ export default function PracticePage() {
   const userId = session?.user_id;
 
   const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
+
+  // Sync practice subview state to document body attribute for MobileNav detection
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (selectedMode !== "index") {
+        document.body.setAttribute("data-practice-subview", "true");
+      } else {
+        document.body.removeAttribute("data-practice-subview");
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-practice-subview");
+      }
+    };
+  }, [selectedMode]);
   const [companiesList, setCompaniesList] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("google");
   const [companySearchInput, setCompanySearchInput] = useState<string>("");
@@ -1284,3 +1301,4 @@ export default function PracticePage() {
     </motion.div>
   );
 }
+

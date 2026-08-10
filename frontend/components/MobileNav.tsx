@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
   Map,
@@ -26,6 +26,7 @@ import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
+import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -38,7 +39,6 @@ const navItems = [
   { name: "Profile", href: "/settings", icon: UserIcon, desc: "Account & settings" },
 ];
 
-// High-frequency bottom bar items for 1-thumb native smartphone navigation
 const bottomBarItems = [
   { name: "Home", href: "/dashboard", icon: LayoutGrid },
   { name: "Learn", href: "/learning", icon: BookIcon },
@@ -47,49 +47,74 @@ const bottomBarItems = [
   { name: "Profile", href: "/settings", icon: UserIcon },
 ];
 
-export default function MobileNav() {
+function MobileNavContent() {
   const pathname = usePathname();
+  const router = useRouter();
   const { session, isLoading } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isPracticeSubView, setIsPracticeSubView] = useState(false);
+  const [isLearningPlayer, setIsLearningPlayer] = useState(false);
+
+  useEffect(() => {
+    const checkAttributes = () => {
+      if (typeof document !== "undefined") {
+        setIsPracticeSubView(document.body.hasAttribute("data-practice-subview"));
+        setIsLearningPlayer(document.body.hasAttribute("data-learning-player"));
+      }
+    };
+    checkAttributes();
+    const interval = setInterval(checkAttributes, 200);
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   if (pathname === "/login" || isLoading || !session) {
     return null;
   }
 
   const userEmail = session?.email || "Guest User";
-  const userInitial = userEmail.charAt(0).toUpperCase();
+  const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+
+  // Hide bottom navigation bar ONLY inside active video player or practice subviews
+  const isHideBottomBar =
+    (pathname === "/learning" && isLearningPlayer) ||
+    (pathname === "/practice" && isPracticeSubView);
 
   return (
     <>
-      {/* ── Mobile Native Top App Bar (Visible on smartphone < md) ── */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 mobile-top-header bg-white/85 border-b border-slate-200/80 backdrop-blur-2xl text-slate-900 shadow-sm">
+      {/* ── Mobile Native Top App Bar ── */}
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/85 border-b border-slate-200/80 backdrop-blur-2xl text-slate-900 shadow-xs">
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
             <SkillsCatalystLogo size="sm" showText animated />
           </Link>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <Link
-            href="/explore"
-            className="w-10 h-10 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/80 text-slate-700 flex items-center justify-center mobile-touch-target transition-all"
-            aria-label="Quick Search"
-          >
-            <Search className="w-4 h-4 text-slate-700" />
-          </Link>
+        <div className="flex items-center gap-2">
+          {/* Quick Search 3D Button */}
+          <ThreeDSquircleTile
+            icon={Search}
+            size="sm"
+            label="Search"
+            onClick={() => router.push("/explore")}
+          />
 
-          <motion.button
-            whileTap={{ scale: 0.92 }}
+          {/* User Initials Squircle Avatar */}
+          <ThreeDSquircleTile
+            text={userInitial}
+            size="sm"
+            badge
+            badgeColor="bg-emerald-500"
+            label="Profile"
+            onClick={() => router.push("/settings")}
+          />
+
+          {/* Menu Drawer Toggle Button */}
+          <ThreeDSquircleTile
+            icon={drawerOpen ? X : Menu}
+            size="sm"
+            label="Toggle Menu"
             onClick={() => setDrawerOpen(!drawerOpen)}
-            className="w-10 h-10 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/80 text-slate-800 flex items-center justify-center mobile-touch-target relative transition-all"
-            aria-label="Toggle Navigation Drawer"
-          >
-            {drawerOpen ? (
-              <X className="w-5 h-5 text-slate-900" />
-            ) : (
-              <Menu className="w-5 h-5 text-slate-900" />
-            )}
-          </motion.button>
+          />
         </div>
       </header>
 
@@ -97,7 +122,7 @@ export default function MobileNav() {
       <AnimatePresence>
         {drawerOpen && (
           <>
-            {/* Darkened Backdrop Overlay */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -106,7 +131,7 @@ export default function MobileNav() {
               className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
             />
 
-            {/* Slide-in Panel from Right */}
+            {/* Slide-in Panel */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -118,11 +143,15 @@ export default function MobileNav() {
                 {/* Drawer Header */}
                 <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#234b3b] to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                      {userInitial}
-                    </div>
+                    <ThreeDSquircleTile
+                      text={userInitial}
+                      size="md"
+                      isActive
+                      badge
+                      badgeColor="bg-emerald-500"
+                    />
                     <div>
-                      <div className="font-bold text-slate-900 text-sm truncate max-w-[170px]">
+                      <div className="font-bold text-slate-900 text-sm truncate max-w-[150px]">
                         {userEmail.split("@")[0]}
                       </div>
                       <div className="text-[11px] text-slate-500 flex items-center gap-1">
@@ -130,69 +159,65 @@ export default function MobileNav() {
                       </div>
                     </div>
                   </div>
-                  <button
+                  <ThreeDSquircleTile
+                    icon={X}
+                    size="sm"
+                    label="Close Menu"
                     onClick={() => setDrawerOpen(false)}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  />
                 </div>
 
-                {/* Navigation Links */}
-                <nav className="space-y-1.5">
+                {/* Navigation Links with 3D Squircle Icons */}
+                <nav className="space-y-2">
                   {navItems.map((item) => {
                     const isActive =
                       pathname === item.href ||
                       (pathname === "/" && item.href === "/dashboard");
-                    const Icon = item.icon;
-                    const isExplore = item.name === "Explore";
 
                     return (
-                      <Link
+                      <div
                         key={item.name}
-                        href={item.href}
-                        onClick={() => setDrawerOpen(false)}
-                        className={`group flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all mobile-touch-target ${
+                        onClick={() => {
+                          setDrawerOpen(false);
+                          router.push(item.href);
+                        }}
+                        className={`group flex items-center justify-between px-3 py-2.5 rounded-2xl cursor-pointer transition-all ${
                           isActive
-                            ? "bg-[#234b3b] text-white shadow-md shadow-[#234b3b]/20"
-                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                            ? "bg-slate-100/90 border border-slate-200/90 shadow-sm"
+                            : "hover:bg-slate-50 border border-transparent"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                              isActive
-                                ? "bg-white/20 text-white"
-                                : "bg-slate-100 text-slate-600 group-hover:text-slate-900"
-                            }`}
-                          >
-                            {isExplore ? (
-                              <ExploreIcon size={18} />
-                            ) : (
-                              <Icon className="w-4 h-4" />
-                            )}
-                          </div>
+                          <ThreeDSquircleTile
+                            icon={item.icon}
+                            isActive={isActive}
+                            size="sm"
+                            onClick={() => {
+                              setDrawerOpen(false);
+                              router.push(item.href);
+                            }}
+                          />
                           <div>
-                            <span className={`block font-bold leading-none ${isActive ? "text-white" : "text-slate-900"}`}>
+                            <span className={`block font-bold text-sm leading-none ${isActive ? "text-[#234B3B]" : "text-slate-900"}`}>
                               {item.name}
                             </span>
-                            <span className={`text-[10px] font-medium mt-0.5 block ${isActive ? "text-emerald-100" : "text-slate-500"}`}>
+                            <span className="text-[10px] font-medium text-[#64748b] mt-0.5 block">
                               {item.desc}
                             </span>
                           </div>
                         </div>
                         <ChevronRight
-                          className={`w-4 h-4 ${
-                            isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"
+                          className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${
+                            isActive ? "text-[#234B3B]" : "text-slate-400"
                           }`}
                         />
-                      </Link>
+                      </div>
                     );
                   })}
                 </nav>
               </div>
 
-              {/* Drawer Footer: Streak Badge */}
+              {/* Drawer Footer */}
               <div className="rounded-2xl p-4 mt-6 border border-slate-200 bg-slate-50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
@@ -213,55 +238,47 @@ export default function MobileNav() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Native Floating Light Glass Pill Navigation Bar (Visible on smartphone < md) ── */}
-      <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-full border border-slate-200/90 bg-white/90 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-2 py-1.5 flex items-center justify-around">
-        {bottomBarItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (pathname === "/" && item.href === "/dashboard");
-          const Icon = item.icon;
-          const isExplore = item.name === "Explore";
+      {/* ── Mobile Floating 3D Squircle Bottom Navigation Bar (Hidden only inside active video player or practice subviews) ── */}
+      {!isHideBottomBar && (
+        <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-3 py-2 flex items-center justify-around">
+          {bottomBarItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (pathname === "/" && item.href === "/dashboard");
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="relative flex flex-col items-center justify-center py-1.5 px-3 min-w-[56px] min-h-[46px] rounded-full transition-all select-none"
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="mobileBottomNavActive"
-                  className="absolute inset-0 bg-[#234b3b] rounded-full shadow-md shadow-[#234b3b]/30"
-                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                />
-              )}
-              <motion.div
-                whileTap={{ scale: 0.86 }}
-                className={`relative z-10 flex flex-col items-center justify-center transition-colors duration-200 ${
-                  isActive ? "text-white" : "text-slate-500 hover:text-slate-900"
-                }`}
+            return (
+              <div
+                key={item.name}
+                className="flex flex-col items-center justify-center cursor-pointer select-none"
+                onClick={() => router.push(item.href)}
               >
-                {isExplore ? (
-                  <ExploreIcon size={20} className={`relative z-10 transition-transform duration-200 ${isActive ? "scale-110 text-white" : "text-slate-500"}`} />
-                ) : (
-                  <Icon
-                    className={`w-5 h-5 relative z-10 transition-all duration-200 ${
-                      isActive ? "text-white scale-110" : "text-slate-500"
-                    }`}
-                  />
-                )}
+                <ThreeDSquircleTile
+                  icon={item.icon}
+                  isActive={isActive}
+                  size="md"
+                  label={item.name}
+                  onClick={() => router.push(item.href)}
+                />
                 <span
-                  className={`text-[10px] tracking-tight font-medium mt-0.5 relative z-10 transition-all duration-200 ${
-                    isActive ? "text-white font-bold opacity-100 scale-105" : "text-slate-500 opacity-90"
+                  className={`text-[10px] tracking-tight font-bold mt-1 transition-colors ${
+                    isActive ? "text-[#234B3B]" : "text-slate-500"
                   }`}
                 >
                   {item.name}
                 </span>
-              </motion.div>
-            </Link>
-          );
-        })}
-      </nav>
+              </div>
+            );
+          })}
+        </nav>
+      )}
     </>
+  );
+}
+
+export default function MobileNav() {
+  return (
+    <Suspense fallback={null}>
+      <MobileNavContent />
+    </Suspense>
   );
 }

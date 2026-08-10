@@ -516,6 +516,18 @@ function FullPlayerView({
   const [currentIdx, setCurrentIdx] = useState(initialVideoIndex);
   const [activeTab, setActiveTab] = useState<"Overview" | "Notes" | "Instructor" | "FAQ">("Overview");
 
+  // Sync active player view state to document body attribute for MobileNav detection
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-learning-player", "true");
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-learning-player");
+      }
+    };
+  }, []);
+
   // ── Auto-completion UI state
   const [completedVideoIds, setCompletedVideoIds] = useState<Set<string>>(new Set());
   const [showCompletionBanner, setShowCompletionBanner] = useState(false);
