@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
-import { X, ExternalLink, Check, Video, BookOpen, Clock, Zap, PlayCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X, ExternalLink, Check, Video, BookOpen, Clock, Zap, PlayCircle, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface LeetCodeProblem {
@@ -224,7 +225,25 @@ export default function PracticeTopicDrawer({
   solvedSet,
   onToggleSolved,
 }: PracticeTopicDrawerProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   const keyLower = topicName.toLowerCase();
   const data = TOPIC_DATASET[keyLower] || {
@@ -242,211 +261,187 @@ export default function PracticeTopicDrawer({
 
   const solvedCount = data.problems.filter((p) => solvedSet[p.id]).length;
 
-  const toggleSolved = (p: LeetCodeProblem) => {
+  const toggleSolved = (p: any) => {
     onToggleSolved(p.id, { title: p.title, difficulty: p.difficulty, pattern: p.pattern });
   };
 
-  return (
+  const portalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-hidden flex justify-end select-none">
-        {/* Backdrop overlay */}
+      <div className="fixed inset-0 z-[9999] overflow-hidden flex justify-end select-none">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity z-[10000]"
         />
 
-        {/* Slide-over Drawer Panel */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-4xl xl:max-w-5xl bg-white border-l border-slate-200 text-slate-900 shadow-2xl h-full flex flex-col z-50 overflow-hidden"
+          className="relative w-full max-w-4xl xl:max-w-5xl bg-white border-l border-slate-200 text-slate-900 shadow-2xl h-full flex flex-col z-[10001] overflow-hidden"
         >
-          {/* Header Bar */}
-          <div className="p-6 pb-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-4 shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="p-4 sm:p-6 pb-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={onClose}
-                className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-mono text-slate-700 font-bold transition-colors"
+                className="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-black transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
               >
-                ESC
+                <ChevronLeft className="w-4 h-4 text-emerald-800" />
+                <span>Back</span>
               </button>
-              <span className="text-xs font-semibold text-slate-500">Foundation Concept & Problem Bank</span>
+              <span className="text-xs font-semibold text-slate-500 hidden sm:inline">Foundation Concept &amp; Problem Bank</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3.5 py-1 rounded-full">
                 Solved: <span className="font-extrabold">({solvedCount} / {data.problems.length})</span>
               </span>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-200/80 border border-slate-200/80 transition-colors cursor-pointer active:scale-95"
+                aria-label="Close drawer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Drawer Body Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-            {/* Title & Topic Header */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-8 pb-28 sm:pb-8">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
                     {topicName}
                   </h2>
-                  <p className="text-xs font-bold text-slate-600 mt-1 flex items-center gap-3">
-                    <span>Time Complexity: <strong className="text-emerald-700">{data.timeComplexity}</strong></span>
-                    <span>•</span>
-                    <span>Space Complexity: <strong className="text-blue-700">{data.spaceComplexity}</strong></span>
+                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                    Master Pattern Overview &amp; Curated Practice Questions
                   </p>
                 </div>
 
-                {/* Topic Masterclass YouTube Video Button */}
                 <a
                   href={data.masterclassVideoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs border border-rose-500 transition-all self-start sm:self-auto shrink-0 group cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
                 >
-                  <Video className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                  <span>Watch Pattern Masterclass 📺</span>
+                  <Video className="w-4 h-4 text-rose-600" />
+                  <span>Watch Masterclass</span>
+                  <ExternalLink className="w-3 h-3 text-rose-500" />
                 </a>
               </div>
 
-              {/* Concept Definition Box */}
-              <div className="p-6 rounded-[24px] bg-emerald-50/60 border border-emerald-200/80 text-sm text-slate-800 leading-relaxed shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-[#234B3B] uppercase tracking-wider mb-2">
-                  <BookOpen className="w-4 h-4 text-[#234B3B]" />
-                  <span>Pattern Concept &amp; Definition</span>
-                </div>
-                <p className="font-medium text-slate-700">{data.definition}</p>
-              </div>
-            </div>
-
-            {/* Prerequisites Cards Grid */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-extrabold tracking-widest text-slate-500 uppercase">
-                PREREQUISITES
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {data.prerequisites.map((pre, idx) => (
-                  <div
-                    key={idx}
-                    className="p-5 rounded-2xl bg-white border border-slate-200/80 space-y-1 shadow-xs"
-                  >
-                    <div className="font-extrabold text-slate-900 text-sm">{pre.title}</div>
-                    <div className="text-xs text-slate-500 font-medium">{pre.subtitle}</div>
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-purple-600" /> Pattern Definition
+                  </span>
+                  <div className="flex items-center gap-2 text-xs font-mono font-bold">
+                    <span className="px-2.5 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200">
+                      Time: {data.timeComplexity}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded bg-indigo-100 text-indigo-800 border border-indigo-200">
+                      Space: {data.spaceComplexity}
+                    </span>
                   </div>
-                ))}
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                  {data.definition}
+                </p>
               </div>
+
+              {data.prerequisites && data.prerequisites.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-amber-500" /> Prerequisite Skills
+                  </span>
+                  <div className="flex flex-wrap gap-2.5">
+                    {data.prerequisites.map((pr: any, pIdx: number) => (
+                      <div
+                        key={pIdx}
+                        className="px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 flex items-center gap-2"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <div>
+                          <div className="font-bold text-slate-900 leading-none">{pr.title}</div>
+                          <div className="text-[10px] text-slate-500 font-medium mt-0.5">{pr.subtitle}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Targeted LeetCode Problem Table with Video Solutions */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-extrabold tracking-widest text-slate-500 uppercase">
-                  PROBLEM BANK &amp; EXACT VIDEO SOLUTIONS
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <span>Curated Practice Problems</span>
+                  <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                    {data.problems.length} Questions
+                  </span>
                 </h3>
-                <span className="text-xs text-slate-500 font-medium">Click row or checkmark to toggle solved state</span>
               </div>
 
-              <div className="rounded-[24px] border border-slate-200 bg-white overflow-x-auto shadow-xs">
-                <table className="w-full text-left text-xs md:text-sm border-collapse min-w-[760px]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px] bg-slate-50">
-                      <th className="py-4 px-4 text-center w-12">#</th>
-                      <th className="py-4 px-4 w-20">LeetCode</th>
-                      <th className="py-4 px-4">Problem</th>
-                      <th className="py-4 px-4 w-24">Level</th>
-                      <th className="py-4 px-4 w-40">Video Solution</th>
-                      <th className="py-4 px-4 text-center w-16">Status</th>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-extrabold uppercase text-[10px] tracking-wider">
+                      <th className="p-3.5 pl-4">#</th>
+                      <th className="p-3.5">Title</th>
+                      <th className="p-3.5">Difficulty</th>
+                      <th className="p-3.5">Solution Video</th>
+                      <th className="p-3.5 pr-4 text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.problems.map((p, idx) => {
-                      const isSolved = !!solvedSet[p.id];
-                      const videoUrl = p.solutionVideoUrl || getYoutubeSolutionUrl(p);
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {data.problems.map((p: any) => {
+                      const isDone = !!solvedSet[p.id];
+                      const diffColor =
+                        p.difficulty === "Easy"
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                          : p.difficulty === "Medium"
+                          ? "bg-amber-100 text-amber-900 border-amber-200"
+                          : "bg-rose-100 text-rose-800 border-rose-200";
 
                       return (
-                        <tr
-                          key={p.id}
-                          className="hover:bg-slate-50 transition-colors group cursor-pointer"
-                          onClick={() => toggleSolved(p)}
-                        >
-                          {/* Row Index */}
-                          <td className="py-3.5 px-4 text-center text-slate-400 font-mono font-bold whitespace-nowrap">
-                            {idx + 1}
-                          </td>
-
-                          {/* LeetCode Problem Number */}
-                          <td className="py-3.5 px-4 font-mono font-extrabold text-blue-700 whitespace-nowrap">
-                            #{p.number}
-                          </td>
-
-                          {/* Problem Title Link */}
-                          <td className="py-3.5 px-4">
+                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-3.5 pl-4 font-mono font-bold text-slate-400">{p.number}</td>
+                          <td className="p-3.5 font-bold text-slate-900">
                             <a
                               href={p.url}
                               target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className={`font-bold inline-flex items-center gap-1.5 transition-colors ${
-                                isSolved
-                                  ? "text-slate-400 line-through"
-                                  : "text-slate-900 group-hover:text-[#234B3B]"
-                              }`}
+                              rel="noopener noreferrer"
+                              className="hover:text-purple-700 hover:underline flex items-center gap-1.5"
                             >
                               <span>{p.title}</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#234B3B] shrink-0" />
+                              <ExternalLink className="w-3 h-3 text-slate-400" />
                             </a>
                           </td>
-
-                          {/* Level Badge */}
-                          <td className="py-3.5 px-4 whitespace-nowrap">
-                            <span
-                              className={`text-xs font-bold px-3 py-1 rounded-full inline-block ${
-                                p.difficulty === "Easy"
-                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                  : p.difficulty === "Medium"
-                                  ? "bg-amber-100 text-amber-900 border border-amber-200"
-                                  : "bg-rose-100 text-rose-800 border border-rose-200"
-                              }`}
-                            >
+                          <td className="p-3.5">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${diffColor}`}>
                               {p.difficulty}
                             </span>
                           </td>
-
-                          {/* Video Solution YouTube Link */}
-                          <td className="py-3.5 px-4 whitespace-nowrap">
+                          <td className="p-3.5">
                             <a
-                              href={videoUrl}
+                              href={getYoutubeSolutionUrl(p)}
                               target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold transition-all group/vid"
-                              title={`Watch accurate video solution for ${p.title}`}
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
                             >
-                              <PlayCircle className="w-3.5 h-3.5 text-rose-600 group-hover/vid:scale-110 transition-transform" />
-                              <span>Solution 📺</span>
+                              <PlayCircle className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Solution</span>
                             </a>
                           </td>
-
-                          {/* Checkbox Status */}
-                          <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                          <td className="p-3.5 pr-4 text-right">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleSolved(p);
-                              }}
-                              className={`w-5 h-5 rounded-md border flex items-center justify-center mx-auto transition-colors cursor-pointer ${
-                                isSolved
-                                  ? "bg-[#234B3B] border-[#234B3B] text-white shadow-xs"
+                              onClick={() => toggleSolved(p)}
+                              className={`w-6 h-6 rounded-lg border inline-flex items-center justify-center transition-all cursor-pointer ${
+                                isDone
+                                  ? "bg-emerald-500 border-emerald-600 text-white shadow-2xs"
                                   : "border-slate-300 bg-white text-transparent hover:border-[#234B3B]"
                               }`}
                             >
@@ -465,4 +460,6 @@ export default function PracticeTopicDrawer({
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(portalContent, document.body);
 }

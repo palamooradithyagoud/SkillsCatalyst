@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Calculator,
@@ -162,6 +163,11 @@ const PLACEMENT_PREP_DATA = {
 export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepModalProps) {
   const [activeTab, setActiveTab] = useState<"aptitude" | "mockTests">("aptitude");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Practice State
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -191,23 +197,6 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Escape key handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !selectedTopic) onClose();
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose, selectedTopic]);
-
-  // Questions for current topic (Dynamic lookup for all Quantitative Aptitude topics)
-  const questionsList: PlacementQuestion[] =
-    selectedTopic && QUANTITATIVE_APTITUDE_MAP[selectedTopic]
-      ? QUANTITATIVE_APTITUDE_MAP[selectedTopic]
-      : PERCENTAGES_QUESTIONS;
-
   const startTopicQuiz = (topicName: string) => {
     setSelectedTopic(topicName);
     setCurrentIndex(0);
@@ -219,6 +208,17 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
     setQuestionTimerSeconds(0);
     setQuizFinished(false);
   };
+
+  // Escape key handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !selectedTopic) onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, selectedTopic]);
 
   // Load saved progress from LocalStorage & Supabase whenever selectedTopic changes
   useEffect(() => {
@@ -268,6 +268,24 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
 
     syncDatabaseProgress();
   }, [selectedTopic]);
+
+  // Questions for current topic (Dynamic lookup for all Quantitative Aptitude topics)
+  const questionsList: PlacementQuestion[] =
+    selectedTopic && QUANTITATIVE_APTITUDE_MAP[selectedTopic]
+      ? QUANTITATIVE_APTITUDE_MAP[selectedTopic]
+      : PERCENTAGES_QUESTIONS;
+
+  const currentQ = questionsList[currentIndex] || questionsList[0];
+  const totalQuestions = questionsList.length;
+  const answeredCount = Object.keys(userAnswers).length;
+  const correctCount = questionsList.reduce((acc, q) => {
+    return userAnswers[q.id] === q.correctIndex ? acc + 1 : acc;
+  }, 0);
+  const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+  const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex + 1) / totalQuestions) * 100) : 0;
+
+  // Early return MUST be after ALL hooks are called
+  if (!isOpen || !mounted) return null;
 
   // Helper to persist attempt to LocalStorage and Database
   const persistAttempt = async (
@@ -403,21 +421,9 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
     setQuizFinished(false);
   };
 
-  const currentQ = questionsList[currentIndex];
-
-  // Calculated Metrics
-  const totalQuestions = questionsList.length;
-  const answeredCount = Object.keys(userAnswers).length;
-  const correctCount = questionsList.reduce((acc, q) => {
-    return userAnswers[q.id] === q.correctIndex ? acc + 1 : acc;
-  }, 0);
-  const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-  const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex + 1) / totalQuestions) * 100) : 0;
-  if (!isOpen) return null;
-
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed top-0 bottom-0 right-0 left-0 md:left-20 lg:left-24 z-40 bg-[#f4f6f3] select-none overflow-hidden flex flex-col border-l border-slate-200/90 shadow-2xl">
+      <div className="fixed inset-0 z-[9999] bg-[#f4f6f3] select-none overflow-hidden flex flex-col shadow-2xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -425,66 +431,69 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
           transition={{ duration: 0.2 }}
           className="bg-[#f4f6f3] w-full h-full flex flex-col overflow-hidden"
         >
-          {/* Header Bar */}
-          <div className="p-5 border-b border-slate-200 bg-white flex items-center justify-between gap-4 shrink-0 shadow-2xs">
-            <div className="flex items-center gap-3.5">
+          {/* Compact Header Bar */}
+          <div className="px-3 py-2 sm:px-6 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0 shadow-2xs">
+            <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
               {selectedTopic ? (
                 <button
                   onClick={() => setSelectedTopic(null)}
-                  className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all flex items-center gap-1.5 text-xs font-black cursor-pointer border border-slate-200/80 shadow-2xs"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all flex items-center gap-1 text-xs font-black cursor-pointer border border-slate-200/80 shrink-0 active:scale-95 shadow-2xs"
+                  aria-label="Back to Topics"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Topics</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Back to Topics</span>
+                  <span className="sm:hidden">Back</span>
                 </button>
               ) : (
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 shrink-0">
-                  <Award className="w-6 h-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 shrink-0">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
               )}
-              <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                  {selectedTopic ? `${selectedTopic} Practice Module` : "Placement Preparation"}
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight truncate leading-tight">
+                  {selectedTopic ? `${selectedTopic} Practice` : "Placement Preparation"}
                 </h2>
-                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block mt-0.5">
                   {selectedTopic
-                    ? `Practice Mode • ${totalQuestions} Questions with Step-by-Step Solutions`
-                    : "Comprehensive Aptitude, Reasoning, Verbal & Mock Test Suite"}
+                    ? `${totalQuestions} Questions • Practice Mode`
+                    : "Aptitude, Reasoning, Verbal & Mock Tests"}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Practice View Switcher */}
               {selectedTopic && !quizFinished && (
-                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+                <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] sm:text-xs font-bold">
                   <button
                     onClick={() => setPracticeViewMode("card")}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md transition-all cursor-pointer ${
                       practiceViewMode === "card"
-                        ? "bg-slate-900 text-white font-black shadow-xs"
+                        ? "bg-slate-900 text-white font-black shadow-2xs"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
-                    Single Question
+                    Single
                   </button>
                   <button
                     onClick={() => setPracticeViewMode("sheet")}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md transition-all cursor-pointer ${
                       practiceViewMode === "sheet"
-                        ? "bg-purple-600 text-white font-black shadow-xs"
+                        ? "bg-purple-600 text-white font-black shadow-2xs"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
-                    Full Practice Sheet
+                    Sheet
                   </button>
                 </div>
               )}
 
               <button
                 onClick={onClose}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition-all border border-slate-800 shadow-md cursor-pointer"
+                className="p-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all border border-slate-800 shadow-md cursor-pointer flex items-center gap-1 active:scale-95"
+                aria-label="Close modal"
               >
-                <span>Close (ESC)</span>
+                <span className="hidden sm:inline">Close</span>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1204,4 +1213,6 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }
