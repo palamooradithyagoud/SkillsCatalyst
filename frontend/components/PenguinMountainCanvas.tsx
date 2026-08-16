@@ -19,10 +19,10 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     let cssWidth = canvas.parentElement?.clientWidth || 600;
     let cssHeight = canvas.parentElement?.clientHeight || 700;
 
-    // Support Retina / High-DPI screens for crystal clarity
+    // High-DPI screen support for crisp rendering
     const setupCanvasResolution = () => {
       if (!canvas || !canvas.parentElement) return;
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       cssWidth = canvas.parentElement.clientWidth;
       cssHeight = canvas.parentElement.clientHeight;
 
@@ -38,7 +38,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     setupCanvasResolution();
     window.addEventListener("resize", setupCanvasResolution);
 
-    // Mouse tracking for subtle interactive parallax
+    // Mouse / Touch tracking for subtle parallax
     let mouseX = 0;
     let mouseY = 0;
     let targetMouseX = 0;
@@ -53,7 +53,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     window.addEventListener("mousemove", handleMouseMove);
 
     // Snow particle system
-    const snowCount = 60;
+    const snowCount = 50;
     const snowflakes: Array<{
       x: number;
       y: number;
@@ -67,10 +67,10 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       snowflakes.push({
         x: Math.random() * cssWidth,
         y: Math.random() * cssHeight,
-        radius: Math.random() * 1.8 + 0.6,
-        speedY: Math.random() * 0.9 + 0.3,
-        speedX: Math.random() * 0.6 + 0.1,
-        opacity: Math.random() * 0.65 + 0.25,
+        radius: Math.random() * 1.6 + 0.6,
+        speedY: Math.random() * 0.8 + 0.3,
+        speedX: Math.random() * 0.5 + 0.1,
+        opacity: Math.random() * 0.6 + 0.25,
       });
     }
 
@@ -143,7 +143,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fill();
 
       // Flipper
-      const wingWave = isCheering ? Math.sin(time * 6) * 0.35 : 0;
+      const wingWave = isCheering ? Math.sin(time * 3.5) * 0.35 : 0;
       ctx.fillStyle = "#181A24";
       ctx.beginPath();
       if (isCheering) {
@@ -166,6 +166,8 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
       const width = cssWidth;
       const height = cssHeight;
+      const isMobile = width < 640;
+      const scaleRatio = isMobile ? Math.max(0.72, width / 520) : 1.0;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -182,8 +184,8 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fillRect(0, 0, width, height);
 
       // Golden Sunset Aura Behind Mountain Peak
-      const sunX = width * 0.74 + mouseX * 12;
-      const sunY = height * 0.19 + mouseY * 8;
+      const sunX = width * 0.74 + mouseX * 10;
+      const sunY = height * 0.18 + mouseY * 6;
       const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, width * 0.65);
       sunGrad.addColorStop(0, "rgba(255, 248, 235, 0.9)");
       sunGrad.addColorStop(0.2, "rgba(255, 205, 165, 0.45)");
@@ -196,18 +198,18 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       // Twilight Cloud Streaks
       ctx.fillStyle = "rgba(42, 28, 48, 0.35)";
       ctx.beginPath();
-      ctx.ellipse(width * 0.25, height * 0.09, width * 0.45, 28, 0, 0, Math.PI * 2);
-      ctx.ellipse(width * 0.8, height * 0.06, width * 0.35, 24, 0, 0, Math.PI * 2);
+      ctx.ellipse(width * 0.25, height * 0.09, width * 0.45, 24 * scaleRatio, 0, 0, Math.PI * 2);
+      ctx.ellipse(width * 0.8, height * 0.06, width * 0.35, 20 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "rgba(230, 155, 130, 0.22)";
       ctx.beginPath();
-      ctx.ellipse(sunX - 30, sunY + 25, width * 0.32, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(sunX - 25, sunY + 20, width * 0.32, 18 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
       // ── 2. DISTANT SILHOUETTE PEAKS ──
-      const par1X = mouseX * 6;
-      const par1Y = mouseY * 4;
+      const par1X = mouseX * 5;
+      const par1Y = mouseY * 3;
 
       ctx.fillStyle = "#4A3B54";
       ctx.beginPath();
@@ -232,11 +234,11 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fill();
 
       // ── 3. MIDGROUND HIGH-FIDELITY MOUNTAINS ──
-      const par2X = mouseX * 16;
-      const par2Y = mouseY * 9;
+      const par2X = mouseX * 12;
+      const par2Y = mouseY * 7;
 
       // Central Tall Peak
-      const peakX = width * 0.48 + par2X;
+      const peakX = width * 0.5 + par2X;
       const peakY = height * 0.16 + par2Y;
       const peakBaseY = height * 0.64;
 
@@ -244,9 +246,9 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
       ctx.moveTo(peakX, peakY);
-      ctx.lineTo(width * 0.31 + par2X, height * 0.46);
-      ctx.lineTo(width * 0.25 + par2X, height * 0.56);
-      ctx.lineTo(width * 0.46 + par2X, peakBaseY);
+      ctx.lineTo(width * 0.33 + par2X, height * 0.46);
+      ctx.lineTo(width * 0.27 + par2X, height * 0.56);
+      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
       ctx.closePath();
       ctx.fill();
 
@@ -260,9 +262,9 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fillStyle = litGrad;
       ctx.beginPath();
       ctx.moveTo(peakX, peakY);
-      ctx.lineTo(width * 0.46 + par2X, peakBaseY);
-      ctx.lineTo(width * 0.64 + par2X, height * 0.54);
-      ctx.lineTo(width * 0.68 + par2X, height * 0.4);
+      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
+      ctx.lineTo(width * 0.66 + par2X, height * 0.54);
+      ctx.lineTo(width * 0.7 + par2X, height * 0.4);
       ctx.closePath();
       ctx.fill();
 
@@ -270,35 +272,35 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fillStyle = "#8FA8CD";
       ctx.beginPath();
       ctx.moveTo(peakX, peakY);
-      ctx.lineTo(peakX - 10, height * 0.25);
-      ctx.lineTo(peakX - 4, height * 0.3);
-      ctx.lineTo(peakX - 22, height * 0.39);
-      ctx.lineTo(peakX - 14, height * 0.44);
-      ctx.lineTo(peakX - 32, height * 0.52);
-      ctx.lineTo(width * 0.31 + par2X, height * 0.46);
+      ctx.lineTo(peakX - 10 * scaleRatio, height * 0.25);
+      ctx.lineTo(peakX - 4 * scaleRatio, height * 0.3);
+      ctx.lineTo(peakX - 22 * scaleRatio, height * 0.39);
+      ctx.lineTo(peakX - 14 * scaleRatio, height * 0.44);
+      ctx.lineTo(peakX - 32 * scaleRatio, height * 0.52);
+      ctx.lineTo(width * 0.33 + par2X, height * 0.46);
       ctx.closePath();
       ctx.fill();
 
       // Dark Rock Ridges on Lit Face
       ctx.fillStyle = "#26293A";
       ctx.beginPath();
-      ctx.moveTo(peakX + 8, height * 0.24);
-      ctx.lineTo(peakX + 20, height * 0.28);
-      ctx.lineTo(peakX + 14, height * 0.33);
-      ctx.lineTo(peakX + 34, height * 0.41);
-      ctx.lineTo(peakX + 24, height * 0.45);
-      ctx.lineTo(peakX + 46, height * 0.52);
-      ctx.lineTo(width * 0.46 + par2X, peakBaseY);
+      ctx.moveTo(peakX + 8 * scaleRatio, height * 0.24);
+      ctx.lineTo(peakX + 20 * scaleRatio, height * 0.28);
+      ctx.lineTo(peakX + 14 * scaleRatio, height * 0.33);
+      ctx.lineTo(peakX + 34 * scaleRatio, height * 0.41);
+      ctx.lineTo(peakX + 24 * scaleRatio, height * 0.45);
+      ctx.lineTo(peakX + 46 * scaleRatio, height * 0.52);
+      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
       ctx.closePath();
       ctx.fill();
 
       // ── 🚩 SUMMIT FLAG ON THE MOUNTAIN PEAK ──
-      const poleHeight = 28;
+      const poleHeight = 26 * scaleRatio;
       const poleTopY = peakY - poleHeight;
 
       // Golden Flagpole
       ctx.strokeStyle = "#F6C774";
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2 * scaleRatio;
       ctx.beginPath();
       ctx.moveTo(peakX, peakY + 2);
       ctx.lineTo(peakX, poleTopY);
@@ -307,14 +309,15 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       // Golden Peak Finial Ball
       ctx.fillStyle = "#FFE29A";
       ctx.beginPath();
-      ctx.arc(peakX, poleTopY, 2.5, 0, Math.PI * 2);
+      ctx.arc(peakX, poleTopY, 2.2 * scaleRatio, 0, Math.PI * 2);
       ctx.fill();
 
       // Waving Red/Hot-Pink Summit Flag Pennant
-      const flagWave1 = Math.sin(time * 5.5) * 2.5;
-      const flagWave2 = Math.cos(time * 5.5 + 1.2) * 3;
+      const flagWave1 = Math.sin(time * 5.5) * 2.5 * scaleRatio;
+      const flagWave2 = Math.cos(time * 5.5 + 1.2) * 3 * scaleRatio;
+      const flagW = 24 * scaleRatio;
 
-      const flagGrad = ctx.createLinearGradient(peakX, poleTopY, peakX + 26, poleTopY + 14);
+      const flagGrad = ctx.createLinearGradient(peakX, poleTopY, peakX + flagW, poleTopY + 12);
       flagGrad.addColorStop(0, "#EA008A");
       flagGrad.addColorStop(0.5, "#FF2E93");
       flagGrad.addColorStop(1, "#FFB703");
@@ -323,21 +326,21 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.beginPath();
       ctx.moveTo(peakX, poleTopY + 2);
       ctx.bezierCurveTo(
-        peakX + 10,
+        peakX + 8 * scaleRatio,
         poleTopY + 2 + flagWave1,
-        peakX + 18,
+        peakX + 16 * scaleRatio,
         poleTopY + 4 + flagWave2,
-        peakX + 26,
+        peakX + flagW,
         poleTopY + 6 + flagWave1
       );
-      ctx.lineTo(peakX + 20, poleTopY + 12 + flagWave2);
+      ctx.lineTo(peakX + 18 * scaleRatio, poleTopY + 12 + flagWave2);
       ctx.bezierCurveTo(
-        peakX + 15,
-        poleTopY + 14 + flagWave2,
-        peakX + 8,
-        poleTopY + 12 + flagWave1,
+        peakX + 13 * scaleRatio,
+        poleTopY + 13 + flagWave2,
+        peakX + 7 * scaleRatio,
+        poleTopY + 11 + flagWave1,
         peakX,
-        poleTopY + 15
+        poleTopY + 14 * scaleRatio
       );
       ctx.closePath();
       ctx.fill();
@@ -354,7 +357,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.lineTo(width * 0.12 + par2X, height * 0.24);
       ctx.lineTo(width * 0.22 + par2X, height * 0.34);
       ctx.lineTo(width * 0.33 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.42 + par2X, height * 0.52);
+      ctx.lineTo(width * 0.44 + par2X, height * 0.52);
       ctx.lineTo(-30, height * 0.68);
       ctx.closePath();
       ctx.fill();
@@ -416,13 +419,13 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.fillRect(0, height * 0.45, width, height * 0.22);
 
       // ── 4. FOREGROUND SNOW VALLEY ──
-      const par3X = mouseX * 24;
-      const par3Y = mouseY * 12;
+      const par3X = mouseX * 18;
 
       const snowGrad = ctx.createLinearGradient(0, height * 0.56, 0, height);
       snowGrad.addColorStop(0, "#D6E2F2");
       snowGrad.addColorStop(0.35, "#E7EFF9");
-      snowGrad.addColorStop(0.7, "#F5F8FE");
+      snowGrad.addColorStop(0.65, "#F5F8FE");
+      snowGrad.addColorStop(0.85, "#FFFFFF");
       snowGrad.addColorStop(1, "#FFFFFF");
 
       ctx.fillStyle = snowGrad;
@@ -450,49 +453,50 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.closePath();
       ctx.fill();
 
-      // Front Pure White Snow Ridge
-      ctx.fillStyle = "#FAFCFF";
+      // Front Pure White Snow Blanket (Ensures bottom transition is clean white)
+      ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
       ctx.moveTo(0, height * 0.74);
-      ctx.bezierCurveTo(width * 0.4, height * 0.69, width * 0.65, height * 0.71, width, height * 0.77);
+      ctx.bezierCurveTo(width * 0.4, height * 0.7, width * 0.65, height * 0.71, width, height * 0.76);
       ctx.lineTo(width, height);
       ctx.lineTo(0, height);
       ctx.closePath();
       ctx.fill();
 
       // ── 👥 GROUP OF SPECTATOR PENGUINS (Exclusively on the Left Side Below) ──
-      const leftGroupX = width * 0.16 + par3X * 0.2;
-      const leftGroupY = height * 0.72;
+      const leftBaseX = Math.max(25, width * 0.16 + par3X * 0.2);
+      const leftBaseY = height * 0.72;
+      const pScale = (isMobile ? 0.65 : 0.85) * scaleRatio;
 
       // Penguin 1: Senior Adult Observer
-      drawSpectatorPenguin(leftGroupX - 35, leftGroupY - 2, 0.85, 0.14, false);
+      drawSpectatorPenguin(leftBaseX, leftBaseY - 2, pScale * 1.0, 0.14, false);
 
       // Penguin 2: Attentive Adult Observer
-      drawSpectatorPenguin(leftGroupX - 12, leftGroupY + 4, 0.80, 0.19, false);
+      drawSpectatorPenguin(leftBaseX + 18 * scaleRatio, leftBaseY + 4, pScale * 0.95, 0.19, false);
 
       // Penguin 3: Cheering Adult waving flipper
-      drawSpectatorPenguin(leftGroupX + 10, leftGroupY + 9, 0.75, 0.24, true);
+      drawSpectatorPenguin(leftBaseX + 36 * scaleRatio, leftBaseY + 9, pScale * 0.88, 0.24, true);
 
-      // Penguin 4: Curious Young Penguin gazing ahead
-      drawSpectatorPenguin(leftGroupX + 30, leftGroupY + 15, 0.58, 0.28, false);
+      // Penguin 4: Curious Young Penguin
+      drawSpectatorPenguin(leftBaseX + 52 * scaleRatio, leftBaseY + 14, pScale * 0.7, 0.28, false);
 
-      // Penguin 5: Cute Little Baby Penguin waving in excitement
-      drawSpectatorPenguin(leftGroupX - 22, leftGroupY + 14, 0.52, 0.18, true);
+      // Penguin 5: Cute Little Baby Penguin waving
+      drawSpectatorPenguin(leftBaseX + 10 * scaleRatio, leftBaseY + 13, pScale * 0.62, 0.18, true);
 
       // ── 5. REALISTIC PENGUIN FOOTPRINTS TRAIL ──
       const walkCycle = time * 1.8;
-      const pengX = width * 0.5 + par3X * 0.25;
-      const stepBob = Math.abs(Math.sin(walkCycle)) * 1.6;
-      const pengY = height * 0.71 - stepBob;
+      const pengX = width * 0.5 + par3X * 0.2;
+      const stepBob = Math.abs(Math.sin(walkCycle)) * 1.6 * scaleRatio;
+      const pengY = height * 0.7 - stepBob;
 
-      const steps = 14;
+      const steps = 12;
       for (let i = 0; i < steps; i++) {
         const prog = i / steps;
-        const ty = height * 0.98 - prog * (height * 0.98 - (height * 0.71) - 14);
-        const txOff = (i % 2 === 0 ? -1 : 1) * (3.5 + prog * 2);
+        const ty = height * 0.98 - prog * (height * 0.98 - (height * 0.7) - 12);
+        const txOff = (i % 2 === 0 ? -1 : 1) * (3 * scaleRatio + prog * 2);
         const tx = width * 0.5 + txOff + (1 - prog) * (par3X * 0.08);
-        const rx = 2.5 + (1 - prog) * 5.5;
-        const ry = 1.4 + (1 - prog) * 2.8;
+        const rx = (2.2 + (1 - prog) * 4.5) * scaleRatio;
+        const ry = (1.2 + (1 - prog) * 2.4) * scaleRatio;
 
         // Shadow indent
         ctx.fillStyle = `rgba(125, 150, 185, ${0.4 + (1 - prog) * 0.45})`;
@@ -502,21 +506,22 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
         // Snow rim highlight
         ctx.strokeStyle = `rgba(255, 255, 255, ${0.35 + (1 - prog) * 0.5})`;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.ellipse(tx, ty + 1, rx * 0.8, ry * 0.6, 0, 0, Math.PI);
+        ctx.ellipse(tx, ty + 0.8, rx * 0.8, ry * 0.6, 0, 0, Math.PI);
         ctx.stroke();
       }
 
-      // ── 6. REALISTIC ACTIVE WALKING PENGUIN (Slow, Serene Waddle) ──
+      // ── 6. REALISTIC ACTIVE WALKING PENGUIN ──
       ctx.save();
       ctx.translate(pengX, pengY);
+      ctx.scale(scaleRatio, scaleRatio);
 
       // Gentle Lifelike Waddling Sway
       const waddleRoll = Math.sin(walkCycle) * 0.028;
       ctx.rotate(waddleRoll);
 
-      // Soft Contact Shadow that gently breathes with the step
+      // Soft Contact Shadow
       const shadowPulse = 20 + Math.sin(walkCycle) * 1.2;
       const shadow = ctx.createRadialGradient(0, 22, 2, 0, 22, shadowPulse + 6);
       shadow.addColorStop(0, "rgba(80, 102, 132, 0.85)");
@@ -528,7 +533,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.ellipse(0, 22 + stepBob * 0.5, shadowPulse, 6.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Walking Alternating Feet (Smooth Lift)
+      // Walking Alternating Feet
       const leftFootLift = Math.max(0, -Math.sin(walkCycle)) * 2.2;
       const rightFootLift = Math.max(0, Math.sin(walkCycle)) * 2.2;
 
@@ -553,7 +558,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.closePath();
       ctx.fill();
 
-      // Left Flipper / Wing (Gentle counter-sway)
+      // Left Flipper / Wing
       const leftWingSway = Math.sin(walkCycle) * 1.4;
       ctx.fillStyle = "#14161E";
       ctx.beginPath();
@@ -567,7 +572,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Right Flipper / Wing (Gentle counter-sway)
+      // Right Flipper / Wing
       const rightWingSway = -Math.sin(walkCycle) * 1.4;
       ctx.fillStyle = "#161822";
       ctx.beginPath();
@@ -581,7 +586,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Main Torso (Aerodynamic Emperor Plumage from Behind)
+      // Main Torso
       const body = ctx.createLinearGradient(-16, 0, 16, 0);
       body.addColorStop(0, "#1A1D26");
       body.addColorStop(0.3, "#222733");
@@ -597,7 +602,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.closePath();
       ctx.fill();
 
-      // Soft Back Feather Spine Highlight
+      // Spine Highlight
       ctx.strokeStyle = "rgba(55, 65, 82, 0.4)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -605,13 +610,13 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.lineTo(0, 18);
       ctx.stroke();
 
-      // Head Silhouette (Facing Forward & Looking Up at the Peak)
+      // Head Silhouette
       ctx.fillStyle = "#101218";
       ctx.beginPath();
       ctx.ellipse(0, -32, 11, 13, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Golden Auricular Neck Collar (Signature Emperor Penguin Glow)
+      // Golden Auricular Neck Collar
       const collar = ctx.createLinearGradient(-9, -27, 9, -27);
       collar.addColorStop(0, "#FFA500");
       collar.addColorStop(0.5, "#FF5500");
@@ -622,7 +627,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       ctx.ellipse(0, -25, 7.5, 3.2, 0, 0, Math.PI);
       ctx.fill();
 
-      // Golden Auricular Ear Cheek Patches (Visible from Behind as it Looks at the Peak)
+      // Golden Auricular Ear Cheek Patches
       ctx.fillStyle = "rgba(255, 185, 35, 0.8)";
       ctx.beginPath();
       ctx.ellipse(-9, -33, 2.2, 4, -0.3, 0, Math.PI * 2);
@@ -647,7 +652,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
         ctx.globalAlpha = flake.opacity;
         ctx.beginPath();
-        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+        ctx.arc(flake.x, flake.y, flake.radius * scaleRatio, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1.0;

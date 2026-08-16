@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import { useTransition } from "@/providers/TransitionProvider";
+import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PenguinMountainCanvas from "@/components/PenguinMountainCanvas";
 
 export default function LoginPage() {
@@ -200,23 +201,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] w-screen h-screen min-h-screen overflow-y-auto overflow-x-hidden bg-[#1F1B2C] text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none">
-      {/* ── LEFT HALF: Realistic, Clear Animated Antarctic Mountain Landscape with Penguin in Pure Code ── */}
-      <div className="w-full lg:w-1/2 min-h-[340px] lg:min-h-screen relative overflow-hidden bg-[#1F1B2C]">
+    <div className="fixed inset-0 z-[9999] w-screen h-screen min-h-screen overflow-y-auto overflow-x-hidden bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none">
+      {/* ── LEFT / TOP HEADER: Realistic Animated Mountain Canvas with Penguin in Pure Code ── */}
+      <div className="w-full h-[250px] sm:h-[300px] lg:h-full lg:w-1/2 lg:min-h-screen shrink-0 relative overflow-hidden bg-[#1F1B2C]">
         <PenguinMountainCanvas className="absolute inset-0 w-full h-full" />
       </div>
 
-      {/* ── RIGHT HALF: Crisp White Auth Container (Seamless Flush Alignment, No Gaps) ── */}
-      <div className="w-full lg:w-1/2 min-h-screen bg-white rounded-t-[32px] lg:rounded-none flex flex-col justify-between p-6 sm:p-12 lg:p-16 shadow-2xl relative z-10">
-        <div className="w-full max-w-[380px] mx-auto my-auto space-y-6 pt-2 pb-6">
-          {/* Top 4-Point Star Icon (Exactly from Image) */}
-          <div className="flex justify-center">
-            <svg
-              viewBox="0 0 32 32"
-              className="w-7 h-7 text-[#18191F] fill-current"
-            >
-              <path d="M16 3 C16 10.18 10.18 16 3 16 C10.18 16 16 21.82 16 29 C16 21.82 21.82 16 29 16 C21.82 16 16 10.18 16 3 Z" />
-            </svg>
+      {/* ── RIGHT / BOTTOM CARD: Crisp White Auth Container (Seamless Alignment) ── */}
+      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none -mt-4 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-2xl relative z-10">
+        <div className="w-full max-w-[380px] mx-auto my-auto space-y-5 pt-1 pb-6">
+          {/* SkillsCatalyst Official Brand Header */}
+          <div className="flex justify-center mb-1">
+            <SkillsCatalystLogo size="md" showText={true} />
           </div>
 
           {/* Heading & Subtitle */}
