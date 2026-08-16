@@ -4243,10 +4243,10 @@ function RoadmapDetailView({
                             <AnimatePresence>
                               {isExpanded && (
                                 <motion.div
-                                  initial={{ opacity: 0, x: -15, scale: 0.98 }}
+                                  initial={{ opacity: 0, x: -12, scale: 0.98 }}
                                   animate={{ opacity: 1, x: 0, scale: 1 }}
-                                  exit={{ opacity: 0, x: -15, scale: 0.98 }}
-                                  transition={{ duration: 0.3, ease: "easeOut" }}
+                                  exit={{ opacity: 0, x: -12, scale: 0.98 }}
+                                  transition={{ type: "spring", damping: 25, stiffness: 280 }}
                                   className="relative flex-1"
                                 >
                                   {/* SVG Connector Curved Roots branching out to the right */}
