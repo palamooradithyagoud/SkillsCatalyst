@@ -638,7 +638,7 @@ export default function PracticePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             onClick={() => setSelectedMode("beginner")}
-            className="relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+            className="practice-card card-morph relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-lg cursor-pointer flex flex-col justify-between group"
           >
             <div className="space-y-3 sm:space-y-5">
               <div className="flex items-center justify-between">
@@ -684,7 +684,7 @@ export default function PracticePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.4 }}
             onClick={() => setSelectedMode("company")}
-            className="relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col justify-between group"
+            className="practice-card card-morph relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-8 bg-white border border-slate-100 hover:border-blue-200 hover:shadow-lg cursor-pointer flex flex-col justify-between group"
           >
             <div className="space-y-3 sm:space-y-5">
               <div className="flex items-center justify-between">

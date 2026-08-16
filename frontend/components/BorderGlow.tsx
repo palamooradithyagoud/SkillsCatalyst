@@ -167,7 +167,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
       onPointerMove={handlePointerMove}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className={`relative grid isolate border border-slate-200/80 ${className}`}
+      className={`roadmap-card card-morph relative grid isolate border border-slate-200/80 ${className}`}
       style={{
         background: backgroundColor,
         borderRadius: `${borderRadius}px`,

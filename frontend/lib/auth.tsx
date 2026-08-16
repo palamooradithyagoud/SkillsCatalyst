@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTransition } from "@/providers/TransitionProvider";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
@@ -215,6 +216,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setAndStoreSession, clearSessionLocal]);
 
+  const { startLogoTransition } = useTransition();
+
   // Strict route guard
   useEffect(() => {
     if (isLoading) return;
@@ -224,16 +227,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session && !isLoginPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
+      startLogoTransition();
       router.replace("/dashboard");
     }
-  }, [session, isLoading, pathname, router]);
+  }, [session, isLoading, pathname, router, startLogoTransition]);
 
   const login = useCallback(
     (email: string, userId: string, name?: string) => {
+      startLogoTransition();
       setAndStoreSession(email, userId, name, true);
       router.replace("/dashboard");
     },
-    [setAndStoreSession, router]
+    [setAndStoreSession, router, startLogoTransition]
   );
 
   const queryClient = useQueryClient();
@@ -276,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // On protected pages: if loading or unauthenticated, show dark transition screen while redirecting
+  // On protected pages: if loading or unauthenticated, render provider tree while router handles redirect
   if (isLoading || !session) {
     return (
       <AuthContext.Provider
@@ -290,12 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUnverifiedEmail,
         }}
       >
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#060a15] text-white">
-          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs text-slate-400 font-mono tracking-wider animate-pulse">
-            LOADING SKILLSCATALYST...
-          </p>
-        </div>
+        {children}
       </AuthContext.Provider>
     );
   }

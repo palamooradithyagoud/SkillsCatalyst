@@ -17,12 +17,5 @@ export default function Home() {
     }
   }, [session, isLoading, router]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#060a15] text-white select-none">
-      <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
-      <p className="text-xs text-slate-400 font-mono tracking-wider animate-pulse">
-        INITIALIZING SKILLSCATALYST...
-      </p>
-    </div>
-  );
+  return null;
 }

@@ -9,18 +9,26 @@ import PracticeOverview from "@/components/PracticeOverview";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useTransition } from "@/providers/TransitionProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, FileText, Map, Sparkles, CheckCircle2, Zap, X } from "lucide-react";
 
 export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
+  const { notifyDashboardReady } = useTransition();
 
-  const { data } = useQuery({
+  const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["dashboard", userId],
     queryFn: () => fetchDashboardData(),
     enabled: !!session?.user_id,
   });
+
+  React.useEffect(() => {
+    if (!isLoading && (isSuccess || data)) {
+      notifyDashboardReady();
+    }
+  }, [isLoading, isSuccess, data, notifyDashboardReady]);
 
   const displayName = session?.name || data?.user?.name || session?.email?.split("@")[0] || "Learner";
 

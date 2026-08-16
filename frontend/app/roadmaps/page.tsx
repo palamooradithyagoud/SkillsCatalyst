@@ -4375,7 +4375,7 @@ function RoadmapDetailView({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-2xl p-6 border border-white/[0.08] relative overflow-hidden"
+            className="glass roadmap-card card-morph rounded-2xl p-6 border border-white/[0.08] relative overflow-hidden"
             style={{
               background: "linear-gradient(135deg, rgba(19,27,46,0.95) 0%, rgba(10,15,28,0.98) 100%)",
               boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
@@ -4757,7 +4757,7 @@ export default function RoadmapsPage() {
             initial={{ opacity: 0, scale: 0.97, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="glass rounded-2xl p-6 border border-indigo-500/30"
+            className="glass roadmap-card card-morph rounded-2xl p-6 border border-indigo-500/30"
             style={{
               background: "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(15,23,42,0.95) 100%)",
             }}
@@ -4845,7 +4845,7 @@ export default function RoadmapsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.4 }}
                 onClick={() => handleCardClick(item)}
-                className="h-full cursor-pointer group"
+                className="roadmap-card card-morph h-full cursor-pointer group"
               >
                 <BorderGlow
                   edgeSensitivity={30}
@@ -4857,7 +4857,7 @@ export default function RoadmapsPage() {
                   coneSpread={25}
                   animated={false}
                   colors={[itemColor, '#10b981', '#6366f1']}
-                  className="h-full p-6 transition-all duration-300 hover:-translate-y-1.5 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90"
                 >
                   <div className="flex flex-col justify-between h-full space-y-5">
                     <div>
@@ -4956,7 +4956,7 @@ export default function RoadmapsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.4 }}
                 onClick={() => handleCardClick(item)}
-                className="h-full cursor-pointer group"
+                className="roadmap-card card-morph h-full cursor-pointer group"
               >
                 <BorderGlow
                   edgeSensitivity={30}
@@ -4968,7 +4968,7 @@ export default function RoadmapsPage() {
                   coneSpread={25}
                   animated={false}
                   colors={[itemColor, '#38bdf8', '#6366f1']}
-                  className="h-full p-6 transition-all duration-300 hover:-translate-y-1.5 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90"
                 >
                   <div className="flex flex-col justify-between h-full space-y-5">
                     <div>

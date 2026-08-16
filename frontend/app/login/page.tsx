@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Code2,
   Mail,
@@ -30,9 +31,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchDashboardData } from "@/lib/api";
+import { useTransition } from "@/providers/TransitionProvider";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { startLogoTransition } = useTransition();
   const { isLoading, unverifiedEmail, setUnverifiedEmail, clearUnverifiedEmail } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -44,6 +51,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [resendSent, setResendSent] = useState(false);
@@ -90,11 +98,24 @@ export default function LoginPage() {
           setUnverifiedEmail(data.user.email || email.trim());
           setErrorMessage("Please verify your email address to continue to the dashboard.");
           await supabase.auth.signOut();
+          setLoading(false);
+          return;
         }
+
+        // 1. Start application-level logo transition overlay (survives route navigation)
+        startLogoTransition();
+
+        // 2. Prefetch dashboard data in background immediately
+        queryClient.prefetchQuery({
+          queryKey: ["dashboard", data.user.id],
+          queryFn: () => fetchDashboardData(),
+        });
+
+        // 3. Navigate to dashboard
+        router.replace("/dashboard");
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "An unexpected error occurred during sign in.");
-    } finally {
       setLoading(false);
     }
   };
@@ -197,21 +218,6 @@ export default function LoginPage() {
       setResendLoading(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#040711] text-white">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-12 h-12 border-3 border-indigo-500 border-t-transparent rounded-full mb-4 shadow-xl shadow-indigo-500/40"
-        />
-        <p className="text-xs font-bold text-slate-300 tracking-widest uppercase animate-pulse">
-          Initializing SkillsCatalyst Workspace...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-[9999] w-screen h-screen min-h-screen overflow-y-auto overflow-x-hidden bg-[#040711] text-white flex flex-col-reverse lg:flex-row m-0 p-0 select-none">

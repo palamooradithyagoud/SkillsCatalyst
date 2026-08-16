@@ -4,6 +4,8 @@ import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import QueryProvider from "@/lib/query-provider";
 import { AuthProvider } from "@/lib/auth";
+import { TransitionProvider } from "@/providers/TransitionProvider";
+import LogoTransitionOverlay from "@/components/LogoTransitionOverlay";
 
 export const metadata: Metadata = {
   title: "SkillsCatalyst — Learn Faster. Grow Smarter.",
@@ -24,19 +26,22 @@ export default function RootLayout({
       </head>
       <body className="antialiased flex flex-col md:flex-row min-h-screen" suppressHydrationWarning>
         <QueryProvider>
-          <AuthProvider>
-            {/* Subtle ambient orbs in background */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-              <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]" />
-              <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/8 blur-[120px]" />
-              <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-cyan-600/5 blur-[100px]" />
-            </div>
-            <Sidebar />
-            <MobileNav />
-            <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden">
-              {children}
-            </main>
-          </AuthProvider>
+          <TransitionProvider>
+            <AuthProvider>
+              {/* Subtle ambient orbs in background */}
+              <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/8 blur-[120px]" />
+                <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-cyan-600/5 blur-[100px]" />
+              </div>
+              <Sidebar />
+              <MobileNav />
+              <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden">
+                {children}
+              </main>
+              <LogoTransitionOverlay />
+            </AuthProvider>
+          </TransitionProvider>
         </QueryProvider>
       </body>
     </html>
