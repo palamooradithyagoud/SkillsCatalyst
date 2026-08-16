@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { fetchSavedPlaylists, fetchPlaylistVideos, Playlist } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
+import PricingModal from "@/components/PricingModal";
 
 export interface MetricsData {
   learningProgress?: {
@@ -53,6 +54,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
 
   const [savedPlaylists, setSavedPlaylists] = useState<SavedYTPlaylistItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
 
   // Client-side local cache hydration after mount
   useEffect(() => {
@@ -168,10 +170,11 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </p>
           <div className="pt-0.5 sm:pt-1">
             <button
-              onClick={() => router.push("/learning")}
+              type="button"
+              onClick={() => setIsPricingModalOpen(true)}
               className="px-3.5 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-white text-[#234B3B] font-bold text-[11px] sm:text-sm shadow-md hover:bg-emerald-50 active:scale-95 transition-all cursor-pointer"
             >
-              Explore Courses
+              Get Premium
             </button>
           </div>
         </div>
@@ -385,6 +388,12 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </div>
         )}
       </div>
+
+      {/* ── 3-Card Retro Pricing Modal ── */}
+      <PricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+      />
     </div>
   );
 }
