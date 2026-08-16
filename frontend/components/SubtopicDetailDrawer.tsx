@@ -443,43 +443,52 @@ export default function SubtopicDetailDrawer({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] overflow-hidden flex justify-end">
-          {/* Dim Backdrop Overlay (No blur) */}
+          {/* Dim Backdrop Overlay with Silky Smooth Fade */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             onClick={onClose}
             className="fixed inset-0 bg-slate-950/60 z-[10000]"
           />
 
-          {/* Midnight Dark Slide-over Panel (Matching Image Palette) */}
+          {/* Midnight Dark Slide-over Panel (Butter Smooth Spring) */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="relative z-[10001] w-full sm:w-[540px] md:w-[600px] max-w-full h-full bg-[#0C1322] border-l border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-100"
+            initial={{ x: "100%", opacity: 0.85 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0.85 }}
+            transition={{
+              type: "spring",
+              damping: 32,
+              stiffness: 300,
+              mass: 0.8,
+            }}
+            className="relative z-[10001] w-full sm:w-[540px] md:w-[600px] max-w-full h-full bg-[#0C1322] border-l border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-100 will-change-transform"
           >
             {/* Header with Mobile Back Button & Close Button */}
             <div className="p-4 sm:p-5 border-b border-slate-800 bg-[#0B111E] flex items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 {/* Back Button */}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.04, x: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   onClick={onClose}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-extrabold flex items-center gap-1 transition-all cursor-pointer shrink-0 active:scale-95 shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer shrink-0 shadow-sm"
                   aria-label="Back to Roadmap"
                 >
                   <ChevronLeft className="w-4 h-4 text-[#FFB703]" />
                   <span>Back</span>
-                </button>
+                </motion.button>
 
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* Yellow Category Badge (from image) */}
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#FFB703] text-black">
+                    {/* Yellow Category Badge */}
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#FFB703] text-black shadow-xs">
                       {subtopic.parentName}
                     </span>
-                    {/* Magenta / Pink Badge (from image) */}
+                    {/* Magenta / Pink Badge */}
                     <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-[#EA008A] text-white flex items-center gap-1 shadow-sm">
                       <Lock className="w-3 h-3 text-white" /> LOCKED • UPCOMING
                     </span>
@@ -492,13 +501,16 @@ export default function SubtopicDetailDrawer({
               </div>
 
               {/* Close Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.08, rotate: 90 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 450, damping: 20 }}
                 onClick={onClose}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all shrink-0 cursor-pointer shadow-sm active:scale-95"
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors shrink-0 cursor-pointer shadow-sm"
                 aria-label="Close subtopic drawer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Action / Release Banner */}
@@ -509,13 +521,16 @@ export default function SubtopicDetailDrawer({
                 <span>Upcoming Curriculum Release • Q3</span>
               </div>
 
-              {/* Purple CTA Button (from image) */}
-              <button
+              {/* Purple CTA Button */}
+              <motion.button
+                whileHover={{ scale: 1.03, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 500, damping: 20 }}
                 onClick={() => setIsNotified(!isNotified)}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
                   isNotified
                     ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-emerald-500/20"
-                    : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-purple-600/30 active:scale-95"
+                    : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-purple-600/30"
                 }`}
               >
                 {isNotified ? (
@@ -529,17 +544,26 @@ export default function SubtopicDetailDrawer({
                     <span>Notify Me</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 pb-28 sm:pb-8 bg-[#0C1322]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 pb-28 sm:pb-8 bg-[#0C1322] scroll-smooth">
               {/* ── Main Locked & Upcoming Feature Card */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-[#10192D] border border-slate-800 shadow-xl text-center space-y-5">
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="p-6 sm:p-8 rounded-3xl bg-[#10192D] border border-slate-800 shadow-xl text-center space-y-5"
+              >
                 <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="w-16 h-16 rounded-2xl bg-[#EA008A]/15 border border-[#EA008A]/40 text-[#EA008A] flex items-center justify-center mx-auto shadow-sm">
+                  <motion.div
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                    className="w-16 h-16 rounded-2xl bg-[#EA008A]/15 border border-[#EA008A]/40 text-[#EA008A] flex items-center justify-center mx-auto shadow-sm"
+                  >
                     <Lock className="w-8 h-8 text-[#EA008A]" />
-                  </div>
+                  </motion.div>
 
                   <div className="space-y-1.5">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#EA008A] text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -553,37 +577,50 @@ export default function SubtopicDetailDrawer({
                     </p>
                   </div>
 
-                  {/* Upcoming Features Grid — Solid White Cards (from image) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg pt-3 text-left">
-                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                        <ShieldCheck className="w-4 h-4" />
+                  {/* Upcoming Features Grid — Solid White Cards with Butter Hover */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full max-w-lg pt-3 text-left">
+                    <motion.div
+                      whileHover={{ y: -3, scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="p-4 rounded-2xl bg-white border border-slate-200 shadow-md hover:shadow-xl transition-shadow flex items-center gap-3.5 cursor-default select-none"
+                    >
+                      <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs">
+                        <ShieldCheck className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-black text-slate-900">Verified Docs</div>
+                        <div className="text-xs font-black text-slate-900 leading-snug">Verified Docs</div>
                         <div className="text-[11px] text-slate-500 font-bold">Industry vetted guides</div>
                       </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-purple-50 text-[#8B5CF6] border border-purple-200 shrink-0">
-                        <Zap className="w-4 h-4" />
+                    <motion.div
+                      whileHover={{ y: -3, scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="p-4 rounded-2xl bg-white border border-slate-200 shadow-md hover:shadow-xl transition-shadow flex items-center gap-3.5 cursor-default select-none"
+                    >
+                      <div className="p-2.5 rounded-xl bg-purple-50 text-[#8B5CF6] border border-purple-200 shrink-0 shadow-2xs">
+                        <Zap className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-black text-slate-900">Hands-on Quizzes</div>
+                        <div className="text-xs font-black text-slate-900 leading-snug">Hands-on Quizzes</div>
                         <div className="text-[11px] text-slate-500 font-bold">XP &amp; Skill Badges</div>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
-                  {/* Action Buttons — Vibrant Purple CTA (from image) */}
+                  {/* Action Buttons with Spring Micro-interactions */}
                   <div className="pt-3 flex items-center gap-3 justify-center flex-wrap">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
                       onClick={() => setIsNotified(!isNotified)}
                       className={`px-6 py-3 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
                         isNotified
                           ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-emerald-500/20"
-                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-purple-600/30 active:scale-95"
+                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-purple-600/30"
                       }`}
                     >
                       {isNotified ? (
@@ -597,17 +634,20 @@ export default function SubtopicDetailDrawer({
                           <span>Notify Me When Unlocked</span>
                         </>
                       )}
-                    </button>
+                    </motion.button>
 
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
                       onClick={onClose}
-                      className="px-5 py-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-all cursor-pointer shadow-sm"
+                      className="px-5 py-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors cursor-pointer shadow-sm"
                     >
                       Back to Roadmap
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
