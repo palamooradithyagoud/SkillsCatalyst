@@ -167,7 +167,7 @@ export default function ExplorePage() {
             <Link
               key={item.id}
               href={item.href}
-              className="snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl transition-all shadow-sm flex flex-col justify-between space-y-3"
+              className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3"
             >
               {/* Vibrant ambient glow */}
               <div

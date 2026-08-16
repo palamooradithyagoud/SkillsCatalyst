@@ -51,29 +51,22 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
 
   const CACHE_KEY = "skillscatalyst_cached_dashboard_saved_playlists";
 
-  // Instant Cache Initialization for Zero Navigation Flicker
-  const [savedPlaylists, setSavedPlaylists] = useState<SavedYTPlaylistItem[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed)) return parsed;
-        }
-      } catch {}
-    }
-    return [];
-  });
+  const [savedPlaylists, setSavedPlaylists] = useState<SavedYTPlaylistItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const [loading, setLoading] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) return false;
-      } catch {}
-    }
-    return true;
-  });
+  // Client-side local cache hydration after mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setSavedPlaylists(parsed);
+          setLoading(false);
+        }
+      }
+    } catch {}
+  }, []);
 
   // Silent Background Revalidation (SWR Pattern)
   useEffect(() => {
@@ -196,7 +189,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#eab308] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[120px] sm:min-h-[140px] shadow-sm hover:scale-[1.01] transition-transform cursor-pointer"
+          className="metric-card card-morph col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#eab308] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[120px] sm:min-h-[140px] shadow-sm cursor-pointer"
           onClick={() => router.push("/learning")}
         >
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold">
@@ -205,7 +198,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </div>
 
           <div className="flex items-baseline gap-2 sm:gap-3 my-1 sm:my-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" suppressHydrationWarning>
               {savedPlaylists.length}
             </span>
             <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/30 text-white backdrop-blur-sm">
@@ -213,7 +206,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
             </span>
           </div>
 
-          <span className="text-[10px] sm:text-xs text-amber-100 font-medium truncate">
+          <span className="text-[10px] sm:text-xs text-amber-100 font-medium truncate" suppressHydrationWarning>
             {savedPlaylists.length === 1
               ? "1 playlist"
               : `${savedPlaylists.length} playlists`}
@@ -225,7 +218,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#3b82f6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[120px] sm:min-h-[140px] shadow-sm hover:scale-[1.01] transition-transform cursor-pointer"
+          className="metric-card card-morph col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#3b82f6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[120px] sm:min-h-[140px] shadow-sm cursor-pointer"
           onClick={() => router.push("/learning")}
         >
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold">
@@ -252,7 +245,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="col-span-2 md:col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#8b5cf6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[110px] sm:min-h-[140px] shadow-sm hover:scale-[1.01] transition-transform cursor-pointer"
+          className="metric-card card-morph col-span-2 md:col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#8b5cf6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[110px] sm:min-h-[140px] shadow-sm cursor-pointer"
           onClick={() => router.push("/practice")}
         >
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold">
@@ -331,7 +324,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 * idx }}
                 onClick={() => router.push(course.href)}
-                className="bg-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all cursor-pointer flex flex-col justify-between sm:min-h-[210px] group"
+                className="playlist-card card-morph bg-white rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 cursor-pointer flex flex-col justify-between sm:min-h-[210px] group"
               >
                 {/* Mobile Header + Image Row / Desktop Layout */}
                 <div className="flex flex-row sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0">

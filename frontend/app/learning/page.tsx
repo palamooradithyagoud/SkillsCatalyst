@@ -323,7 +323,7 @@ function SavedPlaylistRow({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35 }}
-      className="bg-white rounded-[24px] border border-slate-100 shadow-xs hover:shadow-md transition-all overflow-hidden"
+      className="course-card card-morph bg-white rounded-[24px] border border-slate-100 shadow-xs hover:shadow-md overflow-hidden"
     >
       {/* ── Row Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 pt-5 pb-3">

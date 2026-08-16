@@ -384,7 +384,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
               return (
                 <div
                   key={task.id}
-                  className="bg-slate-50/90 rounded-[20px] p-4 border border-slate-100 hover:border-slate-200 transition-all space-y-3 group"
+                  className="task-card card-morph bg-slate-50/90 rounded-[20px] p-4 border border-slate-100 hover:border-slate-200 space-y-3 group cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
