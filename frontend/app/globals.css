@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-
 :root {
   /* Backgrounds */
   --bg-base: #f4f6f3;
@@ -772,4 +771,70 @@ input:-webkit-autofill:active {
     left: -100%;
     opacity: 0;
   }
+}
+
+/* ────────────── RETRO PRICING CARD SYSTEM ────────────── */
+.retro-pricing-card {
+  width: 100%;
+  background: #000000;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 0.5vmin solid #ffffff;
+  box-shadow: 0.4rem 0.4rem #ffffff;
+  overflow: hidden;
+  color: rgb(255, 255, 255);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.retro-pricing-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 0.55rem 0.55rem #ffffff;
+}
+
+.pricing-block-content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pricing-plan {
+  color: #fcfcfd;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.price-value {
+  display: flex;
+  align-items: baseline;
+  color: #fefeff;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 800;
+  gap: 0.35rem;
+}
+
+.pricing-note {
+  opacity: 0.8;
+  font-size: 0.75rem;
+}
+
+.check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.check-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.9);
 }
