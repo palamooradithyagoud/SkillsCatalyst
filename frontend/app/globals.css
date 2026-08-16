@@ -62,6 +62,16 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+/* ────────────── INPUT AUTOFILL OVERRIDES ────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #18191F !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* ────────────── SURFACE CARDS & MORPHING CARD SYSTEM ────────────── */
 .card {
   width: 200px;
