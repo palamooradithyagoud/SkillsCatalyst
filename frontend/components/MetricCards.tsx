@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen, GraduationCap, FileText, ChevronRight, Plus,
-  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2
+  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,27 @@ export interface MetricsData {
   };
   resumeReadiness?: {
     percentage: number;
+  };
+  leetcodeProgress?: {
+    totalSolved?: number;
+    easySolved?: number;
+    mediumSolved?: number;
+    hardSolved?: number;
+    username?: string;
+    ranking?: number;
+    configured?: boolean;
+    subtitle?: string;
+  };
+  codingProgress?: {
+    totalSolved?: number;
+    leetcodeSolved?: number;
+    easySolved?: number;
+    mediumSolved?: number;
+    hardSolved?: number;
+    username?: string;
+    ranking?: number;
+    configured?: boolean;
+    subtitle?: string;
   };
 }
 
@@ -53,6 +74,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   const CACHE_KEY = "skillscatalyst_cached_dashboard_saved_playlists";
 
   const [savedPlaylists, setSavedPlaylists] = useState<SavedYTPlaylistItem[]>([]);
+  const [cachedLcStats, setCachedLcStats] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState<boolean>(false);
 
@@ -65,6 +87,25 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         if (Array.isArray(parsed)) {
           setSavedPlaylists(parsed);
           setLoading(false);
+        }
+      }
+
+      // Check localStorage for cached coding/leetcode stats
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("sc_coding_stats_") || key.startsWith("sc_coding_profiles_"))) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed) {
+              if (parsed.leetcode && typeof parsed.leetcode === "object") {
+                setCachedLcStats(parsed.leetcode);
+                break;
+              } else if (parsed.leetcode && typeof parsed.leetcode === "string") {
+                setCachedLcStats({ configured: true, username: parsed.leetcode });
+              }
+            }
+          }
         }
       }
     } catch {}
@@ -152,6 +193,29 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
       ? Math.round((totalCompletedVideos / totalSavedVideos) * 100)
       : metrics?.learningProgress?.percentage ?? 0;
 
+  // Resolve live webscraped LeetCode statistics
+  const leetcodeData = metrics?.leetcodeProgress || metrics?.codingProgress;
+  const isLeetcodeConfigured = Boolean(
+    leetcodeData?.configured ||
+    leetcodeData?.username ||
+    cachedLcStats?.configured ||
+    cachedLcStats?.username ||
+    ((leetcodeData?.totalSolved ?? 0) > 0) ||
+    ((cachedLcStats?.total_solved ?? 0) > 0)
+  );
+
+  const totalSolved =
+    leetcodeData?.totalSolved ??
+    cachedLcStats?.total_solved ??
+    cachedLcStats?.solved ??
+    0;
+
+  const easySolved = leetcodeData?.easySolved ?? cachedLcStats?.easy_solved ?? 0;
+  const mediumSolved = leetcodeData?.mediumSolved ?? cachedLcStats?.medium_solved ?? 0;
+  const hardSolved = leetcodeData?.hardSolved ?? cachedLcStats?.hard_solved ?? 0;
+  const leetcodeUser = leetcodeData?.username || cachedLcStats?.username || "";
+  const leetcodeRanking = leetcodeData?.ranking || cachedLcStats?.ranking || 0;
+
   return (
     <div className="space-y-6 select-none">
       {/* ── Top Hero Banner (Forest Green) ── */}
@@ -179,9 +243,22 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </div>
         </div>
 
-        {/* Animated 3D SkillsCatalyst Emblem (Hidden on small mobile to save vertical height) */}
-        <div className="relative shrink-0 mt-3 md:mt-0 z-10 p-2 hidden sm:flex items-center justify-center">
-          <SkillsCatalystLogo size="xl" animated />
+        {/* Prominent SkillsCatalyst Hero Logo Emblem */}
+        <div className="relative shrink-0 mt-4 md:mt-0 z-10 hidden sm:flex items-center justify-center">
+          <motion.div
+            whileHover={{ scale: 1.05, y: -2 }}
+            transition={{ type: "spring", stiffness: 350, damping: 22 }}
+            className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-[24px] sm:rounded-[32px] bg-white p-3 sm:p-5 shadow-2xl shadow-black/30 flex items-center justify-center border border-white/20"
+          >
+            <Image
+              src="/logo.png"
+              alt="SkillsCatalyst Official Logo"
+              width={200}
+              height={200}
+              className="w-full h-full object-contain drop-shadow-sm select-none"
+              priority
+            />
+          </motion.div>
         </div>
       </motion.div>
 
@@ -243,29 +320,72 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </span>
         </motion.div>
 
-        {/* Card 3: Vivid Purple (Spans 2-columns on mobile for compact fit) */}
+        {/* Card 3: Vivid Purple - LeetCode Solved (Spans 2-columns on mobile for compact fit) */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="metric-card card-morph col-span-2 md:col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#8b5cf6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[110px] sm:min-h-[140px] shadow-sm cursor-pointer"
-          onClick={() => router.push("/practice")}
+          className="metric-card card-morph col-span-2 md:col-span-1 rounded-[20px] sm:rounded-[24px] bg-[#8b5cf6] p-3.5 sm:p-5 text-white flex flex-col justify-between min-h-[110px] sm:min-h-[140px] shadow-sm cursor-pointer group hover:brightness-105 transition-all"
+          onClick={() => {
+            if (!isLeetcodeConfigured) {
+              router.push("/settings");
+            } else {
+              router.push("/practice");
+            }
+          }}
         >
-          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold">
-            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Assignments & Drills</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Code2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-200" />
+              <span className="truncate">LeetCode Solved</span>
+            </div>
+            {leetcodeUser ? (
+              <span className="text-[10px] font-bold text-purple-100 bg-white/20 px-2 py-0.5 rounded-full truncate max-w-[100px]">
+                @{leetcodeUser}
+              </span>
+            ) : (
+              <span className="text-[9px] font-bold text-purple-200 opacity-80 group-hover:opacity-100 transition-opacity">
+                Settings →
+              </span>
+            )}
           </div>
 
           <div className="flex items-baseline gap-2 sm:gap-3 my-1 sm:my-2">
-            <span className="text-2xl sm:text-3xl font-black tracking-tight">89%</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" suppressHydrationWarning>
+              {totalSolved}
+            </span>
             <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/30 text-white backdrop-blur-sm">
-              ▲ Active
+              {isLeetcodeConfigured
+                ? (totalSolved > 0 ? "▲ Live Synced" : "▲ Synced")
+                : "+ Connect Link"}
             </span>
           </div>
 
-          <span className="text-[10px] sm:text-xs text-purple-100 font-medium">
-            Based on completed practice tasks
-          </span>
+          <div className="text-[10px] sm:text-xs text-purple-100 font-medium truncate" suppressHydrationWarning>
+            {isLeetcodeConfigured ? (
+              totalSolved > 0 || (easySolved + mediumSolved + hardSolved) > 0 ? (
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="inline-flex items-center gap-0.5 text-emerald-200 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> {easySolved} Easy
+                  </span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-0.5 text-amber-200 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> {mediumSolved} Med
+                  </span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-0.5 text-rose-200 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block" /> {hardSolved} Hard
+                  </span>
+                </div>
+              ) : (
+                <span>Linked @{leetcodeUser || "profile"} • Ready to practice</span>
+              )
+            ) : (
+              <span className="text-purple-200 group-hover:text-white transition-colors underline underline-offset-2">
+                Paste your LeetCode link in Settings →
+              </span>
+            )}
+          </div>
         </motion.div>
       </div>
 
