@@ -53,7 +53,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     window.addEventListener("mousemove", handleMouseMove);
 
     // Snow particle system
-    const snowCount = 50;
+    const snowCount = 45;
     const snowflakes: Array<{
       x: number;
       y: number;
@@ -67,100 +67,188 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       snowflakes.push({
         x: Math.random() * cssWidth,
         y: Math.random() * cssHeight,
-        radius: Math.random() * 1.6 + 0.6,
-        speedY: Math.random() * 0.8 + 0.3,
-        speedX: Math.random() * 0.5 + 0.1,
-        opacity: Math.random() * 0.6 + 0.25,
+        radius: Math.random() * 1.5 + 0.6,
+        speedY: Math.random() * 0.7 + 0.25,
+        speedX: Math.random() * 0.4 + 0.1,
+        opacity: Math.random() * 0.55 + 0.25,
       });
     }
 
     let time = 0;
 
-    // Helper to draw a spectator penguin on the left side
-    const drawSpectatorPenguin = (
+    // ── Helper: Draw a Penguin Facing TOWARDS US (Front View, Moving Forward) ──
+    const drawForwardPenguin = (
       x: number,
       y: number,
       scale: number,
-      facingAngle: number,
-      isCheering: boolean = false
+      animOffset: number = 0,
+      headTilt: number = 0
     ) => {
       ctx.save();
       ctx.translate(x, y);
       ctx.scale(scale, scale);
 
-      // Contact shadow
-      ctx.fillStyle = "rgba(90, 115, 145, 0.55)";
+      const cycle = (time * 2.6 + animOffset);
+      const waddleRoll = Math.sin(cycle) * 0.045;
+      const bob = Math.abs(Math.sin(cycle)) * 1.6;
+      const leftFootStep = Math.max(0, Math.sin(cycle)) * 2.4;
+      const rightFootStep = Math.max(0, -Math.sin(cycle)) * 2.4;
+
+      // Contact shadow under feet
+      ctx.fillStyle = "rgba(75, 100, 130, 0.42)";
       ctx.beginPath();
-      ctx.ellipse(0, 18, 14, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 19 + bob * 0.4, 13, 4.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.rotate(facingAngle);
+      // Penguin body waddle transformation
+      ctx.translate(0, -bob);
+      ctx.rotate(waddleRoll);
 
-      // Back plumage
-      const bodyGrad = ctx.createLinearGradient(-10, 0, 10, 0);
-      bodyGrad.addColorStop(0, "#161922");
-      bodyGrad.addColorStop(0.5, "#222733");
-      bodyGrad.addColorStop(1, "#12141C");
+      // Feet (facing forward towards us)
+      // Left foot
+      ctx.fillStyle = "#14161F";
+      ctx.beginPath();
+      ctx.ellipse(-6, 19 - leftFootStep, 4.5, 2.2, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFAA00";
+      ctx.beginPath();
+      ctx.ellipse(-6, 19.5 - leftFootStep, 2.2, 1.0, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Right foot
+      ctx.fillStyle = "#14161F";
+      ctx.beginPath();
+      ctx.ellipse(6, 19 - rightFootStep, 4.5, 2.2, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFAA00";
+      ctx.beginPath();
+      ctx.ellipse(6, 19.5 - rightFootStep, 2.2, 1.0, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dark Back / Body Silhouette (Egg shape)
+      const bodyGrad = ctx.createLinearGradient(-12, 0, 12, 0);
+      bodyGrad.addColorStop(0, "#12141C");
+      bodyGrad.addColorStop(0.5, "#202532");
+      bodyGrad.addColorStop(1, "#101219");
 
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
-      ctx.moveTo(0, -24);
-      ctx.bezierCurveTo(-14, -22, -15, 0, -12, 16);
-      ctx.bezierCurveTo(-8, 20, 8, 20, 12, 16);
-      ctx.bezierCurveTo(15, 0, 14, -22, 0, -24);
+      ctx.moveTo(0, -22);
+      ctx.bezierCurveTo(-14, -20, -15, 2, -12, 17);
+      ctx.bezierCurveTo(-8, 20, 8, 20, 12, 17);
+      ctx.bezierCurveTo(15, 2, 14, -20, 0, -22);
       ctx.closePath();
       ctx.fill();
 
-      // White chest/belly in 3/4 view
-      ctx.fillStyle = "#F2F6FC";
+      // Left Flipper (flapping at side as it walks towards us)
+      const leftWingAngle = Math.sin(cycle) * 0.15 - 0.1;
+      ctx.save();
+      ctx.translate(-11, -8);
+      ctx.rotate(leftWingAngle);
+      ctx.fillStyle = "#151822";
       ctx.beginPath();
-      ctx.moveTo(2, -16);
-      ctx.bezierCurveTo(8, -10, 10, 2, 7, 14);
-      ctx.bezierCurveTo(4, 16, 0, 16, 0, 12);
-      ctx.bezierCurveTo(2, 4, 1, -8, 2, -16);
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(-5, 6, -7, 16, -2, 22);
+      ctx.bezierCurveTo(1, 16, 2, 8, 0, 0);
       ctx.closePath();
       ctx.fill();
+      ctx.restore();
 
-      // Golden auricular neck patch
-      ctx.fillStyle = "#FFAA00";
+      // Right Flipper
+      const rightWingAngle = -Math.sin(cycle) * 0.15 + 0.1;
+      ctx.save();
+      ctx.translate(11, -8);
+      ctx.rotate(rightWingAngle);
+      ctx.fillStyle = "#151822";
       ctx.beginPath();
-      ctx.ellipse(4, -18, 3.5, 5, 0.4, 0, Math.PI * 2);
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(5, 6, 7, 16, 2, 22);
+      ctx.bezierCurveTo(-1, 16, -2, 8, 0, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Crisp White Belly (facing towards us)
+      const bellyGrad = ctx.createLinearGradient(0, -14, 0, 18);
+      bellyGrad.addColorStop(0, "#FFFFFF");
+      bellyGrad.addColorStop(0.85, "#F4F7FC");
+      bellyGrad.addColorStop(1, "#E1E8F2");
+
+      ctx.fillStyle = bellyGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.bezierCurveTo(-9, -12, -9.5, 4, -7.5, 17);
+      ctx.bezierCurveTo(-4, 18.5, 4, 18.5, 7.5, 17);
+      ctx.bezierCurveTo(9.5, 4, 9, -12, 0, -14);
+      ctx.closePath();
       ctx.fill();
 
       // Head
-      ctx.fillStyle = "#101218";
+      ctx.save();
+      ctx.translate(0, -22);
+      ctx.rotate(headTilt);
+
+      // Head black base
+      ctx.fillStyle = "#0E1017";
       ctx.beginPath();
-      ctx.ellipse(2, -26, 8, 9, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 8.5, 9, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Beak pointing toward center
-      ctx.fillStyle = "#FF8A00";
+      // Golden Auricular / Neck Patches on both sides
+      ctx.fillStyle = "#FFB300";
       ctx.beginPath();
-      ctx.moveTo(7, -26);
-      ctx.lineTo(15, -25);
-      ctx.lineTo(8, -23);
-      ctx.closePath();
+      ctx.ellipse(-6.5, 2, 2.5, 4, -0.3, 0, Math.PI * 2);
       ctx.fill();
 
-      // Flipper
-      const wingWave = isCheering ? Math.sin(time * 3.5) * 0.35 : 0;
-      ctx.fillStyle = "#181A24";
       ctx.beginPath();
-      if (isCheering) {
-        ctx.moveTo(-6, -14);
-        ctx.bezierCurveTo(-18, -25 + wingWave * 15, -16, -35 + wingWave * 15, -8, -20);
-      } else {
-        ctx.moveTo(-6, -14);
-        ctx.bezierCurveTo(-16, -2, -15, 10, -8, 14);
-      }
+      ctx.ellipse(6.5, 2, 2.5, 4, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Golden Neck Gradient Arc
+      const neckArc = ctx.createLinearGradient(-6, 4, 6, 4);
+      neckArc.addColorStop(0, "rgba(255, 170, 0, 0.95)");
+      neckArc.addColorStop(0.5, "rgba(255, 120, 0, 0.85)");
+      neckArc.addColorStop(1, "rgba(255, 170, 0, 0.95)");
+      ctx.fillStyle = neckArc;
+      ctx.beginPath();
+      ctx.ellipse(0, 4.5, 5, 2.2, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Cute Eyes (facing us)
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.ellipse(-3.2, -1.5, 1.8, 2.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(3.2, -1.5, 1.8, 2.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#0C0E14";
+      ctx.beginPath();
+      ctx.arc(-3.0, -1.2, 1.1, 0, Math.PI * 2);
+      ctx.arc(3.0, -1.2, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Catchlight in eyes
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.beginPath();
+      ctx.arc(-3.4, -1.8, 0.45, 0, Math.PI * 2);
+      ctx.arc(2.6, -1.8, 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Orange Beak (centered, facing us)
+      ctx.fillStyle = "#FF7A00";
+      ctx.beginPath();
+      ctx.moveTo(-2.2, 0.2);
+      ctx.lineTo(2.2, 0.2);
+      ctx.lineTo(0, 4.2);
       ctx.closePath();
       ctx.fill();
 
       ctx.restore();
+      ctx.restore();
     };
 
     const render = () => {
-      time += 0.02;
+      time += 0.018;
       mouseX += (targetMouseX - mouseX) * 0.04;
       mouseY += (targetMouseY - mouseY) * 0.04;
 
@@ -171,160 +259,238 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
       ctx.clearRect(0, 0, width, height);
 
-      // ── 1. SKY GRADIENT (Sunset into Dusk) ──
-      const sky = ctx.createLinearGradient(0, 0, 0, height * 0.65);
-      sky.addColorStop(0, "#1F1B2C");
-      sky.addColorStop(0.2, "#3E2A47");
-      sky.addColorStop(0.45, "#7A435E");
-      sky.addColorStop(0.7, "#BF6A6F");
-      sky.addColorStop(0.88, "#E69B82");
-      sky.addColorStop(1, "#FAD0B0");
+      // ── 1. SKY GRADIENT (Deep Purple into Sunset Peach) ──
+      const sky = ctx.createLinearGradient(0, 0, 0, height * 0.58);
+      sky.addColorStop(0, "#191424");
+      sky.addColorStop(0.2, "#2E1C38");
+      sky.addColorStop(0.42, "#5C2E4B");
+      sky.addColorStop(0.68, "#9C4E65");
+      sky.addColorStop(0.85, "#D88077");
+      sky.addColorStop(0.96, "#F5B499");
+      sky.addColorStop(1, "#FCE2D2");
 
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, width, height);
 
-      // Golden Sunset Aura Behind Mountain Peak
-      const sunX = width * 0.74 + mouseX * 10;
-      const sunY = height * 0.18 + mouseY * 6;
-      const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, width * 0.65);
-      sunGrad.addColorStop(0, "rgba(255, 248, 235, 0.9)");
-      sunGrad.addColorStop(0.2, "rgba(255, 205, 165, 0.45)");
-      sunGrad.addColorStop(0.5, "rgba(191, 106, 111, 0.15)");
-      sunGrad.addColorStop(1, "rgba(31, 27, 44, 0)");
+      // Radiant Sunset Aura / Moon Glow in Upper Right
+      const sunX = width * 0.74 + mouseX * 8;
+      const sunY = height * 0.16 + mouseY * 5;
+      const sunGrad = ctx.createRadialGradient(sunX, sunY, 3, sunX, sunY, width * 0.42);
+      sunGrad.addColorStop(0, "rgba(255, 250, 240, 0.85)");
+      sunGrad.addColorStop(0.25, "rgba(255, 215, 185, 0.35)");
+      sunGrad.addColorStop(0.6, "rgba(200, 110, 120, 0.12)");
+      sunGrad.addColorStop(1, "rgba(25, 20, 36, 0)");
 
       ctx.fillStyle = sunGrad;
-      ctx.fillRect(0, 0, width, height * 0.7);
+      ctx.fillRect(0, 0, width, height * 0.6);
 
-      // Twilight Cloud Streaks
-      ctx.fillStyle = "rgba(42, 28, 48, 0.35)";
+      // Subtle Dusk Cloud Bands
+      ctx.fillStyle = "rgba(45, 25, 48, 0.32)";
       ctx.beginPath();
-      ctx.ellipse(width * 0.25, height * 0.09, width * 0.45, 24 * scaleRatio, 0, 0, Math.PI * 2);
-      ctx.ellipse(width * 0.8, height * 0.06, width * 0.35, 20 * scaleRatio, 0, 0, Math.PI * 2);
+      ctx.ellipse(width * 0.22, height * 0.08, width * 0.35, 16 * scaleRatio, 0, 0, Math.PI * 2);
+      ctx.ellipse(width * 0.65, height * 0.05, width * 0.28, 12 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(230, 155, 130, 0.22)";
+      ctx.fillStyle = "rgba(235, 150, 130, 0.2)";
       ctx.beginPath();
-      ctx.ellipse(sunX - 25, sunY + 20, width * 0.32, 18 * scaleRatio, 0, 0, Math.PI * 2);
+      ctx.ellipse(sunX - 15, sunY + 22, width * 0.26, 14 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // ── 2. DISTANT SILHOUETTE PEAKS ──
-      const par1X = mouseX * 5;
-      const par1Y = mouseY * 3;
+      // ── 2. LOW-POLY GEOMETRIC MOUNTAIN RANGE (Matching Reference Art) ──
+      const par2X = mouseX * 10;
+      const par2Y = mouseY * 6;
 
-      ctx.fillStyle = "#4A3B54";
-      ctx.beginPath();
-      ctx.moveTo(-50, height * 0.55);
-      const bgPeaks = [
-        [0, 0.48],
-        [0.12, 0.36],
-        [0.24, 0.42],
-        [0.4, 0.25],
-        [0.55, 0.34],
-        [0.68, 0.2],
-        [0.82, 0.32],
-        [0.95, 0.24],
-        [1.1, 0.55],
-      ];
-      for (let i = 0; i < bgPeaks.length; i++) {
-        ctx.lineTo(bgPeaks[i][0] * width + par1X, bgPeaks[i][1] * height + par1Y);
-      }
-      ctx.lineTo(width + 50, height * 0.65);
-      ctx.lineTo(-50, height * 0.65);
-      ctx.closePath();
-      ctx.fill();
-
-      // ── 3. MIDGROUND HIGH-FIDELITY MOUNTAINS ──
-      const par2X = mouseX * 12;
-      const par2Y = mouseY * 7;
-
-      // Central Tall Peak
       const peakX = width * 0.5 + par2X;
       const peakY = height * 0.16 + par2Y;
-      const peakBaseY = height * 0.64;
+      const baseLineY = height * 0.55;
 
-      // Left Shadow Face
+      // ── Background Dark Peaks (Faceted Silhouettes) ──
+      ctx.fillStyle = "#1E1A29";
+      ctx.beginPath();
+      ctx.moveTo(-40, baseLineY);
+      ctx.lineTo(width * 0.18 + par2X * 0.5, height * 0.28);
+      ctx.lineTo(width * 0.38 + par2X * 0.5, height * 0.25);
+      ctx.lineTo(width * 0.68 + par2X * 0.5, height * 0.2);
+      ctx.lineTo(width * 0.88 + par2X * 0.5, height * 0.32);
+      ctx.lineTo(width + 40, baseLineY);
+      ctx.closePath();
+      ctx.fill();
+
+      // ── Left Angular Mountain Range ──
+      // Peak 1 - Far Left Dark Face
+      ctx.fillStyle = "#10131B";
+      ctx.beginPath();
+      ctx.moveTo(-30, baseLineY);
+      ctx.lineTo(-30, height * 0.32);
+      ctx.lineTo(width * 0.14 + par2X, height * 0.24);
+      ctx.lineTo(width * 0.24 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.28 + par2X, baseLineY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Peak 1 - White Crystal Facet
+      ctx.fillStyle = "#E4ECF7";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.14 + par2X, height * 0.24);
+      ctx.lineTo(width * 0.05 + par2X, height * 0.32);
+      ctx.lineTo(width * 0.19 + par2X, height * 0.35);
+      ctx.lineTo(width * 0.24 + par2X, height * 0.42);
+      ctx.closePath();
+      ctx.fill();
+
+      // Peak 2 - Left Mid Triangular Facet (Dark)
+      ctx.fillStyle = "#1A1E2B";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.14 + par2X, height * 0.24);
+      ctx.lineTo(width * 0.33 + par2X, height * 0.26);
+      ctx.lineTo(width * 0.24 + par2X, height * 0.42);
+      ctx.closePath();
+      ctx.fill();
+
+      // Peak 2 - Geometric White Diamond Shards
+      ctx.fillStyle = "#F3F7FD";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.33 + par2X, height * 0.26);
+      ctx.lineTo(width * 0.28 + par2X, height * 0.34);
+      ctx.lineTo(width * 0.34 + par2X, height * 0.55);
+      ctx.lineTo(width * 0.38 + par2X, height * 0.4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#121520";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.28 + par2X, height * 0.34);
+      ctx.lineTo(width * 0.24 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.34 + par2X, height * 0.55);
+      ctx.closePath();
+      ctx.fill();
+
+      // ── Central Summit Pyramid Peak (Goal Flag at Top) ──
+      // Central Summit - Left Slate Blue Icy Facet
+      const iceFacetGrad = ctx.createLinearGradient(peakX, peakY, width * 0.42 + par2X, baseLineY);
+      iceFacetGrad.addColorStop(0, "#A5BBD6");
+      iceFacetGrad.addColorStop(0.5, "#7E98B8");
+      iceFacetGrad.addColorStop(1, "#5E7896");
+
+      ctx.fillStyle = iceFacetGrad;
+      ctx.beginPath();
+      ctx.moveTo(peakX, peakY);
+      ctx.lineTo(width * 0.38 + par2X, height * 0.4);
+      ctx.lineTo(width * 0.43 + par2X, height * 0.52);
+      ctx.lineTo(width * 0.47 + par2X, baseLineY);
+      ctx.lineTo(peakX - 6 * scaleRatio, baseLineY);
+      ctx.lineTo(peakX, peakY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Central Summit - Right Lit Peach / Ivory Facet
+      const peachLitGrad = ctx.createLinearGradient(peakX, peakY, width * 0.58 + par2X, baseLineY);
+      peachLitGrad.addColorStop(0, "#FFF7F0");
+      peachLitGrad.addColorStop(0.4, "#FBE0D0");
+      peachLitGrad.addColorStop(0.85, "#E8C0AB");
+      peachLitGrad.addColorStop(1, "#CFA28C");
+
+      ctx.fillStyle = peachLitGrad;
+      ctx.beginPath();
+      ctx.moveTo(peakX, peakY);
+      ctx.lineTo(peakX - 6 * scaleRatio, baseLineY);
+      ctx.lineTo(width * 0.54 + par2X, height * 0.53);
+      ctx.lineTo(width * 0.58 + par2X, height * 0.38);
+      ctx.lineTo(width * 0.65 + par2X, height * 0.48);
+      ctx.lineTo(width * 0.6 + par2X, baseLineY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Central Shadow Crevasse
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
-      ctx.moveTo(peakX, peakY);
-      ctx.lineTo(width * 0.33 + par2X, height * 0.46);
-      ctx.lineTo(width * 0.27 + par2X, height * 0.56);
-      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
+      ctx.moveTo(peakX + 6 * scaleRatio, height * 0.24);
+      ctx.lineTo(width * 0.53 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.51 + par2X, height * 0.52);
+      ctx.lineTo(width * 0.54 + par2X, height * 0.53);
+      ctx.lineTo(width * 0.58 + par2X, height * 0.38);
       ctx.closePath();
       ctx.fill();
 
-      // Right Sunlit Snow Face
-      const litGrad = ctx.createLinearGradient(peakX, peakY, width * 0.68, peakBaseY);
-      litGrad.addColorStop(0, "#FFF9F2");
-      litGrad.addColorStop(0.4, "#FEDDC7");
-      litGrad.addColorStop(0.8, "#D0DCED");
-      litGrad.addColorStop(1, "#ADC1DE");
-
-      ctx.fillStyle = litGrad;
+      // ── Right Mountain Geometric Facets ──
+      // Right Dark Peak Base
+      ctx.fillStyle = "#222736";
       ctx.beginPath();
-      ctx.moveTo(peakX, peakY);
-      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
-      ctx.lineTo(width * 0.66 + par2X, height * 0.54);
-      ctx.lineTo(width * 0.7 + par2X, height * 0.4);
+      ctx.moveTo(width * 0.58 + par2X, height * 0.38);
+      ctx.lineTo(width * 0.68 + par2X, height * 0.2);
+      ctx.lineTo(width * 0.76 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.65 + par2X, height * 0.48);
       ctx.closePath();
       ctx.fill();
 
-      // Detailed Snow Crags on Shadow Face
-      ctx.fillStyle = "#8FA8CD";
+      // Right Peach Crystal Triangle
+      ctx.fillStyle = "#FCE7D8";
       ctx.beginPath();
-      ctx.moveTo(peakX, peakY);
-      ctx.lineTo(peakX - 10 * scaleRatio, height * 0.25);
-      ctx.lineTo(peakX - 4 * scaleRatio, height * 0.3);
-      ctx.lineTo(peakX - 22 * scaleRatio, height * 0.39);
-      ctx.lineTo(peakX - 14 * scaleRatio, height * 0.44);
-      ctx.lineTo(peakX - 32 * scaleRatio, height * 0.52);
-      ctx.lineTo(width * 0.33 + par2X, height * 0.46);
+      ctx.moveTo(width * 0.68 + par2X, height * 0.2);
+      ctx.lineTo(width * 0.76 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.63 + par2X, height * 0.46);
       ctx.closePath();
       ctx.fill();
 
-      // Dark Rock Ridges on Lit Face
-      ctx.fillStyle = "#26293A";
+      // Right Far Ridge (Dark Navy Facets & Peach Highlights)
+      ctx.fillStyle = "#181C28";
       ctx.beginPath();
-      ctx.moveTo(peakX + 8 * scaleRatio, height * 0.24);
-      ctx.lineTo(peakX + 20 * scaleRatio, height * 0.28);
-      ctx.lineTo(peakX + 14 * scaleRatio, height * 0.33);
-      ctx.lineTo(peakX + 34 * scaleRatio, height * 0.41);
-      ctx.lineTo(peakX + 24 * scaleRatio, height * 0.45);
-      ctx.lineTo(peakX + 46 * scaleRatio, height * 0.52);
-      ctx.lineTo(width * 0.48 + par2X, peakBaseY);
+      ctx.moveTo(width * 0.68 + par2X, height * 0.2);
+      ctx.lineTo(width * 0.88 + par2X, height * 0.24);
+      ctx.lineTo(width + 30, height * 0.28);
+      ctx.lineTo(width + 30, baseLineY);
+      ctx.lineTo(width * 0.65 + par2X, baseLineY);
       ctx.closePath();
       ctx.fill();
 
-      // ── 🚩 SUMMIT FLAG ON THE MOUNTAIN PEAK ──
-      const poleHeight = 26 * scaleRatio;
+      // Right Geometric Accordion Highlight Facets
+      ctx.fillStyle = "#FBD8C2";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.88 + par2X, height * 0.24);
+      ctx.lineTo(width * 0.82 + par2X, height * 0.34);
+      ctx.lineTo(width * 0.94 + par2X, height * 0.32);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#F8ECE2";
+      ctx.beginPath();
+      ctx.moveTo(width * 0.94 + par2X, height * 0.32);
+      ctx.lineTo(width * 0.88 + par2X, height * 0.42);
+      ctx.lineTo(width * 0.98 + par2X, height * 0.38);
+      ctx.closePath();
+      ctx.fill();
+
+      // ── 🚩 SUMMIT GOAL FLAG AT MOUNTAIN APEX ──
+      const poleHeight = 28 * scaleRatio;
       const poleTopY = peakY - poleHeight;
 
-      // Golden Flagpole
-      ctx.strokeStyle = "#F6C774";
-      ctx.lineWidth = 2 * scaleRatio;
+      // Slender Flagpole
+      ctx.strokeStyle = "#FDE3A7";
+      ctx.lineWidth = 1.8 * scaleRatio;
       ctx.beginPath();
       ctx.moveTo(peakX, peakY + 2);
       ctx.lineTo(peakX, poleTopY);
       ctx.stroke();
 
-      // Golden Peak Finial Ball
-      ctx.fillStyle = "#FFE29A";
+      // Top Finial Ball
+      ctx.fillStyle = "#FFF0BE";
       ctx.beginPath();
       ctx.arc(peakX, poleTopY, 2.2 * scaleRatio, 0, Math.PI * 2);
       ctx.fill();
 
-      // Waving Red/Hot-Pink Summit Flag Pennant
-      const flagWave1 = Math.sin(time * 5.5) * 2.5 * scaleRatio;
-      const flagWave2 = Math.cos(time * 5.5 + 1.2) * 3 * scaleRatio;
-      const flagW = 24 * scaleRatio;
+      // Glowing Neon Pink/Orange Goal Pennant Flag Waving
+      const flagWave1 = Math.sin(time * 5.2) * 2.8 * scaleRatio;
+      const flagWave2 = Math.cos(time * 5.2 + 1.2) * 3.2 * scaleRatio;
+      const flagW = 26 * scaleRatio;
 
       const flagGrad = ctx.createLinearGradient(peakX, poleTopY, peakX + flagW, poleTopY + 12);
-      flagGrad.addColorStop(0, "#EA008A");
-      flagGrad.addColorStop(0.5, "#FF2E93");
-      flagGrad.addColorStop(1, "#FFB703");
+      flagGrad.addColorStop(0, "#FF007F");
+      flagGrad.addColorStop(0.5, "#FF3399");
+      flagGrad.addColorStop(1, "#FF9E00");
 
       ctx.fillStyle = flagGrad;
       ctx.beginPath();
-      ctx.moveTo(peakX, poleTopY + 2);
+      ctx.moveTo(peakX, poleTopY + 1.5);
       ctx.bezierCurveTo(
         peakX + 8 * scaleRatio,
         poleTopY + 2 + flagWave1,
@@ -333,310 +499,269 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
         peakX + flagW,
         poleTopY + 6 + flagWave1
       );
-      ctx.lineTo(peakX + 18 * scaleRatio, poleTopY + 12 + flagWave2);
+      ctx.lineTo(peakX + 16 * scaleRatio, poleTopY + 12 + flagWave2);
       ctx.bezierCurveTo(
-        peakX + 13 * scaleRatio,
+        peakX + 10 * scaleRatio,
         poleTopY + 13 + flagWave2,
-        peakX + 7 * scaleRatio,
+        peakX + 5 * scaleRatio,
         poleTopY + 11 + flagWave1,
         peakX,
-        poleTopY + 14 * scaleRatio
+        poleTopY + 13 * scaleRatio
       );
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
       ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Left Flanking Mountain Range
-      ctx.fillStyle = "#141620";
-      ctx.beginPath();
-      ctx.moveTo(-30, height * 0.62);
-      ctx.lineTo(-20, height * 0.32);
-      ctx.lineTo(width * 0.12 + par2X, height * 0.24);
-      ctx.lineTo(width * 0.22 + par2X, height * 0.34);
-      ctx.lineTo(width * 0.33 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.44 + par2X, height * 0.52);
-      ctx.lineTo(-30, height * 0.68);
-      ctx.closePath();
-      ctx.fill();
+      // ── 3. SNOW PLAINS & FOREGROUND VALLEY ──
+      const par3X = mouseX * 16;
 
-      // Left Snow Highlights
-      ctx.fillStyle = "#E4EDF8";
-      ctx.beginPath();
-      ctx.moveTo(width * 0.12 + par2X, height * 0.24);
-      ctx.lineTo(width * 0.05 + par2X, height * 0.32);
-      ctx.lineTo(width * 0.14 + par2X, height * 0.3);
-      ctx.lineTo(width * 0.22 + par2X, height * 0.34);
-      ctx.lineTo(width * 0.17 + par2X, height * 0.4);
-      ctx.lineTo(width * 0.33 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.26 + par2X, height * 0.44);
-      ctx.lineTo(width * 0.38 + par2X, height * 0.4);
-      ctx.lineTo(width * 0.34 + par2X, height * 0.55);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right Mountain Face
-      ctx.fillStyle = "#1E2232";
-      ctx.beginPath();
-      ctx.moveTo(width + 30, height * 0.62);
-      ctx.lineTo(width + 30, height * 0.14);
-      ctx.lineTo(width * 0.88 + par2X, height * 0.2);
-      ctx.lineTo(width * 0.76 + par2X, height * 0.3);
-      ctx.lineTo(width * 0.68 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.56 + par2X, height * 0.52);
-      ctx.lineTo(width + 30, height * 0.68);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right Sunset Snow Highlights
-      const rightLit = ctx.createLinearGradient(width * 0.68, height * 0.2, width, height * 0.5);
-      rightLit.addColorStop(0, "#FFF7EE");
-      rightLit.addColorStop(0.5, "#FDD4BD");
-      rightLit.addColorStop(1, "#B4C8E2");
-
-      ctx.fillStyle = rightLit;
-      ctx.beginPath();
-      ctx.moveTo(width + 30, height * 0.14);
-      ctx.lineTo(width * 0.94 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.88 + par2X, height * 0.2);
-      ctx.lineTo(width * 0.83 + par2X, height * 0.36);
-      ctx.lineTo(width * 0.76 + par2X, height * 0.3);
-      ctx.lineTo(width * 0.71 + par2X, height * 0.42);
-      ctx.lineTo(width * 0.68 + par2X, height * 0.26);
-      ctx.lineTo(width * 0.62 + par2X, height * 0.46);
-      ctx.closePath();
-      ctx.fill();
-
-      // Soft Valley Mist
-      const mist = ctx.createLinearGradient(0, height * 0.45, 0, height * 0.64);
-      mist.addColorStop(0, "rgba(230, 238, 250, 0)");
-      mist.addColorStop(0.5, "rgba(240, 220, 230, 0.35)");
-      mist.addColorStop(1, "rgba(245, 248, 255, 0.85)");
-
-      ctx.fillStyle = mist;
-      ctx.fillRect(0, height * 0.45, width, height * 0.22);
-
-      // ── 4. FOREGROUND SNOW VALLEY ──
-      const par3X = mouseX * 18;
-
-      const snowGrad = ctx.createLinearGradient(0, height * 0.56, 0, height);
-      snowGrad.addColorStop(0, "#D6E2F2");
-      snowGrad.addColorStop(0.35, "#E7EFF9");
-      snowGrad.addColorStop(0.65, "#F5F8FE");
+      // Base Ice Blue Snow Field
+      const snowGrad = ctx.createLinearGradient(0, height * 0.54, 0, height);
+      snowGrad.addColorStop(0, "#CCDCEE");
+      snowGrad.addColorStop(0.3, "#E2ECF7");
+      snowGrad.addColorStop(0.6, "#F5F8FE");
       snowGrad.addColorStop(0.85, "#FFFFFF");
       snowGrad.addColorStop(1, "#FFFFFF");
 
       ctx.fillStyle = snowGrad;
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.56);
-      ctx.bezierCurveTo(width * 0.3, height * 0.54, width * 0.7, height * 0.55, width, height * 0.57);
+      ctx.moveTo(0, height * 0.54);
+      ctx.bezierCurveTo(width * 0.3, height * 0.53, width * 0.7, height * 0.54, width, height * 0.55);
       ctx.lineTo(width, height);
       ctx.lineTo(0, height);
       ctx.closePath();
       ctx.fill();
 
-      // Left Snow Dune Shadow
-      ctx.fillStyle = "rgba(165, 185, 215, 0.45)";
+      // Left Ice Depression / Lake (Where group of penguins resides)
+      ctx.fillStyle = "rgba(180, 202, 228, 0.55)";
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.62);
-      ctx.bezierCurveTo(width * 0.32, height * 0.6, width * 0.48, height * 0.7, 0, height * 0.76);
-      ctx.closePath();
+      ctx.ellipse(width * 0.17 + par3X * 0.1, height * 0.68, Math.max(width * 0.27, 130 * scaleRatio), 32 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Right Snow Dune Shadow
-      ctx.fillStyle = "rgba(175, 195, 222, 0.4)";
+      // Right Ice Depression / Lake
+      ctx.fillStyle = "rgba(185, 208, 234, 0.45)";
       ctx.beginPath();
-      ctx.moveTo(width, height * 0.64);
-      ctx.bezierCurveTo(width * 0.68, height * 0.62, width * 0.52, height * 0.72, width, height * 0.8);
-      ctx.closePath();
+      ctx.ellipse(width * 0.86 + par3X * 0.1, height * 0.69, width * 0.24, 26 * scaleRatio, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Front Pure White Snow Blanket (Ensures bottom transition is clean white)
+      // Front Crisp White Snow Slope
       ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.74);
-      ctx.bezierCurveTo(width * 0.4, height * 0.7, width * 0.65, height * 0.71, width, height * 0.76);
+      ctx.moveTo(0, height * 0.73);
+      ctx.bezierCurveTo(width * 0.35, height * 0.71, width * 0.65, height * 0.72, width, height * 0.75);
       ctx.lineTo(width, height);
       ctx.lineTo(0, height);
       ctx.closePath();
       ctx.fill();
 
-      // ── 👥 GROUP OF SPECTATOR PENGUINS (Exclusively on the Left Side Below) ──
-      const leftBaseX = Math.max(25, width * 0.16 + par3X * 0.2);
-      const leftBaseY = height * 0.72;
-      const pScale = (isMobile ? 0.65 : 0.85) * scaleRatio;
+      // ── 4. 👥 GROUP OF PENGUINS (MOVING TOWARDS US / FACING VIEWER) ──
+      // Expanded colony with natural depth-layering (back-to-front rendering)
+      const groupBaseX = Math.max(45, width * 0.17 + par3X * 0.2);
+      const groupBaseY = height * 0.73;
+      const gScale = (isMobile ? 0.64 : 0.84) * scaleRatio;
 
-      // Penguin 1: Senior Adult Observer
-      drawSpectatorPenguin(leftBaseX, leftBaseY - 2, pScale * 1.0, 0.14, false);
+      // ── Back Row Penguins ──
+      // 1. Far Left Back Adult
+      drawForwardPenguin(groupBaseX - 42 * scaleRatio, groupBaseY - 14 * scaleRatio, gScale * 0.78, 0.6, -0.06);
+      // 2. Mid Left Back Adult
+      drawForwardPenguin(groupBaseX - 22 * scaleRatio, groupBaseY - 16 * scaleRatio, gScale * 0.84, 1.9, 0.04);
+      // 3. Center Back Adult
+      drawForwardPenguin(groupBaseX + 6 * scaleRatio, groupBaseY - 17 * scaleRatio, gScale * 0.86, 3.2, -0.03);
+      // 4. Right Back Observer
+      drawForwardPenguin(groupBaseX + 32 * scaleRatio, groupBaseY - 12 * scaleRatio, gScale * 0.76, 4.5, 0.07);
 
-      // Penguin 2: Attentive Adult Observer
-      drawSpectatorPenguin(leftBaseX + 18 * scaleRatio, leftBaseY + 4, pScale * 0.95, 0.19, false);
+      // ── Middle Row Penguins ──
+      // 5. Left Middle Adult
+      drawForwardPenguin(groupBaseX - 32 * scaleRatio, groupBaseY - 2 * scaleRatio, gScale * 0.94, 1.1, -0.04);
+      // 6. Center Left Adult
+      drawForwardPenguin(groupBaseX - 10 * scaleRatio, groupBaseY - 4 * scaleRatio, gScale * 1.02, 2.5, 0.02);
+      // 7. Center Right Adult
+      drawForwardPenguin(groupBaseX + 14 * scaleRatio, groupBaseY + 0 * scaleRatio, gScale * 0.96, 3.8, -0.05);
+      // 8. Right Middle Adult
+      drawForwardPenguin(groupBaseX + 38 * scaleRatio, groupBaseY + 3 * scaleRatio, gScale * 0.88, 5.1, 0.05);
 
-      // Penguin 3: Cheering Adult waving flipper
-      drawSpectatorPenguin(leftBaseX + 36 * scaleRatio, leftBaseY + 9, pScale * 0.88, 0.24, true);
+      // ── Front Row (Young & Baby Penguins) ──
+      // 9. Front Left Juvenile
+      drawForwardPenguin(groupBaseX - 18 * scaleRatio, groupBaseY + 11 * scaleRatio, gScale * 0.82, 0.3, 0.06);
+      // 10. Front Center Baby Chick (Adorable small waddler)
+      drawForwardPenguin(groupBaseX + 2 * scaleRatio, groupBaseY + 14 * scaleRatio, gScale * 0.66, 2.1, -0.04);
+      // 11. Front Right Baby Chick
+      drawForwardPenguin(groupBaseX + 24 * scaleRatio, groupBaseY + 15 * scaleRatio, gScale * 0.62, 4.3, 0.05);
 
-      // Penguin 4: Curious Young Penguin
-      drawSpectatorPenguin(leftBaseX + 52 * scaleRatio, leftBaseY + 14, pScale * 0.7, 0.28, false);
+      // ── 🚶 3 PENGUINS IN A STRAIGHT LINE WALKING TOWARDS US (IN FRONT OF GROUP) ──
+      const lineX = groupBaseX + 2 * scaleRatio;
 
-      // Penguin 5: Cute Little Baby Penguin waving
-      drawSpectatorPenguin(leftBaseX + 10 * scaleRatio, leftBaseY + 13, pScale * 0.62, 0.18, true);
+      // Subtle footprint steps along their straight line path
+      for (let s = 0; s < 6; s++) {
+        const stepProg = s / 5;
+        const footY = groupBaseY + (18 + stepProg * 36) * scaleRatio;
+        const footSide = (s % 2 === 0 ? -1 : 1) * 3 * scaleRatio;
+        ctx.fillStyle = "rgba(135, 160, 192, 0.28)";
+        ctx.beginPath();
+        ctx.ellipse(lineX + footSide, footY, 2.4 * scaleRatio, 1.3 * scaleRatio, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // ── 5. REALISTIC PENGUIN FOOTPRINTS TRAIL ──
-      const walkCycle = time * 1.8;
-      const pengX = width * 0.5 + par3X * 0.2;
-      const stepBob = Math.abs(Math.sin(walkCycle)) * 1.6 * scaleRatio;
-      const pengY = height * 0.7 - stepBob;
+      // Line Penguin 1: Rear of the line (just in front of group)
+      drawForwardPenguin(lineX, groupBaseY + 28 * scaleRatio, gScale * 0.86, 0.5, -0.02);
 
-      const steps = 12;
+      // Line Penguin 2: Middle of the straight line
+      drawForwardPenguin(lineX, groupBaseY + 44 * scaleRatio, gScale * 0.96, 2.0, 0.03);
+
+      // Line Penguin 3: Lead Penguin at the very front marching towards us
+      drawForwardPenguin(lineX, groupBaseY + 60 * scaleRatio, gScale * 1.06, 3.5, -0.02);
+
+      // ── 5. 👣 REALISTIC FOOTPRINTS TRAIL (Leading to the Solo Penguin) ──
+      const walkCycle = time * 2.0;
+      const soloX = width * 0.5 + par3X * 0.15;
+      const soloBob = Math.abs(Math.sin(walkCycle)) * 1.6 * scaleRatio;
+      const soloY = height * 0.69 - soloBob;
+
+      const steps = 11;
       for (let i = 0; i < steps; i++) {
         const prog = i / steps;
-        const ty = height * 0.98 - prog * (height * 0.98 - (height * 0.7) - 12);
-        const txOff = (i % 2 === 0 ? -1 : 1) * (3 * scaleRatio + prog * 2);
-        const tx = width * 0.5 + txOff + (1 - prog) * (par3X * 0.08);
-        const rx = (2.2 + (1 - prog) * 4.5) * scaleRatio;
-        const ry = (1.2 + (1 - prog) * 2.4) * scaleRatio;
+        const ty = height * 0.98 - prog * (height * 0.98 - (height * 0.69) - 10);
+        const txOff = (i % 2 === 0 ? -1 : 1) * (2.8 * scaleRatio + prog * 1.8);
+        const tx = width * 0.5 + txOff + (1 - prog) * (par3X * 0.06);
+        const rx = (2.2 + (1 - prog) * 4.2) * scaleRatio;
+        const ry = (1.1 + (1 - prog) * 2.2) * scaleRatio;
 
-        // Shadow indent
-        ctx.fillStyle = `rgba(125, 150, 185, ${0.4 + (1 - prog) * 0.45})`;
+        // Footprint shadow depression
+        ctx.fillStyle = `rgba(130, 155, 188, ${0.35 + (1 - prog) * 0.45})`;
         ctx.beginPath();
         ctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Snow rim highlight
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.35 + (1 - prog) * 0.5})`;
+        // Subtle snow rim highlight
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + (1 - prog) * 0.45})`;
         ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.ellipse(tx, ty + 0.8, rx * 0.8, ry * 0.6, 0, 0, Math.PI);
+        ctx.ellipse(tx, ty + 0.6, rx * 0.8, ry * 0.5, 0, 0, Math.PI);
         ctx.stroke();
       }
 
-      // ── 6. REALISTIC ACTIVE WALKING PENGUIN ──
+      // ── 6. 🐧 SOLO PENGUIN (MOVING TOWARDS THE GOAL / MOUNTAIN PEAK) ──
       ctx.save();
-      ctx.translate(pengX, pengY);
+      ctx.translate(soloX, soloY);
       ctx.scale(scaleRatio, scaleRatio);
 
-      // Gentle Lifelike Waddling Sway
-      const waddleRoll = Math.sin(walkCycle) * 0.028;
-      ctx.rotate(waddleRoll);
+      // Waddling roll as it hikes up toward the summit
+      const soloWaddleRoll = Math.sin(walkCycle) * 0.035;
+      ctx.rotate(soloWaddleRoll);
 
-      // Soft Contact Shadow
-      const shadowPulse = 20 + Math.sin(walkCycle) * 1.2;
-      const shadow = ctx.createRadialGradient(0, 22, 2, 0, 22, shadowPulse + 6);
-      shadow.addColorStop(0, "rgba(80, 102, 132, 0.85)");
-      shadow.addColorStop(0.5, "rgba(120, 145, 175, 0.4)");
-      shadow.addColorStop(1, "rgba(200, 220, 245, 0)");
+      // Soft ambient contact shadow under feet
+      const soloShadowPulse = 18 + Math.sin(walkCycle) * 1.0;
+      const soloShadow = ctx.createRadialGradient(0, 20, 2, 0, 20, soloShadowPulse + 4);
+      soloShadow.addColorStop(0, "rgba(75, 98, 128, 0.75)");
+      soloShadow.addColorStop(0.5, "rgba(110, 135, 168, 0.35)");
+      soloShadow.addColorStop(1, "rgba(195, 218, 245, 0)");
 
-      ctx.fillStyle = shadow;
+      ctx.fillStyle = soloShadow;
       ctx.beginPath();
-      ctx.ellipse(0, 22 + stepBob * 0.5, shadowPulse, 6.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 20 + soloBob * 0.4, soloShadowPulse, 6.0, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Walking Alternating Feet
-      const leftFootLift = Math.max(0, -Math.sin(walkCycle)) * 2.2;
-      const rightFootLift = Math.max(0, Math.sin(walkCycle)) * 2.2;
+      // Walking feet stepping upwards (seen from behind)
+      const leftLift = Math.max(0, -Math.sin(walkCycle)) * 2.2;
+      const rightLift = Math.max(0, Math.sin(walkCycle)) * 2.2;
 
-      // Left Dark Foot
-      ctx.fillStyle = "#161820";
+      // Left foot
+      ctx.fillStyle = "#12141C";
       ctx.beginPath();
-      ctx.ellipse(-7, 21 - leftFootLift, 4.5, 2.5, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(-7, 20 - leftLift, 4.2, 2.2, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Right Dark Foot
-      ctx.fillStyle = "#161820";
+      // Right foot
+      ctx.fillStyle = "#12141C";
       ctx.beginPath();
-      ctx.ellipse(7, 21 - rightFootLift, 4.5, 2.5, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(7, 20 - rightLift, 4.2, 2.2, -0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Tail Feathers
-      ctx.fillStyle = "#101218";
+      // Tail feathers (pointing back/down)
+      ctx.fillStyle = "#0D0E15";
       ctx.beginPath();
-      ctx.moveTo(-5, 19);
-      ctx.lineTo(5, 19);
-      ctx.lineTo(0, 25);
+      ctx.moveTo(-5, 18);
+      ctx.lineTo(5, 18);
+      ctx.lineTo(0, 24);
       ctx.closePath();
       ctx.fill();
 
-      // Left Flipper / Wing
-      const leftWingSway = Math.sin(walkCycle) * 1.4;
-      ctx.fillStyle = "#14161E";
+      // Left Flipper / Wing (swaying with walk toward goal)
+      const leftFlippSway = Math.sin(walkCycle) * 1.4;
+      ctx.fillStyle = "#141720";
       ctx.beginPath();
-      ctx.moveTo(-14, -16);
-      ctx.bezierCurveTo(-24 - leftWingSway, -2, -26 - leftWingSway, 12, -18, 18);
-      ctx.bezierCurveTo(-14, 15, -13, 2, -12, -8);
+      ctx.moveTo(-13, -15);
+      ctx.bezierCurveTo(-22 - leftFlippSway, -2, -24 - leftFlippSway, 11, -16, 17);
+      ctx.bezierCurveTo(-13, 14, -12, 2, -11, -7);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(175, 200, 230, 0.45)";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(160, 185, 215, 0.35)";
+      ctx.lineWidth = 1.0;
       ctx.stroke();
 
       // Right Flipper / Wing
-      const rightWingSway = -Math.sin(walkCycle) * 1.4;
-      ctx.fillStyle = "#161822";
+      const rightFlippSway = -Math.sin(walkCycle) * 1.4;
+      ctx.fillStyle = "#151822";
       ctx.beginPath();
-      ctx.moveTo(14, -16);
-      ctx.bezierCurveTo(24 + rightWingSway, -2, 26 + rightWingSway, 12, 18, 18);
-      ctx.bezierCurveTo(14, 15, 13, 2, 12, -8);
+      ctx.moveTo(13, -15);
+      ctx.bezierCurveTo(22 + rightFlippSway, -2, 24 + rightFlippSway, 11, 16, 17);
+      ctx.bezierCurveTo(13, 14, 12, 2, 11, -7);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 205, 175, 0.6)";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(255, 205, 175, 0.4)";
+      ctx.lineWidth = 1.0;
       ctx.stroke();
 
-      // Main Torso
-      const body = ctx.createLinearGradient(-16, 0, 16, 0);
-      body.addColorStop(0, "#1A1D26");
-      body.addColorStop(0.3, "#222733");
-      body.addColorStop(0.7, "#1B1F28");
-      body.addColorStop(1, "#12141C");
+      // Main Back Torso (Full sleek dark plumage seen from behind)
+      const soloBody = ctx.createLinearGradient(-15, 0, 15, 0);
+      soloBody.addColorStop(0, "#13161F");
+      soloBody.addColorStop(0.3, "#212634");
+      soloBody.addColorStop(0.7, "#1A1D27");
+      soloBody.addColorStop(1, "#10121A");
 
-      ctx.fillStyle = body;
+      ctx.fillStyle = soloBody;
       ctx.beginPath();
-      ctx.moveTo(0, -29);
-      ctx.bezierCurveTo(-18, -27, -20, -2, -18, 20);
-      ctx.bezierCurveTo(-14, 24, 14, 24, 18, 20);
-      ctx.bezierCurveTo(20, -2, 18, -27, 0, -29);
+      ctx.moveTo(0, -28);
+      ctx.bezierCurveTo(-17, -26, -19, -2, -17, 19);
+      ctx.bezierCurveTo(-13, 23, 13, 23, 17, 19);
+      ctx.bezierCurveTo(19, -2, 17, -26, 0, -28);
       ctx.closePath();
       ctx.fill();
 
-      // Spine Highlight
-      ctx.strokeStyle = "rgba(55, 65, 82, 0.4)";
-      ctx.lineWidth = 1.5;
+      // Subtle Center Spine Contour Shadow
+      ctx.strokeStyle = "rgba(50, 60, 78, 0.4)";
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.moveTo(0, -18);
       ctx.lineTo(0, 18);
       ctx.stroke();
 
-      // Head Silhouette
-      ctx.fillStyle = "#101218";
+      // Head (Sleek solid black plumage head from behind, tilted towards mountain)
+      const headGrad = ctx.createLinearGradient(-10, -32, 10, -32);
+      headGrad.addColorStop(0, "#0D0F16");
+      headGrad.addColorStop(0.5, "#1C202C");
+      headGrad.addColorStop(1, "#0A0C12");
+
+      ctx.fillStyle = headGrad;
       ctx.beginPath();
-      ctx.ellipse(0, -32, 11, 13, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -30.5, 10.5, 11.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Golden Auricular Neck Collar
-      const collar = ctx.createLinearGradient(-9, -27, 9, -27);
-      collar.addColorStop(0, "#FFA500");
-      collar.addColorStop(0.5, "#FF5500");
-      collar.addColorStop(1, "#FFC000");
-
-      ctx.fillStyle = collar;
+      // Delicate ambient rim light on top of head from the sunset sky
+      ctx.strokeStyle = "rgba(235, 180, 160, 0.35)";
+      ctx.lineWidth = 0.9;
       ctx.beginPath();
-      ctx.ellipse(0, -25, 7.5, 3.2, 0, 0, Math.PI);
-      ctx.fill();
-
-      // Golden Auricular Ear Cheek Patches
-      ctx.fillStyle = "rgba(255, 185, 35, 0.8)";
-      ctx.beginPath();
-      ctx.ellipse(-9, -33, 2.2, 4, -0.3, 0, Math.PI * 2);
-      ctx.ellipse(9, -33, 2.2, 4, 0.3, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(0, -30.5, 10.5, -Math.PI * 0.75, -Math.PI * 0.25);
+      ctx.stroke();
 
       ctx.restore();
 
-      // ── 7. FLOATING SNOW PARTICLES ──
+      // ── 7. FLOATING SNOWFLAKES ──
       ctx.fillStyle = "#FFFFFF";
       for (let i = 0; i < snowflakes.length; i++) {
         const flake = snowflakes[i];
@@ -675,3 +800,4 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     </div>
   );
 }
+

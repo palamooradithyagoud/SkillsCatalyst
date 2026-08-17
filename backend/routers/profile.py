@@ -37,11 +37,14 @@ class CodingProfilesInputModel(BaseModel):
 def _clean_handle(url_or_handle: Optional[str]) -> str:
     if not url_or_handle:
         return ""
-    text = url_or_handle.strip().rstrip("/")
+    text = str(url_or_handle).strip()
+    text = text.split("?")[0].split("#")[0].rstrip("/")
     if "://" in text:
-        parts = text.split("/")
-        return parts[-1] if parts[-1] else (parts[-2] if len(parts) > 1 else text)
-    return text
+        text = text.split("://", 1)[1]
+    if "/" in text:
+        parts = [p.strip() for p in text.split("/") if p.strip() and p.strip().lower() not in ("u", "user", "users", "profile", "in", "in-in")]
+        return parts[-1] if parts else text
+    return text.lstrip("@").strip()
 
 
 async def _extract_leetcode(input_val: str) -> Dict[str, Any]:
@@ -68,12 +71,12 @@ async def _extract_leetcode(input_val: str) -> Dict[str, Any]:
     }
     """
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             resp = await client.post(
                 url,
                 json={"query": query, "variables": {"username": handle}},
                 headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                     "Content-Type": "application/json",
                     "Referer": f"https://leetcode.com/{handle}/"
                 }
@@ -96,10 +99,11 @@ async def _extract_leetcode(input_val: str) -> Dict[str, Any]:
                             hard_solved = cnt
 
                     ranking = data.get("profile", {}).get("ranking", 0)
+                    real_username = data.get("username") or handle
                     return {
                         "configured": True,
-                        "username": handle,
-                        "url": f"https://leetcode.com/{handle}",
+                        "username": real_username,
+                        "url": f"https://leetcode.com/{real_username}",
                         "total_solved": total_solved,
                         "easy_solved": easy_solved,
                         "medium_solved": medium_solved,
@@ -115,6 +119,11 @@ async def _extract_leetcode(input_val: str) -> Dict[str, Any]:
         "configured": True,
         "username": handle,
         "url": f"https://leetcode.com/{handle}",
+        "total_solved": 0,
+        "easy_solved": 0,
+        "medium_solved": 0,
+        "hard_solved": 0,
+        "ranking": 0,
         "badge": "Connected",
         "summary": f"Linked @{handle}"
     }

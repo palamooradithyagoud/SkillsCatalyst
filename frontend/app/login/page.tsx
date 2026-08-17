@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Mail,
@@ -208,11 +209,24 @@ export default function LoginPage() {
       </div>
 
       {/* ── RIGHT / BOTTOM CARD: Crisp White Auth Container (Seamless Alignment) ── */}
-      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none -mt-4 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-2xl relative z-10">
-        <div className="w-full max-w-[380px] mx-auto my-auto space-y-5 pt-1 pb-6">
+      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none -mt-4 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-2xl relative z-10 overflow-hidden">
+        {/* ── Low-Opacity Background Watermark Logo Emblem ── */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
+          <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.045] mix-blend-multiply">
+            <Image
+              src="/logo.png"
+              alt="SkillsCatalyst Watermark"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
+        <div className="w-full max-w-[380px] mx-auto my-auto space-y-5 pt-1 pb-6 relative z-10">
           {/* SkillsCatalyst Official Brand Header */}
           <div className="flex justify-center mb-1">
-            <SkillsCatalystLogo size="md" showText={true} />
+            <SkillsCatalystLogo size="md" showText={false} />
           </div>
 
           {/* Heading & Subtitle */}

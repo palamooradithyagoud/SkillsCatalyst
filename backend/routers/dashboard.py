@@ -2,6 +2,7 @@ import re
 from fastapi import APIRouter, Depends
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id
+from backend.routers.profile import _clean_handle
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -350,14 +351,38 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
 
             # 4. Fetch extracted coding profiles stats (LeetCode, GFG, Codeforces, CodeChef, HackerRank)
             extracted_solved = 0
+            leetcode_solved = 0
+            leetcode_easy = 0
+            leetcode_med = 0
+            leetcode_hard = 0
+            leetcode_user = ""
+            leetcode_ranking = 0
+            leetcode_configured = False
+
             res_code = (
                 sb.table("user_coding_profiles")
-                .select("stats_json")
+                .select("leetcode_url, stats_json")
                 .eq("user_id", user_id)
                 .execute()
             )
-            if res_code.data and res_code.data[0].get("stats_json"):
-                stats_json = res_code.data[0].get("stats_json", {})
+            if res_code.data and len(res_code.data) > 0:
+                code_row = res_code.data[0]
+                stats_json = code_row.get("stats_json") or {}
+                raw_lc_url = code_row.get("leetcode_url") or ""
+
+                lc = stats_json.get("leetcode", {})
+                if isinstance(lc, dict) and (lc.get("configured") or "total_solved" in lc):
+                    leetcode_configured = True
+                    leetcode_solved = lc.get("total_solved") or lc.get("solved") or 0
+                    leetcode_easy = lc.get("easy_solved", 0)
+                    leetcode_med = lc.get("medium_solved", 0)
+                    leetcode_hard = lc.get("hard_solved", 0)
+                    leetcode_user = lc.get("username", "") or _clean_handle(raw_lc_url)
+                    leetcode_ranking = lc.get("ranking", 0)
+                elif raw_lc_url:
+                    leetcode_user = _clean_handle(raw_lc_url)
+                    leetcode_configured = bool(leetcode_user)
+
                 for platform, pdata in stats_json.items():
                     if isinstance(pdata, dict):
                         ts = pdata.get("total_solved") or pdata.get("solved") or 0
@@ -365,7 +390,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                             extracted_solved += int(ts)
 
             # Problems solved strictly reflects connected external coding platform stats
-            problems_solved = extracted_solved
+            problems_solved = extracted_solved if extracted_solved > 0 else leetcode_solved
 
             # 5. Fetch user name from academic profile if exists
             res_profile = (
@@ -442,6 +467,12 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     coding_score = min(100.0, (problems_solved / 50.0) * 100.0)
     pri_score = round((resume_score * 0.35) + (coding_score * 0.35) + (pct * 0.15) + (roadmap_pct * 0.15), 1)
 
+    leetcode_subtitle = (
+        f"Easy: {leetcode_easy} • Med: {leetcode_med} • Hard: {leetcode_hard}"
+        if (leetcode_solved > 0 or (leetcode_easy + leetcode_med + leetcode_hard) > 0)
+        else (f"Linked @{leetcode_user}" if leetcode_user else "Connect in Settings")
+    )
+
     return {
         "user": {
             "name": display_name,
@@ -475,6 +506,27 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
             "resumeReadiness": {
                 "percentage": resume_score,
                 "subtitle": resume_subtitle
+            },
+            "leetcodeProgress": {
+                "totalSolved": leetcode_solved or problems_solved,
+                "easySolved": leetcode_easy,
+                "mediumSolved": leetcode_med,
+                "hardSolved": leetcode_hard,
+                "username": leetcode_user,
+                "ranking": leetcode_ranking,
+                "configured": leetcode_configured,
+                "subtitle": leetcode_subtitle
+            },
+            "codingProgress": {
+                "totalSolved": problems_solved,
+                "leetcodeSolved": leetcode_solved or problems_solved,
+                "easySolved": leetcode_easy,
+                "mediumSolved": leetcode_med,
+                "hardSolved": leetcode_hard,
+                "username": leetcode_user,
+                "ranking": leetcode_ranking,
+                "configured": leetcode_configured,
+                "subtitle": leetcode_subtitle
             },
             "interviewReadiness": {
                 "isLocked": True,
