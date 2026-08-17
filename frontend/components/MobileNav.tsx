@@ -74,10 +74,11 @@ function MobileNavContent() {
   const userEmail = session?.email || "Guest User";
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
 
-  // Hide bottom navigation bar ONLY inside active video player or practice subviews
+  // Hide bottom navigation bar inside active video player, practice subviews, or roadmaps page
   const isHideBottomBar =
     (pathname === "/learning" && isLearningPlayer) ||
-    (pathname === "/practice" && isPracticeSubView);
+    (pathname === "/practice" && isPracticeSubView) ||
+    pathname.startsWith("/roadmaps");
 
   return (
     <>
