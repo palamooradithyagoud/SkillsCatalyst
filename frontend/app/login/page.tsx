@@ -202,9 +202,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] w-screen h-screen min-h-screen overflow-y-auto overflow-x-hidden bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none">
+    <div className="w-full min-h-screen min-h-[100dvh] bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
       {/* ── LEFT / TOP HEADER: Realistic Animated Mountain Canvas with Penguin in Pure Code ── */}
-      <div className="w-full h-[250px] sm:h-[300px] lg:h-full lg:w-1/2 lg:min-h-screen shrink-0 relative overflow-hidden bg-[#1F1B2C]">
+      <div className="w-full min-w-full lg:min-w-0 h-[250px] sm:h-[300px] lg:h-full lg:w-1/2 lg:min-h-screen shrink-0 relative overflow-hidden bg-[#1F1B2C]">
         <PenguinMountainCanvas className="absolute inset-0 w-full h-full" />
       </div>
 

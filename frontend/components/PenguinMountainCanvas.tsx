@@ -16,20 +16,21 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     if (!ctx) return;
 
     let animationFrameId: number;
-    let cssWidth = canvas.parentElement?.clientWidth || 600;
-    let cssHeight = canvas.parentElement?.clientHeight || 700;
+    let cssWidth = canvas.parentElement?.clientWidth || window.innerWidth;
+    let cssHeight = canvas.parentElement?.clientHeight || 300;
 
     // High-DPI screen support for crisp rendering
     const setupCanvasResolution = () => {
       if (!canvas || !canvas.parentElement) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-      cssWidth = canvas.parentElement.clientWidth;
-      cssHeight = canvas.parentElement.clientHeight;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      cssWidth = Math.ceil(rect.width || canvas.parentElement.clientWidth || window.innerWidth);
+      cssHeight = Math.ceil(rect.height || canvas.parentElement.clientHeight || 300);
 
-      canvas.width = Math.floor(cssWidth * dpr);
-      canvas.height = Math.floor(cssHeight * dpr);
-      canvas.style.width = `${cssWidth}px`;
-      canvas.style.height = `${cssHeight}px`;
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
 
       ctx.resetTransform();
       ctx.scale(dpr, dpr);
@@ -37,6 +38,13 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
     setupCanvasResolution();
     window.addEventListener("resize", setupCanvasResolution);
+
+    const resizeObserver = new ResizeObserver(() => {
+      setupCanvasResolution();
+    });
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
 
     // Mouse / Touch tracking for subtle parallax
     let mouseX = 0;
@@ -270,7 +278,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       sky.addColorStop(1, "#FCE2D2");
 
       ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(-10, -10, width + 30, height + 30);
 
       // Radiant Sunset Aura / Moon Glow in Upper Right
       const sunX = width * 0.74 + mouseX * 8;
@@ -282,7 +290,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       sunGrad.addColorStop(1, "rgba(25, 20, 36, 0)");
 
       ctx.fillStyle = sunGrad;
-      ctx.fillRect(0, 0, width, height * 0.6);
+      ctx.fillRect(-10, -10, width + 30, height * 0.65);
 
       // Subtle Dusk Cloud Bands
       ctx.fillStyle = "rgba(45, 25, 48, 0.32)";
@@ -528,10 +536,10 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
 
       ctx.fillStyle = snowGrad;
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.54);
-      ctx.bezierCurveTo(width * 0.3, height * 0.53, width * 0.7, height * 0.54, width, height * 0.55);
-      ctx.lineTo(width, height);
-      ctx.lineTo(0, height);
+      ctx.moveTo(-10, height * 0.54);
+      ctx.bezierCurveTo(width * 0.3, height * 0.53, width * 0.7, height * 0.54, width + 20, height * 0.55);
+      ctx.lineTo(width + 20, height + 20);
+      ctx.lineTo(-10, height + 20);
       ctx.closePath();
       ctx.fill();
 
@@ -550,10 +558,10 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
       // Front Crisp White Snow Slope
       ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      ctx.moveTo(0, height * 0.73);
-      ctx.bezierCurveTo(width * 0.35, height * 0.71, width * 0.65, height * 0.72, width, height * 0.75);
-      ctx.lineTo(width, height);
-      ctx.lineTo(0, height);
+      ctx.moveTo(-10, height * 0.73);
+      ctx.bezierCurveTo(width * 0.35, height * 0.71, width * 0.65, height * 0.72, width + 20, height * 0.75);
+      ctx.lineTo(width + 20, height + 20);
+      ctx.lineTo(-10, height + 20);
       ctx.closePath();
       ctx.fill();
 
@@ -790,6 +798,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
     return () => {
       window.removeEventListener("resize", setupCanvasResolution);
       window.removeEventListener("mousemove", handleMouseMove);
+      resizeObserver.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
