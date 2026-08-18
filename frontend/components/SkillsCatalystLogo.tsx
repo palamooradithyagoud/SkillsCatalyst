@@ -9,6 +9,8 @@ interface SkillsCatalystLogoProps {
   showText?: boolean;
   animated?: boolean;
   className?: string;
+  textColor?: string;
+  subTextColor?: string;
   onClick?: () => void;
 }
 
@@ -17,6 +19,8 @@ export default function SkillsCatalystLogo({
   showText = false,
   animated = true,
   className = "",
+  textColor,
+  subTextColor,
   onClick,
 }: SkillsCatalystLogoProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -101,10 +105,10 @@ export default function SkillsCatalystLogo({
       {/* ── Brand Typography: SkillsCatalyst / Accelerated Learning ── */}
       {showText && (
         <div className="flex flex-col">
-          <span className={`text-[#18191F] dark:text-white leading-none ${config.title}`}>
+          <span className={`leading-none font-black ${config.title} ${textColor || "text-slate-950 text-black"}`}>
             SkillsCatalyst
           </span>
-          <span className={`font-semibold text-slate-500 dark:text-slate-400 leading-tight mt-0.5 ${config.sub}`}>
+          <span className={`font-semibold leading-tight mt-0.5 ${subTextColor || "text-slate-600"} ${config.sub}`}>
             Accelerated Learning
           </span>
         </div>

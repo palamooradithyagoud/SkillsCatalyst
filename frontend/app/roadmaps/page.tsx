@@ -50,6 +50,7 @@ import BrandReactIcon from "@/components/icons/BrandReactIcon";
 import PythonIcon from "@/components/icons/PythonIcon";
 import BrandNextjsIcon from "@/components/icons/BrandNextjsIcon";
 import PenguinRoadmapMountainExpedition, { CheckpointItem } from "@/components/PenguinRoadmapMountainExpedition";
+import PenguinRoadmapHeroBanner from "@/components/PenguinRoadmapHeroBanner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import BorderGlow from "@/components/BorderGlow";
@@ -4158,40 +4159,19 @@ export default function RoadmapsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-10 pb-16"
     >
-      {/* ── Roadmaps Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] p-6 sm:p-10 text-white shadow-lg">
-        <div className="absolute -right-16 -top-16 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
-          <div className="w-44 h-44 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-300 to-amber-300 blur-2xl animate-pulse" />
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-emerald-300 uppercase">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 shadow-xs">
-                CAREER &amp; SKILL PATHWAYS
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              Developer Roadmaps
-            </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
-              Step-by-step career learning paths curated by industry experts. Pick a technology or career domain to track your mastery from novice to senior architect.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0 flex-wrap">
-            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-center">
-              <div className="text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">SKILL TRACKS</div>
-              <div className="text-2xl font-black text-white">{SKILL_ROADMAPS.length}</div>
-            </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-center">
-              <div className="text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider">CAREER PATHS</div>
-              <div className="text-2xl font-black text-amber-300">{CAREER_ROADMAPS.length}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ── Roadmaps Hero Header Banner with Mountain & Penguin Expedition ── */}
+      <PenguinRoadmapHeroBanner
+        skillCount={SKILL_ROADMAPS.length}
+        careerCount={CAREER_ROADMAPS.length}
+        onExploreSkills={() => {
+          const el = document.getElementById("skill-roadmaps-section");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+        onExploreCareers={() => {
+          const el = document.getElementById("career-roadmaps-section");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
       {/* ── Partner & Technology Logo Loop (Downside Main Banner) */}
       <motion.div
@@ -4299,7 +4279,7 @@ export default function RoadmapsPage() {
       </AnimatePresence>
 
       {/* ── SECTION 1: SKILL ROADMAPS */}
-      <section className="space-y-6">
+      <section id="skill-roadmaps-section" className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
@@ -4412,7 +4392,7 @@ export default function RoadmapsPage() {
       </section>
 
       {/* ── SECTION 2: CAREER ROADMAPS */}
-      <section className="space-y-6">
+      <section id="career-roadmaps-section" className="space-y-6">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <Briefcase className="w-6 h-6 text-emerald-700 shrink-0" />
