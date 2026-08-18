@@ -40,18 +40,39 @@ const LANGUAGES: { value: Lang; label: string }[] = [
 ];
 
 // ── Client-side skill-query guard ─────────────────────────────────────────────
-// Lightweight blocklist mirrors backend _LEARNING_OFFTOPIC for fast UX feedback.
+// Zero-tolerance prohibited terms (Adult, Romance, Songs, Music, Explicit Entertainment)
+const PROHIBITED_TERMS = [
+  // Adult / NSFW / Porn
+  "porn", "xxx", "sex", "sexy", "erotic", "erotica", "nude", "nudity", "naked",
+  "boobs", "cleavage", "bikini", "18+", "nsfw", "adult", "bhabhi", "aunty",
+  "hot scene", "hot video", "hot clip", "hot girl", "hot actress", "sensual", "lust",
+  "strip", "onlyfans", "playboy", "hentai", "ecchi", "r18", "uncensored",
+  // Romance / Dating / Kissing
+  "romance", "romantic", "hot romance", "hot love", "love story", "kiss", "kissing",
+  "lip lock", "bed scene", "romance scene", "dating", "hookup", "couple goals",
+  "crush", "flirt", "breakup", "affair",
+  // Music / Songs / Tracks
+  "song", "songs", "music", "album", "albums", "audio", "track", "tracks", "lyrics",
+  "singer", "singers", "band", "dj", "remix", "lofi", "lo-fi", "mashup", "gaana",
+  "mp3", "soundtrack", "melody", "pop", "rap", "hiphop", "rock", "bgm", "ringtone",
+  "karaoke", "dance", "choreography", "party song", "item song", "sad song",
+  "official music video", "lyric video", "full song", "audio song",
+  // Pranks / Roasts
+  "prank", "pranks", "roast", "roasting", "comedy video", "funny video", "tiktok", "reels", "mukbang",
+];
+
+// General off-topic domains (sports, food, movies, news, politics)
 const OFFTOPIC_TERMS = [
-  "movie", "movies", "film", "films", "cinema", "netflix", "disney", "hotstar",
-  "song", "songs", "music", "album", "singer", "celebrity", "bollywood", "hollywood",
-  "anime", "manga", "cartoon", "podcast", "vlog",
-  "cricket", "ipl", "football", "soccer", "nfl", "nba", "sports", "match",
+  "movie", "movies", "film", "films", "cinema", "netflix", "disney", "hotstar", "prime",
+  "celebrity", "bollywood", "hollywood", "tollywood", "kollywood",
+  "anime", "manga", "cartoon", "podcast", "vlog", "trailer", "teaser",
+  "cricket", "ipl", "football", "soccer", "nfl", "nba", "sports", "match", "tournament",
   "recipe", "food", "cooking", "restaurant", "diet",
-  "girlfriend", "boyfriend", "relationship", "marriage", "wedding", "dating",
+  "relationship", "marriage", "wedding",
   "joke", "jokes", "meme", "memes", "funny",
   "politics", "election", "president", "government",
   "astrology", "horoscope", "zodiac",
-  "weather", "news", "headline",
+  "weather", "news", "headline", "crypto", "bitcoin", "stock market",
 ];
 
 const SKILL_TERMS = [
@@ -59,57 +80,51 @@ const SKILL_TERMS = [
   "django", "flask", "fastapi", "machine learning", "deep learning", "ai", "ml",
   "data science", "nlp", "llm", "dsa", "algorithm", "data structure", "leetcode",
   "system design", "cloud", "aws", "azure", "gcp", "devops", "docker", "kubernetes",
-  "sql", "database", "mongodb", "postgres", "api", "rest", "graphql",
+  "sql", "database", "mongodb", "postgres", "redis", "api", "rest", "graphql",
   "html", "css", "frontend", "backend", "fullstack", "git", "github", "linux",
   "bash", "c++", "golang", "rust", "kotlin", "swift", "flutter", "dart", "php",
   "cybersecurity", "networking", "programming", "coding", "software", "developer",
   "engineer", "interview", "resume", "career", "roadmap", "tech", "tutorial", "course",
+  "c language", "web development", "next.js", "tailwind", "express",
 ];
 
-function isSkillQuery(q: string): boolean {
+function validateClientSkillQuery(q: string): { isValid: boolean; error: string | null } {
   const lower = q.toLowerCase().trim();
-  if (!lower || lower.length < 2) return false;
-  if (/^\d+$/.test(lower)) return false; // numbers-only
+  if (!lower || lower.length < 2) {
+    return { isValid: false, error: "Please enter at least 2 characters to search for a skill (e.g. Python, React, DSA)." };
+  }
+  if (/^[\d\s]+$/.test(lower)) {
+    return { isValid: false, error: "🚫 Numbers alone aren't a skill. Try \"Python\", \"React\", or \"DSA\"." };
+  }
+
+  // 1. Zero tolerance for adult, romance, songs, music
+  const hasProhibited = PROHIBITED_TERMS.some((t) => lower.includes(t));
+  if (hasProhibited) {
+    return {
+      isValid: false,
+      error: "🚫 The Learning section is exclusively for educational & programming topics. Songs, romance, adult, and entertainment queries are strictly blocked.",
+    };
+  }
+
+  // 2. Off-topic domain check
   const hasOffTopic = OFFTOPIC_TERMS.some((t) => lower.includes(t));
-  if (!hasOffTopic) return true;
-  // Off-topic keyword present — only valid if a skill keyword is also present
-  return SKILL_TERMS.some((t) => lower.includes(t));
+  const hasSkill    = SKILL_TERMS.some((t) => lower.includes(t));
+  if (hasOffTopic && !hasSkill) {
+    return {
+      isValid: false,
+      error: `🚫 "${q}" doesn't look like a tech or educational skill. Try searching for a programming language, tool, or concept — e.g. "Python", "React", "DSA", or "System Design".`,
+    };
+  }
+
+  return { isValid: true, error: null };
 }
 
-// ── Client-side skill guard ───────────────────────────────────────────────────
-const _CS_NON_SKILL = [
-  "movie", "movies", "film", "films", "song", "songs", "music", "album",
-  "cricket", "ipl", "football", "soccer", "sports", "match",
-  "recipe", "food", "cooking", "restaurant",
-  "joke", "meme", "funny", "prank",
-  "netflix", "hotstar", "bollywood", "hollywood", "anime", "manga",
-  "relationship", "girlfriend", "boyfriend",
-  "astrology", "horoscope", "zodiac",
-  "news", "politics", "election", "celebrity", "actor", "actress",
-];
-const _CS_SKILL = [
-  "python", "java", "javascript", "typescript", "react", "vue", "angular",
-  "node", "django", "flask", "fastapi", "dsa", "algorithm", "data structure",
-  "machine learning", "deep learning", "ai", "ml", "data science", "nlp",
-  "system design", "cloud", "aws", "azure", "gcp", "devops", "docker",
-  "kubernetes", "sql", "database", "mongodb", "redis", "html", "css",
-  "frontend", "backend", "fullstack", "api", "graphql", "git", "github",
-  "linux", "bash", "c++", "golang", "rust", "kotlin", "swift", "flutter",
-  "cybersecurity", "networking", "programming", "coding", "developer",
-  "software", "engineer", "tutorial", "course", "bootcamp", "leetcode",
-  "competitive", "interview", "career", "resume", "roadmap",
-];
+function isSkillQuery(q: string): boolean {
+  return validateClientSkillQuery(q).isValid;
+}
 
 function isNonSkillQuery(q: string): string | null {
-  const lower = q.toLowerCase().trim();
-  if (!lower || lower.length < 2) return "Please enter a skill to search for (e.g. Python, React, DSA).";
-  if (/^[\d\s]+$/.test(lower)) return "Please search for a skill or technology, not a number.";
-  const hasNonSkill = _CS_NON_SKILL.some((kw) => lower.includes(kw));
-  const hasSkill    = _CS_SKILL.some((kw) => lower.includes(kw));
-  if (hasNonSkill && !hasSkill) {
-    return `"${q}" doesn't look like a skill. Try searching for programming languages, frameworks, or tools like "Python", "React", or "DSA".`;
-  }
-  return null;
+  return validateClientSkillQuery(q).error;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1021,17 +1036,9 @@ export default function LearningPage() {
     const trimmed = query.trim();
     if (!trimmed) return;
 
-    // Client-side numbers-only guard
-    if (/^\d+$/.test(trimmed)) {
-      setQueryError("🚫 Numbers alone aren't a skill. Try \"Python\", \"React\", or \"DSA\".");
-      return;
-    }
-
-    // Client-side skill-query guard — fast path before hitting backend
-    if (!isSkillQuery(trimmed)) {
-      setQueryError(
-        `🚫 "${trimmed}" doesn't look like a skill search. Try a programming language, tool, or concept — e.g. "Python", "React", "DSA", or "System Design".`
-      );
+    const validation = validateClientSkillQuery(trimmed);
+    if (!validation.isValid) {
+      setQueryError(validation.error || "Please enter a valid skill query.");
       return;
     }
 

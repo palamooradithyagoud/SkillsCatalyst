@@ -17,23 +17,44 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/learning", tags=["learning"])
 
 # ---------------------------------------------------------------------------
-# Skills-only guard — keeps the search strictly on tech/career topics
+# Strict Educational Content Guard — zero-tolerance filters
 # ---------------------------------------------------------------------------
 
-# Blocklist: domains clearly outside skills/tech/career
+# Absolutely prohibited terms: Adult / NSFW / Porn, Romance / Dating / Kissing, Songs / Music / Tracks, Pure Entertainment
+_STRICT_PROHIBITED_TERMS = re.compile(
+    r"\b("
+    # Adult / NSFW / Porn / Erotic / Nude
+    r"porn|xxx|sex|sexy|erotic|erotica|nude|nudity|naked|boobs|cleavage|bikini|18\+|nsfw|adult|"
+    r"bhabhi|aunty|hot.?scene|hot.?video|hot.?clip|hot.?girl|hot.?actress|sensual|lust|lusty|"
+    r"strip|cam|onlyfans|playboy|hentai|ecchi|r18|uncensored|leaked.?video|mms|"
+    # Romance / Dating / Sensual / Kiss
+    r"romance|romantic|hot.?romance|hot.?love|love.?story|kiss|kissing|lip.?lock|bed.?scene|"
+    r"romance.?scene|dating|hookup|couple.?goals|crush|flirt|breakup|affair|girlfriend|boyfriend|"
+    # Music / Songs / Tracks / Audio
+    r"song|songs|music|album|albums|audio|track|tracks|lyrics|singer|singers|band|dj|remix|"
+    r"lofi|lo-fi|mashup|gaana|mp3|soundtrack|official.?song|melody|pop|rap|hiphop|rock|bgm|"
+    r"ringtone|tune|karaoke|dance|choreography|party.?song|item.?song|sad.?song|"
+    r"official.?music.?video|lyric.?video|full.?song|audio.?song|"
+    # Junk Entertainment / Pranks / Roasts
+    r"prank|pranks|roast|roasting|comedy.?video|funny.?video|meme.?video|tiktok|reels|"
+    r"shorts.?dance|reaction.?video|mukbang"
+    r")\b",
+    re.IGNORECASE,
+)
+
+# Blocklist: general domains outside tech/coding/career (sports, food, movies, news, politics, etc.)
 _LEARNING_OFFTOPIC = re.compile(
     r"\b("
-    # Entertainment
+    # Entertainment & media
     r"movie|movies|film|films|cinema|series|web.?series|netflix|amazon.?prime|disney|hotstar|ott|"
-    r"song|songs|music|album|band|singer|singer|actor|actress|celebrity|bollywood|hollywood|"
-    r"anime|manga|cartoon|podcast|vlog|vlogger|reality.?show|"
+    r"actor|actress|celebrity|bollywood|hollywood|tollywood|kollywood|anime|manga|cartoon|"
+    r"podcast|vlog|vlogger|reality.?show|trailer|teaser|"
     # Sports
     r"cricket|ipl|football|soccer|nfl|nba|sports|match|tournament|stadium|player|scorer|"
     # Food / lifestyle
     r"recipe|food|cook|cooking|restaurant|dish|eat|meal|diet|fitness.?workout|"
     # Personal / relationships
-    r"girlfriend|boyfriend|relationship|marriage|wedding|love|dating|breakup|"
-    r"joke|meme|funny|prank|entertainment|"
+    r"marriage|wedding|love|dating|breakup|joke|meme|funny|prank|entertainment|"
     # News / politics
     r"politics|election|president|prime.?minister|government|modi|trump|biden|parliament|"
     r"news|headline|current.?affairs|weather|forecast|"
@@ -69,24 +90,41 @@ _ENTERTAINMENT_TITLE_BLOCKLIST = [
     "movie review", "film review", "music video", "music playlist",
     "cooking", "recipe", "food", "sports highlights", "cricket highlights",
     "ipl highlights", "match recap", "songs playlist", "top 10 songs",
-    "best movies", "series review", "web series",
+    "best movies", "series review", "web series", "official music video",
+    "dance video", "party songs", "dj remix", "lofi remix",
 ]
 
 
-def _is_skill_query(query: str) -> bool:
+def _validate_skill_query(query: str) -> tuple[bool, str]:
     """
-    Returns True if the query is a valid skill/tech/career search.
-    A query is invalid (non-skill) when:
-      - It matches the off-topic domain blocklist, AND
-      - It does NOT contain any recognised skill/career keyword.
+    Validates if the search query is strictly an educational / technical / career skill.
+    Returns (is_valid, error_message).
     """
     stripped = query.strip()
     if not stripped:
-        return False
+        return False, "Search query cannot be empty."
+    if len(stripped) < 2:
+        return False, "Please enter at least 2 characters to search."
+    if re.fullmatch(r"[\d\s]+", stripped):
+        return False, "Numbers alone aren't a skill query. Try \"Python\", \"React\", or \"DSA\"."
+
+    # 1. Zero-tolerance check: adult, romance, songs, music, explicit entertainment
+    if _STRICT_PROHIBITED_TERMS.search(stripped):
+        return False, "Search rejected. The Learning section is exclusively for educational & technical topics (songs, romance, adult, and entertainment queries are strictly prohibited)."
+
+    # 2. General off-topic check (sports, movies, cooking, etc.)
     if _LEARNING_OFFTOPIC.search(stripped):
-        # Only allow if user also mentioned a skill (e.g. "cricket data analysis in Python")
-        return bool(_LEARNING_SKILL.search(stripped))
-    return True
+        # Only permit if a recognized tech/coding skill is explicitly present (e.g. "cricket data analysis with python")
+        if not _LEARNING_SKILL.search(stripped):
+            return False, f"\"{stripped}\" doesn't look like a technical or educational skill. Try searching for \"Python\", \"React\", \"DSA\", or \"System Design\"."
+
+    return True, ""
+
+
+def _is_skill_query(query: str) -> bool:
+    """Backward compatibility wrapper returning boolean."""
+    is_valid, _ = _validate_skill_query(query)
+    return is_valid
 import uuid
 
 
@@ -103,8 +141,9 @@ def _is_uuid(val: str) -> bool:
 def _filter_skill_playlists(results: list[dict]) -> list[dict]:
     """
     Post-filter YouTube results: remove playlists whose title or description
-    contain entertainment blocklist keywords (reduces noise from YouTube API).
-    CSV-sourced results are always trusted and pass through unchanged.
+    contain prohibited or entertainment blocklist keywords (eliminates adult, romance,
+    songs, music, and entertainment contamination from YouTube API).
+    CSV-sourced results are always verified and pass through.
     """
     filtered = []
     for pl in results:
@@ -112,10 +151,21 @@ def _filter_skill_playlists(results: list[dict]) -> list[dict]:
         if pl.get("source") == "csv":
             filtered.append(pl)
             continue
-        title_desc = f"{pl.get('title', '')} {pl.get('description', '')}".lower()
-        if any(kw in title_desc for kw in _ENTERTAINMENT_TITLE_BLOCKLIST):
-            logger.debug(f"Filtered out non-skill YT playlist: '{pl.get('title', '')}'")
+        title = pl.get("title", "")
+        desc = pl.get("description", "")
+        channel = pl.get("channel", "")
+        combined_text = f"{title} {desc} {channel}".lower()
+
+        # Zero-tolerance check for adult/romance/songs
+        if _STRICT_PROHIBITED_TERMS.search(combined_text):
+            logger.info(f"Filtered out prohibited YT playlist: '{title}'")
             continue
+
+        # Entertainment noise check
+        if any(kw in combined_text for kw in _ENTERTAINMENT_TITLE_BLOCKLIST):
+            logger.debug(f"Filtered out non-skill YT playlist: '{title}'")
+            continue
+
         filtered.append(pl)
     return filtered
 
@@ -261,11 +311,11 @@ def _search_csv_playlists(query: str, level: str = "all") -> list[dict]:
 async def _search_youtube(
     query: str, level: str = "all", language: str = "english", max_results: int = 25
 ) -> list[dict]:
-    """Search YouTube Data API v3 for playlists."""
+    """Search YouTube Data API v3 for playlists with strict educational parameters."""
     if not YOUTUBE_API_KEY:
         return []
     yt_query = (
-        f"{query} tutorial playlist "
+        f"{query} course tutorial playlist programming educational "
         f"{level if level != 'all' else ''} "
         f"{language if language.lower() != 'english' else ''}"
     ).strip()
@@ -274,6 +324,7 @@ async def _search_youtube(
         "q":                 yt_query,
         "type":              "playlist",
         "maxResults":        max_results,
+        "safeSearch":        "strict",
         "key":               YOUTUBE_API_KEY,
         "relevanceLanguage": language[:2].lower() if language else "en",
     }
@@ -472,18 +523,15 @@ async def search_skill(
             },
         )
 
-    # ── Skill-only guard: block entertainment / off-topic queries
-    if not _is_skill_query(sanitised):
-        logger.info(f"Non-skill search blocked: '{sanitised[:80]}'")
+    # ── Educational & Skill-only guard: block prohibited and off-topic queries
+    is_valid, error_msg = _validate_skill_query(sanitised)
+    if not is_valid:
+        logger.info(f"Non-skill / prohibited search blocked: '{sanitised[:80]}'")
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "not_skill",
-                "message": (
-                    f"\"{ sanitised }\" doesn't look like a skill or tech topic. "
-                    "Try searching for a programming language, tool, or concept — "
-                    "e.g. \"Python\", \"React\", \"System Design\", or \"DSA\"."
-                ),
+                "message": error_msg,
             },
         )
 
@@ -908,13 +956,23 @@ async def get_playlist_videos(
                     vid = snippet.get("resourceId", {}).get("videoId", "")
                     if not vid:
                         continue
+                    v_title = snippet.get("title", "Untitled")
+                    v_desc = snippet.get("description", "")
+                    # Filter private / deleted videos
+                    if v_title in ("Private video", "Deleted video"):
+                        continue
+                    # Filter any adult, romance, song, or prohibited videos inside playlists
+                    if _STRICT_PROHIBITED_TERMS.search(f"{v_title} {v_desc}"):
+                        logger.info(f"Filtered out non-educational video in playlist: '{v_title}'")
+                        continue
+
                     thumbnail = (
                         snippet.get("thumbnails", {}).get("medium", {}).get("url")
                         or f"https://img.youtube.com/vi/{vid}/mqdefault.jpg"
                     )
                     videos.append({
                         "videoId":       vid,
-                        "title":         snippet.get("title", "Untitled"),
+                        "title":         v_title,
                         "position":      snippet.get("position", len(videos)),
                         "thumbnail":     thumbnail,
                         "watched":       False,
@@ -1230,6 +1288,13 @@ async def generate_skill_roadmap(req: RoadmapRequest):
     skill = req.skill.strip()
     if not skill:
         raise HTTPException(status_code=400, detail="Skill prompt cannot be empty")
+
+    is_valid, err_msg = _validate_skill_query(skill)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "not_skill", "message": err_msg}
+        )
 
     prompt = f"""
 Generate a structured 5-tier learning & career roadmap for the topic/skill: "{skill}".
