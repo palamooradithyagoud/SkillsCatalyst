@@ -58,14 +58,26 @@ request_id_ctx_var: contextvars.ContextVar[str] = contextvars.ContextVar("reques
 
 # ── CORS Configuration ────────────────────────────────────────────────────────
 _allowed_origins = [
+    "https://www.skillscatalyst.in",
+    "https://skillscatalyst.in",
     "https://skills-catalyst.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
 _env_frontend = FRONTEND_URL.strip().rstrip("/")
-if _env_frontend and _env_frontend not in _allowed_origins:
-    _allowed_origins.append(_env_frontend)
+if _env_frontend:
+    if _env_frontend not in _allowed_origins:
+        _allowed_origins.append(_env_frontend)
+    # Auto-pair www and apex domains
+    if _env_frontend.startswith("https://www."):
+        apex_origin = _env_frontend.replace("https://www.", "https://")
+        if apex_origin not in _allowed_origins:
+            _allowed_origins.append(apex_origin)
+    elif _env_frontend.startswith("https://") and not _env_frontend.startswith("https://www."):
+        www_origin = _env_frontend.replace("https://", "https://www.")
+        if www_origin not in _allowed_origins:
+            _allowed_origins.append(www_origin)
 
 _extra_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 for _orig in _extra_origins:
@@ -76,9 +88,10 @@ for _orig in _extra_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
+    allow_origin_regex=r"^https://skills-catalyst.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Authorization", "Content-Type", "x-session-id", "X-Request-ID", "Accept", "Origin"],
+    allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-Guest-Session-Token", "x-session-id"],
 )
 

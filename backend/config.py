@@ -14,7 +14,7 @@ SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "").strip()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "").strip()
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-local-secret-changeme-in-production").strip()
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://skills-catalyst.vercel.app").strip().rstrip("/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 ENVIRONMENT = os.getenv("RAILWAY_ENVIRONMENT", os.getenv("ENVIRONMENT", "development")).strip()
 
 REQUIRED_ENV_VARS = {
