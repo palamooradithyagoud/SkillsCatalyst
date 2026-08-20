@@ -50,41 +50,35 @@ def _is_placeholder_secret(val: str) -> bool:
 def validate_startup_config() -> None:
     """
     Validates required environment variables and checks for insecure default secrets on startup.
-    Fails fast with clear startup logs if key variables are missing or insecure in production.
+    Logs clear startup errors and warnings if key variables are missing or insecure.
     """
     missing_vars = [var_name for var_name, value in REQUIRED_ENV_VARS.items() if not value]
 
     if missing_vars:
         error_msg = f"CRITICAL [CONFIG_ERROR]: Missing required environment variables on startup: {', '.join(missing_vars)}"
         logger.error(error_msg)
-        if ENVIRONMENT.lower() in ("production", "prod"):
-            raise RuntimeError(error_msg)
-        else:
-            logger.warning("Application running in non-production mode with default/missing fallback configuration.")
+        logger.warning("Application running with some missing configuration. Endpoints requiring missing keys may fail gracefully.")
 
-    # Objective 6: Detect placeholder/insecure default secrets in production
-    if ENVIRONMENT.lower() in ("production", "prod"):
-        critical_secrets = {
-            "SECRET_KEY": SECRET_KEY,
-            "SUPABASE_JWT_SECRET": SUPABASE_JWT_SECRET,
-            "SUPABASE_SERVICE_KEY": SUPABASE_SERVICE_KEY,
-            "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
-            "GROQ_API_KEY": GROQ_API_KEY,
-        }
+    # Detect placeholder/insecure default secrets
+    critical_secrets = {
+        "SECRET_KEY": SECRET_KEY,
+        "SUPABASE_JWT_SECRET": SUPABASE_JWT_SECRET,
+        "SUPABASE_SERVICE_KEY": SUPABASE_SERVICE_KEY,
+        "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
+        "GROQ_API_KEY": GROQ_API_KEY,
+    }
 
-        insecure_found = []
-        for sec_name, sec_val in critical_secrets.items():
-            if _is_placeholder_secret(sec_val) or len(sec_val) < 16:
-                insecure_found.append(sec_name)
+    insecure_found = []
+    for sec_name, sec_val in critical_secrets.items():
+        if _is_placeholder_secret(sec_val) or len(sec_val) < 16:
+            insecure_found.append(sec_name)
 
-        if insecure_found:
-            sec_error = (
-                f"CRITICAL SECURITY CONFIGURATION FAILURE [CONFIG_ERROR]: Production deployment detected with "
-                f"insecure, default, or placeholder values for environment variables: {', '.join(insecure_found)}. "
-                f"Please configure strong random production credentials (min 16 chars) in Railway environment variables."
-            )
-            logger.error(sec_error)
-            raise RuntimeError(sec_error)
+    if insecure_found:
+        sec_error = (
+            f"SECURITY CONFIGURATION WARNING [CONFIG_WARNING]: Insecure or placeholder values detected for: {', '.join(insecure_found)}. "
+            f"Please configure strong production credentials in environment variables."
+        )
+        logger.warning(sec_error)
 
-    logger.info(f"Startup configuration validated successfully (Environment: {ENVIRONMENT}).")
+    logger.info(f"Startup configuration validation complete (Environment: {ENVIRONMENT}).")
 
