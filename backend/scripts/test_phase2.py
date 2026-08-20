@@ -68,6 +68,26 @@ def test_security_headers_and_cors():
     assert "X-Guest-Session-Token" in headers
     
     # Valid explicit CORS Origin validation
+    cors_resp_prod = client.options(
+        "/health",
+        headers={
+            "Origin": "https://www.skillscatalyst.in",
+            "Access-Control-Request-Method": "GET",
+        }
+    )
+    assert cors_resp_prod.status_code == 200
+    assert cors_resp_prod.headers.get("access-control-allow-origin") == "https://www.skillscatalyst.in"
+
+    cors_resp_apex = client.options(
+        "/health",
+        headers={
+            "Origin": "https://skillscatalyst.in",
+            "Access-Control-Request-Method": "GET",
+        }
+    )
+    assert cors_resp_apex.status_code == 200
+    assert cors_resp_apex.headers.get("access-control-allow-origin") == "https://skillscatalyst.in"
+
     cors_resp = client.options(
         "/health",
         headers={
@@ -78,11 +98,11 @@ def test_security_headers_and_cors():
     assert cors_resp.status_code == 200
     assert cors_resp.headers.get("access-control-allow-origin") == "https://skills-catalyst.vercel.app"
 
-    # Disallowed wildcard/subdomain Origin rejected
+    # Disallowed untrusted Origin rejected
     invalid_cors = client.options(
         "/health",
         headers={
-            "Origin": "https://skills-catalyst-unauthorized.vercel.app",
+            "Origin": "https://unauthorized-malicious-site.example.com",
             "Access-Control-Request-Method": "GET",
         }
     )

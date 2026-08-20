@@ -269,7 +269,7 @@ export default function CareerPage() {
     formData.append("file", file);
 
     const apiBase =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${apiBase}/api/resume/extract`);

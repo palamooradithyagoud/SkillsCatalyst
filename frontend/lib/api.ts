@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
 
 export function getGuestSessionId(): string {
   if (typeof window === "undefined") return "guest_session_default";
