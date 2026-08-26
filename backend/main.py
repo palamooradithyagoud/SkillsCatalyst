@@ -146,6 +146,10 @@ async def production_hardening_middleware(request: Request, call_next):
         _, signed_token = sanitize_or_generate_guest_id(raw_sid)
         response.headers["X-Guest-Session-Token"] = signed_token
 
+    # Record telemetry into observability recorder
+    from backend.services.observability import record_request
+    record_request(request.method, request.url.path, response.status_code, process_time_ms)
+
     # Structured Railway Telemetry Log
     logger.info(
         f"HTTP {request.method} {request.url.path} -> {response.status_code} | Latency: {process_time_ms}ms | ID: {req_id} | Env: {ENVIRONMENT}"
@@ -215,14 +219,51 @@ app.include_router(profile.router)
 
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
+@app.get("/api/health", status_code=status.HTTP_200_OK, tags=["System"])
 def health_check():
-    """Railway Liveness Probe Endpoint."""
-    return {"status": "healthy"}
+    """Multi-service health check endpoint (never exposes secrets/credentials)."""
+    db_status = "unconfigured"
+    try:
+        from backend.services.supabase_service import get_supabase
+        sb = get_supabase()
+        if sb:
+            db_status = "ok"
+    except Exception:
+        db_status = "error"
+
+    from backend.services.cache_service import get_redis_health_status
+    from backend.services.observability import get_system_metrics
+    redis_status = get_redis_health_status()
+    yt_status = "configured" if os.getenv("YOUTUBE_API_KEY") else "unconfigured"
+    ai_status = "configured" if os.getenv("GROQ_API_KEY") else "unconfigured"
+
+    metrics = get_system_metrics()
+
+    return {
+        "status": "healthy",
+        "services": {
+            "database": db_status,
+            "redis": redis_status,
+            "youtube": yt_status,
+            "groq_ai": ai_status,
+        },
+        "metrics": {
+            "uptime_seconds": metrics.get("uptime_seconds", 0),
+            "redis_hit_rate_pct": metrics.get("redis_cache", {}).get("hit_rate_pct", 0),
+            "total_requests": metrics.get("requests", {}).get("total", 0),
+        }
+    }
 
 @app.get("/ready", status_code=status.HTTP_200_OK, tags=["System"])
 def readiness_check():
     """Railway Readiness Probe Endpoint."""
     return {"status": "ready"}
+
+@app.get("/api/metrics", status_code=status.HTTP_200_OK, tags=["System"])
+def system_metrics():
+    """Returns safe, aggregated observability telemetry."""
+    from backend.services.observability import get_system_metrics
+    return get_system_metrics()
 
 @app.get("/", status_code=status.HTTP_200_OK, tags=["System"])
 def root():
@@ -233,4 +274,5 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run("backend.main:app", host="0.0.0.0", port=port)
+
 

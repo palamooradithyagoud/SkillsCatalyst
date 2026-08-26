@@ -55,7 +55,7 @@ def test_health_probes_unauthenticated_no_cors():
     print("Testing Railway health probes accessibility without CORS headers...")
     h_resp = client.get("/health")
     assert h_resp.status_code == 200
-    assert h_resp.json() == {"status": "healthy"}
+    assert h_resp.json().get("status") == "healthy"
 
     r_resp = client.get("/ready")
     assert r_resp.status_code == 200

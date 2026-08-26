@@ -6,16 +6,16 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 from fastapi import Request, HTTPException, status
 from backend.services.auth_service import get_optional_user_id
+from backend.services.cache_service import get_redis_client
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("skillscatalyst.ratelimiter")
 
-# Configurable RPM (Requests Per Minute) limits from environment variables
+# Configurable RPM limits
 RATE_LIMIT_AI_RPM = int(os.getenv("RATE_LIMIT_AI_RPM", "30"))
 RATE_LIMIT_RESUME_RPM = int(os.getenv("RATE_LIMIT_RESUME_RPM", "10"))
 RATE_LIMIT_SEARCH_RPM = int(os.getenv("RATE_LIMIT_SEARCH_RPM", "60"))
 RATE_LIMIT_DEFAULT_RPM = int(os.getenv("RATE_LIMIT_DEFAULT_RPM", "120"))
 
-# Trusted proxy IPs/networks (defaulting to local loopback and internal proxy defaults)
 TRUSTED_PROXIES = set(
     filter(None, [p.strip() for p in os.getenv("TRUSTED_PROXIES", "127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16").split(",")])
 )
@@ -35,8 +35,8 @@ def _is_trusted_proxy(ip: str) -> bool:
 
 def extract_client_key(request: Request) -> str:
     """
-    Safely extracts client identity:
-    1. Authenticated User UUID (from Bearer JWT if present)
+    Safely extracts client identity for rate limiting:
+    1. Authenticated User UUID (from Bearer JWT)
     2. X-Forwarded-For header ONLY IF connecting peer is a trusted proxy
     3. Client Host IP directly
     """
@@ -48,7 +48,6 @@ def extract_client_key(request: Request) -> str:
 
     peer_ip = request.client.host if request.client else ""
 
-    # Only trust X-Forwarded-For if request comes from a trusted proxy
     if peer_ip and _is_trusted_proxy(peer_ip):
         forwarded = request.headers.get("X-Forwarded-For")
         if forwarded:
@@ -63,7 +62,7 @@ def extract_client_key(request: Request) -> str:
 
 
 class BaseRateLimiter(ABC):
-    """Abstract Rate Limiter Interface for pluggable storage (Memory / Redis)."""
+    """Abstract Rate Limiter Interface."""
 
     @abstractmethod
     def check_rate_limit(self, request: Request, max_requests: int, window_seconds: int = 60) -> Tuple[bool, int]:
@@ -71,10 +70,7 @@ class BaseRateLimiter(ABC):
 
 
 class InMemoryRateLimiter(BaseRateLimiter):
-    """
-    Thread-safe in-memory sliding window rate limiter.
-    Includes key eviction to prevent memory accumulation.
-    """
+    """Thread-safe in-memory sliding window rate limiter with auto-eviction."""
 
     def __init__(self):
         self._requests: Dict[str, List[float]] = defaultdict(list)
@@ -106,34 +102,31 @@ class InMemoryRateLimiter(BaseRateLimiter):
 
 class RedisRateLimiter(BaseRateLimiter):
     """
-    Distributed Redis sliding window rate limiter using sorted sets.
-    Active when REDIS_URL environment variable is configured.
+    Distributed Redis sliding window rate limiter using sorted sets and connection pooling.
+    Falls back gracefully to in-memory limiter on Redis connectivity disruptions.
     """
 
-    def __init__(self, redis_url: str):
-        self.redis_url = redis_url
-        self._redis_client = None
-
-    def _get_redis(self):
-        if self._redis_client is None:
-            import redis
-            self._redis_client = redis.Redis.from_url(self.redis_url, decode_responses=True)
-        return self._redis_client
+    def __init__(self):
+        self._fallback_limiter = InMemoryRateLimiter()
 
     def check_rate_limit(self, request: Request, max_requests: int, window_seconds: int = 60) -> Tuple[bool, int]:
         try:
-            r = self._get_redis()
+            r = get_redis_client()
+            if not r:
+                return self._fallback_limiter.check_rate_limit(request, max_requests, window_seconds)
+
             now = time.time()
             client_key = extract_client_key(request)
             key = f"rate:{client_key}:{request.url.path}"
             window_start = now - window_seconds
 
             pipe = r.pipeline()
+            # 1. Clean out entries older than current sliding window
             pipe.zremrangebyscore(key, 0, window_start)
+            # 2. Count active requests in sliding window
             pipe.zcard(key)
+            # 3. Get oldest timestamp to calculate accurate retry-after
             pipe.zrange(key, 0, 0, withscores=True)
-            pipe.zadd(key, {str(now): now})
-            pipe.expire(key, window_seconds + 5)
             res = pipe.execute()
 
             current_count = res[1]
@@ -144,28 +137,24 @@ class RedisRateLimiter(BaseRateLimiter):
                 retry_after = max(1, int(oldest_score + window_seconds - now))
                 return False, retry_after
 
+            # Within limit: record new timestamp atomically
+            add_pipe = r.pipeline()
+            add_pipe.zadd(key, {str(now): now})
+            add_pipe.expire(key, window_seconds + 5)
+            add_pipe.execute()
+
             return True, 0
         except Exception as err:
-            logger.warning(f"Redis rate limiter fallback to allow: {err}")
-            return True, 0
+            logger.warning(f"Redis rate limiter error ({type(err).__name__}) — falling back to memory limiter.")
+            return self._fallback_limiter.check_rate_limit(request, max_requests, window_seconds)
 
 
-# Factory initializer: selects Redis if REDIS_URL present, else InMemory
-from backend.config import REDIS_URL
-
-_redis_url = REDIS_URL or os.getenv("REDIS_URL")
-if _redis_url:
-    logger.info("Initializing RedisRateLimiter backend.")
-    rate_limiter: BaseRateLimiter = RedisRateLimiter(_redis_url)
-else:
-    logger.info("Initializing InMemoryRateLimiter backend.")
-    rate_limiter: BaseRateLimiter = InMemoryRateLimiter()
+# Factory instance
+rate_limiter: BaseRateLimiter = RedisRateLimiter()
 
 
 def enforce_rate_limit(max_requests: int, window_seconds: int = 60):
-    """
-    FastAPI dependency for enforcing rate limits on specific endpoint routes.
-    """
+    """FastAPI dependency for enforcing rate limits on specific routes."""
     async def dependency(request: Request):
         allowed, retry_after = rate_limiter.check_rate_limit(
             request=request,
@@ -175,7 +164,7 @@ def enforce_rate_limit(max_requests: int, window_seconds: int = 60):
         if not allowed:
             client_key = extract_client_key(request)
             logger.warning(
-                f"Rate limit exceeded for path '{request.url.path}' by client '{client_key}'. Retry after {retry_after}s."
+                f"Rate limit exceeded on '{request.url.path}' by '{client_key}'. Retry after {retry_after}s."
             )
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
