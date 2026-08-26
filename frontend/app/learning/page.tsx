@@ -22,22 +22,12 @@ import { useAuth } from "@/lib/auth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type ActiveCard = "explore" | "saved";
-type Level = "all" | "beginner" | "intermediate" | "advanced";
-type Lang  = "all" | "english" | "hindi" | "telugu" | "tamil";
-
-const LEVELS: { value: Level; label: string }[] = [
-  { value: "all",          label: "All Levels"   },
-  { value: "beginner",     label: "Beginner"      },
-  { value: "intermediate", label: "Intermediate"  },
-  { value: "advanced",     label: "Advanced"      },
-];
+type Lang  = "english" | "telugu" | "hindi";
 
 const LANGUAGES: { value: Lang; label: string }[] = [
-  { value: "all",     label: "All Languages" },
-  { value: "english", label: "English"       },
-  { value: "hindi",   label: "Hindi"         },
-  { value: "telugu",  label: "Telugu"        },
-  { value: "tamil",   label: "Tamil"         },
+  { value: "english", label: "English" },
+  { value: "telugu",  label: "Telugu"  },
+  { value: "hindi",   label: "Hindi"   },
 ];
 
 // ── Client-side skill-query guard ─────────────────────────────────────────────
@@ -964,8 +954,7 @@ export default function LearningPage() {
 
   const [activeCard, setActiveCard]     = useState<ActiveCard>("explore");
   const [query, setQuery]               = useState("");
-  const [level, setLevel]               = useState<Level>("all");
-  const [language, setLanguage]         = useState<Lang>("all");
+  const [language, setLanguage]         = useState<Lang>("english");
   const [searchTerm, setSearchTerm]     = useState("");
   const [hasSearched, setHasSearched]   = useState(false);
   const [notification, setNotification] = useState<{ msg: string; type: "success" | "error"; actionText?: string; onAction?: () => void } | null>(null);
@@ -1001,8 +990,8 @@ export default function LearningPage() {
     isFetching: searching,
     refetch: doSearch,
   } = useQuery({
-    queryKey: ["learning-search", searchTerm, level, language],
-    queryFn:  () => searchSkill(searchTerm, level, language),
+    queryKey: ["learning-search", searchTerm, language],
+    queryFn:  () => searchSkill(searchTerm, "all", language),
     enabled:  !!searchTerm,
     staleTime: 5 * 60 * 1000,
   });
@@ -1207,7 +1196,6 @@ export default function LearningPage() {
                     }`}
                   />
                 </div>
-                <SelectDropdown value={level}    options={LEVELS}    onChange={setLevel}    />
                 <SelectDropdown value={language} options={LANGUAGES} onChange={setLanguage} />
                 <motion.button
                   whileHover={{ scale: 1.02 }}
