@@ -620,16 +620,16 @@ def _detect_query_language(query: str) -> Optional[str]:
         return "hindi"
     if re.search(r"\benglish\b", q):
         return "english"
-    if re.search(r"\btamil\b", q):
-        return "tamil"
     return None
 
 
 def _filter_by_language(rows: list[dict], language: str) -> list[dict]:
-    """Filters results by language preference matching the CSV language column."""
+    """Filters results by language preference: english, telugu, or hindi."""
     if not language or language.lower() in ("all", "any"):
         return rows
     lang_lower = language.lower().strip()
+    if lang_lower not in ("english", "telugu", "hindi"):
+        lang_lower = "english"
     filtered = []
     for r in rows:
         r_lang = r.get("language", "").lower()
@@ -644,14 +644,7 @@ def _filter_by_language(rows: list[dict], language: str) -> list[dict]:
     return filtered
 
 
-def _filter_by_level(rows: list[dict], level: str) -> list[dict]:
-    allowed = LEVEL_MAP.get(level.lower())
-    if not allowed:
-        return rows
-    return [r for r in rows if any(a.lower() in r["level"].lower() for a in allowed)]
-
-
-def _search_csv_playlists(query: str, level: str = "all", language: str = "all") -> list[dict]:
+def _search_csv_playlists(query: str, level: str = "all", language: str = "english") -> list[dict]:
     q_lower = query.lower().strip()
     if not q_lower:
         return []
@@ -709,8 +702,7 @@ def _search_csv_playlists(query: str, level: str = "all", language: str = "all")
                 seen.add(key)
                 results.append(r)
 
-    level_filtered = _filter_by_level(results, level)
-    return _filter_by_language(level_filtered, effective_lang)
+    return _filter_by_language(results, effective_lang)
 
 
 async def _search_youtube(
@@ -719,11 +711,12 @@ async def _search_youtube(
     """Search YouTube Data API v3 for playlists/videos with strict educational parameters."""
     if not YOUTUBE_API_KEY:
         return []
+    lang_clean = language.lower().strip() if language and language.lower().strip() in ("telugu", "hindi") else "english"
     yt_query = (
         f"{query} course tutorial playlist programming educational "
-        f"{level if level != 'all' else ''} "
-        f"{language if language.lower() not in ('english', 'all') else ''}"
+        f"{lang_clean if lang_clean != 'english' else ''}"
     ).strip()
+    relevance_lang = "te" if lang_clean == "telugu" else ("hi" if lang_clean == "hindi" else "en")
     params = {
         "part":              "snippet",
         "q":                 yt_query,
@@ -731,7 +724,7 @@ async def _search_youtube(
         "maxResults":        max_results,
         "safeSearch":        "strict",
         "key":               YOUTUBE_API_KEY,
-        "relevanceLanguage": language[:2].lower() if language and language != "all" else "en",
+        "relevanceLanguage": relevance_lang,
     }
     async with httpx.AsyncClient(timeout=10) as client:
         try:
@@ -839,7 +832,7 @@ QUALITY_KEYWORDS = {
     "playlist", "series", "zero to hero", "beginner to advanced", "one shot"
 }
 
-def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all", language: str = "all") -> list[dict]:
+def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all", language: str = "english") -> list[dict]:
     q_lower = query.lower().strip()
     query_lang = _detect_query_language(q_lower)
     effective_lang = (query_lang if query_lang else language).lower().strip()
@@ -853,7 +846,6 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         title_lower = p.get("title", "").lower()
         desc_lower = p.get("description", "").lower()
         channel_lower = p.get("channel", "").lower()
-        level_str = p.get("level", "").lower()
         item_lang = p.get("language", "").lower()
 
         # 1. Curated CSV source boost (verified high-quality playlists)
@@ -871,7 +863,7 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         if is_dsa and any(w in title_lower for w in ["dsa", "data structure", "data structures", "algorithm", "algorithms", "bootcamp"]):
             score += 40.0
 
-        # 4. Language match boost
+        # 4. Language match boost (English, Telugu, Hindi)
         if effective_lang and effective_lang != "all":
             if effective_lang in item_lang:
                 score += 50.0
@@ -900,10 +892,6 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         if any(kw in desc_lower for kw in QUALITY_KEYWORDS):
             score += 5.0
 
-        # 8. Level Match
-        if level != "all" and level.lower() in level_str:
-            score += 10.0
-
         return score
 
     seen_ids = set()
@@ -922,19 +910,21 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
 @router.get("/search", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_SEARCH_RPM))])
 async def search_skill(
     query:       str = Query(..., description="Skill keyword e.g. Python, React, DSA"),
-    level:       str = Query("all",     description="beginner | intermediate | advanced | all"),
-    language:    str = Query("all",     description="all | english | hindi | telugu | tamil"),
+    language:    str = Query("english", description="english | telugu | hindi"),
+    level:       Optional[str] = Query("all", description="Legacy parameter (all levels returned)"),
     max_results: Optional[int] = Query(10, description="Max results limit (default 10, max 10)"),
 ):
     """
     Search playlists with quality ranking & limit strictly to TOP 10 best playlists.
     Strict CSV-first precedence: returns curated CSV results if found, otherwise falls back to YouTube API.
-    Filters and ranks according to language category from CSVs.
+    Filters and ranks according to language category (English, Telugu, Hindi).
     """
-    if not isinstance(level, str):
-        level = getattr(level, "default", "all") or "all"
     if not isinstance(language, str):
-        language = getattr(language, "default", "all") or "all"
+        language = getattr(language, "default", "english") or "english"
+
+    lang_clean = language.lower().strip()
+    if lang_clean not in ("english", "telugu", "hindi"):
+        lang_clean = "english"
 
     # ── Input sanitisation: strip HTML tags (XSS / injection guard)
     sanitised = re.sub(r"<[^>]+>", "", query).strip()
@@ -983,30 +973,29 @@ async def search_skill(
 
     # Detect language intent from query text or explicit parameter
     query_lang = _detect_query_language(sanitised)
-    effective_lang = query_lang if query_lang else language
+    effective_lang = query_lang if query_lang else lang_clean
 
-    # Search local CSV database first
-    csv_rows = _search_csv_playlists(sanitised, level, effective_lang)
+    # Search local CSV database first (all levels)
+    csv_rows = _search_csv_playlists(sanitised, "all", effective_lang)
 
     if csv_rows:
         source_used = "csv"
-        ranked = _score_and_rank_playlists(csv_rows, sanitised, level, effective_lang)
+        ranked = _score_and_rank_playlists(csv_rows, sanitised, "all", effective_lang)
         top_10 = ranked[:limit]
     else:
         source_used = "youtube"
-        yt_rows = await _search_youtube(sanitised, level, effective_lang, max_results=20)
+        yt_rows = await _search_youtube(sanitised, "all", effective_lang, max_results=20)
         yt_rows = _filter_skill_playlists(yt_rows)
-        ranked = _score_and_rank_playlists(yt_rows, sanitised, level, effective_lang)
+        ranked = _score_and_rank_playlists(yt_rows, sanitised, "all", effective_lang)
         top_10 = ranked[:limit]
 
     logger.info(
         f"Search '{sanitised}' → {len(top_10)} results "
-        f"(source={source_used}, level={level}, lang={effective_lang})."
+        f"(source={source_used}, lang={effective_lang})."
     )
 
     return {
         "query": sanitised,
-        "level": level,
         "language": effective_lang,
         "source": source_used,
         "count": len(top_10),
