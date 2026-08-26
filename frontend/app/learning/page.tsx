@@ -78,14 +78,14 @@ const OFFTOPIC_TERMS = [
 const SKILL_TERMS = [
   "python", "java", "javascript", "typescript", "react", "vue", "angular", "node",
   "django", "flask", "fastapi", "machine learning", "deep learning", "ai", "ml",
-  "data science", "nlp", "llm", "dsa", "algorithm", "data structure", "leetcode",
+  "data science", "nlp", "llm", "dsa", "ds", "algorithm", "data structure", "leetcode",
   "system design", "cloud", "aws", "azure", "gcp", "devops", "docker", "kubernetes",
   "sql", "database", "mongodb", "postgres", "redis", "api", "rest", "graphql",
   "html", "css", "frontend", "backend", "fullstack", "git", "github", "linux",
-  "bash", "c++", "golang", "rust", "kotlin", "swift", "flutter", "dart", "php",
+  "bash", "c++", "cpp", "golang", "rust", "kotlin", "swift", "flutter", "dart", "php",
   "cybersecurity", "networking", "programming", "coding", "software", "developer",
   "engineer", "interview", "resume", "career", "roadmap", "tech", "tutorial", "course",
-  "c language", "web development", "next.js", "tailwind", "express",
+  "c language", "c programming", "web development", "next.js", "tailwind", "express",
 ];
 
 function validateClientSkillQuery(q: string): { isValid: boolean; error: string | null } {
