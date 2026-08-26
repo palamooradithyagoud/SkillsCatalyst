@@ -1,8 +1,18 @@
+import uuid
 from locust import HttpUser, task, between
 
 
 class SkillsCatalystUser(HttpUser):
     wait_time = between(0.1, 0.5)
+
+    def on_start(self):
+        """Assign unique client IP and session token to simulate real distributed traffic."""
+        user_suffix = uuid.uuid4().hex[:6]
+        self.session_id = f"guest_loadtest_{user_suffix}"
+        self.client.headers.update({
+            "X-Forwarded-For": f"198.51.100.{hash(user_suffix) % 250 + 1}",
+            "x-session-id": self.session_id,
+        })
 
     @task(4)
     def search_curated_learning(self):
@@ -30,6 +40,6 @@ class SkillsCatalystUser(HttpUser):
                 "last_position": 45.0,
                 "watch_time": 45,
             },
-            headers={"x-session-id": "guest_loadtest_session_token"},
+            headers={"x-session-id": self.session_id},
             name="/api/learning/save-progress [Guest]"
         )

@@ -19,3 +19,4 @@ PyJWT==2.13.0
 passlib==1.7.4
 gunicorn==25.1.0
 redis>=5.0.0
+locust>=2.30.0
