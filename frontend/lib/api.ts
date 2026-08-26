@@ -871,6 +871,7 @@ export interface Playlist {
   title: string;
   channel: string;
   description: string;
+  language?: string;
   level: string;
   video_count: string;
   duration: string;
@@ -894,7 +895,7 @@ export interface SearchResult {
 export async function searchSkill(
   query: string,
   level = "all",
-  language = "english",
+  language = "all",
   max_results = 10
 ): Promise<SearchResult> {
   if (!query || !query.trim() || query.trim().length < 2) {
@@ -1205,8 +1206,18 @@ export function cleanPlaylistId(rawIdOrUrl: string): string {
       const listParam = url.searchParams.get("list");
       if (listParam) return listParam;
     }
+    if (rawIdOrUrl.includes("watch?v=") || rawIdOrUrl.includes("v=")) {
+      const url = new URL(rawIdOrUrl.startsWith("http") ? rawIdOrUrl : `https://${rawIdOrUrl}`);
+      const vParam = url.searchParams.get("v");
+      if (vParam) return vParam;
+    }
+    if (rawIdOrUrl.includes("youtu.be/")) {
+      const url = new URL(rawIdOrUrl.startsWith("http") ? rawIdOrUrl : `https://${rawIdOrUrl}`);
+      const pathId = url.pathname.replace(/^\//, "");
+      if (pathId) return pathId;
+    }
   } catch {}
-  return rawIdOrUrl.replace(/^.*list=/, "").split("&")[0].trim();
+  return rawIdOrUrl.replace(/^.*list=/, "").replace(/^.*v=/, "").split("&")[0].trim();
 }
 
 export async function fetchPlaylistVideos(

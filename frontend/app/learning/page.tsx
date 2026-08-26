@@ -23,7 +23,7 @@ import { useAuth } from "@/lib/auth";
 // ── Types ─────────────────────────────────────────────────────────────────────
 type ActiveCard = "explore" | "saved";
 type Level = "all" | "beginner" | "intermediate" | "advanced";
-type Lang  = "english" | "hindi" | "tamil" | "telugu";
+type Lang  = "all" | "english" | "hindi" | "telugu" | "tamil";
 
 const LEVELS: { value: Level; label: string }[] = [
   { value: "all",          label: "All Levels"   },
@@ -33,10 +33,11 @@ const LEVELS: { value: Level; label: string }[] = [
 ];
 
 const LANGUAGES: { value: Lang; label: string }[] = [
-  { value: "english", label: "English" },
-  { value: "hindi",   label: "Hindi"   },
-  { value: "tamil",   label: "Tamil"   },
-  { value: "telugu",  label: "Telugu"  },
+  { value: "all",     label: "All Languages" },
+  { value: "english", label: "English"       },
+  { value: "hindi",   label: "Hindi"         },
+  { value: "telugu",  label: "Telugu"        },
+  { value: "tamil",   label: "Tamil"         },
 ];
 
 // ── Client-side skill-query guard ─────────────────────────────────────────────
@@ -138,8 +139,15 @@ function getLevelStyle(level: string): string {
 
 function extractPlaylistId(url: string): string | null {
   if (!url) return null;
-  const m = url.match(/[?&]list=([^&]+)/);
-  return m?.[1] ?? null;
+  const listMatch = url.match(/[?&]list=([^&]+)/);
+  if (listMatch) return listMatch[1];
+  const vMatch = url.match(/[?&]v=([^&]+)/);
+  if (vMatch) return vMatch[1];
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+  if (shortMatch) return shortMatch[1];
+  const embedMatch = url.match(/\/embed\/([^?&]+)/);
+  if (embedMatch) return embedMatch[1];
+  return null;
 }
 
 // ── SelectDropdown ────────────────────────────────────────────────────────────
@@ -204,6 +212,11 @@ function PlaylistCard({
             <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full border ${getLevelStyle(pl.level)}`}>
               {pl.level || "All Levels"}
             </span>
+            {pl.language && (
+              <span className="text-[10px] sm:text-xs font-bold text-violet-700 bg-violet-50 border border-violet-200/90 px-2 py-0.5 rounded-full shadow-xs">
+                {pl.language}
+              </span>
+            )}
             {pl.source === "csv" ? (
               <span className="flex items-center gap-1 text-[9px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 rounded-full ml-auto shadow-xs">
                 <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600" /> CSV
@@ -345,7 +358,7 @@ function SavedPlaylistRow({
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-bold text-slate-900 truncate">{pl.title}</h3>
           <p className="text-xs font-semibold text-slate-400 mt-0.5">
-            {[pl.channel, pl.skill_query, pl.level].filter(Boolean).join(" • ")}
+            {[pl.channel, pl.language, pl.skill_query, pl.level].filter(Boolean).join(" • ")}
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
@@ -498,10 +511,12 @@ function VideoPlayerContainer({
   onProgressUpdate: (pct: number) => void;
   onComplete: (watchedSeconds: number) => void;
 }) {
-  const containerId = `yt-player-${videoId}`;
+  const isValidYTId = typeof videoId === "string" && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
+  const safeVideoId = isValidYTId ? videoId : "rfscVS0vtbw";
+  const containerId = `yt-player-${safeVideoId}`;
   useYouTubePlayer({
     containerId,
-    videoId,
+    videoId: safeVideoId,
     startAt,
     playlistId,
     onProgressUpdate,
@@ -950,7 +965,7 @@ export default function LearningPage() {
   const [activeCard, setActiveCard]     = useState<ActiveCard>("explore");
   const [query, setQuery]               = useState("");
   const [level, setLevel]               = useState<Level>("all");
-  const [language, setLanguage]         = useState<Lang>("english");
+  const [language, setLanguage]         = useState<Lang>("all");
   const [searchTerm, setSearchTerm]     = useState("");
   const [hasSearched, setHasSearched]   = useState(false);
   const [notification, setNotification] = useState<{ msg: string; type: "success" | "error"; actionText?: string; onAction?: () => void } | null>(null);

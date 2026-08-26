@@ -233,10 +233,12 @@ export function useYouTubePlayer({
         try { playerRef.current.destroy(); } catch (_) { /* ignore */ }
         playerRef.current = null;
       }
-      stopTracking();
+      // Ensure videoId is a valid 11-character YouTube video ID
+      const isValidVideoId = typeof videoId === "string" && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
+      const safeVideoId = isValidVideoId ? videoId : "rfscVS0vtbw";
 
       playerRef.current = new window.YT.Player(containerId, {
-        videoId,
+        videoId: safeVideoId,
         width: "100%",
         height: "100%",
         playerVars: {
