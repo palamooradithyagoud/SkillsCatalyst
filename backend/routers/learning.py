@@ -2,6 +2,7 @@ import os
 import csv
 import httpx
 import re
+import time
 import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Query, Depends
@@ -12,6 +13,7 @@ from backend.services.auth_service import get_current_user_id, get_session_or_us
 from backend.config import YOUTUBE_API_KEY
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_SEARCH_RPM
 from backend.services.cache_service import get_cached_youtube_search, cache_youtube_search
+from backend.services.observability import record_youtube_call, record_learning_search
 
 logger = logging.getLogger(__name__)
 
@@ -727,13 +729,19 @@ async def _search_youtube(
         "key":               YOUTUBE_API_KEY,
         "relevanceLanguage": relevance_lang,
     }
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(timeout=8.0) as client:
         try:
             resp = await client.get("https://www.googleapis.com/youtube/v3/search", params=params)
+            if resp.status_code in (403, 429):
+                logger.warning(f"YouTube API rate limit / quota exceeded response [{resp.status_code}]")
+                record_youtube_call(success=False)
+                return []
             resp.raise_for_status()
             data = resp.json()
+            record_youtube_call(success=True)
         except Exception as e:
-            print(f"YouTube API error: {e}")
+            record_youtube_call(success=False)
+            logger.warning(f"YouTube API query error: {type(e).__name__}")
             return []
 
     results = []
@@ -833,6 +841,23 @@ QUALITY_KEYWORDS = {
     "playlist", "series", "zero to hero", "beginner to advanced", "one shot"
 }
 
+# ── Centralized Scoring & Ranking Weights ─────────────────────────────────────
+SCORE_CSV_SOURCE_BOOST       = 50.0
+SCORE_EXACT_TECH_MATCH       = 50.0
+SCORE_COMPETING_TECH_PENALTY = -500.0
+SCORE_DSA_BOOST              = 40.0
+SCORE_EXACT_LANG_MATCH       = 50.0
+SCORE_HINGLISH_LANG_MATCH    = 35.0
+SCORE_ENGLISH_MIX_MATCH      = 25.0
+SCORE_LANG_MISMATCH_PENALTY  = -30.0
+SCORE_EXACT_TITLE_RELEVANCE  = 40.0
+SCORE_ALL_WORDS_MATCH        = 30.0
+SCORE_ANY_WORD_MATCH         = 15.0
+SCORE_REPUTABLE_CHANNEL      = 25.0
+SCORE_QUALITY_KEYWORD_TITLE  = 15.0
+SCORE_QUALITY_KEYWORD_DESC   = 5.0
+
+
 def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all", language: str = "english") -> list[dict]:
     q_lower = query.lower().strip()
     query_lang = _detect_query_language(q_lower)
@@ -849,49 +874,49 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         channel_lower = p.get("channel", "").lower()
         item_lang = p.get("language", "").lower()
 
-        # 1. Curated CSV source boost (verified high-quality playlists)
+        # 1. Curated CSV source boost
         if p.get("source") == "csv":
-            score += 50.0
+            score += SCORE_CSV_SOURCE_BOOST
 
         # 2. Strict technology match & penalty for competing tech
         if tech:
             if re.search(r"\b" + re.escape(tech) + r"\b", title_lower):
-                score += 50.0
+                score += SCORE_EXACT_TECH_MATCH
             if any(re.search(pat, title_lower) for pat in TECH_CONFIG[tech]["competing"]):
-                score -= 500.0
+                score += SCORE_COMPETING_TECH_PENALTY
 
         # 3. DSA/DS specific boost
         if is_dsa and any(w in title_lower for w in ["dsa", "data structure", "data structures", "algorithm", "algorithms", "bootcamp"]):
-            score += 40.0
+            score += SCORE_DSA_BOOST
 
         # 4. Language match boost (English, Telugu, Hindi)
         if effective_lang and effective_lang != "all":
             if effective_lang in item_lang:
-                score += 50.0
+                score += SCORE_EXACT_LANG_MATCH
             elif effective_lang == "hindi" and any(h in item_lang for h in ("hinglish", "hindi/english", "english/hindi")):
-                score += 35.0
+                score += SCORE_HINGLISH_LANG_MATCH
             elif effective_lang == "english" and any(e in item_lang for e in ("hindi/english", "english/hindi")):
-                score += 25.0
+                score += SCORE_ENGLISH_MIX_MATCH
             else:
-                score -= 30.0
+                score += SCORE_LANG_MISMATCH_PENALTY
 
         # 5. Title relevance
         if q_lower in title_lower:
-            score += 40.0
+            score += SCORE_EXACT_TITLE_RELEVANCE
         elif q_words and all(w in title_lower for w in q_words):
-            score += 30.0
+            score += SCORE_ALL_WORDS_MATCH
         elif q_words and any(w in title_lower for w in q_words):
-            score += 15.0
+            score += SCORE_ANY_WORD_MATCH
 
         # 6. Reputable Channel Boost
         if any(ch in channel_lower for ch in REPUTABLE_CHANNELS):
-            score += 25.0
+            score += SCORE_REPUTABLE_CHANNEL
 
         # 7. Course / Quality Keyword Boost
         if any(kw in title_lower for kw in QUALITY_KEYWORDS):
-            score += 15.0
+            score += SCORE_QUALITY_KEYWORD_TITLE
         if any(kw in desc_lower for kw in QUALITY_KEYWORDS):
-            score += 5.0
+            score += SCORE_QUALITY_KEYWORD_DESC
 
         return score
 
@@ -971,10 +996,12 @@ async def search_skill(
 
     # Enforce top 10 limit
     limit = 10 if (max_results is None or max_results <= 0) else min(max_results, 10)
+    search_start = time.time()
 
     # Detect language intent from query text or explicit parameter
     query_lang = _detect_query_language(sanitised)
     effective_lang = query_lang if query_lang else lang_clean
+    cache_hit = False
 
     # Search local CSV database first (all levels)
     csv_rows = _search_csv_playlists(sanitised, "all", effective_lang)
@@ -988,6 +1015,7 @@ async def search_skill(
         # Check Redis cache first to save YouTube Data API quota
         cached_yt = get_cached_youtube_search(sanitised, effective_lang)
         if cached_yt:
+            cache_hit = True
             logger.info(f"YouTube search cache HIT for '{sanitised}' ({effective_lang})")
             top_10 = cached_yt[:limit]
         else:
@@ -998,9 +1026,12 @@ async def search_skill(
             if top_10:
                 cache_youtube_search(sanitised, effective_lang, top_10)
 
+    elapsed_ms = round((time.time() - search_start) * 1000, 2)
+    record_learning_search(source=source_used, language=effective_lang, cache_hit=cache_hit, latency_ms=elapsed_ms)
+
     logger.info(
         f"Search '{sanitised}' → {len(top_10)} results "
-        f"(source={source_used}, lang={effective_lang})."
+        f"(source={source_used}, lang={effective_lang}, cached={cache_hit}, latency={elapsed_ms}ms)."
     )
 
     return {
@@ -1688,11 +1719,18 @@ async def save_video_progress(
     current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
-    Periodic resume save (every 10 s) — updates last_position & watch_time
-    WITHOUT touching the `watched` flag (prevents anti-cheat bypass).
+    Playback Progress Verification — periodic resume save (every 10s).
+    Validates position sanity & watch_time without touching `watched` status.
     """
     user_id = current_user_id
-    if not user_id or not _is_uuid(user_id):
+    if not user_id:
+        return {"success": True}
+
+    # Playback Progress Verification: sanitize position & watch_time
+    if req.last_position < 0 or req.watch_time < 0 or req.last_position > 86400:
+        return {"success": False, "reason": "Invalid position or watch time bounds"}
+
+    if not _is_uuid(user_id):
         return {"success": True}
     sb = get_supabase()
     if not sb:
@@ -1718,7 +1756,7 @@ async def save_video_progress(
             }).execute()
         return {"success": True}
     except Exception as e:
-        print(f"save-progress error: {e}")
+        logger.warning(f"save-progress database error: {type(e).__name__}")
         return {"success": False}
 
 
@@ -1729,18 +1767,20 @@ async def complete_video(
     current_user_id: str = Depends(get_session_or_user_id)
 ):
     """
-    Auto-completion endpoint. Called when ≥75% of a video is genuinely watched.
-    Updates relational `video_progress`, syncs JSONB `learning_progress`, and logs event in `user_feedback`.
+    Playback Progress Verification — auto-completion endpoint.
+    Fired when player verifies ≥75% of a video has been watched.
     """
     user_id = current_user_id
     if not user_id:
         return {"success": True, "playlist_stats": {"completed_videos": 0}}
+
+    # Playback Progress Verification bounds check
+    if req.watch_time < 0 or (req.last_position is not None and req.last_position < 0):
+        raise HTTPException(status_code=400, detail="Invalid watch_time or last_position: must be >= 0")
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
-
-    if req.watch_time < 0:
-        raise HTTPException(status_code=400, detail="Invalid watch_time: must be >= 0 seconds")
 
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
