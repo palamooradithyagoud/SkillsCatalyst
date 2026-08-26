@@ -14,6 +14,7 @@ SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "").strip()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "").strip()
 SECRET_KEY = os.getenv("SECRET_KEY", "skills-catalyst-prod-sec-key-8f4b9c1d2e3f4a5b6c7d8e9f").strip()
+REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 ENVIRONMENT = os.getenv("RAILWAY_ENVIRONMENT", os.getenv("ENVIRONMENT", "development")).strip()
 

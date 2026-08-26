@@ -151,7 +151,9 @@ class RedisRateLimiter(BaseRateLimiter):
 
 
 # Factory initializer: selects Redis if REDIS_URL present, else InMemory
-_redis_url = os.getenv("REDIS_URL")
+from backend.config import REDIS_URL
+
+_redis_url = REDIS_URL or os.getenv("REDIS_URL")
 if _redis_url:
     logger.info("Initializing RedisRateLimiter backend.")
     rate_limiter: BaseRateLimiter = RedisRateLimiter(_redis_url)
