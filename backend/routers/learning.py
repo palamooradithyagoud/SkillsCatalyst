@@ -11,6 +11,7 @@ from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.config import YOUTUBE_API_KEY
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_SEARCH_RPM
+from backend.services.cache_service import get_cached_youtube_search, cache_youtube_search
 
 logger = logging.getLogger(__name__)
 
@@ -984,10 +985,18 @@ async def search_skill(
         top_10 = ranked[:limit]
     else:
         source_used = "youtube"
-        yt_rows = await _search_youtube(sanitised, "all", effective_lang, max_results=20)
-        yt_rows = _filter_skill_playlists(yt_rows)
-        ranked = _score_and_rank_playlists(yt_rows, sanitised, "all", effective_lang)
-        top_10 = ranked[:limit]
+        # Check Redis cache first to save YouTube Data API quota
+        cached_yt = get_cached_youtube_search(sanitised, effective_lang)
+        if cached_yt:
+            logger.info(f"YouTube search cache HIT for '{sanitised}' ({effective_lang})")
+            top_10 = cached_yt[:limit]
+        else:
+            yt_rows = await _search_youtube(sanitised, "all", effective_lang, max_results=20)
+            yt_rows = _filter_skill_playlists(yt_rows)
+            ranked = _score_and_rank_playlists(yt_rows, sanitised, "all", effective_lang)
+            top_10 = ranked[:limit]
+            if top_10:
+                cache_youtube_search(sanitised, effective_lang, top_10)
 
     logger.info(
         f"Search '{sanitised}' → {len(top_10)} results "
