@@ -2,7 +2,13 @@ import io
 import re
 import logging
 import os
-import fitz  # PyMuPDF
+
+try:
+    import fitz  # PyMuPDF
+    HAVE_FITZ = True
+except Exception:
+    fitz = None
+    HAVE_FITZ = False
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +34,10 @@ def clean_extracted_text(text: str) -> str:
         return ""
 
     # Strip null bytes and non-printable control characters, keep \n \r \t
-    text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', text)
 
-    # Normalize non-breaking and zero-width spaces
-    text = text.replace('\xa0', ' ').replace('\u200b', '')
-
-    # Trim each line individually
-    lines = [line.strip() for line in text.splitlines()]
-    cleaned = '\n'.join(lines)
+    # Normalize carriage returns
+    cleaned = cleaned.replace('\r\n', '\n').replace('\r', '\n')
 
     # Collapse multiple horizontal spaces to a single space (per line)
     cleaned = re.sub(r'[ \t]+', ' ', cleaned)
@@ -50,8 +52,31 @@ def clean_extracted_text(text: str) -> str:
 # PDF Extraction
 # ---------------------------------------------------------------------------
 
+def _extract_pdf_pypdf(content: bytes) -> str:
+    """Extracts text from PDF bytes using pypdf."""
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(content))
+        if reader.is_encrypted:
+            try:
+                reader.decrypt("")
+            except Exception:
+                raise ValueError("PDF is encrypted or password-protected. Please upload an unencrypted file.")
+        pages: list[str] = []
+        for page in reader.pages:
+            txt = page.extract_text()
+            if txt and txt.strip():
+                pages.append(txt.strip())
+        return "\n\n".join(pages)
+    except Exception as e:
+        logger.warning(f"pypdf extraction failed: {e}")
+        return ""
+
+
 def _extract_pdf_pymupdf(content: bytes) -> str:
     """Extracts text from PDF bytes via PyMuPDF (fitz)."""
+    if not HAVE_FITZ or fitz is None:
+        return ""
     try:
         doc = fitz.open(stream=content, filetype="pdf")
     except Exception as e:
@@ -100,15 +125,23 @@ def extract_text_from_pdf(content: bytes) -> str:
     Extracts plain text from PDF bytes.
 
     Strategy:
-      1. Try PyMuPDF (fast, handles most PDFs).
-      2. Fall back to pdfplumber if PyMuPDF returns empty (image-heavy/complex layouts).
-      3. Raise ValueError if both fail or document is encrypted / unreadable.
+      1. Try PyMuPDF (if available).
+      2. Try pypdf (fast, robust pure-python).
+      3. Fall back to pdfplumber if needed.
     """
-    logger.debug("Attempting PDF extraction via PyMuPDF.")
-    raw_text = _extract_pdf_pymupdf(content)  # raises on encryption
+    raw_text = ""
+    if HAVE_FITZ:
+        try:
+            raw_text = _extract_pdf_pymupdf(content)
+        except Exception as e:
+            logger.debug(f"PyMuPDF failed: {e}")
 
     if not raw_text.strip():
-        logger.info("PyMuPDF returned empty text — trying pdfplumber fallback.")
+        logger.debug("Attempting PDF extraction via pypdf.")
+        raw_text = _extract_pdf_pypdf(content)
+
+    if not raw_text.strip():
+        logger.info("Trying pdfplumber fallback.")
         raw_text = _extract_pdf_pdfplumber(content)
 
     if not raw_text.strip():

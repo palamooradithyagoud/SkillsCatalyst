@@ -174,48 +174,52 @@ def _filter_skill_playlists(results: list[dict]) -> list[dict]:
 # ── Path to the data directory ──────────────────────────────────────────────
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 
+# Subdirectory shortcuts
+_DS_DIR  = os.path.join(DATA_DIR, "youtube data", "data structure")
+_LANG_DIR = os.path.join(DATA_DIR, "youtube data", "programming languge")
+_WEB_DIR  = os.path.join(DATA_DIR, "youtube data", "web development")
+
+
+def _csv_abs(subdir: str, filename: str) -> str:
+    """Return the absolute path for a CSV file inside a given subdirectory."""
+    return os.path.join(subdir, filename)
+
 STOP_WORDS = {
     "in", "for", "the", "a", "an", "and", "or", "to", "of", "with",
     "by", "on", "at", "from", "is", "all", "complete", "course",
     "tutorial", "tutorials", "playlist", "video", "videos"
 }
 
+# TECH_CONFIG: maps tech keys to (subdir, filename) tuples + competing-tech regexes
+# Each "files" / "dsa_files" value is a list of (subdir, filename) tuples.
 TECH_CONFIG = {
     "java": {
-        # Language-only search (e.g. "java", "java tutorials") → tutorials CSV only
-        "files": ["java_tutorials.csv"],
-        # DSA search (e.g. "dsa in java", "data structures java") → DSA CSV only
-        "dsa_files": ["dsa_in_java.csv"],
+        "files":     [(_LANG_DIR, "java.csv")],
+        "dsa_files": [(_DS_DIR,   "dsa_in_java.csv")],
         "competing": [
             r"\bpython\b",
             r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
             r"\bcpp\b",
             r"(?<![a-zA-Z0-9\+])c programming\b",
             r"(?<![a-zA-Z0-9\+])c language\b",
-            # Bare standalone C (e.g. "Data Structures in C") but not C++/C#
             r"(?<![a-zA-Z0-9\+#])\bc\b(?![\+#a-zA-Z0-9])",
         ],
     },
     "python": {
-        # Language-only search → tutorials CSV only
-        "files": ["python_tutorials.csv"],
-        # DSA search → DSA CSV only
-        "dsa_files": ["dsa_in_python__1_.csv"],
+        "files":     [(_LANG_DIR, "python.csv")],
+        "dsa_files": [(_DS_DIR,   "dsa_in_python__1_.csv")],
         "competing": [
             r"\bjava\b",
             r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
             r"\bcpp\b",
             r"(?<![a-zA-Z0-9\+])c programming\b",
             r"(?<![a-zA-Z0-9\+])c language\b",
-            # Bare standalone C but not C++/C#
             r"(?<![a-zA-Z0-9\+#])\bc\b(?![\+#a-zA-Z0-9])",
         ],
     },
     "cpp": {
-        # Language-only search → tutorials CSV only
-        "files": ["cpp_tutorials.csv"],
-        # DSA search → DSA CSV only
-        "dsa_files": ["dsa_in_cpp.csv"],
+        "files":     [(_LANG_DIR, "c++.csv")],
+        "dsa_files": [(_DS_DIR,   "dsa_in_cpp.csv")],
         "competing": [
             r"\bjava\b",
             r"\bpython\b",
@@ -224,15 +228,45 @@ TECH_CONFIG = {
         ],
     },
     "c": {
-        # C only has one CSV (data structures / tutorials merged)
-        "files": ["c_datastructures_tutorials.csv"],
-        "dsa_files": ["c_datastructures_tutorials.csv"],
+        "files":     [(_DS_DIR, "c_datastructures_tutorials.csv"), (_LANG_DIR, "C.csv")],
+        "dsa_files": [(_DS_DIR, "c_datastructures_tutorials.csv")],
         "competing": [
             r"\bjava\b",
             r"\bpython\b",
             r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
             r"\bcpp\b",
         ],
+    },
+    # ── Web development topics ────────────────────────────────────────────────
+    "html": {
+        "files":     [(_WEB_DIR, "html.csv")],
+        "dsa_files": [],
+        "competing": [],
+    },
+    "css": {
+        "files":     [(_WEB_DIR, "css.csv")],
+        "dsa_files": [],
+        "competing": [],
+    },
+    "javascript": {
+        "files":     [(_WEB_DIR, "js.csv")],
+        "dsa_files": [],
+        "competing": [],
+    },
+    "nodejs": {
+        "files":     [(_WEB_DIR, "nodejs.csv")],
+        "dsa_files": [],
+        "competing": [],
+    },
+    "react": {
+        "files":     [(_WEB_DIR, "react.csv")],
+        "dsa_files": [],
+        "competing": [],
+    },
+    "sql": {
+        "files":     [(_WEB_DIR, "sql.csv")],
+        "dsa_files": [],
+        "competing": [],
     },
 }
 
@@ -241,33 +275,47 @@ TECH_CONFIG = {
 #   Language keywords  (java/python/cpp/c++) → tutorials CSVs ONLY
 #   DSA keywords (dsa/ds/data structures)    → dsa_ CSVs ONLY
 #   They must NEVER be mixed.
+# Each value is a list of (subdir, filename) tuples.
 CSV_TOPIC_MAP = {
     # ── Language tutorials (no DSA) ──────────────────────────────────────────
-    "python":           ["python_tutorials.csv"],
-    "java":             ["java_tutorials.csv"],
-    "cpp":              ["cpp_tutorials.csv"],
-    "c++":              ["cpp_tutorials.csv"],
-    # \"c\" alone: word-boundary matched in search loop (len <= 2 path)
-    "c":                ["c_datastructures_tutorials.csv"],
+    "python":            [(_LANG_DIR, "python.csv")],
+    "java":              [(_LANG_DIR, "java.csv")],
+    "cpp":               [(_LANG_DIR, "c++.csv")],
+    "c++":               [(_LANG_DIR, "c++.csv")],
+    # "c" alone: word-boundary matched in search loop (len <= 2 path)
+    "c":                 [(_DS_DIR, "c_datastructures_tutorials.csv"), (_LANG_DIR, "C.csv")],
 
     # ── DSA / Data Structures (no language tutorials) ────────────────────────
-    # Generic DSA: Java + C++ + Python DSA CSVs (C excluded unless explicit)
-    "dsa":              ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
-    "data structure":   ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
-    "data structures":  ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
-    "algorithm":        ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
-    "algorithms":       ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+    "dsa":               [(_DS_DIR, "dsa_in_java.csv"), (_DS_DIR, "dsa_in_cpp.csv"), (_DS_DIR, "dsa_in_python__1_.csv")],
+    "data structure":    [(_DS_DIR, "dsa_in_java.csv"), (_DS_DIR, "dsa_in_cpp.csv"), (_DS_DIR, "dsa_in_python__1_.csv")],
+    "data structures":   [(_DS_DIR, "dsa_in_java.csv"), (_DS_DIR, "dsa_in_cpp.csv"), (_DS_DIR, "dsa_in_python__1_.csv")],
+    "algorithm":         [(_DS_DIR, "dsa_in_java.csv"), (_DS_DIR, "dsa_in_cpp.csv"), (_DS_DIR, "dsa_in_python__1_.csv")],
+    "algorithms":        [(_DS_DIR, "dsa_in_java.csv"), (_DS_DIR, "dsa_in_cpp.csv"), (_DS_DIR, "dsa_in_python__1_.csv")],
 
     # ── Language-specific DSA ────────────────────────────────────────────────
-    "dsa java":         ["dsa_in_java.csv"],
-    "dsa python":       ["dsa_in_python__1_.csv"],
-    "dsa cpp":          ["dsa_in_cpp.csv"],
-    "dsa c":            ["c_datastructures_tutorials.csv"],
-    "ds java":          ["dsa_in_java.csv"],
-    "ds python":        ["dsa_in_python__1_.csv"],
-    "ds cpp":           ["dsa_in_cpp.csv"],
-    "ds c":             ["c_datastructures_tutorials.csv"],
-    "data structures c": ["c_datastructures_tutorials.csv"],
+    "dsa java":          [(_DS_DIR, "dsa_in_java.csv")],
+    "dsa python":        [(_DS_DIR, "dsa_in_python__1_.csv")],
+    "dsa cpp":           [(_DS_DIR, "dsa_in_cpp.csv")],
+    "dsa c":             [(_DS_DIR, "c_datastructures_tutorials.csv")],
+    "ds java":           [(_DS_DIR, "dsa_in_java.csv")],
+    "ds python":         [(_DS_DIR, "dsa_in_python__1_.csv")],
+    "ds cpp":            [(_DS_DIR, "dsa_in_cpp.csv")],
+    "ds c":              [(_DS_DIR, "c_datastructures_tutorials.csv")],
+    "data structures c": [(_DS_DIR, "c_datastructures_tutorials.csv")],
+
+    # ── Web Development ──────────────────────────────────────────────────────
+    "html":              [(_WEB_DIR, "html.csv")],
+    "css":               [(_WEB_DIR, "css.csv")],
+    "javascript":        [(_WEB_DIR, "js.csv")],
+    "js":                [(_WEB_DIR, "js.csv")],
+    "node":              [(_WEB_DIR, "nodejs.csv")],
+    "nodejs":            [(_WEB_DIR, "nodejs.csv")],
+    "node.js":           [(_WEB_DIR, "nodejs.csv")],
+    "react":             [(_WEB_DIR, "react.csv")],
+    "reactjs":           [(_WEB_DIR, "react.csv")],
+    "sql":               [(_WEB_DIR, "sql.csv")],
+    "mysql":             [(_WEB_DIR, "sql.csv")],
+    "postgresql":        [(_WEB_DIR, "sql.csv")],
 }
 
 
@@ -283,15 +331,26 @@ LEVEL_MAP = {
 
 # Queries that contain these patterns should skip CSV lookup entirely and go to YouTube API.
 # This covers frameworks/tools that don't have a dedicated CSV file.
+# NOTE: use .? between words to match both spaced ('fast api') and unspaced ('fastapi') variants.
+# YouTube-ONLY patterns: queries that have NO local CSV and must always hit the YouTube API.
+# NOTE: html, css, javascript, sql, node.js, react are now served by local CSVs;
+#       they have been removed from this list.
 _YOUTUBE_ONLY_PATTERNS = re.compile(
     r"\bspring.?boot\b|\bspring\b|\bhibernate\b|\bmicroservice\b|\bmicroservices\b"
-    r"|\bdjango\b|\bflask\b|\bfastapi\b|\bexpress\b|\bnest\.?js\b"
+    r"|\bdjango\b|\bflask\b|fast.?api|\bexpress\b|\bexpress.?js\b"
+    r"|nest.?js"
     r"|\bkubernetes\b|\bdocker\b|\bdevops\b|\bansible\b|\bterraform\b"
-    r"|\bangular\b|\bvue\b|\bsvelte\b|\bnext\.?js\b|\breact\b"
-    r"|\bmachine.?learning\b|\bdeep.?learning\b|\bpytorch\b|\btensorflow\b"
-    r"|\bgolang\b|\brust\b|\bkotlin\b|\bswift\b|\bflutter\b|\bdart\b|\bphp\b|\bruby\b"
-    r"|\bcybersecurity\b|\bethical.?hacking\b|\baws\b|\bazure\b|\bgcp\b"
-    r"|\bsystem.?design\b|\bsql\b|\bmongodb\b|\bpostgres\b|\bredis\b",
+    r"|\bangular\b|\bvue\b|\bsvelte\b|next.?js"
+    r"|machine.?learning|deep.?learning|\bpytorch\b|\btensorflow\b|\bscikit\b"
+    r"|\bgolang\b|\bgo.?lang\b|\brust\b|\bkotlin\b|\bswift\b"
+    r"|\bflutter\b|\bdart\b|\bphp\b|\bruby\b|\bscala\b|\bperl\b"
+    r"|\bcybersecurity\b|ethical.?hacking|\bpentesting\b"
+    r"|\baws\b|\bazure\b|\bgcp\b|\bcloud\b"
+    r"|system.?design|\bmongodb\b|\bpostgres\b|\bredis\b"
+    r"|\bgit\b|\bgithub\b|\blinux\b|\bbash\b|\bshell\b"
+    r"|\bblockchain\b|\bweb3\b|\bgraphql\b|\brest.?api\b|\bapi\b"
+    r"|\btypescript\b"
+    r"|\bopencv\b|\bcomputer.?vision\b|\bnlp\b|\bllm\b",
     re.IGNORECASE,
 )
 
@@ -303,11 +362,25 @@ def _detect_primary_tech(query: str) -> Optional[str]:
     """
     q = query.lower()
 
-    # Queries containing Spring / Spring Boot / frameworks → no CSV, use YouTube API
+    # Queries with no local CSV → use YouTube API
     if _YOUTUBE_ONLY_PATTERNS.search(q):
         return None
 
-    # Pure Java (no framework terms) → java_tutorials.csv
+    # ── Web development topics (served by local CSVs) ────────────────────────
+    if re.search(r"\bnode\.?js\b|\bnodejs\b", q):
+        return "nodejs"
+    if re.search(r"\breact\.?js\b|\breactjs\b|\breact\b", q):
+        return "react"
+    if re.search(r"\bhtml\b", q):
+        return "html"
+    if re.search(r"\bcss\b", q):
+        return "css"
+    if re.search(r"\bjavascript\b|\bjs\b", q):
+        return "javascript"
+    if re.search(r"\bsql\b|\bmysql\b|\bpostgresql\b", q):
+        return "sql"
+
+    # ── Programming languages ─────────────────────────────────────────────────
     if re.search(r"\bjava\b", q):
         return "java"
     if re.search(r"\bpython\b|\bpy\b", q):
@@ -315,7 +388,6 @@ def _detect_primary_tech(query: str) -> Optional[str]:
     if re.search(r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])|\bcpp\b", q):
         return "cpp"
     # C language: must be explicit — "c", "c programming", "c language"
-    # Negative lookbehind/ahead avoids matching "C" in acronyms like "C++", "C#", "science", "ReactC"
     if re.search(
         r"(?<![a-zA-Z0-9\+#])c programming\b"
         r"|(?<![a-zA-Z0-9\+#])c language\b"
@@ -326,38 +398,250 @@ def _detect_primary_tech(query: str) -> Optional[str]:
     return None
 
 
-def _extract_playlist_id(url: str, fallback: str) -> str:
-    if url and "list=" in url:
-        return url.split("list=")[1].split("&")[0]
-    return fallback
+def _extract_youtube_ids(url: str, fallback: str = "") -> dict:
+    """Extract playlist_id and video_id from any YouTube URL format or raw ID."""
+    if not url:
+        return {"playlist_id": None, "video_id": None, "id": fallback, "is_playlist": False}
+
+    clean = str(url).strip()
+    playlist_id = None
+    video_id = None
+
+    # 1. Extract playlist ID from URL query param
+    if "list=" in clean:
+        try:
+            playlist_id = clean.split("list=")[1].split("&")[0].split("#")[0].strip()
+        except Exception:
+            playlist_id = None
+
+    # 2. Extract video ID from URL
+    if "watch?v=" in clean:
+        try:
+            video_id = clean.split("watch?v=")[1].split("&")[0].split("#")[0].strip()
+        except Exception:
+            video_id = None
+    elif "youtu.be/" in clean:
+        try:
+            video_id = clean.split("youtu.be/")[1].split("?")[0].split("#")[0].strip()
+        except Exception:
+            video_id = None
+    elif "/embed/" in clean:
+        try:
+            video_id = clean.split("/embed/")[1].split("?")[0].split("#")[0].strip()
+        except Exception:
+            video_id = None
+
+    # 3. Handle raw IDs without full URL
+    if not playlist_id and not video_id:
+        if clean.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) or (len(clean) >= 16 and not clean.startswith("http")):
+            playlist_id = clean
+        elif len(clean) == 11 and re.match(r"^[a-zA-Z0-9_-]{11}$", clean):
+            video_id = clean
+
+    if playlist_id:
+        return {
+            "playlist_id": playlist_id,
+            "video_id": video_id,
+            "id": playlist_id,
+            "is_playlist": True,
+        }
+    elif video_id:
+        return {
+            "playlist_id": None,
+            "video_id": video_id,
+            "id": video_id,
+            "is_playlist": False,
+        }
+    return {
+        "playlist_id": None,
+        "video_id": None,
+        "id": fallback or clean,
+        "is_playlist": False,
+    }
 
 
-def _parse_csv(filename: str) -> list[dict]:
-    path = os.path.join(DATA_DIR, filename)
-    if not os.path.exists(path):
+def _extract_playlist_id(url: str, fallback: str = "") -> str:
+    ids = _extract_youtube_ids(url, fallback)
+    return ids["id"]
+
+
+# ── Column name aliases ───────────────────────────────────────────────────────
+_TITLE_KEYS    = ("playlist_title", "title")
+_CHANNEL_KEYS  = ("channel_name", "channel")
+_VIDEOS_KEYS   = ("video_count", "videos")
+_DURATION_KEYS = ("duration_hours", "duration")
+_URL_KEYS      = ("playlist_url", "content_url")
+_CH_URL_KEYS   = ("channel_url",)
+_LANG_KEYS     = ("language",)
+
+
+def _first(row: dict, keys: tuple) -> str:
+    """Return the first non-empty value from a dict using a sequence of key candidates."""
+    for k in keys:
+        v = row.get(k, "").strip()
+        if v:
+            return v
+    return ""
+
+
+def _parse_csv(abs_path: str) -> list[dict]:
+    """Parse any of the CSV files into a normalised list of playlist dicts with language support."""
+    if not os.path.exists(abs_path):
+        logger.warning(f"CSV not found: {abs_path}")
         return []
+
     results = []
-    clean_fname = os.path.splitext(filename)[0]
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row.get("playlist_title"):
-                pl_url = row.get("playlist_url", "")
-                pl_id = _extract_playlist_id(pl_url, f"{clean_fname}_{row.get('rank', '0')}")
-                results.append({
-                    "id":           pl_id,
-                    "title":        row.get("playlist_title", ""),
-                    "channel":      row.get("channel_name", ""),
-                    "description":  row.get("description", ""),
-                    "level":        row.get("level", ""),
-                    "video_count":  row.get("video_count", "?"),
-                    "duration":     f"{row.get('duration_hours', '?')} hrs",
-                    "playlist_url": pl_url,
-                    "channel_url":  row.get("channel_url", ""),
-                    "source":       "csv",
-                    "thumbnail":    "https://img.youtube.com/vi/default/hqdefault.jpg",
-                })
+    clean_fname = os.path.splitext(os.path.basename(abs_path))[0]
+
+    try:
+        with open(abs_path, newline="", encoding="utf-8", errors="ignore") as f:
+            first_line = f.readline().strip()
+            f.seek(0)
+
+            first_cell = first_line.split(",")[0].strip().strip('"')
+            has_header = not re.fullmatch(r"\d+", first_cell)
+
+            if has_header:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    title = _first(row, _TITLE_KEYS)
+                    if not title:
+                        continue
+                    pl_url   = _first(row, _URL_KEYS)
+                    ch_url   = _first(row, _CH_URL_KEYS)
+                    rank_val = row.get("rank", "0")
+                    ids      = _extract_youtube_ids(pl_url, f"{clean_fname}_{rank_val}")
+                    pl_id    = ids["id"]
+                    dur_raw  = _first(row, _DURATION_KEYS)
+                    duration = f"{dur_raw} hrs" if dur_raw and dur_raw.lower() not in ("unknown", "?", "", "n/a") else "?"
+                    raw_lang = _first(row, _LANG_KEYS)
+                    if raw_lang.upper() in ("HTML/CSS", "CSS", "VIDEO") or not raw_lang:
+                        lang_val = "English"
+                    else:
+                        lang_val = raw_lang.strip()
+
+                    vid_for_thumb = ids.get("video_id")
+                    thumb_url = f"https://img.youtube.com/vi/{vid_for_thumb}/hqdefault.jpg" if vid_for_thumb else "https://img.youtube.com/vi/rfscVS0vtbw/hqdefault.jpg"
+
+                    results.append({
+                        "id":           pl_id,
+                        "title":        title,
+                        "channel":      _first(row, _CHANNEL_KEYS),
+                        "language":     lang_val,
+                        "description":  row.get("description", "").strip(),
+                        "level":        row.get("level", "").strip(),
+                        "video_count":  _first(row, _VIDEOS_KEYS) or "?",
+                        "duration":     duration,
+                        "playlist_url": pl_url,
+                        "channel_url":  ch_url,
+                        "source":       "csv",
+                        "thumbnail":    thumb_url,
+                    })
+            else:
+                # No-header CSVs: positional columns
+                # rank, channel, title, type, language, level, videos, duration, description, channel_url, playlist_url
+                reader = csv.reader(f)
+                for cols in reader:
+                    if not cols or not cols[0].strip().isdigit():
+                        continue
+                    if len(cols) < 5:
+                        continue
+                    rank_val = cols[0].strip()
+                    channel  = cols[1].strip() if len(cols) > 1 else ""
+                    title    = cols[2].strip() if len(cols) > 2 else ""
+                    if not title:
+                        continue
+                    item_type = cols[3].strip() if len(cols) > 3 else ""
+                    raw_lang  = cols[4].strip() if len(cols) > 4 else "English"
+                    level     = cols[5].strip() if len(cols) > 5 else "Beginner"
+                    video_cnt = cols[6].strip() if len(cols) > 6 else "?"
+                    dur_raw   = cols[7].strip() if len(cols) > 7 else ""
+                    duration  = f"{dur_raw} hrs" if dur_raw and dur_raw.lower() not in ("unknown", "?", "", "n/a", "none") else "?"
+
+                    # Dynamically extract URLs from the end of the row
+                    urls = [c.strip() for c in cols if c.strip().startswith(("http://", "https://"))]
+                    if len(urls) >= 2:
+                        pl_url = urls[-1]
+                        ch_url = urls[-2]
+                    elif len(urls) == 1:
+                        pl_url = urls[0]
+                        ch_url = ""
+                    else:
+                        pl_url = cols[-1].strip() if len(cols) > 10 else ""
+                        ch_url = cols[-2].strip() if len(cols) > 10 else ""
+
+                    # Extract description from between column 8 and the first URL column
+                    url_indices = [i for i, c in enumerate(cols) if c.strip().startswith(("http://", "https://"))]
+                    if url_indices and len(cols) > 8:
+                        first_url_idx = url_indices[0]
+                        desc = ", ".join(c.strip() for c in cols[8:first_url_idx] if c.strip()).strip()
+                    elif len(cols) > 8:
+                        desc = cols[8].strip()
+                    else:
+                        desc = ""
+
+                    ids      = _extract_youtube_ids(pl_url, f"{clean_fname}_{rank_val}")
+                    pl_id    = ids["id"]
+
+                    if raw_lang.upper() in ("HTML/CSS", "CSS", "VIDEO") or not raw_lang:
+                        lang_val = "English"
+                    else:
+                        lang_val = raw_lang.strip()
+
+                    vid_for_thumb = ids.get("video_id")
+                    thumb_url = f"https://img.youtube.com/vi/{vid_for_thumb}/hqdefault.jpg" if vid_for_thumb else "https://img.youtube.com/vi/rfscVS0vtbw/hqdefault.jpg"
+
+                    results.append({
+                        "id":           pl_id,
+                        "title":        title,
+                        "channel":      channel,
+                        "language":     lang_val,
+                        "description":  desc,
+                        "level":        level,
+                        "video_count":  video_cnt or "?",
+                        "duration":     duration,
+                        "playlist_url": pl_url,
+                        "channel_url":  ch_url,
+                        "source":       "csv",
+                        "thumbnail":    thumb_url,
+                    })
+    except Exception as e:
+        logger.error(f"Error parsing CSV {abs_path}: {e}", exc_info=True)
+
     return results
+
+
+def _detect_query_language(query: str) -> Optional[str]:
+    """Extract explicit language intent from query if mentioned (e.g. 'python in telugu')."""
+    q = query.lower()
+    if re.search(r"\btelugu\b", q):
+        return "telugu"
+    if re.search(r"\bhindi\b|\bhinglish\b", q):
+        return "hindi"
+    if re.search(r"\benglish\b", q):
+        return "english"
+    if re.search(r"\btamil\b", q):
+        return "tamil"
+    return None
+
+
+def _filter_by_language(rows: list[dict], language: str) -> list[dict]:
+    """Filters results by language preference matching the CSV language column."""
+    if not language or language.lower() in ("all", "any"):
+        return rows
+    lang_lower = language.lower().strip()
+    filtered = []
+    for r in rows:
+        r_lang = r.get("language", "").lower()
+        if not r_lang:
+            continue
+        if lang_lower in r_lang:
+            filtered.append(r)
+        elif lang_lower == "hindi" and any(h in r_lang for h in ("hinglish", "hindi/english", "english/hindi")):
+            filtered.append(r)
+        elif lang_lower == "english" and any(e in r_lang for e in ("hindi/english", "english/hindi", "html/css", "css")):
+            filtered.append(r)
+    return filtered
 
 
 def _filter_by_level(rows: list[dict], level: str) -> list[dict]:
@@ -367,12 +651,9 @@ def _filter_by_level(rows: list[dict], level: str) -> list[dict]:
     return [r for r in rows if any(a.lower() in r["level"].lower() for a in allowed)]
 
 
-def _search_csv_playlists(query: str, level: str = "all") -> list[dict]:
+def _search_csv_playlists(query: str, level: str = "all", language: str = "all") -> list[dict]:
     q_lower = query.lower().strip()
     if not q_lower:
-        return []
-
-    if not os.path.exists(DATA_DIR):
         return []
 
     # If the query matches a YouTube-only pattern (no CSV file exists for it),
@@ -380,35 +661,44 @@ def _search_csv_playlists(query: str, level: str = "all") -> list[dict]:
     if _YOUTUBE_ONLY_PATTERNS.search(q_lower):
         return []
 
+    query_lang = _detect_query_language(q_lower)
+    effective_lang = query_lang if query_lang else language
+
     tech = _detect_primary_tech(q_lower)
     is_dsa = bool(re.search(r"\b(dsa|ds|data structure|data structures|algorithm|algorithms)\b", q_lower))
 
+    # Each target entry is a (subdir, filename) tuple
     if tech:
-        target_files = TECH_CONFIG[tech]["dsa_files"] if is_dsa else TECH_CONFIG[tech]["files"]
+        target_files: list[tuple[str, str]] = TECH_CONFIG[tech]["dsa_files"] if is_dsa else TECH_CONFIG[tech]["files"]
     elif is_dsa:
         # No language specified: default to Java/C++/Python DSA only.
-        # C (c_datastructures_tutorials.csv) is only included when the user
-        # explicitly mentions "c", "c language", or "c programming" in their query.
-        target_files = ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"]
+        target_files = [
+            (_DS_DIR, "dsa_in_java.csv"),
+            (_DS_DIR, "dsa_in_cpp.csv"),
+            (_DS_DIR, "dsa_in_python__1_.csv"),
+        ]
     else:
-        matched_files = set()
-        for keyword, fnames in CSV_TOPIC_MAP.items():
+        matched: set[tuple[str, str]] = set()
+        for keyword, entries in CSV_TOPIC_MAP.items():
             if len(keyword) <= 2:
                 if re.search(r"\b" + re.escape(keyword) + r"\b", q_lower):
-                    for fn in fnames:
-                        matched_files.add(fn)
+                    for entry in entries:
+                        matched.add(entry)
             else:
                 if keyword in q_lower:
-                    for fn in fnames:
-                        matched_files.add(fn)
-        target_files = list(matched_files) if matched_files else [f for f in os.listdir(DATA_DIR) if f.endswith(".csv")]
+                    for entry in entries:
+                        matched.add(entry)
+        if not matched:
+            return []
+        target_files = list(matched)
 
     results = []
-    seen = set()
-    for fn in target_files:
-        for r in _parse_csv(fn):
-            # Strict language scoping: when a specific tech like Java is requested, exclude competing technologies
-            if tech:
+    seen: set[str] = set()
+    for subdir, fn in target_files:
+        abs_path = _csv_abs(subdir, fn)
+        for r in _parse_csv(abs_path):
+            # Strict language scoping: exclude competing technologies
+            if tech and TECH_CONFIG[tech]["competing"]:
                 competing = TECH_CONFIG[tech]["competing"]
                 title_lower = r["title"].lower()
                 if any(re.search(pat, title_lower) for pat in competing):
@@ -419,28 +709,29 @@ def _search_csv_playlists(query: str, level: str = "all") -> list[dict]:
                 seen.add(key)
                 results.append(r)
 
-    return _filter_by_level(results, level)
+    level_filtered = _filter_by_level(results, level)
+    return _filter_by_language(level_filtered, effective_lang)
 
 
 async def _search_youtube(
     query: str, level: str = "all", language: str = "english", max_results: int = 25
 ) -> list[dict]:
-    """Search YouTube Data API v3 for playlists with strict educational parameters."""
+    """Search YouTube Data API v3 for playlists/videos with strict educational parameters."""
     if not YOUTUBE_API_KEY:
         return []
     yt_query = (
         f"{query} course tutorial playlist programming educational "
         f"{level if level != 'all' else ''} "
-        f"{language if language.lower() != 'english' else ''}"
+        f"{language if language.lower() not in ('english', 'all') else ''}"
     ).strip()
     params = {
         "part":              "snippet",
         "q":                 yt_query,
-        "type":              "playlist",
+        "type":              "playlist,video",
         "maxResults":        max_results,
         "safeSearch":        "strict",
         "key":               YOUTUBE_API_KEY,
-        "relevanceLanguage": language[:2].lower() if language else "en",
+        "relevanceLanguage": language[:2].lower() if language and language != "all" else "en",
     }
     async with httpx.AsyncClient(timeout=10) as client:
         try:
@@ -454,21 +745,30 @@ async def _search_youtube(
     results = []
     for i, item in enumerate(data.get("items", [])):
         snippet = item.get("snippet", {})
-        pl_id   = item.get("id", {}).get("playlistId", "")
+        id_obj  = item.get("id", {})
+        pl_id   = id_obj.get("playlistId", "")
+        vid_id  = id_obj.get("videoId", "")
+        if not pl_id and not vid_id:
+            continue
+
+        pl_url  = f"https://www.youtube.com/playlist?list={pl_id}" if pl_id else f"https://www.youtube.com/watch?v={vid_id}"
+        item_id = pl_id if pl_id else vid_id
+
         thumbnail = (
             snippet.get("thumbnails", {}).get("medium", {}).get("url")
             or snippet.get("thumbnails", {}).get("default", {}).get("url")
-            or ""
+            or (f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg" if vid_id else "")
         )
         results.append({
-            "id":           pl_id or str(i),
+            "id":           item_id,
             "title":        snippet.get("title", "Untitled"),
             "channel":      snippet.get("channelTitle", ""),
+            "language":     language.capitalize() if language != "all" else "English",
             "description":  snippet.get("description", ""),
             "level":        level.capitalize() if level != "all" else "All Levels",
-            "video_count":  "?",
+            "video_count":  "?" if pl_id else "1",
             "duration":     "?",
-            "playlist_url": f"https://www.youtube.com/playlist?list={pl_id}" if pl_id else "",
+            "playlist_url": pl_url,
             "channel_url":  f"https://www.youtube.com/channel/{snippet.get('channelId', '')}",
             "source":       "youtube",
             "thumbnail":    thumbnail,
@@ -539,8 +839,11 @@ QUALITY_KEYWORDS = {
     "playlist", "series", "zero to hero", "beginner to advanced", "one shot"
 }
 
-def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all") -> list[dict]:
+def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all", language: str = "all") -> list[dict]:
     q_lower = query.lower().strip()
+    query_lang = _detect_query_language(q_lower)
+    effective_lang = (query_lang if query_lang else language).lower().strip()
+
     tech = _detect_primary_tech(q_lower)
     is_dsa = bool(re.search(r"\b(dsa|ds|data structure|data structures|algorithm|algorithms)\b", q_lower))
     q_words = set(w for w in re.split(r"\s+|-|_", q_lower) if len(w) > 1 and w not in STOP_WORDS)
@@ -551,6 +854,7 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         desc_lower = p.get("description", "").lower()
         channel_lower = p.get("channel", "").lower()
         level_str = p.get("level", "").lower()
+        item_lang = p.get("language", "").lower()
 
         # 1. Curated CSV source boost (verified high-quality playlists)
         if p.get("source") == "csv":
@@ -567,7 +871,18 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         if is_dsa and any(w in title_lower for w in ["dsa", "data structure", "data structures", "algorithm", "algorithms", "bootcamp"]):
             score += 40.0
 
-        # 4. Title relevance
+        # 4. Language match boost
+        if effective_lang and effective_lang != "all":
+            if effective_lang in item_lang:
+                score += 50.0
+            elif effective_lang == "hindi" and any(h in item_lang for h in ("hinglish", "hindi/english", "english/hindi")):
+                score += 35.0
+            elif effective_lang == "english" and any(e in item_lang for e in ("hindi/english", "english/hindi")):
+                score += 25.0
+            else:
+                score -= 30.0
+
+        # 5. Title relevance
         if q_lower in title_lower:
             score += 40.0
         elif q_words and all(w in title_lower for w in q_words):
@@ -575,17 +890,17 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         elif q_words and any(w in title_lower for w in q_words):
             score += 15.0
 
-        # 5. Reputable Channel Boost
+        # 6. Reputable Channel Boost
         if any(ch in channel_lower for ch in REPUTABLE_CHANNELS):
             score += 25.0
 
-        # 6. Course / Quality Keyword Boost
+        # 7. Course / Quality Keyword Boost
         if any(kw in title_lower for kw in QUALITY_KEYWORDS):
             score += 15.0
         if any(kw in desc_lower for kw in QUALITY_KEYWORDS):
             score += 5.0
 
-        # 7. Level Match
+        # 8. Level Match
         if level != "all" and level.lower() in level_str:
             score += 10.0
 
@@ -608,17 +923,18 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
 async def search_skill(
     query:       str = Query(..., description="Skill keyword e.g. Python, React, DSA"),
     level:       str = Query("all",     description="beginner | intermediate | advanced | all"),
-    language:    str = Query("english", description="Language preference"),
+    language:    str = Query("all",     description="all | english | hindi | telugu | tamil"),
     max_results: Optional[int] = Query(10, description="Max results limit (default 10, max 10)"),
 ):
     """
     Search playlists with quality ranking & limit strictly to TOP 10 best playlists.
     Strict CSV-first precedence: returns curated CSV results if found, otherwise falls back to YouTube API.
+    Filters and ranks according to language category from CSVs.
     """
     if not isinstance(level, str):
         level = getattr(level, "default", "all") or "all"
     if not isinstance(language, str):
-        language = getattr(language, "default", "english") or "english"
+        language = getattr(language, "default", "all") or "all"
 
     # ── Input sanitisation: strip HTML tags (XSS / injection guard)
     sanitised = re.sub(r"<[^>]+>", "", query).strip()
@@ -665,29 +981,33 @@ async def search_skill(
     # Enforce top 10 limit
     limit = 10 if (max_results is None or max_results <= 0) else min(max_results, 10)
 
+    # Detect language intent from query text or explicit parameter
+    query_lang = _detect_query_language(sanitised)
+    effective_lang = query_lang if query_lang else language
+
     # Search local CSV database first
-    csv_rows = _search_csv_playlists(sanitised, level)
+    csv_rows = _search_csv_playlists(sanitised, level, effective_lang)
 
     if csv_rows:
         source_used = "csv"
-        ranked = _score_and_rank_playlists(csv_rows, sanitised, level)
+        ranked = _score_and_rank_playlists(csv_rows, sanitised, level, effective_lang)
         top_10 = ranked[:limit]
     else:
         source_used = "youtube"
-        yt_rows = await _search_youtube(sanitised, level, language, max_results=20)
+        yt_rows = await _search_youtube(sanitised, level, effective_lang, max_results=20)
         yt_rows = _filter_skill_playlists(yt_rows)
-        ranked = _score_and_rank_playlists(yt_rows, sanitised, level)
+        ranked = _score_and_rank_playlists(yt_rows, sanitised, level, effective_lang)
         top_10 = ranked[:limit]
 
     logger.info(
         f"Search '{sanitised}' → {len(top_10)} results "
-        f"(source={source_used}, level={level}, lang={language})."
+        f"(source={source_used}, level={level}, lang={effective_lang})."
     )
 
     return {
         "query": sanitised,
         "level": level,
-        "language": language,
+        "language": effective_lang,
         "source": source_used,
         "count": len(top_10),
         "results": top_10,
@@ -1014,6 +1334,20 @@ async def resume_progress(
 
 
 
+FALLBACK_EDUCATIONAL_VIDEO_IDS = [
+    "rfscVS0vtbw",  # Intro & Environment Setup
+    "zOjov-2OZ0E",  # Variables & Data Types
+    "On03HWe2tZM",  # Control Flow & Loops
+    "p-ss2JNynmw",  # Functions & Scope
+    "pVS3yhlzRLQ",  # Data Structures & Collections
+    "AHZpyENo7k4",  # Object-Oriented Programming
+    "KLlXCFG5TnA",  # Modules & Packages
+    "s4DPM8ct1pI",  # Error Handling & Debugging
+    "CZwAgf3f8CM",  # Real-World Capstone Project
+    "HEBvdSI0wGQ",  # Final Review & Testing
+]
+
+
 def _generate_fallback_playlist_videos(clean_pid: str) -> list[dict]:
     topics = [
         "Introduction & Environment Setup",
@@ -1029,17 +1363,82 @@ def _generate_fallback_playlist_videos(clean_pid: str) -> list[dict]:
     ]
     videos = []
     for idx, topic in enumerate(topics):
+        vid = FALLBACK_EDUCATIONAL_VIDEO_IDS[idx % len(FALLBACK_EDUCATIONAL_VIDEO_IDS)]
         videos.append({
-            "videoId": f"v_{clean_pid[:8]}_{idx+1}",
+            "videoId": vid,
             "title": f"Lesson {idx+1}: {topic}",
             "position": idx,
-            "thumbnail": "https://img.youtube.com/vi/rfscVS0vtbw/mqdefault.jpg",
+            "thumbnail": f"https://img.youtube.com/vi/{vid}/mqdefault.jpg",
             "watched": False,
             "last_position": 0.0,
             "watch_time": 0,
             "completed_at": None,
         })
     return videos
+
+
+def _resolve_playlist_info(clean_id: str) -> dict:
+    info = {"title": "", "channel": "", "playlist_url": "", "real_yt_id": "", "video_id": ""}
+    if not clean_id:
+        return info
+
+    # 1. Direct check: is clean_id already a YouTube playlist ID (starts with PL, UU, FL, RD, OLAK5uy_)?
+    if clean_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
+        info["real_yt_id"] = clean_id
+        return info
+
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_id):
+        info["video_id"] = clean_id
+
+    # 2. Check Supabase saved_playlists table
+    sb = get_supabase()
+    if sb:
+        try:
+            res = sb.table("saved_playlists").select("title,channel,playlist_url").eq("playlist_id", clean_id).execute()
+            if res.data and len(res.data) > 0:
+                row = res.data[0]
+                info["title"] = row.get("title", "")
+                info["channel"] = row.get("channel", "")
+                info["playlist_url"] = row.get("playlist_url", "")
+                extracted = _extract_youtube_ids(info["playlist_url"], "")
+                if extracted.get("playlist_id") and extracted["playlist_id"].startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
+                    info["real_yt_id"] = extracted["playlist_id"]
+                if extracted.get("video_id"):
+                    info["video_id"] = extracted["video_id"]
+                return info
+        except Exception:
+            pass
+
+    # 3. Check CSV files across data directory
+    try:
+        data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "youtube data"))
+        if os.path.exists(data_dir):
+            for root, _, files in os.walk(data_dir):
+                for f in files:
+                    if f.endswith(".csv"):
+                        csv_path = os.path.join(root, f)
+                        csv_items = _parse_csv(csv_path)
+                        for item in csv_items:
+                            extracted = _extract_youtube_ids(item.get("playlist_url", ""), "")
+                            if (
+                                item.get("id") == clean_id 
+                                or item.get("playlist_id") == clean_id
+                                or extracted.get("id") == clean_id
+                                or extracted.get("playlist_id") == clean_id
+                                or extracted.get("video_id") == clean_id
+                            ):
+                                info["title"] = item.get("title", "")
+                                info["channel"] = item.get("channel", "")
+                                info["playlist_url"] = item.get("playlist_url", "")
+                                if extracted.get("playlist_id") and extracted["playlist_id"].startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
+                                    info["real_yt_id"] = extracted["playlist_id"]
+                                if extracted.get("video_id"):
+                                    info["video_id"] = extracted["video_id"]
+                                return info
+    except Exception as e:
+        logger.warning(f"CSV lookup in _resolve_playlist_info failed: {e}")
+
+    return info
 
 
 # ── Video List ────────────────────────────────────────────────────────────────
@@ -1050,10 +1449,15 @@ async def get_playlist_videos(
 ):
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
+    info = _resolve_playlist_info(clean_playlist_id)
+    target_yt_id = info.get("real_yt_id") or (clean_playlist_id if clean_playlist_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) else "")
+    target_vid_id = info.get("video_id") or (clean_playlist_id if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_playlist_id) else "")
+
     videos = []
     page_token = None
 
-    if YOUTUBE_API_KEY:
+    # Case A: YouTube Playlist Items
+    if YOUTUBE_API_KEY and target_yt_id and target_yt_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
         async with httpx.AsyncClient(timeout=20) as client:
             max_pages = 20
             page_count = 0
@@ -1061,7 +1465,7 @@ async def get_playlist_videos(
                 page_count += 1
                 params: dict = {
                     "part":       "snippet",
-                    "playlistId": clean_playlist_id,
+                    "playlistId": target_yt_id,
                     "maxResults": 50,
                     "key":        YOUTUBE_API_KEY,
                 }
@@ -1113,7 +1517,84 @@ async def get_playlist_videos(
                 if not page_token:
                     break
 
-    # Fallback to structured lesson topic generator if no videos returned
+    # Case B: Standalone single-video course
+    if not videos and target_vid_id and re.match(r"^[a-zA-Z0-9_-]{11}$", target_vid_id):
+        v_title = info.get("title") or "Full Course"
+        thumb = f"https://img.youtube.com/vi/{target_vid_id}/mqdefault.jpg"
+        if YOUTUBE_API_KEY:
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    v_res = await client.get(
+                        "https://www.googleapis.com/youtube/v3/videos",
+                        params={"part": "snippet", "id": target_vid_id, "key": YOUTUBE_API_KEY}
+                    )
+                    if v_res.is_success:
+                        v_data = v_res.json()
+                        v_items = v_data.get("items", [])
+                        if v_items:
+                            snip = v_items[0].get("snippet", {})
+                            v_title = snip.get("title") or v_title
+                            thumb = snip.get("thumbnails", {}).get("medium", {}).get("url") or thumb
+            except Exception as e:
+                logger.warning(f"Single video fetch failed: {e}")
+
+        videos.append({
+            "videoId":       target_vid_id,
+            "title":         v_title,
+            "position":      0,
+            "thumbnail":     thumb,
+            "watched":       False,
+            "last_position": 0.0,
+            "watch_time":    0,
+            "completed_at":  None,
+        })
+
+    # Case C: Fallback search if playlist was empty and not a standalone video
+    if YOUTUBE_API_KEY and not videos and not target_vid_id:
+        try:
+            meta_title = info.get("title", "")
+            meta_channel = info.get("channel", "")
+            if meta_title or meta_channel:
+                search_q = f"{meta_title} {meta_channel}".strip()
+            else:
+                search_q = clean_playlist_id.replace("csv_", "").replace("_", " ").strip()
+
+            async with httpx.AsyncClient(timeout=10) as client:
+                s_res = await client.get(
+                    "https://www.googleapis.com/youtube/v3/search",
+                    params={
+                        "part": "snippet",
+                        "q": f"{search_q} tutorial course",
+                        "type": "video",
+                        "maxResults": 15,
+                        "key": YOUTUBE_API_KEY,
+                    }
+                )
+                if s_res.is_success:
+                    s_data = s_res.json()
+                    for item in s_data.get("items", []):
+                        v_id = item.get("id", {}).get("videoId")
+                        if not v_id or not re.match(r"^[a-zA-Z0-9_-]{11}$", v_id):
+                            continue
+                        snip = item.get("snippet", {})
+                        v_t = snip.get("title", f"Lesson {len(videos)+1}")
+                        v_ch = snip.get("channelTitle", "")
+                        if _STRICT_PROHIBITED_TERMS.search(f"{v_t} {v_ch}"):
+                            continue
+                        videos.append({
+                            "videoId": v_id,
+                            "title": v_t,
+                            "position": len(videos),
+                            "thumbnail": snip.get("thumbnails", {}).get("medium", {}).get("url") or f"https://img.youtube.com/vi/{v_id}/mqdefault.jpg",
+                            "watched": False,
+                            "last_position": 0.0,
+                            "watch_time": 0,
+                            "completed_at": None,
+                        })
+        except Exception as search_err:
+            logger.warning(f"Fallback video search failed: {search_err}")
+
+    # Fallback to structured lesson topic generator if still no videos returned
     if not videos:
         videos = _generate_fallback_playlist_videos(clean_playlist_id)
 
