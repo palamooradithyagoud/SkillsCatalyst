@@ -71,13 +71,14 @@ _LEARNING_SKILL = re.compile(
     r"\b("
     r"python|java|javascript|typescript|react|vue|angular|node|django|flask|fastapi|"
     r"machine.?learning|deep.?learning|ai|ml|data.?science|nlp|llm|neural|tensorflow|pytorch|"
-    r"dsa|algorithm|data.?structure|leetcode|competitive.?programming|sorting|searching|"
+    r"dsa|ds|algorithm|data.?structure|leetcode|competitive.?programming|sorting|searching|"
     r"system.?design|cloud|aws|azure|gcp|devops|docker|kubernetes|terraform|"
     r"sql|database|mongodb|postgres|redis|mysql|sqlite|"
     r"interview|resume|career|job|internship|salary|roadmap|skill|course|tutorial|playlist|"
     r"html|css|frontend|backend|fullstack|api|rest|graphql|web.?dev|"
     r"git|github|ci.?cd|linux|bash|shell|terminal|"
-    r"c\+\+|golang|rust|kotlin|swift|flutter|dart|php|ruby|"
+    r"c\+\+|cpp|golang|rust|kotlin|swift|flutter|dart|php|ruby|"
+    r"c.?programming|c.?language|"
     r"cybersecurity|networking|os|operating.?system|computer.?science|"
     r"project|portfolio|startup|tech|software|engineer|developer|programmer|coding|programming"
     r")\b",
@@ -173,22 +174,104 @@ def _filter_skill_playlists(results: list[dict]) -> list[dict]:
 # ── Path to the data directory ──────────────────────────────────────────────
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 
-# ── CSV keyword → file mapping ───────────────────────────────────────────────
+STOP_WORDS = {
+    "in", "for", "the", "a", "an", "and", "or", "to", "of", "with",
+    "by", "on", "at", "from", "is", "all", "complete", "course",
+    "tutorial", "tutorials", "playlist", "video", "videos"
+}
+
+TECH_CONFIG = {
+    "java": {
+        # Language-only search (e.g. "java", "java tutorials") → tutorials CSV only
+        "files": ["java_tutorials.csv"],
+        # DSA search (e.g. "dsa in java", "data structures java") → DSA CSV only
+        "dsa_files": ["dsa_in_java.csv"],
+        "competing": [
+            r"\bpython\b",
+            r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
+            r"\bcpp\b",
+            r"(?<![a-zA-Z0-9\+])c programming\b",
+            r"(?<![a-zA-Z0-9\+])c language\b",
+            # Bare standalone C (e.g. "Data Structures in C") but not C++/C#
+            r"(?<![a-zA-Z0-9\+#])\bc\b(?![\+#a-zA-Z0-9])",
+        ],
+    },
+    "python": {
+        # Language-only search → tutorials CSV only
+        "files": ["python_tutorials.csv"],
+        # DSA search → DSA CSV only
+        "dsa_files": ["dsa_in_python__1_.csv"],
+        "competing": [
+            r"\bjava\b",
+            r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
+            r"\bcpp\b",
+            r"(?<![a-zA-Z0-9\+])c programming\b",
+            r"(?<![a-zA-Z0-9\+])c language\b",
+            # Bare standalone C but not C++/C#
+            r"(?<![a-zA-Z0-9\+#])\bc\b(?![\+#a-zA-Z0-9])",
+        ],
+    },
+    "cpp": {
+        # Language-only search → tutorials CSV only
+        "files": ["cpp_tutorials.csv"],
+        # DSA search → DSA CSV only
+        "dsa_files": ["dsa_in_cpp.csv"],
+        "competing": [
+            r"\bjava\b",
+            r"\bpython\b",
+            r"(?<![a-zA-Z0-9\+])c programming\b",
+            r"(?<![a-zA-Z0-9\+])c language\b",
+        ],
+    },
+    "c": {
+        # C only has one CSV (data structures / tutorials merged)
+        "files": ["c_datastructures_tutorials.csv"],
+        "dsa_files": ["c_datastructures_tutorials.csv"],
+        "competing": [
+            r"\bjava\b",
+            r"\bpython\b",
+            r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])",
+            r"\bcpp\b",
+        ],
+    },
+}
+
+# ── CSV keyword → file mapping ────────────────────────────────────────────────
+# STRICT RULE:
+#   Language keywords  (java/python/cpp/c++) → tutorials CSVs ONLY
+#   DSA keywords (dsa/ds/data structures)    → dsa_ CSVs ONLY
+#   They must NEVER be mixed.
 CSV_TOPIC_MAP = {
-    "python":           ["python_tutorials.csv", "dsa_in_python__1_.csv"],
-    "java":             ["java_tutorials.csv", "dsa_in_java.csv"],
-    "cpp":              ["cpp_tutorials.csv", "dsa_in_cpp.csv"],
-    "c++":              ["cpp_tutorials.csv", "dsa_in_cpp.csv"],
+    # ── Language tutorials (no DSA) ──────────────────────────────────────────
+    "python":           ["python_tutorials.csv"],
+    "java":             ["java_tutorials.csv"],
+    "cpp":              ["cpp_tutorials.csv"],
+    "c++":              ["cpp_tutorials.csv"],
+    # \"c\" alone: word-boundary matched in search loop (len <= 2 path)
     "c":                ["c_datastructures_tutorials.csv"],
-    "dsa":              ["dsa_in_python__1_.csv", "dsa_in_cpp.csv", "dsa_in_java.csv", "c_datastructures_tutorials.csv"],
-    "data structure":   ["dsa_in_python__1_.csv", "dsa_in_cpp.csv", "dsa_in_java.csv", "c_datastructures_tutorials.csv"],
-    "data structures":  ["dsa_in_python__1_.csv", "dsa_in_cpp.csv", "dsa_in_java.csv", "c_datastructures_tutorials.csv"],
-    "algorithm":        ["dsa_in_python__1_.csv", "dsa_in_cpp.csv", "dsa_in_java.csv", "c_datastructures_tutorials.csv"],
-    "algorithms":       ["dsa_in_python__1_.csv", "dsa_in_cpp.csv", "dsa_in_java.csv", "c_datastructures_tutorials.csv"],
-    "dsa cpp":          ["dsa_in_cpp.csv"],
+
+    # ── DSA / Data Structures (no language tutorials) ────────────────────────
+    # Generic DSA: Java + C++ + Python DSA CSVs (C excluded unless explicit)
+    "dsa":              ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+    "data structure":   ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+    "data structures":  ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+    "algorithm":        ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+    "algorithms":       ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"],
+
+    # ── Language-specific DSA ────────────────────────────────────────────────
     "dsa java":         ["dsa_in_java.csv"],
     "dsa python":       ["dsa_in_python__1_.csv"],
+    "dsa cpp":          ["dsa_in_cpp.csv"],
+    "dsa c":            ["c_datastructures_tutorials.csv"],
+    "ds java":          ["dsa_in_java.csv"],
+    "ds python":        ["dsa_in_python__1_.csv"],
+    "ds cpp":           ["dsa_in_cpp.csv"],
+    "ds c":             ["c_datastructures_tutorials.csv"],
+    "data structures c": ["c_datastructures_tutorials.csv"],
 }
+
+
+
 
 LEVEL_MAP = {
     "beginner":     ["Beginner", "Beginner-Intermediate", "Beginner-Advanced", "Beginner to Intermediate", "Beginner to Advanced"],
@@ -196,6 +279,51 @@ LEVEL_MAP = {
     "advanced":     ["Advanced", "Intermediate-Advanced", "Beginner-Advanced", "Intermediate to Advanced", "Beginner to Advanced"],
     "all":          None,
 }
+
+
+# Queries that contain these patterns should skip CSV lookup entirely and go to YouTube API.
+# This covers frameworks/tools that don't have a dedicated CSV file.
+_YOUTUBE_ONLY_PATTERNS = re.compile(
+    r"\bspring.?boot\b|\bspring\b|\bhibernate\b|\bmicroservice\b|\bmicroservices\b"
+    r"|\bdjango\b|\bflask\b|\bfastapi\b|\bexpress\b|\bnest\.?js\b"
+    r"|\bkubernetes\b|\bdocker\b|\bdevops\b|\bansible\b|\bterraform\b"
+    r"|\bangular\b|\bvue\b|\bsvelte\b|\bnext\.?js\b|\breact\b"
+    r"|\bmachine.?learning\b|\bdeep.?learning\b|\bpytorch\b|\btensorflow\b"
+    r"|\bgolang\b|\brust\b|\bkotlin\b|\bswift\b|\bflutter\b|\bdart\b|\bphp\b|\bruby\b"
+    r"|\bcybersecurity\b|\bethical.?hacking\b|\baws\b|\bazure\b|\bgcp\b"
+    r"|\bsystem.?design\b|\bsql\b|\bmongodb\b|\bpostgres\b|\bredis\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_primary_tech(query: str) -> Optional[str]:
+    """Detects explicit programming language / tech domain from query.
+    Returns None for any query that should go to YouTube (no CSV exists).
+    Only returns a tech key when a dedicated curated CSV file is available.
+    """
+    q = query.lower()
+
+    # Queries containing Spring / Spring Boot / frameworks → no CSV, use YouTube API
+    if _YOUTUBE_ONLY_PATTERNS.search(q):
+        return None
+
+    # Pure Java (no framework terms) → java_tutorials.csv
+    if re.search(r"\bjava\b", q):
+        return "java"
+    if re.search(r"\bpython\b|\bpy\b", q):
+        return "python"
+    if re.search(r"(?<![a-zA-Z0-9])c\+\+(?![a-zA-Z0-9])|\bcpp\b", q):
+        return "cpp"
+    # C language: must be explicit — "c", "c programming", "c language"
+    # Negative lookbehind/ahead avoids matching "C" in acronyms like "C++", "C#", "science", "ReactC"
+    if re.search(
+        r"(?<![a-zA-Z0-9\+#])c programming\b"
+        r"|(?<![a-zA-Z0-9\+#])c language\b"
+        r"|(?<![a-zA-Z0-9\+#])\bc\b(?![\+#a-zA-Z0-9])",
+        q
+    ):
+        return "c"
+    return None
 
 
 def _extract_playlist_id(url: str, fallback: str) -> str:
@@ -247,63 +375,49 @@ def _search_csv_playlists(query: str, level: str = "all") -> list[dict]:
     if not os.path.exists(DATA_DIR):
         return []
 
-    all_csv_files = [f for f in os.listdir(DATA_DIR) if f.endswith(".csv")]
+    # If the query matches a YouTube-only pattern (no CSV file exists for it),
+    # return empty immediately so the caller falls back to the YouTube API.
+    if _YOUTUBE_ONLY_PATTERNS.search(q_lower):
+        return []
 
-    matched_files = set()
-    for keyword, fnames in CSV_TOPIC_MAP.items():
-        if len(keyword) <= 2:
-            if re.search(r"\b" + re.escape(keyword) + r"\b", q_lower):
-                for fn in fnames:
-                    matched_files.add(fn)
-        else:
-            if keyword in q_lower:
-                for fn in fnames:
-                    matched_files.add(fn)
+    tech = _detect_primary_tech(q_lower)
+    is_dsa = bool(re.search(r"\b(dsa|ds|data structure|data structures|algorithm|algorithms)\b", q_lower))
+
+    if tech:
+        target_files = TECH_CONFIG[tech]["dsa_files"] if is_dsa else TECH_CONFIG[tech]["files"]
+    elif is_dsa:
+        # No language specified: default to Java/C++/Python DSA only.
+        # C (c_datastructures_tutorials.csv) is only included when the user
+        # explicitly mentions "c", "c language", or "c programming" in their query.
+        target_files = ["dsa_in_java.csv", "dsa_in_cpp.csv", "dsa_in_python__1_.csv"]
+    else:
+        matched_files = set()
+        for keyword, fnames in CSV_TOPIC_MAP.items():
+            if len(keyword) <= 2:
+                if re.search(r"\b" + re.escape(keyword) + r"\b", q_lower):
+                    for fn in fnames:
+                        matched_files.add(fn)
+            else:
+                if keyword in q_lower:
+                    for fn in fnames:
+                        matched_files.add(fn)
+        target_files = list(matched_files) if matched_files else [f for f in os.listdir(DATA_DIR) if f.endswith(".csv")]
 
     results = []
-    seen_urls = set()
-    seen_titles = set()
+    seen = set()
+    for fn in target_files:
+        for r in _parse_csv(fn):
+            # Strict language scoping: when a specific tech like Java is requested, exclude competing technologies
+            if tech:
+                competing = TECH_CONFIG[tech]["competing"]
+                title_lower = r["title"].lower()
+                if any(re.search(pat, title_lower) for pat in competing):
+                    continue
 
-    def add_row(row):
-        title_key = row["title"].lower().strip()
-        url_key = row.get("playlist_url", "").strip()
-        if title_key in seen_titles or (url_key and url_key in seen_urls):
-            return
-        if url_key:
-            seen_urls.add(url_key)
-        seen_titles.add(title_key)
-        results.append(row)
-
-    # 1. Load from topic-matched files first
-    for fname in matched_files:
-        for row in _parse_csv(fname):
-            add_row(row)
-
-    # 2. Search all CSV files for any title / description / channel keyword match
-    q_words = [w for w in re.split(r"\s+|-|_", q_lower) if len(w) > 0]
-    for fname in all_csv_files:
-        for row in _parse_csv(fname):
-            title_desc = f"{row['title']} {row['description']} {row['channel']} {row['level']}".lower()
-
-            full_match = False
-            if len(q_lower) <= 2:
-                full_match = bool(re.search(r"\b" + re.escape(q_lower) + r"\b", title_desc))
-            else:
-                full_match = q_lower in title_desc
-
-            word_match = False
-            for w in q_words:
-                if len(w) <= 2:
-                    if re.search(r"\b" + re.escape(w) + r"\b", title_desc):
-                        word_match = True
-                        break
-                else:
-                    if w in title_desc:
-                        word_match = True
-                        break
-
-            if full_match or word_match:
-                add_row(row)
+            key = r.get("playlist_url") or r.get("title")
+            if key not in seen:
+                seen.add(key)
+                results.append(r)
 
     return _filter_by_level(results, level)
 
@@ -427,7 +541,9 @@ QUALITY_KEYWORDS = {
 
 def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all") -> list[dict]:
     q_lower = query.lower().strip()
-    q_words = set(re.findall(r"\w+", q_lower))
+    tech = _detect_primary_tech(q_lower)
+    is_dsa = bool(re.search(r"\b(dsa|ds|data structure|data structures|algorithm|algorithms)\b", q_lower))
+    q_words = set(w for w in re.split(r"\s+|-|_", q_lower) if len(w) > 1 and w not in STOP_WORDS)
 
     def calculate_score(p: dict) -> float:
         score = 0.0
@@ -440,7 +556,18 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         if p.get("source") == "csv":
             score += 50.0
 
-        # 2. Title relevance
+        # 2. Strict technology match & penalty for competing tech
+        if tech:
+            if re.search(r"\b" + re.escape(tech) + r"\b", title_lower):
+                score += 50.0
+            if any(re.search(pat, title_lower) for pat in TECH_CONFIG[tech]["competing"]):
+                score -= 500.0
+
+        # 3. DSA/DS specific boost
+        if is_dsa and any(w in title_lower for w in ["dsa", "data structure", "data structures", "algorithm", "algorithms", "bootcamp"]):
+            score += 40.0
+
+        # 4. Title relevance
         if q_lower in title_lower:
             score += 40.0
         elif q_words and all(w in title_lower for w in q_words):
@@ -448,17 +575,17 @@ def _score_and_rank_playlists(results: list[dict], query: str, level: str = "all
         elif q_words and any(w in title_lower for w in q_words):
             score += 15.0
 
-        # 3. Reputable Channel Boost
+        # 5. Reputable Channel Boost
         if any(ch in channel_lower for ch in REPUTABLE_CHANNELS):
             score += 25.0
 
-        # 4. Course / Quality Keyword Boost
+        # 6. Course / Quality Keyword Boost
         if any(kw in title_lower for kw in QUALITY_KEYWORDS):
             score += 15.0
         if any(kw in desc_lower for kw in QUALITY_KEYWORDS):
             score += 5.0
 
-        # 5. Level Match
+        # 7. Level Match
         if level != "all" and level.lower() in level_str:
             score += 10.0
 
@@ -486,7 +613,7 @@ async def search_skill(
 ):
     """
     Search playlists with quality ranking & limit strictly to TOP 10 best playlists.
-    Guards against non-skill queries before hitting YouTube API.
+    Strict CSV-first precedence: returns curated CSV results if found, otherwise falls back to YouTube API.
     """
     if not isinstance(level, str):
         level = getattr(level, "default", "all") or "all"
@@ -538,22 +665,23 @@ async def search_skill(
     # Enforce top 10 limit
     limit = 10 if (max_results is None or max_results <= 0) else min(max_results, 10)
 
+    # Search local CSV database first
     csv_rows = _search_csv_playlists(sanitised, level)
-    source_used = "csv" if csv_rows else "youtube"
 
-    yt_rows: list[dict] = []
-    if len(csv_rows) < 10:
+    if csv_rows:
+        source_used = "csv"
+        ranked = _score_and_rank_playlists(csv_rows, sanitised, level)
+        top_10 = ranked[:limit]
+    else:
+        source_used = "youtube"
         yt_rows = await _search_youtube(sanitised, level, language, max_results=20)
-        # Post-filter: remove entertainment results that slipped through YouTube API
         yt_rows = _filter_skill_playlists(yt_rows)
-
-    combined = csv_rows + yt_rows
-    ranked = _score_and_rank_playlists(combined, sanitised, level)
-    top_10 = ranked[:limit]
+        ranked = _score_and_rank_playlists(yt_rows, sanitised, level)
+        top_10 = ranked[:limit]
 
     logger.info(
         f"Search '{sanitised}' → {len(top_10)} results "
-        f"(csv={len(csv_rows)}, yt={len(yt_rows)}, level={level})."
+        f"(source={source_used}, level={level}, lang={language})."
     )
 
     return {
