@@ -23,9 +23,6 @@ frontend/.next/
 frontend/out/
 frontend/node_modules/
 
-# Data folder (660+ CSV files — too large for git)
-/data/
-
 # Logs
 *.log
 npm-debug.log*
