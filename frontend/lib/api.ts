@@ -1,6 +1,14 @@
 import { supabase } from "@/lib/supabase";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
+export function getApiBaseUrl(): string {
+  let url = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").trim().replace(/\/+$/, "");
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url;
+}
+
+export const API_BASE = getApiBaseUrl();
 
 export function getGuestSessionId(): string {
   if (typeof window === "undefined") return "guest_session_default";
