@@ -27,7 +27,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
 import { supabase } from "@/lib/supabase";
-import { getAuthHeaders, apiFetch } from "@/lib/api";
+import { getAuthHeaders, apiFetch, API_BASE } from "@/lib/api";
 
 const TOPIC_ID_MAP: Record<string, number> = {
   // Quantitative Aptitude
@@ -315,7 +315,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
       const topicId = TOPIC_ID_MAP[topicName] || 1;
 
       getAuthHeaders().then((headers) => {
-        apiFetch("/api/practice/attempt", {
+        apiFetch(`${API_BASE}/api/practice/aptitude/attempt`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...headers },
           body: JSON.stringify({
