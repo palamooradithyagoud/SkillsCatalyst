@@ -25,7 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { reviewResume, getAuthHeaders, handleGuestTokenFromResponse } from "@/lib/api";
+import { reviewResume, getAuthHeaders, handleGuestTokenFromResponse, API_BASE } from "@/lib/api";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
 import BorderGlow from "@/components/BorderGlow";
@@ -264,15 +264,11 @@ export default function CareerPage() {
     setReviewText(null);
     setUploadProgress(0);
     setUploadStage("uploading");
-
     const formData = new FormData();
     formData.append("file", file);
 
-    const apiBase =
-      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
-
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${apiBase}/api/resume/extract`);
+    xhr.open("POST", `${API_BASE}/api/resume/extract`);
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
