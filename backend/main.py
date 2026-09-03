@@ -206,9 +206,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # ── Router Registrations ──────────────────────────────────────────────────────
 try:
-    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile
+    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth
 except ModuleNotFoundError:
-    from routers import dashboard, ai_mentor, learning, resume, practice, profile
+    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth
 
 app.include_router(dashboard.router)
 app.include_router(ai_mentor.router)
@@ -216,6 +216,7 @@ app.include_router(learning.router)
 app.include_router(resume.router)
 app.include_router(practice.router)
 app.include_router(profile.router)
+app.include_router(auth.router)
 
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
@@ -236,6 +237,7 @@ def health_check():
     redis_status = get_redis_health_status()
     yt_status = "configured" if os.getenv("YOUTUBE_API_KEY") else "unconfigured"
     ai_status = "configured" if os.getenv("GROQ_API_KEY") else "unconfigured"
+    email_status = "configured" if os.getenv("RESEND_API_KEY") else "unconfigured"
 
     metrics = get_system_metrics()
 
@@ -246,6 +248,7 @@ def health_check():
             "redis": redis_status,
             "youtube": yt_status,
             "groq_ai": ai_status,
+            "resend_email": email_status,
         },
         "metrics": {
             "uptime_seconds": metrics.get("uptime_seconds", 0),

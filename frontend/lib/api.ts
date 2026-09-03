@@ -1863,3 +1863,28 @@ export async function saveCodingProfiles(data: CodingProfilesInput) {
   }
 }
 
+/**
+ * Dispatches a welcome email to a newly registered user via backend Resend service.
+ */
+export async function sendWelcomeEmail(payload: {
+  email: string;
+  full_name?: string;
+  user_id?: string;
+}): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/welcome-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.warn("Welcome email dispatch warning:", err);
+    return { success: false, error: err?.message || String(err) };
+  }
+}
+
+

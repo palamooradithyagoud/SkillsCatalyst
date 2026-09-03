@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchDashboardData } from "@/lib/api";
+import { fetchDashboardData, sendWelcomeEmail } from "@/lib/api";
 import { useTransition } from "@/providers/TransitionProvider";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PenguinMountainCanvas from "@/components/PenguinMountainCanvas";
@@ -140,6 +140,13 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        // Asynchronously dispatch welcome email via Resend
+        sendWelcomeEmail({
+          email: email.trim(),
+          full_name: fullName.trim(),
+          user_id: data.user.id,
+        }).catch((err) => console.warn("Welcome email notice:", err));
+
         if (data.user.email_confirmed_at) {
           setSuccessMessage("Account created successfully! Redirecting...");
         } else {

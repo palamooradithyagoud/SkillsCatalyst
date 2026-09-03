@@ -91,7 +91,7 @@ def _extract_pdf_pymupdf(content: bytes) -> str:
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
         page_text = page.get_text("text")
-        if page_text and page_text.strip():
+        if isinstance(page_text, str) and page_text.strip():
             pages.append(page_text.strip())
 
     doc.close()
