@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -95,10 +96,10 @@ const POPULAR_COURSES = [
 ];
 
 const TOP_COMPANIES = [
-  { name: "Google", role: "Software Engineer", open: "140+ Questions" },
-  { name: "Microsoft", role: "Full Stack Dev", open: "110+ Questions" },
-  { name: "Amazon", role: "SDE I & II", open: "195+ Questions" },
-  { name: "TCS", role: "Ninja & Digital", open: "85+ Questions" },
+  { name: "Google", role: "Software Engineer", open: "140+ Questions", slug: "google" },
+  { name: "Microsoft", role: "Full Stack Dev", open: "110+ Questions", slug: "microsoft" },
+  { name: "Amazon", role: "SDE I & II", open: "195+ Questions", slug: "amazon" },
+  { name: "TCS", role: "Ninja & Digital", open: "85+ Questions", slug: "tcs" },
 ];
 
 const HACKATHONS = [
@@ -107,7 +108,17 @@ const HACKATHONS = [
 ];
 
 export default function ExplorePage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [companyInput, setCompanyInput] = useState("");
+
+  const handleCompanySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = companyInput.trim().toLowerCase();
+    if (trimmed) {
+      router.push(`/practice?company=${encodeURIComponent(trimmed)}&period=thirty-days&mode=company`);
+    }
+  };
 
   return (
     <motion.div
@@ -310,24 +321,48 @@ export default function ExplorePage() {
       {/* ── 5. Company Question Banks & Hackathons ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
         {/* Company Banks */}
-        <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md space-y-3">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md space-y-3.5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <h3 className="text-[11px] sm:text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
               <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
               <span>Company Question Banks</span>
             </h3>
-            <Link href="/practice" className="text-[11px] sm:text-xs text-blue-600 font-black hover:underline">
-              Practice →
+            <Link href="/practice?period=thirty-days&mode=company" className="text-[11px] sm:text-xs text-blue-600 font-black hover:underline">
+              Practice 30D →
             </Link>
           </div>
+
+          {/* Quick Enter Company Search */}
+          <form onSubmit={handleCompanySubmit} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={companyInput}
+              onChange={(e) => setCompanyInput(e.target.value)}
+              placeholder="Enter company (e.g. Google, Meta, TCS)..."
+              className="w-full bg-slate-50 border border-slate-200/90 focus:border-indigo-500 focus:bg-white text-slate-900 placeholder:text-slate-400 text-xs font-bold pl-9 pr-16 py-2 rounded-xl transition-all outline-none shadow-2xs"
+            />
+            <button
+              type="submit"
+              className="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[10px] font-black text-white cursor-pointer transition-all shadow-xs"
+            >
+              Go 30D
+            </button>
+          </form>
+
           <div className="grid grid-cols-2 gap-2">
             {TOP_COMPANIES.map((comp) => (
               <Link
                 key={comp.name}
-                href="/practice"
+                href={`/practice?company=${comp.slug}&period=thirty-days&mode=company`}
                 className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-indigo-500 hover:bg-white transition-all text-left shadow-2xs cursor-pointer group"
               >
-                <div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 truncate">{comp.name}</div>
+                <div className="flex items-center justify-between gap-1">
+                  <div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 truncate">{comp.name}</div>
+                  <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.2 rounded-md shrink-0">
+                    30D
+                  </span>
+                </div>
                 <div className="text-[9px] sm:text-[10px] text-indigo-600 font-bold mt-0.5">{comp.open}</div>
               </Link>
             ))}

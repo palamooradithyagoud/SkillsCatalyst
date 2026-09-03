@@ -222,11 +222,20 @@ const BEGINNER_TREE_DATA: TreeCategory[] = [
 ];
 
 
-export default function PracticePage() {
+function PracticeContent() {
   const { session } = useAuth();
   const userId = session?.user_id;
+  const searchParams = useSearchParams();
 
-  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">("index");
+  const urlCompany = searchParams?.get("company");
+  const urlPeriod = searchParams?.get("period");
+  const urlMode = searchParams?.get("mode");
+
+  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">(() => {
+    if (urlCompany || urlMode === "company") return "company";
+    if (urlMode === "beginner") return "beginner";
+    return "index";
+  });
 
   // Sync practice subview state to document body attribute for MobileNav detection
   useEffect(() => {
@@ -243,10 +252,40 @@ export default function PracticePage() {
       }
     };
   }, [selectedMode]);
+
   const [companiesList, setCompaniesList] = useState<string[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>("google");
+  const [selectedCompany, setSelectedCompany] = useState<string>(() => {
+    if (urlCompany) return urlCompany.toLowerCase();
+    return "google";
+  });
   const [companySearchInput, setCompanySearchInput] = useState<string>("");
-  const [selectedPeriod, setSelectedPeriod] = useState<QuestionPeriod>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<QuestionPeriod>(() => {
+    if (urlPeriod) return urlPeriod as QuestionPeriod;
+    if (urlCompany) return "thirty-days";
+    return "all";
+  });
+
+  // Keep state synchronized with URL search parameters (e.g. from Explore page company cards)
+  useEffect(() => {
+    if (!searchParams) return;
+    const comp = searchParams.get("company");
+    const per = searchParams.get("period");
+    const m = searchParams.get("mode");
+
+    if (comp) {
+      setSelectedCompany(comp.toLowerCase());
+      setSelectedMode("company");
+      setSelectedPeriod((per as QuestionPeriod) || "thirty-days");
+    } else if (m === "company") {
+      setSelectedMode("company");
+      if (per) setSelectedPeriod(per as QuestionPeriod);
+    } else if (m === "beginner") {
+      setSelectedMode("beginner");
+    } else if (m === "index") {
+      setSelectedMode("index");
+    }
+  }, [searchParams]);
+
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
   const [selectedStatus, setSelectedStatus] = useState<"All" | "Unsolved" | "Completed">("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -1301,4 +1340,22 @@ export default function PracticePage() {
     </motion.div>
   );
 }
+
+export default function PracticePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-8 bg-[#f4f6f3]">
+          <div className="flex items-center gap-3 text-slate-600 font-bold text-sm bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-200">
+            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <span>Loading practice modules...</span>
+          </div>
+        </div>
+      }
+    >
+      <PracticeContent />
+    </Suspense>
+  );
+}
+
 

@@ -403,14 +403,13 @@ export default function SettingsPage() {
                   Coding & Developer Profiles
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Connect competitive programming platforms for live stats & readiness tracking.
+                  Connect your LeetCode platform profile for live stats & readiness tracking.
                 </p>
               </div>
             </div>
 
-            {/* 6 Platform Grid Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Card 1: LeetCode */}
+            {/* LeetCode Platform Card (Only LeetCode) */}
+            <div className="space-y-3.5">
               <PlatformInputCard
                 platformKey="leetcode"
                 title="LeetCode"
@@ -418,56 +417,6 @@ export default function SettingsPage() {
                 value={leetcodeInput}
                 onChange={setLeetcodeInput}
                 stat={codingStats.leetcode}
-              />
-
-              {/* Card 2: GitHub */}
-              <PlatformInputCard
-                platformKey="github"
-                title="GitHub"
-                dotColor="bg-slate-200"
-                value={githubInput}
-                onChange={setGithubInput}
-                stat={codingStats.github}
-              />
-
-              {/* Card 3: HackerRank */}
-              <PlatformInputCard
-                platformKey="hackerrank"
-                title="HackerRank"
-                dotColor="bg-emerald-400"
-                value={hackerrankInput}
-                onChange={setHackerrankInput}
-                stat={codingStats.hackerrank}
-              />
-
-              {/* Card 4: CodeChef */}
-              <PlatformInputCard
-                platformKey="codechef"
-                title="CodeChef"
-                dotColor="bg-amber-600"
-                value={codechefInput}
-                onChange={setCodechefInput}
-                stat={codingStats.codechef}
-              />
-
-              {/* Card 5: GeeksforGeeks */}
-              <PlatformInputCard
-                platformKey="geeksforgeeks"
-                title="GeeksforGeeks"
-                dotColor="bg-emerald-500"
-                value={gfgInput}
-                onChange={setGfgInput}
-                stat={codingStats.geeksforgeeks}
-              />
-
-              {/* Card 6: Codeforces */}
-              <PlatformInputCard
-                platformKey="codeforces"
-                title="Codeforces"
-                dotColor="bg-blue-400"
-                value={codeforcesInput}
-                onChange={setCodeforcesInput}
-                stat={codingStats.codeforces}
               />
             </div>
           </div>
@@ -494,7 +443,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>Save Coding Profiles & Sync Stats</span>
+                  <span>Save LeetCode Profile & Sync Stats</span>
                 </>
               )}
             </button>

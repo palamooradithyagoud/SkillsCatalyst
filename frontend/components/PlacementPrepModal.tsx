@@ -351,7 +351,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
   const handleSelectOption = (questionId: number, optionIdx: number) => {
     if (quizFinished || userAnswers[questionId] !== undefined) return;
     const timeSpent = questionTimes[questionId] !== undefined ? questionTimes[questionId] : questionTimerSeconds;
-    const isCorrect = currentQ ? optionIdx === currentQ.correctIndex : false;
+    const targetQ = questionsList.find((item) => item.id === questionId);
+    const isCorrect = targetQ ? optionIdx === targetQ.correctIndex : false;
 
     const newAnswers = { ...userAnswers, [questionId]: optionIdx };
     const newTimes = { ...questionTimes, [questionId]: timeSpent };
@@ -464,23 +465,23 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Practice View Switcher */}
               {selectedTopic && !quizFinished && (
-                <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] sm:text-xs font-bold">
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[10px] sm:text-xs font-bold">
                   <button
                     onClick={() => setPracticeViewMode("card")}
-                    className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
                       practiceViewMode === "card"
-                        ? "bg-slate-900 text-white font-black shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-slate-900 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                     }`}
                   >
                     Single
                   </button>
                   <button
                     onClick={() => setPracticeViewMode("sheet")}
-                    className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
                       practiceViewMode === "sheet"
-                        ? "bg-purple-600 text-white font-black shadow-2xs"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                     }`}
                   >
                     Sheet
@@ -950,16 +951,16 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                               animate={{ y: 0 }}
                               exit={{ y: "100%" }}
                               transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                              className="fixed bottom-0 inset-x-0 bg-[#090e1c] border-t border-white/15 rounded-t-3xl p-6 z-50 max-h-[85vh] overflow-y-auto lg:hidden"
+                              className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 rounded-t-3xl p-6 z-50 max-h-[85vh] overflow-y-auto lg:hidden shadow-2xl"
                             >
-                              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-                                <div className="font-extrabold text-white text-sm flex items-center gap-2">
-                                  <Grid className="w-4 h-4 text-purple-400" />
+                              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                                <div className="font-black text-slate-900 text-sm flex items-center gap-2">
+                                  <Grid className="w-4 h-4 text-purple-600" />
                                   <span>Questions Index ({answeredCount}/{totalQuestions} Practiced)</span>
                                 </div>
                                 <button
                                   onClick={() => setMobileGridOpen(false)}
-                                  className="p-2 rounded-xl glass text-slate-400 hover:text-white"
+                                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
                                 >
                                   <X className="w-5 h-5" />
                                 </button>
@@ -971,11 +972,11 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                                   const isCorr = userAnswers[q.id] === q.correctIndex;
                                   const isCur = idx === currentIndex;
 
-                                  let gridStyle = "bg-slate-800/60 text-slate-400 border-white/[0.05]";
+                                  let gridStyle = "bg-slate-100 text-slate-700 border-slate-200 font-extrabold hover:bg-slate-200";
                                   if (hasAns) {
                                     gridStyle = isCorr
-                                      ? "bg-emerald-600 text-white border-emerald-400"
-                                      : "bg-rose-600 text-white border-rose-400";
+                                      ? "bg-emerald-500 text-white border-emerald-600 font-black shadow-xs"
+                                      : "bg-rose-500 text-white border-rose-600 font-black shadow-xs";
                                   }
 
                                   return (
@@ -985,8 +986,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                                         setCurrentIndex(idx);
                                         setMobileGridOpen(false);
                                       }}
-                                      className={`h-10 rounded-xl text-xs font-black border transition-all flex items-center justify-center ${gridStyle} ${
-                                        isCur ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-[#090e1c] scale-105" : ""
+                                      className={`h-10 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer ${gridStyle} ${
+                                        isCur ? "ring-2 ring-indigo-600 ring-offset-1 scale-105" : ""
                                       }`}
                                     >
                                       {q.id}
@@ -1000,7 +1001,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                                   setMobileGridOpen(false);
                                   setQuizFinished(true);
                                 }}
-                                className="w-full py-3.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-extrabold text-white shadow-lg shadow-purple-600/30"
+                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-xs font-black text-white shadow-lg shadow-purple-600/30 cursor-pointer"
                               >
                                 Finish &amp; View Summary
                               </button>
@@ -1014,16 +1015,23 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                   {/* Mode B: Full Practice Sheet (Scrollable List of All Questions) */}
                   {practiceViewMode === "sheet" && (
                     <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 bg-white p-6 rounded-3xl border shadow-xs">
                         <div>
-                          <h3 className="text-lg font-extrabold text-white">Full Practice Sheet: {selectedTopic}</h3>
-                          <p className="text-xs text-slate-400">All {totalQuestions} practice questions listed with instant answer validation &amp; solutions.</p>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="px-3 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-wider border border-purple-200">
+                              Sheet Mode
+                            </span>
+                            <span className="text-xs text-slate-500 font-bold">• {totalQuestions} Practice Problems</span>
+                          </div>
+                          <h3 className="text-xl font-black text-slate-900 tracking-tight">Full Practice Sheet: {selectedTopic}</h3>
+                          <p className="text-xs text-slate-600 font-medium mt-1">All {totalQuestions} practice questions listed with instant answer validation &amp; step-by-step solutions.</p>
                         </div>
                         <button
                           onClick={() => setQuizFinished(true)}
-                          className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-extrabold text-white shadow"
+                          className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-xs font-black text-white shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shrink-0"
                         >
-                          Done Practicing
+                          <Check className="w-4 h-4" />
+                          <span>Done Practicing</span>
                         </button>
                       </div>
 
@@ -1034,54 +1042,84 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                           const hasAnswered = userAnsIdx !== undefined;
 
                           return (
-                            <div key={q.id} className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 space-y-4">
+                            <div key={q.id} className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md transition-all space-y-4">
                               <div className="flex items-start justify-between gap-4">
-                                <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-extrabold border border-purple-500/30">
-                                  #{idx + 1}
-                                </span>
-                                <h4 className="flex-1 text-sm font-bold text-white leading-relaxed">
-                                  {q.question}
-                                </h4>
+                                <div className="flex items-center gap-2.5">
+                                  <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-800 text-xs font-black border border-purple-200/80 shadow-2xs">
+                                    Problem #{idx + 1}
+                                  </span>
+                                  {hasAnswered && (
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                      isCorrect
+                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                        : "bg-rose-100 text-rose-800 border border-rose-300"
+                                    }`}>
+                                      {isCorrect ? "Correct ✓" : "Incorrect ✗"}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              <h4 className="text-sm sm:text-base font-extrabold text-slate-900 leading-relaxed">
+                                {q.question}
+                              </h4>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {q.options.map((opt, optIdx) => {
                                   const isSel = userAnsIdx === optIdx;
                                   const isRight = optIdx === q.correctIndex;
-                                  let style = "bg-slate-800/60 border-white/[0.06] text-slate-300 hover:border-purple-500/30";
+                                  let style = "bg-white border-slate-200 text-slate-800 hover:border-indigo-400 hover:bg-indigo-50/40 hover:text-indigo-900 shadow-2xs cursor-pointer";
                                   if (hasAnswered) {
-                                    if (isRight) style = "bg-emerald-950/60 border-emerald-500/50 text-emerald-200 font-bold";
-                                    else if (isSel && !isRight) style = "bg-rose-950/60 border-rose-500/50 text-rose-200 font-bold";
+                                    if (isRight) {
+                                      style = "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-400/30 cursor-not-allowed";
+                                    } else if (isSel && !isRight) {
+                                      style = "bg-rose-50 border-2 border-rose-500 text-rose-950 font-black shadow-xs ring-1 ring-rose-400/30 cursor-not-allowed";
+                                    } else {
+                                      style = "bg-slate-50/60 border-slate-200/80 text-slate-400 font-medium opacity-60 cursor-not-allowed";
+                                    }
                                   }
 
                                   return (
                                     <button
                                       key={optIdx}
                                       onClick={() => handleSelectOption(q.id, optIdx)}
-                                      className={`p-3 rounded-xl border transition-all text-left text-xs ${style}`}
+                                      disabled={hasAnswered}
+                                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all text-left text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 ${style}`}
                                     >
-                                      {opt}
+                                      <span className="flex-1 leading-relaxed">{opt}</span>
+                                      {hasAnswered && isRight && (
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                      )}
+                                      {hasAnswered && isSel && !isRight && (
+                                        <X className="w-4 h-4 text-rose-600 shrink-0" />
+                                      )}
                                     </button>
                                   );
                                 })}
                               </div>
 
-                              <div>
+                              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                                 <button
                                   onClick={() => toggleSolution(q.id)}
-                                  className="text-xs font-bold text-purple-300 hover:text-purple-200 flex items-center gap-1.5"
+                                  className="text-xs font-extrabold text-amber-900 bg-amber-50 hover:bg-amber-100 px-3.5 py-1.5 rounded-xl border border-amber-300/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                 >
-                                  <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                                  <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
                                   <span>{showSolutionMap[q.id] ? "Hide Solution" : "Show Solution 💡"}</span>
                                 </button>
-
-                                {showSolutionMap[q.id] && (
-                                  <div className="mt-3 p-4 rounded-xl bg-purple-950/30 border border-purple-500/30 text-xs text-slate-200 space-y-1">
-                                    <div className="font-extrabold text-amber-300">Answer: {q.answerText}</div>
-                                    <div className="whitespace-pre-line text-slate-300 font-medium pt-1">{q.solution}</div>
-                                  </div>
-                                )}
                               </div>
+
+                              {showSolutionMap[q.id] && (
+                                <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 text-xs text-slate-800 space-y-2 shadow-2xs">
+                                  <div className="font-black text-amber-950 flex items-center gap-2">
+                                    <span className="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg font-black text-[11px] shadow-2xs">
+                                      Answer: {q.answerText}
+                                    </span>
+                                  </div>
+                                  <div className="whitespace-pre-line text-slate-700 font-semibold pt-1 border-t border-amber-200/60">
+                                    {q.solution}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -1095,33 +1133,33 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
               {quizFinished && (
                 <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
                   {/* Score Banner */}
-                  <div className="p-8 rounded-3xl bg-gradient-to-r from-purple-900/40 via-indigo-900/30 to-blue-900/40 border border-purple-500/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+                  <div className="p-8 rounded-3xl bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 border border-purple-400/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl text-white">
                     <div>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-extrabold mb-3">
-                        <CheckCircle2 className="w-4 h-4" /> Practice Session Completed!
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white border border-white/30 text-xs font-black mb-3 backdrop-blur-sm">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-300" /> Practice Session Completed!
                       </div>
-                      <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                      <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                         {selectedTopic} Practice Summary
                       </h3>
-                      <p className="text-sm text-slate-300 mt-1">
+                      <p className="text-sm text-purple-100 font-medium mt-1">
                         Self-Paced Practice Completed. Review your answers and step-by-step solutions below.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-6 bg-slate-900/80 p-5 rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-6 bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/20 text-white">
                       <div className="text-center">
-                        <div className="text-3xl font-black text-purple-400">{correctCount} / {totalQuestions}</div>
-                        <div className="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Practiced</div>
+                        <div className="text-3xl font-black text-purple-200">{correctCount} / {totalQuestions}</div>
+                        <div className="text-[10px] font-bold uppercase text-purple-200/80 mt-0.5">Practiced</div>
                       </div>
-                      <div className="w-px h-10 bg-white/10" />
+                      <div className="w-px h-10 bg-white/20" />
                       <div className="text-center">
-                        <div className="text-3xl font-black text-emerald-400">{accuracyPercent}%</div>
-                        <div className="text-[10px] font-bold uppercase text-slate-400 mt-0.5">Accuracy</div>
+                        <div className="text-3xl font-black text-emerald-300">{accuracyPercent}%</div>
+                        <div className="text-[10px] font-bold uppercase text-purple-200/80 mt-0.5">Accuracy</div>
                       </div>
-                      <div className="w-px h-10 bg-white/10" />
+                      <div className="w-px h-10 bg-white/20" />
                       <button
                         onClick={handleRestartQuiz}
-                        className="p-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md flex items-center gap-1 text-xs font-bold"
+                        className="p-3 rounded-xl bg-white text-purple-900 hover:bg-purple-50 transition-all shadow-md flex items-center gap-1 text-xs font-black cursor-pointer"
                         title="Restart Practice"
                       >
                         <RefreshCw className="w-4 h-4" />
@@ -1132,8 +1170,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
 
                   {/* Solutions Table & Breakdown */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-extrabold text-white flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-amber-400" />
+                    <h4 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-amber-500" />
                       Detailed Solutions &amp; Answer Key
                     </h4>
 
@@ -1146,25 +1184,25 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                         return (
                           <div
                             key={q.id}
-                            className={`p-6 rounded-2xl border transition-all space-y-3 ${
+                            className={`p-6 rounded-3xl border transition-all space-y-3 bg-white shadow-sm ${
                               userAnsIdx === undefined
-                                ? "bg-slate-900/40 border-white/10"
+                                ? "border-slate-200"
                                 : isCorrect
-                                ? "bg-emerald-950/20 border-emerald-500/30"
-                                : "bg-rose-950/20 border-rose-500/30"
+                                ? "border-emerald-300 ring-1 ring-emerald-400/20"
+                                : "border-rose-300 ring-1 ring-rose-400/20"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-4">
-                              <h5 className="text-sm font-bold text-white leading-relaxed">
+                              <h5 className="text-sm sm:text-base font-extrabold text-slate-900 leading-relaxed">
                                 {q.question}
                               </h5>
                               <span
-                                className={`text-xs font-extrabold px-3 py-1 rounded-full shrink-0 ${
+                                className={`text-xs font-black px-3 py-1 rounded-full shrink-0 ${
                                   userAnsIdx === undefined
-                                    ? "bg-slate-800 text-slate-400"
+                                    ? "bg-slate-100 text-slate-600 border border-slate-200"
                                     : isCorrect
-                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                                    : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                    : "bg-rose-100 text-rose-800 border border-rose-300"
                                 }`}
                               >
                                 {userAnsIdx === undefined
@@ -1176,27 +1214,27 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                             </div>
 
                             {/* User answer vs correct answer & Time taken */}
-                            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-                              <div className="text-slate-400">
-                                Your Choice: <span className={isCorrect ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>{userAnsText}</span>
+                            <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
+                              <div className="text-slate-600">
+                                Your Choice: <span className={isCorrect ? "text-emerald-700 font-black" : "text-rose-700 font-black"}>{userAnsText}</span>
                               </div>
-                              <div className="text-amber-300 font-bold">
-                                Correct Answer: {q.answerText}
+                              <div className="text-amber-800 font-black flex items-center gap-1">
+                                <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-lg border border-amber-200">Correct Answer: {q.answerText}</span>
                               </div>
                               {questionTimes[q.id] !== undefined && (
-                                <div className="text-purple-300 bg-purple-500/15 px-2.5 py-0.5 rounded-md border border-purple-500/30 font-extrabold flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-purple-400" />
+                                <div className="text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200 font-extrabold flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-purple-600" />
                                   <span>Time Taken: {questionTimes[q.id]}s</span>
                                 </div>
                               )}
                             </div>
 
                             {/* Solution Box */}
-                            <div className="p-4 rounded-xl bg-slate-950/60 border border-white/[0.06] text-xs leading-relaxed text-slate-300 space-y-1">
-                              <div className="font-extrabold text-purple-400 text-[11px] uppercase tracking-wider mb-1">
+                            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-xs leading-relaxed text-slate-800 space-y-1">
+                              <div className="font-black text-indigo-900 text-[11px] uppercase tracking-wider mb-1">
                                 Step-by-Step Solution
                               </div>
-                              <div className="whitespace-pre-line font-medium text-slate-300">
+                              <div className="whitespace-pre-line font-medium text-slate-700">
                                 {q.solution}
                               </div>
                             </div>
