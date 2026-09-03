@@ -137,26 +137,17 @@ export default function PracticeOverview({
   }, [userId]);
 
   // Connected Platform Badges Count
-  const connectedPlatformsCount = Object.values(codingStats).filter((s) => s && s.configured).length;
+  const isLeetcodeConfigured = !!(codingStats.leetcode && codingStats.leetcode.configured);
 
   // Calculate Aggregated Problems Solved
   const leetcodeSolved = codingStats.leetcode?.total_solved || 0;
-  const gfgSolved = codingStats.geeksforgeeks?.total_solved || 0;
-  const cfSolved = codingStats.codeforces?.total_solved || 0;
-  const ccSolved = codingStats.codechef?.total_solved || 0;
-  const hrSolved = codingStats.hackerrank?.total_solved || 0;
 
-  const hasConnectedPlatforms = connectedPlatformsCount > 0;
-  const totalExtractedSolved = leetcodeSolved + gfgSolved + cfSolved + ccSolved + hrSolved;
-
-  // Display total solved problems exclusively from connected coding platforms (LeetCode, GFG, Codeforces, CodeChef, HackerRank)
-  const displayTotalSolved = hasConnectedPlatforms
-    ? Math.max(totalExtractedSolved, problemsSolved)
+  // Display total solved problems exclusively from LeetCode
+  const displayTotalSolved = isLeetcodeConfigured
+    ? Math.max(leetcodeSolved, problemsSolved)
     : (problemsSolved > 0 ? problemsSolved : 0);
 
-  const displaySuccessRate = displayTotalSolved > 0
-    ? (codingStats.codeforces?.rating ? `${codingStats.codeforces.rating}` : `${successRate}%`)
-    : "0%";
+  const displaySuccessRate = displayTotalSolved > 0 ? `${successRate}%` : "0%";
 
   return (
     <motion.div
@@ -170,14 +161,14 @@ export default function PracticeOverview({
         <div>
           <h2 className="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
             <span>Practice & Developer Overview</span>
-            {connectedPlatformsCount > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                {connectedPlatformsCount} Connected
+            {isLeetcodeConfigured && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                LeetCode Linked
               </span>
             )}
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Real-time readiness stats aggregated across your developer & coding profiles.
+            Real-time readiness stats from your connected LeetCode profile.
           </p>
         </div>
 
@@ -186,7 +177,7 @@ export default function PracticeOverview({
           className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center gap-1.5"
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          <span>Sync Profiles</span>
+          <span>Sync LeetCode</span>
         </Link>
       </div>
 
@@ -200,15 +191,15 @@ export default function PracticeOverview({
           delay={0.3}
         />
         <StatCard
-          value={`${connectedPlatformsCount}/6`}
-          label="Profiles Connected"
+          value={isLeetcodeConfigured ? "Connected" : "Not Linked"}
+          label="LeetCode Profile"
           icon={<Globe className="w-4 h-4 text-emerald-400" />}
           color="#10b981"
           delay={0.35}
         />
         <StatCard
           value={displaySuccessRate}
-          label={codingStats.codeforces?.rating ? "Codeforces Rating" : "Success Rate"}
+          label="Success Rate"
           icon={<Swords className="w-4 h-4 text-purple-400" />}
           color="#8b5cf6"
           delay={0.4}
@@ -221,60 +212,20 @@ export default function PracticeOverview({
         <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-2">
           <span className="flex items-center gap-1.5">
             <Code2 className="w-4 h-4 text-indigo-400" />
-            <span>Connected Developer Profiles Live Stats</span>
+            <span>Connected LeetCode Live Stats</span>
           </span>
           <Link href="/settings" className="text-indigo-400 hover:text-indigo-300 transition-colors">
-            Manage Links →
+            Manage Link →
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {/* LeetCode */}
           <PlatformStatItem
             title="LeetCode"
             url={codingStats.leetcode?.url || "https://leetcode.com"}
             dotColor="bg-amber-400"
             stat={codingStats.leetcode}
-          />
-
-          {/* GitHub */}
-          <PlatformStatItem
-            title="GitHub"
-            url={codingStats.github?.url || "https://github.com"}
-            dotColor="bg-slate-200"
-            stat={codingStats.github}
-          />
-
-          {/* Codeforces */}
-          <PlatformStatItem
-            title="Codeforces"
-            url={codingStats.codeforces?.url || "https://codeforces.com"}
-            dotColor="bg-blue-400"
-            stat={codingStats.codeforces}
-          />
-
-          {/* CodeChef */}
-          <PlatformStatItem
-            title="CodeChef"
-            url={codingStats.codechef?.url || "https://codechef.com"}
-            dotColor="bg-amber-600"
-            stat={codingStats.codechef}
-          />
-
-          {/* GeeksforGeeks */}
-          <PlatformStatItem
-            title="GeeksforGeeks"
-            url={codingStats.geeksforgeeks?.url || "https://geeksforgeeks.org"}
-            dotColor="bg-emerald-500"
-            stat={codingStats.geeksforgeeks}
-          />
-
-          {/* HackerRank */}
-          <PlatformStatItem
-            title="HackerRank"
-            url={codingStats.hackerrank?.url || "https://hackerrank.com"}
-            dotColor="bg-emerald-400"
-            stat={codingStats.hackerrank}
           />
         </div>
       </div>
