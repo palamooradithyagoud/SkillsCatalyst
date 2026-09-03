@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   TrendingUp,
@@ -21,78 +21,141 @@ import {
   Play,
   Terminal,
   Trophy,
+  X,
+  ArrowRight,
 } from "lucide-react";
 
-// Mock data items for Netflix/Spotify style rich feed
+// Foundation items for Explore feed
 const AI_PICKS = [
   {
-    id: "fullstack-ai",
-    title: "Full-Stack AI Engineer 2026",
-    category: "Career Track",
-    level: "Advanced",
-    duration: "12 Weeks",
+    id: "programming-language",
+    title: "Programming Language",
+    category: "Core Foundation",
+    level: "Beginner - Advanced",
+    duration: "Choose Language",
     gradient: "from-blue-600 via-indigo-600 to-purple-600",
-    badge: "🔥 98% Match",
-    href: "/roadmaps",
+    badge: "🔥 Step 1",
+    isModalTrigger: true,
   },
   {
-    id: "system-design",
-    title: "System Design for FAANG & Scale",
-    category: "Masterclass",
+    id: "data-structures",
+    title: "Data Structures",
+    category: "DSA Foundation",
     level: "Intermediate",
-    duration: "6 Weeks",
+    duration: "Arrays, Trees, Graphs",
     gradient: "from-purple-600 via-pink-600 to-rose-600",
-    badge: "⭐ Top Rated",
-    href: "/learning",
+    badge: "⭐ Step 2",
+    href: "/learning?query=Data%20Structures",
   },
   {
-    id: "dsa-patterns",
-    title: "Top 75 LeetCode Patterns",
+    id: "leetcode-foundation",
+    title: "LeetCode Foundation",
     category: "Placement Prep",
     level: "All Levels",
-    duration: "40 Hours",
+    duration: "Pattern-Wise Sheet",
     gradient: "from-cyan-600 via-teal-600 to-emerald-600",
-    badge: "🚀 Placement Hot",
-    href: "/practice",
+    badge: "🚀 Step 3",
+    href: "/practice?mode=beginner",
+  },
+];
+
+const PROGRAMMING_LANGUAGES = [
+  {
+    name: "C",
+    title: "C Language",
+    tagline: "Systems & Memory Logic",
+    desc: "Syntax, pointers, memory management, and procedural problem-solving.",
+    query: "C Language",
+    badge: "Procedural",
+    badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+    iconGradient: "from-blue-600 to-cyan-600",
+    borderHover: "hover:border-blue-500",
+  },
+  {
+    name: "C++",
+    title: "C++ (CPP)",
+    tagline: "High Performance & STL",
+    desc: "Object-oriented programming, STL containers, templates, and competitive DSA.",
+    query: "C++",
+    badge: "Competitive",
+    badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    iconGradient: "from-indigo-600 to-purple-600",
+    borderHover: "hover:border-indigo-500",
+  },
+  {
+    name: "Java",
+    title: "Java",
+    tagline: "Enterprise & Object-Oriented",
+    desc: "Classes, objects, JVM architecture, Collections framework, and robust backend logic.",
+    query: "Java",
+    badge: "Enterprise",
+    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+    iconGradient: "from-amber-500 to-orange-600",
+    borderHover: "hover:border-amber-500",
+  },
+  {
+    name: "Python",
+    title: "Python",
+    tagline: "Modern, AI & Clean Syntax",
+    desc: "Readable syntax, versatile data structures, algorithms, and practical development.",
+    query: "Python",
+    badge: "High-Level",
+    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    iconGradient: "from-emerald-600 to-teal-600",
+    borderHover: "hover:border-emerald-500",
   },
 ];
 
 const TRENDING_SKILLS = [
-  { name: "Next.js 16 App Router", icon: Code2, count: "48 Courses", tag: "Frontend" },
-  { name: "Python LLM Fine-tuning", icon: Sparkles, count: "62 Courses", tag: "AI/ML" },
-  { name: "FastAPI & Async Python", icon: Terminal, count: "35 Courses", tag: "Backend" },
-  { name: "PostgreSQL & Supabase RLS", icon: Globe, count: "29 Courses", tag: "Database" },
-  { name: "Docker & Kubernetes DevOps", icon: Zap, count: "42 Courses", tag: "DevOps" },
+  { name: "AI & Generative AI", icon: Sparkles, count: "62 Courses", tag: "AI/ML", query: "Generative AI" },
+  { name: "Full-Stack Development", icon: Code2, count: "48 Courses", tag: "FullStack", query: "Full Stack Development" },
+  { name: "Cloud & DevOps", icon: Zap, count: "42 Courses", tag: "DevOps", query: "DevOps" },
+  { name: "Data Engineering & Analytics", icon: Terminal, count: "35 Courses", tag: "Data", query: "Data Engineering" },
+  { name: "Cybersecurity", icon: Globe, count: "29 Courses", tag: "Security", query: "Cybersecurity" },
 ];
 
 const CAREER_TRACKS = [
   {
-    title: "Frontend Developer Track",
-    skills: ["React 19", "TypeScript", "Next.js", "Tailwind"],
+    title: "AI / Generative AI",
+    skills: ["LLMs", "RAG", "AI Agents", "LangChain", "Hugging Face"],
+    companyFav: "OpenAI, Google, Anthropic",
+    gradient: "from-purple-500/20 to-indigo-500/10",
+    borderColor: "border-purple-500/30",
+  },
+  {
+    title: "Full-Stack Development",
+    skills: ["React", "Next.js", "Node.js", "TypeScript"],
     companyFav: "Meta, Vercel, Stripe",
     gradient: "from-blue-500/20 to-cyan-500/10",
     borderColor: "border-blue-500/30",
   },
   {
-    title: "Backend Architect Track",
-    skills: ["Python", "FastAPI", "PostgreSQL", "Docker"],
-    companyFav: "Amazon, Uber, Netflix",
-    gradient: "from-purple-500/20 to-indigo-500/10",
-    borderColor: "border-purple-500/30",
+    title: "Cloud & DevOps",
+    skills: ["AWS", "Docker", "Kubernetes", "CI/CD"],
+    companyFav: "Amazon, Microsoft, Cloudflare",
+    gradient: "from-amber-500/20 to-orange-500/10",
+    borderColor: "border-amber-500/30",
   },
   {
-    title: "AI & ML Specialist",
-    skills: ["Python", "PyTorch", "LangChain", "Groq API"],
-    companyFav: "OpenAI, Google, Anthropic",
+    title: "Data Engineering & Analytics",
+    skills: ["Python", "SQL", "Spark", "Databricks"],
+    companyFav: "Snowflake, Netflix, Databricks",
     gradient: "from-emerald-500/20 to-teal-500/10",
     borderColor: "border-emerald-500/30",
+  },
+  {
+    title: "Cybersecurity",
+    skills: ["Network Security", "Cloud Security", "Ethical Hacking", "SOC"],
+    companyFav: "CrowdStrike, Palo Alto, Cisco",
+    gradient: "from-rose-500/20 to-pink-500/10",
+    borderColor: "border-rose-500/30",
   },
 ];
 
 const POPULAR_COURSES = [
-  { title: "Complete Python Mastery 2026", instructor: "Telusko", rating: "4.9", videos: "54 Videos", level: "Beginner - Advanced", color: "border-cyan-500/30" },
-  { title: "Aptitude & Logical Reasoning Sprint", instructor: "SkillsCatalyst Team", rating: "4.8", videos: "41 Practice Sets", level: "Placement", color: "border-purple-500/30" },
-  { title: "Data Structures & Algorithms in C++", instructor: "Striver", rating: "5.0", videos: "120 Videos", level: "Intermediate", color: "border-blue-500/30" },
+  { title: "Complete Python Mastery 2026", instructor: "Telusko", rating: "4.9", videos: "54 Videos", level: "Beginner - Advanced", color: "border-cyan-500/30", query: "Python Telusko" },
+  { title: "Aptitude & Logical Reasoning Sprint", instructor: "SkillsCatalyst Team", rating: "4.8", videos: "41 Practice Sets", level: "Placement", color: "border-purple-500/30", query: "Aptitude and Reasoning" },
+  { title: "Data Structures & Algorithms in C++", instructor: "Striver", rating: "5.0", videos: "120 Videos", level: "Intermediate", color: "border-blue-500/30", query: "Data Structures in C++ Striver" },
 ];
 
 const TOP_COMPANIES = [
@@ -109,8 +172,8 @@ const HACKATHONS = [
 
 export default function ExplorePage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
   const [companyInput, setCompanyInput] = useState("");
+  const [isLangModalOpen, setIsLangModalOpen] = useState(false);
 
   const handleCompanySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,8 +190,8 @@ export default function ExplorePage() {
       transition={{ duration: 0.4 }}
       className="max-w-7xl mx-auto space-y-6 pb-12"
     >
-      {/* ── Top Floating Mobile Search Ba      {/* ── Top Floating Search Bar Header ── */}
-      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md flex flex-col gap-3.5 relative overflow-hidden">
+      {/* ── Top Header ── */}
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-row items-center justify-between gap-3 relative z-10">
@@ -149,70 +212,83 @@ export default function ExplorePage() {
             <span>Trending</span>
           </span>
         </div>
-
-        {/* Floating Search Input */}
-        <div className="relative mt-0.5 z-10">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search skills, companies, topics..."
-            className="w-full bg-slate-50 border border-slate-200/90 focus:border-indigo-500 focus:bg-white text-slate-900 font-extrabold placeholder:text-slate-400 text-xs sm:text-sm pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl transition-all shadow-2xs outline-none"
-          />
-        </div>
       </div>
 
-      {/* ── 1. Hero AI Picks Carousel (Compact Poster Cards on Smartphone) ── */}
+      {/* ── 1. Foundation Carousel (Compact Poster Cards on Smartphone) ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
-            <span>AI Recommended for You</span>
+            <span>Foundation</span>
           </h2>
           <span className="text-[10px] sm:text-[11px] text-slate-400 font-extrabold">Swipe →</span>
         </div>
 
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar mobile-touch-scroll pb-2 snap-x snap-mandatory px-0.5">
-          {AI_PICKS.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3"
-            >
-              {/* Vibrant ambient glow */}
-              <div
-                className={`absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br ${item.gradient} opacity-15 rounded-full blur-xl group-hover:opacity-30 transition-opacity pointer-events-none`}
-              />
+          {AI_PICKS.map((item) => {
+            const isTrigger = !item.href || item.isModalTrigger;
+            const cardInner = (
+              <>
+                {/* Vibrant ambient glow */}
+                <div
+                  className={`absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br ${item.gradient} opacity-15 rounded-full blur-xl group-hover:opacity-30 transition-opacity pointer-events-none`}
+                />
 
-              <div className="relative z-10 space-y-2">
-                <div className="flex items-center justify-between gap-1 flex-wrap">
-                  <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs">
-                    {item.category}
-                  </span>
-                  <span className="text-[9px] sm:text-[11px] font-black bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shadow-2xs">
-                    {item.badge}
-                  </span>
-                </div>
+                <div className="relative z-10 space-y-2">
+                  <div className="flex items-center justify-between gap-1 flex-wrap">
+                    <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs">
+                      {item.category}
+                    </span>
+                    <span className="text-[9px] sm:text-[11px] font-black bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shadow-2xs">
+                      {item.badge}
+                    </span>
+                  </div>
 
-                <div>
-                  <h3 className="text-xs sm:text-lg font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
-                    {item.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-600 mt-1.5 font-extrabold">
-                    <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.level}</span>
-                    <span>•</span>
-                    <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.duration}</span>
+                  <div>
+                    <h3 className="text-xs sm:text-lg font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-600 mt-1.5 font-extrabold">
+                      <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.level}</span>
+                      {item.duration && (
+                        <>
+                          <span>•</span>
+                          <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.duration}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-xs font-black text-indigo-600 group-hover:translate-x-1 transition-transform relative z-10">
-                <span>Start Learning</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </div>
-            </Link>
-          ))}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-xs font-black text-indigo-600 group-hover:translate-x-1 transition-transform relative z-10">
+                  <span>{isTrigger ? "Choose Language" : "Start Learning"}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </>
+            );
+
+            if (isTrigger) {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setIsLangModalOpen(true)}
+                  className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3 text-left cursor-pointer"
+                >
+                  {cardInner}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.id}
+                href={item.href || "/learning"}
+                className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3"
+              >
+                {cardInner}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -231,7 +307,7 @@ export default function ExplorePage() {
             return (
               <Link
                 key={skill.name}
-                href="/learning"
+                href={`/learning?query=${encodeURIComponent(skill.query || skill.name)}`}
                 className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-bold text-slate-700 hover:text-slate-950 transition-all shadow-2xs hover:shadow-md cursor-pointer"
               >
                 <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-2xs shrink-0">
@@ -263,23 +339,29 @@ export default function ExplorePage() {
           {CAREER_TRACKS.map((track) => (
             <div
               key={track.title}
-              className="snap-start flex-shrink-0 w-[200px] sm:w-[310px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 flex flex-col justify-between shadow-sm space-y-3 hover:shadow-lg transition-all"
+              className="snap-start flex-shrink-0 w-[210px] sm:w-[320px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 flex flex-col justify-between shadow-sm space-y-3 hover:shadow-lg transition-all"
             >
               <div>
-                <div className="text-xs sm:text-base font-black text-slate-900 mb-2 leading-snug">{track.title}</div>
-                <div className="flex flex-wrap gap-1 mb-2">
+                <Link
+                  href={`/learning?query=${encodeURIComponent(track.title)}`}
+                  className="text-xs sm:text-base font-black text-slate-900 hover:text-indigo-600 transition-colors mb-2 leading-snug block"
+                >
+                  {track.title}
+                </Link>
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {track.skills.map((s) => (
-                    <span
+                    <Link
                       key={s}
-                      className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs"
+                      href={`/learning?query=${encodeURIComponent(s)}`}
+                      className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-200/80 shadow-2xs transition-colors cursor-pointer"
                     >
                       {s}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-600 font-bold border-t border-slate-100 pt-2 flex items-center justify-between">
-                <span>Hiring: <strong className="text-slate-900 font-black truncate max-w-[120px] inline-block align-bottom">{track.companyFav}</strong></span>
+                <span>Hiring: <strong className="text-slate-900 font-black truncate max-w-[130px] inline-block align-bottom">{track.companyFav}</strong></span>
               </div>
             </div>
           ))}
@@ -299,7 +381,7 @@ export default function ExplorePage() {
           {POPULAR_COURSES.map((c) => (
             <Link
               key={c.title}
-              href="/learning"
+              href={`/learning?query=${encodeURIComponent(c.query || c.title)}`}
               className="bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-start gap-2 sm:gap-3.5 cursor-pointer group"
             >
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
@@ -396,6 +478,98 @@ export default function ExplorePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Programming Language Selection Modal ── */}
+      <AnimatePresence>
+        {isLangModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            {/* Backdrop click to close */}
+            <div
+              className="absolute inset-0"
+              onClick={() => setIsLangModalOpen(false)}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="bg-white w-full max-w-xl rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xl relative overflow-hidden space-y-5 z-10"
+            >
+              {/* Glow Accent */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-xs shrink-0">
+                    <Code2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                      Choose Programming Language
+                    </h3>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                      Select a language to launch your foundation learning track.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsLangModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 4 Language Cards: C, CPP, Java, Python */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative z-10 pt-1">
+                {PROGRAMMING_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.name}
+                    onClick={() => {
+                      setIsLangModalOpen(false);
+                      router.push(`/learning?query=${encodeURIComponent(lang.query)}`);
+                    }}
+                    className={`p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200/90 ${lang.borderHover} transition-all duration-200 text-left shadow-2xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group flex flex-col justify-between space-y-2.5`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-xl bg-gradient-to-br ${lang.iconGradient} text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0`}
+                        >
+                          {lang.name}
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            {lang.title}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500">
+                            {lang.tagline}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${lang.badgeColor}`}>
+                        {lang.badge}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
+                      {lang.desc}
+                    </p>
+
+                    <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] font-black text-indigo-600">
+                      <span>Open in Learning</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
