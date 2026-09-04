@@ -20,6 +20,8 @@ import {
   fetchProfileData,
   saveAcademicProfile,
   saveCodingProfiles,
+  fetchUserProgressStats,
+  UserProgressStats,
   PlatformStat,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -52,6 +54,21 @@ export default function SettingsPage() {
   const [syncingCoding, setSyncingCoding] = useState(false);
   const [codingSuccessMsg, setCodingSuccessMsg] = useState("");
   const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // User Dynamic Progress Stats (Starts strictly at zero for everyone)
+  const [progressStats, setProgressStats] = useState<UserProgressStats>({
+    streakDays: 0,
+    badgesCount: 0,
+    questionsSolved: 0,
+    completedVideos: 0,
+    completedRoadmaps: 0,
+    totalXP: 0,
+    level: 0,
+    currentLevelXP: 0,
+    nextLevelXP: 100,
+    xpPercent: 0,
+    badges: [],
+  });
 
   // ── localStorage keys ─────────────────────────────────────────────────
   const LS_ACADEMIC = `sc_academic_profile_${userId}`;
@@ -120,6 +137,16 @@ export default function SettingsPage() {
         }
       } catch {}
 
+      // ── Step 3: Fetch verified live progress stats (starts from 0) ──
+      if (userId) {
+        try {
+          const pStats = await fetchUserProgressStats(userId);
+          setProgressStats(pStats);
+        } catch (err) {
+          console.warn("Failed to load progress stats:", err);
+        }
+      }
+
       setLoadingProfile(false);
     }
     loadData();
@@ -176,8 +203,18 @@ export default function SettingsPage() {
       // Even if Supabase failed, inputs are saved locally
       setCodingSuccessMsg("Profiles saved locally! Stats will sync when Supabase is ready.");
     }
+
+    // Refresh dynamic stats
+    if (userId) {
+      fetchUserProgressStats(userId, true)
+        .then((s) => setProgressStats(s))
+        .catch(() => {});
+    }
+
     setTimeout(() => setCodingSuccessMsg(""), 4000);
   };
+
+  const displayName = fullName || session?.name || (session?.email ? session.email.split("@")[0] : "Learner");
 
   return (
     <motion.div
@@ -192,11 +229,11 @@ export default function SettingsPage() {
           <div className="relative">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/20 p-1">
               <div className="w-full h-full rounded-full bg-white text-[#234B3B] flex items-center justify-center font-black text-2xl sm:text-3xl">
-                {fullName ? fullName.charAt(0).toUpperCase() : "P"}
+                {displayName ? displayName.charAt(0).toUpperCase() : "P"}
               </div>
             </div>
             <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 shadow">
-              Lvl 12
+              Lvl {progressStats.level}
             </span>
           </div>
 
@@ -205,16 +242,16 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  {fullName || "Palamoor Adithya"}
+                  {displayName}
                 </h1>
                 <p className="text-xs text-emerald-100 font-medium mt-0.5">
-                  {session?.email || "adithya@example.com"} • {college || "Vardhaman College"}
+                  {session?.email || "learner@skillscatalyst.in"} {college ? `• ${college}` : ""}
                 </p>
               </div>
 
               <button
                 onClick={logout}
-                className="self-center sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all"
+                className="self-center sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Log Out</span>
@@ -225,43 +262,39 @@ export default function SettingsPage() {
             <div className="space-y-1 max-w-md">
               <div className="flex items-center justify-between text-[11px] font-extrabold text-emerald-100">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" /> 2,850 / 3,000 XP
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" /> {progressStats.currentLevelXP.toLocaleString()} / {progressStats.nextLevelXP.toLocaleString()} XP
                 </span>
-                <span className="text-amber-300">Level 13 Next</span>
+                <span className="text-amber-300">Level {progressStats.level + 1} Next</span>
               </div>
               <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden p-0.5">
-                <div className="h-full bg-amber-400 rounded-full w-[85%]" />
+                <div 
+                  className="h-full bg-amber-400 rounded-full transition-all duration-500" 
+                  style={{ width: `${progressStats.xpPercent}%` }}
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Profile Quick Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-6 pt-5 border-t border-white/20">
+        {/* Profile Quick Stats Grid - Exactly 3 Items: Streak, Badges, Questions Solved */}
+        <div className="grid grid-cols-3 gap-2.5 mt-6 pt-5 border-t border-white/20">
           <div className="p-3 rounded-2xl bg-white/10 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-extrabold text-amber-300 flex items-center gap-1">
-              🔥 14 Days
+            <span className="text-xs sm:text-sm font-extrabold text-amber-300 flex items-center gap-1">
+              🔥 {progressStats.streakDays} {progressStats.streakDays === 1 ? "Day" : "Days"}
             </span>
             <span className="text-[10px] text-emerald-100 font-medium mt-0.5">Streak</span>
           </div>
 
           <div className="p-3 rounded-2xl bg-white/10 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-extrabold text-purple-200 flex items-center gap-1">
-              🏆 18 Badges
+            <span className="text-xs sm:text-sm font-extrabold text-purple-200 flex items-center gap-1">
+              🏆 {progressStats.badgesCount} {progressStats.badgesCount === 1 ? "Badge" : "Badges"}
             </span>
             <span className="text-[10px] text-emerald-100 font-medium mt-0.5">Earned</span>
           </div>
 
           <div className="p-3 rounded-2xl bg-white/10 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-extrabold text-blue-200 flex items-center gap-1">
-              🎯 92% ATS
-            </span>
-            <span className="text-[10px] text-emerald-100 font-medium mt-0.5">Resume Score</span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-white/10 flex flex-col items-center justify-center text-center">
-            <span className="text-xs font-extrabold text-emerald-200 flex items-center gap-1">
-              💻 41 Solved
+            <span className="text-xs sm:text-sm font-extrabold text-emerald-200 flex items-center gap-1">
+              💻 {progressStats.questionsSolved} Solved
             </span>
             <span className="text-[10px] text-emerald-100 font-medium mt-0.5">Practice Qs</span>
           </div>
@@ -452,31 +485,71 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Bottom Section: Earned Milestones & Career Badges */}
-      <div className="bg-white rounded-[28px] p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3.5 rounded-2xl bg-purple-100 text-purple-700 shrink-0">
-            <Trophy className="w-6 h-6" />
+      <div className="bg-white rounded-[28px] p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3.5 rounded-2xl bg-purple-100 text-purple-700 shrink-0">
+              <Trophy className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">
+                  Earned Milestones & Career Badges
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                  {progressStats.badgesCount} of {progressStats.badges.length} Unlocked
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Track unlocked platform achievements based on daily streaks, questions solved, videos, and roadmaps.
+              </p>
+              {progressStats.badgesCount === 0 && (
+                <p className="text-xs text-slate-400 mt-2 font-medium">
+                  No badges earned yet. Solve your first practice problem, watch a video, or maintain a daily streak to start unlocking!
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">
-              Earned Milestones & Career Badges
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Track unlocked platform achievements and completed learning milestones.
-            </p>
-            <p className="text-xs text-slate-400 mt-3 font-semibold">
-              No milestone achievements earned yet. Complete an active roadmap to 100% to earn your first badge!
-            </p>
-          </div>
+
+          <button
+            onClick={logout}
+            className="self-start md:self-auto px-5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
         </div>
 
-        <button
-          onClick={logout}
-          className="px-5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
-        </button>
+        {/* Dynamic Badges Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
+          {progressStats.badges.map((b) => (
+            <div
+              key={b.id}
+              className={`p-3 rounded-2xl border flex flex-col items-center text-center transition-all ${
+                b.unlocked
+                  ? "bg-purple-50/80 border-purple-200 shadow-xs ring-1 ring-purple-300"
+                  : "bg-slate-50/60 border-slate-200 opacity-60"
+              }`}
+            >
+              <div className="text-2xl mb-1 filter drop-shadow-xs">{b.icon}</div>
+              <span className="text-[11px] font-bold text-slate-900 leading-tight line-clamp-1">
+                {b.name}
+              </span>
+              <span className="text-[9px] text-slate-500 mt-0.5 line-clamp-2 leading-tight">
+                {b.desc}
+              </span>
+              <span
+                className={`text-[9px] font-extrabold mt-2 px-1.5 py-0.5 rounded-md ${
+                  b.unlocked
+                    ? "bg-purple-600 text-white"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
+                {b.unlocked ? "Earned" : b.progressText || "Locked"}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
