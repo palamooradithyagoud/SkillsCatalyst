@@ -51,8 +51,8 @@ export default function PaymentPosSwipeAnimation({
         </h3>
         <p className="text-xs text-slate-300">
           {isSuccess
-            ? "Your Pro pass is active. Unlocking all roadmaps & practice..."
-            : "Hover or click the terminal below to swipe card & complete payment."}
+            ? "Your Pro pass is active with 7-Day Free Trial. Unlocking all roadmaps & practice..."
+            : `Includes 7-Day Free Trial • First 7 days ₹0 • Hover or click terminal to swipe card.`}
         </p>
       </div>
 
