@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ExternalLink, Check, Video, BookOpen, Clock, Zap, PlayCircle, ChevronLeft } from "lucide-react";
+import { X, ExternalLink, Check, BookOpen, Clock, Zap, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface LeetCodeProblem {
@@ -311,26 +311,13 @@ export default function PracticeTopicDrawer({
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-8 pb-28 sm:pb-8">
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-                    {topicName}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                    Master Pattern Overview &amp; Curated Practice Questions
-                  </p>
-                </div>
-
-                <a
-                  href={data.masterclassVideoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
-                >
-                  <Video className="w-4 h-4 text-rose-600" />
-                  <span>Watch Masterclass</span>
-                  <ExternalLink className="w-3 h-3 text-rose-500" />
-                </a>
+              <div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+                  {topicName}
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                  Master Pattern Overview &amp; Curated Practice Questions
+                </p>
               </div>
 
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
@@ -426,15 +413,10 @@ export default function PracticeTopicDrawer({
                             </span>
                           </td>
                           <td className="p-3.5">
-                            <a
-                              href={getYoutubeSolutionUrl(p)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline"
-                            >
-                              <PlayCircle className="w-3.5 h-3.5 text-indigo-500" />
-                              <span>Solution</span>
-                            </a>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500 border border-slate-200/80 shadow-2xs select-none">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              <span>Upcoming</span>
+                            </span>
                           </td>
                           <td className="p-3.5 pr-4 text-right">
                             <button

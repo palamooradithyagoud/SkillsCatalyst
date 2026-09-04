@@ -405,14 +405,21 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                     display_name = name_val
 
             # 6. Fetch user_progress stats if present
+            user_streak = 0
+            user_level = 0
+            user_total_xp = 0
             res_user_prog = (
                 sb.table("user_progress")
-                .select("success_rate, resume_readiness_score")
+                .select("success_rate, resume_readiness_score, streak_days, level, total_xp")
                 .eq("user_id", user_id)
                 .execute()
             )
-            if res_user_prog.data:
-                user_success_rate = float(res_user_prog.data[0].get("success_rate") or 0.0)
+            if res_user_prog.data and len(res_user_prog.data) > 0:
+                prog_row = res_user_prog.data[0]
+                user_success_rate = float(prog_row.get("success_rate") or 0.0)
+                user_streak = int(prog_row.get("streak_days") or 0)
+                user_level = int(prog_row.get("level") or 0)
+                user_total_xp = int(prog_row.get("total_xp") or 0)
 
             # 7. Fetch latest resume score from resume_scores table
             resume_score = 0
@@ -477,7 +484,9 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         "user": {
             "name": display_name,
             "status": "ACTIVE",
-            "streakDays": 0
+            "streakDays": user_streak,
+            "level": user_level,
+            "totalXp": user_total_xp,
         },
         "metrics": {
             "personalReadinessIndex": {

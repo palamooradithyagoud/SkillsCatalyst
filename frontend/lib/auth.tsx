@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTransition } from "@/providers/TransitionProvider";
-import { sendWelcomeEmail } from "@/lib/api";
+import { sendWelcomeEmail, syncDailyLoginStreak } from "@/lib/api";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
@@ -55,15 +55,9 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
   }
 
   try {
-    await supabase.from("user_progress").upsert(
-      {
-        user_id: userId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id", ignoreDuplicates: true }
-    );
+    await syncDailyLoginStreak(userId);
   } catch (err) {
-    console.warn("Failed to sync user_progress:", err);
+    console.warn("Failed to sync daily login streak:", err);
   }
 
   try {
