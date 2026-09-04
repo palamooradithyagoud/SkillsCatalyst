@@ -676,11 +676,12 @@ export default function CareerPage() {
           </BorderGlow>
         </motion.div>
 
-        {/* Card 2: Resume Review (Locked - Coming Soon) */}
+        {/* Card 2: Resume Review (Unlocked with 7-Day Free Trial) */}
         <motion.div
           whileHover={{ y: -2 }}
           transition={{ duration: 0.2 }}
-          className="h-full group"
+          className="h-full group cursor-pointer"
+          onClick={() => setIsModalOpen(true)}
         >
           <BorderGlow
             edgeSensitivity={30}
@@ -688,24 +689,24 @@ export default function CareerPage() {
             backgroundColor="#ffffff"
             borderRadius={28}
             glowRadius={35}
-            glowIntensity={1.0}
+            glowIntensity={1.2}
             animated={false}
             colors={['#f59e0b', '#fbbf24', '#cbd5e1']}
-            className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm border border-slate-200/90"
+            className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-slate-200/90"
           >
             <div className="flex flex-col justify-between h-full space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30">
-                    <Lock className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30 group-hover:scale-105 transition-transform">
+                    <FileCheck className="w-6 h-6 text-white" />
                   </div>
-                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-amber-500 text-white flex items-center gap-1.5 shadow-xs">
-                    <Lock className="w-3.5 h-3.5" />
-                    COMING SOON
+                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    PRO FEATURE
                   </div>
                 </div>
 
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2">
+                <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">
                   Resume Review
                 </h3>
                 <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
@@ -715,11 +716,16 @@ export default function CareerPage() {
               </div>
 
               <button
-                disabled
-                className="w-full bg-slate-100 border border-slate-200/80 text-slate-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-xs cursor-not-allowed"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsModalOpen(true);
+                }}
+                className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold py-3 rounded-xl transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 text-xs group/btn cursor-pointer"
               >
-                <Lock className="w-4 h-4 text-slate-400" />
-                <span>Coming Soon</span>
+                <Sparkles className="w-4 h-4 text-amber-200" />
+                <span>Launch Resume Review (Free)</span>
+                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
               </button>
             </div>
           </BorderGlow>

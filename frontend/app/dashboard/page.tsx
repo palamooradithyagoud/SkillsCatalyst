@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import MetricCards from "@/components/MetricCards";
 import UpcomingList from "@/components/UpcomingList";
 import PracticeOverview from "@/components/PracticeOverview";
+import PricingModal from "@/components/PricingModal";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
   const { notifyDashboardReady } = useTransition();
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
   const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["dashboard", userId],
@@ -104,6 +106,12 @@ export default function DashboardPage() {
           <UpcomingList items={upcomingItems} />
         </motion.div>
       </div>
+
+      {/* ── Pricing & Free Trial Modal ── */}
+      <PricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+      />
     </motion.div>
   );
 }

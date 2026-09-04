@@ -5,13 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen, GraduationCap, FileText, ChevronRight, Plus,
-  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2
+  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2, Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { fetchSavedPlaylists, fetchPlaylistVideos, Playlist } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PricingModal from "@/components/PricingModal";
+import { getTrialDaysRemaining, isUserTrialClaimed } from "@/lib/trial";
 
 export interface MetricsData {
   learningProgress?: {
@@ -226,19 +227,23 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
         className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-[#234B3B] p-3.5 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between min-h-[100px] sm:min-h-[190px] shadow-sm"
       >
         <div className="max-w-md space-y-1.5 sm:space-y-3 z-10 text-center md:text-left">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/50 text-emerald-300 text-[10px] sm:text-xs font-black tracking-wider uppercase">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+            <span>7-Day Free Trial Available</span>
+          </div>
           <h2 className="text-sm sm:text-3xl font-extrabold tracking-tight">
             Learn today, succeed tomorrow!
           </h2>
-          <p className="text-[11px] sm:text-sm text-emerald-100/80 leading-snug sm:leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
-            Discover new features for smart learning platform designed to help you grow and achieve your goals.
+          <p className="text-[11px] sm:text-sm text-emerald-100/90 leading-snug sm:leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
+            Master 20+ career roadmaps, solve 660+ company interview problems, and score resumes with ATS intelligence. Start with our 7-day free trial on 1-Month or 3-Month passes!
           </p>
           <div className="pt-0.5 sm:pt-1">
             <button
               type="button"
               onClick={() => setIsPricingModalOpen(true)}
-              className="px-3.5 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-white text-[#234B3B] font-bold text-[11px] sm:text-sm shadow-md hover:bg-emerald-50 active:scale-95 transition-all cursor-pointer"
+              className="px-4 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-emerald-400 text-slate-950 font-black text-[11px] sm:text-sm shadow-lg hover:bg-emerald-300 active:scale-95 transition-all cursor-pointer flex items-center gap-2 mx-auto md:mx-0"
             >
-              Get Premium
+              <span>✨ View Plans & 7-Day Free Trial</span>
             </button>
           </div>
         </div>
