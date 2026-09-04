@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   GraduationCap,
   Code2,
@@ -13,6 +14,10 @@ import {
   Sparkles,
   Award,
   Globe,
+  LifeBuoy,
+  Phone,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -549,6 +554,73 @@ export default function SettingsPage() {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── CARD 4: Customer Service, Founder Contact & Legal Policies ── */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-[#234B3B]">
+              <LifeBuoy className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-900">
+                Customer Service & Legal Policies
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Direct founder access, 24/7 help desk, and student rights compliance
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/support"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#234B3B] hover:bg-[#1a382c] text-white font-bold text-xs shadow-xs transition-colors"
+          >
+            <span>Visit Support Desk</span>
+            <span>➔</span>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Founder & Grievance Officer</span>
+            <div className="font-extrabold text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
+              <span>Palamoor Adithya Goud</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+            <span className="text-[11px] text-slate-500 block">Personal query review & 24h SLA</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phone & WhatsApp</span>
+            <a href="tel:+917330602101" className="font-extrabold text-xs sm:text-sm text-emerald-700 hover:underline flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5" />
+              <span>+91 7330602101</span>
+            </a>
+            <span className="text-[11px] text-slate-500 block">Available Mon–Sat: 9 AM–8 PM IST</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Support & Grievance Email</span>
+            <a href="mailto:palamooradithyagoud@gmail.com" className="font-extrabold text-xs text-emerald-700 hover:underline flex items-center gap-1.5 truncate">
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">palamooradithyagoud@gmail.com</span>
+            </a>
+            <span className="text-[11px] text-slate-500 block">Statutory compliance & refund requests</span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Applicable Policies:</span>
+          <Link href="/support" className="text-emerald-700 hover:underline">Privacy Policy (DPDP Act)</Link>
+          <span>•</span>
+          <Link href="/support" className="text-emerald-700 hover:underline">Terms of Service</Link>
+          <span>•</span>
+          <Link href="/support" className="text-emerald-700 hover:underline">7-Day Refund Policy</Link>
+          <span>•</span>
+          <Link href="/support" className="text-emerald-700 hover:underline">Grievance Redressal</Link>
         </div>
       </div>
     </motion.div>
