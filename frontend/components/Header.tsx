@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, ChevronDown, Search } from "lucide-react";
+import Link from "next/link";
+import { Bell, ChevronDown, Search, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {
@@ -59,13 +60,25 @@ export default function Header({ userName = "Palamoor" }: HeaderProps) {
         </motion.p>
       </div>
 
-      {/* Right: Notification Bell Button */}
+      {/* Right: Actions (Support + Notifications) */}
       <motion.div
-        className="flex items-center gap-2 shrink-0 pt-0.5"
+        className="flex items-center gap-2 sm:gap-3 shrink-0 pt-0.5"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
+        {/* Customer Support & Help Desk Button */}
+        <Link href="/support" title="Customer Service & Support Desk">
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            className="relative w-9 h-9 sm:w-11 sm:h-11 bg-white rounded-full border border-slate-200/80 shadow-xs flex items-center justify-center text-slate-700 hover:text-[#234B3B] hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+          >
+            <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2] group-hover:text-[#234B3B] transition-colors" />
+          </motion.div>
+        </Link>
+
+        {/* Notification Bell Button */}
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.94 }}
@@ -88,4 +101,5 @@ export default function Header({ userName = "Palamoor" }: HeaderProps) {
     </motion.header>
   );
 }
+
 

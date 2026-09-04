@@ -18,6 +18,7 @@ import {
   ChevronRight,
   User,
   Search,
+  LifeBuoy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,6 +37,7 @@ const navItems = [
   { name: "Career", href: "/career", icon: Briefcase, desc: "AI resume analysis" },
   { name: "Explore", href: "/explore", icon: ExploreIcon, desc: "Trending skills & tools" },
   { name: "Analytics", href: "/analytics", icon: BarChart3, desc: "Detailed performance" },
+  { name: "Support & Help", href: "/support", icon: LifeBuoy, desc: "Customer desk & policies" },
   { name: "Profile", href: "/settings", icon: UserIcon, desc: "Account & settings" },
 ];
 
