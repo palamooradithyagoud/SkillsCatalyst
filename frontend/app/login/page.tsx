@@ -16,14 +16,12 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData, sendWelcomeEmail } from "@/lib/api";
-import { useTransition } from "@/providers/TransitionProvider";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PenguinMountainCanvas from "@/components/PenguinMountainCanvas";
 
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { startLogoTransition } = useTransition();
   const { isLoading, unverifiedEmail, setUnverifiedEmail, clearUnverifiedEmail } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -84,16 +82,13 @@ export default function LoginPage() {
           return;
         }
 
-        // 1. Trigger transition
-        startLogoTransition();
-
-        // 2. Prefetch dashboard data
+        // 1. Prefetch dashboard data
         queryClient.prefetchQuery({
           queryKey: ["dashboard", data.user.id],
           queryFn: () => fetchDashboardData(),
         });
 
-        // 3. Navigate to dashboard
+        // 2. Navigate to dashboard
         router.replace("/dashboard");
       }
     } catch (err: any) {
@@ -140,6 +135,12 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(`sc_welcome_sent_${data.user.id}`, "1");
+          } catch {}
+        }
+
         // Asynchronously dispatch welcome email via Resend
         sendWelcomeEmail({
           email: email.trim(),

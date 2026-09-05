@@ -4,8 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTransition } from "@/providers/TransitionProvider";
-import { syncDailyLoginStreak } from "@/lib/api";
+import { sendWelcomeEmail, syncDailyLoginStreak } from "@/lib/api";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
@@ -38,8 +37,59 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 // Helper function to sync authenticated user to Supabase user_academic_profile & user_progress
-async function syncUserToSupabase(userId: string, email: string, name?: string) {
+// Sends welcome email ONLY to brand-new users (new Google OAuth logins or new registrations)
+async function syncUserToSupabase(
+  userId: string,
+  email: string,
+  name?: string,
+  createdAt?: string
+) {
   const fullName = name || email.split("@")[0] || "Learner";
+
+  // Check if this user already exists in the database
+  let isBrandNewUser = false;
+  try {
+    const { data: existingProfile, error } = await supabase
+      .from("user_academic_profile")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // If no profile exists yet, this is their very first session
+    if (!error && !existingProfile) {
+      if (createdAt) {
+        const createdMs = new Date(createdAt).getTime();
+        const diffMs = Date.now() - createdMs;
+        // User account was created within the last 15 minutes
+        if (diffMs < 15 * 60 * 1000 && diffMs > -60000) {
+          isBrandNewUser = true;
+        }
+      } else {
+        isBrandNewUser = true;
+      }
+    }
+  } catch (err) {
+    console.warn("Check for new user profile failed:", err);
+  }
+
+  // Client-side guard so we never trigger twice in the same browser session
+  const welcomeKey = `sc_welcome_sent_${userId}`;
+  const alreadySentLocal =
+    typeof window !== "undefined" && localStorage.getItem(welcomeKey) === "1";
+
+  if (isBrandNewUser && !alreadySentLocal && email && email.includes("@")) {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(welcomeKey, "1");
+      } catch {}
+    }
+    // Asynchronously dispatch welcome email via Resend
+    sendWelcomeEmail({
+      email: email.trim(),
+      full_name: fullName,
+      user_id: userId,
+    }).catch((err) => console.warn("Welcome email notice:", err));
+  }
 
   try {
     await supabase.from("user_academic_profile").upsert(
@@ -82,7 +132,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const setAndStoreSession = useCallback(
-    async (email: string, userId: string, name?: string, confirmed: boolean = true) => {
+    async (
+      email: string,
+      userId: string,
+      name?: string,
+      confirmed: boolean = true,
+      createdAt?: string
+    ) => {
       const newSession: UserSession = {
         email,
         user_id: userId,
@@ -98,8 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(newSession);
       setUnverifiedEmailState(null);
 
-      // Async database storage
-      syncUserToSupabase(userId, email, name);
+      // Async database storage & new-user welcome email dispatch
+      syncUserToSupabase(userId, email, name, createdAt);
     },
     []
   );
@@ -154,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             supaUser.user_metadata?.name ||
             userEmail.split("@")[0];
 
-          await setAndStoreSession(userEmail, userId, userName, true);
+          await setAndStoreSession(userEmail, userId, userName, true, supaUser.created_at);
           if (mounted) setIsLoading(false);
           return;
         }
@@ -197,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supaUser.user_metadata?.name ||
           userEmail.split("@")[0];
 
-        await setAndStoreSession(userEmail, userId, userName, true);
+        await setAndStoreSession(userEmail, userId, userName, true, supaUser.created_at);
         setIsLoading(false);
       } else {
         clearSessionLocal();
@@ -211,8 +267,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setAndStoreSession, clearSessionLocal]);
 
-  const { startLogoTransition } = useTransition();
-
   // Strict route guard
   useEffect(() => {
     if (isLoading) return;
@@ -222,18 +276,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session && !isLoginPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
-      startLogoTransition();
       router.replace("/dashboard");
     }
-  }, [session, isLoading, pathname, router, startLogoTransition]);
+  }, [session, isLoading, pathname, router]);
 
   const login = useCallback(
     (email: string, userId: string, name?: string) => {
-      startLogoTransition();
       setAndStoreSession(email, userId, name, true);
       router.replace("/dashboard");
     },
-    [setAndStoreSession, router, startLogoTransition]
+    [setAndStoreSession, router]
   );
 
   const queryClient = useQueryClient();

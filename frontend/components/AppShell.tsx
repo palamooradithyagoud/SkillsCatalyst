@@ -4,7 +4,6 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
-import LogoTransitionOverlay from "@/components/LogoTransitionOverlay";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,7 +13,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden bg-white text-[#18191F] flex flex-col">
         {children}
-        <LogoTransitionOverlay />
       </div>
     );
   }
@@ -32,7 +30,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden">
         {children}
       </main>
-      <LogoTransitionOverlay />
     </>
   );
 }
