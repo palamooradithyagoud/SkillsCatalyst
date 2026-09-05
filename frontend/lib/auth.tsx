@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTransition } from "@/providers/TransitionProvider";
-import { sendWelcomeEmail, syncDailyLoginStreak } from "@/lib/api";
+import { syncDailyLoginStreak } from "@/lib/api";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
@@ -70,17 +70,6 @@ async function syncUserToSupabase(userId: string, email: string, name?: string) 
     );
   } catch (err) {
     console.warn("Failed to sync user_coding_profiles:", err);
-  }
-
-  // Idempotently queue welcome email (backend prevents duplicates via Redis)
-  if (email && email.includes("@")) {
-    try {
-      sendWelcomeEmail({
-        email: email.trim(),
-        full_name: fullName,
-        user_id: userId,
-      }).catch(() => {});
-    } catch {}
   }
 }
 
