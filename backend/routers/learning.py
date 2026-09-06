@@ -1805,103 +1805,17 @@ async def mark_all_watched(
 
 
 # ── Tier 3: Groq AI LLM Roadmap Generation ──────────────────────────────────────
-class RoadmapRequest(BaseModel):
-    skill: str
-    # user_id intentionally excluded — roadmap generation is not user-specific
+from backend.services.learning.roadmap_service import (
+    RoadmapRequest,
+    generate_skill_roadmap as _generate_skill_roadmap_svc,
+)
 
 
 @router.post("/roadmap")
 async def generate_skill_roadmap(req: RoadmapRequest):
     """
     Tier 3 Resolution: Generate a 5-tier structured skill roadmap via Groq AI (Llama-3.3 70B).
-    Tiers:
-    1. Primary Foundation
-    2. Fast Track Acceleration
-    3. Interview Preparation
-    4. Applied Capstone Project
-    5. Advanced Architecture
+    Delegates to backend.services.learning.roadmap_service.
     """
-    skill = req.skill.strip()
-    if not skill:
-        raise HTTPException(status_code=400, detail="Skill prompt cannot be empty")
+    return await _generate_skill_roadmap_svc(req)
 
-    is_valid, err_msg = _validate_skill_query(skill)
-    if not is_valid:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": "not_skill", "message": err_msg}
-        )
-
-    prompt = f"""
-Generate a structured 5-tier learning & career roadmap for the topic/skill: "{skill}".
-
-Respond ONLY with valid JSON in this exact structure:
-{{
-  "title": "{skill} Career Roadmap",
-  "tiers": [
-    {{
-      "tier": 1,
-      "name": "Primary Foundation",
-      "description": "Core concepts and fundamental syntax/principles.",
-      "nodes": ["Concept 1", "Concept 2", "Concept 3"]
-    }},
-    {{
-      "tier": 2,
-      "name": "Fast Track Acceleration",
-      "description": "Intermediate techniques, libraries, and practical implementation.",
-      "nodes": ["Topic 1", "Topic 2", "Topic 3"]
-    }},
-    {{
-      "tier": 3,
-      "name": "Interview Preparation",
-      "description": "Common interview questions, problem solving, and system design patterns.",
-      "nodes": ["Pattern 1", "Pattern 2", "Pattern 3"]
-    }},
-    {{
-      "tier": 4,
-      "name": "Applied Capstone Project",
-      "description": "Real-world portfolio projects and production deployments.",
-      "nodes": ["Project 1", "Project 2"]
-    }},
-    {{
-      "tier": 5,
-      "name": "Advanced Architecture",
-      "description": "Deep performance optimization, internal mechanics, and enterprise architecture.",
-      "nodes": ["Advanced 1", "Advanced 2"]
-    }}
-  ]
-}}
-"""
-    sys_prompt = "You are SkillsCatalyst AI, an expert tech curriculum generator. Output JSON ONLY, no markdown ticks or extra text."
-
-    try:
-        from backend.services.groq_service import chat_with_groq
-        raw_reply = chat_with_groq(prompt, system_prompt=sys_prompt)
-
-        clean_json = raw_reply.strip()
-        if clean_json.startswith("```"):
-            lines = clean_json.split("\n")
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            clean_json = "\n".join(lines).strip()
-
-        import json
-        data = json.loads(clean_json)
-        return {"success": True, "roadmap": data}
-    except Exception as e:
-        logger.info(f"Roadmap generation fallback triggered: {type(e).__name__}")
-        return {
-            "success": True,
-            "roadmap": {
-                "title": f"{skill} Learning Path",
-                "tiers": [
-                    {"tier": 1, "name": "Primary Foundation", "description": "Core concepts and fundamentals.", "nodes": [f"{skill} Basics", "Environment Setup", "Core Syntax"]},
-                    {"tier": 2, "name": "Fast Track Acceleration", "description": "Practical implementation.", "nodes": ["Data Handling", "Modular Design", "Best Practices"]},
-                    {"tier": 3, "name": "Interview Preparation", "description": "Interview problem solving.", "nodes": ["Coding Challenges", "System Patterns", "Mock Questions"]},
-                    {"tier": 4, "name": "Applied Capstone Project", "description": "Portfolio projects.", "nodes": ["End-to-End App", "API Integration", "Deployment"]},
-                    {"tier": 5, "name": "Advanced Architecture", "description": "Performance & scaling.", "nodes": ["Optimization", "Security", "Scalability"]}
-                ]
-            }
-        }
