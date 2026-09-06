@@ -144,15 +144,36 @@ export function useYouTubePlayer({
   const localRecord = typeof window !== "undefined" ? getLocalVideoProgress(videoId) : null;
   const effectiveStartAt = startAt > 0 ? startAt : (localRecord?.lastPosition || 0);
 
+  // Store the initial start position for this video mount once so it doesn't change during playback
+  const initialStartRef = useRef<number>(effectiveStartAt);
+  const prevVideoIdRef = useRef<string>(videoId);
+  if (prevVideoIdRef.current !== videoId) {
+    prevVideoIdRef.current = videoId;
+    initialStartRef.current = effectiveStartAt;
+  }
+
   // Progress Manager
   const { tick, handlePlay, handlePause, flush } = useVideoProgress({
     videoId,
     playlistId,
-    initialPosition: effectiveStartAt,
+    initialPosition: initialStartRef.current,
     initialWatchTime: Math.max(initialWatchTime, localRecord?.watchTime || 0),
     onProgressPct: onProgressUpdate,
     onComplete,
   });
+
+  // Keep latest callbacks in refs so event listeners and timers never cause player re-instantiation
+  const tickRef = useRef(tick);
+  useEffect(() => { tickRef.current = tick; }, [tick]);
+
+  const handlePlayRef = useRef(handlePlay);
+  useEffect(() => { handlePlayRef.current = handlePlay; }, [handlePlay]);
+
+  const handlePauseRef = useRef(handlePause);
+  useEffect(() => { handlePauseRef.current = handlePause; }, [handlePause]);
+
+  const flushRef = useRef(flush);
+  useEffect(() => { flushRef.current = flush; }, [flush]);
 
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -170,11 +191,11 @@ export function useYouTubePlayer({
         const cur = player.getCurrentTime();
         const dur = player.getDuration();
         if (typeof cur === "number" && !isNaN(cur)) {
-          tick(cur, dur || 0);
+          tickRef.current(cur, dur || 0);
         }
       } catch (_) {}
-    }, 250);
-  }, [tick]);
+    }, 500);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -186,80 +207,73 @@ export function useYouTubePlayer({
       const targetEl = document.getElementById(containerId);
       if (!targetEl) return;
 
-      // Destroy prior player instance
-      if (playerRef.current) {
-        try {
-          const cur = playerRef.current.getCurrentTime();
-          if (typeof cur === "number" && !isNaN(cur)) {
-            flush(cur);
-          }
-          playerRef.current.destroy();
-        } catch (_) {}
-        playerRef.current = null;
-      }
-
       // Ensure videoId is a valid 11-character YouTube video ID
       const isValidVideoId = typeof videoId === "string" && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
       const safeVideoId = isValidVideoId ? videoId : "rfscVS0vtbw";
+      const startSeconds = Math.max(0, Math.floor(initialStartRef.current));
 
-      playerRef.current = new window.YT.Player(containerId, {
-        videoId: safeVideoId,
-        width: "100%",
-        height: "100%",
-        playerVars: {
-          autoplay: 1,
-          rel: 0,
-          modestbranding: 1,
-          enablejsapi: 1,
-          start: Math.floor(effectiveStartAt),
-        },
-        events: {
-          onReady: ({ target }) => {
-            if (!isMounted) return;
-            // Seek to resume position once player is ready
-            if (effectiveStartAt > 0) {
-              try {
-                target.seekTo(effectiveStartAt, true);
-              } catch (_) {}
-            }
+      try {
+        playerRef.current = new window.YT.Player(containerId, {
+          videoId: safeVideoId,
+          width: "100%",
+          height: "100%",
+          playerVars: {
+            autoplay: 1,
+            rel: 0,
+            modestbranding: 1,
+            enablejsapi: 1,
+            start: startSeconds,
           },
-          onStateChange: ({ data, target }) => {
-            if (!isMounted) return;
-
-            const player = playerRef.current || target;
-            let currentTime = 0;
-            try {
-              currentTime = player?.getCurrentTime ? player.getCurrentTime() : 0;
-            } catch (_) {}
-
-            // YouTube autoplay zero-reset correction on first PLAYING or BUFFERING
-            if (
-              !hasResumedRef.current &&
-              (data === YT_PLAYING || data === YT_BUFFERING)
-            ) {
-              if (effectiveStartAt > 1 && currentTime < 1) {
+          events: {
+            onReady: ({ target }) => {
+              if (!isMounted) return;
+              // Seek to resume position once player is ready
+              if (startSeconds > 0) {
                 try {
-                  player.seekTo(effectiveStartAt, true);
+                  target.seekTo(startSeconds, true);
                 } catch (_) {}
               }
-              hasResumedRef.current = true;
-            }
+            },
+            onStateChange: ({ data, target }) => {
+              if (!isMounted) return;
 
-            if (data === YT_PLAYING) {
-              handlePlay();
-              startPolling();
-            } else {
-              stopPolling();
-              if (data === YT_PAUSED) {
-                // Immediate save on pause!
-                handlePause(currentTime);
-              } else if (data === YT_ENDED) {
-                flush(currentTime);
+              const player = playerRef.current || target;
+              let currentTime = 0;
+              try {
+                currentTime = player?.getCurrentTime ? player.getCurrentTime() : 0;
+              } catch (_) {}
+
+              // YouTube autoplay zero-reset correction on first PLAYING or BUFFERING
+              if (
+                !hasResumedRef.current &&
+                (data === YT_PLAYING || data === YT_BUFFERING)
+              ) {
+                if (startSeconds > 1 && currentTime < 1) {
+                  try {
+                    player.seekTo(startSeconds, true);
+                  } catch (_) {}
+                }
+                hasResumedRef.current = true;
               }
-            }
+
+              if (data === YT_PLAYING) {
+                handlePlayRef.current();
+                startPolling();
+              } else {
+                stopPolling();
+                if (data === YT_PAUSED) {
+                  // Immediate save on pause
+                  handlePauseRef.current(currentTime);
+                } else if (data === YT_ENDED) {
+                  flushRef.current(currentTime);
+                }
+              }
+            },
           },
-        },
-      });
+        });
+      } catch (err) {
+        console.warn("YouTube player init error:", err);
+      }
     };
 
     loadYTApi(initPlayer);
@@ -271,14 +285,14 @@ export function useYouTubePlayer({
         try {
           const cur = playerRef.current.getCurrentTime();
           if (typeof cur === "number" && !isNaN(cur)) {
-            flush(cur);
+            flushRef.current(cur);
           }
           playerRef.current.destroy();
         } catch (_) {}
         playerRef.current = null;
       }
     };
-    // videoId, containerId, effectiveStartAt drive player re-creation
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, containerId, effectiveStartAt]);
+    // ONLY videoId and containerId control player lifecycle.
+    // Progress and start timestamps are fixed at mount and must NEVER tear down the player.
+  }, [videoId, containerId]);
 }
