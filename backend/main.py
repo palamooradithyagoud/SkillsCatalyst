@@ -161,15 +161,22 @@ async def production_hardening_middleware(request: Request, call_next):
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """
-    Centralized HTTP Exception Handler. Returns clean JSON error payload.
+    Centralized HTTP Exception Handler. Returns clean JSON error payload with correlation ID.
     """
-    logger.warning(f"HTTPException [{exc.status_code}] on {request.url.path}: {exc.detail}")
+    req_id = request_id_ctx_var.get()
+    logger.warning(f"HTTPException [{exc.status_code}] on {request.url.path} | ID: {req_id}: {exc.detail}")
     
+    headers = dict(exc.headers or {})
+    headers["X-Request-ID"] = req_id
+
     detail = exc.detail if isinstance(exc.detail, dict) else {"success": False, "message": str(exc.detail)}
+    if isinstance(detail, dict) and "request_id" not in detail:
+        detail["request_id"] = req_id
+
     return JSONResponse(
         status_code=exc.status_code,
         content=detail,
-        headers=exc.headers
+        headers=headers,
     )
 
 from fastapi.encoders import jsonable_encoder
@@ -179,14 +186,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """
     Centralized Request Validation Exception Handler. Protects internal schema details.
     """
-    logger.warning(f"ValidationError on {request.url.path}: {exc.errors()}")
+    req_id = request_id_ctx_var.get()
+    logger.warning(f"ValidationError on {request.url.path} | ID: {req_id}: {exc.errors()}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({
             "success": False,
             "message": "Invalid request parameter format.",
-            "errors": exc.errors()
-        })
+            "errors": exc.errors(),
+            "request_id": req_id,
+        }),
+        headers={"X-Request-ID": req_id},
     )
 
 @app.exception_handler(Exception)
@@ -195,13 +205,16 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     Centralized Catch-All Exception Handler.
     Prevents stack trace, file path, and internal environment variable exposure to client.
     """
-    logger.error(f"Unhandled Exception on {request.url.path}: {str(exc)}", exc_info=True)
+    req_id = request_id_ctx_var.get()
+    logger.error(f"[SYSTEM_ERROR] Unhandled Exception on {request.url.path} | ID: {req_id}: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "success": False,
-            "message": "An internal server error occurred. Please try again later."
-        }
+            "message": "An internal server error occurred. Please try again later.",
+            "request_id": req_id,
+        },
+        headers={"X-Request-ID": req_id},
     )
 
 # ── Router Registrations ──────────────────────────────────────────────────────
