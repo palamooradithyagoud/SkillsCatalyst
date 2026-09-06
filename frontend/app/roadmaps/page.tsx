@@ -4002,7 +4002,7 @@ export default function RoadmapsPage() {
 
         if (data) {
           const map: Record<string, boolean> = {};
-          data.forEach((row) => {
+          data.forEach((row: any) => {
             const key = `${row.roadmap_id}-${row.node_id}`;
             map[key] = row.status === "completed";
           });

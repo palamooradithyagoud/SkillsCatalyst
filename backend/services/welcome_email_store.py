@@ -197,42 +197,40 @@ def claim_welcome_email_job(user_id: str, lease_seconds: int = 300) -> Optional[
             if sb:
                 # Inspect existing row
                 res = sb.table("welcome_email_events").select("*").eq("user_id", clean_user_id).limit(1).execute()
-                if not res.data:
-                    return None
+                if res.data:
+                    row = res.data[0]
+                    status = row.get("status")
+                    processing_until = row.get("processing_until")
 
-                row = res.data[0]
-                status = row.get("status")
-                processing_until = row.get("processing_until")
-
-                is_expired_lease = False
-                if status == "processing" and processing_until:
-                    try:
-                        p_dt = datetime.fromisoformat(processing_until.replace("Z", "+00:00"))
-                        if now_dt >= p_dt:
+                    is_expired_lease = False
+                    if status == "processing" and processing_until:
+                        try:
+                            p_dt = datetime.fromisoformat(processing_until.replace("Z", "+00:00"))
+                            if now_dt >= p_dt:
+                                is_expired_lease = True
+                        except Exception:
                             is_expired_lease = True
-                    except Exception:
-                        is_expired_lease = True
 
-                can_claim = (status in ("pending", "failed")) or is_expired_lease
-                if not can_claim:
-                    return None
+                    can_claim = (status in ("pending", "failed")) or is_expired_lease
+                    if not can_claim:
+                        return None
 
-                # Atomic conditional update
-                attempts = (row.get("attempts") or 0) + 1
-                update_payload = {
-                    "status": "processing",
-                    "processing_until": lease_until_iso,
-                    "attempts": attempts,
-                    "updated_at": now_iso,
-                }
-                sb.table("welcome_email_events").update(update_payload).eq("user_id", clean_user_id).execute()
-                
-                # Fetch claimed row
-                claimed_res = sb.table("welcome_email_events").select("*").eq("user_id", clean_user_id).limit(1).execute()
-                if claimed_res.data:
-                    claimed_row = claimed_res.data[0]
-                    logger.info(f"welcome_email_processing: user_id={clean_user_id} attempt={attempts} lease_until={lease_until_iso} (Supabase)")
-                    return claimed_row
+                    # Atomic conditional update
+                    attempts = (row.get("attempts") or 0) + 1
+                    update_payload = {
+                        "status": "processing",
+                        "processing_until": lease_until_iso,
+                        "attempts": attempts,
+                        "updated_at": now_iso,
+                    }
+                    sb.table("welcome_email_events").update(update_payload).eq("user_id", clean_user_id).execute()
+                    
+                    # Fetch claimed row
+                    claimed_res = sb.table("welcome_email_events").select("*").eq("user_id", clean_user_id).limit(1).execute()
+                    if claimed_res.data:
+                        claimed_row = claimed_res.data[0]
+                        logger.info(f"welcome_email_processing: user_id={clean_user_id} attempt={attempts} lease_until={lease_until_iso} (Supabase)")
+                        return claimed_row
         except Exception as exc:
             logger.warning(f"Supabase claim error for {clean_user_id}: {exc}")
 
