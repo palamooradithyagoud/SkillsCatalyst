@@ -1879,18 +1879,32 @@ export async function saveCodingProfiles(data: CodingProfilesInput) {
 }
 
 /**
- * Dispatches a welcome email to a newly registered user via backend Resend service.
+ * Dispatches or synchronizes a one-time welcome email for newly registered users.
+ * Transmits the authenticated Supabase access token in Authorization header.
  */
 export async function sendWelcomeEmail(payload: {
-  email: string;
+  is_signup?: boolean;
   full_name?: string;
+  email?: string;
   user_id?: string;
-}): Promise<{ success: boolean; message?: string; error?: string }> {
+} = {}): Promise<{ success: boolean; status?: string; message?: string; error?: string }> {
   try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) {
+      return { success: false, error: "No active session token" };
+    }
+
     const res = await fetch(`${API_BASE}/api/auth/welcome-email`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        is_signup: payload.is_signup ?? false,
+        full_name: payload.full_name,
+      }),
     });
     if (!res.ok) {
       return { success: false, error: `HTTP ${res.status}` };

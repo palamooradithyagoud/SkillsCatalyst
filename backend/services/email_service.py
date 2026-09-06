@@ -25,6 +25,7 @@ def send_email(
     from_email: Optional[str] = None,
     reply_to: Optional[str] = None,
     text: Optional[str] = None,
+    headers: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """
     Sends an email using the Resend API.
@@ -32,9 +33,10 @@ def send_email(
     :param to: Recipient email address or list of email addresses.
     :param subject: Subject line of the email.
     :param html: HTML body of the email.
-    :param from_email: Sender email (defaults to RESEND_FROM_EMAIL or 'SkillsCatalyst <onboarding@resend.dev>').
+    :param from_email: Sender email (defaults to RESEND_FROM_EMAIL or 'SkillsCatalyst <welcome@skillscatalyst.in>').
     :param reply_to: Reply-to address (defaults to RESEND_REPLY_TO or 'skillscatalyst5@gmail.com').
     :param text: Optional plaintext fallback.
+    :param headers: Optional custom headers (e.g. X-Entity-Ref-ID for provider idempotency).
     :return: Dict containing success boolean, id, or error details.
     """
     api_key = RESEND_API_KEY or resend.api_key
@@ -70,6 +72,8 @@ def send_email(
     }
     if text:
         payload["text"] = text
+    if headers:
+        payload["headers"] = headers
 
     try:
         response = resend.Emails.send(cast(resend.Emails.SendParams, payload))
@@ -118,10 +122,15 @@ def send_email(
         }
 
 
-def send_welcome_email(to: str, full_name: Optional[str] = None) -> Dict[str, Any]:
+def send_welcome_email(
+    to: str,
+    full_name: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Sends a beautifully formatted welcome email to a newly signed up user.
-    Uses 'SkillsCatalyst <onboarding@resend.dev>' with reply-to 'skillscatalyst5@gmail.com'.
+    Uses 'SkillsCatalyst <welcome@skillscatalyst.in>' with reply-to 'skillscatalyst5@gmail.com'.
+    Passes X-Entity-Ref-ID header for provider-level idempotency if user_id is provided.
     """
     name = full_name or "Learner"
     subject = "Welcome to SkillsCatalyst — Learn Faster. Grow Smarter! 🚀"
@@ -212,10 +221,15 @@ def send_welcome_email(to: str, full_name: Optional[str] = None) -> Dict[str, An
     </html>
     """
 
+    custom_headers = None
+    if user_id:
+        custom_headers = {"X-Entity-Ref-ID": f"welcome_{user_id}"}
+
     return send_email(
         to=to,
         subject=subject,
         html=html,
         from_email=RESEND_FROM_EMAIL or "SkillsCatalyst <welcome@skillscatalyst.in>",
         reply_to=RESEND_REPLY_TO or "skillscatalyst5@gmail.com",
+        headers=custom_headers,
     )
