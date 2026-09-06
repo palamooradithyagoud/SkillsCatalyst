@@ -314,6 +314,17 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     saved_playlists_count = 0
     user_success_rate = 0.0
     display_name = user_id.split("@")[0] if "@" in user_id else user_id
+    user_streak = 0
+    user_level = 0
+    user_total_xp = 0
+    resume_score = 0
+    leetcode_easy = 0
+    leetcode_med = 0
+    leetcode_hard = 0
+    leetcode_user = ""
+    leetcode_solved = 0
+    leetcode_ranking = 0
+    leetcode_configured = False
 
     if sb:
         try:
