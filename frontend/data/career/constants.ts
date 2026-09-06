@@ -1,7 +1,7 @@
 import { CompanyTypeItem, ExpLevelItem } from "@/types/career";
 
 export const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".txt", ".md"];
-export const MAX_FILE_MB = 10;
+export const MAX_FILE_MB = 5;
 
 export const COMMON_ROLES = [
   "Fullstack Software Engineer",

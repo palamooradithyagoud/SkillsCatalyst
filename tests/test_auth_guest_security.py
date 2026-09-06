@@ -50,3 +50,54 @@ def test_authenticated_route_rejects_missing_or_invalid_jwt():
     """Protected endpoints must reject invalid JWTs with 401 Unauthorized."""
     resp = client.get("/api/profile", headers={"Authorization": "Bearer invalid_token"})
     assert resp.status_code == 401
+
+
+def test_validate_startup_config_fails_fast_in_production_without_secret(monkeypatch):
+    """Production must immediately abort startup if SECRET_KEY is missing."""
+    import os
+    from backend.config import validate_startup_config
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.setenv("SECRET_KEY", "")
+
+    with pytest.raises(RuntimeError, match="CRITICAL SECURITY ERROR"):
+        validate_startup_config()
+
+
+def test_validate_startup_config_fails_fast_in_production_with_insecure_secret(monkeypatch):
+    """Production must immediately abort startup if SECRET_KEY is an insecure default or too short."""
+    import os
+    from backend.config import validate_startup_config
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.setenv("SECRET_KEY", "skills-catalyst-prod-sec-key-8f4b9c1d2e3f4a5b6c7d8e9f")
+
+    with pytest.raises(RuntimeError, match="CRITICAL SECURITY ERROR"):
+        validate_startup_config()
+
+
+def test_validate_startup_config_passes_in_production_with_strong_secret(monkeypatch):
+    """Production startup succeeds when a strong 32+ char SECRET_KEY is configured."""
+    from backend.config import validate_startup_config
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.setenv("SECRET_KEY", "a" * 64)
+
+    # Should complete without raising RuntimeError
+    validate_startup_config()
+
+
+def test_validate_startup_config_safe_fallback_in_development(monkeypatch):
+    """Development/testing allows safe fallback without raising fatal RuntimeError."""
+    from backend.config import validate_startup_config
+
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.setenv("SECRET_KEY", "")
+
+    # Non-production environment must not abort
+    validate_startup_config()
+
