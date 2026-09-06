@@ -3995,6 +3995,9 @@ export default function RoadmapsPage() {
 
     async function loadRoadmapProgress() {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user?.id !== userId) return;
+
         const { data } = await supabase
           .from("roadmap_progress")
           .select("roadmap_id, node_id, status")

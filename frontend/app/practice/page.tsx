@@ -386,6 +386,9 @@ function PracticeContent() {
 
     async function syncFromSupabase() {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user?.id !== userId) return;
+
         const { data: leetcodeData } = await supabase
           .from("leetcode_progress")
           .select("*")
