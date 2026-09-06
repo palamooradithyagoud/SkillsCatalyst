@@ -23,7 +23,6 @@ from backend.services.cache_service import get_cached_youtube_search, cache_yout
 from backend.services.observability import record_youtube_call, record_learning_search
 from backend.services.learning.content_guard import (
     _extract_youtube_ids,
-    _extract_playlist_id,
     _validate_skill_query,
     _filter_skill_playlists,
 )
@@ -455,7 +454,7 @@ def _search_csv_playlists(query: str, level: str = "all", language: str = "engli
                     continue
 
             key = r.get("playlist_url") or r.get("title")
-            if key not in seen:
+            if key and key not in seen:
                 seen.add(key)
                 results.append(r)
 
