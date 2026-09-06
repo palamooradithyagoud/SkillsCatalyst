@@ -1348,6 +1348,35 @@ export async function fetchPlaylistVideos(
     console.warn("Fetch playlist videos from learning_progress failed:", e);
   }
 
+  // 4. Merge with local storage progress using deterministic conflict resolution ("latest valid update wins")
+  if (resultVideos.length > 0 && typeof window !== "undefined") {
+    try {
+      const { getLocalVideoProgress, resolveVideoProgress } = await import("@/lib/progressRepository");
+      resultVideos = resultVideos.map((v) => {
+        const local = getLocalVideoProgress(v.videoId);
+        if (local) {
+          const resolved = resolveVideoProgress(local, {
+            videoId: v.videoId,
+            playlistId: cleanId,
+            lastPosition: v.last_position,
+            watchTime: v.watch_time,
+            updatedAt: (v as any).updated_at || (v as any).completed_at,
+            completed: v.watched,
+          });
+          if (resolved) {
+            return {
+              ...v,
+              watched: v.watched || Boolean(resolved.completed),
+              last_position: resolved.lastPosition,
+              watch_time: resolved.watchTime,
+            };
+          }
+        }
+        return v;
+      });
+    } catch (_) {}
+  }
+
   return { videos: resultVideos, count: resultVideos.length };
 }
 
@@ -1450,45 +1479,31 @@ export async function markVideoWatched(
 
 
 /**
- * Periodic resume save (every 10 s while playing).
- * Updates last_position + watch_time WITHOUT touching the `watched` flag.
+ * Periodic resume save.
+ * Delegates to ProgressRepository for immediate LocalStorage persistence
+ * and debounced/immediate remote sync to FastAPI + Supabase.
  */
 export async function saveVideoProgress(
   playlistId: string,
   videoId: string,
   lastPosition: number,
   watchTime: number,
+  immediate = false,
 ): Promise<void> {
   try {
-    const authHeaders = await getAuthHeaders();
-    apiFetch(`${API_BASE}/api/learning/save-progress`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({
-        playlist_id: playlistId,
-        video_id: videoId,
-        last_position: Math.round(lastPosition),
-        watch_time: Math.round(watchTime),
-      }),
-    }).catch(() => {});
-  } catch {}
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const row = {
-        user_id: session.user.id,
-        playlist_id: playlistId,
-        video_id: videoId,
-        last_position: Math.round(lastPosition),
-        watch_time: Math.round(watchTime),
-        updated_at: new Date().toISOString(),
-      };
-      await supabase
-        .from("video_progress")
-        .upsert(row, { onConflict: "user_id,playlist_id,video_id" });
-    }
-  } catch {}
+    const { syncVideoProgress } = await import("@/lib/progressRepository");
+    await syncVideoProgress(
+      {
+        playlistId,
+        videoId,
+        lastPosition,
+        watchTime,
+      },
+      immediate
+    );
+  } catch (e) {
+    console.warn("saveVideoProgress delegate error:", e);
+  }
 }
 
 /**

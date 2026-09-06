@@ -19,6 +19,13 @@ import {
 } from "@/lib/api";
 import { useYouTubePlayer } from "@/lib/useYouTubePlayer";
 import { useAuth } from "@/lib/auth";
+import {
+  resolveActiveLessonIndex,
+  saveLocalPlaylistActiveLesson,
+  flushPendingSync,
+  getLocalVideoProgress,
+  resolveVideoProgress,
+} from "@/lib/progressRepository";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type ActiveCard = "explore" | "saved";
@@ -504,10 +511,20 @@ function VideoPlayerContainer({
   const isValidYTId = typeof videoId === "string" && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
   const safeVideoId = isValidYTId ? videoId : "rfscVS0vtbw";
   const containerId = `yt-player-${safeVideoId}`;
+
+  // Deterministic conflict resolution for resume position: latest valid update wins
+  const localProg = typeof window !== "undefined" ? getLocalVideoProgress(safeVideoId) : null;
+  const resolved = resolveVideoProgress(localProg, {
+    videoId: safeVideoId,
+    playlistId,
+    lastPosition: startAt,
+  });
+  const effectiveStart = resolved ? resolved.lastPosition : startAt;
+
   useYouTubePlayer({
     containerId,
     videoId: safeVideoId,
-    startAt,
+    startAt: effectiveStart,
     playlistId,
     onProgressUpdate,
     onComplete,
@@ -525,7 +542,7 @@ function VideoPlayerContainer({
 // ── FullPlayerView ─────────────────────────────────────────────────────────────
 function FullPlayerView({
   pl,
-  initialVideoIndex = 0,
+  initialVideoIndex,
   onBack,
 }: {
   pl: Playlist;
@@ -533,7 +550,47 @@ function FullPlayerView({
   onBack: () => void;
 }) {
   const qc = useQueryClient();
-  const [currentIdx, setCurrentIdx] = useState(initialVideoIndex);
+  const ytPlaylistId = extractPlaylistId(pl.playlist_url ?? "") ?? pl.id;
+
+  const { session } = useAuth();
+  const userId = session?.user_id;
+
+  const { data: videoData, isLoading: loadingVideos } = useQuery({
+    queryKey: ["playlist-videos", ytPlaylistId, userId],
+    queryFn: () => fetchPlaylistVideos(ytPlaylistId),
+    enabled: !!ytPlaylistId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const videos = videoData?.videos ?? [];
+
+  // Active lesson resolution:
+  // 1. Explicit request
+  // 2. Previously active lesson
+  // 3. First incomplete lesson
+  // 4. First lesson (index 0)
+  const [currentIdx, setCurrentIdx] = useState<number>(initialVideoIndex ?? 0);
+  const resolvedInitialRef = useRef<boolean>(initialVideoIndex !== undefined);
+
+  useEffect(() => {
+    if (!resolvedInitialRef.current && videos.length > 0) {
+      resolvedInitialRef.current = true;
+      const targetIdx = resolveActiveLessonIndex(ytPlaylistId, videos, initialVideoIndex);
+      if (targetIdx !== currentIdx) {
+        setCurrentIdx(targetIdx);
+      }
+    }
+  }, [videos, ytPlaylistId, initialVideoIndex, currentIdx]);
+
+  const currentVideo = videos[currentIdx] ?? null;
+
+  // Persist active lesson index whenever currentIdx changes
+  useEffect(() => {
+    if (currentVideo) {
+      saveLocalPlaylistActiveLesson(ytPlaylistId, currentIdx, currentVideo.videoId);
+    }
+  }, [currentIdx, currentVideo, ytPlaylistId]);
+
   const [activeTab, setActiveTab] = useState<"Overview" | "Notes" | "Instructor" | "FAQ">("Overview");
 
   // Sync active player view state to document body attribute for MobileNav detection
@@ -555,21 +612,6 @@ function FullPlayerView({
   const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
-
-  const ytPlaylistId = extractPlaylistId(pl.playlist_url ?? "") ?? pl.id;
-
-  const { session } = useAuth();
-  const userId = session?.user_id;
-
-  const { data: videoData, isLoading: loadingVideos } = useQuery({
-    queryKey: ["playlist-videos", ytPlaylistId, userId],
-    queryFn: () => fetchPlaylistVideos(ytPlaylistId),
-    enabled: !!ytPlaylistId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const videos = videoData?.videos ?? [];
-  const currentVideo = videos[currentIdx] ?? null;
 
   // Watched count = DB rows + optimistic local set
   const watchedCount = videos.filter(
@@ -654,8 +696,14 @@ function FullPlayerView({
     }, 400);
   }, [currentVideo, currentIdx, completeMut]);
 
-  const goNext = () => setCurrentIdx((i) => Math.min(i + 1, videos.length - 1));
-  const goPrev = () => setCurrentIdx((i) => Math.max(i - 1, 0));
+  const changeLesson = useCallback((nextIdx: number) => {
+    if (nextIdx === currentIdx || nextIdx < 0 || nextIdx >= videos.length) return;
+    flushPendingSync();
+    setCurrentIdx(nextIdx);
+  }, [currentIdx, videos.length]);
+
+  const goNext = () => changeLesson(currentIdx + 1);
+  const goPrev = () => changeLesson(currentIdx - 1);
 
   const isCompleted = (vid: string) =>
     completedVideoIds.has(vid) || (videos.find((v) => v.videoId === vid)?.watched ?? false);
@@ -908,7 +956,7 @@ function FullPlayerView({
                   <button
                     key={v.videoId}
                     data-idx={i}
-                    onClick={() => setCurrentIdx(i)}
+                    onClick={() => changeLesson(i)}
                     className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       isCurrent
                         ? "bg-amber-400 border-amber-400 text-slate-900 shadow-md font-bold"
@@ -962,7 +1010,7 @@ export default function LearningPage() {
 
   // ── Player state
   const [playerPlaylist, setPlayerPlaylist]   = useState<Playlist | null>(null);
-  const [playerVideoIndex, setPlayerVideoIndex] = useState(0);
+  const [playerVideoIndex, setPlayerVideoIndex] = useState<number | undefined>(undefined);
 
   // ── Auto-search from URL query param (e.g. /learning?query=Python)
   useEffect(() => {
@@ -1052,7 +1100,7 @@ export default function LearningPage() {
     doSearch();
   };
 
-  const handleOpenPlayer = useCallback((pl: Playlist, idx = 0) => {
+  const handleOpenPlayer = useCallback((pl: Playlist, idx?: number) => {
     setPlayerVideoIndex(idx);
     setPlayerPlaylist(pl);
   }, []);
@@ -1382,7 +1430,7 @@ export default function LearningPage() {
                   <SavedPlaylistRow
                     key={pl.id}
                     pl={pl}
-                    onWatch={(p) => handleOpenPlayer(p, 0)}
+                    onWatch={(p) => handleOpenPlayer(p)}
                     onDelete={(id) => unsaveMut.mutate(id)}
                     onWatchVideo={(p, idx) => handleOpenPlayer(p, idx)}
                     delay={i * 0.05}
