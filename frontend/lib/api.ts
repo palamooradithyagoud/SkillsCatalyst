@@ -613,6 +613,7 @@ async function getFallbackDashboardData() {
   let completedCount = 0;
   let resumeScore = 0;
   let roadmapCount = 0;
+  let streakDays = 0;
   let userName = "Learner";
   let userId = "";
 
