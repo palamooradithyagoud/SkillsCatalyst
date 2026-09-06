@@ -4,6 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,7 +13,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isAuthPage) {
     return (
       <div className="w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden bg-white text-[#18191F] flex flex-col">
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </div>
     );
   }
@@ -28,7 +31,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <MobileNav />
       <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden">
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </main>
     </>
   );

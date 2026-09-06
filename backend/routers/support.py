@@ -2,9 +2,10 @@ import uuid
 import logging
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 from backend.services.email_service import send_email
+from backend.services.rate_limiter import enforce_rate_limit
 
 logger = logging.getLogger("skillscatalyst.support")
 
@@ -67,7 +68,8 @@ def get_support_info():
     }
 
 
-@router.post("/ticket", response_model=SupportTicketResponse, status_code=status.HTTP_200_OK)
+@router.post("/ticket", response_model=SupportTicketResponse, status_code=status.HTTP_200_OK,
+             dependencies=[Depends(enforce_rate_limit(max_requests=5, window_seconds=300))])
 async def submit_support_ticket(payload: SupportTicketRequest):
     """
     Submits a customer support ticket.

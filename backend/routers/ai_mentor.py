@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id
-from backend.services.groq_service import chat_with_groq
+from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 
 logger = logging.getLogger(__name__)
@@ -301,7 +301,7 @@ STRICT RULES:
 
     review_text = chat_with_groq(user_prompt, system_prompt=system_prompt)
 
-    if not review_text or review_text.startswith("AI Mentor error:"):
+    if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

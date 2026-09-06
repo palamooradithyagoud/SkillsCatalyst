@@ -8,6 +8,7 @@ logger = logging.getLogger("skillscatalyst.observability")
 
 # In-memory metric stores
 _request_latencies = []  # rolling last 1000 request latencies in ms
+_ai_latencies = []       # rolling last 500 AI invocation latencies in ms
 _counters: Dict[str, int] = defaultdict(int)
 _search_sources: Dict[str, int] = defaultdict(int)
 _start_timestamp = time.time()
@@ -62,11 +63,38 @@ def record_youtube_call(success: bool = True):
         _counters["youtube_api_errors"] += 1
 
 
-def record_ai_call(success: bool = True):
-    """Record AI invocation (Groq)."""
+def record_ai_call(
+    success: bool = True,
+    provider: str = "groq",
+    model: Optional[str] = None,
+    latency_ms: Optional[float] = None,
+    error_category: Optional[str] = None,
+    timed_out: bool = False,
+):
+    """
+    Record AI invocation telemetry with provider, model, latency, and error categorisation.
+    Maintains backwards compatibility with record_ai_call(success=bool).
+    """
     _counters["ai_calls"] += 1
+    _counters[f"ai_provider_{provider.lower()}"] += 1
+
+    if model:
+        # Sanitize model name for counter key
+        clean_model = model.replace("/", "_").replace(":", "_").lower()
+        _counters[f"ai_model_{clean_model}"] += 1
+
+    if timed_out:
+        _counters["ai_timeouts"] += 1
+
+    if latency_ms is not None and latency_ms >= 0:
+        _ai_latencies.append(latency_ms)
+        if len(_ai_latencies) > 500:
+            _ai_latencies.pop(0)
+
     if not success:
         _counters["ai_errors"] += 1
+        if error_category:
+            _counters[f"ai_err_{error_category.lower()}"] += 1
 
 
 def record_learning_search(source: str, language: str, cache_hit: bool, latency_ms: float):
@@ -84,7 +112,7 @@ def get_system_metrics() -> Dict[str, Any]:
     """Calculate and return system observability metrics."""
     uptime_sec = round(time.time() - _start_timestamp, 1)
     
-    # Calculate latency percentiles
+    # Calculate HTTP request latency percentiles
     p50, p95, p99 = 0.0, 0.0, 0.0
     if _request_latencies:
         sorted_lats = sorted(_request_latencies)
@@ -92,6 +120,14 @@ def get_system_metrics() -> Dict[str, Any]:
         p50 = round(sorted_lats[int(n * 0.50)], 2)
         p95 = round(sorted_lats[min(int(n * 0.95), n - 1)], 2)
         p99 = round(sorted_lats[min(int(n * 0.99), n - 1)], 2)
+
+    # Calculate AI latency percentiles
+    ai_p50, ai_p95 = 0.0, 0.0
+    if _ai_latencies:
+        sorted_ai_lats = sorted(_ai_latencies)
+        n_ai = len(sorted_ai_lats)
+        ai_p50 = round(sorted_ai_lats[int(n_ai * 0.50)], 2)
+        ai_p95 = round(sorted_ai_lats[min(int(n_ai * 0.95), n_ai - 1)], 2)
 
     redis_hits = _counters.get("redis_hits", 0)
     redis_misses = _counters.get("redis_misses", 0)
@@ -121,6 +157,17 @@ def get_system_metrics() -> Dict[str, Any]:
             "youtube_errors": _counters.get("youtube_api_errors", 0),
             "ai_calls": _counters.get("ai_calls", 0),
             "ai_errors": _counters.get("ai_errors", 0),
+        },
+        "ai_metrics": {
+            "total_calls": _counters.get("ai_calls", 0),
+            "errors": _counters.get("ai_errors", 0),
+            "timeouts": _counters.get("ai_timeouts", 0),
+            "latency_ms": {
+                "p50": ai_p50,
+                "p95": ai_p95,
+            },
+            "models": {k.replace("ai_model_", ""): v for k, v in _counters.items() if k.startswith("ai_model_")},
+            "error_categories": {k.replace("ai_err_", ""): v for k, v in _counters.items() if k.startswith("ai_err_")},
         },
         "learning_search_breakdown": dict(_search_sources),
     }
