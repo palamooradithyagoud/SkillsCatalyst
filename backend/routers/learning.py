@@ -1701,9 +1701,9 @@ async def update_video_progress(
                 data["completed_at"] = None
 
             if req.last_position is not None:
-                data["last_position"] = req.last_position
+                data["last_position"] = int(round(req.last_position))
             if req.watch_time is not None:
-                data["watch_time"] = req.watch_time
+                data["watch_time"] = int(round(req.watch_time))
 
             sb.table("video_progress").upsert(
                 data, on_conflict="user_id,playlist_id,video_id"
@@ -1737,9 +1737,11 @@ async def save_video_progress(
         return {"success": False, "reason": "Supabase not configured"}
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
+        int_pos = int(round(req.last_position))
+        int_watch = int(round(req.watch_time))
         res = (
             sb.table("video_progress")
-            .update({"last_position": req.last_position, "watch_time": req.watch_time})
+            .update({"last_position": int_pos, "watch_time": int_watch})
             .eq("user_id", user_id)
             .eq("playlist_id", clean_playlist_id)
             .eq("video_id", req.video_id)
@@ -1751,8 +1753,8 @@ async def save_video_progress(
                 "playlist_id":   clean_playlist_id,
                 "video_id":      req.video_id,
                 "watched":       False,
-                "last_position": req.last_position,
-                "watch_time":    req.watch_time,
+                "last_position": int_pos,
+                "watch_time":    int_watch,
             }).execute()
         return {"success": True}
     except Exception as e:
@@ -1785,6 +1787,8 @@ async def complete_video(
     try:
         clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
         now = datetime.now(timezone.utc).isoformat()
+        int_pos = int(round(req.last_position)) if req.last_position is not None else 0
+        int_watch = int(round(req.watch_time))
 
         # 1. Upsert completion record in video_progress if UUID user
         if _is_uuid(user_id):
@@ -1793,11 +1797,10 @@ async def complete_video(
                 "playlist_id":   clean_playlist_id,
                 "video_id":      req.video_id,
                 "watched":       req.completed,
-                "watch_time":    req.watch_time,
+                "watch_time":    int_watch,
                 "completed_at":  now if req.completed else None,
+                "last_position": int_pos,
             }
-            if req.last_position:
-                complete_data["last_position"] = req.last_position
 
             try:
                 sb.table("video_progress").upsert(
