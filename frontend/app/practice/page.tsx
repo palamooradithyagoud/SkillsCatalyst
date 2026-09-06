@@ -400,7 +400,7 @@ function PracticeContent() {
         const fetchedDrawerState: Record<number, boolean> = {};
 
         if (leetcodeData) {
-          leetcodeData.forEach((item) => {
+          leetcodeData.forEach((item: any) => {
             const isSolved = item.status === "solved";
             const qIdStr = item.question_id ? item.question_id.toString() : "";
 
@@ -419,7 +419,7 @@ function PracticeContent() {
         }
 
         if (roadmapData) {
-          roadmapData.forEach((item) => {
+          roadmapData.forEach((item: any) => {
             if (item.status === "completed" && item.node_id) {
               fetchedSolvedState[item.node_id] = true;
             }

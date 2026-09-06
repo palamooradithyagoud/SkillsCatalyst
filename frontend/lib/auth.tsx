@@ -133,10 +133,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailConfirmed: confirmed,
       };
 
-      try {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
-      } catch {}
-
       setSession(newSession);
       setUnverifiedEmailState(null);
 
@@ -152,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(SESSION_KEY);
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
-        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
+        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_") || key.startsWith("sb-"))) {
           localStorage.removeItem(key);
         }
       }
@@ -163,12 +159,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Proactively purge any legacy Supabase tokens from localStorage (migrating to SSR cookies)
+    try {
+      if (typeof window !== "undefined") {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("sb-")) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    } catch {}
+
     async function initAuth() {
       try {
         const { data, error } = await supabase.auth.getUser();
         if (error || !data.user) {
           if (mounted) {
-            await supabase.auth.signOut();
             clearSessionLocal();
             setIsLoading(false);
           }
@@ -224,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes (e.g. after Google OAuth callback or email sign in)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, supaSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event: any, supaSession: any) => {
       if (!mounted) return;
 
       if (supaSession?.user) {

@@ -115,7 +115,7 @@ function handleUnauthenticated(res: Response) {
       localStorage.removeItem("skillscatalyst_user_session");
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
-        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_"))) {
+        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_") || key.startsWith("sb-"))) {
           localStorage.removeItem(key);
         }
       }
@@ -193,7 +193,7 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
       if (userRows && userRows.length > 0) {
         const targetClean = roadmapId.toLowerCase().replace(/-/g, " ").trim();
         const idsToDelete = userRows
-          .filter((row) => {
+          .filter((row: any) => {
             const rawRid = row.roadmap_id || "";
             const rowNorm = normalizeRoadmapId(rawRid);
             const rowClean = rawRid.toLowerCase().replace(/-/g, " ").trim();
@@ -205,7 +205,7 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
               targetClean.includes(rowClean)
             );
           })
-          .map((row) => row.id);
+          .map((row: any) => row.id);
 
         if (idsToDelete.length > 0) {
           await supabase
@@ -667,7 +667,7 @@ async function getFallbackDashboardData() {
         .eq("user_id", userId);
 
       if (rmData && rmData.length > 0) {
-        const completedNodes = rmData.filter((r) => r.status === "completed" && r.node_id !== "_roadmap_started");
+        const completedNodes = rmData.filter((r: any) => r.status === "completed" && r.node_id !== "_roadmap_started");
         roadmapCount = completedNodes.length;
       }
     }
