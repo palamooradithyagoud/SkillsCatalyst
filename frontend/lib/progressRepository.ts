@@ -13,11 +13,11 @@
 import { supabase } from "@/lib/supabase";
 import {
   API_BASE,
-  cleanPlaylistId,
   getAuthHeaders,
   getGuestSessionId,
   getRawGuestSessionId,
-} from "@/lib/api";
+} from "@/lib/api/client";
+import { cleanPlaylistId } from "@/lib/api/learning";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export interface VideoProgress {
