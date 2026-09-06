@@ -810,6 +810,7 @@ class SaveProgressRequest(BaseModel):
     video_id:      str
     last_position: float  # current playback position in seconds
     watch_time:    int    # cumulative seconds actually watched (anti-cheat tracked)
+    updated_at:    Optional[str] = None
 
 
 class CompleteVideoRequest(BaseModel):
@@ -1639,7 +1640,7 @@ async def get_playlist_videos(
             try:
                 res = (
                     sb.table("video_progress")
-                    .select("video_id,watched,last_position,watch_time,completed_at")
+                    .select("video_id,watched,last_position,watch_time,completed_at,updated_at")
                     .eq("user_id", user_id)
                     .eq("playlist_id", clean_playlist_id)
                     .execute()
@@ -1652,6 +1653,7 @@ async def get_playlist_videos(
                         v["last_position"] = prog.get("last_position") or 0.0
                         v["watch_time"]    = prog.get("watch_time") or 0
                         v["completed_at"]  = prog.get("completed_at")
+                        v["updated_at"]    = prog.get("updated_at")
             except Exception as e:
                 print(f"Video progress merge error: {e}")
 
@@ -1667,6 +1669,16 @@ async def get_playlist_videos(
                         lp_v = lp_prog_map.get(v["videoId"])
                         if lp_v:
                             v["watched"] = v["watched"] or bool(lp_v.get("watched") or lp_v.get("completed"))
+                            lp_pos = lp_v.get("last_position") if lp_v.get("last_position") is not None else lp_v.get("lastPosition")
+                            lp_watch = lp_v.get("watch_time") if lp_v.get("watch_time") is not None else lp_v.get("watchTime")
+                            lp_updated = lp_v.get("updated_at")
+                            if not v.get("last_position") or (lp_updated and lp_updated > (v.get("updated_at") or "")):
+                                if lp_pos is not None:
+                                    v["last_position"] = float(lp_pos)
+                                if lp_watch is not None:
+                                    v["watch_time"] = int(lp_watch)
+                                if lp_updated:
+                                    v["updated_at"] = lp_updated
         except Exception as lp_err:
             logger.warning(f"Error merging JSONB progress in get_playlist_videos: {lp_err}")
 
@@ -1721,6 +1733,7 @@ async def save_video_progress(
     """
     Playback Progress Verification — periodic resume save (every 10s).
     Validates position sanity & watch_time without touching `watched` status.
+    Supports authenticated users (video_progress table) and guests (learning_progress JSONB).
     """
     user_id = current_user_id
     if not user_id:
@@ -1730,33 +1743,109 @@ async def save_video_progress(
     if req.last_position < 0 or req.watch_time < 0 or req.last_position > 86400:
         return {"success": False, "reason": "Invalid position or watch time bounds"}
 
-    if not _is_uuid(user_id):
-        return {"success": True}
     sb = get_supabase()
     if not sb:
         return {"success": False, "reason": "Supabase not configured"}
+
+    clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
+    int_pos = int(round(req.last_position))
+    int_watch = int(round(req.watch_time))
+    now_iso = req.updated_at or datetime.now(timezone.utc).isoformat()
+
     try:
-        clean_playlist_id = _extract_playlist_id(req.playlist_id, req.playlist_id)
-        int_pos = int(round(req.last_position))
-        int_watch = int(round(req.watch_time))
-        res = (
-            sb.table("video_progress")
-            .update({"last_position": int_pos, "watch_time": int_watch})
-            .eq("user_id", user_id)
-            .eq("playlist_id", clean_playlist_id)
-            .eq("video_id", req.video_id)
-            .execute()
-        )
-        if not res.data:
-            sb.table("video_progress").insert({
-                "user_id":       user_id,
-                "playlist_id":   clean_playlist_id,
-                "video_id":      req.video_id,
-                "watched":       False,
-                "last_position": int_pos,
-                "watch_time":    int_watch,
-            }).execute()
-        return {"success": True}
+        if _is_uuid(user_id):
+            res = (
+                sb.table("video_progress")
+                .update({"last_position": int_pos, "watch_time": int_watch, "updated_at": now_iso})
+                .eq("user_id", user_id)
+                .eq("playlist_id", clean_playlist_id)
+                .eq("video_id", req.video_id)
+                .execute()
+            )
+            if not res.data:
+                sb.table("video_progress").insert({
+                    "user_id":       user_id,
+                    "playlist_id":   clean_playlist_id,
+                    "video_id":      req.video_id,
+                    "watched":       False,
+                    "last_position": int_pos,
+                    "watch_time":    int_watch,
+                    "updated_at":    now_iso,
+                }).execute()
+            return {"success": True, "updated_at": now_iso}
+        else:
+            # Guest session: persist to learning_progress JSONB
+            try:
+                res_lp = sb.table("learning_progress").select("id, completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                if res_lp.data and len(res_lp.data) > 0:
+                    row_id = res_lp.data[0]["id"]
+                    playlists = res_lp.data[0].get("completed_steps") or []
+                    pl_idx = next((i for i, p in enumerate(playlists) if p.get("id") == clean_playlist_id or p.get("playlist_id") == clean_playlist_id or p.get("id") == req.playlist_id), -1)
+                    if pl_idx != -1:
+                        videos = playlists[pl_idx].get("videos") or []
+                        v_idx = next((i for i, v in enumerate(videos) if (v.get("videoId") or v.get("id")) == req.video_id), -1)
+                        vid_entry = {
+                            "videoId": req.video_id,
+                            "id": req.video_id,
+                            "last_position": int_pos,
+                            "lastPosition": int_pos,
+                            "watch_time": int_watch,
+                            "watchTime": int_watch,
+                            "updated_at": now_iso,
+                        }
+                        if v_idx != -1:
+                            videos[v_idx].update(vid_entry)
+                        else:
+                            vid_entry["watched"] = False
+                            videos.append(vid_entry)
+                        playlists[pl_idx]["videos"] = videos
+                        sb.table("learning_progress").update({
+                            "completed_steps": playlists,
+                            "updated_at": now_iso,
+                        }).eq("id", row_id).execute()
+                    else:
+                        playlists.append({
+                            "id": clean_playlist_id,
+                            "playlist_id": clean_playlist_id,
+                            "videos": [{
+                                "videoId": req.video_id,
+                                "id": req.video_id,
+                                "last_position": int_pos,
+                                "lastPosition": int_pos,
+                                "watch_time": int_watch,
+                                "watchTime": int_watch,
+                                "watched": False,
+                                "updated_at": now_iso,
+                            }]
+                        })
+                        sb.table("learning_progress").update({
+                            "completed_steps": playlists,
+                            "updated_at": now_iso,
+                        }).eq("id", row_id).execute()
+                else:
+                    sb.table("learning_progress").insert({
+                        "session_id": user_id,
+                        "skill_name": "saved_playlists",
+                        "completed_steps": [{
+                            "id": clean_playlist_id,
+                            "playlist_id": clean_playlist_id,
+                            "videos": [{
+                                "videoId": req.video_id,
+                                "id": req.video_id,
+                                "last_position": int_pos,
+                                "lastPosition": int_pos,
+                                "watch_time": int_watch,
+                                "watchTime": int_watch,
+                                "watched": False,
+                                "updated_at": now_iso,
+                            }]
+                        }],
+                        "updated_at": now_iso,
+                    }).execute()
+                return {"success": True, "updated_at": now_iso}
+            except Exception as lp_err:
+                logger.warning(f"Guest save-progress learning_progress error: {lp_err}")
+                return {"success": True}
     except Exception as e:
         logger.warning(f"save-progress database error: {type(e).__name__}")
         return {"success": False}
