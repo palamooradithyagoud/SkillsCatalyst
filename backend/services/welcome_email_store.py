@@ -56,6 +56,12 @@ def _init_sqlite_fallback():
 
 def _is_supabase_table_available() -> bool:
     """Checks if public.welcome_email_events is active in Supabase PostgREST schema cache."""
+    # Isolate unit test runs with synthetic UUIDs to local store unless explicitly testing Supabase integration
+    if os.environ.get("USE_LOCAL_WELCOME_STORE_ONLY") == "true" or (
+        "PYTEST_CURRENT_TEST" in os.environ and os.environ.get("TEST_SUPABASE_INTEGRATION") != "true"
+    ):
+        return False
+
     global _SUPABASE_TABLE_READY
     if _SUPABASE_TABLE_READY is True:
         return True
@@ -112,6 +118,8 @@ def get_welcome_email_event(user_id: str) -> Optional[Dict[str, Any]]:
 def create_welcome_email_event(user_id: str, email: str) -> Tuple[Optional[Dict[str, Any]], bool]:
     """
     Atomically creates a 'pending' welcome email event for a user if one does not exist.
+    Validates that user_id genuinely exists in auth.users before attempting insert
+    to strictly prevent PostgreSQL 23503 foreign key violations.
     Returns: (event_dict, was_created_boolean)
     """
     import uuid
@@ -124,12 +132,30 @@ def create_welcome_email_event(user_id: str, email: str) -> Tuple[Optional[Dict[
         try:
             sb = get_supabase()
             if sb:
-                # Check if already exists first
+                # 1. Check if already exists first
                 existing = sb.table("welcome_email_events").select("*").eq("user_id", clean_user_id).limit(1).execute()
                 if existing.data and len(existing.data) > 0:
                     return existing.data[0], False
 
-                # Insert with onConflict ignore
+                # 2. Foreign key pre-validation: check that user exists in auth.users
+                try:
+                    user_res = sb.auth.admin.get_user_by_id(clean_user_id)
+                    if not user_res or not getattr(user_res, "user", None) or not user_res.user.id:
+                        logger.warning(
+                            f"welcome_email_event_rejected: user_id={clean_user_id} not found in auth.users. "
+                            f"Aborting insert to preserve foreign key constraint welcome_email_events_user_id_fkey."
+                        )
+                        return None, False
+                except Exception as auth_lookup_err:
+                    err_msg = str(auth_lookup_err).lower()
+                    if "user not found" in err_msg or "not found" in err_msg or "404" in err_msg:
+                        logger.warning(
+                            f"welcome_email_event_rejected: user_id={clean_user_id} does not exist in auth.users. "
+                            f"Aborting insert to preserve foreign key constraint welcome_email_events_user_id_fkey."
+                        )
+                        return None, False
+
+                # 3. Insert with onConflict ignore
                 payload = {
                     "id": event_id,
                     "user_id": clean_user_id,
@@ -149,6 +175,13 @@ def create_welcome_email_event(user_id: str, email: str) -> Tuple[Optional[Dict[
                         logger.info(f"welcome_email_event_created: user_id={clean_user_id} event_id={event_id} (Supabase)")
                     return row, created
         except Exception as exc:
+            err_str = str(exc).lower()
+            if "23503" in err_str or "foreign key constraint" in err_str or "welcome_email_events_user_id_fkey" in err_str:
+                logger.error(
+                    f"welcome_email_fk_violation: user_id={clean_user_id} violates welcome_email_events_user_id_fkey. "
+                    f"Rejecting creation without fallback."
+                )
+                return None, False
             logger.warning(f"Supabase error creating welcome_email_event for {clean_user_id}: {exc}")
 
     # SQLite fallback
