@@ -18,10 +18,12 @@ venv/
 .venv/
 env/
 
-# Next.js
+# Next.js & Testing
 frontend/.next/
 frontend/out/
 frontend/node_modules/
+frontend/test-results/
+frontend/playwright-report/
 
 # Logs
 *.log
