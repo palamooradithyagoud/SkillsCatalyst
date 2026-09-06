@@ -12,8 +12,8 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-# Configurable file size limit — defaults to 10 MB, overridable via env.
-_MAX_MB = int(os.getenv("MAX_RESUME_MB", "10"))
+# Configurable file size limit — defaults to 5 MB, overridable via env.
+_MAX_MB = int(os.getenv("MAX_RESUME_MB", "5"))
 MAX_FILE_SIZE_BYTES = _MAX_MB * 1024 * 1024
 
 

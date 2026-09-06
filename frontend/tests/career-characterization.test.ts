@@ -78,16 +78,16 @@ describe('Career Module Characterization Suite', () => {
       assert.strictEqual(err, 'The selected file is empty (0 bytes).');
     });
 
-    it('rejects files larger than MAX_FILE_MB (10 MB)', () => {
-      const size11MB = 11 * 1024 * 1024;
-      const err = validateFile({ name: 'huge_resume.pdf', size: size11MB });
+    it('rejects files larger than MAX_FILE_MB (5 MB)', () => {
+      const size6MB = 6 * 1024 * 1024;
+      const err = validateFile({ name: 'huge_resume.pdf', size: size6MB });
       assert.strictEqual(
         err,
-        'File is too large (11.0 MB). Maximum allowed size is 10 MB.'
+        'File is too large (6.0 MB). Maximum allowed size is 5 MB.'
       );
     });
 
-    it('accepts valid PDF, DOCX, TXT, and MD files under 10 MB', () => {
+    it('accepts valid PDF, DOCX, TXT, and MD files under 5 MB', () => {
       assert.strictEqual(validateFile({ name: 'resume.pdf', size: 1024 * 100 }), null);
       assert.strictEqual(validateFile({ name: 'resume.docx', size: 1024 * 500 }), null);
       assert.strictEqual(validateFile({ name: 'resume.txt', size: 2048 }), null);
@@ -123,8 +123,8 @@ describe('Career Module Characterization Suite', () => {
       assert.deepStrictEqual(ALLOWED_EXTENSIONS, ['.pdf', '.docx', '.txt', '.md']);
     });
 
-    it('verifies MAX_FILE_MB is set to 10', () => {
-      assert.strictEqual(MAX_FILE_MB, 10);
+    it('verifies MAX_FILE_MB is set to 5', () => {
+      assert.strictEqual(MAX_FILE_MB, 5);
     });
 
     it('verifies COMMON_ROLES contains the 6 default career paths', () => {
