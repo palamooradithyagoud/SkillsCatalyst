@@ -1,8 +1,9 @@
 -- ====================================================================
--- SKILLSCATALYST - MASTER ALL-IN-ONE CONSOLIDATED SUPABASE SQL SCHEMA
+-- SKILLSCATALYST - MASTER CONSOLIDATED PRODUCTION SUPABASE SQL SCHEMA
 -- ====================================================================
--- Complete, single-run, idempotent database schema for SkillsCatalyst.
--- Safe to copy-paste and execute directly in the Supabase SQL Editor.
+-- Single, fully-consolidated, idempotent database schema for SkillsCatalyst.
+-- Provisions all tables, indexes, RPC security functions, triggers, and
+-- production-hardened RLS policies. Safe to execute in Supabase SQL Editor.
 --
 -- INCLUDES:
 -- 1. All Extensions & Helper Functions
@@ -20,11 +21,12 @@
 -- 13. User Feedback & Activity Tracking
 -- 14. Quantitative Aptitude & Placement Prep (Categories, Topics, Questions, Attempts, Results)
 -- 15. User To-Dos, Scheduling & Calendar Notes
--- 16. Performance Indexes across all tables
--- 17. Stored Procedures (Daily Login Streak, Level Recalculation, Aptitude Attempts)
--- 18. Automatic Synchronization Triggers
--- 19. Complete Row Level Security (RLS) Policies
--- 20. Seed Metadata for Placement Prep
+-- 16. Welcome Email Events & Durable Signup Triggers
+-- 17. Reusable updated_at & Synchronization Triggers
+-- 18. Stored Procedures & Security Definer RPC Functions
+-- 19. Seed Metadata for Placement Prep
+-- 20. Production-Hardened Permissions (Least-Privilege Anon SELECT, Full Auth/Service CRUD)
+-- 21. Row Level Security (RLS) Strict Tenant Isolation Policies
 -- ====================================================================
 
 -- ── 1. EXTENSIONS ────────────────────────────────────────────────────
@@ -356,7 +358,28 @@ CREATE TRIGGER trg_set_updated_at_user_schedule_notes
     BEFORE UPDATE ON public.user_schedule_notes
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- ── 17. STORED PROCEDURES & DATABASE FUNCTIONS ───────────────────────
+-- ── 17. WELCOME EMAIL EVENTS (DURABLE ONE-TIME DISPATCH) ──────────────
+CREATE TABLE IF NOT EXISTS public.welcome_email_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'sent', 'failed')),
+    attempts INTEGER NOT NULL DEFAULT 0,
+    resend_id TEXT NULL,
+    last_error TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    processing_until TIMESTAMPTZ NULL,
+    sent_at TIMESTAMPTZ NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_welcome_email_events_user_id 
+    ON public.welcome_email_events(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_welcome_email_events_status_lease 
+    ON public.welcome_email_events(status, processing_until);
+
+-- ── 18. STORED PROCEDURES & DATABASE FUNCTIONS ───────────────────────
 
 -- A. Record Daily Login Streak
 CREATE OR REPLACE FUNCTION public.record_daily_login(p_user_id UUID)
@@ -482,7 +505,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public;
 
--- D. Automatic Practice Progress Trigger
+-- D. Automatic Practice Progress Trigger Function
 CREATE OR REPLACE FUNCTION public.trg_sync_leetcode_progress_solved()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -517,7 +540,29 @@ CREATE TRIGGER trg_leetcode_progress_solved
 AFTER INSERT OR UPDATE OR DELETE ON public.leetcode_progress
 FOR EACH ROW EXECUTE FUNCTION public.trg_sync_leetcode_progress_solved();
 
--- ── 18. ZERO-BASELINE PROGRESS INITIALIZATION ────────────────────────
+-- E. Automatic Signup Trigger for New Users (Welcome Email Events)
+CREATE OR REPLACE FUNCTION public.handle_welcome_email_on_signup()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.welcome_email_events (user_id, email, status, created_at, updated_at)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.email, ''),
+        'pending',
+        NOW(),
+        NOW()
+    )
+    ON CONFLICT (user_id) DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_welcome_email_on_signup ON auth.users;
+CREATE TRIGGER trg_welcome_email_on_signup
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_welcome_email_on_signup();
+
+-- ── 19. ZERO-BASELINE PROGRESS INITIALIZATION ────────────────────────
 UPDATE public.user_progress
 SET streak_days = 0,
     last_login_date = NULL,
@@ -543,153 +588,6 @@ SET total_xp = (
             + COALESCE((SELECT COUNT(*) FROM public.roadmap_progress rp WHERE rp.user_id = up.user_id AND rp.status = 'completed' AND rp.node_id <> '_roadmap_started'), 0) * 50
         ) / 100
     );
-
--- ── 19. ROW LEVEL SECURITY (RLS) POLICIES ────────────────────────────
-ALTER TABLE public.user_academic_profile ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_coding_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leetcode_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.roadmap_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.resume_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.saved_playlists ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.video_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.learning_progress ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.skills_cache ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.trust_score_engine ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_feedback ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.aptitude_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.aptitude_topics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.aptitude_questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_aptitude_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_quiz_results ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_todos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_schedule_notes ENABLE ROW LEVEL SECURITY;
-
--- Grant table-level access: anon receives SELECT only; authenticated & service_role receive CRUD
-GRANT SELECT ON public.user_academic_profile TO anon;
-GRANT SELECT ON public.user_coding_profiles TO anon;
-GRANT SELECT ON public.user_progress TO anon;
-GRANT SELECT ON public.leetcode_progress TO anon;
-GRANT SELECT ON public.roadmap_progress TO anon;
-GRANT SELECT ON public.resume_scores TO anon;
-GRANT SELECT ON public.saved_playlists TO anon;
-GRANT SELECT ON public.video_progress TO anon;
-GRANT SELECT ON public.learning_progress TO anon;
-GRANT SELECT ON public.user_todos TO anon;
-GRANT SELECT ON public.user_schedule_notes TO anon;
-GRANT SELECT, INSERT ON public.user_feedback TO anon;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_academic_profile TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_coding_profiles TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_progress TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.leetcode_progress TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.roadmap_progress TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.resume_scores TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.saved_playlists TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.video_progress TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.learning_progress TO authenticated, service_role;
-GRANT SELECT, INSERT ON public.user_feedback TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_todos TO authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_schedule_notes TO authenticated, service_role;
-
-GRANT EXECUTE ON FUNCTION public.record_daily_login(UUID) TO authenticated, service_role, anon;
-GRANT EXECUTE ON FUNCTION public.recalculate_user_level(UUID) TO authenticated, service_role, anon;
-GRANT EXECUTE ON FUNCTION public.upsert_user_aptitude_attempt(UUID, INTEGER, INTEGER, INTEGER, BOOLEAN, INTEGER) TO authenticated, service_role;
-
--- Strict User Ownership Policies
-DROP POLICY IF EXISTS "Service role access on user_academic_profile" ON public.user_academic_profile;
-DROP POLICY IF EXISTS "Strict user ownership on user_academic_profile" ON public.user_academic_profile;
-CREATE POLICY "Service role access on user_academic_profile" ON public.user_academic_profile FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on user_academic_profile" ON public.user_academic_profile FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on user_coding_profiles" ON public.user_coding_profiles;
-DROP POLICY IF EXISTS "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles;
-CREATE POLICY "Service role access on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on user_progress" ON public.user_progress;
-DROP POLICY IF EXISTS "Strict user ownership on user_progress" ON public.user_progress;
-CREATE POLICY "Service role access on user_progress" ON public.user_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on user_progress" ON public.user_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on leetcode_progress" ON public.leetcode_progress;
-DROP POLICY IF EXISTS "Strict user ownership on leetcode_progress" ON public.leetcode_progress;
-CREATE POLICY "Service role access on leetcode_progress" ON public.leetcode_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on leetcode_progress" ON public.leetcode_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on roadmap_progress" ON public.roadmap_progress;
-DROP POLICY IF EXISTS "Strict user ownership on roadmap_progress" ON public.roadmap_progress;
-CREATE POLICY "Service role access on roadmap_progress" ON public.roadmap_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on roadmap_progress" ON public.roadmap_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on resume_scores" ON public.resume_scores;
-DROP POLICY IF EXISTS "Strict user ownership on resume_scores" ON public.resume_scores;
-CREATE POLICY "Service role access on resume_scores" ON public.resume_scores FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on resume_scores" ON public.resume_scores FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on saved_playlists" ON public.saved_playlists;
-DROP POLICY IF EXISTS "Strict user ownership on saved_playlists" ON public.saved_playlists;
-CREATE POLICY "Service role access on saved_playlists" ON public.saved_playlists FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on saved_playlists" ON public.saved_playlists FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role access on video_progress" ON public.video_progress;
-DROP POLICY IF EXISTS "Strict user ownership on video_progress" ON public.video_progress;
-CREATE POLICY "Service role access on video_progress" ON public.video_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on video_progress" ON public.video_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Service role full access on learning_progress" ON public.learning_progress;
-DROP POLICY IF EXISTS "Strict user ownership on learning_progress" ON public.learning_progress;
-CREATE POLICY "Service role full access on learning_progress" ON public.learning_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Strict user ownership on learning_progress" ON public.learning_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Allow read skills_cache" ON public.skills_cache;
-CREATE POLICY "Allow read skills_cache" ON public.skills_cache FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow read trust_score_engine" ON public.trust_score_engine;
-CREATE POLICY "Allow read trust_score_engine" ON public.trust_score_engine FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Service role access on user_feedback" ON public.user_feedback;
-DROP POLICY IF EXISTS "Authenticated insert on user_feedback" ON public.user_feedback;
-CREATE POLICY "Service role access on user_feedback" ON public.user_feedback FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "Authenticated insert on user_feedback" ON public.user_feedback FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Public read aptitude categories" ON public.aptitude_categories;
-CREATE POLICY "Public read aptitude categories" ON public.aptitude_categories FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read aptitude topics" ON public.aptitude_topics;
-CREATE POLICY "Public read aptitude topics" ON public.aptitude_topics FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public read aptitude questions" ON public.aptitude_questions;
-CREATE POLICY "Public read aptitude questions" ON public.aptitude_questions FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Users view own attempts" ON public.user_aptitude_attempts;
-DROP POLICY IF EXISTS "Users insert own attempts" ON public.user_aptitude_attempts;
-CREATE POLICY "Users view own attempts" ON public.user_aptitude_attempts FOR SELECT TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-CREATE POLICY "Users insert own attempts" ON public.user_aptitude_attempts FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
-DROP POLICY IF EXISTS "Users view own quiz results" ON public.user_quiz_results;
-DROP POLICY IF EXISTS "Users insert own quiz results" ON public.user_quiz_results;
-CREATE POLICY "Users view own quiz results" ON public.user_quiz_results FOR SELECT TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-CREATE POLICY "Users insert own quiz results" ON public.user_quiz_results FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
-
--- User To-Dos & Schedule Notes RLS
-DROP POLICY IF EXISTS "Users can view their own todos" ON public.user_todos;
-DROP POLICY IF EXISTS "Users can insert their own todos" ON public.user_todos;
-DROP POLICY IF EXISTS "Users can update their own todos" ON public.user_todos;
-DROP POLICY IF EXISTS "Users can delete their own todos" ON public.user_todos;
-CREATE POLICY "Users can view their own todos" ON public.user_todos FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own todos" ON public.user_todos FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own todos" ON public.user_todos FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own todos" ON public.user_todos FOR DELETE USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can view their own notes" ON public.user_schedule_notes;
-DROP POLICY IF EXISTS "Users can insert their own notes" ON public.user_schedule_notes;
-DROP POLICY IF EXISTS "Users can update their own notes" ON public.user_schedule_notes;
-DROP POLICY IF EXISTS "Users can delete their own notes" ON public.user_schedule_notes;
-CREATE POLICY "Users can view their own notes" ON public.user_schedule_notes FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own notes" ON public.user_schedule_notes FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own notes" ON public.user_schedule_notes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own notes" ON public.user_schedule_notes FOR DELETE USING (auth.uid() = user_id);
 
 -- ── 20. SEED METADATA FOR APTITUDE & PLACEMENT PREP ──────────────────
 INSERT INTO public.aptitude_categories (id, category_name, slug, description, icon_name)
@@ -718,59 +616,203 @@ ON CONFLICT (id) DO UPDATE SET
     total_questions = EXCLUDED.total_questions,
     default_timer_seconds = EXCLUDED.default_timer_seconds;
 
--- ── 15. WELCOME EMAIL EVENTS (DURABLE ONE-TIME DISPATCH) ──────────────
-CREATE TABLE IF NOT EXISTS public.welcome_email_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'sent', 'failed')),
-    attempts INTEGER NOT NULL DEFAULT 0,
-    resend_id TEXT NULL,
-    last_error TEXT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    processing_until TIMESTAMPTZ NULL,
-    sent_at TIMESTAMPTZ NULL
-);
+-- ── 21. PRODUCTION TABLE-LEVEL PERMISSIONS (FIX FOR POSTGRESQL 42501) ───
+-- anon receives SELECT ONLY on user-specific tables to eliminate 42501 on reads.
+-- anon has ZERO INSERT, UPDATE, or DELETE permissions on user tables.
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
-CREATE INDEX IF NOT EXISTS idx_welcome_email_events_user_id 
-    ON public.welcome_email_events(user_id);
+GRANT SELECT ON public.user_academic_profile TO anon;
+GRANT SELECT ON public.user_coding_profiles TO anon;
+GRANT SELECT ON public.user_progress TO anon;
+GRANT SELECT ON public.leetcode_progress TO anon;
+GRANT SELECT ON public.roadmap_progress TO anon;
+GRANT SELECT ON public.resume_scores TO anon;
+GRANT SELECT ON public.saved_playlists TO anon;
+GRANT SELECT ON public.video_progress TO anon;
+GRANT SELECT ON public.learning_progress TO anon;
+GRANT SELECT ON public.user_todos TO anon;
+GRANT SELECT ON public.user_schedule_notes TO anon;
+GRANT SELECT ON public.welcome_email_events TO anon;
+GRANT SELECT, INSERT ON public.user_feedback TO anon;
 
-CREATE INDEX IF NOT EXISTS idx_welcome_email_events_status_lease 
-    ON public.welcome_email_events(status, processing_until);
+GRANT SELECT ON public.skills_cache TO anon;
+GRANT SELECT ON public.trust_score_engine TO anon;
+GRANT SELECT ON public.aptitude_categories TO anon;
+GRANT SELECT ON public.aptitude_topics TO anon;
+GRANT SELECT ON public.aptitude_questions TO anon;
+GRANT SELECT ON public.user_aptitude_attempts TO anon;
+GRANT SELECT ON public.user_quiz_results TO anon;
 
+-- authenticated and service_role receive required CRUD privileges
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_academic_profile TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_coding_profiles TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_progress TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.leetcode_progress TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.roadmap_progress TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.resume_scores TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.saved_playlists TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.video_progress TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.learning_progress TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_todos TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_schedule_notes TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.welcome_email_events TO authenticated, service_role;
+GRANT SELECT, INSERT ON public.user_feedback TO authenticated, service_role;
+
+GRANT ALL ON public.skills_cache TO authenticated, service_role;
+GRANT ALL ON public.trust_score_engine TO authenticated, service_role;
+GRANT ALL ON public.aptitude_categories TO authenticated, service_role;
+GRANT ALL ON public.aptitude_topics TO authenticated, service_role;
+GRANT ALL ON public.aptitude_questions TO authenticated, service_role;
+GRANT ALL ON public.user_aptitude_attempts TO authenticated, service_role;
+GRANT ALL ON public.user_quiz_results TO authenticated, service_role;
+
+-- Grant sequence usages to prevent serial ID exhaustion errors
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- Grant execution on stored procedures
+GRANT EXECUTE ON FUNCTION public.record_daily_login(UUID) TO authenticated, service_role, anon;
+GRANT EXECUTE ON FUNCTION public.recalculate_user_level(UUID) TO authenticated, service_role, anon;
+GRANT EXECUTE ON FUNCTION public.upsert_user_aptitude_attempt(UUID, INTEGER, INTEGER, INTEGER, BOOLEAN, INTEGER) TO authenticated, service_role;
+
+-- ── 22. ROW LEVEL SECURITY (RLS) POLICIES ────────────────────────────
+ALTER TABLE public.user_academic_profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_coding_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leetcode_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.roadmap_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.resume_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.saved_playlists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.video_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skills_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trust_score_engine ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.aptitude_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.aptitude_topics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.aptitude_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_aptitude_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_quiz_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_todos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_schedule_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.welcome_email_events ENABLE ROW LEVEL SECURITY;
 
+-- Strict User Ownership Policies (Authenticated users access auth.uid() rows only)
+
+-- user_academic_profile
+DROP POLICY IF EXISTS "Service role access on user_academic_profile" ON public.user_academic_profile;
+DROP POLICY IF EXISTS "Strict user ownership on user_academic_profile" ON public.user_academic_profile;
+CREATE POLICY "Service role access on user_academic_profile" ON public.user_academic_profile FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_academic_profile" ON public.user_academic_profile FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- user_coding_profiles
+DROP POLICY IF EXISTS "Service role access on user_coding_profiles" ON public.user_coding_profiles;
+DROP POLICY IF EXISTS "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles;
+CREATE POLICY "Service role access on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_coding_profiles" ON public.user_coding_profiles FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- user_progress
+DROP POLICY IF EXISTS "Service role access on user_progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Strict user ownership on user_progress" ON public.user_progress;
+CREATE POLICY "Service role access on user_progress" ON public.user_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on user_progress" ON public.user_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- leetcode_progress
+DROP POLICY IF EXISTS "Service role access on leetcode_progress" ON public.leetcode_progress;
+DROP POLICY IF EXISTS "Strict user ownership on leetcode_progress" ON public.leetcode_progress;
+CREATE POLICY "Service role access on leetcode_progress" ON public.leetcode_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on leetcode_progress" ON public.leetcode_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- roadmap_progress
+DROP POLICY IF EXISTS "Service role access on roadmap_progress" ON public.roadmap_progress;
+DROP POLICY IF EXISTS "Strict user ownership on roadmap_progress" ON public.roadmap_progress;
+CREATE POLICY "Service role access on roadmap_progress" ON public.roadmap_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on roadmap_progress" ON public.roadmap_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- resume_scores
+DROP POLICY IF EXISTS "Service role access on resume_scores" ON public.resume_scores;
+DROP POLICY IF EXISTS "Strict user ownership on resume_scores" ON public.resume_scores;
+CREATE POLICY "Service role access on resume_scores" ON public.resume_scores FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on resume_scores" ON public.resume_scores FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- saved_playlists
+DROP POLICY IF EXISTS "Service role access on saved_playlists" ON public.saved_playlists;
+DROP POLICY IF EXISTS "Strict user ownership on saved_playlists" ON public.saved_playlists;
+CREATE POLICY "Service role access on saved_playlists" ON public.saved_playlists FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on saved_playlists" ON public.saved_playlists FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- video_progress
+DROP POLICY IF EXISTS "Service role access on video_progress" ON public.video_progress;
+DROP POLICY IF EXISTS "Strict user ownership on video_progress" ON public.video_progress;
+CREATE POLICY "Service role access on video_progress" ON public.video_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on video_progress" ON public.video_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- learning_progress (Strict authenticated ownership only; guests mediated via backend service_role)
+DROP POLICY IF EXISTS "Service role full access on learning_progress" ON public.learning_progress;
+DROP POLICY IF EXISTS "Strict user ownership on learning_progress" ON public.learning_progress;
+DROP POLICY IF EXISTS "Guest session access on learning_progress" ON public.learning_progress;
+CREATE POLICY "Service role full access on learning_progress" ON public.learning_progress FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Strict user ownership on learning_progress" ON public.learning_progress FOR ALL TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text) WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- user_feedback
+DROP POLICY IF EXISTS "Service role access on user_feedback" ON public.user_feedback;
+DROP POLICY IF EXISTS "Authenticated insert on user_feedback" ON public.user_feedback;
+CREATE POLICY "Service role access on user_feedback" ON public.user_feedback FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated insert on user_feedback" ON public.user_feedback FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- skills_cache (Public Read)
+DROP POLICY IF EXISTS "Allow read skills_cache" ON public.skills_cache;
+CREATE POLICY "Allow read skills_cache" ON public.skills_cache FOR SELECT USING (true);
+
+-- trust_score_engine (Public Read)
+DROP POLICY IF EXISTS "Allow read trust_score_engine" ON public.trust_score_engine;
+CREATE POLICY "Allow read trust_score_engine" ON public.trust_score_engine FOR SELECT USING (true);
+
+-- aptitude_categories (Public Read)
+DROP POLICY IF EXISTS "Public read aptitude categories" ON public.aptitude_categories;
+CREATE POLICY "Public read aptitude categories" ON public.aptitude_categories FOR SELECT USING (true);
+
+-- aptitude_topics (Public Read)
+DROP POLICY IF EXISTS "Public read aptitude topics" ON public.aptitude_topics;
+CREATE POLICY "Public read aptitude topics" ON public.aptitude_topics FOR SELECT USING (true);
+
+-- aptitude_questions (Public Read)
+DROP POLICY IF EXISTS "Public read aptitude questions" ON public.aptitude_questions;
+CREATE POLICY "Public read aptitude questions" ON public.aptitude_questions FOR SELECT USING (true);
+
+-- user_aptitude_attempts
+DROP POLICY IF EXISTS "Users view own attempts" ON public.user_aptitude_attempts;
+DROP POLICY IF EXISTS "Users insert own attempts" ON public.user_aptitude_attempts;
+CREATE POLICY "Users view own attempts" ON public.user_aptitude_attempts FOR SELECT TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+CREATE POLICY "Users insert own attempts" ON public.user_aptitude_attempts FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- user_quiz_results
+DROP POLICY IF EXISTS "Users view own quiz results" ON public.user_quiz_results;
+DROP POLICY IF EXISTS "Users insert own quiz results" ON public.user_quiz_results;
+CREATE POLICY "Users view own quiz results" ON public.user_quiz_results FOR SELECT TO authenticated USING (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+CREATE POLICY "Users insert own quiz results" ON public.user_quiz_results FOR INSERT TO authenticated WITH CHECK (user_id IS NOT NULL AND auth.uid()::text = user_id::text);
+
+-- user_todos
+DROP POLICY IF EXISTS "Users can view their own todos" ON public.user_todos;
+DROP POLICY IF EXISTS "Users can insert their own todos" ON public.user_todos;
+DROP POLICY IF EXISTS "Users can update their own todos" ON public.user_todos;
+DROP POLICY IF EXISTS "Users can delete their own todos" ON public.user_todos;
+CREATE POLICY "Users can view their own todos" ON public.user_todos FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own todos" ON public.user_todos FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own todos" ON public.user_todos FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own todos" ON public.user_todos FOR DELETE USING (auth.uid() = user_id);
+
+-- user_schedule_notes
+DROP POLICY IF EXISTS "Users can view their own notes" ON public.user_schedule_notes;
+DROP POLICY IF EXISTS "Users can insert their own notes" ON public.user_schedule_notes;
+DROP POLICY IF EXISTS "Users can update their own notes" ON public.user_schedule_notes;
+DROP POLICY IF EXISTS "Users can delete their own notes" ON public.user_schedule_notes;
+CREATE POLICY "Users can view their own notes" ON public.user_schedule_notes FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own notes" ON public.user_schedule_notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own notes" ON public.user_schedule_notes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own notes" ON public.user_schedule_notes FOR DELETE USING (auth.uid() = user_id);
+
+-- welcome_email_events
 DROP POLICY IF EXISTS "Service role full access on welcome_email_events" ON public.welcome_email_events;
-CREATE POLICY "Service role full access on welcome_email_events" 
-    ON public.welcome_email_events FOR ALL 
-    TO service_role 
-    USING (true) WITH CHECK (true);
-
 DROP POLICY IF EXISTS "Users can view their own welcome_email_events" ON public.welcome_email_events;
-CREATE POLICY "Users can view their own welcome_email_events" 
-    ON public.welcome_email_events FOR SELECT 
-    TO authenticated 
-    USING (auth.uid() = user_id);
-
-CREATE OR REPLACE FUNCTION public.handle_welcome_email_on_signup()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.welcome_email_events (user_id, email, status, created_at, updated_at)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.email, ''),
-        'pending',
-        NOW(),
-        NOW()
-    )
-    ON CONFLICT (user_id) DO NOTHING;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-DROP TRIGGER IF EXISTS trg_welcome_email_on_signup ON auth.users;
-CREATE TRIGGER trg_welcome_email_on_signup
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_welcome_email_on_signup();
-
+CREATE POLICY "Service role full access on welcome_email_events" ON public.welcome_email_events FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Users can view their own welcome_email_events" ON public.welcome_email_events FOR SELECT TO authenticated USING (auth.uid() = user_id);
