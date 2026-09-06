@@ -36,58 +36,42 @@ const AuthContext = createContext<AuthContextValue>({
   setUnverifiedEmail: () => {},
 });
 
+// In-memory set to prevent duplicate dispatches caused by React re-renders in the same session
+const _welcomeEmailDispatched = new Set<string>();
+
 // Helper function to sync authenticated user to Supabase user_academic_profile & user_progress
-// Sends welcome email ONLY to brand-new users (new Google OAuth logins or new registrations)
+// Triggers one-time welcome email dispatch; backend database enforces single-dispatch idempotency
 async function syncUserToSupabase(
   userId: string,
   email: string,
   name?: string,
-  createdAt?: string
+  createdAt?: string,
+  lastSignInAt?: string,
+  forceSignup: boolean = false
 ) {
   const fullName = name || email.split("@")[0] || "Learner";
 
-  // Check if this user already exists in the database
-  let isBrandNewUser = false;
-  try {
-    const { data: existingProfile, error } = await supabase
-      .from("user_academic_profile")
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    // If no profile exists yet, this is their very first session
-    if (!error && !existingProfile) {
-      if (createdAt) {
-        const createdMs = new Date(createdAt).getTime();
-        const diffMs = Date.now() - createdMs;
-        // User account was created within the last 15 minutes
-        if (diffMs < 15 * 60 * 1000 && diffMs > -60000) {
-          isBrandNewUser = true;
-        }
-      } else {
-        isBrandNewUser = true;
+  // Identify whether this is the user's initial onboarding session
+  let isSignupSession = forceSignup;
+  if (!isSignupSession && createdAt && lastSignInAt) {
+    try {
+      const createdMs = new Date(createdAt).getTime();
+      const lastSignInMs = new Date(lastSignInAt).getTime();
+      // On genuine first-time signup/OAuth, created_at and last_sign_in_at are virtually simultaneous
+      if (Math.abs(lastSignInMs - createdMs) < 15000) {
+        isSignupSession = true;
       }
-    }
-  } catch (err) {
-    console.warn("Check for new user profile failed:", err);
+    } catch {}
   }
 
-  // Client-side guard so we never trigger twice in the same browser session
-  const welcomeKey = `sc_welcome_sent_${userId}`;
-  const alreadySentLocal =
-    typeof window !== "undefined" && localStorage.getItem(welcomeKey) === "1";
-
-  if (isBrandNewUser && !alreadySentLocal && email && email.includes("@")) {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(welcomeKey, "1");
-      } catch {}
-    }
-    // Asynchronously dispatch welcome email via Resend
+  // Trigger one-time welcome email (backend enforces database idempotency & unique constraint)
+  if (!_welcomeEmailDispatched.has(userId) && email && email.includes("@")) {
+    _welcomeEmailDispatched.add(userId);
     sendWelcomeEmail({
-      email: email.trim(),
+      is_signup: isSignupSession,
       full_name: fullName,
       user_id: userId,
+      email: email.trim(),
     }).catch((err) => console.warn("Welcome email notice:", err));
   }
 
@@ -137,7 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userId: string,
       name?: string,
       confirmed: boolean = true,
-      createdAt?: string
+      createdAt?: string,
+      lastSignInAt?: string,
+      forceSignup: boolean = false
     ) => {
       const newSession: UserSession = {
         email,
@@ -155,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUnverifiedEmailState(null);
 
       // Async database storage & new-user welcome email dispatch
-      syncUserToSupabase(userId, email, name, createdAt);
+      syncUserToSupabase(userId, email, name, createdAt, lastSignInAt, forceSignup);
     },
     []
   );
@@ -210,7 +196,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             supaUser.user_metadata?.name ||
             userEmail.split("@")[0];
 
-          await setAndStoreSession(userEmail, userId, userName, true, supaUser.created_at);
+          await setAndStoreSession(
+            userEmail,
+            userId,
+            userName,
+            true,
+            supaUser.created_at,
+            supaUser.last_sign_in_at
+          );
           if (mounted) setIsLoading(false);
           return;
         }
@@ -253,7 +246,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supaUser.user_metadata?.name ||
           userEmail.split("@")[0];
 
-        await setAndStoreSession(userEmail, userId, userName, true, supaUser.created_at);
+        await setAndStoreSession(
+          userEmail,
+          userId,
+          userName,
+          true,
+          supaUser.created_at,
+          supaUser.last_sign_in_at
+        );
         setIsLoading(false);
       } else {
         clearSessionLocal();
