@@ -1071,7 +1071,7 @@ async def save_playlist(
                         if total_res and total_res > 0:
                             video_count = str(total_res)
             except Exception as yt_err:
-                print(f"Error fetching exact video count on save: {yt_err}")
+                logger.warning(f"Error fetching exact video count on save: {type(yt_err).__name__}")
 
         res_data = None
         if _is_uuid(user_id):
@@ -1507,10 +1507,11 @@ async def get_playlist_videos(
                     )
                     data = r.json()
                     if not r.is_success:
-                        print(f"YouTube playlist items error: {data}")
+                        err_msg = data.get("error", {}).get("message", "unknown") if isinstance(data, dict) else "unknown"
+                        logger.warning(f"YouTube playlist items API error: {err_msg}")
                         break
                 except Exception as e:
-                    print(f"YouTube playlist fetch error: {e}")
+                    logger.warning(f"YouTube playlist fetch error: {type(e).__name__}")
                     break
 
                 for item in data.get("items", []):
@@ -1655,7 +1656,7 @@ async def get_playlist_videos(
                         v["completed_at"]  = prog.get("completed_at")
                         v["updated_at"]    = prog.get("updated_at")
             except Exception as e:
-                print(f"Video progress merge error: {e}")
+                logger.error(f"Video progress merge error: {type(e).__name__}")
 
         # Also merge video watch status from learning_progress JSONB table (session_id & guests)
         try:
@@ -2094,7 +2095,7 @@ Respond ONLY with valid JSON in this exact structure:
         data = json.loads(clean_json)
         return {"success": True, "roadmap": data}
     except Exception as e:
-        print(f"Roadmap generation fallback: {e}")
+        logger.info(f"Roadmap generation fallback triggered: {type(e).__name__}")
         return {
             "success": True,
             "roadmap": {

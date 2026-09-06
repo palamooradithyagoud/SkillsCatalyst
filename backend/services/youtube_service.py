@@ -1,6 +1,11 @@
 import httpx
+import logging
 import re
 from backend.config import YOUTUBE_API_KEY
+from backend.services.observability import record_youtube_call
+
+logger = logging.getLogger(__name__)
+
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3"
 
@@ -37,7 +42,7 @@ async def fetch_playlist_videos(playlist_id: str, max_results: int = 50):
         "maxResults": max_results,
         "key": YOUTUBE_API_KEY,
     }
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
         try:
             res = await client.get(url, params=params)
             res.raise_for_status()
@@ -56,9 +61,16 @@ async def fetch_playlist_videos(playlist_id: str, max_results: int = 50):
                 if not _BLOCKED_TERMS.search(combined_text):
                     clean_items.append(item)
             data["items"] = clean_items
+            record_youtube_call(success=True)
             return data
         except Exception as e:
-            return {"error": str(e)}
+            record_youtube_call(success=False)
+            err_type = type(e).__name__
+            if "timeout" in str(e).lower() or "Timeout" in err_type:
+                logger.warning(f"YouTube playlist API timed out for playlist_id={playlist_id}: {err_type}")
+            else:
+                logger.warning(f"YouTube playlist API error for playlist_id={playlist_id}: {err_type}")
+            return {"error": "Video service temporarily unavailable"}
 
 async def search_youtube_videos(query: str, max_results: int = 25):
     if not YOUTUBE_API_KEY:
@@ -77,7 +89,7 @@ async def search_youtube_videos(query: str, max_results: int = 25):
         "safeSearch": "strict",
         "key": YOUTUBE_API_KEY
     }
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
         try:
             res = await client.get(url, params=params)
             res.raise_for_status()
@@ -95,6 +107,14 @@ async def search_youtube_videos(query: str, max_results: int = 25):
                 if not _BLOCKED_TERMS.search(combined_text):
                     clean_items.append(item)
             data["items"] = clean_items
+            record_youtube_call(success=True)
             return data
         except Exception as e:
-            return {"error": str(e)}
+            record_youtube_call(success=False)
+            err_type = type(e).__name__
+            if "timeout" in str(e).lower() or "Timeout" in err_type:
+                logger.warning(f"YouTube search API timed out for query='{query[:40]}': {err_type}")
+            else:
+                logger.warning(f"YouTube search API error for query='{query[:40]}': {err_type}")
+            return {"error": "Video service temporarily unavailable"}
+

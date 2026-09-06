@@ -1,8 +1,11 @@
 import re
+import logging
 from fastapi import APIRouter, Depends
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id
 from backend.routers.profile import _clean_handle
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -260,7 +263,7 @@ def get_active_roadmap_data(user_id: str) -> dict:
             "last_activity_at": first.get("last_activity_at")
         }
     except Exception as e:
-        print(f"Error getting active roadmap data: {e}")
+        logger.error(f"Error getting active roadmap data for user: {type(e).__name__}")
         return {"has_active_roadmap": False}
 
 
@@ -297,7 +300,7 @@ def delete_active_roadmap_endpoint(roadmap_id: str, user_id: str = Depends(get_c
                 sb.table("roadmap_progress").delete().in_("id", ids_to_delete).execute()
         return {"success": True, "message": f"Removed roadmap {roadmap_id}"}
     except Exception as e:
-        print(f"Error removing roadmap {roadmap_id}: {e}")
+        logger.error(f"Error removing roadmap '{roadmap_id}': {type(e).__name__}")
         return {"success": False, "message": str(e)}
 
 
@@ -439,7 +442,7 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 resume_score = round(float(res_user_prog.data[0].get("resume_readiness_score")))
 
         except Exception as e:
-            print(f"Dashboard metrics query error: {e}")
+            logger.error(f"Dashboard metrics query error: {type(e).__name__}")
 
     active_rm = get_active_roadmap_data(user_id)
     if active_rm.get("has_active_roadmap"):
