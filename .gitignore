@@ -41,3 +41,7 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# Supabase CLI temp files
+supabase/.temp/
+.temp/

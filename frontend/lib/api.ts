@@ -670,6 +670,17 @@ async function getFallbackDashboardData() {
         const completedNodes = rmData.filter((r: any) => r.status === "completed" && r.node_id !== "_roadmap_started");
         roadmapCount = completedNodes.length;
       }
+
+      // Query streak days from user_progress
+      const { data: progRow } = await supabase
+        .from("user_progress")
+        .select("streak_days")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (progRow && typeof progRow.streak_days === "number") {
+        streakDays = progRow.streak_days;
+      }
     }
   } catch (e) {
     console.warn("Supabase dashboard fallback error:", e);
@@ -710,20 +721,6 @@ async function getFallbackDashboardData() {
   const roadmapPct = roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / 20) * 100)) : 0;
   const roadmapSubtitle = roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed";
   const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : "No upload yet";
-
-  let streakDays = 0;
-  if (userId) {
-    try {
-      const { data: progRow } = await supabase
-        .from("user_progress")
-        .select("streak_days")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (progRow && typeof progRow.streak_days === "number") {
-        streakDays = progRow.streak_days;
-      }
-    } catch {}
-  }
 
   const activeRm = await getFallbackActiveRoadmapData();
 
@@ -1956,15 +1953,20 @@ export async function syncDailyLoginStreak(userId: string): Promise<number> {
   } catch {}
 
   try {
-    const { data, error } = await supabase
-      .from("user_progress")
-      .select("streak_days, last_login_date")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const hasAuthSession = sessionData?.session?.user?.id === userId;
 
-    if (!error && data) {
-      if (typeof data.streak_days === "number") currentStreak = data.streak_days;
-      if (data.last_login_date) lastLoginDate = data.last_login_date;
+    if (hasAuthSession) {
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select("streak_days, last_login_date")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        if (typeof data.streak_days === "number") currentStreak = data.streak_days;
+        if (data.last_login_date) lastLoginDate = data.last_login_date;
+      }
     }
 
     let nextStreak = currentStreak;
@@ -1980,17 +1982,19 @@ export async function syncDailyLoginStreak(userId: string): Promise<number> {
       nextStreak = 1;
     }
 
-    // Persist to Supabase
-    await supabase.from("user_progress").upsert(
-      {
-        user_id: userId,
-        streak_days: nextStreak,
-        last_login_date: todayStr,
-        last_active_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
+    // Persist to Supabase only if authenticated
+    if (hasAuthSession) {
+      await supabase.from("user_progress").upsert(
+        {
+          user_id: userId,
+          streak_days: nextStreak,
+          last_login_date: todayStr,
+          last_active_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+    }
 
     try {
       localStorage.setItem(LS_STREAK, String(nextStreak));

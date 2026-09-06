@@ -565,21 +565,20 @@ ALTER TABLE public.user_quiz_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_todos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_schedule_notes ENABLE ROW LEVEL SECURITY;
 
--- Revoke dangerous anon write grants
-REVOKE ALL ON public.user_academic_profile FROM anon;
-REVOKE ALL ON public.user_coding_profiles FROM anon;
-REVOKE ALL ON public.user_progress FROM anon;
-REVOKE ALL ON public.leetcode_progress FROM anon;
-REVOKE ALL ON public.roadmap_progress FROM anon;
-REVOKE ALL ON public.resume_scores FROM anon;
-REVOKE ALL ON public.saved_playlists FROM anon;
-REVOKE ALL ON public.video_progress FROM anon;
-REVOKE ALL ON public.learning_progress FROM anon;
-REVOKE ALL ON public.user_feedback FROM anon;
-REVOKE ALL ON public.user_todos FROM anon;
-REVOKE ALL ON public.user_schedule_notes FROM anon;
+-- Grant table-level access: anon receives SELECT only; authenticated & service_role receive CRUD
+GRANT SELECT ON public.user_academic_profile TO anon;
+GRANT SELECT ON public.user_coding_profiles TO anon;
+GRANT SELECT ON public.user_progress TO anon;
+GRANT SELECT ON public.leetcode_progress TO anon;
+GRANT SELECT ON public.roadmap_progress TO anon;
+GRANT SELECT ON public.resume_scores TO anon;
+GRANT SELECT ON public.saved_playlists TO anon;
+GRANT SELECT ON public.video_progress TO anon;
+GRANT SELECT ON public.learning_progress TO anon;
+GRANT SELECT ON public.user_todos TO anon;
+GRANT SELECT ON public.user_schedule_notes TO anon;
+GRANT SELECT, INSERT ON public.user_feedback TO anon;
 
--- Grant authenticated & service_role access
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_academic_profile TO authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_coding_profiles TO authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_progress TO authenticated, service_role;

@@ -75,15 +75,19 @@ async function syncUserToSupabase(
     }).catch((err) => console.warn("Welcome email notice:", err));
   }
 
+  // Only attempt direct client upsert if active authenticated Supabase session is verified
   try {
-    await supabase.from("user_academic_profile").upsert(
-      {
-        user_id: userId,
-        full_name: fullName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id", ignoreDuplicates: true }
-    );
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData?.session?.user?.id === userId) {
+      await supabase.from("user_academic_profile").upsert(
+        {
+          user_id: userId,
+          full_name: fullName,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
+    }
   } catch (err) {
     console.warn("Failed to sync user_academic_profile:", err);
   }
@@ -95,13 +99,16 @@ async function syncUserToSupabase(
   }
 
   try {
-    await supabase.from("user_coding_profiles").upsert(
-      {
-        user_id: userId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id", ignoreDuplicates: true }
-    );
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData?.session?.user?.id === userId) {
+      await supabase.from("user_coding_profiles").upsert(
+        {
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
+    }
   } catch (err) {
     console.warn("Failed to sync user_coding_profiles:", err);
   }
