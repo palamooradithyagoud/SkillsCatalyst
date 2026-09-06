@@ -14,6 +14,9 @@ from backend.services.observability import (
 
 def test_ai_observability_percentiles_and_breakdown():
     """Verify AI calls record latencies, calculate p50/p95 percentiles, and track models/errors."""
+    from backend.services.observability import _ai_latencies
+    _ai_latencies.clear()
+
     # Record multiple AI calls with different latencies and models
     record_ai_call(success=True, provider="groq", model="llama-3.3-70b-versatile", latency_ms=100.0)
     record_ai_call(success=True, provider="groq", model="llama-3.3-70b-versatile", latency_ms=200.0)

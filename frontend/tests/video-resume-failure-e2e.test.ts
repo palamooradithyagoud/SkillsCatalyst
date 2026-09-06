@@ -141,7 +141,7 @@ describe('Phase 3.2 — Video Resume & Failure-Path E2E Tests', () => {
         completed: false,
       };
 
-      const resolved = resolveVideoProgress(local, remote);
+      const resolved = resolveVideoProgress(local, remote as any);
       assert.ok(resolved);
       assert.strictEqual(
         resolved.lastPosition,
@@ -174,7 +174,7 @@ describe('Phase 3.2 — Video Resume & Failure-Path E2E Tests', () => {
         updated_at: remoteUpdatedAt,
       };
 
-      const resolved = resolveVideoProgress(local, remote);
+      const resolved = resolveVideoProgress(local, remote as any);
       assert.ok(resolved);
       assert.strictEqual(resolved.lastPosition, 85.0, 'Strictly newer remote position must win');
       assert.strictEqual(resolved.watchTime, 85);
