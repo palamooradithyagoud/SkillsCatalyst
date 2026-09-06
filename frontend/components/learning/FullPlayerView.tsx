@@ -17,7 +17,7 @@ import {
   resolveActiveLessonIndex,
   saveLocalPlaylistActiveLesson,
   flushPendingSync,
-} from "@/lib/progressRepository";
+} from "@/lib/progress";
 import { extractPlaylistId } from "@/lib/learning/searchValidation";
 import { VideoPlayerContainer } from "./VideoPlayerContainer";
 

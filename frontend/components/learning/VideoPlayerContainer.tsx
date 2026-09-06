@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef } from "react";
-import { useYouTubePlayer } from "@/lib/useYouTubePlayer";
-import { getLocalVideoProgress, resolveVideoProgress } from "@/lib/progressRepository";
+import { useYouTubePlayer } from "@/hooks/useYouTubePlayer";
+import { getLocalVideoProgress, resolveVideoProgress } from "@/lib/progress";
 
 export const VideoPlayerContainer = React.memo(function VideoPlayerContainer({
   videoId,
