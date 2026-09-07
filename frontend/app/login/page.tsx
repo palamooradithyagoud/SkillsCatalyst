@@ -10,7 +10,9 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -222,6 +224,7 @@ export default function LoginPage() {
               src="/logo.png"
               alt="SkillsCatalyst Watermark"
               fill
+              sizes="(max-width: 640px) 340px, (max-width: 1024px) 460px, 540px"
               className="object-contain"
               priority
             />
@@ -229,6 +232,17 @@ export default function LoginPage() {
         </div>
 
         <div className="w-full max-w-[380px] mx-auto my-auto space-y-5 pt-1 pb-6 relative z-10">
+          {/* Back to Home Link */}
+          <div className="flex items-center justify-start -mb-2">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors group cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
+
           {/* SkillsCatalyst Official Brand Header */}
           <div className="flex justify-center mb-1">
             <SkillsCatalystLogo size="md" showText={false} />

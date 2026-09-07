@@ -286,8 +286,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
 
     const isLoginPage = pathname === "/login";
+    const isLandingPage = pathname === "/";
+    const isPublicPage = isLoginPage || isLandingPage;
 
-    if (!session && !isLoginPage) {
+    if (!session && !isPublicPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
       router.replace("/dashboard");
@@ -323,8 +325,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmailState(email);
   }, []);
 
-  // On /login page: ALWAYS render children immediately without showing full-screen loading screen
-  if (pathname === "/login") {
+  // On /login and / landing page: ALWAYS render children immediately without showing full-screen loading screen
+  if (pathname === "/login" || pathname === "/") {
     return (
       <AuthContext.Provider
         value={{
