@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
+import StructuredCareerPathSection from "./StructuredCareerPathSection";
 
 interface NavDropdownItem {
   title: string;
@@ -404,6 +405,9 @@ export default function SkillsCatalystDesktopHero() {
           </motion.div>
         </section>
       </div>
+
+      {/* ── Section 2: Animated Structured Career Path ── */}
+      <StructuredCareerPathSection />
 
       {/* ── SkillsCatalyst Landing Pricing Modal ── */}
       <LandingPricingModal
