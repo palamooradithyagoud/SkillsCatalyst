@@ -111,7 +111,7 @@ const FEATURES = [
   },
 ];
 
-export default function TechsnapDesktopHero() {
+export default function SkillsCatalystDesktopHero() {
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -147,7 +147,7 @@ export default function TechsnapDesktopHero() {
 
           {/* Navigation Items Row */}
           <div className="scNavbarContentRow">
-            {/* Left: Brand Logo Area (Switches to compact square icon on scroll, like Techsnap) */}
+            {/* Left: Brand Logo Area (Switches to compact square icon on scroll) */}
             <div
               className="scNavBrandArea"
               onClick={() => router.push("/")}
@@ -262,9 +262,9 @@ export default function TechsnapDesktopHero() {
         </div>
       </nav>
 
-      {/* ── Main Desktop Layout: Techsnap 3-Segment Notch + Grand Hero Card ── */}
+      {/* ── Main Desktop Layout: 3-Segment Notch + Grand Hero Card ── */}
       <div className="scDesktopNotchWrapper">
-        {/* Techsnap Exact 3-Segment Notch Header */}
+        {/* Precision 3-Segment Notch Header */}
         <div className="scNotchRow">
           <div className="scNotchLeftWing">
             <div className="scNotchLeftCutout" />
@@ -349,7 +349,7 @@ export default function TechsnapDesktopHero() {
             </motion.div>
           </div>
 
-          {/* ── 5 Feature Showcase Cards Along the Bottom (Like Techsnap) ── */}
+          {/* ── 5 Feature Showcase Cards Along the Bottom ── */}
           <motion.div
             className="scFeaturesGrid"
             initial={{ opacity: 0, y: 30 }}
