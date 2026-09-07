@@ -1,0 +1,721 @@
+/* Skills Catalyst — Techsnap-Inspired Desktop & Mobile Landing CSS */
+
+:root {
+  --sc-bg: #000000;
+  --sc-card-bg: #070710;
+  --sc-purple: #8b5cf6;
+  --sc-purple-light: #c084fc;
+  --sc-purple-glow: rgba(168, 85, 247, 0.4);
+  --sc-blue-glow: rgba(59, 130, 246, 0.25);
+  --sc-text: #ffffff;
+  --sc-muted: #94a3b8;
+  --sc-border: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Full Page Root ── */
+.scLandingRoot {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #000000;
+  color: var(--sc-text);
+  overflow-x: hidden;
+  user-select: none;
+  position: relative;
+}
+
+/* ==========================================================================
+   DESKTOP / LAPTOP LAYOUT (Visible on screens >= 861px, like Techsnap)
+   ========================================================================== */
+
+.scDesktopView {
+  display: none;
+}
+
+@media (min-width: 861px) {
+  .scDesktopView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff;
+    position: relative;
+    padding-top: 0.75rem;
+    box-sizing: border-box;
+  }
+}
+
+/* ── Fixed Floating Top Navigation Bar (Techsnap Exact Architecture) ── */
+.scDesktopNavFixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  width: 100%;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0.75rem 1rem;
+}
+
+.scDesktopNavContainer {
+  pointer-events: auto;
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  border-radius: 9999px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 1280px) {
+  .scDesktopNavContainer {
+    max-width: 1500px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .scDesktopNavContainer {
+    max-width: 1600px;
+  }
+}
+
+/* White Pill Backdrop that smoothly fades in on scroll */
+.scNavScrolledBackdrop {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scNavScrolledBackdropActive {
+  opacity: 1;
+}
+
+/* Navbar content row */
+.scNavbarContentRow {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.85rem;
+  transition: all 0.35s ease;
+}
+
+/* Left Brand Area */
+.scNavBrandArea {
+  position: relative;
+  width: 220px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Full Brand Logo & Title (shown at top) */
+.scBrandFull {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 1;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(0);
+}
+
+.scBrandFullHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-12px);
+}
+
+.scNavBrandLogo {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.scNavBrandTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #000000;
+  white-space: nowrap;
+}
+
+/* Compact Square Brand Icon + Brand Title (shown when scrolled, matching Techsnap) */
+.scBrandCompact {
+  position: absolute;
+  left: 0.25rem;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(6px);
+}
+
+.scBrandCompactVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.scNavBrandTitleScrolled {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.scCompactLogoSquare {
+  width: 38px;
+  height: 38px;
+  background-color: #000000;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.scCompactLogoImg {
+  object-fit: contain;
+}
+
+/* ── Center White Navigation Pill Bar ── */
+.scNavCenterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 65%;
+  background: #ffffff;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.14);
+  transition: all 0.35s ease;
+}
+
+.scNavCenterBarScrolled {
+  box-shadow: none;
+  background: transparent;
+}
+
+.scNavItemWrapper {
+  position: relative;
+}
+
+/* Individual Pill Button inside Center Bar */
+.scNavPillBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #000000;
+  background: #ffffff;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.scNavPillBtn:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.scNavChevron {
+  width: 14px;
+  height: 14px;
+  color: #000000;
+  transition: transform 0.2s ease;
+}
+
+.scNavChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu on hover/active */
+.scNavDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 290px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  padding: 0.65rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.scDropdownItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.scDropdownItem:hover {
+  background: #f3f4f6;
+}
+
+.scDropdownItemTitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.scDropdownItem:hover .scDropdownItemTitle {
+  color: #7c3aed;
+}
+
+.scDropdownItemDesc {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+/* Right Actions (Login & Register on White Area) */
+.scNavRightActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.scNavLoginBtn {
+  padding: 0.55rem 1.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #000000;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.scNavLoginBtn:hover {
+  background: #d1d5db;
+}
+
+.scNavStartBtn {
+  padding: 0.55rem 1.45rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #ff007a;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 0, 122, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.scNavStartBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(255, 0, 122, 0.55);
+}
+
+/* ── Techsnap 3-Segment Notch Header (Exact Architecture) ── */
+.scDesktopNotchWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.scNotchRow {
+  width: 100%;
+  max-width: 1400px;
+  display: flex;
+  height: 64px;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+@media (min-width: 1280px) {
+  .scNotchRow {
+    max-width: 1500px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .scNotchRow {
+    max-width: 1600px;
+  }
+}
+
+.scNotchLeftWing {
+  background-color: #000000;
+  width: 11%;
+  height: 64px;
+}
+
+.scNotchLeftCutout {
+  background-color: #ffffff;
+  width: 100%;
+  height: 64px;
+  border-bottom-right-radius: 34px;
+}
+
+.scNotchCenterTab {
+  width: 64%;
+  background-color: #000000;
+  height: 64px;
+  border-top-left-radius: 38px;
+  border-top-right-radius: 38px;
+}
+
+.scNotchRightWing {
+  background-color: #000000;
+  width: 10%;
+  height: 64px;
+}
+
+.scNotchRightCutout {
+  background-color: #ffffff;
+  width: 100%;
+  height: 64px;
+  border-bottom-left-radius: 34px;
+}
+
+/* ── Grand Black Hero Card (Exact Match to Techsnap) ── */
+.scDesktopHeroCard {
+  position: relative;
+  width: 98%;
+  min-height: 92vh;
+  margin: 0 auto 2.5rem auto;
+  border-radius: 48px 48px 16px 16px;
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  border-top: none;
+  background-color: #000000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6.5rem 2rem 2.5rem 2rem;
+  box-shadow: 0 35px 90px -20px rgba(0, 0, 0, 0.95);
+  box-sizing: border-box;
+}
+
+@media (min-width: 1280px) {
+  .scDesktopHeroCard {
+    padding-top: 7.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .scDesktopHeroCard {
+    padding-top: 8.5rem;
+  }
+}
+
+/* 16:9 Panoramic Penguin Wallpaper Background */
+.scDesktopHeroWallpaper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.scDesktopHeroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  opacity: 0.55;
+  mask-image: linear-gradient(to bottom, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%);
+}
+
+/* Hero Central Typography & Actions */
+.scDesktopHeroContent {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 960px;
+  margin-top: 1rem;
+}
+
+.scPillBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.15rem;
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #d8b4fe;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.25);
+}
+
+.scHeadline {
+  font-size: clamp(2.8rem, 5.2vw, 4.85rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin: 0 0 1.25rem 0;
+}
+
+.scHeadlineWhite {
+  display: block;
+  color: #ffffff;
+  text-shadow: 0 2px 25px rgba(255, 255, 255, 0.2);
+}
+
+.scHeadlineGradient {
+  display: block;
+  background: linear-gradient(135deg, #ffffff 0%, var(--sc-purple-light) 45%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 35px rgba(168, 85, 247, 0.5);
+}
+
+.scSubtitle {
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 400;
+  color: #cbd5e1;
+  line-height: 1.5;
+  max-width: 680px;
+  margin: 0 0 2.25rem 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+/* CTA Buttons */
+.scCTARow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 3.5rem;
+}
+
+.scPrimaryCTA {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1rem 2.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0c0d14;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4), 0 0 25px rgba(168, 85, 247, 0.5);
+  transition: all 0.25s ease;
+}
+
+.scPrimaryCTA:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 40px rgba(255, 255, 255, 0.65), 0 0 35px rgba(168, 85, 247, 0.75);
+}
+
+.scSecondaryCTA {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.scSecondaryCTA:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ── Bottom Feature Cards (Like Techsnap Showcase) ── */
+.scFeaturesGrid {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1280px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.scFeatureCard {
+  background: rgba(15, 16, 28, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.scFeatureCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(168, 85, 247, 0.5);
+  background: rgba(25, 23, 44, 0.92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(168, 85, 247, 0.3);
+}
+
+.scFeatureIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sc-purple-light);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+
+.scFeatureTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.scFeatureDesc {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   MOBILE LAYOUT (Visible on screens < 861px)
+   ========================================================================== */
+
+.scMobileView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  background-color: #06060c;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (min-width: 861px) {
+  .scMobileView {
+    display: none;
+  }
+}
+
+.scMobilePosterWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-height: 100dvh;
+  aspect-ratio: 9 / 16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.scMobilePosterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Mobile Interactive CTA button aligned with 100% precision over graphic */
+.scMobileCTA {
+  position: absolute;
+  left: 50%;
+  top: 88.96%;
+  transform: translateX(-50%);
+  width: 38%;
+  height: 4.8%;
+  min-height: 42px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 30;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scMobileCTAPulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 0 35px rgba(168, 85, 247, 0.4);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.scMobileCTA:active .scMobileCTAPulse {
+  opacity: 1;
+}

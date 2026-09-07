@@ -9,10 +9,15 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === "/login";
+  const isLandingPage = pathname === "/";
 
-  if (isAuthPage) {
+  if (isAuthPage || isLandingPage) {
     return (
-      <div className="w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden bg-white text-[#18191F] flex flex-col">
+      <div
+        className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
+          isLandingPage ? "bg-[#06070d] text-white" : "bg-white text-[#18191F]"
+        }`}
+      >
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
