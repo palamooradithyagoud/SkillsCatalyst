@@ -14,6 +14,7 @@ import {
   Sparkles,
   ChevronDown,
 } from "lucide-react";
+import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 
 interface NavDropdownItem {
   title: string;
@@ -130,8 +131,39 @@ export default function SkillsCatalystDesktopHero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [pricingInitialTier, setPricingInitialTier] = useState<LandingPricingTier>("all");
+
   const handleNavigateToLogin = () => {
     router.push("/login");
+  };
+
+  const handleNavPillClick = (item: NavItem) => {
+    if (item.id === "pricing") {
+      setPricingInitialTier("all");
+      setIsPricingModalOpen(true);
+      setActiveDropdown(null);
+    } else {
+      handleNavigateToLogin();
+    }
+  };
+
+  const handleDropdownItemClick = (itemId: string, subItemTitle: string) => {
+    if (itemId === "pricing") {
+      if (subItemTitle === "Student Free Tier") {
+        setPricingInitialTier("free");
+      } else if (subItemTitle === "Catalyst Pro") {
+        setPricingInitialTier("pro");
+      } else if (subItemTitle === "University Campus") {
+        setPricingInitialTier("enterprise");
+      } else {
+        setPricingInitialTier("all");
+      }
+      setIsPricingModalOpen(true);
+      setActiveDropdown(null);
+    } else {
+      handleNavigateToLogin();
+    }
   };
 
   return (
@@ -199,7 +231,7 @@ export default function SkillsCatalystDesktopHero() {
                   >
                     <button
                       type="button"
-                      onClick={handleNavigateToLogin}
+                      onClick={() => handleNavPillClick(item)}
                       className="scNavPillBtn"
                       aria-expanded={isOpen}
                     >
@@ -224,8 +256,8 @@ export default function SkillsCatalystDesktopHero() {
                             <button
                               key={subItem.title}
                               type="button"
-                              onClick={handleNavigateToLogin}
-                              className="scDropdownItem"
+                              onClick={() => handleDropdownItemClick(item.id, subItem.title)}
+                              className="scDropdownItem cursor-pointer"
                             >
                               <span className="scDropdownItemTitle">{subItem.title}</span>
                               <span className="scDropdownItemDesc">{subItem.description}</span>
@@ -372,6 +404,13 @@ export default function SkillsCatalystDesktopHero() {
           </motion.div>
         </section>
       </div>
+
+      {/* ── SkillsCatalyst Landing Pricing Modal ── */}
+      <LandingPricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+        initialTier={pricingInitialTier}
+      />
     </div>
   );
 }
