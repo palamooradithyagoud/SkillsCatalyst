@@ -655,15 +655,17 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background-color: #060814;
   background: radial-gradient(circle at 50% 8%, #141b3a 0%, #0c132b 50%, #060814 100%);
   color: #ffffff;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
-  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 @media (min-width: 861px) {
@@ -672,16 +674,26 @@
   }
 }
 
+@media (max-height: 600px) {
+  .scMobileView {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-y: auto;
+  }
+}
+
 .scMobileContainer {
   width: 100%;
   max-width: 480px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100%;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ── 1. Top Header Bar ── */
@@ -819,11 +831,11 @@
   flex: 1;
   width: 100%;
   position: relative;
-  min-height: clamp(370px, 56vh, 520px);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   margin-top: 0;
+  overflow: hidden;
 }
 
 /* Constellation Arc */
@@ -973,7 +985,7 @@
   top: 80%;
 }
 
-/* ── Clean Penguin Summit Art Container ── */
+/* ── Clean Penguin Summit Art Container (Hardware accelerated, rock-solid) ── */
 .scMobilePenguinContainer {
   position: absolute;
   inset: 0;
@@ -981,6 +993,11 @@
   height: 100%;
   z-index: 2;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .scMobilePenguinImg {
@@ -988,6 +1005,10 @@
   height: 100%;
   object-fit: cover;
   object-position: center top;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform: translateZ(0);
 }
 
 .scMobileSkyOverlay {
