@@ -649,37 +649,42 @@
    5-feature glowing constellation arc, and interactive CTA.
    ========================================================================== */
 
+/* Lock mobile viewport against accidental window scroll & rubber-banding */
+@media (max-width: 860px) {
+  html,
+  body,
+  .scLandingRoot {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    height: 100% !important;
+    max-height: 100% !important;
+  }
+}
+
 .scMobileView {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100dvh;
   background-color: #060814;
   background: radial-gradient(circle at 50% 8%, #141b3a 0%, #0c132b 50%, #060814 100%);
   color: #ffffff;
   overflow: hidden;
-  position: relative;
   touch-action: manipulation;
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: auto;
+  z-index: 50;
 }
 
 @media (min-width: 861px) {
   .scMobileView {
     display: none !important;
-  }
-}
-
-@media (max-height: 600px) {
-  .scMobileView {
-    height: auto;
-    min-height: 100dvh;
-    max-height: none;
-    overflow-y: auto;
   }
 }
 
