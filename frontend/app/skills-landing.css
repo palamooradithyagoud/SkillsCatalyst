@@ -644,78 +644,440 @@
 }
 
 /* ==========================================================================
-   MOBILE LAYOUT (Visible on screens < 861px)
+   MOBILE LAYOUT (Active on screens < 861px)
+   Rebuilt with clean penguin summit illustration, real HTML typography,
+   5-feature glowing constellation arc, and interactive CTA.
    ========================================================================== */
 
 .scMobileView {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
   min-height: 100dvh;
-  max-height: 100dvh;
-  background-color: #06060c;
-  overflow: hidden;
+  background-color: #060814;
+  background: radial-gradient(circle at 50% 8%, #141b3a 0%, #0c132b 50%, #060814 100%);
+  color: #ffffff;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 861px) {
   .scMobileView {
-    display: none;
+    display: none !important;
   }
 }
 
-.scMobilePosterWrapper {
+.scMobileContainer {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ── 1. Top Header Bar ── */
+.scMobileHeader {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: clamp(10px, 2.2vh, 18px) clamp(12px, 3.5vw, 20px) 4px;
+  position: relative;
+  z-index: 20;
+}
+
+.scMobileScriptLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-size: clamp(0.78rem, 2.6vw, 0.94rem);
+  line-height: 1.05;
+  color: #c7d2fe;
+  transform: rotate(-6deg);
+  transform-origin: top left;
+  pointer-events: none;
+  padding-top: 2px;
+}
+
+.scMobileSquiggle {
+  width: 38px;
+  height: 8px;
+  margin-top: 2px;
+}
+
+.scMobileBrand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.scMobileLogoWrap {
+  width: clamp(66px, 18vw, 84px);
+  height: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.scMobileLogoImg {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.22));
+}
+
+.scMobileLogoTagline {
+  font-size: clamp(5.6px, 1.6vw, 6.8px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(226, 232, 240, 0.72);
+  text-transform: uppercase;
+  margin-top: -2px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.scMobileMottoRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.scMobileMottoLine {
+  width: 1.5px;
+  height: 36px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border-radius: 1px;
+}
+
+.scMobileMottoContent {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(6.5px, 1.8vw, 7.8px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  color: rgba(241, 245, 249, 0.85);
+  text-transform: uppercase;
+}
+
+/* ── 2. Hero Typography ── */
+.scMobileTypography {
+  width: 100%;
+  padding: 2px clamp(14px, 4vw, 24px) 0;
+  margin-bottom: clamp(16px, 3vh, 26px);
+  text-align: center;
+  position: relative;
+  z-index: 20;
+}
+
+.scMobileTitle {
+  font-size: clamp(1.75rem, 5.8vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scMobileTitleWhite {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+
+.scMobileTitleGradient {
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 45%, #e879f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(192, 132, 252, 0.45));
+}
+
+.scMobileSubtitle {
+  font-size: clamp(0.72rem, 2.3vw, 0.84rem);
+  line-height: 1.4;
+  color: rgba(226, 232, 240, 0.82);
+  max-width: 310px;
+  margin: 6px auto 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* ── 3. Mountain Summit Scene & Interactive Stage ── */
+.scMobileStage {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  min-height: clamp(370px, 56vh, 520px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+/* Constellation Arc */
+.scMobileArcSection {
   position: relative;
   width: 100%;
+  max-width: 390px;
+  height: clamp(105px, 15vh, 128px);
+  margin: 0 auto;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.scMobileArcSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  max-height: 100dvh;
-  aspect-ratio: 9 / 16;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.scMobileArcNodes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scArcNode {
+  position: absolute;
+  width: 0;
+  height: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 12;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scArcNode:hover,
+.scArcNode:active {
+  transform: scale(1.12);
+}
+
+.scArcIconCircle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 33px;
+  height: 33px;
+  border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+.scArcNode-1 .scArcIconCircle {
+  background: #0f172a;
+  border: 1.5px solid #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.55), inset 0 0 6px rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+.scArcNode-2 .scArcIconCircle {
+  background: #2e1065;
+  border: 1.5px solid #a855f7;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.55), inset 0 0 6px rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+}
+
+.scArcNode-3 .scArcIconCircle {
+  width: 38px;
+  height: 38px;
+  background: #4a044e;
+  border: 1.8px solid #f0abfc;
+  box-shadow: 0 0 18px rgba(240, 171, 252, 0.75), 0 0 28px rgba(192, 132, 252, 0.45), inset 0 0 8px rgba(240, 171, 252, 0.4);
+  color: #ffffff;
+}
+
+.scArcNode-4 .scArcIconCircle {
+  background: #4c0519;
+  border: 1.5px solid #fb7185;
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.55), inset 0 0 6px rgba(251, 113, 133, 0.3);
+  color: #fda4af;
+}
+
+.scArcNode-5 .scArcIconCircle {
+  background: #451a03;
+  border: 1.5px solid #fde047;
+  box-shadow: 0 0 12px rgba(253, 224, 71, 0.65), inset 0 0 6px rgba(253, 224, 71, 0.35);
+  color: #fef08a;
+}
+
+.scArcNodeLabel {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(7.5px, 2.1vw, 8.8px);
+  font-weight: 600;
+  line-height: 1.15;
+  color: #f8fafc;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.9);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scArcNode-apex .scArcNodeLabel {
+  top: 25px;
+}
+
+/* Feature node positioning along curved arc - 100% mathematically aligned with SVG curve */
+.scArcNode-1 {
+  left: 11%;
+  top: 80%;
+}
+
+.scArcNode-2 {
+  left: 27%;
+  top: 44%;
+}
+
+.scArcNode-3 {
+  left: 50%;
+  top: 20%;
+}
+
+.scArcNode-4 {
+  left: 73%;
+  top: 44%;
+}
+
+.scArcNode-5 {
+  left: 89%;
+  top: 80%;
+}
+
+/* ── Clean Penguin Summit Art Container ── */
+.scMobilePenguinContainer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
   overflow: hidden;
 }
 
-.scMobilePosterImage {
+.scMobilePenguinImg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.scMobileSkyOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36%;
+  background: linear-gradient(180deg, #0c132b 0%, rgba(12, 19, 43, 0.85) 30%, rgba(12, 19, 43, 0) 100%);
   pointer-events: none;
 }
 
-/* Mobile Interactive CTA button aligned with 100% precision over graphic */
-.scMobileCTA {
+/* ── "Get Started →" CTA Button Wrapper (Locks exact center alignment) ── */
+.scMobileCTAWrapper {
   position: absolute;
-  left: 50%;
-  top: 88.96%;
-  transform: translateX(-50%);
-  width: 38%;
-  height: 4.8%;
-  min-height: 42px;
+  bottom: clamp(16px, 3.8vh, 28px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.scMobileGetStartedBtn {
+  pointer-events: auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: clamp(10px, 1.8vh, 12px) clamp(28px, 7vw, 36px);
   border-radius: 9999px;
+  background: #ffffff;
+  color: #080c1d;
+  font-size: clamp(0.88rem, 2.8vw, 0.96rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   border: none;
-  background: transparent;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.45), 0 6px 22px rgba(0, 0, 0, 0.65);
   cursor: pointer;
-  z-index: 30;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  transform-origin: center center;
+  transition: box-shadow 0.25s ease, background-color 0.2s ease;
 }
 
-.scMobileCTAPulse {
+.scMobileBtnArrow {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.scMobileBtnGlowHalo {
   position: absolute;
-  inset: 0;
+  inset: -4px;
   border-radius: 9999px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 0 35px rgba(168, 85, 247, 0.4);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.scMobileGetStartedBtn:hover .scMobileBtnGlowHalo,
+.scMobileGetStartedBtn:active .scMobileBtnGlowHalo {
+  opacity: 1;
+}
+
+/* ── Bottom Right Handwritten Script ── */
+.scMobileBottomScript {
+  position: absolute;
+  bottom: clamp(14px, 3vh, 22px);
+  right: clamp(10px, 3.5vw, 18px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-size: clamp(0.86rem, 2.8vw, 1.02rem);
+  line-height: 1.05;
+  color: #e2e8f0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  transform: rotate(-9deg);
   pointer-events: none;
 }
 
-.scMobileCTA:active .scMobileCTAPulse {
-  opacity: 1;
+.scMobileBottomSquiggle {
+  width: 38px;
+  height: 8px;
+  margin-top: 2px;
 }
+
