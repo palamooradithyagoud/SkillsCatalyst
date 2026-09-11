@@ -19,6 +19,11 @@ import {
   User,
   Search,
   LifeBuoy,
+  ArrowLeft,
+  GraduationCap,
+  Newspaper,
+  Calendar,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -49,6 +54,14 @@ const bottomBarItems = [
   { name: "Profile", href: "/settings", icon: UserIcon },
 ];
 
+const exploreBottomBarItems = [
+  { id: "trending", name: "Trending", icon: Flame },
+  { id: "scholarships", name: "Grants", icon: GraduationCap },
+  { id: "news", name: "News", icon: Newspaper },
+  { id: "events", name: "Events", icon: Calendar },
+  { id: "community", name: "Guilds", icon: Users },
+];
+
 function MobileNavContent() {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,18 +69,23 @@ function MobileNavContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
+  const [exploreTab, setExploreTab] = useState<string>("trending");
 
   useEffect(() => {
     const checkAttributes = () => {
       if (typeof document !== "undefined") {
         setIsPracticeSubView(document.body.hasAttribute("data-practice-subview"));
         setIsLearningPlayer(document.body.hasAttribute("data-learning-player"));
+        const tabAttr = document.body.getAttribute("data-explore-tab");
+        if (tabAttr && tabAttr !== exploreTab) {
+          setExploreTab(tabAttr);
+        }
       }
     };
     checkAttributes();
-    const interval = setInterval(checkAttributes, 200);
+    const interval = setInterval(checkAttributes, 150);
     return () => clearInterval(interval);
-  }, [pathname]);
+  }, [pathname, exploreTab]);
 
   if (pathname === "/login" || isLoading || !session) {
     return null;
@@ -241,38 +259,110 @@ function MobileNavContent() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Floating 3D Squircle Bottom Navigation Bar (Hidden only inside active video player or practice subviews) ── */}
+      {/* ── Mobile Floating Bottom Navigation Bar ── */}
       {!isHideBottomBar && (
-        <nav aria-label="Mobile Navigation" className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-3 py-2 flex items-center justify-around">
-          {bottomBarItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (pathname === "/" && item.href === "/dashboard");
+        pathname === "/explore" ? (
+          /* ── Dedicated Explore Sub-Downbar with Back Button (Transparent Glass) ── */
+          <nav
+            aria-label="Mobile Explore Navigation"
+            className="md:hidden fixed bottom-3 inset-x-2 max-w-lg mx-auto z-40 rounded-3xl border border-white/50 bg-white/40 backdrop-blur-2xl shadow-[0_16px_40px_rgba(15,23,42,0.1)] px-2.5 py-2 flex items-center justify-between gap-1"
+          >
+            {/* Back Button to leave Explore and restore standard downbar */}
+            <div
+              className="flex flex-col items-center justify-center cursor-pointer select-none shrink-0 border-r border-slate-300/60 pr-2"
+              onClick={() => router.push("/dashboard")}
+            >
+              <ThreeDSquircleTile
+                icon={ArrowLeft}
+                isActive={false}
+                size="sm"
+                label="Back"
+                onClick={() => router.push("/dashboard")}
+              />
+              <span className="text-[9px] tracking-tight font-black mt-1 text-slate-700">
+                Back
+              </span>
+            </div>
 
-            return (
-              <div
-                key={item.name}
-                className="flex flex-col items-center justify-center cursor-pointer select-none"
-                onClick={() => router.push(item.href)}
-              >
-                <ThreeDSquircleTile
-                  icon={item.icon}
-                  isActive={isActive}
-                  size="md"
-                  label={item.name}
+            {/* 5 Explore Tabs */}
+            <div className="flex-1 flex items-center justify-around">
+              {exploreBottomBarItems.map((item) => {
+                const isActive = exploreTab === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col items-center justify-center cursor-pointer select-none"
+                    onClick={() => {
+                      setExploreTab(item.id);
+                      if (typeof document !== "undefined") {
+                        document.body.setAttribute("data-explore-tab", item.id);
+                      }
+                      router.replace(`/explore?tab=${item.id}`, { scroll: false });
+                      window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
+                    }}
+                  >
+                    <ThreeDSquircleTile
+                      icon={item.icon}
+                      isActive={isActive}
+                      size="sm"
+                      label={item.name}
+                      onClick={() => {
+                        setExploreTab(item.id);
+                        if (typeof document !== "undefined") {
+                          document.body.setAttribute("data-explore-tab", item.id);
+                        }
+                        router.replace(`/explore?tab=${item.id}`, { scroll: false });
+                        window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
+                      }}
+                    />
+                    <span
+                      className={`text-[9px] tracking-tight font-extrabold mt-1 transition-colors ${
+                        isActive ? "text-[#234B3B]" : "text-slate-500"
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </nav>
+        ) : (
+          /* ── Standard 5-Item Mobile Navigation Bar ── */
+          <nav
+            aria-label="Mobile Navigation"
+            className="md:hidden fixed bottom-3 inset-x-3 max-w-md mx-auto z-40 rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] px-3 py-2 flex items-center justify-around"
+          >
+            {bottomBarItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (pathname === "/" && item.href === "/dashboard");
+
+              return (
+                <div
+                  key={item.name}
+                  className="flex flex-col items-center justify-center cursor-pointer select-none"
                   onClick={() => router.push(item.href)}
-                />
-                <span
-                  className={`text-[10px] tracking-tight font-bold mt-1 transition-colors ${
-                    isActive ? "text-[#234B3B]" : "text-slate-500"
-                  }`}
                 >
-                  {item.name}
-                </span>
-              </div>
-            );
-          })}
-        </nav>
+                  <ThreeDSquircleTile
+                    icon={item.icon}
+                    isActive={isActive}
+                    size="md"
+                    label={item.name}
+                    onClick={() => router.push(item.href)}
+                  />
+                  <span
+                    className={`text-[10px] tracking-tight font-bold mt-1 transition-colors ${
+                      isActive ? "text-[#234B3B]" : "text-slate-500"
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </div>
+              );
+            })}
+          </nav>
+        )
       )}
     </>
   );
