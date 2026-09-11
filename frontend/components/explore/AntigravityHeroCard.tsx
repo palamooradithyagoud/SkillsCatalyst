@@ -11,35 +11,32 @@ import {
 
 interface AntigravityHeroCardProps {
   children: React.ReactNode;
-  glowColor?: string; // e.g. "rgba(99,102,241,0.2)" or "rgba(59,130,246,0.2)"
+  glowColor?: string;
   className?: string;
 }
 
 export default function AntigravityHeroCard({
   children,
-  glowColor = "rgba(99,102,241,0.2)",
+  glowColor = "rgba(99,102,241,0.22)",
   className = "",
 }: AntigravityHeroCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Normalized mouse coordinates from -0.5 to 0.5
+  // Normalized mouse coordinates
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  // Pixel coordinates for specular spotlight
+  // Spotlight coordinates
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Spring physics for natural weightless response
-  const mouseXSpring = useSpring(x, { stiffness: 260, damping: 26 });
-  const mouseYSpring = useSpring(y, { stiffness: 260, damping: 26 });
+  // Lightweight snappy spring
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
 
-  // 3D Tilt transforms (controlled angle for elegance)
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
-
-  // Subtle floating elevation on hover
-  const translateZ = useTransform(mouseXSpring, [-0.5, 0.5], ["10px", "10px"]);
+  // 3D Tilt transforms
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["4deg", "-4deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-4deg", "4deg"]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -48,11 +45,8 @@ export default function AntigravityHeroCard({
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
 
-    const xPct = currentX / rect.width - 0.5;
-    const yPct = currentY / rect.height - 0.5;
-
-    x.set(xPct);
-    y.set(yPct);
+    x.set(currentX / rect.width - 0.5);
+    y.set(currentY / rect.height - 0.5);
 
     mouseX.set(currentX);
     mouseY.set(currentY);
@@ -63,11 +57,11 @@ export default function AntigravityHeroCard({
     y.set(0);
   };
 
-  const specularBackground = useMotionTemplate`radial-gradient(450px circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.12), transparent 75%)`;
+  const specularBackground = useMotionTemplate`radial-gradient(350px circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.09), transparent 75%)`;
 
   return (
     <div
-      style={{ perspective: 1200 }}
+      style={{ perspective: 1000 }}
       className="w-full"
     >
       <motion.div
@@ -78,34 +72,28 @@ export default function AntigravityHeroCard({
           rotateX,
           rotateY,
           transformStyle: "preserve-3d",
+          willChange: "transform",
         }}
-        whileHover={{ scale: 1.01 }}
-        transition={{ type: "spring", stiffness: 350, damping: 28 }}
-        className={`group relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-10 border border-slate-800 shadow-[0_24px_55px_rgba(15,23,42,0.25)] hover:border-slate-700/80 transition-colors ${className}`}
+        className={`group relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-10 border border-slate-800 shadow-[0_20px_45px_rgba(15,23,42,0.2)] hover:border-slate-700/80 transition-colors ${className}`}
       >
-        {/* Living Ambient Gradient Background */}
-        <motion.div
-          animate={{
-            scale: [1, 1.08, 1],
-            opacity: [0.35, 0.55, 0.35],
-          }}
-          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-          style={{ background: glowColor }}
-          className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full blur-3xl"
+        {/* Zero-Lag Hardware-Accelerated Static Radial Aura */}
+        <div
+          style={{ background: `radial-gradient(circle at 85% 15%, ${glowColor}, transparent 65%)` }}
+          className="pointer-events-none absolute inset-0 z-0"
         />
 
-        {/* Dynamic Specular Light Glare that follows cursor */}
+        {/* Dynamic Specular Light Glare that follows cursor on desktop */}
         <motion.div
-          className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-30"
+          className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-20 hidden md:block"
           style={{ background: specularBackground }}
         />
 
         {/* Antigravity isometric micro-grid */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40 z-0" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:28px_28px] opacity-35 z-0" />
 
         {/* Content with Z-axis depth */}
         <div
-          style={{ transform: "translateZ(26px)" }}
+          style={{ transform: "translateZ(20px)" }}
           className="relative z-10 w-full"
         >
           {children}

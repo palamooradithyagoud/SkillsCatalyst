@@ -284,14 +284,15 @@ function MobileNavContent() {
               </span>
             </div>
 
-            {/* 5 Explore Tabs */}
-            <div className="flex-1 flex items-center justify-around">
+            {/* 5 Explore Tabs with Butter-Smooth Sliding Indicator */}
+            <div className="flex-1 flex items-center justify-around relative">
               {exploreBottomBarItems.map((item) => {
                 const isActive = exploreTab === item.id;
                 return (
-                  <div
+                  <motion.div
                     key={item.id}
-                    className="flex flex-col items-center justify-center cursor-pointer select-none"
+                    whileTap={{ scale: 0.9 }}
+                    className="relative flex flex-col items-center justify-center cursor-pointer select-none py-1 px-1.5 rounded-2xl"
                     onClick={() => {
                       setExploreTab(item.id);
                       if (typeof document !== "undefined") {
@@ -301,28 +302,43 @@ function MobileNavContent() {
                       window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
                     }}
                   >
-                    <ThreeDSquircleTile
-                      icon={item.icon}
-                      isActive={isActive}
-                      size="sm"
-                      label={item.name}
-                      onClick={() => {
-                        setExploreTab(item.id);
-                        if (typeof document !== "undefined") {
-                          document.body.setAttribute("data-explore-tab", item.id);
-                        }
-                        router.replace(`/explore?tab=${item.id}`, { scroll: false });
-                        window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
-                      }}
-                    />
+                    {/* Active Sliding Frosted Glass Pill */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeMobileExploreTabPill"
+                        className="absolute inset-0 bg-white/75 backdrop-blur-md rounded-2xl border border-white/85 shadow-xs -z-10"
+                        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      />
+                    )}
+
+                    <motion.div
+                      animate={{ scale: isActive ? 1.08 : 1, y: isActive ? -1 : 0 }}
+                      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                    >
+                      <ThreeDSquircleTile
+                        icon={item.icon}
+                        isActive={isActive}
+                        size="sm"
+                        label={item.name}
+                        onClick={() => {
+                          setExploreTab(item.id);
+                          if (typeof document !== "undefined") {
+                            document.body.setAttribute("data-explore-tab", item.id);
+                          }
+                          router.replace(`/explore?tab=${item.id}`, { scroll: false });
+                          window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
+                        }}
+                      />
+                    </motion.div>
+
                     <span
-                      className={`text-[9px] tracking-tight font-extrabold mt-1 transition-colors ${
+                      className={`text-[9px] tracking-tight font-extrabold mt-0.5 transition-colors ${
                         isActive ? "text-[#234B3B]" : "text-slate-500"
                       }`}
                     >
                       {item.name}
                     </span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

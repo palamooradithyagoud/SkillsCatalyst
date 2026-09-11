@@ -235,12 +235,7 @@ function ExplorePageContent() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28"
-    >
+    <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28">
       {/* ── Top Header ── */}
       <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
@@ -299,9 +294,10 @@ function ExplorePageContent() {
         </div>
       </div>
 
-      {/* ── Tab Views: Trending (Existing Content) ── */}
-      {activeTab === "trending" && (
-        <div className="space-y-6">
+      {/* ── Normal Tab Views ── */}
+          {/* ── Tab Views: Trending (Existing Content) ── */}
+          {activeTab === "trending" && (
+            <div className="space-y-6">
 
       {/* ── 1. Foundation Carousel (Compact Poster Cards on Smartphone) ── */}
       <div className="space-y-2.5 sm:space-y-3">
@@ -691,7 +687,7 @@ function ExplorePageContent() {
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 

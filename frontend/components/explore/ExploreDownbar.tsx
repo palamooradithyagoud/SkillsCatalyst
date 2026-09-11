@@ -64,25 +64,31 @@ export default function ExploreDownbar({
               <motion.div
                 layoutId="activeExploreTabIndicator"
                 className="absolute inset-0 bg-white/80 backdrop-blur-md rounded-full border border-white/90 shadow-xs -z-10"
-                transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             )}
 
-            <Icon
-              className={`w-4 h-4 shrink-0 transition-colors ${
-                isActive
-                  ? tab.id === "trending"
-                    ? "text-orange-500 fill-orange-500/20"
-                    : tab.id === "scholarships"
-                    ? "text-indigo-600"
-                    : tab.id === "news"
-                    ? "text-blue-600"
-                    : tab.id === "events"
-                    ? "text-purple-600"
-                    : "text-emerald-600"
-                  : "text-slate-400"
-              }`}
-            />
+            <motion.div
+              animate={{ scale: isActive ? 1.08 : 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="shrink-0 flex items-center justify-center"
+            >
+              <Icon
+                className={`w-4 h-4 transition-colors ${
+                  isActive
+                    ? tab.id === "trending"
+                      ? "text-orange-500 fill-orange-500/20"
+                      : tab.id === "scholarships"
+                      ? "text-indigo-600"
+                      : tab.id === "news"
+                      ? "text-blue-600"
+                      : tab.id === "events"
+                      ? "text-purple-600"
+                      : "text-emerald-600"
+                    : "text-slate-400"
+                }`}
+              />
+            </motion.div>
 
             <span className="inline-block leading-none">
               {tab.label}
