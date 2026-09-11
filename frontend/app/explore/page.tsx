@@ -204,6 +204,9 @@ function ExplorePageContent() {
     if (typeof document !== "undefined") {
       document.body.setAttribute("data-explore-tab", activeTab);
     }
+  }, [activeTab]);
+
+  useEffect(() => {
     const handleExploreTabChange = (e: any) => {
       if (e.detail && ["trending", "scholarships", "news", "events", "community"].includes(e.detail)) {
         setActiveTab(e.detail);
@@ -216,7 +219,7 @@ function ExplorePageContent() {
         document.body.removeAttribute("data-explore-tab");
       }
     };
-  }, [activeTab]);
+  }, []);
 
   const handleSelectTab = (tab: ExploreTabId) => {
     setActiveTab(tab);

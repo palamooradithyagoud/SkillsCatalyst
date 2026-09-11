@@ -72,6 +72,16 @@ function MobileNavContent() {
   const [exploreTab, setExploreTab] = useState<string>("trending");
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/explore") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab && ["trending", "scholarships", "news", "events", "community"].includes(tab)) {
+        setExploreTab(tab);
+      }
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     const checkAttributes = () => {
       if (typeof document !== "undefined") {
         setIsPracticeSubView(document.body.hasAttribute("data-practice-subview"));
@@ -84,7 +94,18 @@ function MobileNavContent() {
     };
     checkAttributes();
     const interval = setInterval(checkAttributes, 150);
-    return () => clearInterval(interval);
+
+    const handleExploreTabChange = (e: any) => {
+      if (e.detail && typeof e.detail === "string") {
+        setExploreTab(e.detail);
+      }
+    };
+    window.addEventListener("explore-tab-change", handleExploreTabChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("explore-tab-change", handleExploreTabChange);
+    };
   }, [pathname, exploreTab]);
 
   if (pathname === "/login" || isLoading || !session) {
@@ -268,31 +289,34 @@ function MobileNavContent() {
             className="md:hidden fixed bottom-3 inset-x-2 max-w-lg mx-auto z-40 rounded-3xl border border-white/50 bg-white/40 backdrop-blur-2xl shadow-[0_16px_40px_rgba(15,23,42,0.1)] px-2.5 py-2 flex items-center justify-between gap-1"
           >
             {/* Back Button to leave Explore and restore standard downbar */}
-            <div
-              className="flex flex-col items-center justify-center cursor-pointer select-none shrink-0 border-r border-slate-300/60 pr-2"
+            <button
+              type="button"
+              className="flex flex-col items-center justify-center cursor-pointer select-none shrink-0 border-r border-slate-300/60 pr-2 bg-transparent border-0 outline-none active:scale-90 transition-transform"
               onClick={() => router.push("/dashboard")}
+              aria-label="Back to Dashboard"
             >
-              <ThreeDSquircleTile
-                icon={ArrowLeft}
-                isActive={false}
-                size="sm"
-                label="Back"
-                onClick={() => router.push("/dashboard")}
-              />
+              <div className="pointer-events-none">
+                <ThreeDSquircleTile
+                  icon={ArrowLeft}
+                  isActive={false}
+                  size="sm"
+                  label="Back"
+                />
+              </div>
               <span className="text-[9px] tracking-tight font-black mt-1 text-slate-700">
                 Back
               </span>
-            </div>
+            </button>
 
             {/* 5 Explore Tabs with Butter-Smooth Sliding Indicator */}
             <div className="flex-1 flex items-center justify-around relative">
               {exploreBottomBarItems.map((item) => {
                 const isActive = exploreTab === item.id;
                 return (
-                  <motion.div
+                  <button
                     key={item.id}
-                    whileTap={{ scale: 0.9 }}
-                    className="relative flex flex-col items-center justify-center cursor-pointer select-none py-1 px-1.5 rounded-2xl"
+                    type="button"
+                    className="relative flex flex-col items-center justify-center cursor-pointer select-none py-1 px-1 rounded-2xl bg-transparent border-0 outline-none active:scale-95 transition-transform"
                     onClick={() => {
                       setExploreTab(item.id);
                       if (typeof document !== "undefined") {
@@ -301,44 +325,38 @@ function MobileNavContent() {
                       router.replace(`/explore?tab=${item.id}`, { scroll: false });
                       window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
                     }}
+                    aria-label={item.name}
                   >
                     {/* Active Sliding Frosted Glass Pill */}
                     {isActive && (
                       <motion.div
                         layoutId="activeMobileExploreTabPill"
                         className="absolute inset-0 bg-white/75 backdrop-blur-md rounded-2xl border border-white/85 shadow-xs -z-10"
-                        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
                       />
                     )}
 
-                    <motion.div
-                      animate={{ scale: isActive ? 1.08 : 1, y: isActive ? -1 : 0 }}
-                      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                    <div
+                      className={`transition-transform duration-200 pointer-events-none ${
+                        isActive ? "scale-105 -translate-y-0.5" : "scale-100"
+                      }`}
                     >
                       <ThreeDSquircleTile
                         icon={item.icon}
                         isActive={isActive}
                         size="sm"
                         label={item.name}
-                        onClick={() => {
-                          setExploreTab(item.id);
-                          if (typeof document !== "undefined") {
-                            document.body.setAttribute("data-explore-tab", item.id);
-                          }
-                          router.replace(`/explore?tab=${item.id}`, { scroll: false });
-                          window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
-                        }}
                       />
-                    </motion.div>
+                    </div>
 
                     <span
-                      className={`text-[9px] tracking-tight font-extrabold mt-0.5 transition-colors ${
+                      className={`text-[9px] tracking-tight font-extrabold mt-0.5 transition-colors pointer-events-none ${
                         isActive ? "text-[#234B3B]" : "text-slate-500"
                       }`}
                     >
                       {item.name}
                     </span>
-                  </motion.div>
+                  </button>
                 );
               })}
             </div>

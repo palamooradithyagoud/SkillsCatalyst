@@ -74,7 +74,7 @@ export default function AntigravityHeroCard({
           transformStyle: "preserve-3d",
           willChange: "transform",
         }}
-        className={`group relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-10 border border-slate-800 shadow-[0_20px_45px_rgba(15,23,42,0.2)] hover:border-slate-700/80 transition-colors ${className}`}
+        className={`group relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-10 border border-slate-800 shadow-[0_20px_45px_rgba(15,23,42,0.2)] hover:border-slate-700/80 transition-colors [transform:translateZ(0)] [-webkit-backface-visibility:hidden] [backface-visibility:hidden] ${className}`}
       >
         {/* Zero-Lag Hardware-Accelerated Static Radial Aura */}
         <div
