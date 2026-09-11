@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -23,7 +23,16 @@ import {
   Trophy,
   X,
   ArrowRight,
+  GraduationCap,
+  Newspaper,
+  Calendar,
+  Users,
 } from "lucide-react";
+import ScholarshipsWidget from "@/components/explore/ScholarshipsWidget";
+import TechNewsWidget from "@/components/explore/TechNewsWidget";
+import EventsWidget from "@/components/explore/EventsWidget";
+import CommunityWidget from "@/components/explore/CommunityWidget";
+import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
 
 // Foundation items for Explore feed
 const AI_PICKS = [
@@ -170,10 +179,52 @@ const HACKATHONS = [
   { title: "Next.js Web3 Hackathon", prize: "₹5,00,000", status: "Starts in 3 Days", tag: "FullStack" },
 ];
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [companyInput, setCompanyInput] = useState("");
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+
+  const initialTab = (searchParams.get("tab") as ExploreTabId) || "trending";
+  const [activeTab, setActiveTab] = useState<ExploreTabId>(
+    ["trending", "scholarships", "news", "events", "community"].includes(initialTab)
+      ? initialTab
+      : "trending"
+  );
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as ExploreTabId;
+    if (tabParam && ["trending", "scholarships", "news", "events", "community"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Sync activeTab attribute on document.body for instant MobileNav synchronization
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-explore-tab", activeTab);
+    }
+    const handleExploreTabChange = (e: any) => {
+      if (e.detail && ["trending", "scholarships", "news", "events", "community"].includes(e.detail)) {
+        setActiveTab(e.detail);
+      }
+    };
+    window.addEventListener("explore-tab-change", handleExploreTabChange);
+    return () => {
+      window.removeEventListener("explore-tab-change", handleExploreTabChange);
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-explore-tab");
+      }
+    };
+  }, [activeTab]);
+
+  const handleSelectTab = (tab: ExploreTabId) => {
+    setActiveTab(tab);
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-explore-tab", tab);
+    }
+    router.replace(`/explore?tab=${tab}`, { scroll: false });
+  };
 
   const handleCompanySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +239,7 @@ export default function ExplorePage() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="max-w-7xl mx-auto space-y-6 pb-12"
+      className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28"
     >
       {/* ── Top Header ── */}
       <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md relative overflow-hidden">
@@ -200,19 +251,57 @@ export default function ExplorePage() {
               <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">Explore</h1>
+              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+                Explore
+              </h1>
               <p className="text-slate-500 text-[11px] sm:text-sm font-semibold mt-0.5">
-                Curated roadmaps &amp; skill paths
+                {activeTab === "trending" && "Curated roadmaps & skill paths"}
+                {activeTab === "scholarships" && "Global student grants & tech scholarships"}
+                {activeTab === "news" && "Real-time AI & engineering news ticker"}
+                {activeTab === "events" && "Global hackathons, keynotes & summits"}
+                {activeTab === "community" && "Peer study pods, tech guilds & referrals"}
               </p>
             </div>
           </div>
 
-          <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-orange-500/25 shrink-0">
-            <Flame className="w-3.5 h-3.5 text-white fill-white" />
-            <span>Trending</span>
-          </span>
+          <div className="flex items-center gap-2">
+            {activeTab === "trending" && (
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-orange-500/25 shrink-0">
+                <Flame className="w-3.5 h-3.5 text-white fill-white" />
+                <span>Trending</span>
+              </span>
+            )}
+            {activeTab === "scholarships" && (
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-indigo-600/25 shrink-0">
+                <GraduationCap className="w-3.5 h-3.5 text-white" />
+                <span>Scholarships</span>
+              </span>
+            )}
+            {activeTab === "news" && (
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-emerald-600/25 shrink-0">
+                <Newspaper className="w-3.5 h-3.5 text-white" />
+                <span>Tech News</span>
+              </span>
+            )}
+            {activeTab === "events" && (
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-purple-600/25 shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-white" />
+                <span>Events</span>
+              </span>
+            )}
+            {activeTab === "community" && (
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-teal-600/25 shrink-0">
+                <Users className="w-3.5 h-3.5 text-white" />
+                <span>Community</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* ── Tab Views: Trending (Existing Content) ── */}
+      {activeTab === "trending" && (
+        <div className="space-y-6">
 
       {/* ── 1. Foundation Carousel (Compact Poster Cards on Smartphone) ── */}
       <div className="space-y-2.5 sm:space-y-3">
@@ -489,6 +578,27 @@ export default function ExplorePage() {
           </div>
         </div>
       </div>
+      </div>
+      )}
+
+      {/* ── 2. Scholarships Widget ── */}
+      {activeTab === "scholarships" && <ScholarshipsWidget />}
+
+      {/* ── 3. Tech News Widget ── */}
+      {activeTab === "news" && <TechNewsWidget />}
+
+      {/* ── 4. Events Widget ── */}
+      {activeTab === "events" && <EventsWidget />}
+
+      {/* ── 5. Community Widget ── */}
+      {activeTab === "community" && <CommunityWidget />}
+
+      {/* ── Desktop Floating Downbar Dock ── */}
+      <ExploreDownbar
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
+        className="hidden md:flex"
+      />
 
       {/* ── Programming Language Selection Modal ── */}
       <AnimatePresence>
@@ -584,3 +694,18 @@ export default function ExplorePage() {
     </motion.div>
   );
 }
+
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-7xl mx-auto p-8 text-center text-slate-400 font-bold">
+          Loading Explore...
+        </div>
+      }
+    >
+      <ExplorePageContent />
+    </Suspense>
+  );
+}
+
