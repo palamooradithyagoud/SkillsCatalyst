@@ -90,13 +90,7 @@ export default function EventsWidget() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="space-y-6 max-w-5xl mx-auto"
-    >
+    <div className="space-y-6 max-w-5xl mx-auto">
       {/* ── Spatial Hero Banner with Antigravity 3D Tilt & Specular Lighting ── */}
       <AntigravityHeroCard glowColor="rgba(168, 85, 247, 0.25)">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -292,6 +286,6 @@ export default function EventsWidget() {
           })}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
