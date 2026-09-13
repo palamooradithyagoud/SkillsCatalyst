@@ -289,14 +289,19 @@ function MobileNavContent() {
             className="md:hidden fixed bottom-3 inset-x-2 max-w-lg mx-auto z-40 rounded-3xl border border-white/50 bg-white/40 backdrop-blur-2xl shadow-[0_16px_40px_rgba(15,23,42,0.1)] px-2.5 py-2 flex items-center justify-between gap-1"
           >
             {/* Back Button to leave Explore and restore standard downbar */}
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               className="flex flex-col items-center justify-center cursor-pointer select-none shrink-0 border-r border-slate-300/60 pr-2 bg-transparent border-0 outline-none active:scale-90 transition-transform"
               onClick={() => router.push("/dashboard")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") router.push("/dashboard");
+              }}
               aria-label="Back to Dashboard"
             >
               <div className="pointer-events-none">
                 <ThreeDSquircleTile
+                  as="div"
                   icon={ArrowLeft}
                   isActive={false}
                   size="sm"
@@ -306,16 +311,17 @@ function MobileNavContent() {
               <span className="text-[9px] tracking-tight font-black mt-1 text-slate-700">
                 Back
               </span>
-            </button>
+            </div>
 
             {/* 5 Explore Tabs with Butter-Smooth Sliding Indicator */}
             <div className="flex-1 flex items-center justify-around relative">
               {exploreBottomBarItems.map((item) => {
                 const isActive = exploreTab === item.id;
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     className="relative flex flex-col items-center justify-center cursor-pointer select-none py-1 px-1 rounded-2xl bg-transparent border-0 outline-none active:scale-95 transition-transform"
                     onClick={() => {
                       setExploreTab(item.id);
@@ -323,7 +329,15 @@ function MobileNavContent() {
                         document.body.setAttribute("data-explore-tab", item.id);
                       }
                       router.replace(`/explore?tab=${item.id}`, { scroll: false });
-                      window.dispatchEvent(new CustomEvent("explore-tab-change", { detail: item.id }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setExploreTab(item.id);
+                        if (typeof document !== "undefined") {
+                          document.body.setAttribute("data-explore-tab", item.id);
+                        }
+                        router.replace(`/explore?tab=${item.id}`, { scroll: false });
+                      }
                     }}
                     aria-label={item.name}
                   >
@@ -342,6 +356,7 @@ function MobileNavContent() {
                       }`}
                     >
                       <ThreeDSquircleTile
+                        as="div"
                         icon={item.icon}
                         isActive={isActive}
                         size="sm"
@@ -356,7 +371,7 @@ function MobileNavContent() {
                     >
                       {item.name}
                     </span>
-                  </button>
+                  </div>
                 );
               })}
             </div>

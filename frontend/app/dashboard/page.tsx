@@ -80,22 +80,28 @@ export default function DashboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="max-w-7xl mx-auto space-y-2.5 sm:space-y-3.5"
+      className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-2.5 sm:space-y-3.5"
     >
       {/* ── Main Header Section ── */}
       <motion.div variants={itemVariants}>
         <Header userName={displayName} />
       </motion.div>
 
-      {/* ── Main Content Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Main Area: Hero Banner, 3 Metric Cards, Active Courses Grid */}
-        <motion.div variants={itemVariants} className="lg:col-span-8 xl:col-span-8 space-y-6">
+      {/* ── Main Content Grid: Compact side-by-side without empty gap ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-5 sm:gap-6 items-start">
+        {/* Left Main Area: Hero Banner, 3 Metric Cards, Learning Progress, Trending Skills */}
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-[480px] space-y-4 sm:space-y-5"
+        >
           <MetricCards metrics={data?.metrics} />
         </motion.div>
 
-        {/* Right Panel: Quick Hub Navigation on top, Calendar & Tasks down below */}
-        <motion.div variants={rightPanelVariants} className="lg:col-span-4 xl:col-span-4 space-y-4 sm:space-y-5 sticky top-6">
+        {/* Right / Middle Area: Quick Hub on top/middle, Calendar & Tasks downside */}
+        <motion.div
+          variants={rightPanelVariants}
+          className="w-full max-w-[540px] space-y-4 sm:space-y-5 sticky top-6"
+        >
           <QuickHubNav />
           <UpcomingList items={upcomingItems} />
         </motion.div>

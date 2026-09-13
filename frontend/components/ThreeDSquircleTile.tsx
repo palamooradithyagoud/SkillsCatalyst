@@ -14,6 +14,7 @@ export interface ThreeDSquircleTileProps {
   filled?: boolean;
   label?: string;
   className?: string;
+  as?: "button" | "div";
 }
 
 export default function ThreeDSquircleTile({
@@ -27,6 +28,7 @@ export default function ThreeDSquircleTile({
   filled = false,
   label,
   className = "",
+  as = "button",
 }: ThreeDSquircleTileProps) {
   const [isRippling, setIsRippling] = useState(false);
 
@@ -56,9 +58,12 @@ export default function ThreeDSquircleTile({
     ? "text-[#234B3B] font-bold"
     : "text-slate-600 group-hover:text-slate-900";
 
+  const Component = as === "div" ? motion.div : motion.button;
+  const buttonProps = as === "div" ? {} : { type: "button" as const };
+
   return (
-    <motion.button
-      type="button"
+    <Component
+      {...buttonProps}
       aria-label={label || text || "Navigation Item"}
       onClick={handleClick}
       whileHover={{ scale: 1.05 }}
@@ -140,6 +145,6 @@ export default function ThreeDSquircleTile({
           </span>
         )}
       </span>
-    </motion.button>
+    </Component>
   );
 }
