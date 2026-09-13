@@ -20,7 +20,7 @@ export default function Header({ userName = "Palamoor" }: HeaderProps) {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" as const }}
-      className="flex flex-row items-start justify-between gap-3 sm:gap-6 mb-4 sm:mb-8"
+      className="flex flex-row items-start justify-between gap-3 sm:gap-6 mb-1 sm:mb-2"
     >
       {/* Left: Title block */}
       <div className="flex-1 min-w-0">
