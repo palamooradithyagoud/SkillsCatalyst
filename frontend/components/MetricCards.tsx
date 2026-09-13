@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { fetchSavedPlaylists, fetchPlaylistVideos, Playlist } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PricingModal from "@/components/PricingModal";
+import EventHeroCard from "@/components/EventHeroCard";
 import { getTrialDaysRemaining, isUserTrialClaimed } from "@/lib/trial";
 
 export interface MetricsData {
@@ -219,53 +220,8 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
 
   return (
     <div className="space-y-6 select-none">
-      {/* ── Top Hero Banner (Forest Green) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-[#234B3B] p-3.5 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between min-h-[100px] sm:min-h-[190px] shadow-sm"
-      >
-        <div className="max-w-md space-y-1.5 sm:space-y-3 z-10 text-center md:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/50 text-emerald-300 text-[10px] sm:text-xs font-black tracking-wider uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-            <span>7-Day Free Trial Available</span>
-          </div>
-          <h2 className="text-sm sm:text-3xl font-extrabold tracking-tight">
-            Learn today, succeed tomorrow!
-          </h2>
-          <p className="text-[11px] sm:text-sm text-emerald-100/90 leading-snug sm:leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
-            Master 20+ career roadmaps, solve 660+ company interview problems, and score resumes with ATS intelligence. Start with our 7-day free trial on 1-Month or 3-Month passes!
-          </p>
-          <div className="pt-0.5 sm:pt-1">
-            <button
-              type="button"
-              onClick={() => setIsPricingModalOpen(true)}
-              className="px-4 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-emerald-400 text-slate-950 font-black text-[11px] sm:text-sm shadow-lg hover:bg-emerald-300 active:scale-95 transition-all cursor-pointer flex items-center gap-2 mx-auto md:mx-0"
-            >
-              <span>✨ View Plans & 7-Day Free Trial</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Prominent SkillsCatalyst Hero Logo Emblem */}
-        <div className="relative shrink-0 mt-4 md:mt-0 z-10 hidden sm:flex items-center justify-center">
-          <motion.div
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 350, damping: 22 }}
-            className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-[24px] sm:rounded-[32px] bg-white p-3 sm:p-5 shadow-2xl shadow-black/30 flex items-center justify-center border border-white/20"
-          >
-            <Image
-              src="/logo.png"
-              alt="SkillsCatalyst Official Logo"
-              width={200}
-              height={200}
-              className="w-full h-full object-contain drop-shadow-sm select-none"
-              priority
-            />
-          </motion.div>
-        </div>
-      </motion.div>
+      {/* ── Top Hero Event Banner with Moving Events & Get PRO Trigger ── */}
+      <EventHeroCard onOpenPricing={() => setIsPricingModalOpen(true)} />
 
       {/* ── 3 High-Contrast Metric Cards (2-Column Mobile Grid, 3-Column Desktop) ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5">
