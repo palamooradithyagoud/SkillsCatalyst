@@ -79,7 +79,7 @@ export default function DashboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="max-w-7xl mx-auto space-y-4 sm:space-y-6"
+      className="max-w-7xl mx-auto space-y-2.5 sm:space-y-3.5"
     >
       {/* ── Main Header Section ── */}
       <motion.div variants={itemVariants}>
