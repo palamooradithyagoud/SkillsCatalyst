@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import MetricCards from "@/components/MetricCards";
+import QuickHubNav from "@/components/QuickHubNav";
 import UpcomingList from "@/components/UpcomingList";
 import PracticeOverview from "@/components/PracticeOverview";
 import PricingModal from "@/components/PricingModal";
@@ -93,8 +94,9 @@ export default function DashboardPage() {
           <MetricCards metrics={data?.metrics} />
         </motion.div>
 
-        {/* Right Panel: Calendar, Date Strip, New Event Button, Homework Progress */}
-        <motion.div variants={rightPanelVariants} className="lg:col-span-4 xl:col-span-4 sticky top-6">
+        {/* Right Panel: Quick Hub Navigation on top, Calendar & Tasks down below */}
+        <motion.div variants={rightPanelVariants} className="lg:col-span-4 xl:col-span-4 space-y-4 sm:space-y-5 sticky top-6">
+          <QuickHubNav />
           <UpcomingList items={upcomingItems} />
         </motion.div>
       </div>
