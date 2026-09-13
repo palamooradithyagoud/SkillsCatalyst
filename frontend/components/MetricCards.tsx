@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen, GraduationCap, FileText, ChevronRight, Plus,
-  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2, Sparkles
+  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2, Sparkles, TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -110,7 +110,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           }
         }
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Silent Background Revalidation (SWR Pattern)
@@ -170,12 +170,12 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           setSavedPlaylists(playlistItems);
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(playlistItems));
-          } catch {}
+          } catch { }
         } else {
           setSavedPlaylists([]);
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify([]));
-          } catch {}
+          } catch { }
         }
       } catch (err) {
         console.warn("Failed to load saved YT playlists:", err);
@@ -438,6 +438,150 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── Trending Skills Section (Below Learning Progress) ── */}
+      <div className="space-y-2.5 sm:space-y-3 pt-1">
+        <div className="w-full max-w-[460px] sm:max-w-[480px] flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-[#7c3aed]" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
+              Trending Skills
+            </h3>
+          </div>
+          <Link
+            href="/learning"
+            className="text-[11px] sm:text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] flex items-center gap-0.5 transition-colors"
+          >
+            <span>View All</span>
+            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </Link>
+        </div>
+
+        <div className="w-full max-w-[460px] sm:max-w-[480px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+          {/* 1. Python */}
+          <motion.div
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push("/learning?query=Python")}
+            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+          >
+            {/* Exact Official Python Logo */}
+            <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="py-blue" x1="12%" y1="12%" x2="80%" y2="80%">
+                  <stop offset="0%" stopColor="#387EB8" />
+                  <stop offset="100%" stopColor="#366994" />
+                </linearGradient>
+                <linearGradient id="py-yellow" x1="15%" y1="25%" x2="85%" y2="85%">
+                  <stop offset="0%" stopColor="#FFE873" />
+                  <stop offset="100%" stopColor="#FFD43B" />
+                </linearGradient>
+              </defs>
+              <path d="M54.7 0C25.5 0 27.3 12.6 27.3 12.6l.03 13.1h27.8v3.9H16.2S0 27.6 0 57.1c0 29.5 16.3 28.5 16.3 28.5h9.7v-13.7s-.5-16.3 16-16.3h27.6s15.5.2 15.5-15V12.7S88.6 0 54.7 0zm-15.3 8.9c2.8 0 5 2.2 5 5s-2.2 5-5 5-5-2.2-5-5 2.2-5 5-5z" fill="url(#py-blue)"/>
+              <path d="M55.3 110c29.2 0 27.4-12.6 27.4-12.6l-.03-13.1H54.9v-3.9h38.9s16.2 2 16.2-27.5c0-29.5-16.3-28.5-16.3-28.5h-9.7v13.7s.5 16.3-16 16.3H50.1s-15.5-.2-15.5 15v21.8s-2.5 12.8 31.4 12.8zm15.3-8.9c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" fill="url(#py-yellow)"/>
+              <circle cx="39.4" cy="13.9" r="4.2" fill="#FFFFFF"/>
+              <circle cx="70.6" cy="96.1" r="4.2" fill="#FFFFFF"/>
+            </svg>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+                Python
+              </h4>
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+                ↑ 24%
+              </span>
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+                1.2M learners
+              </p>
+            </div>
+          </motion.div>
+
+          {/* 2. React.js */}
+          <motion.div
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push("/learning?query=React")}
+            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+          >
+            {/* Exact Official React Atom Logo */}
+            <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="12" cy="12" rx="4.2" ry="11" stroke="#00D8FF" strokeWidth="1.3" />
+              <ellipse cx="12" cy="12" rx="4.2" ry="11" transform="rotate(60 12 12)" stroke="#00D8FF" strokeWidth="1.3" />
+              <ellipse cx="12" cy="12" rx="4.2" ry="11" transform="rotate(120 12 12)" stroke="#00D8FF" strokeWidth="1.3" />
+              <circle cx="12" cy="12" r="2.2" fill="#00D8FF" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+                React.js
+              </h4>
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+                ↑ 18%
+              </span>
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+                850K learners
+              </p>
+            </div>
+          </motion.div>
+
+          {/* 3. Generative AI */}
+          <motion.div
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push("/learning?query=AI")}
+            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+          >
+            {/* Exact Icon provided by user for Generative AI */}
+            <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 relative flex items-center justify-center">
+              <Image
+                src="/images/icons/generative-ai.png"
+                alt="Generative AI"
+                width={28}
+                height={28}
+                className="w-full h-full object-contain"
+                priority
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+                Generative AI
+              </h4>
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+                ↑ 32%
+              </span>
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+                1.5M learners
+              </p>
+            </div>
+          </motion.div>
+
+          {/* 4. UI/UX Design */}
+          <motion.div
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push("/learning?query=UI%2FUX")}
+            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+          >
+            {/* Exact Official Figma Logo */}
+            <svg className="w-5 h-6 sm:w-5.5 sm:h-7 shrink-0" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
+              <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
+              <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
+              <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
+              <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
+            </svg>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+                UI/UX Design
+              </h4>
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+                ↑ 21%
+              </span>
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+                920K learners
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* ── 3-Card Retro Pricing Modal ── */}
