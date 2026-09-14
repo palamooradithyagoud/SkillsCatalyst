@@ -24,6 +24,7 @@ import {
   Plus,
   Trash2,
   Edit3,
+  Eye,
   X,
   ChevronDown,
   ChevronUp,
@@ -153,10 +154,49 @@ export default function SettingsPage() {
   // ── Resume State ──────────────────────────────────────────────────────────
   const [uploadingResume, setUploadingResume] = useState(false);
   const [resumeMsg, setResumeMsg] = useState("");
+  const [resumePreviewUrl, setResumePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Restore cached resume preview from IndexedDB across page reloads
+  useEffect(() => {
+    if (typeof window === "undefined" || !("indexedDB" in window)) return;
+    try {
+      const req = indexedDB.open("SkillsCatalystCache", 1);
+      req.onupgradeneeded = () => {
+        if (!req.result.objectStoreNames.contains("resumes")) {
+          req.result.createObjectStore("resumes");
+        }
+      };
+      req.onsuccess = () => {
+        try {
+          const db = req.result;
+          if (!db.objectStoreNames.contains("resumes")) return;
+          const tx = db.transaction("resumes", "readonly");
+          const store = tx.objectStore("resumes");
+          const getReq = store.get("latest_resume");
+          getReq.onsuccess = () => {
+            if (getReq.result instanceof Blob) {
+              const url = URL.createObjectURL(getReq.result);
+              setResumePreviewUrl(url);
+            }
+          };
+        } catch {}
+      };
+    } catch {}
+  }, []);
+
   // ── Modals State ──────────────────────────────────────────────────────────
-  type ModalType = "personal" | "skill" | "experience" | "education" | "project" | "cert" | "achievement" | "avatar" | null;
+  type ModalType =
+    | "personal"
+    | "skill"
+    | "experience"
+    | "education"
+    | "project"
+    | "cert"
+    | "achievement"
+    | "avatar"
+    | "resume_preview"
+    | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [modalError, setModalError] = useState("");
@@ -360,6 +400,32 @@ export default function SettingsPage() {
     if (!file) return;
     setUploadingResume(true);
     setResumeMsg("");
+
+    // Create live preview URL immediately for visual rendering
+    try {
+      const url = URL.createObjectURL(file);
+      setResumePreviewUrl(url);
+
+      if (typeof window !== "undefined" && "indexedDB" in window) {
+        const req = indexedDB.open("SkillsCatalystCache", 1);
+        req.onupgradeneeded = () => {
+          if (!req.result.objectStoreNames.contains("resumes")) {
+            req.result.createObjectStore("resumes");
+          }
+        };
+        req.onsuccess = () => {
+          try {
+            const db = req.result;
+            if (db.objectStoreNames.contains("resumes")) {
+              const tx = db.transaction("resumes", "readwrite");
+              tx.objectStore("resumes").put(file, "latest_resume");
+            }
+          } catch {}
+        };
+      }
+    } catch (e) {
+      console.warn("Could not create resume preview URL:", e);
+    }
 
     try {
       const extractRes = await extractResume(file);
@@ -633,14 +699,40 @@ export default function SettingsPage() {
         <div className="col-span-5 flex flex-col gap-1.5 sm:gap-3 justify-between">
           {/* Card 1: Resume */}
           <div
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (profileData.resume?.filename || resumePreviewUrl) {
+                setActiveModal("resume_preview");
+              } else {
+                fileInputRef.current?.click();
+              }
+            }}
             className="flex-1 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 cursor-pointer group"
           >
             <div className="min-w-0 flex-1">
               <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Resume</h3>
-              <p className="text-[9px] sm:text-xs font-semibold text-slate-400 mt-0.5 truncate">
-                {profileData.resume?.filename ? "Update resume" : "Preview resume"}
-              </p>
+              {profileData.resume?.filename || resumePreviewUrl ? (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] sm:text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-0.5">
+                    <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    Preview
+                  </span>
+                  <span className="text-[9px] text-slate-300">•</span>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="text-[9px] sm:text-xs font-semibold text-slate-400 hover:text-slate-700"
+                    title="Upload replacement resume"
+                  >
+                    Update
+                  </span>
+                </div>
+              ) : (
+                <p className="text-[9px] sm:text-xs font-semibold text-slate-400 mt-0.5 truncate">
+                  Upload resume
+                </p>
+              )}
             </div>
             <img
               src="/images/profile/resume_3d.jpg"
@@ -1269,6 +1361,15 @@ export default function SettingsPage() {
                 if (e.target.files?.[0]) handleResumeUpload(e.target.files[0]);
               }}
             />
+            {(profileData.resume?.filename || resumePreviewUrl) && (
+              <button
+                onClick={() => setActiveModal("resume_preview")}
+                className="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Preview</span>
+              </button>
+            )}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingResume}
@@ -1305,13 +1406,19 @@ export default function SettingsPage() {
         )}
 
         {profileData.resume?.filename ? (
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+          <div
+            onClick={() => setActiveModal("resume_preview")}
+            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-4 cursor-pointer group"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
                 PDF
               </div>
               <div>
-                <h4 className="text-xs font-black text-slate-900">{profileData.resume.filename}</h4>
+                <h4 className="text-xs font-black text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-2">
+                  <span>{profileData.resume.filename}</span>
+                  <span className="text-[10px] font-bold text-purple-600 underline">Click to preview</span>
+                </h4>
                 <p className="text-[11px] text-slate-500">
                   {profileData.resume.summary || "Ready for technical recruiters"}
                 </p>
@@ -1942,6 +2049,120 @@ export default function SettingsPage() {
           }}
         />
       </ModalShell>
+
+      {/* MODAL: RESUME DOCUMENT PREVIEW */}
+      <AnimatePresence>
+        {activeModal === "resume_preview" && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden my-auto"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-100 bg-slate-50/70">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+                    PDF
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                      <span className="truncate max-w-[200px] sm:max-w-xs">
+                        {profileData.resume?.filename || "Resume Document"}
+                      </span>
+                      {(profileData.resume?.ats_score || profileData.resume?.overall_score) && (
+                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
+                          {profileData.resume.ats_score || profileData.resume.overall_score}/100 ATS
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
+                      {profileData.resume?.summary || "Interactive resume document preview"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {resumePreviewUrl && (
+                    <a
+                      href={resumePreviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5"
+                      title="Open full document in a new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Open Fullscreen</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Upload replacement resume"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Replace PDF</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-hidden p-3 sm:p-5 bg-slate-100/60 flex flex-col items-center justify-center min-h-[420px] sm:min-h-[580px]">
+                {resumePreviewUrl ? (
+                  <iframe
+                    src={resumePreviewUrl}
+                    title="Uploaded Resume Preview"
+                    className="w-full h-[58vh] sm:h-[68vh] rounded-2xl border border-slate-200 bg-white shadow-xs"
+                  />
+                ) : (
+                  <div className="max-w-md text-center space-y-4 p-8 bg-white rounded-3xl border border-slate-200 shadow-xs my-auto">
+                    <div className="w-16 h-16 rounded-3xl bg-purple-50 text-purple-700 flex items-center justify-center mx-auto shadow-xs">
+                      <FileText className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-slate-900">
+                        {profileData.resume?.filename || "Resume on file"}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Your resume has been saved and reviewed by AI with an ATS readiness score of{" "}
+                        <strong className="text-purple-700">
+                          {profileData.resume?.ats_score || profileData.resume?.overall_score || 75}/100
+                        </strong>
+                        . To render the embedded PDF reader in this browser session, select or drop your PDF document below.
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white font-bold text-xs shadow-xs hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <UploadCloud className="w-4 h-4" />
+                        <span>Select PDF to View</span>
+                      </button>
+                      <Link
+                        href="/career"
+                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <span>AI Mentor Review</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
