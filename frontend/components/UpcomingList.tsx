@@ -359,7 +359,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
               onClick={() => setViewMode("weekly")}
               className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 viewMode === "weekly"
-                  ? "bg-[#234B3B] text-white shadow-sm"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-indigo-500/25"
                   : "text-slate-500 hover:text-slate-800"
               }`}
             >
@@ -369,7 +369,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
               onClick={() => setViewMode("monthly")}
               className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 viewMode === "monthly"
-                  ? "bg-[#234B3B] text-white shadow-sm"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-indigo-500/25"
                   : "text-slate-500 hover:text-slate-800"
               }`}
             >
@@ -384,8 +384,8 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
               {formattedSelectedDate}
             </h2>
-            <p className="text-[11px] text-emerald-800 font-extrabold flex items-center gap-1 mt-0.5">
-              <Calendar className="w-3 h-3 text-emerald-700" />
+            <p className="text-[11px] text-indigo-600 font-extrabold flex items-center gap-1 mt-0.5">
+              <Calendar className="w-3 h-3 text-indigo-500" />
               <span>Today: {today.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </p>
           </div>
@@ -394,8 +394,8 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
           </span>
         </div>
 
-        {/* ── Curved Sage-Green Ribbon Date Strip ── */}
-        <div className="bg-[#9baa86] rounded-[22px] p-3.5 my-3 text-white shadow-sm transition-all">
+        {/* ── Curved Purple + Indigo Gradient Ribbon Date Strip ── */}
+        <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 rounded-[22px] p-3.5 my-3 text-white shadow-md shadow-indigo-500/20 transition-all">
           <div className="grid grid-cols-7 gap-1 text-center">
             {days.map((d) => {
               const isSelected = selectedDay === d.date;
@@ -408,7 +408,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                     onClick={() => setSelectedDay(d.date)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-white text-[#234B3B] shadow-md scale-110"
+                        ? "bg-white text-indigo-700 shadow-md scale-110 font-black"
                         : "text-white hover:bg-white/20"
                     }`}
                   >
@@ -454,13 +454,13 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
             onClick={() => setIsAddNoteModalOpen(true)}
             className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors group cursor-pointer"
           >
-            <Edit3 className="w-4 h-4 text-slate-500 group-hover:text-[#234B3B] transition-colors" />
+            <Edit3 className="w-4 h-4 text-slate-500 group-hover:text-indigo-600 transition-colors" />
             <span>Add a note</span>
           </button>
 
           <button
             onClick={() => setIsNewEventModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#234B3B] text-white text-xs font-bold hover:bg-[#1b3b2e] shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 text-white text-xs font-bold hover:opacity-95 shadow-md shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New event</span>
@@ -477,7 +477,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsNewEventModalOpen(true)}
-              className="text-[11px] font-bold text-[#234B3B] hover:underline cursor-pointer"
+              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
             >
               + Add Task
             </button>
@@ -536,7 +536,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                       <button
                         onClick={() => cycleTaskProgress(task.id)}
                         title="Click to update progress"
-                        className="text-slate-400 hover:text-[#234B3B] transition-colors p-1 cursor-pointer"
+                        className="text-slate-400 hover:text-indigo-600 transition-colors p-1 cursor-pointer"
                       >
                         <ArrowUpRight className="w-4 h-4" />
                       </button>
@@ -560,24 +560,24 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                       {/* Segment 1 */}
                       <div
                         className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-                          filledSegments >= 1 ? "bg-[#234B3B]" : "bg-slate-200/80"
+                          filledSegments >= 1 ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-slate-200/80"
                         }`}
                       />
                       {/* Segment 2 */}
                       <div
                         className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-                          filledSegments >= 2 ? "bg-[#234B3B]" : "bg-slate-200/80"
+                          filledSegments >= 2 ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-slate-200/80"
                         }`}
                       />
                       {/* Segment 3 */}
                       <div
                         className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-                          filledSegments >= 3 ? "bg-[#234B3B]" : "bg-slate-200/80"
+                          filledSegments >= 3 ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-slate-200/80"
                         }`}
                       />
                     </div>
 
-                    <span className="text-[11px] font-bold text-slate-600 shrink-0 group-hover/bar:text-[#234B3B] transition-colors">
+                    <span className="text-[11px] font-bold text-slate-600 shrink-0 group-hover/bar:text-indigo-600 transition-colors">
                       {task.progress}%
                     </span>
                   </div>
@@ -602,7 +602,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                 >
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-100 text-[#234B3B] flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                         <Plus className="w-5 h-5" />
                       </div>
                       <div>
@@ -628,7 +628,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
                         placeholder="e.g. Complete Dynamic Programming module"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 font-medium placeholder-slate-400 focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-[#234B3B]/20 outline-none transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 font-medium placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                         required
                         autoFocus
                       />
@@ -643,7 +643,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                         value={newDeadline}
                         onChange={(e) => setNewDeadline(e.target.value)}
                         placeholder="e.g. Sep 10 or 5:00 PM"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 font-medium placeholder-slate-400 focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-[#234B3B]/20 outline-none transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 font-medium placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                       />
                     </div>
 
@@ -659,7 +659,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                             onClick={() => setNewProgress(val)}
                             className={`py-2.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
                               newProgress === val
-                                ? "bg-[#234B3B] text-white border-[#234B3B] shadow-sm"
+                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-xs"
                                 : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                             }`}
                           >
@@ -679,7 +679,7 @@ export default function UpcomingList({ items = [] }: { items?: any[] }) {
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2.5 rounded-xl bg-[#234B3B] text-white text-xs font-bold hover:bg-[#1b3b2e] shadow-md active:scale-95 transition-all cursor-pointer"
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 text-white text-xs font-bold hover:opacity-95 shadow-md shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
                       >
                         Create Task
                       </button>
