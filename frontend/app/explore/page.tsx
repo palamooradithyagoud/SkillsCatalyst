@@ -297,9 +297,38 @@ function ExplorePageContent() {
         </div>
       </div>
 
+      {/* ── Mobile Category Navigation Pills ── */}
+      <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+        {[
+          { id: "trending", name: "Trending", icon: Flame },
+          { id: "scholarships", name: "Grants", icon: GraduationCap },
+          { id: "news", name: "News", icon: Newspaper },
+          { id: "events", name: "Events", icon: Calendar },
+          { id: "community", name: "Guilds", icon: Users },
+        ].map((item) => {
+          const isActive = activeTab === item.id;
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleSelectTab(item.id as ExploreTabId)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
+                isActive
+                  ? "bg-[#234b3b] text-white shadow-xs"
+                  : "bg-white text-slate-600 border border-slate-200"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{item.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Normal Tab Views ── */}
-          {/* ── Tab Views: Trending (Existing Content) ── */}
-          {activeTab === "trending" && (
+      {/* ── Tab Views: Trending (Existing Content) ── */}
+      {activeTab === "trending" && (
             <div className="space-y-6">
 
       {/* ── 1. Foundation Carousel (Compact Poster Cards on Smartphone) ── */}

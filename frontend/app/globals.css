@@ -1,7 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-card: var(--card);
+}
+
 :root {
+  /* shadcn UI variables */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #234b3b;
+  --primary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --card: #ffffff;
+
   /* Backgrounds */
   --bg-base: #f4f6f3;
   --bg-surface: #ffffff;
@@ -72,25 +93,21 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* ────────────── SURFACE CARDS & MORPHING CARD SYSTEM ────────────── */
+/* ────────────── SURFACE CARDS & HOVER SYSTEM ────────────── */
 .card {
   width: 200px;
   height: 260px;
   background-color: #212121;
   box-shadow: 15px 15px 30px #191919,
               -15px -15px 30px #292929;
-  transition: border-radius cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-              transform cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-              box-shadow cubic-bezier(0.075, 0.82, 0.165, 1) 1s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
-  border-bottom-right-radius: 50px !important;
-  border-top-left-radius: 50px !important;
-  transform: scale(1.05);
+  transform: translateY(-3px);
 }
 
-/* Flexible & Responsive Morphing for All Cards */
+/* Smooth, Stable Hover for All Cards — Zero Shape Morphing */
 .card-morph,
 .morph-card,
 .glass,
@@ -113,19 +130,14 @@ input:-webkit-autofill:active {
 .analytics-card,
 .overview-card,
 .mobile-card,
-.mobile-card-compact,
-div[class*="rounded-"][class*="border"]:not(button):not(input):not(nav):not(aside):not(header):not([role="dialog"]):not(.fixed):not(.sticky),
-a[class*="rounded-"][class*="border"]:not(button):not(input):not(nav):not(aside):not(header):not([role="dialog"]):not(.fixed):not(.sticky) {
-  transition: border-radius cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-              transform cubic-bezier(0.075, 0.82, 0.165, 1) 1s,
-              box-shadow cubic-bezier(0.075, 0.82, 0.165, 1) 1s;
+.mobile-card-compact {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
 }
 
 .card-morph:hover,
 .morph-card:hover,
-.glass:hover,
-.glass-card:hover,
-.glass-strong:hover,
 .metric-card:hover,
 .dashboard-card:hover,
 .playlist-card:hover,
@@ -143,12 +155,8 @@ a[class*="rounded-"][class*="border"]:not(button):not(input):not(nav):not(aside)
 .analytics-card:hover,
 .overview-card:hover,
 .mobile-card:hover,
-.mobile-card-compact:hover,
-div[class*="rounded-"][class*="border"]:not(button):not(input):not(nav):not(aside):not(header):not([role="dialog"]):not(.fixed):not(.sticky):hover,
-a[class*="rounded-"][class*="border"]:not(button):not(input):not(nav):not(aside):not(header):not([role="dialog"]):not(.fixed):not(.sticky):hover {
-  border-bottom-right-radius: 50px !important;
-  border-top-left-radius: 50px !important;
-  transform: scale(1.025);
+.mobile-card-compact:hover {
+  transform: translateY(-2px);
 }
 
 .glass {
