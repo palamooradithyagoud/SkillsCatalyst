@@ -36,6 +36,16 @@ import {
   Target,
   Camera,
   Check,
+  ArrowRight,
+  Languages,
+  Terminal,
+  Cloud,
+  Database,
+  Layers,
+  Cpu,
+  GitBranch,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -146,10 +156,17 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Modals State ──────────────────────────────────────────────────────────
-  type ModalType = "skill" | "experience" | "education" | "project" | "cert" | "achievement" | "avatar" | null;
+  type ModalType = "personal" | "skill" | "experience" | "education" | "project" | "cert" | "achievement" | "avatar" | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [modalError, setModalError] = useState("");
+
+  // ── Interactive UI States ─────────────────────────────────────────────────
+  const [showVerifyBanner, setShowVerifyBanner] = useState(true);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [languages, setLanguages] = useState<string[]>(["English"]);
+  const [newLangInput, setNewLangInput] = useState("");
+  const [showAddLang, setShowAddLang] = useState(false);
 
   // ── Progress Stats State ──────────────────────────────────────────────────
   const [progressStats, setProgressStats] = useState<UserProgressStats>({
@@ -246,18 +263,20 @@ export default function SettingsPage() {
   const completionReport = calculateProfileCompletion(profileData);
 
   // ── Handler: Save Personal Details ────────────────────────────────────────
-  const handleSavePersonal = async (e?: React.FormEvent) => {
+  const handleSavePersonal = async (e?: React.FormEvent, customData?: UserProfile) => {
     if (e) e.preventDefault();
     setSavingPersonal(true);
     setPersonalMsg("");
 
-    const res = await savePersonalProfile(personalForm);
+    const dataToSave = customData || personalForm;
+    const res = await savePersonalProfile(dataToSave);
     if (res.success) {
       setPersonalMsg("Personal information updated successfully!");
       setProfileData((prev) => ({
         ...prev,
-        personal: { ...(prev.personal || {}), ...personalForm },
+        personal: { ...(prev.personal || {}), ...dataToSave },
       }));
+      setPersonalForm(dataToSave);
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
     } else {
@@ -265,6 +284,7 @@ export default function SettingsPage() {
     }
     setSavingPersonal(false);
     setTimeout(() => setPersonalMsg(""), 4000);
+    return res;
   };
 
   // ── Handler: Save Career Preferences ──────────────────────────────────────
@@ -458,477 +478,612 @@ export default function SettingsPage() {
     }
   };
 
-  const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Learner");
+  // ── Helper Utilities ──────────────────────────────────────────────────────
+  const getInitials = (name: string) => {
+    if (!name) return "PG";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const getOrgInitials = (orgName: string) => {
+    if (!orgName) return "VC";
+    const words = orgName.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + (words[1] ? words[1][0] : "")).toUpperCase();
+  };
+
+  const getWeekDays = (offset = 0) => {
+    const now = new Date();
+    const base = new Date(now.getTime() + offset * 7 * 24 * 60 * 60 * 1000);
+    const dayOfWeek = base.getDay(); // 0 is Sunday
+    const sunday = new Date(base);
+    sunday.setDate(base.getDate() - dayOfWeek);
+
+    const days = [];
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sunday);
+      d.setDate(sunday.getDate() + i);
+      const isToday = offset === 0 && d.toDateString() === now.toDateString();
+      const isActive = isToday || (offset === 0 && i === 1);
+      days.push({
+        dateNum: d.getDate(),
+        dayName: dayNames[i],
+        monthName: monthNames[d.getMonth()],
+        isToday,
+        active: isActive,
+        duration: isToday ? "25m" : i === 1 ? "10m" : "",
+      });
+    }
+
+    const startStr = `${days[0].dateNum} ${days[0].monthName}`;
+    const endStr = `${days[6].dateNum} ${days[6].monthName}`;
+
+    return { days, rangeLabel: `${startStr} – ${endStr}` };
+  };
+
+  const weekData = getWeekDays(weekOffset);
+  const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Palamoor Adithya Goud");
+  const userHandle = session?.email ? session.email.split("@")[0] : "aadhi00";
+
+  // Categorized skills helper
+  const SKILL_CATEGORIES = [
+    {
+      id: "prog",
+      label: "Programming / scripting Languages",
+      iconType: "terminal",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        const name = (s.skill_name || "").toLowerCase();
+        return (
+          cat.includes("program") ||
+          cat.includes("script") ||
+          cat.includes("language") ||
+          cat === "technical" ||
+          ["python", "c", "c++", "java", "javascript", "typescript", "rust", "go", "ruby", "php"].some((k) => name.includes(k))
+        );
+      },
+    },
+    {
+      id: "cloud",
+      label: "Cloud & Devops",
+      iconType: "cloud",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        const name = (s.skill_name || "").toLowerCase();
+        return (
+          cat.includes("cloud") ||
+          cat.includes("devops") ||
+          ["aws", "azure", "gcp", "docker", "kubernetes", "ci/cd", "terraform"].some((k) => name.includes(k))
+        );
+      },
+    },
+    {
+      id: "db",
+      label: "Databases",
+      iconType: "database",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        const name = (s.skill_name || "").toLowerCase();
+        return (
+          cat.includes("database") ||
+          cat.includes("db") ||
+          ["supabase", "postgres", "sql", "mongodb", "redis", "mysql"].some((k) => name.includes(k))
+        );
+      },
+    },
+    {
+      id: "frameworks",
+      label: "Frameworks",
+      iconType: "layers",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        const name = (s.skill_name || "").toLowerCase();
+        return (
+          cat.includes("framework") ||
+          ["fastapi", "react", "next", "next.js", "nextjs", "django", "express", "flask", "spring", "vue", "angular"].some((k) => name.includes(k))
+        );
+      },
+    },
+    {
+      id: "technologies",
+      label: "Technologies",
+      iconType: "cpu",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        return cat.includes("technolog");
+      },
+    },
+    {
+      id: "tools",
+      label: "Tools & Platforms",
+      iconType: "git",
+      filter: (s: UserSkill) => {
+        const cat = (s.category || "").toLowerCase();
+        const name = (s.skill_name || "").toLowerCase();
+        return (
+          cat.includes("tool") ||
+          cat.includes("platform") ||
+          ["git", "github", "vscode", "visual studio code", "postman", "linux", "jira"].some((k) => name.includes(k))
+        );
+      },
+    },
+    {
+      id: "soft",
+      label: "Soft Skills",
+      iconType: "sparkles",
+      filter: (s: UserSkill) => (s.category || "").toLowerCase().includes("soft"),
+    },
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-8 pb-20 select-none font-sans"
+      className="max-w-4xl mx-auto space-y-4 pb-24 select-none font-sans px-3 sm:px-4"
     >
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. PROFILE HERO BANNER & REAL-TIME COMPLETION METER                 */}
+      {/* 1. TOP BENTO GRID (TECHSNAP STYLE: LARGE LEFT CARD + 3 MINI CARDS)  */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#240A5E] via-[#4A1584] to-[#6B21A8] text-white p-3.5 sm:p-6 lg:p-8 shadow-xl border border-purple-400/30">
-        {/* Subtle background glow effect */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch">
+        {/* Left Card: Vibrant Deep Purple/Violet Monogram */}
+        <div className="md:col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-3xl p-6 sm:p-7 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[290px] group">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5 sm:gap-6">
-          {/* Left: Avatar + Identity + Gamification */}
-          <div className="flex flex-row items-center sm:items-start gap-3 sm:gap-5 text-left flex-1 min-w-0">
-            {/* Avatar with edit overlay */}
-            <div className="relative group cursor-pointer shrink-0" onClick={() => setActiveModal("avatar")}>
-              <div className="w-16 h-16 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl bg-white/10 p-0.5 sm:p-1 border-2 border-purple-300/40 shadow-inner flex items-center justify-center overflow-hidden">
-                {personalForm.avatar_url ? (
-                  <img
-                    src={personalForm.avatar_url}
-                    alt={displayName}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-purple-100 to-white text-[#4A1584] flex items-center justify-center font-black text-2xl sm:text-3xl lg:text-4xl shadow">
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] sm:text-[10px] font-bold">
-                <Camera className="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 text-purple-200" />
-                <span>Change</span>
-              </div>
-              <span className="absolute -bottom-1 -right-1 sm:-bottom-1.5 sm:-right-1.5 px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-amber-400 text-slate-950 shadow-md">
-                Lvl {progressStats.level}
+          {/* Center Monogram Initials */}
+          <div
+            className="flex-1 flex items-center justify-center my-auto py-5 relative z-10 cursor-pointer"
+            onClick={() => setActiveModal("avatar")}
+            title="Change photo or avatar"
+          >
+            {personalForm.avatar_url ? (
+              <img
+                src={personalForm.avatar_url}
+                alt={displayName}
+                className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-3xl border-2 border-purple-300/40 shadow-lg"
+              />
+            ) : (
+              <span className="text-7xl sm:text-8xl lg:text-9xl font-black text-white/95 tracking-tight select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+                {getInitials(displayName)}
               </span>
-            </div>
-
-            {/* Identity Details */}
-            <div className="space-y-0.5 sm:space-y-1.5 flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 justify-start">
-                <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate max-w-[190px] sm:max-w-none">
-                  {displayName}
-                </h1>
-                {profileData.resume?.ats_score && profileData.resume.ats_score >= 80 && (
-                  <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-extrabold bg-purple-500/20 text-purple-200 border border-purple-300/40">
-                    <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Job-Ready ATS
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs sm:text-sm font-semibold text-purple-100/90 truncate">
-                {personalForm.headline || "Aspiring Software Engineer & Lifelong Learner"}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-[10px] sm:text-xs text-purple-200/80 font-medium pt-0.5 sm:pt-1 justify-start">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-200 shrink-0" />
-                  <span className="truncate max-w-[110px] sm:max-w-none">
-                    {personalForm.city ? `${personalForm.city}, ${personalForm.country}` : personalForm.country || "India"}
-                  </span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-200 shrink-0" />
-                  <span className="truncate max-w-[130px] sm:max-w-none">
-                    {session?.email || "learner@skillscatalyst.in"}
-                  </span>
-                </span>
-                {personalForm.phone && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="flex items-center gap-1 text-purple-200 bg-purple-950/60 border border-purple-500/30 px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[11px]">
-                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Private Phone
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Dynamic XP Progress */}
-              <div className="pt-1.5 sm:pt-2 max-w-md w-full">
-                <div className="flex items-center justify-between text-[9px] sm:text-[11px] font-extrabold text-purple-200 mb-0.5 sm:mb-1">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
-                    {progressStats.currentLevelXP.toLocaleString()} / {progressStats.nextLevelXP.toLocaleString()} XP
-                  </span>
-                  <span className="text-amber-300">Level {progressStats.level + 1}</span>
-                </div>
-                <div className="w-full bg-black/30 h-1.5 sm:h-2 rounded-full overflow-hidden p-0.5 border border-white/10">
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400 rounded-full transition-all duration-500"
-                    style={{ width: `${progressStats.xpPercent}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Right: Profile Strength Meter & Action Button */}
-          <div className="w-full lg:w-80 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-white/15 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div>
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-purple-200">
-                  Profile Strength
-                </span>
-                <div className="text-lg sm:text-2xl font-black text-white flex items-center gap-2">
-                  <span>{completionReport.totalPercent}%</span>
-                  <span className="text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-400/20 text-purple-200">
-                    {completionReport.totalPercent >= 80 ? "All-Star" : completionReport.totalPercent >= 50 ? "Intermediate" : "Starter"}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowChecklist(!showChecklist)}
-                className="text-[10px] sm:text-xs font-bold text-purple-200 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <span>{showChecklist ? "Hide Checklist" : "View Checklist"}</span>
-                {showChecklist ? <ChevronUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
-              </button>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-black/30 h-1.5 sm:h-2.5 rounded-full overflow-hidden p-0.5 mb-2 sm:mb-3 border border-white/10">
-              <div
-                className="h-full bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400 rounded-full transition-all duration-700"
-                style={{ width: `${completionReport.totalPercent}%` }}
-              />
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-3 gap-1 sm:gap-2 pt-1.5 sm:pt-2 border-t border-white/10 text-center">
-              <div>
-                <div className="text-[11px] sm:text-xs font-black text-amber-300">🔥 {progressStats.streakDays}d</div>
-                <div className="text-[8px] sm:text-[9px] text-purple-200/80 uppercase font-bold">Streak</div>
-              </div>
-              <div>
-                <div className="text-[11px] sm:text-xs font-black text-purple-300">🏆 {progressStats.badgesCount}</div>
-                <div className="text-[8px] sm:text-[9px] text-purple-200/80 uppercase font-bold">Badges</div>
-              </div>
-              <div>
-                <div className="text-[11px] sm:text-xs font-black text-purple-200">💻 {progressStats.questionsSolved}</div>
-                <div className="text-[8px] sm:text-[9px] text-purple-200/80 uppercase font-bold">Solved</div>
-              </div>
-            </div>
+          {/* Bottom Profile Details */}
+          <div className="relative z-10 space-y-0.5">
+            <p className="text-xs sm:text-sm font-semibold text-purple-200/90">
+              @{userHandle}
+            </p>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight">
+              {displayName}
+            </h2>
+            <p className="text-xs font-medium text-purple-200/80">
+              {personalForm.headline || "Student"}
+            </p>
           </div>
         </div>
 
-        {/* Expandable Checklist Drawer */}
-        <AnimatePresence>
-          {showChecklist && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-6 pt-5 border-t border-white/15 overflow-hidden"
-            >
-              <h3 className="text-xs font-black uppercase tracking-wider text-purple-200 mb-3">
-                Profile Completeness Breakdown
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {Object.entries(completionReport.sections).map(([key, item]) => (
-                  <div
-                    key={key}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-                      item.completed
-                        ? "bg-purple-500/20 border-purple-300/40 text-emerald-100"
-                        : "bg-white/5 border-white/10 text-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {item.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-purple-300 shrink-0" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border border-white/40 flex items-center justify-center text-[9px] text-white/60">
-                          !
-                        </div>
-                      )}
-                      <div>
-                        <div className="font-bold text-white text-[11px]">{item.label}</div>
-                        <div className="text-[9px] text-white/70">{item.details}</div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-black shrink-0 px-1.5 py-0.5 rounded bg-black/20 text-white/90">
-                      {item.score}/{item.maxScore}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 2. SECTION TABS / QUICK JUMP BAR                                    */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold scrollbar-none">
-        <a href="#personal" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          👤 Personal Details
-        </a>
-        <a href="#skills" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          ⚡ Skills Hub ({profileData.skills.length})
-        </a>
-        <a href="#resume" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          📄 Resume Central
-        </a>
-        <a href="#experience" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          💼 Experience & Education
-        </a>
-        <a href="#projects" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          🚀 Projects & Honors
-        </a>
-        <a href="#preferences" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          🎯 Career Preferences
-        </a>
-        <a href="#developer" className="px-3.5 py-2 rounded-xl bg-white border border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/70 text-slate-700 hover:text-purple-900 shadow-sm whitespace-nowrap transition-all">
-          💻 Developer Platforms
-        </a>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 3. SECTION: PERSONAL DETAILS & ABOUT BIO                            */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="personal" className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 text-[#5B1FA6]">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
+        {/* Right Column: 3 Mini Cards */}
+        <div className="md:col-span-5 flex flex-col gap-3 justify-between">
+          {/* Card 1: Resume */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between cursor-pointer group"
+          >
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Personal Details</h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Public professional identity and private contact verification
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Resume</h3>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">
+                {profileData.resume?.filename ? "Update resume" : "Preview resume"}
               </p>
             </div>
-          </div>
-          {personalMsg && (
-            <div className="p-2.5 px-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-purple-600" />
-              <span>{personalMsg}</span>
-            </div>
-          )}
-        </div>
-
-        <form onSubmit={handleSavePersonal} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                Full Legal Name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={personalForm.full_name || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, full_name: e.target.value })}
-                placeholder="e.g. Adithya Palamoor"
-                required
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                Professional Headline
-              </label>
-              <input
-                type="text"
-                value={personalForm.headline || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, headline: e.target.value })}
-                placeholder="e.g. Full Stack Developer | React, Node.js & Cloud"
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                Country
-              </label>
-              <input
-                type="text"
-                value={personalForm.country || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
-                placeholder="e.g. India"
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                State / Region
-              </label>
-              <input
-                type="text"
-                value={personalForm.state || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
-                placeholder="e.g. Telangana"
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                City
-              </label>
-              <input
-                type="text"
-                value={personalForm.city || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
-                placeholder="e.g. Hyderabad"
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block">
-                  Phone Number
-                </label>
-                <span className="text-[10px] font-extrabold text-purple-700 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-                  <Lock className="w-2.5 h-2.5" /> Private • Never shared
-                </span>
-              </div>
-              <input
-                type="tel"
-                value={personalForm.phone || ""}
-                onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
-                placeholder="e.g. +91 9876543210"
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-                Gender Identity
-              </label>
-              <select
-                value={personalForm.gender || "Prefer not to say"}
-                onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
-                className="w-full bg-white border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none cursor-pointer"
-              >
-                <option value="Prefer not to say">Prefer not to say</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Non-binary">Non-binary</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-              About / Professional Bio
-            </label>
-            <textarea
-              rows={3}
-              value={personalForm.about || ""}
-              onChange={(e) => setPersonalForm({ ...personalForm, about: e.target.value })}
-              placeholder="Tell recruiters and peers about your journey, passions, and what drives you..."
-              className="w-full bg-white border border-slate-200 p-4 text-xs font-medium text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none resize-none leading-relaxed"
+            <img
+              src="/images/profile/resume_3d.jpg"
+              alt="Resume"
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
             />
           </div>
 
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={savingPersonal}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white font-black text-xs transition-all shadow-md shadow-purple-900/20 hover:shadow-lg hover:shadow-purple-900/30 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {savingPersonal ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Saving Personal Details...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Save Personal Details</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+          {/* Card 2: Courses */}
+          <Link
+            href="/roadmaps"
+            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          >
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Courses</h3>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5">Explore learning paths</p>
+            </div>
+            <img
+              src="/images/profile/courses_3d.jpg"
+              alt="Courses"
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
+            />
+          </Link>
+
+          {/* Card 3: Projects */}
+          <a
+            href="#proof-of-work"
+            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          >
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Projects</h3>
+              <p className="text-base sm:text-lg font-black text-slate-900 mt-0.5">
+                {profileData.projects.length || 1}
+              </p>
+            </div>
+            <img
+              src="/images/profile/projects_3d.jpg"
+              alt="Projects"
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
+            />
+          </a>
+        </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 4. SECTION: SKILLS HUB                                              */}
+      {/* 2. SUB-BENTO BAR: FOLLOWERS PILL & EDIT PROFILE PILL BUTTON         */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="skills" className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-amber-100 text-amber-800">
-              <Sparkles className="w-6 h-6" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Left Pill */}
+        <div className="bg-white rounded-2xl sm:rounded-full border border-slate-200/80 px-6 py-3.5 flex items-center justify-center sm:justify-start gap-6 shadow-xs flex-1">
+          <div className="text-sm font-semibold text-slate-600">
+            <span className="font-black text-slate-900">0</span> Following
+          </div>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="text-sm font-semibold text-slate-600">
+            <span className="font-black text-slate-900">0</span> Followers
+          </div>
+          <div className="w-px h-4 bg-slate-200 hidden md:block" />
+          <div className="hidden md:flex items-center gap-2 text-xs text-purple-700 font-bold">
+            <span>🔥 {progressStats.streakDays}d Streak</span>
+            <span>•</span>
+            <span>Lvl {progressStats.level}</span>
+            <span>•</span>
+            <span className="text-amber-600">⚡ {completionReport.totalPercent}% Complete</span>
+          </div>
+        </div>
+
+        {/* Right Pill: Edit Profile Button */}
+        <button
+          onClick={() => {
+            setModalError("");
+            setActiveModal("personal");
+          }}
+          className="bg-white rounded-2xl sm:rounded-full border border-slate-200/80 hover:border-purple-300 hover:bg-purple-50/40 px-6 py-3.5 flex items-center justify-center gap-2 text-sm font-bold text-slate-800 transition-all shadow-xs cursor-pointer"
+        >
+          <Edit3 className="w-4 h-4 text-slate-600" />
+          <span>Edit Profile</span>
+        </button>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 3. VERIFICATION BANNER (PURPLE/VIOLET GRADIENT)                     */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showVerifyBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-gradient-to-r from-[#8B5CF6] via-[#9333EA] to-[#A855F7] rounded-3xl p-5 sm:p-6 text-white shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0 mt-0.5 sm:mt-0">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-base font-black text-white">Get Verified on SkillsCatalyst</h4>
+                <p className="text-xs text-purple-100/90 font-normal leading-relaxed max-w-xl">
+                  Upload your student ID or certificate to earn your verified badge and unlock perks.
+                </p>
+                <div className="pt-1">
+                  <button
+                    onClick={() => {
+                      setEditingItem(null);
+                      setActiveModal("cert");
+                    }}
+                    className="px-4 py-1.5 bg-white hover:bg-purple-50 text-purple-700 rounded-full font-black text-xs transition-all inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <span>Verify Now</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">Skills Hub</h2>
-                <span className="text-xs font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                  {profileData.skills.length} Total
+
+            <button
+              onClick={() => setShowVerifyBanner(false)}
+              className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 4. "YOUR WEEKLY VIBE" ACTIVITY CARD                                 */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Your weekly vibe</h3>
+            <p className="text-xs font-semibold text-slate-400 mt-0.5">{weekData.rangeLabel}</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setWeekOffset((prev) => prev - 1)}
+              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
+              title="Previous week"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setWeekOffset((prev) => prev + 1)}
+              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
+              title="Next week"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* 7 Vertical Pill Bars */}
+        <div className="flex items-end justify-between gap-2 sm:gap-4 pt-4 px-2 sm:px-6">
+          {weekData.days.map((d, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 flex-1">
+              <div className="relative w-full flex flex-col items-center">
+                {d.duration && (
+                  <span className="absolute -top-6 text-[11px] font-bold text-slate-700 whitespace-nowrap">
+                    {d.duration}
+                  </span>
+                )}
+                <div className="h-28 sm:h-32 w-7 sm:w-10 rounded-full bg-slate-100 flex flex-col justify-end p-1">
+                  {d.active && (
+                    <div className="w-full h-3/4 rounded-full bg-gradient-to-t from-[#FB923C] to-[#F97316] shadow-sm" />
+                  )}
+                </div>
+              </div>
+              <div className="text-center">
+                <span className={`block text-xs font-bold ${d.active ? "text-slate-900" : "text-slate-400"}`}>
+                  {d.dateNum}
+                </span>
+                <span className={`block text-[10px] font-semibold uppercase ${d.active ? "text-slate-900" : "text-slate-400"}`}>
+                  {d.dayName}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
-                Categorized skill proficiencies matched against job descriptions and ATS parsers
-              </p>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
 
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 5. EXPERIENCE CARD                                                  */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div id="experience" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Experience</h3>
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setActiveModal("experience");
+            }}
+            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Experience</span>
+          </button>
+        </div>
+
+        {profileData.experiences.length === 0 ? (
+          <div className="py-8 text-center text-sm font-medium text-slate-400">
+            No experience added yet.
+          </div>
+        ) : (
+          <div className="space-y-3 pt-1">
+            {profileData.experiences.map((exp) => (
+              <div key={exp.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 relative group space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900">{exp.role || (exp as any).job_title}</h4>
+                    <p className="text-xs font-semibold text-purple-700">{exp.company_name}</p>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => {
+                        setEditingItem(exp);
+                        setActiveModal("experience");
+                      }}
+                      className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteExperience(exp.id!)}
+                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium">
+                  <span>{exp.work_type || "Full-time"}</span>
+                  <span>•</span>
+                  <span>{exp.employment_type || "Remote"}</span>
+                  {exp.location && (
+                    <>
+                      <span>•</span>
+                      <span>{exp.location}</span>
+                    </>
+                  )}
+                  <span>•</span>
+                  <span>{exp.start_date || "N/A"} – {exp.currently_working ?? (exp as any).is_current ? "Present" : exp.end_date || "Present"}</span>
+                </div>
+                {exp.description && (
+                  <p className="text-[11px] text-slate-600 font-normal pt-1 line-clamp-2">
+                    {exp.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 6. PROOF OF WORK CARD                                               */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div id="proof-of-work" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Proof of Work</h3>
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setActiveModal("project");
+            }}
+            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Project</span>
+          </button>
+        </div>
+
+        {profileData.projects.length === 0 ? (
+          <div className="py-8 text-center text-sm font-medium text-slate-400">
+            Add links to your work and projects
+          </div>
+        ) : (
+          <div className="space-y-3 pt-1">
+            {profileData.projects.map((proj) => (
+              <div key={proj.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 relative group space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-xs font-black text-slate-900">{proj.project_name || (proj as any).title}</h4>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => {
+                        setEditingItem(proj);
+                        setActiveModal("project");
+                      }}
+                      className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProject(proj.id!)}
+                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                {proj.description && (
+                  <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                    {proj.description}
+                  </p>
+                )}
+                {((proj.technologies && proj.technologies.length > 0) || ((proj as any).tech_stack && (proj as any).tech_stack.length > 0)) && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {(proj.technologies || (proj as any).tech_stack).map((t: string) => (
+                      <span key={t} className="text-[9px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-3 pt-1 text-[10px] font-bold">
+                  {proj.github_url && (
+                    <a
+                      href={proj.github_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-purple-700 hover:underline flex items-center gap-1"
+                    >
+                      <span>GitHub Repo</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {(proj.live_demo_url || (proj as any).demo_url) && (
+                    <a
+                      href={proj.live_demo_url || (proj as any).demo_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-purple-700 hover:underline flex items-center gap-1"
+                    >
+                      <span>Live Demo</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 7. EXPERTISE & SKILLS CARD                                          */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div id="skills" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Expertise & Skills</h3>
           <button
             onClick={() => {
               setEditingItem(null);
               setActiveModal("skill");
             }}
-            className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#5B1FA6] border border-purple-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add New Skill</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Skill</span>
           </button>
         </div>
 
-        {/* Skills Tag Cloud */}
         {profileData.skills.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-2">
-            <p className="text-xs font-bold text-slate-600">No skills added yet.</p>
-            <p className="text-[11px] text-slate-400">
-              Add at least 3 skills (e.g. React, Python, Data Structures) to boost your profile strength by +15%.
-            </p>
+          <div className="py-8 text-center text-sm font-medium text-slate-400">
+            No skills added yet. Add your programming languages, tools, and frameworks.
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Categorized rendering */}
-            {["Technical", "Frameworks", "Languages", "Tools", "Soft Skills"].map((cat) => {
-              const catSkills = profileData.skills.filter(
-                (s) => (s.category || "Technical").toLowerCase() === cat.toLowerCase()
-              );
-              if (catSkills.length === 0) return null;
+          <div className="space-y-4 pt-1">
+            {SKILL_CATEGORIES.map((cat) => {
+              const matchedSkills = profileData.skills.filter(cat.filter);
+              if (matchedSkills.length === 0) return null;
 
               return (
-                <div key={cat} className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
-                    {cat}
-                  </span>
+                <div key={cat.id} className="space-y-2">
+                  <div className="text-xs font-semibold text-indigo-500/90 flex items-center gap-1.5">
+                    <span className="text-indigo-400">—</span>
+                    <span>{cat.label}</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    {catSkills.map((s) => (
+                    {matchedSkills.map((s) => (
                       <div
                         key={s.id || s.skill_name}
-                        className="group pl-3 pr-2 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-2"
+                        className="group px-3.5 py-2 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-purple-300 transition-all flex items-center gap-2"
                       >
-                        <span className="text-xs font-extrabold text-slate-800">{s.skill_name || (s as any).name}</span>
-                        <span
-                          className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                            (s.proficiency || (s as any).level) === "Expert"
-                              ? "bg-purple-100 text-purple-700"
-                              : (s.proficiency || (s as any).level) === "Advanced"
-                              ? "bg-purple-100 text-purple-700"
-                              : (s.proficiency || (s as any).level) === "Intermediate"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          {s.proficiency || (s as any).level || "Intermediate"}
-                        </span>
+                        {cat.iconType === "terminal" ? (
+                          <span className="text-[11px] font-mono font-bold text-amber-500">{`>_`}</span>
+                        ) : cat.iconType === "cloud" ? (
+                          <Cloud className="w-3.5 h-3.5 text-teal-500" />
+                        ) : cat.iconType === "database" ? (
+                          <Database className="w-3.5 h-3.5 text-purple-500" />
+                        ) : cat.iconType === "layers" ? (
+                          <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                        ) : cat.iconType === "cpu" ? (
+                          <Cpu className="w-3.5 h-3.5 text-blue-500" />
+                        ) : cat.iconType === "git" ? (
+                          <GitBranch className="w-3.5 h-3.5 text-orange-500" />
+                        ) : (
+                          <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                        )}
+                        <span className="text-xs font-bold text-slate-800">{s.skill_name}</span>
                         <button
                           onClick={() => handleDeleteSkill(s.id || s.skill_name)}
-                          className="text-slate-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer"
+                          className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0.5"
                           title="Remove skill"
                         >
                           <X className="w-3 h-3" />
@@ -944,248 +1099,112 @@ export default function SettingsPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 5. SECTION: RESUME CENTRAL & ATS COMPATIBILITY                       */}
+      {/* 8. LANGUAGES CARD                                                   */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="resume" className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-indigo-100 text-indigo-700">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Resume Central</h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Upload your resume for real-time ATS compatibility scoring and AI role benchmarking
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".pdf"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) handleResumeUpload(e.target.files[0]);
-              }}
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingResume}
-              className="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {uploadingResume ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Analyzing Resume...</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-4 h-4" />
-                  <span>Upload New Resume (PDF)</span>
-                </>
-              )}
-            </button>
-
-            <Link
-              href="/career"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white font-black text-xs transition-all shadow-md shadow-purple-900/20 flex items-center gap-1.5 shadow-sm"
-            >
-              <span>Deep AI Review</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Languages</h3>
+          <button
+            onClick={() => setShowAddLang(!showAddLang)}
+            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Language</span>
+          </button>
         </div>
 
-        {resumeMsg && (
-          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
-            <span>{resumeMsg}</span>
+        {showAddLang && (
+          <div className="flex gap-2 pb-2">
+            <input
+              type="text"
+              value={newLangInput}
+              onChange={(e) => setNewLangInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newLangInput.trim()) {
+                  e.preventDefault();
+                  if (!languages.includes(newLangInput.trim())) {
+                    setLanguages([...languages, newLangInput.trim()]);
+                  }
+                  setNewLangInput("");
+                  setShowAddLang(false);
+                }
+              }}
+              placeholder="e.g. Hindi, Telugu, German (Press Enter)"
+              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+              autoFocus
+            />
+            <button
+              onClick={() => {
+                if (newLangInput.trim() && !languages.includes(newLangInput.trim())) {
+                  setLanguages([...languages, newLangInput.trim()]);
+                }
+                setNewLangInput("");
+                setShowAddLang(false);
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 cursor-pointer"
+            >
+              Add
+            </button>
           </div>
         )}
 
-        {/* Current Resume Info Card */}
-        {profileData.resume?.filename ? (
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-50 to-indigo-50/40 border border-indigo-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
-                PDF
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-slate-900">{profileData.resume.filename}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {profileData.resume.summary || "Ready for technical recruiters"} • Uploaded {profileData.resume.updated_at ? new Date(profileData.resume.updated_at).toLocaleDateString() : "Recently"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                  ATS Score
-                </span>
-                <span
-                  className={`text-xl font-black ${
-                    (profileData.resume.ats_score || 0) >= 80
-                      ? "text-purple-600"
-                      : (profileData.resume.ats_score || 0) >= 60
-                      ? "text-amber-600"
-                      : "text-rose-600"
-                  }`}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {languages.map((lang) => (
+            <span
+              key={lang}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs font-semibold text-indigo-700 group"
+            >
+              <Languages className="w-3.5 h-3.5 text-indigo-500" />
+              <span>{lang}</span>
+              {languages.length > 1 && (
+                <button
+                  onClick={() => setLanguages(languages.filter((l) => l !== lang))}
+                  className="text-indigo-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ml-1"
                 >
-                  {profileData.resume.ats_score || profileData.resume.overall_score || 75} / 100
-                </span>
-              </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                title="Replace Resume"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="p-8 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 hover:border-indigo-400 transition-colors text-center cursor-pointer space-y-2"
-          >
-            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto">
-              <UploadCloud className="w-5 h-5" />
-            </div>
-            <div className="text-xs font-black text-slate-800">
-              Click to upload your resume (PDF only, max 5MB)
-            </div>
-            <div className="text-[11px] text-slate-500">
-              Our AI extractor tests against standard ATS benchmarks and unlocks +20% profile strength.
-            </div>
-          </div>
-        )}
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 6. SECTION: EXPERIENCE & EDUCATION DUAL CONTAINER                   */}
+      {/* 9. EDUCATION CARD                                                   */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="experience" className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Experience List */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-blue-100 text-blue-700">
-                <Briefcase className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Work Experience</h3>
-                <p className="text-xs text-slate-500 font-medium">Internships, contracts, and full-time roles</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                setActiveModal("experience");
-              }}
-              className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors cursor-pointer"
-              title="Add Experience"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-
-          {profileData.experiences.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-              No experience added. Add your internship, freelancing, or student lead roles.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {profileData.experiences.map((exp) => (
-                <div key={exp.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 relative group space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900">{exp.role || (exp as any).job_title}</h4>
-                      <p className="text-xs font-semibold text-blue-700">{exp.company_name}</p>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => {
-                          setEditingItem(exp);
-                          setActiveModal("experience");
-                        }}
-                        className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteExperience(exp.id!)}
-                        className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium">
-                    <span>{exp.work_type || "Full-time"}</span>
-                    <span>•</span>
-                    <span>{exp.employment_type || "Remote"}</span>
-                    {exp.location && (
-                      <>
-                        <span>•</span>
-                        <span>{exp.location}</span>
-                      </>
-                    )}
-                    <span>•</span>
-                    <span>{exp.start_date || "N/A"} – {exp.currently_working ?? (exp as any).is_current ? "Present" : exp.end_date || "Present"}</span>
-                  </div>
-                  {exp.description && (
-                    <p className="text-[11px] text-slate-600 font-normal pt-1 line-clamp-2">
-                      {exp.description}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+      <div id="education" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Education</h3>
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setActiveModal("education");
+            }}
+            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Education</span>
+          </button>
         </div>
 
-        {/* Education List */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 text-[#5B1FA6]">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Education</h3>
-                <p className="text-xs text-slate-500 font-medium">University, college, degree, and GPA</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                setActiveModal("education");
-              }}
-              className="p-2 rounded-xl bg-emerald-50 hover:bg-purple-100 text-purple-800 transition-colors cursor-pointer"
-              title="Add Education"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+        {profileData.education.length === 0 ? (
+          <div className="py-8 text-center text-sm font-medium text-slate-400">
+            No education added yet. Add your university or college details.
           </div>
+        ) : (
+          <div className="space-y-4 pt-1">
+            {profileData.education.map((edu) => (
+              <div key={edu.id} className="flex items-start gap-3.5 group relative">
+                {/* Square Orange Initial Badge (matching VC in screenshot) */}
+                <div className="w-12 h-12 rounded-2xl bg-[#F97316] text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs">
+                  {getOrgInitials(edu.college || (edu as any).institution || "VC")}
+                </div>
 
-          {profileData.education.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-              No education added yet. Add your degree and college details.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {profileData.education.map((edu) => (
-                <div key={edu.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 relative group space-y-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900">{edu.college || (edu as any).institution}</h4>
-                      <p className="text-xs font-semibold text-purple-800">
-                        {edu.degree_type || (edu as any).degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ""}
-                      </p>
-                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 truncate">
+                      {edu.college || (edu as any).institution}
+                    </h4>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
@@ -1204,585 +1223,325 @@ export default function SettingsPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium">
-                    <span>{edu.start_date || (edu as any).start_year ? `${edu.start_date || (edu as any).start_year} – ` : ""}{edu.currently_studying ?? (edu as any).is_current ? "Present" : edu.end_date || (edu as any).end_year || "Present"}</span>
-                    {edu.gpa !== undefined && edu.gpa !== null && (
-                      <>
-                        <span>•</span>
-                        <span className="font-bold text-slate-700">GPA: {edu.gpa}</span>
-                      </>
-                    )}
-                  </div>
+
+                  <p className="text-xs text-slate-600 font-medium mt-0.5">
+                    {edu.degree_type || (edu as any).degree}
+                    {edu.field_of_study ? ` • ${edu.field_of_study}` : ""}
+                  </p>
+
+                  <p className="text-xs text-slate-400 font-normal mt-0.5">
+                    {edu.start_date || (edu as any).start_year || "2025"} –{" "}
+                    {edu.currently_studying ?? (edu as any).is_current
+                      ? "Present"
+                      : edu.end_date || (edu as any).end_year || "Present"}
+                    {edu.gpa !== undefined && edu.gpa !== null && ` • Grade: ${edu.gpa}`}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 7. SECTION: PROJECTS & CERTIFICATIONS                               */}
+      {/* 10. RESUME CENTRAL & AI ATS SCORE CARD (PRESERVED WORKFLOW)          */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="projects" className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Portfolio Projects */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-teal-100 text-teal-700">
-                <FolderGit2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Portfolio Projects</h3>
-                <p className="text-xs text-slate-500 font-medium">Showcase real software, repos, and live demos</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setEditingItem(null);
-                setActiveModal("project");
-              }}
-              className="p-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 transition-colors cursor-pointer"
-              title="Add Project"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-
-          {profileData.projects.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-              No projects added yet. Add at least 2 projects with GitHub links (+15% score).
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {profileData.projects.map((proj) => (
-                <div key={proj.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 relative group space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-xs font-black text-slate-900">{proj.project_name || (proj as any).title}</h4>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => {
-                          setEditingItem(proj);
-                          setActiveModal("project");
-                        }}
-                        className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProject(proj.id!)}
-                        className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  {proj.description && (
-                    <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
-                      {proj.description}
-                    </p>
-                  )}
-                  {((proj.technologies && proj.technologies.length > 0) || ((proj as any).tech_stack && (proj as any).tech_stack.length > 0)) && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {(proj.technologies || (proj as any).tech_stack).map((t: string) => (
-                        <span key={t} className="text-[9px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3 pt-1 text-[10px] font-bold">
-                    {proj.github_url && (
-                      <a
-                        href={proj.github_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-teal-700 hover:underline flex items-center gap-1"
-                      >
-                        <span>GitHub Repo</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                    {(proj.live_demo_url || (proj as any).demo_url) && (
-                      <a
-                        href={proj.live_demo_url || (proj as any).demo_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-purple-700 hover:underline flex items-center gap-1"
-                      >
-                        <span>Live Demo</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Certifications & Achievements */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-purple-100 text-purple-700">
-                <Award className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">Certifications & Honors</h3>
-                <p className="text-xs text-slate-500 font-medium">Verified credentials, hackathons, and awards</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => {
-                  setEditingItem(null);
-                  setActiveModal("cert");
-                }}
-                className="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-[11px] font-black transition-colors cursor-pointer"
-              >
-                + Cert
-              </button>
-              <button
-                onClick={() => {
-                  setEditingItem(null);
-                  setActiveModal("achievement");
-                }}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-black transition-colors cursor-pointer"
-              >
-                + Award
-              </button>
-            </div>
-          </div>
-
-          {profileData.certifications.length === 0 && profileData.achievements.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-500">
-              No certifications or awards added. Showcase AWS, GCP, Coursera, or Hackathon wins.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {profileData.certifications.map((c) => (
-                <div key={c.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 relative group space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900">{c.certification_name || (c as any).name}</h4>
-                      <p className="text-xs font-semibold text-purple-700">{c.issuing_organization}</p>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleDeleteCertification(c.id!)}
-                        className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] text-slate-500 font-medium">
-                    <span>Issued: {c.issue_date || "Verified"}</span>
-                    {c.credential_url && (
-                      <a href={c.credential_url} target="_blank" rel="noreferrer" className="text-purple-700 hover:underline flex items-center gap-1">
-                        <span>Credential</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {profileData.achievements.map((a) => (
-                <div key={a.id} className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-200/70 relative group space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="text-xs font-black text-amber-950 flex items-center gap-1.5">
-                        <span>🏆</span> {a.achievement_name || (a as any).title}
-                      </h4>
-                      {(a.organization || (a as any).issuer) && (
-                        <p className="text-xs font-semibold text-amber-800">{a.organization || (a as any).issuer}</p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteAchievement(a.id!)}
-                      className="p-1 text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] text-amber-900/60 font-medium">
-                    {a.achievement_date && <span>Date: {a.achievement_date}</span>}
-                  </div>
-                  {a.description && <p className="text-[11px] text-amber-900/80">{a.description}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 8. SECTION: CAREER PREFERENCES                                      */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="preferences" className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div id="resume" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-rose-100 text-rose-700">
-              <Target className="w-6 h-6" />
+            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-700">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Career Preferences</h2>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Resume Central</h3>
               <p className="text-xs text-slate-500 font-medium">
-                Desired job roles, target tech companies, and preferred work environments
+                Upload resume for AI ATS benchmark evaluation
               </p>
             </div>
           </div>
-          {careerPrefsMsg && (
-            <div className="p-2.5 px-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-purple-600" />
-              <span>{careerPrefsMsg}</span>
-            </div>
-          )}
-        </div>
 
-        <div className="space-y-5">
-          {/* Target Roles */}
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-              Target Job Roles
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={roleInput}
-                onChange={(e) => setRoleInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (roleInput.trim()) {
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
-                      });
-                      setRoleInput("");
-                    }
-                  }
-                }}
-                placeholder="e.g. SDE-1, Full Stack Developer, DevOps Engineer (Press Enter)"
-                className="flex-1 bg-white border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (roleInput.trim()) {
-                    setCareerPrefsForm({
-                      ...careerPrefsForm,
-                      target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
-                    });
-                    setRoleInput("");
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
-              >
-                Add Role
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {careerPrefsForm.target_roles?.map((r, i) => (
-                <span
-                  key={i}
-                  className="pl-3 pr-2 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 text-xs font-extrabold flex items-center gap-1.5"
-                >
-                  <span>{r}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        target_roles: careerPrefsForm.target_roles?.filter((_, idx) => idx !== i),
-                      })
-                    }
-                    className="text-rose-400 hover:text-rose-700 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Target Dream Companies */}
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-              Dream Companies
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={companyInput}
-                onChange={(e) => setCompanyInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (companyInput.trim()) {
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
-                      });
-                      setCompanyInput("");
-                    }
-                  }
-                }}
-                placeholder="e.g. Google, Microsoft, Atlassian, Uber, Flipkart (Press Enter)"
-                className="flex-1 bg-white border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (companyInput.trim()) {
-                    setCareerPrefsForm({
-                      ...careerPrefsForm,
-                      target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
-                    });
-                    setCompanyInput("");
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
-              >
-                Add Company
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {careerPrefsForm.target_companies?.map((c, i) => (
-                <span
-                  key={i}
-                  className="pl-3 pr-2 py-1 rounded-lg bg-purple-50 border border-purple-200 text-purple-900 text-xs font-extrabold flex items-center gap-1.5"
-                >
-                  <span>{c}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        target_companies: careerPrefsForm.target_companies?.filter((_, idx) => idx !== i),
-                      })
-                    }
-                    className="text-purple-300 hover:text-purple-700 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Work Arrangement Toggles */}
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-2">
-              Work Arrangements
-            </label>
-            <div className="flex flex-wrap gap-2.5">
-              {["Remote", "Hybrid", "Onsite"].map((arr) => {
-                const isSelected = (careerPrefsForm.work_arrangements || []).includes(arr);
-                return (
-                  <button
-                    key={arr}
-                    type="button"
-                    onClick={() => {
-                      const curr = careerPrefsForm.work_arrangements || [];
-                      const next = isSelected ? curr.filter((x) => x !== arr) : [...curr, arr];
-                      setCareerPrefsForm({ ...careerPrefsForm, work_arrangements: next });
-                    }}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white shadow-sm"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
-                  >
-                    {arr}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Preferred Locations */}
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-              Preferred Locations
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (locationInput.trim()) {
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        preferred_locations: [...(careerPrefsForm.preferred_locations || []), locationInput.trim()],
-                      });
-                      setLocationInput("");
-                    }
-                  }
-                }}
-                placeholder="e.g. Bengaluru, Hyderabad, Pune, Remote, Singapore (Press Enter)"
-                className="flex-1 bg-white border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (locationInput.trim()) {
-                    setCareerPrefsForm({
-                      ...careerPrefsForm,
-                      preferred_locations: [...(careerPrefsForm.preferred_locations || []), locationInput.trim()],
-                    });
-                    setLocationInput("");
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
-              >
-                Add Location
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {careerPrefsForm.preferred_locations?.map((loc, i) => (
-                <span
-                  key={i}
-                  className="pl-3 pr-2 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs font-extrabold flex items-center gap-1.5"
-                >
-                  <span>{loc}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        preferred_locations: careerPrefsForm.preferred_locations?.filter((_, idx) => idx !== i),
-                      })
-                    }
-                    className="text-blue-400 hover:text-blue-700 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Preferred Industries */}
-          <div>
-            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
-              Target Industries
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={industryInput}
-                onChange={(e) => setIndustryInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (industryInput.trim()) {
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        preferred_industries: [...(careerPrefsForm.preferred_industries || []), industryInput.trim()],
-                      });
-                      setIndustryInput("");
-                    }
-                  }
-                }}
-                placeholder="e.g. FinTech, AI/ML, EdTech, SaaS, Healthcare (Press Enter)"
-                className="flex-1 bg-white border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (industryInput.trim()) {
-                    setCareerPrefsForm({
-                      ...careerPrefsForm,
-                      preferred_industries: [...(careerPrefsForm.preferred_industries || []), industryInput.trim()],
-                    });
-                    setIndustryInput("");
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
-              >
-                Add Industry
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {careerPrefsForm.preferred_industries?.map((ind, i) => (
-                <span
-                  key={i}
-                  className="pl-3 pr-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-extrabold flex items-center gap-1.5"
-                >
-                  <span>{ind}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCareerPrefsForm({
-                        ...careerPrefsForm,
-                        preferred_industries: careerPrefsForm.preferred_industries?.filter((_, idx) => idx !== i),
-                      })
-                    }
-                    className="text-amber-400 hover:text-amber-700 cursor-pointer"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.[0]) handleResumeUpload(e.target.files[0]);
+              }}
+            />
             <button
-              onClick={handleSaveCareerPreferences}
-              disabled={savingCareerPrefs}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white font-black text-xs transition-all shadow-md shadow-purple-900/20 hover:shadow-lg hover:shadow-purple-900/30 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingResume}
+              className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {savingCareerPrefs ? (
+              {uploadingResume ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Saving Preferences...</span>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Evaluating...</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
-                  <span>Save Career Preferences</span>
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Upload PDF</span>
                 </>
               )}
             </button>
+
+            <Link
+              href="/career"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-xs"
+            >
+              <span>AI Review</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
           </div>
+        </div>
+
+        {resumeMsg && (
+          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-600" />
+            <span>{resumeMsg}</span>
+          </div>
+        )}
+
+        {profileData.resume?.filename ? (
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                PDF
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-slate-900">{profileData.resume.filename}</h4>
+                <p className="text-[11px] text-slate-500">
+                  {profileData.resume.summary || "Ready for technical recruiters"}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                ATS Score
+              </span>
+              <span className="text-lg font-black text-purple-700">
+                {profileData.resume.ats_score || profileData.resume.overall_score || 75}/100
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 hover:border-purple-300 transition-colors text-center cursor-pointer space-y-1.5"
+          >
+            <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center mx-auto">
+              <UploadCloud className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-slate-700">Click to upload your resume (PDF, max 5MB)</p>
+            <p className="text-[11px] text-slate-400">Official AI review tests ATS compatibility and unlocks +20% strength.</p>
+          </div>
+        )}
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 11. CAREER PREFERENCES CARD                                         */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div id="preferences" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-700">
+              <Target className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Career Preferences</h3>
+              <p className="text-xs text-slate-500 font-medium">Desired job roles, dream companies, and arrangements</p>
+            </div>
+          </div>
+          {careerPrefsMsg && (
+            <span className="text-xs font-bold text-purple-700">{careerPrefsMsg}</span>
+          )}
+        </div>
+
+        {/* Roles */}
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+            Target Job Roles
+          </label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={roleInput}
+              onChange={(e) => setRoleInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && roleInput.trim()) {
+                  e.preventDefault();
+                  setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
+                  });
+                  setRoleInput("");
+                }
+              }}
+              placeholder="e.g. SDE-1, Full Stack Developer (Press Enter)"
+              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (roleInput.trim()) {
+                  setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
+                  });
+                  setRoleInput("");
+                }
+              }}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {careerPrefsForm.target_roles?.map((r, i) => (
+              <span key={i} className="pl-3 pr-2 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-1.5">
+                <span>{r}</span>
+                <button
+                  type="button"
+                  onClick={() => setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_roles: careerPrefsForm.target_roles?.filter((_, idx) => idx !== i),
+                  })}
+                  className="text-rose-400 hover:text-rose-700 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Dream Companies */}
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+            Dream Companies
+          </label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={companyInput}
+              onChange={(e) => setCompanyInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && companyInput.trim()) {
+                  e.preventDefault();
+                  setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
+                  });
+                  setCompanyInput("");
+                }
+              }}
+              placeholder="e.g. Google, Atlassian, Microsoft (Press Enter)"
+              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (companyInput.trim()) {
+                  setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
+                  });
+                  setCompanyInput("");
+                }
+              }}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {careerPrefsForm.target_companies?.map((c, i) => (
+              <span key={i} className="pl-3 pr-2 py-1 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold flex items-center gap-1.5">
+                <span>{c}</span>
+                <button
+                  type="button"
+                  onClick={() => setCareerPrefsForm({
+                    ...careerPrefsForm,
+                    target_companies: careerPrefsForm.target_companies?.filter((_, idx) => idx !== i),
+                  })}
+                  className="text-purple-400 hover:text-purple-700 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Work Arrangements */}
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+            Work Arrangements
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {["Remote", "Hybrid", "Onsite"].map((arr) => {
+              const isSelected = (careerPrefsForm.work_arrangements || []).includes(arr);
+              return (
+                <button
+                  key={arr}
+                  type="button"
+                  onClick={() => {
+                    const curr = careerPrefsForm.work_arrangements || [];
+                    const next = isSelected ? curr.filter((x) => x !== arr) : [...curr, arr];
+                    setCareerPrefsForm({ ...careerPrefsForm, work_arrangements: next });
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-purple-700 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {arr}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={handleSaveCareerPreferences}
+            disabled={savingCareerPrefs}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            {savingCareerPrefs ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>Save Preferences</span>
+          </button>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 9. SECTION: DEVELOPER & CODING PLATFORMS (ALL 6 SURFACED)           */}
+      {/* 12. DEVELOPER PLATFORMS CARD                                        */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="developer" className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div id="developer" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-blue-100 text-blue-700">
-              <Code2 className="w-6 h-6" />
+            <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-700">
+              <Code2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
                 Developer & Coding Profiles
-              </h2>
+              </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Connect your accounts across all 6 major competitive programming and software platforms
+                Connect accounts across 6 major competitive programming platforms
               </p>
             </div>
           </div>
-
           {codingMsg && (
-            <div className="p-2.5 px-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-xs font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>{codingMsg}</span>
-            </div>
+            <span className="text-xs font-bold text-purple-700">{codingMsg}</span>
           )}
         </div>
 
-        {/* 6 Platforms Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <PlatformInputCard
             platformKey="leetcode"
             title="LeetCode"
@@ -1843,80 +1602,55 @@ export default function SettingsPage() {
           <button
             onClick={handleSaveCoding}
             disabled={syncingCoding}
-            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs tracking-wide transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
-            {syncingCoding ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Extracting Live Platform Stats...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Save & Sync Developer Profiles</span>
-              </>
-            )}
+            {syncingCoding ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>Save & Sync Platforms</span>
           </button>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 10. SECTION: EARNED MILESTONES & CAREER BADGES (PRESERVED)           */}
+      {/* 13. EARNED MILESTONES & BADGES CARD                                 */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-100/80 shadow-[0_4px_25px_-5px_rgba(112,51,212,0.06)] space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-purple-100 text-purple-700 shrink-0">
-              <Trophy className="w-6 h-6" />
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700">
+              <Trophy className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">
-                  Earned Milestones & Career Badges
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                  {progressStats.badgesCount} of {progressStats.badges.length} Unlocked
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 font-medium">
-                Track unlocked platform achievements based on daily streaks, questions solved, videos, and roadmaps.
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Earned Milestones & Badges
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                {progressStats.badgesCount} of {progressStats.badges.length} Badges Unlocked
               </p>
             </div>
           </div>
-
           <button
             onClick={logout}
-            className="self-start md:self-auto px-5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+            className="px-4 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
           </button>
         </div>
 
-        {/* Dynamic Badges Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-2">
           {progressStats.badges.map((b) => (
             <div
               key={b.id}
               className={`p-3 rounded-2xl border flex flex-col items-center text-center transition-all ${
                 b.unlocked
-                  ? "bg-purple-50/80 border-purple-200 shadow-xs ring-1 ring-purple-300"
-                  : "bg-slate-50/60 border-slate-200 opacity-60"
+                  ? "bg-purple-50/70 border-purple-200 ring-1 ring-purple-300"
+                  : "bg-slate-50/50 border-slate-200 opacity-60"
               }`}
             >
-              <div className="text-2xl mb-1 filter drop-shadow-xs">{b.icon}</div>
-              <span className="text-[11px] font-bold text-slate-900 leading-tight line-clamp-1">
-                {b.name}
-              </span>
-              <span className="text-[9px] text-slate-500 mt-0.5 line-clamp-2 leading-tight">
-                {b.desc}
-              </span>
-              <span
-                className={`text-[9px] font-extrabold mt-2 px-1.5 py-0.5 rounded-md ${
-                  b.unlocked ? "bg-purple-600 text-white" : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {b.unlocked ? "Earned" : b.progressText || "Locked"}
+              <div className="text-xl mb-1">{b.icon}</div>
+              <span className="text-[10px] font-bold text-slate-900 line-clamp-1">{b.name}</span>
+              <span className={`text-[8px] font-bold mt-1.5 px-1.5 py-0.5 rounded ${b.unlocked ? "bg-purple-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+                {b.unlocked ? "Earned" : "Locked"}
               </span>
             </div>
           ))}
@@ -1924,77 +1658,78 @@ export default function SettingsPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 11. SECTION: FOUNDER SUPPORT CARD & LEGAL POLICIES (PRESERVED)      */}
+      {/* 14. CUSTOMER SERVICE & LEGAL POLICIES                               */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-[#5B1FA6]">
+            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700">
               <LifeBuoy className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">
-                Customer Service & Legal Policies
-              </h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Direct founder access, 24/7 help desk, and student rights compliance
-              </p>
+              <h3 className="text-base font-black text-slate-900">Customer Service & Founder Support</h3>
+              <p className="text-xs text-slate-500 font-medium">Direct founder contact and student policies</p>
             </div>
           </div>
           <Link
             href="/support"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white font-bold text-xs shadow-xs transition-colors"
+            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold"
           >
-            <span>Visit Support Desk</span>
-            <span>➔</span>
+            Support Desk ➔
           </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Founder & Grievance Officer</span>
-            <div className="font-extrabold text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
-              <span>Palamoor Adithya Goud</span>
-              <span className="w-2 h-2 rounded-full bg-purple-500" />
-            </div>
-            <span className="text-[11px] text-slate-500 block">Personal query review & 24h SLA</span>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Founder</span>
+            <span className="font-bold text-slate-900">Palamoor Adithya Goud</span>
           </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phone & WhatsApp</span>
-            <a href="tel:+917330602101" className="font-extrabold text-xs sm:text-sm text-purple-700 hover:underline flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" />
-              <span>+91 7330602101</span>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Phone / WhatsApp</span>
+            <a href="tel:+917330602101" className="font-bold text-purple-700 hover:underline">
+              +91 7330602101
             </a>
-            <span className="text-[11px] text-slate-500 block">Available Mon–Sat: 9 AM–8 PM IST</span>
           </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Support & Grievance Email</span>
-            <a href="mailto:palamooradithyagoud@gmail.com" className="font-extrabold text-xs text-purple-700 hover:underline flex items-center gap-1.5 truncate">
-              <Mail className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">palamooradithyagoud@gmail.com</span>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs truncate">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Email</span>
+            <a href="mailto:palamooradithyagoud@gmail.com" className="font-bold text-purple-700 hover:underline truncate">
+              palamooradithyagoud@gmail.com
             </a>
-            <span className="text-[11px] text-slate-500 block">Statutory compliance & refund requests</span>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-          <ShieldCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-          <span>Applicable Policies:</span>
-          <Link href="/support" className="text-purple-700 hover:underline">Privacy Policy (DPDP Act)</Link>
-          <span>•</span>
-          <Link href="/support" className="text-purple-700 hover:underline">Terms of Service</Link>
-          <span>•</span>
-          <Link href="/support" className="text-purple-700 hover:underline">7-Day Refund Policy</Link>
-          <span>•</span>
-          <Link href="/support" className="text-purple-700 hover:underline">Grievance Redressal</Link>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 12. INTERACTIVE MODALS                                               */}
       {/* ─────────────────────────────────────────────────────────────────── */}
+
+      {/* MODAL: EDIT PERSONAL PROFILE */}
+      <ModalShell
+        isOpen={activeModal === "personal"}
+        onClose={() => {
+          setActiveModal(null);
+          setModalError("");
+        }}
+        title="Edit Profile Details"
+        error={modalError}
+      >
+        <PersonalModalForm
+          initialData={personalForm}
+          onSave={async (updated) => {
+            setModalError("");
+            const res = await handleSavePersonal(undefined, updated);
+            if (res && res.success) {
+              setActiveModal(null);
+            } else {
+              setModalError(res?.error || "Failed to update profile details.");
+            }
+          }}
+          onClose={() => {
+            setActiveModal(null);
+            setModalError("");
+          }}
+        />
+      </ModalShell>
 
       {/* MODAL: ADD/EDIT SKILL */}
       <ModalShell
@@ -2324,7 +2059,7 @@ function SkillModalForm({
   onClose: () => void;
 }) {
   const [skillName, setSkillName] = useState("");
-  const [category, setCategory] = useState("Technical");
+  const [category, setCategory] = useState("Programming / scripting Languages");
   const [proficiency, setProficiency] = useState("Intermediate");
 
   return (
@@ -2345,7 +2080,7 @@ function SkillModalForm({
           type="text"
           value={skillName}
           onChange={(e) => setSkillName(e.target.value)}
-          placeholder="e.g. Next.js, Docker, Python, PostgreSQL"
+          placeholder="e.g. Python, Docker, Next.js, PostgreSQL"
           required
           autoFocus
           className="w-full bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 outline-none"
@@ -2360,12 +2095,14 @@ function SkillModalForm({
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full bg-white border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 outline-none"
+            className="w-full bg-white border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-900 rounded-xl focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 outline-none cursor-pointer"
           >
-            <option value="Technical">Technical</option>
+            <option value="Programming / scripting Languages">Programming / scripting Languages</option>
+            <option value="Cloud & Devops">Cloud & Devops</option>
+            <option value="Databases">Databases</option>
             <option value="Frameworks">Frameworks</option>
-            <option value="Languages">Languages</option>
-            <option value="Tools">Tools</option>
+            <option value="Technologies">Technologies</option>
+            <option value="Tools & Platforms">Tools & Platforms</option>
             <option value="Soft Skills">Soft Skills</option>
           </select>
         </div>
@@ -3223,5 +2960,171 @@ function AvatarModalForm({
         </div>
       </div>
     </div>
+  );
+}
+
+function PersonalModalForm({
+  initialData,
+  onSave,
+  onClose,
+}: {
+  initialData: UserProfile;
+  onSave: (data: UserProfile) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<UserProfile>({ ...initialData });
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        await onSave(form);
+        setSaving(false);
+      }}
+      className="space-y-4"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            Full Legal Name <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={form.full_name || ""}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+            placeholder="e.g. Palamoor Adithya Goud"
+            className="w-full bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            Headline / Role
+          </label>
+          <input
+            type="text"
+            value={form.headline || ""}
+            onChange={(e) => setForm({ ...form, headline: e.target.value })}
+            placeholder="e.g. Student / Full Stack Developer"
+            className="w-full bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            City
+          </label>
+          <input
+            type="text"
+            value={form.city || ""}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            placeholder="e.g. Hyderabad"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            State
+          </label>
+          <input
+            type="text"
+            value={form.state || ""}
+            onChange={(e) => setForm({ ...form, state: e.target.value })}
+            placeholder="e.g. Telangana"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            Country
+          </label>
+          <input
+            type="text"
+            value={form.country || "India"}
+            onChange={(e) => setForm({ ...form, country: e.target.value })}
+            placeholder="e.g. India"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            Phone Number (Private)
+          </label>
+          <input
+            type="tel"
+            value={form.phone || ""}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="e.g. +91 9876543210"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+            Gender
+          </label>
+          <select
+            value={form.gender || "Prefer not to say"}
+            onChange={(e) => setForm({ ...form, gender: e.target.value })}
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600 cursor-pointer"
+          >
+            <option value="Prefer not to say">Prefer not to say</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Non-binary">Non-binary</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+          About / Bio
+        </label>
+        <textarea
+          rows={3}
+          value={form.about || ""}
+          onChange={(e) => setForm({ ...form, about: e.target.value })}
+          placeholder="Brief summary about your skills, passions, and background..."
+          className="w-full bg-white border border-slate-200 p-3 text-xs font-medium rounded-xl outline-none focus:border-purple-600 resize-none"
+        />
+      </div>
+
+      <div>
+        <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+          Avatar URL (Optional)
+        </label>
+        <input
+          type="url"
+          value={form.avatar_url || ""}
+          onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
+          placeholder="https://github.com/username.png"
+          className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-mono rounded-xl outline-none focus:border-purple-600"
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white text-xs font-bold shadow-sm shadow-purple-900/20 cursor-pointer disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    </form>
   );
 }
