@@ -12,6 +12,7 @@ export interface ThreeDSquircleTileProps {
   badge?: boolean | string;
   badgeColor?: string;
   filled?: boolean;
+  color?: "green" | "purple" | "default";
   label?: string;
   className?: string;
   as?: "button" | "div";
@@ -26,6 +27,7 @@ export default function ThreeDSquircleTile({
   badge = false,
   badgeColor = "bg-emerald-500",
   filled = false,
+  color = "default",
   label,
   className = "",
   as = "button",
@@ -54,6 +56,8 @@ export default function ThreeDSquircleTile({
   // Determine icon color classes
   const iconColorClass = filled
     ? "text-white"
+    : color === "purple"
+    ? "text-purple-600 group-hover:text-purple-700"
     : isActive
     ? "text-[#234B3B] font-bold"
     : "text-slate-600 group-hover:text-slate-900";
@@ -89,6 +93,8 @@ export default function ThreeDSquircleTile({
         className={`absolute top-0 left-0 w-full h-full rounded-[1.15em] block border transition-all duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[100%_100%] [will-change:transform] ${
           filled
             ? "bg-[#0b462c] border-[#105637] rotate-[18deg] scale-105 opacity-100"
+            : color === "purple"
+            ? "bg-purple-100 border-purple-200 rotate-[15deg] opacity-80 group-hover:opacity-100 group-hover:bg-purple-200 group-hover:border-purple-300 group-hover:[transform:rotate(24deg)_translate3d(-0.3em,-0.3em,0.3em)]"
             : isActive
             ? "bg-gradient-to-br from-[#234B3B] to-[#163328] border-[#234B3B]/40 rotate-[20deg] scale-105 opacity-100 group-hover:[transform:rotate(26deg)_translate3d(-0.35em,-0.35em,0.35em)]"
             : "bg-slate-100/90 border-slate-200/90 rotate-[15deg] opacity-70 group-hover:opacity-100 group-hover:bg-slate-200/80 group-hover:border-slate-300 group-hover:[transform:rotate(24deg)_translate3d(-0.3em,-0.3em,0.3em)]"
@@ -96,6 +102,8 @@ export default function ThreeDSquircleTile({
         style={{
           boxShadow: filled
             ? "0.35em -0.35em 0.9em rgba(11, 70, 44, 0.4), 0 0 12px rgba(16, 185, 129, 0.2)"
+            : color === "purple"
+            ? "0.35em -0.35em 0.8em rgba(147, 51, 234, 0.2), 0 0 12px rgba(147, 51, 234, 0.12)"
             : isActive
             ? "0.4em -0.4em 1em rgba(35, 75, 59, 0.35), 0 0 15px rgba(35, 75, 59, 0.2)"
             : "0.35em -0.35em 0.75em rgba(0,0,0,0.06)",
@@ -107,6 +115,8 @@ export default function ThreeDSquircleTile({
         className={`absolute top-0 left-0 w-full h-full rounded-[1.15em] transition-all duration-300 ease-[cubic-bezier(0.83,0,0.17,1)] origin-[80%_50%] flex backdrop-blur-xl [will-change:transform] transform ${
           filled
             ? "bg-[#084227] border border-[#166542] text-white [transform:translate3d(0,0,0.6em)] group-hover:[transform:translate3d(0,0,1.8em)]"
+            : color === "purple"
+            ? "bg-purple-50/90 border border-purple-200/90 text-purple-600 group-hover:text-purple-700 group-hover:bg-purple-100/90 group-hover:[transform:translate3d(0,0,1.8em)]"
             : isActive
             ? "bg-white/95 border border-white text-[#234B3B] [transform:translate3d(0,0,0.8em)] group-hover:[transform:translate3d(0,0,2em)]"
             : "bg-white/80 border border-white/90 text-slate-600 group-hover:text-slate-900 group-hover:bg-white/95 group-hover:[transform:translate3d(0,0,1.8em)]"
@@ -114,6 +124,8 @@ export default function ThreeDSquircleTile({
         style={{
           boxShadow: filled
             ? "inset 0 0 0 0.1em rgba(255, 255, 255, 0.2), 0 4px 14px rgba(8, 66, 39, 0.3)"
+            : color === "purple"
+            ? "inset 0 0 0 0.1em rgba(255, 255, 255, 0.9), 0 4px 14px rgba(147, 51, 234, 0.15)"
             : isActive
             ? "inset 0 0 0 0.12em rgba(255, 255, 255, 0.9), 0 6px 18px rgba(35, 75, 59, 0.18)"
             : "inset 0 0 0 0.1em rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0,0,0,0.04)",
@@ -121,7 +133,7 @@ export default function ThreeDSquircleTile({
       >
         <span className="m-auto flex items-center justify-center relative z-10">
           {text ? (
-            <span className={`font-black tracking-tight ${filled ? "text-white" : isActive ? "text-[#234B3B]" : "text-slate-800"}`}>
+            <span className={`font-black tracking-tight ${filled ? "text-white" : color === "purple" ? "text-purple-600" : isActive ? "text-[#234B3B]" : "text-slate-800"}`}>
               {text}
             </span>
           ) : React.isValidElement(IconComponent) ? (
