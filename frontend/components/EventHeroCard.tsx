@@ -185,8 +185,8 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           aria-label="Get PRO - One membership for all benefits"
           className="pointer-events-auto group bg-white hover:bg-white/95 text-left rounded-xl sm:rounded-2xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-xl shadow-black/40 border border-slate-100/90 flex items-center justify-between gap-2.5 sm:gap-3 transition-all cursor-pointer backdrop-blur-md w-auto max-w-[270px] sm:max-w-[300px]"
         >
-          {/* Left: Magenta/Violet Rounded Square with Trophy Icon */}
-          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[7px] sm:rounded-[9px] bg-[#d81b60] bg-gradient-to-tr from-[#c2185b] via-[#d81b60] to-[#e91e63] flex items-center justify-center shrink-0 shadow-xs shadow-pink-600/30">
+          {/* Left: Purple + Indigo Gradient Rounded Square with Trophy Icon */}
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[7px] sm:rounded-[9px] bg-gradient-to-tr from-purple-600 via-indigo-600 to-indigo-500 flex items-center justify-center shrink-0 shadow-xs shadow-indigo-500/30">
             <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.2]" />
           </div>
 

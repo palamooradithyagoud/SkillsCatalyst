@@ -63,7 +63,15 @@ export interface SavedYTPlaylistItem {
   href: string;
 }
 
-export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
+export default function MetricCards({
+  metrics,
+  hideEventCard = false,
+  showOnly = "all",
+}: {
+  metrics?: MetricsData;
+  hideEventCard?: boolean;
+  showOnly?: "all" | "metrics" | "learning-and-skills";
+}) {
   const router = useRouter();
 
   // 3D clay graphics pool as visual accents for saved playlists
@@ -221,10 +229,13 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
   return (
     <div className="space-y-3.5 sm:space-y-4 select-none">
       {/* ── Top Hero Event Banner with Moving Events & Get PRO Trigger ── */}
-      <EventHeroCard onOpenPricing={() => setIsPricingModalOpen(true)} />
+      {!hideEventCard && showOnly !== "learning-and-skills" && (
+        <EventHeroCard onOpenPricing={() => setIsPricingModalOpen(true)} />
+      )}
 
       {/* ── 3 Compact Metric Cards (Aligned to Left, Matching Event Card Width) ── */}
-      <div className="w-full max-w-[460px] sm:max-w-[480px] grid grid-cols-3 gap-2 sm:gap-2.5">
+      {showOnly !== "learning-and-skills" && (
+        <div className="w-full max-w-[540px] grid grid-cols-3 gap-2 sm:gap-2.5">
         {/* Card 1: Mustard/Yellow - Saved Playlists */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -326,54 +337,58 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
             )}
           </div>
         </motion.div>
-      </div>
-
-      {/* ── Your Learning Progress Section ── */}
-      <div className="space-y-2.5 sm:space-y-3">
-        <div className="w-full max-w-[460px] sm:max-w-[480px] flex items-center justify-between">
-          <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
-            Your Learning Progress
-          </h3>
-          <Link
-            href="/learning"
-            className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 transition-colors"
-          >
-            <span>Browse & Save</span>
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </Link>
         </div>
+      )}
 
-        {loading ? (
-          <div className="w-full max-w-[460px] sm:max-w-[480px] bg-white rounded-[18px] p-6 border border-slate-100 shadow-sm flex items-center justify-center space-x-3 text-slate-400">
-            <Loader2 className="w-4 h-4 animate-spin text-[#234B3B]" />
-            <span className="text-xs font-semibold">Loading learning progress...</span>
-          </div>
-        ) : savedPlaylists.length === 0 ? (
-          /* Empty State when user has zero saved YouTube playlists */
-          <div className="w-full max-w-[460px] sm:max-w-[480px] bg-white rounded-[18px] p-6 border border-dashed border-slate-200 text-center space-y-2.5 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
-              <Video className="w-5 h-5" />
-            </div>
-            <div className="space-y-1 max-w-xs mx-auto">
-              <h4 className="text-xs font-bold text-slate-900">
-                No Learning Progress Yet
-              </h4>
-              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                Save YouTube playlists on the Learning page to track your real video completion progress here!
-              </p>
-            </div>
-            <div className="pt-0.5">
-              <button
-                onClick={() => router.push("/learning")}
-                className="px-4 py-2 rounded-full bg-[#234B3B] text-white text-[11px] font-bold hover:bg-[#1b3b2e] shadow-sm transition-all active:scale-95 cursor-pointer"
+      {/* ── Your Learning Progress & Trending Skills Section ── */}
+      {showOnly !== "metrics" && (
+        <>
+          {/* ── Your Learning Progress Section ── */}
+          <div className="space-y-2.5 sm:space-y-3">
+            <div className="w-full max-w-[540px] flex items-center justify-between">
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
+                Your Learning Progress
+              </h3>
+              <Link
+                href="/learning"
+                className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 transition-colors"
               >
-                + Browse & Save Playlists
-              </button>
+                <span>Browse & Save</span>
+                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </Link>
             </div>
-          </div>
-        ) : (
-          /* Compact Grid of Saved Playlists showing exact video completion count */
-          <div className="w-full max-w-[460px] sm:max-w-[480px] grid grid-cols-2 gap-2 sm:gap-2.5">
+
+            {loading ? (
+              <div className="w-full max-w-[540px] bg-white rounded-[18px] p-6 border border-slate-100 shadow-sm flex items-center justify-center space-x-3 text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin text-[#234B3B]" />
+                <span className="text-xs font-semibold">Loading learning progress...</span>
+              </div>
+            ) : savedPlaylists.length === 0 ? (
+              /* Empty State when user has zero saved YouTube playlists */
+              <div className="w-full max-w-[540px] bg-white rounded-[18px] p-6 border border-dashed border-slate-200 text-center space-y-2.5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
+                  <Video className="w-5 h-5" />
+                </div>
+                <div className="space-y-1 max-w-xs mx-auto">
+                  <h4 className="text-xs font-bold text-slate-900">
+                    No Learning Progress Yet
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Save YouTube playlists on the Learning page to track your real video completion progress here!
+                  </p>
+                </div>
+                <div className="pt-0.5">
+                  <button
+                    onClick={() => router.push("/learning")}
+                    className="px-4 py-2 rounded-full bg-[#234B3B] text-white text-[11px] font-bold hover:bg-[#1b3b2e] shadow-sm transition-all active:scale-95 cursor-pointer"
+                  >
+                    + Browse & Save Playlists
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Compact Grid of Saved Playlists showing exact video completion count */
+              <div className="w-full max-w-[540px] grid grid-cols-2 gap-2 sm:gap-2.5">
             {savedPlaylists.slice(0, 2).map((course, idx) => (
               <motion.div
                 key={course.id}
@@ -442,7 +457,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
 
       {/* ── Trending Skills Section (Below Learning Progress) ── */}
       <div className="space-y-2.5 sm:space-y-3 pt-1">
-        <div className="w-full max-w-[460px] sm:max-w-[480px] flex items-center justify-between">
+        <div className="w-full max-w-[540px] flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4 text-[#7c3aed]" />
             <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
@@ -458,7 +473,7 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </Link>
         </div>
 
-        <div className="w-full max-w-[460px] sm:max-w-[480px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+        <div className="w-full max-w-[540px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
           {/* 1. Python */}
           <motion.div
             whileHover={{ y: -2, scale: 1.02 }}
@@ -583,6 +598,8 @@ export default function MetricCards({ metrics }: { metrics?: MetricsData }) {
           </motion.div>
         </div>
       </div>
+        </>
+      )}
 
       {/* ── 3-Card Retro Pricing Modal ── */}
       <PricingModal
