@@ -626,18 +626,73 @@ export default function SettingsPage() {
       className="max-w-4xl mx-auto space-y-4 pb-24 select-none font-sans px-3 sm:px-4"
     >
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. TOP BENTO GRID (TECHSNAP STYLE: LARGE LEFT CARD + 3 MINI CARDS)  */}
+      {/* 1. TOP BENTO GRID: 3 MINI CARDS LEFT (col-span-5) & PROFILE RIGHT (col-span-7) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch">
-        {/* Left Card: Vibrant Deep Purple/Violet Monogram */}
-        <div className="md:col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-3xl p-6 sm:p-7 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[290px] group">
+      <div className="grid grid-cols-12 gap-2 sm:gap-3.5 items-stretch">
+        {/* Left Column: 3 Mini Cards (Resume, Courses, Projects) */}
+        <div className="col-span-5 flex flex-col gap-1.5 sm:gap-3 justify-between">
+          {/* Card 1: Resume */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 cursor-pointer group"
+          >
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Resume</h3>
+              <p className="text-[9px] sm:text-xs font-semibold text-slate-400 mt-0.5 truncate">
+                {profileData.resume?.filename ? "Update resume" : "Preview resume"}
+              </p>
+            </div>
+            <img
+              src="/images/profile/resume_3d.jpg"
+              alt="Resume"
+              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
+            />
+          </div>
+
+          {/* Card 2: Courses */}
+          <Link
+            href="/roadmaps"
+            className="flex-1 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 group"
+          >
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Courses</h3>
+              <p className="text-[9px] sm:text-xs font-semibold text-slate-400 mt-0.5 truncate">Explore paths</p>
+            </div>
+            <img
+              src="/images/profile/courses_3d.jpg"
+              alt="Courses"
+              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
+            />
+          </Link>
+
+          {/* Card 3: Projects */}
+          <a
+            href="#proof-of-work"
+            className="flex-1 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 group"
+          >
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Projects</h3>
+              <p className="text-xs sm:text-lg font-black text-slate-900 mt-0.5 truncate">
+                {profileData.projects.length || 1}
+              </p>
+            </div>
+            <img
+              src="/images/profile/projects_3d.jpg"
+              alt="Projects"
+              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
+            />
+          </a>
+        </div>
+
+        {/* Right Card: Vibrant Deep Purple/Violet Monogram Profile */}
+        <div className="col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-7 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[210px] sm:min-h-[290px] group">
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-16 -right-16 w-56 h-56 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
 
           {/* Center Monogram Initials */}
           <div
-            className="flex-1 flex items-center justify-center my-auto py-5 relative z-10 cursor-pointer"
+            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-5 relative z-10 cursor-pointer"
             onClick={() => setActiveModal("avatar")}
             title="Change photo or avatar"
           >
@@ -645,10 +700,10 @@ export default function SettingsPage() {
               <img
                 src={personalForm.avatar_url}
                 alt={displayName}
-                className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-3xl border-2 border-purple-300/40 shadow-lg"
+                className="w-16 h-16 sm:w-28 sm:h-28 lg:w-32 lg:h-32 object-cover rounded-2xl sm:rounded-3xl border-2 border-purple-300/40 shadow-lg"
               />
             ) : (
-              <span className="text-7xl sm:text-8xl lg:text-9xl font-black text-white/95 tracking-tight select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
+              <span className="text-5xl sm:text-8xl lg:text-9xl font-black text-white/95 tracking-tight select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
                 {getInitials(displayName)}
               </span>
             )}
@@ -656,107 +711,44 @@ export default function SettingsPage() {
 
           {/* Bottom Profile Details */}
           <div className="relative z-10 space-y-0.5">
-            <p className="text-xs sm:text-sm font-semibold text-purple-200/90">
+            <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-purple-200/90 truncate">
               @{userHandle}
             </p>
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight">
+            <h2 className="text-xs sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight truncate">
               {displayName}
             </h2>
-            <p className="text-xs font-medium text-purple-200/80">
+            <p className="text-[9px] sm:text-xs font-medium text-purple-200/80 truncate">
               {personalForm.headline || "Student"}
             </p>
           </div>
         </div>
-
-        {/* Right Column: 3 Mini Cards */}
-        <div className="md:col-span-5 flex flex-col gap-3 justify-between">
-          {/* Card 1: Resume */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between cursor-pointer group"
-          >
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Resume</h3>
-              <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                {profileData.resume?.filename ? "Update resume" : "Preview resume"}
-              </p>
-            </div>
-            <img
-              src="/images/profile/resume_3d.jpg"
-              alt="Resume"
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
-            />
-          </div>
-
-          {/* Card 2: Courses */}
-          <Link
-            href="/roadmaps"
-            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between group"
-          >
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Courses</h3>
-              <p className="text-xs font-semibold text-slate-400 mt-0.5">Explore learning paths</p>
-            </div>
-            <img
-              src="/images/profile/courses_3d.jpg"
-              alt="Courses"
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
-            />
-          </Link>
-
-          {/* Card 3: Projects */}
-          <a
-            href="#proof-of-work"
-            className="flex-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between group"
-          >
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Projects</h3>
-              <p className="text-base sm:text-lg font-black text-slate-900 mt-0.5">
-                {profileData.projects.length || 1}
-              </p>
-            </div>
-            <img
-              src="/images/profile/projects_3d.jpg"
-              alt="Projects"
-              className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl group-hover:scale-105 transition-transform"
-            />
-          </a>
-        </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 2. SUB-BENTO BAR: FOLLOWERS PILL & EDIT PROFILE PILL BUTTON         */}
+      {/* 2. SUB-BENTO BAR: FOLLOWERS PILL (col-span-5) & EDIT PROFILE (col-span-7) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Left Pill */}
-        <div className="bg-white rounded-2xl sm:rounded-full border border-slate-200/80 px-6 py-3.5 flex items-center justify-center sm:justify-start gap-6 shadow-xs flex-1">
-          <div className="text-sm font-semibold text-slate-600">
+      <div className="grid grid-cols-12 gap-2 sm:gap-3.5 items-stretch">
+        {/* Left Pill: Exactly under Left Cards (Resume/Courses/Projects) */}
+        <div className="col-span-5 bg-white rounded-2xl sm:rounded-full border border-slate-200/80 px-2 sm:px-4 lg:px-6 py-2.5 sm:py-3.5 flex items-center justify-center gap-2 sm:gap-4 shadow-xs">
+          <div className="text-[11px] sm:text-sm font-semibold text-slate-600 truncate">
             <span className="font-black text-slate-900">0</span> Following
           </div>
-          <div className="w-px h-4 bg-slate-200" />
-          <div className="text-sm font-semibold text-slate-600">
+          <div className="w-px h-3 sm:h-4 bg-slate-200 shrink-0" />
+          <div className="text-[11px] sm:text-sm font-semibold text-slate-600 truncate">
             <span className="font-black text-slate-900">0</span> Followers
-          </div>
-          <div className="w-px h-4 bg-slate-200 hidden md:block" />
-          <div className="hidden md:flex items-center gap-2 text-xs text-purple-700 font-bold">
-            <span>🔥 {progressStats.streakDays}d Streak</span>
-            <span>•</span>
-            <span>Lvl {progressStats.level}</span>
-            <span>•</span>
-            <span className="text-amber-600">⚡ {completionReport.totalPercent}% Complete</span>
           </div>
         </div>
 
-        {/* Right Pill: Edit Profile Button */}
+        {/* Right Pill: Edit Profile Button (Exactly under Right Profile Card) */}
         <button
           onClick={() => {
             setModalError("");
             setActiveModal("personal");
           }}
-          className="bg-white rounded-2xl sm:rounded-full border border-slate-200/80 hover:border-purple-300 hover:bg-purple-50/40 px-6 py-3.5 flex items-center justify-center gap-2 text-sm font-bold text-slate-800 transition-all shadow-xs cursor-pointer"
+          className="col-span-7 bg-white rounded-2xl sm:rounded-full border border-slate-200/80 hover:border-purple-300 hover:bg-purple-50/40 px-2 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-bold text-slate-800 transition-all shadow-xs cursor-pointer"
         >
-          <Edit3 className="w-4 h-4 text-slate-600" />
-          <span>Edit Profile</span>
+          <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 shrink-0" />
+          <span className="truncate">Edit Profile</span>
         </button>
       </div>
 
@@ -810,26 +802,33 @@ export default function SettingsPage() {
       {/* 4. "YOUR WEEKLY VIBE" ACTIVITY CARD                                 */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Your weekly vibe</h3>
             <p className="text-xs font-semibold text-slate-400 mt-0.5">{weekData.rangeLabel}</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setWeekOffset((prev) => prev - 1)}
-              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
-              title="Previous week"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setWeekOffset((prev) => prev + 1)}
-              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
-              title="Next week"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60 px-3 py-1.5 rounded-full shadow-2xs">
+              <span>🔥 {progressStats.streakDays}d Streak</span>
+              <span>•</span>
+              <span>Lvl {progressStats.level}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setWeekOffset((prev) => prev - 1)}
+                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
+                title="Previous week"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setWeekOffset((prev) => prev + 1)}
+                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
+                title="Next week"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
