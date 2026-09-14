@@ -1252,5 +1252,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
     </AnimatePresence>
   );
 
+  if (!isOpen || !mounted) return null;
+
   return createPortal(modalContent, document.body);
 }
