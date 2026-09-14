@@ -3121,6 +3121,51 @@ function AchievementModalForm({
   );
 }
 
+// ── HELPER: PROCESS & OPTIMIZE UPLOADED IMAGE ────────────────────────────────
+function processImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("Please select a valid image file (PNG, JPG, or WebP)."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 512;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Failed to decode image file."));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("Failed to read image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 function AvatarModalForm({
   currentUrl,
   onSave,
@@ -3130,34 +3175,101 @@ function AvatarModalForm({
   onSave: (url: string) => void;
   onClose: () => void;
 }) {
-  const [url, setUrl] = useState(currentUrl);
+  const [preview, setPreview] = useState(currentUrl);
+  const [error, setError] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (file: File) => {
+    if (!file) return;
+    setError("");
+    setProcessing(true);
+    try {
+      const dataUrl = await processImageFile(file);
+      setPreview(dataUrl);
+    } catch (err: any) {
+      setError(err?.message || "Failed to process image.");
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
-          Image URL (e.g. GitHub, LinkedIn, or Unsplash)
-        </label>
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://images.unsplash.com/... or https://github.com/username.png"
-          className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-mono rounded-xl outline-none"
-        />
-      </div>
-
-      {url && (
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-          <img src={url} alt="Preview" className="w-12 h-12 rounded-xl object-cover border" />
-          <span className="text-xs font-bold text-slate-700">Photo Preview</span>
+      {error && (
+        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+          {error}
         </div>
       )}
+
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.[0]) handleFileChange(e.target.files[0]);
+        }}
+      />
+
+      {/* Upload & Preview Dropzone */}
+      <div
+        onClick={() => inputRef.current?.click()}
+        className="border-2 border-dashed border-slate-200 hover:border-purple-400 rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center gap-3.5 bg-slate-50/60 hover:bg-purple-50/30 transition-all cursor-pointer group"
+      >
+        {preview ? (
+          <div className="relative group/avatar">
+            <img
+              src={preview}
+              alt="Avatar Preview"
+              className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover border-2 border-purple-300 shadow-md transition-transform group-hover/avatar:scale-105"
+            />
+            <div className="absolute inset-0 rounded-3xl bg-slate-900/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1.5">
+              <Camera className="w-4 h-4" />
+              <span>Change</span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-20 h-20 rounded-3xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+            <Camera className="w-8 h-8" />
+          </div>
+        )}
+
+        <div className="text-center space-y-1">
+          <p className="text-xs sm:text-sm font-bold text-slate-800">
+            {processing
+              ? "Optimizing photo..."
+              : preview
+              ? "Click to choose a different photo"
+              : "Click or tap to upload profile photo"}
+          </p>
+          <p className="text-[11px] text-slate-400 font-medium">
+            Upload any image (PNG, JPG, WebP) directly from your device
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            inputRef.current?.click();
+          }}
+          disabled={processing}
+          className="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-purple-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer mt-1"
+        >
+          <UploadCloud className="w-3.5 h-3.5" />
+          <span>Select Photo from Device</span>
+        </button>
+      </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <button
           type="button"
-          onClick={() => onSave("")}
+          onClick={() => {
+            setPreview("");
+            onSave("");
+          }}
           className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
         >
           Remove Photo (Use Initials)
@@ -3172,8 +3284,9 @@ function AvatarModalForm({
           </button>
           <button
             type="button"
-            onClick={() => onSave(url.trim())}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white text-xs font-bold shadow-sm shadow-purple-900/20 cursor-pointer"
+            disabled={processing}
+            onClick={() => onSave(preview.trim())}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white text-xs font-bold shadow-sm shadow-purple-900/20 cursor-pointer disabled:opacity-50"
           >
             Save Photo
           </button>
@@ -3316,17 +3429,59 @@ function PersonalModalForm({
         />
       </div>
 
+      {/* Direct Image File Upload instead of URL input */}
       <div>
-        <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
-          Avatar URL (Optional)
+        <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+          Profile Photo
         </label>
-        <input
-          type="url"
-          value={form.avatar_url || ""}
-          onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-          placeholder="https://github.com/username.png"
-          className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-mono rounded-xl outline-none focus:border-purple-600"
-        />
+        <div className="flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+          {form.avatar_url ? (
+            <img
+              src={form.avatar_url}
+              alt="Avatar preview"
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-300 shrink-0 shadow-xs"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-sm shrink-0">
+              {form.full_name ? form.full_name.slice(0, 2).toUpperCase() : "SC"}
+            </div>
+          )}
+
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <p className="text-xs font-bold text-slate-800 truncate">
+              {form.avatar_url ? "Custom photo uploaded" : "Default initials monogram"}
+            </p>
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Upload Image</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      try {
+                        const dataUrl = await processImageFile(f);
+                        setForm((prev) => ({ ...prev, avatar_url: dataUrl }));
+                      } catch {}
+                    }
+                  }}
+                />
+              </label>
+              {form.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, avatar_url: "" }))}
+                  className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
