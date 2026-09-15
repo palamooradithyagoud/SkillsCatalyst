@@ -4,6 +4,7 @@ import AppShell from "@/components/AppShell";
 import QueryProvider from "@/lib/query-provider";
 import { AuthProvider } from "@/lib/auth";
 import { TransitionProvider } from "@/providers/TransitionProvider";
+import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
   title: "SkillsCatalyst — Learn Faster. Grow Smarter.",
@@ -35,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -47,13 +48,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased flex flex-col min-h-screen" suppressHydrationWarning>
-        <QueryProvider>
-          <TransitionProvider>
-            <AuthProvider>
-              <AppShell>{children}</AppShell>
-            </AuthProvider>
-          </TransitionProvider>
-        </QueryProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <QueryProvider>
+            <TransitionProvider>
+              <AuthProvider>
+                <AppShell>{children}</AppShell>
+              </AuthProvider>
+            </TransitionProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

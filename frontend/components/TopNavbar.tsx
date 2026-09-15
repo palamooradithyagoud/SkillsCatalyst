@@ -11,6 +11,7 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 interface TopNavbarProps {
   onOpenSearch?: () => void;
@@ -53,7 +54,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   };
 
   return (
-    <header className="w-full h-14 bg-white/60 backdrop-blur-md border-b border-white/40 sticky top-0 z-40 px-3 sm:px-5 flex items-center justify-between select-none">
+    <header className="hidden md:flex w-full h-14 bg-white/60 backdrop-blur-md border-b border-white/40 sticky top-0 z-40 px-3 sm:px-5 items-center justify-between select-none">
       {/* ── Left: Official SkillsCatalyst Brand Logo + Dropdown ── */}
       <div className="flex items-center gap-2">
         <div className="relative">
@@ -127,6 +128,9 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
         >
           <Search className="w-[18px] h-[18px]" strokeWidth={2} />
         </button>
+
+        {/* 2. Theme Toggle Switch */}
+        <ThemeSwitch />
 
         {/* 3. User Initials Avatar */}
         <div className="relative">

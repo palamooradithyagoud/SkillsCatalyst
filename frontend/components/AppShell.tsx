@@ -38,9 +38,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Top Navbar matching the reference design */}
       <TopNavbar />
 
+      {/* Mobile Nav: lives outside the flex row so it doesn't steal width from main */}
+      <MobileNav />
+
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar />
-        <MobileNav />
         <main className="relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-8 overflow-y-auto max-w-full overflow-x-hidden min-w-0">
           <ErrorBoundary>
             {children}
