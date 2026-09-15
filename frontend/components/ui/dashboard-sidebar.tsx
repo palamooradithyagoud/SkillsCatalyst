@@ -244,13 +244,23 @@ export function SidebarNav({
   activeId,
   onSelect,
   activeWorkspace,
-  onWorkspaceSelect
+  onWorkspaceSelect,
+  groups = mockNavGroups,
+  bottomItems = mockBottomItems,
+  workspaceName = 'Acme Corp',
+  planLabel = 'Pro Plan',
+  headerActions
 }: { 
   className?: string,
   activeId?: string,
   onSelect?: (id: string) => void,
   activeWorkspace?: string,
-  onWorkspaceSelect?: (ws: string) => void
+  onWorkspaceSelect?: (ws: string) => void,
+  groups?: NavGroupData[],
+  bottomItems?: NavItemData[],
+  workspaceName?: string,
+  planLabel?: string,
+  headerActions?: React.ReactNode
 }) {
   const [internalId, setInternalId] = useState('home');
   const currentId = activeId !== undefined ? activeId : internalId;
@@ -258,10 +268,15 @@ export function SidebarNav({
 
   return (
     <div className={`flex flex-col w-[260px] h-full bg-white border-r border-slate-200/80 p-3 font-sans ${className}`}>
-      <WorkspaceSwitcher selected={activeWorkspace} onSelect={onWorkspaceSelect} />
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex-1 min-w-0">
+          <WorkspaceSwitcher selected={activeWorkspace || workspaceName} onSelect={onWorkspaceSelect} />
+        </div>
+        {headerActions}
+      </div>
 
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-4 mt-2">
-        {mockNavGroups.map((group, idx) => (
+        {groups.map((group, idx) => (
           <div key={idx} className="flex flex-col gap-0.5">
             {group.heading && (
               <span className="px-2.5 mb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
@@ -281,7 +296,7 @@ export function SidebarNav({
       </div>
 
       <div className="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-0.5">
-        {mockBottomItems.map(item => (
+        {bottomItems.map(item => (
           <NavItem 
             key={item.id} 
             item={item} 
