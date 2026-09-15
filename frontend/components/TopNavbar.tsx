@@ -1,15 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Search,
   ChevronDown,
-  Bell,
-  MessageSquare,
-  Sparkles,
   Settings,
   LogOut,
   User,
@@ -57,7 +53,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   };
 
   return (
-    <header className="w-full h-14 bg-white border-b border-slate-200/80 sticky top-0 z-40 px-3 sm:px-5 flex items-center justify-between select-none shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+    <header className="w-full h-14 bg-white/60 backdrop-blur-md border-b border-white/40 sticky top-0 z-40 px-3 sm:px-5 flex items-center justify-between select-none">
       {/* ── Left: Official SkillsCatalyst Brand Logo + Dropdown ── */}
       <div className="flex items-center gap-2">
         <div className="relative">
@@ -132,76 +128,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
           <Search className="w-[18px] h-[18px]" strokeWidth={2} />
         </button>
 
-        {/* 2. Gradient AI Orb */}
-        <Link
-          href="/ai-mentor"
-          title="AI Assistant & Mentor"
-          className="relative p-1 rounded-full hover:scale-105 active:scale-95 transition-transform cursor-pointer group"
-        >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 via-sky-400 via-purple-400 to-pink-400 shadow-sm shadow-purple-500/25 p-[2px] flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-white/30 backdrop-blur-xs flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-white drop-shadow-xs" />
-            </div>
-          </div>
-        </Link>
-
-        {/* 3. Chat / Messages Icon */}
-        <Link
-          href="/ai-mentor"
-          title="Chat & Discussions"
-          className="p-1.5 text-slate-600 hover:text-[#5227FF] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-        >
-          <MessageSquare className="w-[18px] h-[18px]" strokeWidth={2} />
-        </Link>
-
-        {/* 4. Streak & Target Pill (🔥 2 | 🎯 1150) */}
-        <div className="flex items-center gap-2.5 px-3 py-1 bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 shadow-2xs">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm leading-none" role="img" aria-label="streak">🔥</span>
-            <span className="text-slate-800 font-bold">2</span>
-          </div>
-          <span className="text-slate-300 font-light">|</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm leading-none" role="img" aria-label="target">🎯</span>
-            <span className="text-slate-800 font-bold">1150</span>
-          </div>
-        </div>
-
-        {/* 5. Notification Bell with Count Badge */}
-        <div className="relative">
-          <button
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            title="Notifications"
-            className="p-1.5 text-slate-600 hover:text-[#5227FF] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer relative"
-          >
-            <Bell className="w-[19px] h-[19px]" strokeWidth={2} />
-            <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-[#EF4444] text-white text-[10px] font-extrabold flex items-center justify-center ring-2 ring-white shadow-xs">
-              1
-            </span>
-          </button>
-
-          {/* Notifications Dropdown */}
-          {isNotificationsOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)} />
-              <div className="absolute right-0 top-[46px] w-72 bg-white border border-slate-200/90 rounded-2xl shadow-xl shadow-slate-900/10 z-50 p-3 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-100">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="font-bold text-xs text-slate-900">Notifications</span>
-                  <span className="text-[11px] text-[#5227FF] font-semibold cursor-pointer">Mark all read</span>
-                </div>
-                <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-50/50 border border-purple-100">
-                  <div className="w-2 h-2 rounded-full bg-[#5227FF] mt-1.5 shrink-0" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-semibold text-slate-900">Day 2 Streak Achieved! 🔥</span>
-                    <span className="text-[11px] text-slate-500">Keep learning today to hit your 7-day bonus reward.</span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 6. User Initials Avatar ('AG' / 'PG') */}
+        {/* 3. User Initials Avatar */}
         <div className="relative">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
