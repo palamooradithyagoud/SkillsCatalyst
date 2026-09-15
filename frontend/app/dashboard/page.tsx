@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
 import MetricCards from "@/components/MetricCards";
 import QuickHubNav from "@/components/QuickHubNav";
 import UpcomingList from "@/components/UpcomingList";
@@ -83,10 +82,7 @@ export default function DashboardPage() {
       animate="visible"
       className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-2.5 sm:space-y-3.5"
     >
-      {/* ── Main Header Section ── */}
-      <motion.div variants={itemVariants}>
-        <Header userName={displayName} />
-      </motion.div>
+
 
       {/* ── Main Content Grid: Compact side-by-side without empty gap ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] xl:grid-cols-[510px_1fr] gap-5 sm:gap-6 items-start">
