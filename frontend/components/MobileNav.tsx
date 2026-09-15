@@ -38,6 +38,7 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import { CurvedNavbar, type iNavItem } from "@/components/ui/curved-menu";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 const platformNavItems: iNavItem[] = [
   { heading: "Dashboard", href: "/dashboard", subheading: "Overview & Metrics" },
@@ -175,6 +176,11 @@ function MobileNavContent() {
           >
             <span>{userInitial}</span>
           </button>
+
+          {/* Theme Toggle — scaled down to fit compact mobile bar */}
+          <div style={{ transform: "scale(0.65)", transformOrigin: "center" }} className="shrink-0">
+            <ThemeSwitch />
+          </div>
 
           {/* Menu Drawer Toggle Button */}
           <button
