@@ -1353,7 +1353,7 @@ export default function SettingsPage() {
             return (
               <div
                 key={item.key}
-                className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 hover:border-purple-300 hover:shadow-xs transition-all space-y-2.5 group"
+                className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 transition-all space-y-2.5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1364,30 +1364,19 @@ export default function SettingsPage() {
                     className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
                       isConnected
                         ? "bg-purple-100 text-purple-800 border border-purple-200"
-                        : "bg-slate-200/80 text-slate-500"
+                        : "bg-slate-100 text-slate-400 border border-slate-200/60"
                     }`}
                   >
-                    {isConnected ? "Connected" : "Not Linked"}
+                    {isConnected ? "Connected" : "Not Connected"}
                   </span>
                 </div>
 
                 {isConnected ? (
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-slate-800 truncate">
+                    <div className="text-xs">
+                      <span className="font-mono font-bold text-slate-800 truncate block">
                         {displayHandle || item.val}
                       </span>
-                      {item.val && (
-                        <a
-                          href={item.val.startsWith("http") ? item.val : `${item.urlPrefix}${item.val}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-purple-600 hover:text-purple-800 transition-colors p-1"
-                          title={`Open ${item.title} profile`}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
                     </div>
                     {item.stat && item.stat.summary && (
                       <p className="text-[11px] font-medium text-purple-700 truncate">
@@ -1396,13 +1385,9 @@ export default function SettingsPage() {
                     )}
                   </div>
                 ) : (
-                  <Link
-                    href="/settings/edit?tab=coding"
-                    className="text-[11px] font-medium text-slate-400 hover:text-purple-600 flex items-center gap-1 transition-colors pt-1"
-                  >
-                    <span>Click to connect</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <p className="text-[11px] font-medium text-slate-400">
+                    Not connected
+                  </p>
                 )}
               </div>
             );

@@ -1251,10 +1251,34 @@ function EditProfileContent() {
                 },
               ].map((p) => {
                 const isLinked = !!p.val;
+                const getPlatformUrl = (key: string, rawVal: string) => {
+                  if (!rawVal || !rawVal.trim()) return "";
+                  const v = rawVal.trim();
+                  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+                  const username = v.replace(/^@/, "").replace(/\/$/, "");
+                  switch (key) {
+                    case "leetcode":
+                      return `https://leetcode.com/u/${username}`;
+                    case "github":
+                      return `https://github.com/${username}`;
+                    case "codeforces":
+                      return `https://codeforces.com/profile/${username}`;
+                    case "codechef":
+                      return `https://www.codechef.com/users/${username}`;
+                    case "hackerrank":
+                      return `https://www.hackerrank.com/profile/${username}`;
+                    case "geeksforgeeks":
+                      return `https://auth.geeksforgeeks.org/user/${username}`;
+                    default:
+                      return `https://${username}`;
+                  }
+                };
+                const profileUrl = getPlatformUrl(p.key, p.val);
+
                 return (
                   <div
                     key={p.key}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-[#18181B] border border-slate-200/90 dark:border-[#27272A] space-y-2 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-[#18181B] border border-slate-200/90 dark:border-[#27272A] space-y-2.5 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1270,7 +1294,7 @@ function EditProfileContent() {
                             : "bg-slate-100 dark:bg-[#222226] text-slate-500 dark:text-zinc-400"
                         }`}
                       >
-                        {isLinked ? "Configured" : "Optional"}
+                        {isLinked ? "Connected" : "Not Linked"}
                       </span>
                     </div>
 
@@ -1286,6 +1310,28 @@ function EditProfileContent() {
                       placeholder={p.placeholder}
                       className="w-full bg-slate-50 dark:bg-[#141417] border border-slate-200 dark:border-[#2A2A2E] px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 transition-colors"
                     />
+
+                    {/* Profile Link Display in Edit Section */}
+                    {profileUrl ? (
+                      <div className="pt-1.5 flex items-center justify-between border-t border-slate-100 dark:border-[#242428]">
+                        <a
+                          href={profileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-[#7C3AED] hover:text-[#6D28D9] dark:text-purple-400 dark:hover:text-purple-300 transition-colors truncate max-w-full group/link"
+                          title={`Open ${p.title} profile`}
+                        >
+                          <span className="truncate underline underline-offset-2">{profileUrl}</span>
+                          <ExternalLink className="w-3 h-3 shrink-0 text-[#7C3AED] dark:text-purple-400 group-hover/link:translate-x-0.5 transition-transform" />
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="pt-1 border-t border-slate-100/60 dark:border-[#222226]">
+                        <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic">
+                          Enter username to view profile link
+                        </p>
+                      </div>
+                    )}
 
                     {p.stat && p.stat.summary && (
                       <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300 truncate">
