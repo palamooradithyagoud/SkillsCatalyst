@@ -1204,7 +1204,9 @@ function EditProfileContent() {
                 {
                   key: "leetcode",
                   title: "LeetCode",
-                  dot: "bg-amber-400",
+                  logo: "/images/coding/leetcode.png",
+                  logoClass: "h-5 w-auto max-w-[24px] object-contain",
+                  showTitle: true,
                   val: codingForm.leetcode || "",
                   placeholder: "Username or https://leetcode.com/u/...",
                   stat: profileData.coding_stats?.leetcode,
@@ -1212,7 +1214,9 @@ function EditProfileContent() {
                 {
                   key: "github",
                   title: "GitHub",
-                  dot: "bg-slate-900 dark:bg-zinc-100",
+                  logo: "/images/coding/github.png",
+                  logoClass: "h-5 w-auto max-w-[80px] object-contain dark:invert",
+                  showTitle: false,
                   val: codingForm.github || "",
                   placeholder: "Username or https://github.com/...",
                   stat: profileData.coding_stats?.github,
@@ -1220,7 +1224,9 @@ function EditProfileContent() {
                 {
                   key: "codeforces",
                   title: "Codeforces",
-                  dot: "bg-rose-500",
+                  logo: "/images/coding/codeforces.svg",
+                  logoClass: "h-5 w-5 object-contain",
+                  showTitle: true,
                   val: codingForm.codeforces || "",
                   placeholder: "Handle or https://codeforces.com/profile/...",
                   stat: profileData.coding_stats?.codeforces,
@@ -1228,7 +1234,9 @@ function EditProfileContent() {
                 {
                   key: "codechef",
                   title: "CodeChef",
-                  dot: "bg-amber-800",
+                  logo: "/images/coding/codechef.png",
+                  logoClass: "h-5 w-auto max-w-[90px] object-contain dark:brightness-110",
+                  showTitle: false,
                   val: codingForm.codechef || "",
                   placeholder: "Username or https://www.codechef.com/users/...",
                   stat: profileData.coding_stats?.codechef,
@@ -1236,7 +1244,9 @@ function EditProfileContent() {
                 {
                   key: "hackerrank",
                   title: "HackerRank",
-                  dot: "bg-purple-500",
+                  logo: "/images/coding/hackerrank.png",
+                  logoClass: "h-5 w-auto max-w-[24px] object-contain",
+                  showTitle: true,
                   val: codingForm.hackerrank || "",
                   placeholder: "Username or https://www.hackerrank.com/profile/...",
                   stat: profileData.coding_stats?.hackerrank,
@@ -1244,7 +1254,9 @@ function EditProfileContent() {
                 {
                   key: "geeksforgeeks",
                   title: "GeeksforGeeks",
-                  dot: "bg-green-600",
+                  logo: "/images/coding/geeksforgeeks.png",
+                  logoClass: "h-5 w-auto max-w-[110px] object-contain dark:brightness-110",
+                  showTitle: false,
                   val: codingForm.geeksforgeeks || "",
                   placeholder: "Username or https://auth.geeksforgeeks.org/user/...",
                   stat: profileData.coding_stats?.geeksforgeeks,
@@ -1281,11 +1293,17 @@ function EditProfileContent() {
                     className="p-3.5 rounded-2xl bg-white dark:bg-[#18181B] border border-slate-200/90 dark:border-[#27272A] space-y-2.5 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2.5 h-2.5 rounded-full ${p.dot} shadow-xs`} />
-                        <span className="text-xs font-black text-slate-900 dark:text-white">
-                          {p.title}
-                        </span>
+                      <div className="flex items-center gap-2 min-h-[26px]">
+                        <img
+                          src={p.logo}
+                          alt={p.title}
+                          className={p.logoClass}
+                        />
+                        {p.showTitle && (
+                          <span className="text-xs font-black text-slate-900 dark:text-white">
+                            {p.title}
+                          </span>
+                        )}
                       </div>
                       <span
                         className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${

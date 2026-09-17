@@ -1338,12 +1338,12 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
-            { key: "leetcode", title: "LeetCode", dot: "bg-amber-400", val: leetcodeInput, stat: codingStats.leetcode, urlPrefix: "https://leetcode.com/u/" },
-            { key: "github", title: "GitHub", dot: "bg-slate-900", val: githubInput, stat: codingStats.github, urlPrefix: "https://github.com/" },
-            { key: "codeforces", title: "Codeforces", dot: "bg-rose-500", val: codeforcesInput, stat: codingStats.codeforces, urlPrefix: "https://codeforces.com/profile/" },
-            { key: "codechef", title: "CodeChef", dot: "bg-amber-800", val: codechefInput, stat: codingStats.codechef, urlPrefix: "https://www.codechef.com/users/" },
-            { key: "hackerrank", title: "HackerRank", dot: "bg-purple-500", val: hackerrankInput, stat: codingStats.hackerrank, urlPrefix: "https://www.hackerrank.com/profile/" },
-            { key: "geeksforgeeks", title: "GeeksforGeeks", dot: "bg-green-600", val: gfgInput, stat: codingStats.geeksforgeeks, urlPrefix: "https://auth.geeksforgeeks.org/user/" },
+            { key: "leetcode", title: "LeetCode", logo: "/images/coding/leetcode.png", logoClass: "h-5 w-auto max-w-[24px] object-contain", showTitle: true, val: leetcodeInput, stat: codingStats.leetcode },
+            { key: "github", title: "GitHub", logo: "/images/coding/github.png", logoClass: "h-5 w-auto max-w-[80px] object-contain", showTitle: false, val: githubInput, stat: codingStats.github },
+            { key: "codeforces", title: "Codeforces", logo: "/images/coding/codeforces.svg", logoClass: "h-5 w-5 object-contain", showTitle: true, val: codeforcesInput, stat: codingStats.codeforces },
+            { key: "codechef", title: "CodeChef", logo: "/images/coding/codechef.png", logoClass: "h-5 w-auto max-w-[90px] object-contain", showTitle: false, val: codechefInput, stat: codingStats.codechef },
+            { key: "hackerrank", title: "HackerRank", logo: "/images/coding/hackerrank.png", logoClass: "h-5 w-auto max-w-[24px] object-contain", showTitle: true, val: hackerrankInput, stat: codingStats.hackerrank },
+            { key: "geeksforgeeks", title: "GeeksforGeeks", logo: "/images/coding/geeksforgeeks.png", logoClass: "h-5 w-auto max-w-[110px] object-contain", showTitle: false, val: gfgInput, stat: codingStats.geeksforgeeks },
           ].map((item) => {
             const isConnected = !!(item.val || (item.stat && item.stat.configured));
             const displayHandle = item.val
@@ -1356,9 +1356,15 @@ export default function SettingsPage() {
                 className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 transition-all space-y-2.5"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${item.dot} shadow-xs`} />
-                    <span className="text-xs font-black text-slate-900">{item.title}</span>
+                  <div className="flex items-center gap-2 min-h-[26px]">
+                    <img
+                      src={item.logo}
+                      alt={item.title}
+                      className={item.logoClass}
+                    />
+                    {item.showTitle && (
+                      <span className="text-xs font-black text-slate-900">{item.title}</span>
+                    )}
                   </div>
                   <span
                     className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
