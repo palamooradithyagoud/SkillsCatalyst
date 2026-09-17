@@ -53,7 +53,7 @@ export default function ThemeSwitch() {
           box-shadow: inset 8px -4px 0px 0px #fff;
         }
         .theme-switch input:checked + .theme-slider {
-          background-color: #00a6ff;
+          background-color: #7C3AED;
         }
         .theme-switch input:checked + .theme-slider:before {
           transform: translateX(1.8em);

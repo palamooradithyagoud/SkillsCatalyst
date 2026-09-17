@@ -47,6 +47,7 @@ import {
   GitBranch,
   ChevronLeft,
   ChevronRight,
+  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -187,6 +188,7 @@ export default function SettingsPage() {
 
   // ── Modals State ──────────────────────────────────────────────────────────
   type ModalType =
+    | "edit_profile"
     | "personal"
     | "skill"
     | "experience"
@@ -201,12 +203,43 @@ export default function SettingsPage() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [modalError, setModalError] = useState("");
 
+  // ── Unified Edit Profile Tab State ─────────────────────────────────────────
+  type EditProfileTab = "personal" | "experience" | "projects" | "skills" | "education" | "languages";
+  const [editProfileTab, setEditProfileTab] = useState<EditProfileTab>("personal");
+  const [editProfileItemView, setEditProfileItemView] = useState<"list" | "form">("list");
+  const [editProfileSubItem, setEditProfileSubItem] = useState<any>(null);
+  const [personalSavedToast, setPersonalSavedToast] = useState(false);
+  const [newSkillName, setNewSkillName] = useState("");
+  const [newSkillCategory, setNewSkillCategory] = useState("Programming / scripting Languages");
+  const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [newLangTabInput, setNewLangTabInput] = useState("");
+
   // ── Interactive UI States ─────────────────────────────────────────────────
   const [showVerifyBanner, setShowVerifyBanner] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [newLangInput, setNewLangInput] = useState("");
   const [showAddLang, setShowAddLang] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sc_profile_languages");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLanguages(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
+  const handleUpdateLanguages = (newLangs: string[]) => {
+    setLanguages(newLangs);
+    try {
+      localStorage.setItem("sc_profile_languages", JSON.stringify(newLangs));
+    } catch {}
+  };
 
   // ── Progress Stats State ──────────────────────────────────────────────────
   const [progressStats, setProgressStats] = useState<UserProgressStats>({
@@ -831,17 +864,13 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Right Pill: Edit Profile Button (Exactly under Right Profile Card) */}
-        <button
-          onClick={() => {
-            setModalError("");
-            setActiveModal("personal");
-          }}
+        <Link
+          href="/settings/edit"
           className="col-span-7 bg-white rounded-2xl sm:rounded-full border border-slate-200/80 hover:border-purple-300 hover:bg-purple-50/40 px-2 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-bold text-slate-800 transition-all shadow-xs cursor-pointer"
         >
           <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 shrink-0" />
           <span className="truncate">Edit Profile</span>
-        </button>
+        </Link>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
@@ -959,16 +988,6 @@ export default function SettingsPage() {
       <div id="experience" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Experience</h3>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setActiveModal("experience");
-            }}
-            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Experience</span>
-          </button>
         </div>
 
         {profileData.experiences.length === 0 ? (
@@ -978,28 +997,11 @@ export default function SettingsPage() {
         ) : (
           <div className="space-y-3 pt-1">
             {profileData.experiences.map((exp) => (
-              <div key={exp.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 relative group space-y-1">
+              <div key={exp.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-xs font-black text-slate-900">{exp.role || (exp as any).job_title}</h4>
                     <p className="text-xs font-semibold text-purple-700">{exp.company_name}</p>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        setEditingItem(exp);
-                        setActiveModal("experience");
-                      }}
-                      className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteExperience(exp.id!)}
-                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium">
@@ -1032,16 +1034,6 @@ export default function SettingsPage() {
       <div id="proof-of-work" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Proof of Work</h3>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setActiveModal("project");
-            }}
-            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Project</span>
-          </button>
         </div>
 
         {profileData.projects.length === 0 ? (
@@ -1051,26 +1043,9 @@ export default function SettingsPage() {
         ) : (
           <div className="space-y-3 pt-1">
             {profileData.projects.map((proj) => (
-              <div key={proj.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 relative group space-y-2">
+              <div key={proj.id} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="text-xs font-black text-slate-900">{proj.project_name || (proj as any).title}</h4>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        setEditingItem(proj);
-                        setActiveModal("project");
-                      }}
-                      className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProject(proj.id!)}
-                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
                 {proj.description && (
                   <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
@@ -1122,16 +1097,6 @@ export default function SettingsPage() {
       <div id="skills" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Expertise & Skills</h3>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setActiveModal("skill");
-            }}
-            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Skill</span>
-          </button>
         </div>
 
         {profileData.skills.length === 0 ? (
@@ -1154,7 +1119,7 @@ export default function SettingsPage() {
                     {matchedSkills.map((s) => (
                       <div
                         key={s.id || s.skill_name}
-                        className="group px-3.5 py-2 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-purple-300 transition-all flex items-center gap-2"
+                        className="px-3.5 py-2 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2"
                       >
                         {cat.iconType === "terminal" ? (
                           <span className="text-[11px] font-mono font-bold text-amber-500">{`>_`}</span>
@@ -1172,13 +1137,6 @@ export default function SettingsPage() {
                           <Sparkles className="w-3.5 h-3.5 text-purple-500" />
                         )}
                         <span className="text-xs font-bold text-slate-800">{s.skill_name}</span>
-                        <button
-                          onClick={() => handleDeleteSkill(s.id || s.skill_name)}
-                          className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-0.5"
-                          title="Remove skill"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -1195,66 +1153,16 @@ export default function SettingsPage() {
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Languages</h3>
-          <button
-            onClick={() => setShowAddLang(!showAddLang)}
-            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Language</span>
-          </button>
         </div>
-
-        {showAddLang && (
-          <div className="flex gap-2 pb-2">
-            <input
-              type="text"
-              value={newLangInput}
-              onChange={(e) => setNewLangInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && newLangInput.trim()) {
-                  e.preventDefault();
-                  if (!languages.includes(newLangInput.trim())) {
-                    setLanguages([...languages, newLangInput.trim()]);
-                  }
-                  setNewLangInput("");
-                  setShowAddLang(false);
-                }
-              }}
-              placeholder="e.g. Hindi, Telugu, German (Press Enter)"
-              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
-              autoFocus
-            />
-            <button
-              onClick={() => {
-                if (newLangInput.trim() && !languages.includes(newLangInput.trim())) {
-                  setLanguages([...languages, newLangInput.trim()]);
-                }
-                setNewLangInput("");
-                setShowAddLang(false);
-              }}
-              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 cursor-pointer"
-            >
-              Add
-            </button>
-          </div>
-        )}
 
         <div className="flex flex-wrap gap-2 pt-1">
           {languages.map((lang) => (
             <span
               key={lang}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs font-semibold text-indigo-700 group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs font-semibold text-indigo-700"
             >
               <Languages className="w-3.5 h-3.5 text-indigo-500" />
               <span>{lang}</span>
-              {languages.length > 1 && (
-                <button
-                  onClick={() => setLanguages(languages.filter((l) => l !== lang))}
-                  className="text-indigo-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ml-1"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
             </span>
           ))}
         </div>
@@ -1266,16 +1174,6 @@ export default function SettingsPage() {
       <div id="education" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Education</h3>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setActiveModal("education");
-            }}
-            className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Education</span>
-          </button>
         </div>
 
         {profileData.education.length === 0 ? (
@@ -1285,7 +1183,7 @@ export default function SettingsPage() {
         ) : (
           <div className="space-y-4 pt-1">
             {profileData.education.map((edu) => (
-              <div key={edu.id} className="flex items-start gap-3.5 group relative">
+              <div key={edu.id} className="flex items-start gap-3.5">
                 {/* Square Orange Initial Badge (matching VC in screenshot) */}
                 <div className="w-12 h-12 rounded-2xl bg-[#F97316] text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs">
                   {getOrgInitials(edu.college || (edu as any).institution || "VC")}
@@ -1296,23 +1194,6 @@ export default function SettingsPage() {
                     <h4 className="text-sm font-bold text-slate-900 truncate">
                       {edu.college || (edu as any).institution}
                     </h4>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => {
-                          setEditingItem(edu);
-                          setActiveModal("education");
-                        }}
-                        className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEducation(edu.id!)}
-                        className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   </div>
 
                   <p className="text-xs text-slate-600 font-medium mt-0.5">
@@ -1809,162 +1690,6 @@ export default function SettingsPage() {
       {/* 12. INTERACTIVE MODALS                                               */}
       {/* ─────────────────────────────────────────────────────────────────── */}
 
-      {/* MODAL: EDIT PERSONAL PROFILE */}
-      <ModalShell
-        isOpen={activeModal === "personal"}
-        onClose={() => {
-          setActiveModal(null);
-          setModalError("");
-        }}
-        title="Edit Profile Details"
-        error={modalError}
-      >
-        <PersonalModalForm
-          initialData={personalForm}
-          onSave={async (updated) => {
-            setModalError("");
-            const res = await handleSavePersonal(undefined, updated);
-            if (res && res.success) {
-              setActiveModal(null);
-            } else {
-              setModalError(res?.error || "Failed to update profile details.");
-            }
-          }}
-          onClose={() => {
-            setActiveModal(null);
-            setModalError("");
-          }}
-        />
-      </ModalShell>
-
-      {/* MODAL: ADD/EDIT SKILL */}
-      <ModalShell
-        isOpen={activeModal === "skill"}
-        onClose={() => {
-          setActiveModal(null);
-          setModalError("");
-        }}
-        title="Add Skill to Hub"
-        error={modalError}
-      >
-        <SkillModalForm
-          onSave={async (skill) => {
-            setModalError("");
-            const res = await saveSkill(skill);
-            if (res.success && res.skill) {
-              setProfileData((prev) => {
-                const nextSkills = prev.skills.filter((s) => s.id !== res.skill!.id && s.skill_name.toLowerCase() !== res.skill!.skill_name.toLowerCase());
-                nextSkills.push(res.skill!);
-                return { ...prev, skills: nextSkills };
-              });
-              setActiveModal(null);
-            } else {
-              setModalError(res.error || "Failed to save skill to database.");
-            }
-          }}
-          onClose={() => {
-            setActiveModal(null);
-            setModalError("");
-          }}
-        />
-      </ModalShell>
-
-      {/* MODAL: ADD/EDIT EXPERIENCE */}
-      <ModalShell
-        isOpen={activeModal === "experience"}
-        onClose={() => {
-          setActiveModal(null);
-          setModalError("");
-        }}
-        title={editingItem ? "Edit Experience" : "Add Work Experience"}
-        error={modalError}
-      >
-        <ExperienceModalForm
-          initialData={editingItem}
-          onSave={async (exp) => {
-            setModalError("");
-            const res = await saveExperience(exp);
-            if (res.success && res.experience) {
-              setProfileData((prev) => {
-                const existing = prev.experiences.filter((e) => e.id !== res.experience!.id);
-                return { ...prev, experiences: [res.experience!, ...existing] };
-              });
-              setActiveModal(null);
-            } else {
-              setModalError(res.error || "Failed to save experience to database.");
-            }
-          }}
-          onClose={() => {
-            setActiveModal(null);
-            setModalError("");
-          }}
-        />
-      </ModalShell>
-
-      {/* MODAL: ADD/EDIT EDUCATION */}
-      <ModalShell
-        isOpen={activeModal === "education"}
-        onClose={() => {
-          setActiveModal(null);
-          setModalError("");
-        }}
-        title={editingItem ? "Edit Education" : "Add Education"}
-        error={modalError}
-      >
-        <EducationModalForm
-          initialData={editingItem}
-          onSave={async (edu) => {
-            setModalError("");
-            const res = await saveEducation(edu);
-            if (res.success && res.education) {
-              setProfileData((prev) => {
-                const existing = prev.education.filter((e) => e.id !== res.education!.id);
-                return { ...prev, education: [res.education!, ...existing] };
-              });
-              setActiveModal(null);
-            } else {
-              setModalError(res.error || "Failed to save education to database.");
-            }
-          }}
-          onClose={() => {
-            setActiveModal(null);
-            setModalError("");
-          }}
-        />
-      </ModalShell>
-
-      {/* MODAL: ADD/EDIT PROJECT */}
-      <ModalShell
-        isOpen={activeModal === "project"}
-        onClose={() => {
-          setActiveModal(null);
-          setModalError("");
-        }}
-        title={editingItem ? "Edit Project" : "Add Portfolio Project"}
-        error={modalError}
-      >
-        <ProjectModalForm
-          initialData={editingItem}
-          onSave={async (proj) => {
-            setModalError("");
-            const res = await saveProject(proj);
-            if (res.success && res.project) {
-              setProfileData((prev) => {
-                const existing = prev.projects.filter((p) => p.id !== res.project!.id);
-                return { ...prev, projects: [res.project!, ...existing] };
-              });
-              setActiveModal(null);
-            } else {
-              setModalError(res.error || "Failed to save project to database.");
-            }
-          }}
-          onClose={() => {
-            setActiveModal(null);
-            setModalError("");
-          }}
-        />
-      </ModalShell>
-
       {/* MODAL: ADD CERTIFICATION */}
       <ModalShell
         isOpen={activeModal === "cert"}
@@ -2413,7 +2138,7 @@ function ExperienceModalForm({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Role / Job Title
@@ -2442,7 +2167,7 @@ function ExperienceModalForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Location
@@ -2462,7 +2187,7 @@ function ExperienceModalForm({
           <select
             value={workType}
             onChange={(e) => setWorkType(e.target.value as any)}
-            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none cursor-pointer"
           >
             <option value="Full-time">Full-time</option>
             <option value="Internship">Internship</option>
@@ -2478,7 +2203,7 @@ function ExperienceModalForm({
           <select
             value={empType}
             onChange={(e) => setEmpType(e.target.value as any)}
-            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none"
+            className="w-full bg-white border border-slate-200 px-3 py-2 text-xs font-semibold rounded-xl outline-none cursor-pointer"
           >
             <option value="Remote">Remote</option>
             <option value="Hybrid">Hybrid</option>
@@ -2487,7 +2212,7 @@ function ExperienceModalForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Start Date
@@ -2615,7 +2340,7 @@ function EducationModalForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Degree Type
@@ -2642,7 +2367,7 @@ function EducationModalForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Start Date
@@ -2802,7 +2527,7 @@ function ProjectModalForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Start Date
@@ -2838,7 +2563,7 @@ function ProjectModalForm({
         <span>Currently working on this project</span>
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             GitHub Repository URL
@@ -3346,7 +3071,7 @@ function PersonalModalForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             City
@@ -3385,7 +3110,7 @@ function PersonalModalForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1">
             Phone Number (Private)
@@ -3434,7 +3159,7 @@ function PersonalModalForm({
         <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
           Profile Photo
         </label>
-        <div className="flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+        <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-3.5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
           {form.avatar_url ? (
             <img
               src={form.avatar_url}
@@ -3451,7 +3176,7 @@ function PersonalModalForm({
             <p className="text-xs font-bold text-slate-800 truncate">
               {form.avatar_url ? "Custom photo uploaded" : "Default initials monogram"}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
               <label className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
                 <UploadCloud className="w-3.5 h-3.5" />
                 <span>Upload Image</span>
@@ -3484,18 +3209,18 @@ function PersonalModalForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer text-center"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white text-xs font-bold shadow-sm shadow-purple-900/20 cursor-pointer disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#4A1584] via-[#6320B5] to-[#7E22CE] hover:from-[#3c106d] hover:via-[#521996] hover:to-[#6b1cb1] text-white text-xs font-bold shadow-sm shadow-purple-900/20 cursor-pointer disabled:opacity-50 text-center"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
