@@ -95,6 +95,7 @@ function MobileNavContent() {
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
   const [exploreTab, setExploreTab] = useState<string>("trending");
+  const [isExplicitlyHidden, setIsExplicitlyHidden] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.pathname === "/explore") {
@@ -111,6 +112,7 @@ function MobileNavContent() {
       if (typeof document !== "undefined") {
         setIsPracticeSubView(document.body.hasAttribute("data-practice-subview"));
         setIsLearningPlayer(document.body.hasAttribute("data-learning-player"));
+        setIsExplicitlyHidden(document.body.hasAttribute("data-hide-bottombar"));
         const tabAttr = document.body.getAttribute("data-explore-tab");
         if (tabAttr && tabAttr !== exploreTab) {
           setExploreTab(tabAttr);
@@ -140,11 +142,14 @@ function MobileNavContent() {
   const userEmail = session?.email || "Guest User";
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
 
-  // Hide bottom navigation bar inside active video player, practice subviews, or roadmaps page
+  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, or edit profile page
   const isHideBottomBar =
+    isExplicitlyHidden ||
     (pathname === "/learning" && isLearningPlayer) ||
     (pathname === "/practice" && isPracticeSubView) ||
-    pathname.startsWith("/roadmaps");
+    pathname.startsWith("/roadmaps") ||
+    pathname.startsWith("/settings/edit") ||
+    pathname.startsWith("/profile/edit");
 
   return (
     <>
