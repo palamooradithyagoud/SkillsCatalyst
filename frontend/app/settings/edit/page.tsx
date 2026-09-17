@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -13,6 +13,7 @@ import {
   Briefcase,
   FolderGit2,
   Code2,
+  Target,
   GraduationCap,
   Languages,
   Plus,
@@ -49,6 +50,11 @@ import {
   saveProject,
   deleteProject,
   calculateProfileCompletion,
+  saveCareerPreferences,
+  saveCodingProfiles,
+  UserCareerPreferences,
+  CodingProfilesInput,
+  PlatformStat,
   CompleteProfileData,
   UserProfile,
   UserExperience,
@@ -57,7 +63,7 @@ import {
   UserEducation,
 } from "@/lib/api";
 
-type EditTab = "personal" | "skills" | "experience" | "education" | "projects" | "languages";
+type EditTab = "personal" | "career" | "coding" | "skills" | "experience" | "education" | "projects" | "languages";
 
 // ── Image Processing Helper ──────────────────────────────────────────────────
 function processImageFile(file: File): Promise<string> {
@@ -143,7 +149,7 @@ function CircularProgress({ percent }: { percent: number }) {
   );
 }
 
-export default function EditProfilePage() {
+function EditProfileContent() {
   const router = useRouter();
   const { session } = useAuth();
   const qc = useQueryClient();
@@ -170,6 +176,41 @@ export default function EditProfilePage() {
     coding_stats: null,
     resume: null,
   });
+
+  // Personal Form State
+  const searchParams = useSearchParams();
+
+  // Career Preferences State
+  const [careerForm, setCareerForm] = useState<UserCareerPreferences>({
+    target_roles: [],
+    preferred_industries: [],
+    target_companies: [],
+    preferred_locations: [],
+    work_arrangements: ["Remote", "Hybrid"],
+  });
+  const [roleInput, setRoleInput] = useState("");
+  const [companyInput, setCompanyInput] = useState("");
+  const [locationInput, setLocationInput] = useState("");
+  const [savingCareer, setSavingCareer] = useState(false);
+
+  // Coding Profiles State
+  const [codingForm, setCodingForm] = useState<CodingProfilesInput>({
+    leetcode: "",
+    github: "",
+    codeforces: "",
+    codechef: "",
+    hackerrank: "",
+    geeksforgeeks: "",
+  });
+  const [savingCoding, setSavingCoding] = useState(false);
+
+  // Read ?tab= query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as EditTab;
+    if (tabParam && ["personal", "career", "coding", "skills", "experience", "education", "projects", "languages"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Personal Form State
   const [personalForm, setPersonalForm] = useState<UserProfile>({
@@ -224,6 +265,25 @@ export default function EditProfilePage() {
         if (full) {
           setProfileData(full);
           const defaultName = session?.name || (session?.email ? session.email.split("@")[0] : "");
+          if (full.career_preferences) {
+            setCareerForm({
+              target_roles: full.career_preferences.target_roles || [],
+              preferred_industries: full.career_preferences.preferred_industries || [],
+              target_companies: full.career_preferences.target_companies || [],
+              preferred_locations: full.career_preferences.preferred_locations || [],
+              work_arrangements: full.career_preferences.work_arrangements || ["Remote", "Hybrid"],
+            });
+          }
+          if (full.coding_inputs) {
+            setCodingForm({
+              leetcode: full.coding_inputs.leetcode || "",
+              github: full.coding_inputs.github || "",
+              codeforces: full.coding_inputs.codeforces || "",
+              codechef: full.coding_inputs.codechef || "",
+              hackerrank: full.coding_inputs.hackerrank || "",
+              geeksforgeeks: full.coding_inputs.geeksforgeeks || "",
+            });
+          }
           if (full.personal) {
             setPersonalForm({
               full_name: full.personal.full_name || defaultName,
@@ -267,13 +327,15 @@ export default function EditProfilePage() {
     const merged: CompleteProfileData = {
       ...profileData,
       personal: personalForm,
+      career_preferences: careerForm,
+      coding_inputs: codingForm,
       skills: profileData.skills,
       experiences: profileData.experiences,
       education: profileData.education,
       projects: profileData.projects,
     };
     return calculateProfileCompletion(merged);
-  }, [profileData, personalForm]);
+  }, [profileData, personalForm, careerForm, codingForm]);
 
   const showToast = (msg: string) => {
     setSuccessToast(msg);
@@ -300,6 +362,57 @@ export default function EditProfilePage() {
         .toUpperCase()
     : userEmail.slice(0, 2).toUpperCase() || "PG";
   const userRole = personalForm.headline || "Student";
+
+  // ── Handler: Save Career Preferences ──
+  const handleSaveCareer = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSavingCareer(true);
+    setErrorMsg("");
+    try {
+      const res = await saveCareerPreferences(careerForm);
+      if (res.success) {
+        setProfileData((prev) => ({
+          ...prev,
+          career_preferences: { ...(prev.career_preferences || {}), ...careerForm },
+        }));
+        qc.invalidateQueries({ queryKey: ["dashboard"] });
+        qc.invalidateQueries({ queryKey: ["profile"] });
+        showToast("Career preferences saved successfully!");
+      } else {
+        setErrorMsg(res.error || "Failed to save career preferences.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || "An unexpected error occurred.");
+    } finally {
+      setSavingCareer(false);
+    }
+  };
+
+  // ── Handler: Save Developer & Coding Profiles ──
+  const handleSaveCoding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSavingCoding(true);
+    setErrorMsg("");
+    try {
+      const res = await saveCodingProfiles(codingForm);
+      if (res && res.success) {
+        setProfileData((prev) => ({
+          ...prev,
+          coding_inputs: codingForm,
+          coding_stats: res.stats || prev.coding_stats,
+        }));
+        qc.invalidateQueries({ queryKey: ["dashboard"] });
+        qc.invalidateQueries({ queryKey: ["profile"] });
+        showToast("Developer profiles saved and live metrics synced!");
+      } else {
+        setErrorMsg("Failed to save coding profiles. Ensure backend is reachable.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || "An unexpected error occurred.");
+    } finally {
+      setSavingCoding(false);
+    }
+  };
 
   // ── Handler: Save Personal Form ──
   const handleSavePersonal = async (e?: React.FormEvent) => {
@@ -540,6 +653,8 @@ export default function EditProfilePage() {
         <div className="flex items-center gap-2 min-w-max">
           {[
             { id: "personal", label: "Account" },
+            { id: "career", label: "Preferences", count: (careerForm.target_roles?.length || 0) + (careerForm.target_companies?.length || 0) },
+            { id: "coding", label: "Coding Profiles" },
             { id: "skills", label: "Skills", count: profileData.skills.length },
             { id: "experience", label: "Experience", count: profileData.experiences.length },
             { id: "education", label: "Education", count: profileData.education.length },
@@ -731,7 +846,462 @@ export default function EditProfilePage() {
         )}
 
         {/* ─────────────────────────────────────────────────────────────────── */}
-        {/* TAB 2: SKILLS                                                       */}
+        {/* TAB: CAREER PREFERENCES                                             */}
+        {/* ─────────────────────────────────────────────────────────────────── */}
+        {activeTab === "career" && (
+          <form onSubmit={handleSaveCareer} className="space-y-5">
+            {/* Form Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+              <div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#7C3AED]" />
+                  <span>Career Preferences</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+                  Set target roles, dream companies, and ideal work arrangements
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/settings"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={savingCareer}
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{savingCareer ? "Saving..." : "Save changes"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Target Job Roles */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+                Target Job Roles
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={roleInput}
+                  onChange={(e) => setRoleInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = roleInput.trim();
+                      if (val && !careerForm.target_roles.includes(val)) {
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          target_roles: [...prev.target_roles, val],
+                        }));
+                        setRoleInput("");
+                      }
+                    }
+                  }}
+                  placeholder="e.g. SDE-1, Full Stack Developer, DevOps Engineer..."
+                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = roleInput.trim();
+                    if (val && !careerForm.target_roles.includes(val)) {
+                      setCareerForm((prev) => ({
+                        ...prev,
+                        target_roles: [...prev.target_roles, val],
+                      }));
+                      setRoleInput("");
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Roles Chips */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {careerForm.target_roles.map((r, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-bold text-rose-900 dark:text-rose-200 shadow-2xs"
+                  >
+                    <span>{r}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          target_roles: prev.target_roles.filter((_, idx) => idx !== i),
+                        }))
+                      }
+                      className="text-rose-400 hover:text-rose-700 dark:hover:text-rose-100 p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Suggestions */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                  Suggestions:
+                </span>
+                {["SDE-1", "Full Stack Developer", "DevOps Engineer", "Frontend Engineer", "Cloud Architect", "Data Engineer"].map((sugg) => (
+                  <button
+                    key={sugg}
+                    type="button"
+                    disabled={careerForm.target_roles.includes(sugg)}
+                    onClick={() =>
+                      setCareerForm((prev) => ({
+                        ...prev,
+                        target_roles: [...prev.target_roles, sugg],
+                      }))
+                    }
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-[#27272A] disabled:opacity-40 cursor-pointer transition-all"
+                  >
+                    + {sugg}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dream Companies */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
+              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+                Dream Companies
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={companyInput}
+                  onChange={(e) => setCompanyInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = companyInput.trim();
+                      if (val && !careerForm.target_companies.includes(val)) {
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          target_companies: [...prev.target_companies, val],
+                        }));
+                        setCompanyInput("");
+                      }
+                    }
+                  }}
+                  placeholder="e.g. Google, Microsoft, Atlassian, Amazon, Meta..."
+                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = companyInput.trim();
+                    if (val && !careerForm.target_companies.includes(val)) {
+                      setCareerForm((prev) => ({
+                        ...prev,
+                        target_companies: [...prev.target_companies, val],
+                      }));
+                      setCompanyInput("");
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Companies Chips */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {careerForm.target_companies.map((c, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 text-xs font-bold text-purple-900 dark:text-purple-200 shadow-2xs"
+                  >
+                    <span>{c}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          target_companies: prev.target_companies.filter((_, idx) => idx !== i),
+                        }))
+                      }
+                      className="text-purple-400 hover:text-purple-700 dark:hover:text-purple-100 p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Suggestions */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                  Suggestions:
+                </span>
+                {["Google", "Microsoft", "Amazon", "Atlassian", "Meta", "Uber", "Apple"].map((sugg) => (
+                  <button
+                    key={sugg}
+                    type="button"
+                    disabled={careerForm.target_companies.includes(sugg)}
+                    onClick={() =>
+                      setCareerForm((prev) => ({
+                        ...prev,
+                        target_companies: [...prev.target_companies, sugg],
+                      }))
+                    }
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-[#27272A] disabled:opacity-40 cursor-pointer transition-all"
+                  >
+                    + {sugg}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Work Arrangements */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
+              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+                Work Arrangements
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {["Remote", "Hybrid", "Onsite"].map((arr) => {
+                  const isSelected = (careerForm.work_arrangements || []).includes(arr);
+                  return (
+                    <button
+                      key={arr}
+                      type="button"
+                      onClick={() => {
+                        const curr = careerForm.work_arrangements || [];
+                        const next = isSelected ? curr.filter((x) => x !== arr) : [...curr, arr];
+                        setCareerForm((prev) => ({ ...prev, work_arrangements: next }));
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-[#7C3AED] text-white shadow-xs"
+                          : "bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#222226] border border-slate-200 dark:border-[#27272A]"
+                      }`}
+                    >
+                      {arr}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Preferred Locations */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
+              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+                Preferred Locations
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = locationInput.trim();
+                      if (val && !careerForm.preferred_locations.includes(val)) {
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          preferred_locations: [...prev.preferred_locations, val],
+                        }));
+                        setLocationInput("");
+                      }
+                    }
+                  }}
+                  placeholder="e.g. Bangalore, Hyderabad, Pune, Mumbai, Remote..."
+                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = locationInput.trim();
+                    if (val && !careerForm.preferred_locations.includes(val)) {
+                      setCareerForm((prev) => ({
+                        ...prev,
+                        preferred_locations: [...prev.preferred_locations, val],
+                      }));
+                      setLocationInput("");
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Locations Chips */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {careerForm.preferred_locations.map((loc, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-slate-100 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] text-xs font-bold text-slate-800 dark:text-zinc-200 shadow-2xs"
+                  >
+                    <span>{loc}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCareerForm((prev) => ({
+                          ...prev,
+                          preferred_locations: prev.preferred_locations.filter((_, idx) => idx !== i),
+                        }))
+                      }
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────── */}
+        {/* TAB: DEVELOPER & CODING PROFILES                                    */}
+        {/* ─────────────────────────────────────────────────────────────────── */}
+        {activeTab === "coding" && (
+          <form onSubmit={handleSaveCoding} className="space-y-5">
+            {/* Form Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+              <div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-[#7C3AED]" />
+                  <span>Developer & Coding Profiles</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+                  Link your handles to automatically fetch and verify coding ratings and stats
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/settings"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={savingCoding}
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{savingCoding ? "Saving..." : "Save & Sync"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Platform inputs grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {[
+                {
+                  key: "leetcode",
+                  title: "LeetCode",
+                  dot: "bg-amber-400",
+                  val: codingForm.leetcode || "",
+                  placeholder: "Username or https://leetcode.com/u/...",
+                  stat: profileData.coding_stats?.leetcode,
+                },
+                {
+                  key: "github",
+                  title: "GitHub",
+                  dot: "bg-slate-900 dark:bg-zinc-100",
+                  val: codingForm.github || "",
+                  placeholder: "Username or https://github.com/...",
+                  stat: profileData.coding_stats?.github,
+                },
+                {
+                  key: "codeforces",
+                  title: "Codeforces",
+                  dot: "bg-rose-500",
+                  val: codingForm.codeforces || "",
+                  placeholder: "Handle or https://codeforces.com/profile/...",
+                  stat: profileData.coding_stats?.codeforces,
+                },
+                {
+                  key: "codechef",
+                  title: "CodeChef",
+                  dot: "bg-amber-800",
+                  val: codingForm.codechef || "",
+                  placeholder: "Username or https://www.codechef.com/users/...",
+                  stat: profileData.coding_stats?.codechef,
+                },
+                {
+                  key: "hackerrank",
+                  title: "HackerRank",
+                  dot: "bg-purple-500",
+                  val: codingForm.hackerrank || "",
+                  placeholder: "Username or https://www.hackerrank.com/profile/...",
+                  stat: profileData.coding_stats?.hackerrank,
+                },
+                {
+                  key: "geeksforgeeks",
+                  title: "GeeksforGeeks",
+                  dot: "bg-green-600",
+                  val: codingForm.geeksforgeeks || "",
+                  placeholder: "Username or https://auth.geeksforgeeks.org/user/...",
+                  stat: profileData.coding_stats?.geeksforgeeks,
+                },
+              ].map((p) => {
+                const isLinked = !!p.val;
+                return (
+                  <div
+                    key={p.key}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-[#18181B] border border-slate-200/90 dark:border-[#27272A] space-y-2 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${p.dot} shadow-xs`} />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
+                          {p.title}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                          isLinked
+                            ? "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50"
+                            : "bg-slate-100 dark:bg-[#222226] text-slate-500 dark:text-zinc-400"
+                        }`}
+                      >
+                        {isLinked ? "Configured" : "Optional"}
+                      </span>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={p.val}
+                      onChange={(e) =>
+                        setCodingForm((prev) => ({
+                          ...prev,
+                          [p.key]: e.target.value,
+                        }))
+                      }
+                      placeholder={p.placeholder}
+                      className="w-full bg-slate-50 dark:bg-[#141417] border border-slate-200 dark:border-[#2A2A2E] px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 transition-colors"
+                    />
+
+                    {p.stat && p.stat.summary && (
+                      <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300 truncate">
+                        <Globe className="w-3 h-3 text-[#7C3AED] shrink-0" />
+                        <span className="truncate">{p.stat.summary}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </form>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────── */}
+        {/* TAB: SKILLS                                                         */}
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "skills" && (
           <div className="space-y-4">
@@ -1358,6 +1928,10 @@ export default function EditProfilePage() {
               onClick={() => {
                 if (activeTab === "personal") {
                   handleSavePersonal();
+                } else if (activeTab === "career") {
+                  handleSaveCareer();
+                } else if (activeTab === "coding") {
+                  handleSaveCoding();
                 } else if (activeTab === "skills") {
                   showToast("Skills list is saved!");
                 } else if (activeTab === "languages") {
@@ -1366,11 +1940,11 @@ export default function EditProfilePage() {
                   showToast("Profile section updated!");
                 }
               }}
-              disabled={savingPersonal}
+              disabled={savingPersonal || savingCareer || savingCoding}
               className="flex items-center gap-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-black px-4 sm:px-5 py-2 rounded-full shadow-md shadow-purple-600/30 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <Save className="w-3.5 h-3.5" />
-              <span>{savingPersonal ? "Saving..." : "Save"}</span>
+              <span>{savingPersonal || savingCareer || savingCoding ? "Saving..." : "Save"}</span>
             </button>
           </div>
         </motion.div>
@@ -1964,5 +2538,14 @@ function EducationEditor({
         </button>
       </div>
     </form>
+  );
+}
+
+
+export default function EditProfilePage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl mx-auto p-8 text-center text-slate-400 text-xs font-bold">Loading editor...</div>}>
+      <EditProfileContent />
+    </Suspense>
   );
 }

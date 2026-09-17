@@ -1216,120 +1216,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 10. RESUME CENTRAL & AI ATS SCORE CARD (PRESERVED WORKFLOW)          */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="resume" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-700">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Resume Central</h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Upload resume for AI ATS benchmark evaluation
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".pdf"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) handleResumeUpload(e.target.files[0]);
-              }}
-            />
-            {(profileData.resume?.filename || resumePreviewUrl) && (
-              <button
-                onClick={() => setActiveModal("resume_preview")}
-                className="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Preview</span>
-              </button>
-            )}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingResume}
-              className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {uploadingResume ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Evaluating...</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-3.5 h-3.5" />
-                  <span>Upload PDF</span>
-                </>
-              )}
-            </button>
-
-            <Link
-              href="/career"
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-xs"
-            >
-              <span>AI Review</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        {resumeMsg && (
-          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
-            <span>{resumeMsg}</span>
-          </div>
-        )}
-
-        {profileData.resume?.filename ? (
-          <div
-            onClick={() => setActiveModal("resume_preview")}
-            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-4 cursor-pointer group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition-transform">
-                PDF
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-slate-900 group-hover:text-purple-700 transition-colors flex items-center gap-2">
-                  <span>{profileData.resume.filename}</span>
-                  <span className="text-[10px] font-bold text-purple-600 underline">Click to preview</span>
-                </h4>
-                <p className="text-[11px] text-slate-500">
-                  {profileData.resume.summary || "Ready for technical recruiters"}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                ATS Score
-              </span>
-              <span className="text-lg font-black text-purple-700">
-                {profileData.resume.ats_score || profileData.resume.overall_score || 75}/100
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 hover:border-purple-300 transition-colors text-center cursor-pointer space-y-1.5"
-          >
-            <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center mx-auto">
-              <UploadCloud className="w-4 h-4" />
-            </div>
-            <p className="text-xs font-bold text-slate-700">Click to upload your resume (PDF, max 5MB)</p>
-            <p className="text-[11px] text-slate-400">Official AI review tests ATS compatibility and unlocks +20% strength.</p>
-          </div>
-        )}
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 11. CAREER PREFERENCES CARD                                         */}
+      {/* 10. CAREER PREFERENCES CARD (Presentation View - Edit in /settings/edit) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div id="preferences" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
         <div className="flex items-center justify-between">
@@ -1342,176 +1229,93 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500 font-medium">Desired job roles, dream companies, and arrangements</p>
             </div>
           </div>
-          {careerPrefsMsg && (
-            <span className="text-xs font-bold text-purple-700">{careerPrefsMsg}</span>
-          )}
+          <Link
+            href="/settings/edit?tab=career"
+            className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-purple-600" />
+            <span>Edit Preferences</span>
+          </Link>
         </div>
 
         {/* Roles */}
-        <div>
-          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
             Target Job Roles
           </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={roleInput}
-              onChange={(e) => setRoleInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && roleInput.trim()) {
-                  e.preventDefault();
-                  setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
-                  });
-                  setRoleInput("");
-                }
-              }}
-              placeholder="e.g. SDE-1, Full Stack Developer (Press Enter)"
-              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (roleInput.trim()) {
-                  setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_roles: [...(careerPrefsForm.target_roles || []), roleInput.trim()],
-                  });
-                  setRoleInput("");
-                }
-              }}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
-            >
-              Add
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {careerPrefsForm.target_roles?.map((r, i) => (
-              <span key={i} className="pl-3 pr-2 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-1.5">
-                <span>{r}</span>
-                <button
-                  type="button"
-                  onClick={() => setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_roles: careerPrefsForm.target_roles?.filter((_, idx) => idx !== i),
-                  })}
-                  className="text-rose-400 hover:text-rose-700 cursor-pointer"
+          {(careerPrefsForm.target_roles || []).length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {careerPrefsForm.target_roles?.map((r, i) => (
+                <span
+                  key={i}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold shadow-2xs"
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
+                  {r}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 font-medium italic">
+              No target roles specified yet. Click &apos;Edit Preferences&apos; to configure your career goals.
+            </p>
+          )}
         </div>
 
         {/* Dream Companies */}
-        <div>
-          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
             Dream Companies
           </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={companyInput}
-              onChange={(e) => setCompanyInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && companyInput.trim()) {
-                  e.preventDefault();
-                  setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
-                  });
-                  setCompanyInput("");
-                }
-              }}
-              placeholder="e.g. Google, Atlassian, Microsoft (Press Enter)"
-              className="flex-1 bg-white border border-slate-200 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-purple-600"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (companyInput.trim()) {
-                  setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_companies: [...(careerPrefsForm.target_companies || []), companyInput.trim()],
-                  });
-                  setCompanyInput("");
-                }
-              }}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
-            >
-              Add
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {careerPrefsForm.target_companies?.map((c, i) => (
-              <span key={i} className="pl-3 pr-2 py-1 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold flex items-center gap-1.5">
-                <span>{c}</span>
-                <button
-                  type="button"
-                  onClick={() => setCareerPrefsForm({
-                    ...careerPrefsForm,
-                    target_companies: careerPrefsForm.target_companies?.filter((_, idx) => idx !== i),
-                  })}
-                  className="text-purple-400 hover:text-purple-700 cursor-pointer"
+          {(careerPrefsForm.target_companies || []).length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {careerPrefsForm.target_companies?.map((c, i) => (
+                <span
+                  key={i}
+                  className="px-3.5 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold shadow-2xs"
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
+                  {c}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 font-medium italic">
+              No dream companies specified yet. Click &apos;Edit Preferences&apos; to add companies.
+            </p>
+          )}
         </div>
 
         {/* Work Arrangements */}
-        <div>
-          <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider block mb-1.5">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
             Work Arrangements
           </label>
           <div className="flex flex-wrap gap-2">
             {["Remote", "Hybrid", "Onsite"].map((arr) => {
               const isSelected = (careerPrefsForm.work_arrangements || []).includes(arr);
               return (
-                <button
+                <span
                   key={arr}
-                  type="button"
-                  onClick={() => {
-                    const curr = careerPrefsForm.work_arrangements || [];
-                    const next = isSelected ? curr.filter((x) => x !== arr) : [...curr, arr];
-                    setCareerPrefsForm({ ...careerPrefsForm, work_arrangements: next });
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     isSelected
                       ? "bg-purple-700 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : "bg-slate-100 text-slate-400 opacity-60"
                   }`}
                 >
                   {arr}
-                </button>
+                </span>
               );
             })}
           </div>
         </div>
-
-        <div className="flex justify-end pt-2">
-          <button
-            onClick={handleSaveCareerPreferences}
-            disabled={savingCareerPrefs}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            {savingCareerPrefs ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            <span>Save Preferences</span>
-          </button>
-        </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 12. DEVELOPER PLATFORMS CARD                                        */}
+      {/* 11. DEVELOPER PLATFORMS CARD (Presentation View - Edit in /settings/edit) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div id="developer" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-700">
+            <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700">
               <Code2 className="w-5 h-5" />
             </div>
             <div>
@@ -1519,81 +1323,90 @@ export default function SettingsPage() {
                 Developer & Coding Profiles
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Connect accounts across 6 major competitive programming platforms
+                Connected accounts across competitive programming and developer platforms
               </p>
             </div>
           </div>
-          {codingMsg && (
-            <span className="text-xs font-bold text-purple-700">{codingMsg}</span>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <PlatformInputCard
-            platformKey="leetcode"
-            title="LeetCode"
-            dotColor="bg-amber-400"
-            placeholder="Username or https://leetcode.com/u/..."
-            value={leetcodeInput}
-            onChange={setLeetcodeInput}
-            stat={codingStats.leetcode}
-          />
-          <PlatformInputCard
-            platformKey="github"
-            title="GitHub"
-            dotColor="bg-slate-900"
-            placeholder="Username or https://github.com/..."
-            value={githubInput}
-            onChange={setGithubInput}
-            stat={codingStats.github}
-          />
-          <PlatformInputCard
-            platformKey="codeforces"
-            title="Codeforces"
-            dotColor="bg-rose-500"
-            placeholder="Handle or https://codeforces.com/profile/..."
-            value={codeforcesInput}
-            onChange={setCodeforcesInput}
-            stat={codingStats.codeforces}
-          />
-          <PlatformInputCard
-            platformKey="codechef"
-            title="CodeChef"
-            dotColor="bg-amber-800"
-            placeholder="Username or https://www.codechef.com/users/..."
-            value={codechefInput}
-            onChange={setCodechefInput}
-            stat={codingStats.codechef}
-          />
-          <PlatformInputCard
-            platformKey="hackerrank"
-            title="HackerRank"
-            dotColor="bg-purple-500"
-            placeholder="Username or https://www.hackerrank.com/profile/..."
-            value={hackerrankInput}
-            onChange={setHackerrankInput}
-            stat={codingStats.hackerrank}
-          />
-          <PlatformInputCard
-            platformKey="geeksforgeeks"
-            title="GeeksforGeeks"
-            dotColor="bg-green-600"
-            placeholder="Username or https://auth.geeksforgeeks.org/user/..."
-            value={gfgInput}
-            onChange={setGfgInput}
-            stat={codingStats.geeksforgeeks}
-          />
-        </div>
-
-        <div className="flex justify-end pt-2">
-          <button
-            onClick={handleSaveCoding}
-            disabled={syncingCoding}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          <Link
+            href="/settings/edit?tab=coding"
+            className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-slate-700 hover:text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
-            {syncingCoding ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            <span>Save & Sync Platforms</span>
-          </button>
+            <Edit3 className="w-3.5 h-3.5 text-purple-600" />
+            <span>Edit Profiles</span>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { key: "leetcode", title: "LeetCode", dot: "bg-amber-400", val: leetcodeInput, stat: codingStats.leetcode, urlPrefix: "https://leetcode.com/u/" },
+            { key: "github", title: "GitHub", dot: "bg-slate-900", val: githubInput, stat: codingStats.github, urlPrefix: "https://github.com/" },
+            { key: "codeforces", title: "Codeforces", dot: "bg-rose-500", val: codeforcesInput, stat: codingStats.codeforces, urlPrefix: "https://codeforces.com/profile/" },
+            { key: "codechef", title: "CodeChef", dot: "bg-amber-800", val: codechefInput, stat: codingStats.codechef, urlPrefix: "https://www.codechef.com/users/" },
+            { key: "hackerrank", title: "HackerRank", dot: "bg-purple-500", val: hackerrankInput, stat: codingStats.hackerrank, urlPrefix: "https://www.hackerrank.com/profile/" },
+            { key: "geeksforgeeks", title: "GeeksforGeeks", dot: "bg-green-600", val: gfgInput, stat: codingStats.geeksforgeeks, urlPrefix: "https://auth.geeksforgeeks.org/user/" },
+          ].map((item) => {
+            const isConnected = !!(item.val || (item.stat && item.stat.configured));
+            const displayHandle = item.val
+              ? item.val.replace(/^https?:\/\/(www\.)?[a-zA-Z0-9.-]+\/(u\/|profile\/|users\/|user\/)?/, "")
+              : item.stat?.username || "";
+
+            return (
+              <div
+                key={item.key}
+                className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 hover:border-purple-300 hover:shadow-xs transition-all space-y-2.5 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.dot} shadow-xs`} />
+                    <span className="text-xs font-black text-slate-900">{item.title}</span>
+                  </div>
+                  <span
+                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                      isConnected
+                        ? "bg-purple-100 text-purple-800 border border-purple-200"
+                        : "bg-slate-200/80 text-slate-500"
+                    }`}
+                  >
+                    {isConnected ? "Connected" : "Not Linked"}
+                  </span>
+                </div>
+
+                {isConnected ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-slate-800 truncate">
+                        {displayHandle || item.val}
+                      </span>
+                      {item.val && (
+                        <a
+                          href={item.val.startsWith("http") ? item.val : `${item.urlPrefix}${item.val}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 hover:text-purple-800 transition-colors p-1"
+                          title={`Open ${item.title} profile`}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                    {item.stat && item.stat.summary && (
+                      <p className="text-[11px] font-medium text-purple-700 truncate">
+                        {item.stat.summary}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href="/settings/edit?tab=coding"
+                    className="text-[11px] font-medium text-slate-400 hover:text-purple-600 flex items-center gap-1 transition-colors pt-1"
+                  >
+                    <span>Click to connect</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
