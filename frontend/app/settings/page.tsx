@@ -1402,54 +1402,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 13. EARNED MILESTONES & BADGES CARD                                 */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700">
-              <Trophy className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                Earned Milestones & Badges
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                {progressStats.badgesCount} of {progressStats.badges.length} Badges Unlocked
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="px-4 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-2">
-          {progressStats.badges.map((b) => (
-            <div
-              key={b.id}
-              className={`p-3 rounded-2xl border flex flex-col items-center text-center transition-all ${
-                b.unlocked
-                  ? "bg-purple-50/70 border-purple-200 ring-1 ring-purple-300"
-                  : "bg-slate-50/50 border-slate-200 opacity-60"
-              }`}
-            >
-              <div className="text-xl mb-1">{b.icon}</div>
-              <span className="text-[10px] font-bold text-slate-900 line-clamp-1">{b.name}</span>
-              <span className={`text-[8px] font-bold mt-1.5 px-1.5 py-0.5 rounded ${b.unlocked ? "bg-purple-600 text-white" : "bg-slate-200 text-slate-600"}`}>
-                {b.unlocked ? "Earned" : "Locked"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 14. CUSTOMER SERVICE & LEGAL POLICIES                               */}
+      {/* 12. CUSTOMER SERVICE & LEGAL POLICIES                               */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
@@ -1462,12 +1415,21 @@ export default function SettingsPage() {
               <p className="text-xs text-slate-500 font-medium">Direct founder contact and student policies</p>
             </div>
           </div>
-          <Link
-            href="/support"
-            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold"
-          >
-            Support Desk ➔
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/support"
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold shadow-xs hover:opacity-95 transition-opacity"
+            >
+              Support Desk ➔
+            </Link>
+            <button
+              onClick={logout}
+              className="px-4 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
