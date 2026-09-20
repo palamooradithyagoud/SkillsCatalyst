@@ -422,6 +422,92 @@ class TestEventsCMS(unittest.TestCase):
             self.assertEqual(len(events), 1)
             self.assertEqual(events[0]["event_name"], "Python Hackathon")
 
+    # =========================================================================
+    # 21. MULTI-TOKEN SEARCH WORKS
+    # =========================================================================
+    def test_21_multi_token_search(self):
+        """21. Multi-token search matches terms across title, college, location, description."""
+        with patch("backend.services.event_service.get_supabase") as mock_ev_sb:
+            ev1 = {
+                **self.valid_event_payload,
+                "id": "e1",
+                "event_name": "AI Builders",
+                "conducted_by_college": "IIT Bombay",
+                "location": "Mumbai",
+                "status": "published",
+            }
+            mock_ev_client = MagicMock()
+            mock_ev_client.from_().select().eq().order().execute.return_value = MagicMock(data=[ev1])
+            mock_ev_sb.return_value = mock_ev_client
+
+            # Multi-word query matching event_name + conducted_by_college
+            resp = client.get("/api/events?search=IIT+Builders")
+            self.assertEqual(resp.status_code, 200)
+            events = resp.json()["events"]
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0]["id"], "e1")
+
+    # =========================================================================
+    # 22. CATEGORY 'ALL' DOES NOT FILTER OUT VALID EVENTS
+    # =========================================================================
+    def test_22_category_all_returns_unfiltered(self):
+        """22. Querying category=all does not filter out online/offline events."""
+        with patch("backend.services.event_service.get_supabase") as mock_ev_sb:
+            mock_ev_client = MagicMock()
+            mock_ev_client.from_().select().eq().order().execute.return_value = MagicMock(data=[
+                {**self.valid_event_payload, "id": "e1", "status": "published"}
+            ])
+            mock_ev_sb.return_value = mock_ev_client
+
+            resp = client.get("/api/events?category=all")
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(len(resp.json()["events"]), 1)
+
+    # =========================================================================
+    # 23. PARTIAL UPDATE REJECTS INVERTED DATES AGAINST EXISTING RECORD
+    # =========================================================================
+    def test_23_partial_update_date_order_validation(self):
+        """23. Partial update with end_date earlier than existing start_date returns 400."""
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.event_service.get_supabase") as mock_ev_sb:
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.mock_owner_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            existing_record = {
+                **self.valid_event_payload,
+                "id": "e-test",
+                "start_date": (self.now + timedelta(days=10)).isoformat(),
+                "end_date": (self.now + timedelta(days=15)).isoformat(),
+            }
+
+            mock_ev_client = MagicMock()
+            mock_ev_client.from_().select().eq().execute.return_value = MagicMock(data=[existing_record])
+            mock_ev_sb.return_value = mock_ev_client
+
+            # Send end_date earlier than existing start_date (day 5 < day 10)
+            resp = client.patch(
+                "/api/admin/events/e-test",
+                headers={"Authorization": "Bearer mock-owner-token"},
+                json={"end_date": (self.now + timedelta(days=5)).isoformat()},
+            )
+            self.assertEqual(resp.status_code, 400)
+            self.assertIn("End date must be on or after the start date", resp.json()["detail"])
+
+    # =========================================================================
+    # 24. MALFORMED / NON-EXISTENT EVENT ID RETURNS 404 CLEANLY
+    # =========================================================================
+    def test_24_malformed_event_id_returns_404(self):
+        """24. Non-existent or malformed event ID cleanly returns 404."""
+        with patch("backend.services.event_service.get_supabase") as mock_ev_sb:
+            mock_ev_client = MagicMock()
+            mock_ev_client.from_().select().eq().eq().execute.return_value = MagicMock(data=[])
+            mock_ev_sb.return_value = mock_ev_client
+
+            resp = client.get("/api/events/non-existent-id")
+            self.assertEqual(resp.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

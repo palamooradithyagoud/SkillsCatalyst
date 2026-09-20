@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.events (
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     visible_from TIMESTAMPTZ,
     visible_until TIMESTAMPTZ,
-    created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
