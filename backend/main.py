@@ -223,9 +223,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # ── Router Registrations ──────────────────────────────────────────────────────
 try:
-    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin
+    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin, events
 except ModuleNotFoundError:
-    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin
+    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin, events
 
 app.include_router(dashboard.router)
 app.include_router(ai_mentor.router)
@@ -236,6 +236,7 @@ app.include_router(profile.router)
 app.include_router(auth.router)
 app.include_router(support.router)
 app.include_router(admin.router)
+app.include_router(events.router)
 
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])

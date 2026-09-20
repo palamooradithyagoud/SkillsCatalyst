@@ -7,3 +7,4 @@ export * from "./dashboard";
 export * from "./practice";
 export * from "./career";
 export * from "./profile";
+export * from "./events";

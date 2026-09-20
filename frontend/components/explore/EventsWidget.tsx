@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -17,8 +18,15 @@ import {
   SlidersHorizontal,
   BookmarkCheck,
   Users,
+  ExternalLink,
+  MapPin,
+  Trophy,
+  Clock,
+  Award,
 } from "lucide-react";
 import AntigravityHeroCard from "@/components/explore/AntigravityHeroCard";
+import { fetchStudentEvents } from "@/lib/api/events";
+import type { EventItem } from "@/types/events";
 
 interface EventFormat {
   id: string;
@@ -79,6 +87,28 @@ export default function EventsWidget() {
   const [activeFormatId, setActiveFormatId] = useState<string>(EVENT_FORMATS[0].id);
   const [interestedTopics, setInterestedTopics] = useState<Record<string, boolean>>({});
   const [isAlertSubscribed, setIsAlertSubscribed] = useState(false);
+  const [liveEvents, setLiveEvents] = useState<EventItem[]>([]);
+  const [loadingLiveEvents, setLoadingLiveEvents] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetchStudentEvents();
+        if (active && res.events) {
+          setLiveEvents(res.events);
+        }
+      } catch {
+        // Silently handled
+      } finally {
+        if (active) setLoadingLiveEvents(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const activeFormat = EVENT_FORMATS.find((f) => f.id === activeFormatId) || EVENT_FORMATS[0];
 
@@ -90,7 +120,171 @@ export default function EventsWidget() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto">
+      {/* ── Section 1: Live Campus Events & Hackathons (Admin Managed) ── */}
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-600 shadow-2xs">
+              <Trophy className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                Live Campus Events &amp; Hackathons
+              </h2>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Verified competitions, hackathons, and technical sprints with active student registrations.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+            {liveEvents.length} Active
+          </span>
+        </div>
+
+        {loadingLiveEvents ? (
+          <div className="p-8 text-center text-xs font-semibold text-slate-400 bg-white border border-slate-200/90 rounded-2xl">
+            Loading active events...
+          </div>
+        ) : liveEvents.length === 0 ? (
+          <div className="p-8 text-center bg-white border border-dashed border-slate-200/90 rounded-2xl space-y-2">
+            <Trophy className="w-8 h-8 text-slate-300 mx-auto" />
+            <p className="text-xs font-bold text-slate-700">No active events published at this moment</p>
+            <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+              New college hackathons, hiring challenges, and tech symposia will be published here directly.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {liveEvents.map((ev) => (
+              <div
+                key={ev.id}
+                className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-purple-300 shadow-xs hover:shadow-lg transition-all overflow-hidden flex flex-col justify-between group"
+              >
+                {/* Poster Banner */}
+                <div className="relative w-full h-44 sm:h-48 bg-slate-950 overflow-hidden">
+                  {ev.banner_url ? (
+                    <Image
+                      src={ev.banner_url}
+                      alt={ev.event_name}
+                      fill
+                      className="object-cover group-hover:scale-103 transition-transform duration-500"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-tr from-purple-900 to-indigo-900 flex items-center justify-center text-white/40">
+                      <Trophy className="w-12 h-12" />
+                    </div>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+                  {/* Badges on Banner */}
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-black/60 backdrop-blur-md text-white border border-white/20">
+                      {ev.category === "online" ? "Online" : "In-Person"}
+                    </span>
+                    {ev.is_hackathon && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-xs">
+                        Hackathon
+                      </span>
+                    )}
+                  </div>
+
+                  {ev.is_hackathon && ev.prize_pool && (
+                    <div className="absolute bottom-2.5 left-3 z-10">
+                      <span className="text-xs font-black text-emerald-300 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-emerald-400/40 inline-flex items-center gap-1">
+                        <Award className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Prize Pool: {ev.prize_pool}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Event Details Body */}
+                <div className="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-sm sm:text-base font-black text-slate-900 group-hover:text-purple-700 transition-colors line-clamp-1">
+                      {ev.event_name}
+                    </h3>
+                    <p className="text-xs font-bold text-slate-600 truncate flex items-center gap-1.5">
+                      <span className="text-purple-600">🏛</span>
+                      <span>{ev.conducted_by_college}</span>
+                      {ev.location && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-slate-500 font-medium">{ev.location}</span>
+                        </>
+                      )}
+                    </p>
+
+                    {ev.description && (
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {ev.description}
+                      </p>
+                    )}
+
+                    {/* Timeline & Hackathon Metadata */}
+                    <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dates</span>
+                        <span className="font-extrabold text-slate-800 block">
+                          {new Date(ev.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          {" – "}
+                          {new Date(ev.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Register By</span>
+                        <span className="font-extrabold text-amber-700 block">
+                          {new Date(ev.registration_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+
+                      {ev.is_hackathon && ev.team_size && (
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Team Size</span>
+                          <span className="font-bold text-slate-700 block">{ev.team_size}</span>
+                        </div>
+                      )}
+
+                      {ev.is_hackathon && ev.mode && (
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mode</span>
+                          <span className="font-bold text-slate-700 capitalize block">{ev.mode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Link */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span>Registrations Open</span>
+                    </span>
+
+                    <a
+                      href={ev.event_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm transition-all cursor-pointer"
+                    >
+                      <span>Register / View Event</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 2: Educational Curriculum Breakdowns ── */}
+      <div className="pt-4 border-t border-slate-200/80 space-y-6">
       {/* ── Spatial Hero Banner with Antigravity 3D Tilt & Specular Lighting ── */}
       <AntigravityHeroCard glowColor="rgba(168, 85, 247, 0.25)">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -285,6 +479,7 @@ export default function EventsWidget() {
             );
           })}
         </div>
+      </div>
       </div>
     </div>
   );
