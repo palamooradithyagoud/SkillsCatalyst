@@ -35,28 +35,36 @@ def _format_datetime(dt: Optional[datetime]) -> Optional[str]:
     return dt.isoformat()
 
 
+def _parse_iso_utc(val: Any) -> Optional[datetime]:
+    """Safely parses a datetime or ISO string into an offset-aware UTC datetime."""
+    if not val:
+        return None
+    if isinstance(val, datetime):
+        return val if val.tzinfo is not None else val.replace(tzinfo=timezone.utc)
+    try:
+        s = str(val).strip()
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
 def _is_event_visible_now(event: Dict[str, Any], now_dt: datetime) -> bool:
     """Evaluates whether an event satisfies the student-visible criteria."""
     if event.get("status") != EventStatus.PUBLISHED.value:
         return False
 
-    v_from_raw = event.get("visible_from")
-    if v_from_raw:
-        try:
-            v_from = datetime.fromisoformat(v_from_raw.replace("Z", "+00:00"))
-            if v_from > now_dt:
-                return False
-        except Exception:
-            pass
+    v_from = _parse_iso_utc(event.get("visible_from"))
+    if v_from and v_from > now_dt:
+        return False
 
-    v_until_raw = event.get("visible_until")
-    if v_until_raw:
-        try:
-            v_until = datetime.fromisoformat(v_until_raw.replace("Z", "+00:00"))
-            if v_until <= now_dt:
-                return False
-        except Exception:
-            pass
+    v_until = _parse_iso_utc(event.get("visible_until"))
+    if v_until and v_until <= now_dt:
+        return False
 
     return True
 
@@ -79,7 +87,6 @@ def get_student_events(
         logger.warning("Supabase client unavailable when fetching student events")
         return []
 
-    now_iso = datetime.now(timezone.utc).isoformat()
     now_dt = datetime.now(timezone.utc)
 
     try:
@@ -103,7 +110,8 @@ def get_student_events(
                     name = (ev.get("event_name") or "").lower()
                     college = (ev.get("conducted_by_college") or "").lower()
                     desc = (ev.get("description") or "").lower()
-                    if s not in name and s not in college and s not in desc:
+                    loc = (ev.get("location") or "").lower()
+                    if s not in name and s not in college and s not in desc and s not in loc:
                         continue
                 visible_events.append(ev)
 
@@ -111,7 +119,7 @@ def get_student_events(
 
     except Exception as e:
         err_msg = str(e)
-        if "PGRST205" in err_msg or "schema cache" in err_msg:
+        if any(k in err_msg for k in ("PGRST205", "PGRST204", "42P01", "schema cache", "does not exist")):
             logger.info("Events table pending migration in Supabase. Returning empty student list.")
         else:
             logger.error(f"Error fetching student events: {e}")
@@ -120,6 +128,9 @@ def get_student_events(
 
 def get_student_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
     """Fetches a single published visible event by UUID."""
+    if not event_id:
+        return None
+
     sb = get_supabase()
     if not sb:
         return None
@@ -135,7 +146,11 @@ def get_student_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
             return event
         return None
     except Exception as e:
-        logger.error(f"Error fetching student event {event_id}: {e}")
+        err_msg = str(e)
+        if any(k in err_msg for k in ("PGRST205", "PGRST204", "42P01", "schema cache", "does not exist")):
+            logger.info(f"Events table pending migration when querying {event_id}.")
+        else:
+            logger.error(f"Error fetching student event {event_id}: {e}")
         return None
 
 
@@ -170,12 +185,13 @@ def get_admin_events(
                 if s in (ev.get("event_name") or "").lower()
                 or s in (ev.get("conducted_by_college") or "").lower()
                 or s in (ev.get("location") or "").lower()
+                or s in (ev.get("description") or "").lower()
             ]
 
         return events
     except Exception as e:
         err_msg = str(e)
-        if "PGRST205" in err_msg or "schema cache" in err_msg:
+        if any(k in err_msg for k in ("PGRST205", "PGRST204", "42P01", "schema cache", "does not exist")):
             logger.info("Events table not yet created in Supabase.")
         else:
             logger.error(f"Error fetching admin events: {e}")
@@ -184,6 +200,9 @@ def get_admin_events(
 
 def get_admin_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
     """Owner endpoint to fetch any event regardless of status."""
+    if not event_id:
+        return None
+
     sb = get_supabase()
     if not sb:
         return None
@@ -194,7 +213,11 @@ def get_admin_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
             return res.data[0]
         return None
     except Exception as e:
-        logger.error(f"Error fetching admin event {event_id}: {e}")
+        err_msg = str(e)
+        if any(k in err_msg for k in ("PGRST205", "PGRST204", "42P01", "schema cache", "does not exist")):
+            logger.info(f"Events table not yet created when querying admin event {event_id}.")
+        else:
+            logger.error(f"Error fetching admin event {event_id}: {e}")
         return None
 
 
@@ -338,6 +361,12 @@ def set_event_status(event_id: str, new_status: EventStatus) -> Dict[str, Any]:
             detail="Database service unavailable",
         )
 
+    if not event_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event ID is required.",
+        )
+
     now_iso = datetime.now(timezone.utc).isoformat()
     try:
         res = sb.from_("events").update({
@@ -370,6 +399,12 @@ def delete_event(event_id: str) -> bool:
             detail="Database service unavailable",
         )
 
+    if not event_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event ID is required.",
+        )
+
     try:
         res = sb.from_("events").delete().eq("id", event_id).execute()
         return True
@@ -391,10 +426,10 @@ def get_active_events_count() -> int:
         return 0
 
     try:
-        res = sb.from_("events").select("id", count="exact").eq("status", EventStatus.PUBLISHED.value).execute()
-        if res and res.count is not None:
-            return res.count
-        return len(res.data or [])
+        now_dt = datetime.now(timezone.utc)
+        res = sb.from_("events").select("*").eq("status", EventStatus.PUBLISHED.value).execute()
+        raw_events = res.data or []
+        return sum(1 for ev in raw_events if _is_event_visible_now(ev, now_dt))
     except Exception:
         return 0
 
@@ -431,7 +466,7 @@ async def upload_banner_image(file: UploadFile, user_id: str) -> str:
     content = await file.read()
     if len(content) > MAX_BANNER_SIZE_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="Image exceeds the maximum allowed size of 5 MB.",
         )
 
