@@ -37,6 +37,7 @@ else:
 
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
+OWNER_EMAIL = os.getenv("OWNER_EMAIL", "palamooradithyagoud@gmail.com").strip().lower()
 
 REQUIRED_ENV_VARS = {
     "SUPABASE_URL": SUPABASE_URL,

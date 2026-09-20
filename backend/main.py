@@ -169,7 +169,11 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     headers = dict(exc.headers or {})
     headers["X-Request-ID"] = req_id
 
-    detail = exc.detail if isinstance(exc.detail, dict) else {"success": False, "message": str(exc.detail)}
+    detail = exc.detail if isinstance(exc.detail, dict) else {
+        "success": False,
+        "message": str(exc.detail),
+        "detail": str(exc.detail),
+    }
     if isinstance(detail, dict) and "request_id" not in detail:
         detail["request_id"] = req_id
 
@@ -219,9 +223,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # ── Router Registrations ──────────────────────────────────────────────────────
 try:
-    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support
+    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin
 except ModuleNotFoundError:
-    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support
+    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin
 
 app.include_router(dashboard.router)
 app.include_router(ai_mentor.router)
@@ -231,6 +235,7 @@ app.include_router(practice.router)
 app.include_router(profile.router)
 app.include_router(auth.router)
 app.include_router(support.router)
+app.include_router(admin.router)
 
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])

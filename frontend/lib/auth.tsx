@@ -3,10 +3,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { sendWelcomeEmail, syncDailyLoginStreak } from "@/lib/api";
 
 const SESSION_KEY = "skillscatalyst_user_session";
+
+export type UserRole = "owner" | "student";
+export type AppMode = "student" | "admin";
 
 export interface UserSession {
   email?: string;
@@ -14,13 +18,18 @@ export interface UserSession {
   name?: string;
   loggedInAt: string;
   emailConfirmed?: boolean;
+  role: UserRole;
 }
 
 interface AuthContextValue {
   session: UserSession | null;
   isLoading: boolean;
   unverifiedEmail: string | null;
-  login: (email: string, userId: string, name?: string) => void;
+  role: UserRole;
+  isOwner: boolean;
+  appMode: AppMode;
+  setAppMode: (mode: AppMode) => void;
+  login: (email: string, userId: string, name?: string, role?: UserRole) => void;
   logout: () => void;
   clearUnverifiedEmail: () => void;
   setUnverifiedEmail: (email: string | null) => void;
@@ -30,6 +39,10 @@ const AuthContext = createContext<AuthContextValue>({
   session: null,
   isLoading: true,
   unverifiedEmail: null,
+  role: "student",
+  isOwner: false,
+  appMode: "student",
+  setAppMode: () => {},
   login: () => {},
   logout: () => {},
   clearUnverifiedEmail: () => {},
@@ -119,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [unverifiedEmail, setUnverifiedEmailState] = useState<string | null>(null);
+  const [appMode, setAppModeState] = useState<AppMode>("student");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -130,7 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       confirmed: boolean = true,
       createdAt?: string,
       lastSignInAt?: string,
-      forceSignup: boolean = false
+      forceSignup: boolean = false,
+      role: UserRole = "student"
     ) => {
       const newSession: UserSession = {
         email,
@@ -138,10 +153,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: name || email.split("@")[0],
         loggedInAt: new Date().toISOString(),
         emailConfirmed: confirmed,
+        role,
       };
 
       setSession(newSession);
       setUnverifiedEmailState(null);
+
+      if (role === "owner") {
+        const savedMode = typeof window !== "undefined" ? localStorage.getItem("sc_owner_mode") : null;
+        if (savedMode === "admin" || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"))) {
+          setAppModeState("admin");
+        } else {
+          setAppModeState("student");
+        }
+      } else {
+        setAppModeState("student");
+      }
 
       // Async database storage & new-user welcome email dispatch
       syncUserToSupabase(userId, email, name, createdAt, lastSignInAt, forceSignup);
@@ -151,8 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearSessionLocal = useCallback(() => {
     setSession(null);
+    setAppModeState("student");
     try {
       localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem("sc_owner_mode");
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
         if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_") || key.startsWith("sb-"))) {
@@ -210,13 +239,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             supaUser.user_metadata?.name ||
             userEmail.split("@")[0];
 
+          // Extract authoritative role from Supabase Auth app_metadata
+          const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
+          const role: UserRole = rawRole === "owner" ? "owner" : "student";
+
           await setAndStoreSession(
             userEmail,
             userId,
             userName,
             true,
             supaUser.created_at,
-            supaUser.last_sign_in_at
+            supaUser.last_sign_in_at,
+            false,
+            role
           );
           if (mounted) setIsLoading(false);
           return;
@@ -232,13 +267,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-
     initAuth();
 
     // Listen for auth state changes (e.g. after Google OAuth callback or email sign in)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: any, supaSession: any) => {
+    } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, supaSession: Session | null) => {
       if (!mounted) return;
 
       if (supaSession?.user) {
@@ -260,13 +294,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           supaUser.user_metadata?.name ||
           userEmail.split("@")[0];
 
+        // Extract authoritative role from Supabase Auth app_metadata
+        const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
+        const role: UserRole = rawRole === "owner" ? "owner" : "student";
+
         await setAndStoreSession(
           userEmail,
           userId,
           userName,
           true,
           supaUser.created_at,
-          supaUser.last_sign_in_at
+          supaUser.last_sign_in_at,
+          false,
+          role
         );
         setIsLoading(false);
       } else {
@@ -287,18 +327,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const isLoginPage = pathname === "/login";
     const isLandingPage = pathname === "/";
+    const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
     const isPublicPage = isLoginPage || isLandingPage;
 
     if (!session && !isPublicPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
+      router.replace(session.role === "owner" && appMode === "admin" ? "/admin" : "/dashboard");
+    } else if (session && isAdminPage && session.role !== "owner") {
+      // Normal students can NEVER access admin routes
       router.replace("/dashboard");
     }
-  }, [session, isLoading, pathname, router]);
+  }, [session, isLoading, pathname, router, appMode]);
+
+  const setAppMode = useCallback(
+    (newMode: AppMode) => {
+      // Authorization safeguard: only authenticated platform owner can toggle Admin Mode
+      if (session?.role !== "owner") {
+        setAppModeState("student");
+        return;
+      }
+      setAppModeState(newMode);
+      try {
+        localStorage.setItem("sc_owner_mode", newMode);
+      } catch {}
+      if (newMode === "admin" && !pathname.startsWith("/admin")) {
+        router.push("/admin");
+      } else if (newMode === "student" && pathname.startsWith("/admin")) {
+        router.push("/dashboard");
+      }
+    },
+    [session?.role, pathname, router]
+  );
 
   const login = useCallback(
-    (email: string, userId: string, name?: string) => {
-      setAndStoreSession(email, userId, name, true);
+    (email: string, userId: string, name?: string, role: UserRole = "student") => {
+      setAndStoreSession(email, userId, name, true, undefined, undefined, false, role);
       router.replace("/dashboard");
     },
     [setAndStoreSession, router]
@@ -313,6 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     } catch {}
     setSession(null);
+    setAppModeState("student");
     setUnverifiedEmailState(null);
     router.replace("/login");
   }, [router, queryClient, clearSessionLocal]);
@@ -325,20 +390,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmailState(email);
   }, []);
 
+  const isOwner = session?.role === "owner";
+
+  const contextValue: AuthContextValue = {
+    session,
+    isLoading,
+    unverifiedEmail,
+    role: session?.role || "student",
+    isOwner,
+    appMode,
+    setAppMode,
+    login,
+    logout,
+    clearUnverifiedEmail,
+    setUnverifiedEmail,
+  };
+
   // On /login and / landing page: ALWAYS render children immediately without showing full-screen loading screen
   if (pathname === "/login" || pathname === "/") {
     return (
-      <AuthContext.Provider
-        value={{
-          session,
-          isLoading,
-          unverifiedEmail,
-          login,
-          logout,
-          clearUnverifiedEmail,
-          setUnverifiedEmail,
-        }}
-      >
+      <AuthContext.Provider value={contextValue}>
         {children}
       </AuthContext.Provider>
     );
@@ -347,34 +418,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // On protected pages: if loading or unauthenticated, render provider tree while router handles redirect
   if (isLoading || !session) {
     return (
-      <AuthContext.Provider
-        value={{
-          session,
-          isLoading,
-          unverifiedEmail,
-          login,
-          logout,
-          clearUnverifiedEmail,
-          setUnverifiedEmail,
-        }}
-      >
+      <AuthContext.Provider value={contextValue}>
         {children}
       </AuthContext.Provider>
     );
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        isLoading,
-        unverifiedEmail,
-        login,
-        logout,
-        clearUnverifiedEmail,
-        setUnverifiedEmail,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
