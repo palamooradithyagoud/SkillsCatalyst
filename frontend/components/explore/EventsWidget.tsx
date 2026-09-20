@@ -236,12 +236,14 @@ export default function EventsWidget() {
                         </span>
                       </div>
 
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Register By</span>
-                        <span className="font-extrabold text-amber-700 block">
-                          {new Date(ev.registration_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </span>
-                      </div>
+                      {ev.registration_deadline && (
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Register By</span>
+                          <span className="font-extrabold text-amber-700 block">
+                            {new Date(ev.registration_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                      )}
 
                       {ev.is_hackathon && ev.team_size && (
                         <div className="space-y-0.5">

@@ -371,19 +371,19 @@ def update_event(event_id: str, data: UpdateEventRequest) -> Dict[str, Any]:
         update_payload["conducted_by_college"] = data.conducted_by_college.strip()
     if data.event_link is not None:
         update_payload["event_link"] = data.event_link.strip()
-    if data.registration_deadline is not None:
+    if "registration_deadline" in data.model_fields_set:
         update_payload["registration_deadline"] = _format_datetime(data.registration_deadline)
     if data.start_date is not None:
         update_payload["start_date"] = _format_datetime(data.start_date)
     if data.end_date is not None:
         update_payload["end_date"] = _format_datetime(data.end_date)
-    if data.location is not None:
+    if "location" in data.model_fields_set:
         update_payload["location"] = data.location.strip() if data.location else None
     if data.category is not None:
         update_payload["category"] = _get_enum_val(data.category)
     if data.banner_url is not None:
         update_payload["banner_url"] = data.banner_url.strip()
-    if data.description is not None:
+    if "description" in data.model_fields_set:
         update_payload["description"] = data.description.strip() if data.description else None
 
     # Handle is_hackathon logic
@@ -394,27 +394,27 @@ def update_event(event_id: str, data: UpdateEventRequest) -> Dict[str, Any]:
             update_payload["team_size"] = None
             update_payload["mode"] = None
         else:
-            if data.prize_pool is not None:
+            if "prize_pool" in data.model_fields_set:
                 update_payload["prize_pool"] = data.prize_pool.strip() if data.prize_pool else None
-            if data.team_size is not None:
+            if "team_size" in data.model_fields_set:
                 update_payload["team_size"] = data.team_size.strip() if data.team_size else None
             if data.mode is not None:
                 update_payload["mode"] = _get_enum_val(data.mode)
     else:
         # If is_hackathon wasn't altered, check fields if current is a hackathon
         if existing.get("is_hackathon"):
-            if data.prize_pool is not None:
+            if "prize_pool" in data.model_fields_set:
                 update_payload["prize_pool"] = data.prize_pool.strip() if data.prize_pool else None
-            if data.team_size is not None:
+            if "team_size" in data.model_fields_set:
                 update_payload["team_size"] = data.team_size.strip() if data.team_size else None
             if data.mode is not None:
                 update_payload["mode"] = _get_enum_val(data.mode)
 
     if data.status is not None:
         update_payload["status"] = _get_enum_val(data.status)
-    if data.visible_from is not None:
+    if "visible_from" in data.model_fields_set:
         update_payload["visible_from"] = _format_datetime(data.visible_from)
-    if data.visible_until is not None:
+    if "visible_until" in data.model_fields_set:
         update_payload["visible_until"] = _format_datetime(data.visible_until)
 
     try:

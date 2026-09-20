@@ -508,6 +508,41 @@ class TestEventsCMS(unittest.TestCase):
             resp = client.get("/api/events/non-existent-id")
             self.assertEqual(resp.status_code, 404)
 
+    # =========================================================================
+    # 25. OPTIONAL REGISTRATION DEADLINE
+    # =========================================================================
+    def test_25_optional_registration_deadline(self):
+        """25. Event can be created and retrieved with null/omitted registration_deadline."""
+        payload_no_deadline = {**self.valid_event_payload}
+        del payload_no_deadline["registration_deadline"]
+
+        # Validate Pydantic model parses successfully without deadline
+        req = CreateEventRequest(**payload_no_deadline)
+        self.assertIsNone(req.registration_deadline)
+
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.event_service.get_supabase") as mock_ev_sb:
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.mock_owner_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            mock_ev_client = MagicMock()
+            mock_ev_client.from_().insert().execute.return_value = MagicMock(
+                data=[{**payload_no_deadline, "registration_deadline": None, "id": "ev-nodeadline", "created_by": self.owner_id, "status": "draft"}]
+            )
+            mock_ev_sb.return_value = mock_ev_client
+
+            resp = client.post(
+                "/api/admin/events",
+                headers={"Authorization": "Bearer mock-owner-token"},
+                json=payload_no_deadline,
+            )
+            self.assertEqual(resp.status_code, 201)
+            data = resp.json()
+            self.assertTrue(data["success"])
+            self.assertIsNone(data["event"]["registration_deadline"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,50 +19,45 @@ describe("Events Module API & Types Integrity", () => {
     assert.strictEqual(FacadeAPI.uploadEventBanner, EventsAPI.uploadEventBanner);
   });
 
-  it("validates event payload structures and required fields", () => {
+  it("validates event payload structures with optional registration_deadline", () => {
     const mockPayload: CreateEventPayload = {
-      title: "National AI Hackathon 2026",
-      slug: "national-ai-hackathon-2026",
-      description: "Build cutting-edge agentic workflows.",
-      category: "hackathon",
-      event_mode: "online",
-      start_date: "2026-10-01T09:00:00Z",
-      end_date: "2026-10-03T18:00:00Z",
-      registration_deadline: "2026-09-28T23:59:59Z",
-      registration_url: "https://example.com/register",
+      event_name: "National AI Hackathon 2026",
+      conducted_by_college: "ABC Engineering College",
+      event_link: "https://example.com/register",
+      category: "online",
+      banner_url: "https://example.com/banner.png",
+      start_date: "2026-10-01T00:00:00Z",
+      end_date: "2026-10-03T23:59:59Z",
+      registration_deadline: null,
       is_hackathon: true,
       prize_pool: "₹1,00,000",
-      team_size_min: 2,
-      team_size_max: 4,
-      problem_statement: "Autonomous Dev Agents",
-      visible_from: "2026-09-20T00:00:00Z",
-      visible_until: "2026-10-04T00:00:00Z",
+      team_size: "2-4",
+      mode: "online",
       status: "published",
     };
 
-    assert.strictEqual(mockPayload.title, "National AI Hackathon 2026");
+    assert.strictEqual(mockPayload.event_name, "National AI Hackathon 2026");
     assert.strictEqual(mockPayload.is_hackathon, true);
     assert.strictEqual(mockPayload.prize_pool, "₹1,00,000");
-    assert.strictEqual(mockPayload.team_size_min, 2);
-    assert.strictEqual(mockPayload.team_size_max, 4);
+    assert.strictEqual(mockPayload.team_size, "2-4");
     assert.strictEqual(mockPayload.status, "published");
+    assert.strictEqual(mockPayload.registration_deadline, null);
   });
 
   it("validates non-hackathon payload clears hackathon specifics", () => {
     const mockPayload: CreateEventPayload = {
-      title: "System Design Masterclass",
-      slug: "system-design-masterclass",
-      category: "workshop",
-      event_mode: "hybrid",
-      start_date: "2026-11-01T10:00:00Z",
-      end_date: "2026-11-01T16:00:00Z",
+      event_name: "System Design Masterclass",
+      conducted_by_college: "XYZ Tech University",
+      event_link: "https://example.com/register",
+      category: "offline",
+      banner_url: "https://example.com/banner.png",
+      start_date: "2026-11-01T00:00:00Z",
+      end_date: "2026-11-01T23:59:59Z",
       is_hackathon: false,
-      visible_from: "2026-10-15T00:00:00Z",
-      visible_until: "2026-11-02T00:00:00Z",
     };
 
     assert.strictEqual(mockPayload.is_hackathon, false);
     assert.strictEqual(mockPayload.prize_pool, undefined);
-    assert.strictEqual(mockPayload.team_size_min, undefined);
+    assert.strictEqual(mockPayload.registration_deadline, undefined);
   });
 });

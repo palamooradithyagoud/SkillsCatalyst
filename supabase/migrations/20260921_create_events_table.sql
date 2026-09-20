@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.events (
     event_name TEXT NOT NULL,
     conducted_by_college TEXT NOT NULL,
     event_link TEXT NOT NULL,
-    registration_deadline TIMESTAMPTZ NOT NULL,
+    registration_deadline TIMESTAMPTZ,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     location TEXT,
@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS public.events (
     CONSTRAINT chk_events_date_order CHECK (end_date >= start_date),
     CONSTRAINT chk_events_visibility_window CHECK (visible_until IS NULL OR visible_from IS NULL OR visible_until > visible_from)
 );
+
+-- Ensure registration_deadline is nullable for existing tables
+ALTER TABLE IF EXISTS public.events ALTER COLUMN registration_deadline DROP NOT NULL;
 
 -- ── 2. Indexes for Performance ───────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_events_status_visibility 
