@@ -110,7 +110,10 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 function handleUnauthenticated(res: Response) {
-  if ((res.status === 401 || res.status === 403) && typeof window !== "undefined") {
+  // Only trigger session cleanup on 401 Unauthorized (invalid/expired session).
+  // 403 Forbidden means the user is authenticated but lacks permission for that specific resource;
+  // they must NEVER be logged out of their session.
+  if (res.status === 401 && typeof window !== "undefined") {
     try {
       localStorage.removeItem("skillscatalyst_user_session");
       for (let i = localStorage.length - 1; i >= 0; i--) {

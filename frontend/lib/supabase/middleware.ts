@@ -40,6 +40,7 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthPage = pathname === "/login";
   const isCallbackPage = pathname.startsWith("/auth/callback");
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/support") ||
@@ -47,14 +48,32 @@ export async function updateSession(request: NextRequest) {
     isCallbackPage ||
     pathname.startsWith("/api/");
 
-  // Protected route check: if unauthenticated and trying to access private application routes
+  // 1. Admin route protection: requires authenticated session with authoritative 'owner' role
+  if (isAdminRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const isOwner = (user.app_metadata?.role === "owner");
+    if (!isOwner) {
+      // Authenticated student or non-owner attempting /admin: redirect to student dashboard (NEVER log out)
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 2. Protected route check: if unauthenticated and trying to access private application routes
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // If already authenticated and accessing login page, redirect to dashboard
+  // 3. If already authenticated and accessing login page, redirect to dashboard
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";

@@ -9,6 +9,8 @@ import {
   Settings,
   LogOut,
   User,
+  ShieldAlert,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import ThemeSwitch from "@/components/ThemeSwitch";
@@ -19,11 +21,10 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   const router = useRouter();
-  const { session, logout } = useAuth();
+  const { session, logout, isOwner, appMode, setAppMode } = useAuth();
 
   const [activeWorkspace, setActiveWorkspace] = useState("SkillsCatalyst");
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const userDisplayName = session?.name || "Adithya goud Palamoor";
@@ -120,6 +121,31 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
 
       {/* ── Right Section: Icons, Badges & Profile ── */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Owner Quick Mode Switcher (Visible strictly to authenticated Platform Owner) */}
+        {isOwner && (
+          <button
+            onClick={() => setAppMode(appMode === "admin" ? "student" : "admin")}
+            title={appMode === "admin" ? "Switch to Student Mode" : "Switch to Admin Mode"}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              appMode === "admin"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 hover:brightness-105"
+                : "bg-[#5227FF]/10 text-[#5227FF] hover:bg-[#5227FF]/15 border border-[#5227FF]/20"
+            }`}
+          >
+            {appMode === "admin" ? (
+              <>
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Admin CMS</span>
+              </>
+            ) : (
+              <>
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Student Mode</span>
+              </>
+            )}
+          </button>
+        )}
+
         {/* 1. Search Icon */}
         <button
           onClick={handleSearchClick}
@@ -146,11 +172,56 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
           {isUserMenuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-              <div className="absolute right-0 top-[46px] w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl shadow-slate-900/10 z-50 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute right-0 top-[46px] w-60 bg-white border border-slate-200/90 rounded-2xl shadow-xl shadow-slate-900/10 z-50 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100">
                 <div className="px-3 py-2 border-b border-slate-100 text-left">
                   <p className="text-xs font-bold text-slate-900 truncate">{userDisplayName}</p>
                   <p className="text-[11px] text-slate-500 truncate">{session?.email || "learner@skillscatalyst.in"}</p>
                 </div>
+
+                {/* Owner Mode Switcher Segment (Strictly for Platform Owner) */}
+                {isOwner && (
+                  <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/70">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Workspace Mode
+                      </span>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                        Owner
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-200/80 rounded-lg">
+                      <button
+                        onClick={() => {
+                          setAppMode("student");
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                          appMode === "student"
+                            ? "bg-white text-slate-900 shadow-2xs font-bold"
+                            : "text-slate-500 hover:text-slate-900"
+                        }`}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5 text-[#5227FF]" />
+                        <span>Student</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAppMode("admin");
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                          appMode === "admin"
+                            ? "bg-purple-600 text-white shadow-2xs font-bold"
+                            : "text-slate-500 hover:text-slate-900"
+                        }`}
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 text-white" />
+                        <span>Admin</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     setIsUserMenuOpen(false);

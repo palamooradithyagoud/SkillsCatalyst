@@ -15,12 +15,13 @@ Guarantees:
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 
 from backend.services.email_service import send_welcome_email
 from backend.services.cache_service import get_redis_client
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import require_authenticated_user
 from backend.services.welcome_email_store import (
     get_welcome_email_event,
     create_welcome_email_event,
@@ -270,4 +271,20 @@ def trigger_welcome_email(
         "success": True,
         "status": "queued",
         "message": "Welcome email queued for delivery.",
+    }
+
+
+@router.get("/me", status_code=status.HTTP_200_OK)
+def get_auth_me(current_user: dict = Depends(require_authenticated_user)):
+    """
+    Authoritative identity & role endpoint for authenticated clients.
+    The frontend consumes this to determine user role ('owner' or 'student')
+    and cannot forge role or owner privileges locally.
+    """
+    return {
+        "user_id": current_user["user_id"],
+        "email": current_user["email"],
+        "name": current_user["name"],
+        "role": current_user["role"],
+        "is_owner": current_user["is_owner"],
     }

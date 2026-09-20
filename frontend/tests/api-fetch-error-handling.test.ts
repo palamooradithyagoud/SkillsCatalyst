@@ -66,7 +66,7 @@ describe('apiFetch & Error Handling Characterization', () => {
     assert.strictEqual(storage.get('other_unrelated_setting'), 'preserve_me', 'unrelated settings preserved');
   });
 
-  it('purges auth session upon receiving 403 Forbidden', async () => {
+  it('does NOT purge auth session upon receiving 403 Forbidden', async () => {
     storage.set('skillscatalyst_user_session', 'forbidden_session');
     storage.set('sc_pl_active_abc', 'active_lesson');
 
@@ -78,8 +78,8 @@ describe('apiFetch & Error Handling Characterization', () => {
 
     const res = await apiFetch('https://api.example.com/admin');
     assert.strictEqual(res.status, 403);
-    assert.strictEqual(storage.has('skillscatalyst_user_session'), false);
-    assert.strictEqual(storage.has('sc_pl_active_abc'), false);
+    assert.strictEqual(storage.has('skillscatalyst_user_session'), true, 'session must NOT be purged on 403');
+    assert.strictEqual(storage.has('sc_pl_active_abc'), true, 'active state must NOT be purged on 403');
   });
 
   it('does NOT purge auth session on 500 Internal Server Error', async () => {
