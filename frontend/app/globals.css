@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -15,6 +16,19 @@
 }
 
 :root {
+  /* Kinetic Navigation Tokens */
+  --color-primary: #6366f1;
+  --color-dark: #131313;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-800: #262626;
+  --size-container: 1400px;
+  --container-padding: 2em;
+  --section-padding: 4em;
+  --gap: 1.5em;
+  --cubic-default: cubic-bezier(0.65, 0.05, 0, 1);
+
   /* shadcn UI variables */
   --background: #ffffff;
   --foreground: #0f172a;
@@ -881,3 +895,334 @@ input:-webkit-autofill:active {
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.9);
 }
+
+/* ==========================================================================
+   Sterling Gate: Kinetic Navigation Styles
+   ========================================================================== */
+
+.fullscreen-menu-container {
+  position: relative;
+}
+
+.nav-overlay-wrapper {
+  display: none; /* GSAP controls display: block when opening */
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 120;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.nav-overlay-wrapper .overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.menu-content {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 440px;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12);
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  background: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .menu-content {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.menu-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.backdrop-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.backdrop-layer.first {
+  background: #ede9fe; /* Soft lavender kinetic curtain */
+}
+
+.backdrop-layer.second {
+  background: #e0e7ff; /* Soft indigo kinetic curtain */
+}
+
+.backdrop-layer:not(.first):not(.second) {
+  background: #ffffff; /* Primary crisp white background */
+}
+
+.ambient-background-shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.bg-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bg-shape.active {
+  opacity: 1;
+}
+
+.shape-element {
+  transform-origin: center center;
+}
+
+.menu-content-wrapper {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.menu-content-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.menu-list-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 1rem;
+  text-decoration: none;
+  overflow: hidden;
+  color: #0f172a;
+  border: 1px solid transparent;
+  transition: all 0.22s ease;
+}
+
+.nav-link:hover,
+.nav-link:active {
+  border-color: rgba(147, 51, 234, 0.2);
+  background: rgba(147, 51, 234, 0.04);
+}
+
+.nav-link-hover-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.1));
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nav-link:hover .nav-link-hover-bg,
+.menu-list-item:hover .nav-link-hover-bg {
+  opacity: 1;
+}
+
+.nav-link-text {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.25;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover .nav-link-text {
+  color: #7c3aed;
+}
+
+/* Close & Header button styling */
+.nav-close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 9999px;
+  color: #0f172a;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.nav-close-btn:hover {
+  background: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.2);
+}
+
+/* ── Dark Mode: Black Charcoal Background & Purple Text/Accents ── */
+.dark .menu-content {
+  background: #111217; /* Black charcoal */
+  border-left: 1px solid rgba(168, 85, 247, 0.2);
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.7);
+}
+
+.dark .backdrop-layer.first {
+  background: #1a1528; /* Deep indigo-charcoal curtain */
+}
+
+.dark .backdrop-layer.second {
+  background: #221438; /* Deep violet-charcoal curtain */
+}
+
+.dark .backdrop-layer:not(.first):not(.second) {
+  background: #111217; /* Primary black charcoal background */
+}
+
+.dark .nav-link-text {
+  color: #c084fc; /* Vibrant purple text */
+}
+
+.dark .nav-link:hover .nav-link-text {
+  color: #f3e8ff; /* Luminous soft purple on hover */
+}
+
+.dark .nav-link:hover,
+.dark .nav-link:active {
+  border-color: rgba(168, 85, 247, 0.35);
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.dark .nav-link-hover-bg {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(192, 132, 252, 0.12));
+}
+
+.dark .nav-close-btn {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  color: #e9d5ff;
+}
+
+.dark .nav-close-btn:hover {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(168, 85, 247, 0.45);
+}
+
+.dark .nav-overlay-wrapper .overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.menu-button-text {
+  height: 1.2rem;
+  overflow: hidden;
+  position: relative;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.menu-button-text .p-large {
+  margin: 0;
+  line-height: 1.2rem;
+}
+
+.icon-wrap {
+  width: 0.95rem;
+  height: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-button-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  transform-origin: center center;
+  display: block;
+}
+
+.site-header-wrapper {
+  position: relative;
+  z-index: 40;
+}
+
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+.nav-row__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
