@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
+import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 
 type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users";
 
@@ -169,7 +170,7 @@ export default function AdminPage() {
 
   const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: Activity },
-    { id: "hackathons", label: "Hackathons", icon: Trophy, badge: overviewData?.stats.cms_modules.hackathons },
+    { id: "hackathons", label: "Events & Hackathons", icon: Trophy, badge: overviewData?.stats.cms_modules.hackathons },
     { id: "scholarships", label: "Scholarships", icon: Award, badge: overviewData?.stats.cms_modules.scholarships },
     { id: "news", label: "Curated News", icon: Newspaper, badge: overviewData?.stats.cms_modules.news_updates },
     { id: "community", label: "Community", icon: MessageSquare, badge: overviewData?.stats.cms_modules.community_threads },
@@ -419,26 +420,9 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB 2: HACKATHONS */}
+          {/* TAB 2: EVENTS & HACKATHONS CMS */}
           {activeTab === "hackathons" && (
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">Hackathon Management</h3>
-                  <p className="text-xs text-slate-400">Curate premier hackathons displayed on the student Explore page.</p>
-                </div>
-                <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  CMS Module Active
-                </span>
-              </div>
-              <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl space-y-2">
-                <Trophy className="w-8 h-8 text-indigo-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">Hackathon CMS Gateway Ready</p>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Protected by owner authorization. Add and curate live events for student exploration.
-                </p>
-              </div>
-            </div>
+            <AdminEventsCMS onEventCountChange={refreshAdminData} />
           )}
 
           {/* TAB 3: SCHOLARSHIPS */}

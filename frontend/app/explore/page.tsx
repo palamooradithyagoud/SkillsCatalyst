@@ -27,12 +27,15 @@ import {
   Newspaper,
   Calendar,
   Users,
+  ExternalLink,
 } from "lucide-react";
 import ScholarshipsWidget from "@/components/explore/ScholarshipsWidget";
 import TechNewsWidget from "@/components/explore/TechNewsWidget";
 import EventsWidget from "@/components/explore/EventsWidget";
 import CommunityWidget from "@/components/explore/CommunityWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
+import { fetchStudentEvents } from "@/lib/api/events";
+import type { EventItem } from "@/types/events";
 
 // Foundation items for Explore feed
 const AI_PICKS = [
@@ -174,16 +177,33 @@ const TOP_COMPANIES = [
   { name: "TCS", role: "Ninja & Digital", open: "85+ Questions", slug: "tcs" },
 ];
 
-const HACKATHONS = [
-  { title: "Global AI Innovators 2026", prize: "₹10,00,000", status: "Live Now", tag: "AI/ML" },
-  { title: "Next.js Web3 Hackathon", prize: "₹5,00,000", status: "Starts in 3 Days", tag: "FullStack" },
-];
-
 function ExplorePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [companyInput, setCompanyInput] = useState("");
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+  const [hackathons, setHackathons] = useState<EventItem[]>([]);
+  const [loadingHackathons, setLoadingHackathons] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetchStudentEvents({ is_hackathon: true });
+        if (active && res.events) {
+          setHackathons(res.events);
+        }
+      } catch {
+        // Silently handled
+      } finally {
+        if (active) setLoadingHackathons(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const initialTab = (searchParams.get("tab") as ExploreTabId) || "trending";
   const [activeTab, setActiveTab] = useState<ExploreTabId>(
@@ -588,22 +608,39 @@ function ExplorePageContent() {
             </h3>
             <span className="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">Live</span>
           </div>
-          <div className="space-y-2">
-            {HACKATHONS.map((h) => (
-              <div
-                key={h.title}
-                className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 flex items-center justify-between shadow-2xs gap-2 min-w-0 overflow-hidden"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate">{h.title}</div>
-                  <div className="text-[9px] sm:text-[10px] text-amber-900 font-extrabold mt-0.5 truncate">Prize Pool: {h.prize}</div>
-                </div>
-                <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl bg-amber-500 text-white text-[9px] sm:text-[10px] font-black shadow-xs shrink-0">
-                  {h.status}
-                </span>
-              </div>
-            ))}
-          </div>
+
+          {loadingHackathons ? (
+            <div className="p-4 text-center text-xs text-slate-400 font-semibold">Loading hackathons...</div>
+          ) : hackathons.length === 0 ? (
+            <div className="p-4 text-center text-xs text-slate-500 font-medium bg-slate-50 rounded-xl border border-slate-200/70">
+              No live hackathons active today. Check back soon for upcoming campus challenges!
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {hackathons.map((h) => (
+                <a
+                  key={h.id}
+                  href={h.event_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100/70 hover:to-orange-100/70 border border-amber-200/80 flex items-center justify-between shadow-2xs gap-2 min-w-0 overflow-hidden transition-all cursor-pointer group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate group-hover:text-amber-700 transition-colors">
+                      {h.event_name}
+                    </div>
+                    <div className="text-[9px] sm:text-[10px] text-amber-900 font-extrabold mt-0.5 truncate">
+                      {h.conducted_by_college} {h.prize_pool ? `• Prize: ${h.prize_pool}` : ""}
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl bg-amber-500 text-white text-[9px] sm:text-[10px] font-black shadow-xs shrink-0 flex items-center gap-1">
+                    <span>Register</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       </div>

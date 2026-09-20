@@ -15,3 +15,4 @@ export * from "./api/dashboard";
 export * from "./api/practice";
 export * from "./api/career";
 export * from "./api/profile";
+export * from "./api/events";

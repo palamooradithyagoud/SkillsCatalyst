@@ -11,6 +11,7 @@ import * as DashboardAPI from "@/lib/api/dashboard";
 import * as PracticeAPI from "@/lib/api/practice";
 import * as CareerAPI from "@/lib/api/career";
 import * as ProfileAPI from "@/lib/api/profile";
+import * as EventsAPI from "@/lib/api/events";
 
 describe("API Domain Modules & Facade Verification", () => {
   it("preserves identical export references between facade and domain modules", () => {
@@ -70,6 +71,18 @@ describe("API Domain Modules & Facade Verification", () => {
     assert.strictEqual(FacadeAPI.getLocalCalendarDateStr, ProfileAPI.getLocalCalendarDateStr);
     assert.strictEqual(FacadeAPI.syncDailyLoginStreak, ProfileAPI.syncDailyLoginStreak);
     assert.strictEqual(FacadeAPI.fetchUserProgressStats, ProfileAPI.fetchUserProgressStats);
+
+    // Events
+    assert.strictEqual(FacadeAPI.fetchStudentEvents, EventsAPI.fetchStudentEvents);
+    assert.strictEqual(FacadeAPI.fetchStudentEventById, EventsAPI.fetchStudentEventById);
+    assert.strictEqual(FacadeAPI.fetchAdminEvents, EventsAPI.fetchAdminEvents);
+    assert.strictEqual(FacadeAPI.fetchAdminEventById, EventsAPI.fetchAdminEventById);
+    assert.strictEqual(FacadeAPI.createAdminEvent, EventsAPI.createAdminEvent);
+    assert.strictEqual(FacadeAPI.updateAdminEvent, EventsAPI.updateAdminEvent);
+    assert.strictEqual(FacadeAPI.publishAdminEvent, EventsAPI.publishAdminEvent);
+    assert.strictEqual(FacadeAPI.archiveAdminEvent, EventsAPI.archiveAdminEvent);
+    assert.strictEqual(FacadeAPI.deleteAdminEvent, EventsAPI.deleteAdminEvent);
+    assert.strictEqual(FacadeAPI.uploadEventBanner, EventsAPI.uploadEventBanner);
   });
 
   it("learning search fast-fails cleanly on empty or single-character query", async () => {
