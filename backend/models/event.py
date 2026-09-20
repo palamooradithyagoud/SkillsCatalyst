@@ -50,7 +50,7 @@ class CreateEventRequest(BaseModel):
     event_name: str = Field(..., min_length=2, max_length=255, description="Name of the event/hackathon")
     conducted_by_college: str = Field(..., min_length=2, max_length=255, description="Host college or organization")
     event_link: str = Field(..., description="External registration or portal link")
-    registration_deadline: datetime = Field(..., description="Last date for registration")
+    registration_deadline: Optional[datetime] = Field(None, description="Last date for registration (optional)")
     start_date: datetime = Field(..., description="Event start date and time")
     end_date: datetime = Field(..., description="Event end date and time")
     category: EventCategory = Field(..., description="Event category: 'online' or 'offline'")
@@ -169,7 +169,7 @@ class EventResponse(BaseModel):
     event_name: str
     conducted_by_college: str
     event_link: str
-    registration_deadline: str
+    registration_deadline: Optional[str] = None
     start_date: str
     end_date: str
     location: Optional[str] = None

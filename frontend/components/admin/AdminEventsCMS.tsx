@@ -136,9 +136,9 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       event_name: event.event_name || "",
       conducted_by_college: event.conducted_by_college || "",
       event_link: event.event_link || "",
-      registration_deadline: event.registration_deadline ? event.registration_deadline.substring(0, 16) : "",
-      start_date: event.start_date ? event.start_date.substring(0, 16) : "",
-      end_date: event.end_date ? event.end_date.substring(0, 16) : "",
+      registration_deadline: event.registration_deadline ? event.registration_deadline.substring(0, 10) : "",
+      start_date: event.start_date ? event.start_date.substring(0, 10) : "",
+      end_date: event.end_date ? event.end_date.substring(0, 10) : "",
       category: event.category || "offline",
       location: event.location || "",
       banner_url: event.banner_url || "",
@@ -147,25 +147,20 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       prize_pool: event.prize_pool || "",
       team_size: event.team_size || "",
       mode: event.mode || "offline",
-      visible_from: event.visible_from ? event.visible_from.substring(0, 16) : "",
-      visible_until: event.visible_until ? event.visible_until.substring(0, 16) : "",
+      visible_from: event.visible_from ? event.visible_from.substring(0, 10) : "",
+      visible_until: event.visible_until ? event.visible_until.substring(0, 10) : "",
     });
     setFormErrors({});
     setIsModalOpen(true);
   };
 
-  // Handle banner upload
+  // Upload poster image
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setFormErrors((prev) => ({ ...prev, banner_url: "Please select a valid image file (PNG, JPG, WebP)." }));
-      return;
-    }
-
     if (file.size > 5 * 1024 * 1024) {
-      setFormErrors((prev) => ({ ...prev, banner_url: "Image size cannot exceed 5 MB." }));
+      setFormErrors((prev) => ({ ...prev, banner_url: "File exceeds 5MB size limit." }));
       return;
     }
 
@@ -201,18 +196,18 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       errors.event_link = "Event link must start with https:// or http://";
     }
 
-    if (!form.registration_deadline) errors.registration_deadline = "Registration deadline is required.";
+    // registration_deadline is optional
     if (!form.start_date) errors.start_date = "Start date is required.";
     if (!form.end_date) errors.end_date = "End date is required.";
 
     if (form.start_date && form.end_date) {
-      if (new Date(form.end_date) < new Date(form.start_date)) {
+      if (form.end_date < form.start_date) {
         errors.end_date = "End date must be on or after start date.";
       }
     }
 
     if (form.visible_from && form.visible_until) {
-      if (new Date(form.visible_until) <= new Date(form.visible_from)) {
+      if (form.visible_until <= form.visible_from) {
         errors.visible_until = "Visible Until date must be after Visible From date.";
       }
     }
@@ -236,9 +231,9 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       event_name: form.event_name.trim(),
       conducted_by_college: form.conducted_by_college.trim(),
       event_link: form.event_link.trim(),
-      registration_deadline: new Date(form.registration_deadline).toISOString(),
-      start_date: new Date(form.start_date).toISOString(),
-      end_date: new Date(form.end_date).toISOString(),
+      registration_deadline: form.registration_deadline ? `${form.registration_deadline}T23:59:59Z` : null,
+      start_date: `${form.start_date}T00:00:00Z`,
+      end_date: `${form.end_date}T23:59:59Z`,
       category: form.category,
       banner_url: form.banner_url.trim(),
       location: form.location.trim() || null,
@@ -248,8 +243,8 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       team_size: form.is_hackathon && form.team_size.trim() ? form.team_size.trim() : null,
       mode: form.is_hackathon ? form.mode : null,
       status: targetStatus,
-      visible_from: form.visible_from ? new Date(form.visible_from).toISOString() : null,
-      visible_until: form.visible_until ? new Date(form.visible_until).toISOString() : null,
+      visible_from: form.visible_from ? `${form.visible_from}T00:00:00Z` : null,
+      visible_until: form.visible_until ? `${form.visible_until}T23:59:59Z` : null,
     };
 
     try {
@@ -496,10 +491,12 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                         <Calendar className="w-3 h-3 text-purple-400" />
                         <span>Start: {new Date(ev.start_date).toLocaleDateString()}</span>
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-400" />
-                        <span>Deadline: {new Date(ev.registration_deadline).toLocaleDateString()}</span>
-                      </span>
+                      {ev.registration_deadline && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-amber-400" />
+                          <span>Deadline: {new Date(ev.registration_deadline).toLocaleDateString()}</span>
+                        </span>
+                      )}
                       {ev.is_hackathon && ev.prize_pool && (
                         <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                           <Award className="w-3 h-3" />
@@ -640,9 +637,9 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
 
                   {/* Last Date for Registration */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">Last Date for Registration *</label>
+                    <label className="text-xs font-semibold text-slate-300">Last Date for Registration (Optional)</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={form.registration_deadline}
                       onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 [color-scheme:dark]"
@@ -667,7 +664,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Start Date *</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={form.start_date}
                       onChange={(e) => setForm({ ...form, start_date: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 [color-scheme:dark]"
@@ -679,7 +676,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">End Date *</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={form.end_date}
                       onChange={(e) => setForm({ ...form, end_date: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 [color-scheme:dark]"
@@ -841,7 +838,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Visible From (Optional)</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={form.visible_from}
                       onChange={(e) => setForm({ ...form, visible_from: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 [color-scheme:dark]"
@@ -853,7 +850,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Visible Until (Optional)</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={form.visible_until}
                       onChange={(e) => setForm({ ...form, visible_until: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-purple-500 [color-scheme:dark]"
