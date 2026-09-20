@@ -37,19 +37,8 @@ import ExploreIcon from "@/components/icons/ExploreIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
-import { CurvedNavbar, type iNavItem } from "@/components/ui/curved-menu";
+import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
 import ThemeSwitch from "@/components/ThemeSwitch";
-
-const platformNavItems: iNavItem[] = [
-  { heading: "Dashboard", href: "/dashboard", subheading: "Overview & Metrics" },
-  { heading: "Learning", href: "/learning", subheading: "Courses & YouTube Playlists" },
-  { heading: "Roadmaps", href: "/roadmaps", subheading: "Interactive Career Tracks" },
-  { heading: "Practice", href: "/practice", subheading: "Aptitude & Coding Prep" },
-  { heading: "Career", href: "/career", subheading: "AI Resume & ATS Review" },
-  { heading: "Explore", href: "/explore", subheading: "Trending Skills & Grants" },
-  { heading: "Analytics", href: "/analytics", subheading: "Performance & Readiness" },
-  { heading: "Profile", href: "/settings", subheading: "Account & Preferences" },
-];
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -199,25 +188,15 @@ function MobileNavContent() {
         </div>
       </header>
 
-      {/* ── Native Curved Mobile Navigation Drawer ── */}
-      <AnimatePresence mode="wait">
-        {drawerOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setDrawerOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[65] md:hidden"
-            />
-            <CurvedNavbar
-              setIsActive={setDrawerOpen}
-              navItems={platformNavItems}
-            />
-          </>
-        )}
-      </AnimatePresence>
+      {/* ── Kinetic Mobile Navigation Drawer (Sterling Gate) ── */}
+      <div className="md:hidden">
+        <SterlingGateKineticNavigation
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          showTrigger={false}
+        />
+      </div>
+
 
       {/* ── Mobile Floating Tubelight Bottom Navigation Bar (Hidden when Drawer is Open) ── */}
       {!isHideBottomBar && !drawerOpen && (
