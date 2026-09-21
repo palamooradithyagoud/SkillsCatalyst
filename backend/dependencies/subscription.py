@@ -1,15 +1,21 @@
 """
 backend/dependencies/subscription.py
 FastAPI route dependencies for subscription and entitlement enforcement.
-Prepared for Phase 3 (Enforcement). Read-only and non-blocking in Phase 1.
+Phase: Payments Phase 3 — Premium Entitlement Enforcement
 """
 
 from typing import Callable, Optional, Dict, Any
 from fastapi import Depends, HTTPException, status
 
-from backend.services.auth_service import get_current_user_id
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.services.subscription_service import SubscriptionService
-from backend.models.subscription import PlanCode, MySubscriptionResponse, FeatureKey
+from backend.models.subscription import (
+    PlanCode,
+    MySubscriptionResponse,
+    FeatureKey,
+    AccessLevel,
+    EntitlementDetailDTO,
+)
 
 
 def get_current_user_subscription(
@@ -43,18 +49,66 @@ def require_premium(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
-                "error": "PREMIUM_REQUIRED",
-                "message": "This feature requires an active SkillsCatalyst Premium subscription.",
-                "plan": sub.plan.value,
+                "code": "PREMIUM_REQUIRED",
+                "message": "Premium subscription required",
+                "plan": sub.plan.value if hasattr(sub.plan, "value") else str(sub.plan),
             },
         )
     return sub
 
 
+def require_entitlement(feature_key: str) -> Callable:
+    """
+    Centralized Authoritative Entitlement Dependency for Phase 3.
+    Resolves caller identity via authenticated JWT or secure session token.
+    Raises 403 Forbidden if feature access is NONE.
+    Returns the resolved EntitlementDetailDTO(access, limit).
+    """
+    def _dependency(
+        user_id: str = Depends(get_session_or_user_id),
+    ) -> EntitlementDetailDTO:
+        entitlements = SubscriptionService.get_user_entitlements(user_id)
+        ent = entitlements.get(feature_key)
+        if not ent or ent.access == AccessLevel.NONE:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "PREMIUM_REQUIRED",
+                    "feature": feature_key,
+                    "message": "Premium subscription required",
+                },
+            )
+        return ent
+
+    return _dependency
+
+
+def check_feature_quota(feature_key: str, current_count: int, user_id: str) -> None:
+    """
+    Evaluates whether a caller's usage count has reached or exceeded their plan limit.
+    Raises HTTP 403 with machine-readable LIMIT_REACHED detail.
+    Premium users and features with None limits pass unconditionally.
+    """
+    _, is_premium = SubscriptionService.get_effective_plan(user_id)
+    if is_premium:
+        return
+
+    limit = SubscriptionService.get_feature_limit(user_id, feature_key)
+    if limit is not None and current_count >= limit:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "LIMIT_REACHED",
+                "feature": feature_key,
+                "limit": limit,
+            },
+        )
+
+
 def require_feature_access(feature_key: str) -> Callable:
     """
-    Dependency factory: Returns a FastAPI dependency ensuring user has access to specified feature.
-    Raises 403 Forbidden if the user's effective plan denies access (access_level == 'none').
+    Backward-compatible dependency factory for checking feature access.
+    Raises 403 Forbidden if access_level == 'none'.
     """
     def _dependency(user_id: str = Depends(get_current_user_id)) -> bool:
         has_access = SubscriptionService.has_feature_access(user_id, feature_key)
@@ -62,9 +116,9 @@ def require_feature_access(feature_key: str) -> Callable:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
-                    "error": "FEATURE_ACCESS_DENIED",
-                    "feature_key": feature_key,
-                    "message": f"Your current subscription plan does not include access to {feature_key}.",
+                    "code": "PREMIUM_REQUIRED",
+                    "feature": feature_key,
+                    "message": "Premium subscription required",
                 },
             )
         return True
@@ -80,3 +134,4 @@ def require_feature_limit(feature_key: str) -> Callable:
         return SubscriptionService.get_feature_limit(user_id, feature_key)
 
     return _dependency
+

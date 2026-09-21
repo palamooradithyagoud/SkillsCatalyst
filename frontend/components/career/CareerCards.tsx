@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import BorderGlow from "@/components/BorderGlow";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface CareerCardsProps {
   onOpenPlacementPrep: () => void;
@@ -18,6 +19,8 @@ export default function CareerCards({
   onOpenPlacementPrep,
   onOpenResumeReview,
 }: CareerCardsProps) {
+  const { canAccess } = useSubscription();
+  const hasPlacementAccess = canAccess("placement_prep");
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1: Placement Prep (Active - First) */}
@@ -44,9 +47,17 @@ export default function CareerCards({
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-violet-500/30 group-hover:scale-105 transition-transform">
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <div className="px-3 py-1 rounded-full text-[11px] font-black bg-purple-600 text-white flex items-center gap-1.5 shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                  Active Prep Suite
+                <div className="flex items-center gap-1.5">
+                  {!hasPlacementAccess && (
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black uppercase tracking-wider shadow-2xs">
+                      <Lock className="w-3 h-3 text-amber-600" />
+                      <span>PREMIUM</span>
+                    </span>
+                  )}
+                  <div className="px-3 py-1 rounded-full text-[11px] font-black bg-purple-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                    Active Prep Suite
+                  </div>
                 </div>
               </div>
 

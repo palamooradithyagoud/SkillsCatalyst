@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Clock, Briefcase, ArrowRight } from "lucide-react";
+import { Clock, Briefcase, ArrowRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface PracticeModeCardsProps {
   onSelectMode: (mode: "beginner" | "company") => void;
@@ -13,6 +14,8 @@ export function PracticeModeCards({
   onSelectMode,
   companiesCount,
 }: PracticeModeCardsProps) {
+  const { canAccess } = useSubscription();
+  const hasAccess = canAccess("company_interview_questions");
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-6 pt-2">
       {/* Card 1: Beginner Level */}
@@ -74,9 +77,17 @@ export function PracticeModeCards({
             <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <Briefcase className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-100 text-blue-800 text-[9px] sm:text-[10px] font-black tracking-widest uppercase">
-              INTERVIEW PREP
-            </span>
+            <div className="flex items-center gap-1.5">
+              {!hasAccess && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                  <Lock className="w-2.5 h-2.5 text-amber-600" />
+                  <span>PREMIUM</span>
+                </span>
+              )}
+              <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-100 text-blue-800 text-[9px] sm:text-[10px] font-black tracking-widest uppercase">
+                INTERVIEW PREP
+              </span>
+            </div>
           </div>
 
           <div>

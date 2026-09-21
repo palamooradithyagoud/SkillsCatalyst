@@ -46,6 +46,10 @@ export async function createPaymentOrder(
   planCode: "premium_monthly" | "premium_3_month" | string
 ): Promise<CreatePaymentOrderResponse> {
   const headers = await getAuthHeaders();
+  if (!headers.Authorization) {
+    throw new Error("Please sign in to your account to purchase a subscription.");
+  }
+
   const res = await apiFetch(`${API_BASE}/api/payments/create-order`, {
     method: "POST",
     headers: {
@@ -56,6 +60,9 @@ export async function createPaymentOrder(
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Your session is invalid or expired. Please sign in again to complete checkout.");
+    }
     const errorBody = await res.json().catch(() => ({}));
     throw new Error(
       errorBody.detail || errorBody.message || `Failed to create payment order (${res.status})`

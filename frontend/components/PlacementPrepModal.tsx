@@ -28,6 +28,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
 import { supabase } from "@/lib/supabase";
 import { getAuthHeaders, apiFetch, API_BASE } from "@/lib/api";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PremiumLockCard } from "@/components/premium";
 
 const TOPIC_ID_MAP: Record<string, number> = {
   // Quantitative Aptitude
@@ -161,6 +163,8 @@ const PLACEMENT_PREP_DATA = {
 };
 
 export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepModalProps) {
+  const { canAccess } = useSubscription();
+  const hasPlacementAccess = canAccess("placement_prep");
   const [activeTab, setActiveTab] = useState<"aptitude" | "mockTests">("aptitude");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [mounted, setMounted] = useState<boolean>(false);
@@ -500,10 +504,29 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
             </div>
           </div>
 
-          {/* Main Topic Selection View */}
-          {!selectedTopic && (
+          {!hasPlacementAccess ? (
+            <div className="p-6 md:p-12 flex items-center justify-center flex-1 bg-[#f4f6f3] overflow-y-auto">
+              <PremiumLockCard
+                title="Placement Preparation Suite"
+                description="Master recruitment assessments with complete Quantitative Aptitude, Logical Reasoning, Verbal Ability question banks and timed full-length company mock tests (TCS NQT, Infosys, and top product firms)."
+                benefits={[
+                  "15+ comprehensive aptitude, reasoning & verbal topic banks",
+                  "Detailed step-by-step solutions with shortcuts & formulas",
+                  "Full-length company mock test simulations with timed metrics",
+                  "AI performance analytics & weakness breakdown",
+                ]}
+                secondaryAction={{
+                  label: "Close",
+                  onClick: onClose,
+                }}
+              />
+            </div>
+          ) : (
             <>
-              {/* Navigation Tabs */}
+              {/* Main Topic Selection View */}
+              {!selectedTopic && (
+                <>
+                  {/* Navigation Tabs */}
               <div className="px-6 py-3 border-b border-slate-200 bg-slate-100/90 flex items-center gap-3 shrink-0">
                 <button
                   onClick={() => setActiveTab("aptitude")}
@@ -1246,6 +1269,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                 </div>
               )}
             </div>
+          )}
+            </>
           )}
         </motion.div>
       </div>

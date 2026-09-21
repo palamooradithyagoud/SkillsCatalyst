@@ -172,11 +172,16 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     headers = dict(exc.headers or {})
     headers["X-Request-ID"] = req_id
 
-    detail = exc.detail if isinstance(exc.detail, dict) else {
-        "success": False,
-        "message": str(exc.detail),
-        "detail": str(exc.detail),
-    }
+    if isinstance(exc.detail, dict):
+        detail = dict(exc.detail)
+        if "detail" not in detail:
+            detail["detail"] = dict(exc.detail)
+    else:
+        detail = {
+            "success": False,
+            "message": str(exc.detail),
+            "detail": str(exc.detail),
+        }
     if isinstance(detail, dict) and "request_id" not in detail:
         detail["request_id"] = req_id
 

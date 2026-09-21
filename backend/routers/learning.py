@@ -8,12 +8,14 @@ All domain and business logic is decoupled into `backend.services.learning.*`.
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException, status
 
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.config import YOUTUBE_API_KEY
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_SEARCH_RPM
+from backend.models.subscription import FeatureKey, EntitlementDetailDTO
+from backend.dependencies.subscription import require_entitlement
 
 logger = logging.getLogger(__name__)
 
@@ -250,11 +252,36 @@ async def mark_all_watched(
 
 # ── AI LLM Roadmap Generation ──────────────────────────────────────────────────
 @router.post("/roadmap")
-async def generate_skill_roadmap(req: RoadmapRequest):
+async def generate_skill_roadmap(
+    req: RoadmapRequest,
+    user_id: str = Depends(get_session_or_user_id),
+    entitlement: EntitlementDetailDTO = Depends(require_entitlement(FeatureKey.ROADMAPS.value)),
+):
     """
     Tier 3 Resolution: Generate a 5-tier structured skill roadmap via Groq AI (Llama-3.3 70B).
     Delegates to backend.services.learning.roadmap_service.
+    Enforces server-side roadmap quotas for free tier if configured.
     """
+    if entitlement.limit is not None:
+        sb = get_supabase()
+        if sb:
+            try:
+                res = sb.table("roadmap_progress").select("roadmap_id").eq("user_id", user_id).execute()
+                active_ids = {r.get("roadmap_id") for r in (res.data or []) if r.get("roadmap_id")}
+                if len(active_ids) >= entitlement.limit:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail={
+                            "code": "LIMIT_REACHED",
+                            "feature": "roadmaps",
+                            "limit": entitlement.limit,
+                        },
+                    )
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.warning(f"Error checking roadmap progress count: {e}")
+
     return await _generate_skill_roadmap_svc(req)
 
 

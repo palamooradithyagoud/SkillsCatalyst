@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionStatus } from "@/components/premium";
 
 export type NavItemData = {
   id: string;
@@ -294,7 +295,12 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom Section: Settings, Support, Logout */}
-        <div className="mt-auto p-2.5 border-t border-slate-100 flex flex-col gap-0.5">
+        <div className="mt-auto p-2.5 border-t border-slate-100 flex flex-col gap-1">
+          {isOpen && (
+            <div className="mb-1">
+              <SubscriptionStatus compact />
+            </div>
+          )}
           {bottomItems.map((item) => (
             <SidebarItem
               key={item.id}

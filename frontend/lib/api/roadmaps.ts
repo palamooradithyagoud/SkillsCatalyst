@@ -21,10 +21,26 @@ export async function generateRoadmap(skill: string): Promise<RoadmapData | null
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ skill }),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      if (res.status === 403) {
+        const errorBody = await res.json().catch(() => null);
+        const detail = errorBody?.detail;
+        const err: any = new Error(
+          detail?.message || "Free plan limit reached for AI Roadmaps. Upgrade to Premium for unlimited roadmaps."
+        );
+        err.status = 403;
+        err.code = detail?.code || "LIMIT_REACHED";
+        err.detail = detail;
+        throw err;
+      }
+      throw new Error(`HTTP ${res.status}`);
+    }
     const data = await res.json();
     return data.roadmap ?? null;
-  } catch (e) {
+  } catch (e: any) {
+    if (e?.status === 403 || e?.code === "LIMIT_REACHED") {
+      throw e;
+    }
     console.warn("Roadmap generation failed:", e);
     return null;
   }

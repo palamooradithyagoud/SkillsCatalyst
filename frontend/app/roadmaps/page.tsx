@@ -55,6 +55,9 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import BorderGlow from "@/components/BorderGlow";
 import LogoLoop, { LogoItem } from "@/components/LogoLoop";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePricingModal } from "@/contexts/PricingModalContext";
+import { UsageLimitIndicator } from "@/components/premium";
 import {
   SKILL_ROADMAPS,
   CAREER_ROADMAPS,
@@ -2534,10 +2537,14 @@ function RoadmapDetailView({
 export default function RoadmapsPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
+  const { isPremium, getLimit } = useSubscription();
+  const { openPricingModal } = usePricingModal();
+  const roadmapLimit = isPremium ? null : getLimit("roadmaps");
 
   const [selectedRoadmap, setSelectedRoadmap] = useState<PresetRoadmap | null>(null);
   const [query, setQuery] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [customRoadmaps, setCustomRoadmaps] = useState<RoadmapData[]>([]);
   const [completedState, setCompletedState] = useState<Record<string, boolean>>({});
   const [enrolledIds, setEnrolledIds] = useState<Set<string>>(new Set());
@@ -2600,12 +2607,25 @@ export default function RoadmapsPage() {
   const handleGenerate = async () => {
     if (!query.trim() || generating) return;
     setGenerating(true);
-    const roadmap = await generateRoadmap(query.trim());
-    if (roadmap) {
-      setCustomRoadmaps((prev) => [roadmap, ...prev]);
-      setQuery("");
+    setGenerateError(null);
+    try {
+      const roadmap = await generateRoadmap(query.trim());
+      if (roadmap) {
+        setCustomRoadmaps((prev) => [roadmap, ...prev]);
+        setQuery("");
+      }
+    } catch (e: any) {
+      if (e?.status === 403 || e?.code === "LIMIT_REACHED") {
+        setGenerateError(
+          "Free limit reached for AI Roadmap generation. Upgrade to Premium for unlimited AI roadmaps!"
+        );
+        openPricingModal();
+      } else {
+        setGenerateError("Failed to generate roadmap. Please try again.");
+      }
+    } finally {
+      setGenerating(false);
     }
-    setGenerating(false);
   };
 
   const queryClient = useQueryClient();

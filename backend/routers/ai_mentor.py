@@ -1,15 +1,37 @@
 import logging
 import re
-from typing import Optional
+from collections import defaultdict
+from typing import Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id
 from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
+from backend.models.subscription import FeatureKey, EntitlementDetailDTO
+from backend.dependencies.subscription import require_entitlement
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai-mentor", tags=["ai-mentor"])
+
+# Thread-safe in-memory quota tracking for AI mentor usage
+_ai_mentor_usage_counts: Dict[str, int] = defaultdict(int)
+
+
+def get_ai_mentor_usage(user_id: str) -> int:
+    return _ai_mentor_usage_counts[user_id]
+
+
+def increment_ai_mentor_usage(user_id: str) -> int:
+    _ai_mentor_usage_counts[user_id] += 1
+    return _ai_mentor_usage_counts[user_id]
+
+
+def reset_ai_mentor_usage(user_id: Optional[str] = None) -> None:
+    if user_id:
+        _ai_mentor_usage_counts.pop(user_id, None)
+    else:
+        _ai_mentor_usage_counts.clear()
 
 
 
@@ -165,12 +187,25 @@ _SKILLS_SYSTEM_PROMPT = (
 @router.post("/chat", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def chat_mentor(
     req: PromptRequest,
-    current_user_id: str = Depends(get_session_or_user_id)
+    current_user_id: str = Depends(get_session_or_user_id),
+    entitlement: EntitlementDetailDTO = Depends(require_entitlement(FeatureKey.AI_MENTOR.value)),
 ):
     """
     Skills-only AI mentor chat endpoint.
-    Guards against off-topic queries before hitting the LLM.
+    Guards against quota exhaustion and off-topic queries before hitting the LLM.
     """
+    if entitlement.limit is not None:
+        usage = get_ai_mentor_usage(current_user_id)
+        if usage >= entitlement.limit:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "LIMIT_REACHED",
+                    "feature": "ai_mentor",
+                    "limit": entitlement.limit,
+                },
+            )
+
     logger.info(f"AI mentor chat request (prompt length={len(req.prompt)}).")
 
     # Off-topic guard: fast-path check before calling the LLM (saves API cost)
@@ -179,6 +214,9 @@ async def chat_mentor(
         return {"reply": _OFFTOPIC_REPLY}
 
     response = chat_with_groq(req.prompt, system_prompt=_SKILLS_SYSTEM_PROMPT)
+
+    if entitlement.limit is not None:
+        increment_ai_mentor_usage(current_user_id)
 
     # Secondary guard: if LLM somehow wandered off-topic, check its reply
     # (very rare with a strict system prompt, but good defence-in-depth)
@@ -192,11 +230,23 @@ async def chat_mentor(
 @router.post("/review-resume", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def review_resume(
     req: ResumeReviewRequest,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_current_user_id),
+    entitlement: EntitlementDetailDTO = Depends(require_entitlement(FeatureKey.AI_MENTOR.value)),
 ):
     """
     Performs a full AI-powered resume review using Groq LLM and persists score into Supabase.
     """
+    if entitlement.limit is not None:
+        usage = get_ai_mentor_usage(current_user_id)
+        if usage >= entitlement.limit:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "LIMIT_REACHED",
+                    "feature": "ai_mentor",
+                    "limit": entitlement.limit,
+                },
+            )
     target_role = req.target_role
     years_exp = req.years_experience or "1-3 years"
     company_type = req.company_type or "Product-Based"
@@ -355,4 +405,6 @@ STRICT RULES:
         logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
 
     logger.info(f"Resume review completed ({len(review_text)} chars returned).")
+    if entitlement.limit is not None:
+        increment_ai_mentor_usage(current_user_id)
     return {"review": review_text}

@@ -27,10 +27,14 @@ import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
 import { CompanyProgressTracker } from "@/components/practice/CompanyProgressTracker";
 import { QuestionListTable } from "@/components/practice/QuestionListTable";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PremiumLockCard } from "@/components/premium";
 
 function PracticeContent() {
   const { session } = useAuth();
   const userId = session?.user_id;
+  const { canAccess, isPremium } = useSubscription();
+  const hasCompanyAccess = canAccess("company_interview_questions");
   const searchParams = useSearchParams();
 
   const urlCompany = searchParams?.get("company");
@@ -132,6 +136,12 @@ function PracticeContent() {
 
     async function loadQuestions() {
       if (selectedMode !== "company") return;
+      if (!hasCompanyAccess) {
+        setQuestions([]);
+        setTotalCount(0);
+        setLoadingQuestions(false);
+        return;
+      }
       setLoadingQuestions(true);
 
       const result = await fetchCompanyQuestions(
@@ -219,55 +229,78 @@ function PracticeContent() {
 
       {/* ── MODE 2: COMPANY WISE QUESTION BANK */}
       {selectedMode === "company" && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Controls Panel */}
-          <CompanyControlsPanel
-            selectedCompany={selectedCompany}
-            onSelectCompany={(comp) => {
-              setSelectedCompany(comp);
-              setLimit(100);
-            }}
-            filteredCompaniesDropdown={filteredCompaniesDropdown}
-            companySearchInput={companySearchInput}
-            onCompanySearchChange={setCompanySearchInput}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            selectedPeriod={selectedPeriod}
-            onSelectPeriod={(p) => {
-              setSelectedPeriod(p);
-              setLimit(100);
-            }}
-            selectedDifficulty={selectedDifficulty}
-            onSelectDifficulty={setSelectedDifficulty}
-            selectedStatus={selectedStatus}
-            onSelectStatus={setSelectedStatus}
-          />
+        !hasCompanyAccess ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="pt-2"
+          >
+            <PremiumLockCard
+              title="Company-Wise Interview Questions"
+              description="Unlock real LeetCode interview question banks with frequency data from 660+ top tech companies including Google, Amazon, Microsoft, and Meta."
+              benefits={[
+                "Full question banks for 660+ companies",
+                "30-day, 6-month & all-time frequency filters",
+                "Difficulty breakdown & topic tags for targeted prep",
+                "Direct LeetCode problem links with live solution tracker",
+              ]}
+              secondaryAction={{
+                label: "Back to Practice Modes",
+                onClick: () => setSelectedMode("index"),
+              }}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Controls Panel */}
+            <CompanyControlsPanel
+              selectedCompany={selectedCompany}
+              onSelectCompany={(comp) => {
+                setSelectedCompany(comp);
+                setLimit(100);
+              }}
+              filteredCompaniesDropdown={filteredCompaniesDropdown}
+              companySearchInput={companySearchInput}
+              onCompanySearchChange={setCompanySearchInput}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              selectedPeriod={selectedPeriod}
+              onSelectPeriod={(p) => {
+                setSelectedPeriod(p);
+                setLimit(100);
+              }}
+              selectedDifficulty={selectedDifficulty}
+              onSelectDifficulty={setSelectedDifficulty}
+              selectedStatus={selectedStatus}
+              onSelectStatus={setSelectedStatus}
+            />
 
-          {/* Progress Tracker Banner */}
-          <CompanyProgressTracker
-            company={selectedCompany}
-            solvedCount={companySolvedCount}
-            totalCount={questions.length}
-            progressPercent={companyProgressPercent}
-          />
+            {/* Progress Tracker Banner */}
+            <CompanyProgressTracker
+              company={selectedCompany}
+              solvedCount={companySolvedCount}
+              totalCount={questions.length}
+              progressPercent={companyProgressPercent}
+            />
 
-          {/* Question List Table */}
-          <QuestionListTable
-            company={selectedCompany}
-            periodLabel={selectedPeriodLabel}
-            loadingQuestions={loadingQuestions}
-            filteredQuestions={filteredQuestions}
-            totalCount={totalCount}
-            loadedCount={questions.length}
-            solvedState={solvedState}
-            onToggleSolved={toggleSolved}
-            onLoadMore={() => setLimit((prev) => prev + 100)}
-          />
-        </motion.div>
+            {/* Question List Table */}
+            <QuestionListTable
+              company={selectedCompany}
+              periodLabel={selectedPeriodLabel}
+              loadingQuestions={loadingQuestions}
+              filteredQuestions={filteredQuestions}
+              totalCount={totalCount}
+              loadedCount={questions.length}
+              solvedState={solvedState}
+              onToggleSolved={toggleSolved}
+              onLoadMore={() => setLimit((prev) => prev + 100)}
+            />
+          </motion.div>
+        )
       )}
 
       {/* Practice Topic Detail Drawer Overlay */}
