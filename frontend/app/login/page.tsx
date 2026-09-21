@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PenguinMountainCanvas from "@/components/PenguinMountainCanvas";
+import RotatingText from "@/components/RotatingText";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -250,12 +251,25 @@ export default function LoginPage() {
 
           {/* Heading & Subtitle */}
           <div className="text-center space-y-1">
-            <h1 className="text-2xl sm:text-[30px] font-black text-[#18191F] tracking-tight">
-              {unverifiedEmail
-                ? "Verify your email"
-                : mode === "signin"
-                ? "Welcome back!"
-                : "Create an account"}
+            <h1 className="text-2xl sm:text-[30px] font-black text-[#18191F] tracking-tight flex items-center justify-center min-h-[38px] sm:min-h-[44px]">
+              {unverifiedEmail ? (
+                "Verify your email"
+              ) : mode === "signin" ? (
+                <RotatingText
+                  texts={["Learn Faster", "Grow Smarter"]}
+                  mainClassName="justify-center overflow-hidden py-0.5 text-[#18191F]"
+                  staggerFrom="last"
+                  initial={{ y: "100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "-120%", opacity: 0 }}
+                  staggerDuration={0.025}
+                  splitLevelClassName="overflow-hidden pb-0.5"
+                  transition={{ type: "spring", damping: 28, stiffness: 350 }}
+                  rotationInterval={2200}
+                />
+              ) : (
+                "Create an account"
+              )}
             </h1>
             <p className="text-xs sm:text-[13px] text-zinc-500 font-normal">
               {unverifiedEmail
