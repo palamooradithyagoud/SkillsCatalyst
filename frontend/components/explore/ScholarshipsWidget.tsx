@@ -1,142 +1,72 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import {
   GraduationCap,
   Sparkles,
-  Layers,
-  FileCheck2,
-  Compass,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Bell,
-  Check,
+  Building,
   BookOpen,
-  Code2,
+  ArrowRight,
+  ExternalLink,
+  ShieldCheck,
+  Search,
+  AlertCircle,
+  Clock,
+  RefreshCw,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchStudentScholarships } from "@/lib/api/scholarships";
 import AntigravityHeroCard from "@/components/explore/AntigravityHeroCard";
-
-interface GrantProgramTrack {
-  id: string;
-  title: string;
-  category: string;
-  targetProfile: string;
-  examples: string[];
-  evaluationFocus: string[];
-  catalystAssistance: string;
-}
-
-const GRANT_TRACKS: GrantProgramTrack[] = [
-  {
-    id: "opensource",
-    title: "Open-Source Contributor Fellowships",
-    category: "Developer Fellowship",
-    targetProfile: "Active repository contributors, library maintainers & student developers",
-    examples: ["Google Summer of Code (GSoC)", "Linux Foundation Mentorship (LFX)", "Major League Hacking (MLH) Fellowship"],
-    evaluationFocus: ["Public GitHub pull request quality", "Documentation clarity", "Git version control fluency"],
-    catalystAssistance: "Automated commit history audit and proposal draft templates.",
-  },
-  {
-    id: "academic",
-    title: "Engineering Academic Research Fellowships",
-    category: "Research Grant",
-    targetProfile: "CS, AI/ML, and Systems undergraduate researchers",
-    examples: ["ACM Student Research Competition", "IEEE Undergraduate Grants", "University Conference Travel Stipends"],
-    evaluationFocus: ["Research abstract rigor", "Algorithm analysis depth", "Faculty recommendation letters"],
-    catalystAssistance: "Statement of Purpose (SOP) structure review and literature review templates.",
-  },
-  {
-    id: "diversity",
-    title: "Diversity & Inclusion in Tech Fellowships",
-    category: "Inclusion Grant",
-    targetProfile: "Underrepresented engineers, first-generation college students & women in STEM",
-    examples: ["Women Techmakers Scholars Program", "Grace Hopper Celebration Student Grants", "Rewriting the Code Fellowships"],
-    evaluationFocus: ["Community impact", "Leadership initiative", "Technical career vision"],
-    catalystAssistance: "Essay narrative feedback and interview preparation cohorts.",
-  },
-];
-
-const ARCHITECTURE_PILLARS = [
-  {
-    title: "Direct Portal Synchronization",
-    description: "Connects directly with official foundation websites and university portals to eliminate expired or third-party spam listings.",
-    icon: Compass,
-    tag: "Source Integrity",
-  },
-  {
-    title: "GitHub & Profile Matching",
-    description: "Evaluates your primary programming languages, repository commits, and project portfolio against fellowship prerequisites.",
-    icon: Layers,
-    tag: "Eligibility Engine",
-  },
-  {
-    title: "Application Dossier Guidance",
-    description: "Provides structured guidelines for technical proposals, statements of purpose, and reference requests.",
-    icon: FileCheck2,
-    tag: "Preparation",
-  },
-];
+import type { ScholarshipItem } from "@/types/scholarships";
 
 export default function ScholarshipsWidget() {
-  const [selectedTrackId, setSelectedTrackId] = useState<string>(GRANT_TRACKS[0].id);
-  const [isNotified, setIsNotified] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const selectedTrack = GRANT_TRACKS.find((t) => t.id === selectedTrackId) || GRANT_TRACKS[0];
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["student-scholarships", searchQuery],
+    queryFn: () => fetchStudentScholarships({ search: searchQuery.trim() || undefined }),
+    staleTime: 60 * 1000,
+  });
+
+  const scholarships: ScholarshipItem[] = data?.scholarships || [];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* ── Spatial Hero Banner with Antigravity 3D Tilt & Specular Lighting ── */}
+      {/* ── Spatial Hero Banner ── */}
       <AntigravityHeroCard glowColor="rgba(99, 102, 241, 0.25)">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-xl space-y-3.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 text-xs font-black tracking-wide uppercase shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-              <span>Upcoming Module · Verified Opportunities</span>
+              <span>Verified Portals Only · Direct Links</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-snug">
-              Student Tech Grants &amp; Fellowships
+              Student Tech Scholarships
             </h2>
 
             <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              An upcoming verified discovery engine connecting student developers with legitimate open-source fellowships, collegiate research grants, and conference stipends—matched directly to your verified skills.
+              Discover verified scholarships, collegiate research grants, and global tech fellowships. Verified directly from authoritative foundations, universities, and tech institutions.
             </p>
 
             <div className="pt-1 flex flex-wrap items-center gap-3">
               <span className="text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Zero Fake Listings · Verified Portals Only</span>
+                <span>Zero Fake Listings · Official Portals Only</span>
               </span>
-
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.04, y: -1 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setIsNotified((prev) => !prev)}
-                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer select-none shadow-md ${
-                  isNotified
-                    ? "bg-emerald-600 text-white shadow-emerald-900/30"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/30"
-                }`}
-              >
-                {isNotified ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Notification Saved</span>
-                  </>
-                ) : (
-                  <>
-                    <Bell className="w-3.5 h-3.5" />
-                    <span>Notify on Release</span>
-                  </>
-                )}
-              </motion.button>
             </div>
           </div>
 
-          {/* Antigravity floating 3D emblem with Z-axis pop */}
+          {/* Antigravity floating 3D emblem */}
           <div
             style={{ transform: "translateZ(45px)" }}
             className="hidden lg:flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-800/70 border border-slate-700/80 shadow-2xl shrink-0 w-52 text-center backdrop-blur-2xl group-hover:shadow-[0_20px_40px_rgba(99,102,241,0.2)] transition-shadow"
@@ -148,148 +78,166 @@ export default function ScholarshipsWidget() {
             >
               <GraduationCap className="w-9 h-9 stroke-[2.2]" />
             </motion.div>
-            <span className="text-xs font-black text-slate-200 block">Verified Matching</span>
-            <span className="text-[11px] font-bold text-indigo-400 mt-0.5 block">Zero Expired Links</span>
+            <span className="text-xs font-black text-slate-200 block">Active Listings</span>
+            <span className="text-[11px] font-bold text-indigo-400 mt-0.5 block">Official Applications</span>
           </div>
         </div>
       </AntigravityHeroCard>
 
-      {/* ── Interactive Category Preview Tabs ── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-indigo-600" />
-            <span>Target Opportunity Tracks</span>
-          </h3>
-          <span className="text-[11px] font-bold text-slate-400">Select to preview details</span>
+      {/* ── Search Bar ── */}
+      <div className="flex items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by scholarship name, provider, or qualification..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 transition-colors"
+          />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          {GRANT_TRACKS.map((track) => {
-            const isSelected = selectedTrackId === track.id;
-            return (
-              <motion.button
-                key={track.id}
-                type="button"
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedTrackId(track.id)}
-                className={`p-5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
-                  isSelected
-                    ? "bg-white border-indigo-600 shadow-[0_14px_32px_rgba(99,102,241,0.1)] ring-1 ring-indigo-500/30"
-                    : "bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs"
-                }`}
-              >
-                <div className="space-y-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200/80 inline-block">
-                    {track.category}
-                  </span>
-                  <h4 className="font-black text-slate-900 text-sm leading-snug">
-                    {track.title}
-                  </h4>
-                  <p className="text-xs text-slate-600 font-medium line-clamp-2">
-                    {track.targetProfile}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-indigo-600">
-                  <span>Preview Criteria</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="text-xs font-bold text-slate-500 hover:text-slate-800 px-2 py-1"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
-      {/* ── Active Track Details Card ── */}
-      <motion.div
-        key={selectedTrack.id}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4"
-      >
-        <div className="border-b border-slate-100 pb-3">
-          <h4 className="text-base font-black text-slate-900">{selectedTrack.title}</h4>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Intended profile: {selectedTrack.targetProfile}
+      {/* ── Listings Container ── */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3.5 animate-pulse"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-xl bg-slate-200 shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-200 rounded w-1/2" />
+                </div>
+              </div>
+              <div className="h-10 bg-slate-100 rounded-xl" />
+              <div className="h-9 bg-slate-200 rounded-xl" />
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="p-8 text-center bg-white rounded-2xl border border-rose-200 space-y-3 shadow-2xs">
+          <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+          <h4 className="text-sm font-black text-slate-900">Failed to load scholarships</h4>
+          <p className="text-xs text-slate-500">
+            {error instanceof Error ? error.message : "Could not connect to the scholarships service."}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Retry</span>
+          </button>
+        </div>
+      ) : scholarships.length === 0 ? (
+        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/90 space-y-3 shadow-2xs">
+          <GraduationCap className="w-10 h-10 text-slate-400 mx-auto" />
+          <h4 className="text-sm font-black text-slate-900">No scholarships available right now.</h4>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            {searchQuery
+              ? "No scholarships matched your search criteria. Try a different term."
+              : "Check back soon as new verified funding opportunities and fellowships are published."}
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider block">
-              Benchmark Programs
-            </span>
-            <ul className="space-y-1.5 text-xs font-bold text-slate-800">
-              {selectedTrack.examples.map((ex, i) => (
-                <li key={i} className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                  <span>{ex}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">
-              Key Evaluation Criteria
-            </span>
-            <ul className="space-y-1.5 text-xs font-bold text-slate-800">
-              {selectedTrack.evaluationFocus.map((ev, i) => (
-                <li key={i} className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
-                  <span>{ev}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider block">
-              Catalyst Preparation Support
-            </span>
-            <p className="text-xs font-semibold text-slate-700 leading-relaxed">
-              {selectedTrack.catalystAssistance}
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── Architecture Pillars ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {ARCHITECTURE_PILLARS.map((pillar) => {
-          const Icon = pillar.icon;
-          return (
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {scholarships.map((item) => (
             <motion.div
-              key={pillar.title}
+              key={item.id}
               whileHover={{ y: -3 }}
-              className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3 flex flex-col justify-between"
+              transition={{ duration: 0.2 }}
+              className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all flex flex-col justify-between space-y-4"
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600">
-                    <Icon className="w-4.5 h-4.5" />
+              <div className="space-y-3">
+                {/* Header with Image & Provider */}
+                <div className="flex items-start gap-3.5">
+                  {item.image_url ? (
+                    <div className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0 border border-slate-200 bg-slate-50">
+                      <Image
+                        src={item.image_url}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shrink-0">
+                      <GraduationCap className="w-7 h-7" />
+                    </div>
+                  )}
+
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <span className="text-[11px] font-black text-indigo-700 flex items-center gap-1 truncate">
+                      <Building className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{item.provided_by}</span>
+                    </span>
+
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base leading-snug line-clamp-2">
+                      {item.name}
+                    </h3>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400">{pillar.tag}</span>
                 </div>
-                <h5 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
-                  {pillar.title}
-                </h5>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  {pillar.description}
+
+                {/* Qualification Badge */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 text-xs font-semibold">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span className="truncate">{item.qualification_required}</span>
+                </div>
+
+                {/* Eligibility Summary */}
+                <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
+                  {item.eligibility}
                 </p>
+
+                {/* Expiration if set */}
+                {item.visible_until && (
+                  <div className="flex items-center gap-1 text-[11px] text-amber-700 font-bold">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Closes on {new Date(item.visible_until).toLocaleDateString()}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                <span>Phase</span>
-                <span className="text-indigo-600 font-black">Coming Soon</span>
+              {/* CTAs */}
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                <Link
+                  href={`/scholarships/${item.id}`}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black text-center flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                >
+                  <span>View Scholarship</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+
+                <a
+                  href={item.application_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open Official Application Portal"
+                  className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors shrink-0"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               </div>
             </motion.div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,3 +8,4 @@ export * from "./practice";
 export * from "./career";
 export * from "./profile";
 export * from "./events";
+export * from "./scholarships";
