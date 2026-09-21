@@ -9,9 +9,17 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-card: var(--card);
 }
 
@@ -32,11 +40,19 @@
   /* shadcn UI variables */
   --background: #ffffff;
   --foreground: #0f172a;
-  --primary: #234b3b;
+  --primary: #10b981;
   --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #10b981;
   --card: #ffffff;
 
   /* Backgrounds */
@@ -78,11 +94,19 @@
   --bg-card: #121214;
   --bg-card-hover: #18181b;
 
-  --primary: #7c3aed;
-  --primary-foreground: #ffffff;
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --accent: #18181b;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
   --muted: #18181b;
   --muted-foreground: #a1a1aa;
   --border: #27272a;
+  --input: #27272a;
+  --ring: #10b981;
   --card: #121214;
 
   --text-primary: #f4f4f5;
