@@ -23,6 +23,7 @@ import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
 import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
+import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 
 type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users";
 
@@ -433,24 +434,7 @@ export default function AdminPage() {
 
           {/* TAB 4: NEWS */}
           {activeTab === "news" && (
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">Tech News &amp; Platform Broadcasts</h3>
-                  <p className="text-xs text-slate-400">Broadcast important industry news and platform announcements.</p>
-                </div>
-                <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  CMS Module Active
-                </span>
-              </div>
-              <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl space-y-2">
-                <Newspaper className="w-8 h-8 text-purple-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">Broadcast Channel Ready</p>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Publish announcements visible to students across all learning pathways.
-                </p>
-              </div>
-            </div>
+            <AdminTechNewsCMS onNewsCountChange={refreshAdminData} />
           )}
 
           {/* TAB 5: COMMUNITY */}

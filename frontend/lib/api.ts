@@ -17,3 +17,4 @@ export * from "./api/career";
 export * from "./api/profile";
 export * from "./api/events";
 export * from "./api/scholarships";
+export * from "./api/tech_news";
