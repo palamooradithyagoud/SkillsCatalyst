@@ -19,6 +19,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import AntigravityHeroCard from "@/components/explore/AntigravityHeroCard";
+import { TechNewsStories } from "@/components/tech-news/TechNewsStories";
 
 interface TechChannel {
   id: string;
@@ -161,6 +162,9 @@ export default function TechNewsWidget() {
           </div>
         </div>
       </AntigravityHeroCard>
+
+      {/* ── Live 48h Stories Tray ── */}
+      <TechNewsStories />
 
       {/* ── Interactive Channel Selectors ── */}
       <div className="space-y-3">

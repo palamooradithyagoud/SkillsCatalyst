@@ -9,3 +9,4 @@ export * from "./career";
 export * from "./profile";
 export * from "./events";
 export * from "./scholarships";
+export * from "./tech_news";

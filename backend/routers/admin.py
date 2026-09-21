@@ -43,6 +43,30 @@ from backend.services.scholarship_service import (
     get_active_scholarships_count,
     upload_scholarship_image,
 )
+from backend.models.tech_news import (
+    CreateTechNewsSourceRequest,
+    UpdateTechNewsSourceRequest,
+    CreateTechNewsRequest,
+    UpdateTechNewsRequest,
+    TechNewsStatus,
+)
+from backend.services.tech_news_service import (
+    get_admin_sources,
+    get_admin_source_by_id,
+    create_source,
+    update_source,
+    delete_source,
+    get_admin_stories,
+    get_admin_story_by_id,
+    create_story,
+    update_story,
+    publish_story,
+    archive_story,
+    delete_story,
+    upload_source_logo,
+    upload_story_cover,
+    get_active_stories_count,
+)
 
 logger = logging.getLogger("skillscatalyst.admin")
 
@@ -91,9 +115,10 @@ def get_admin_overview(
         except Exception:
             pass
 
-    # Derive real event/hackathon count from database
+    # Derive real event, scholarship, and tech news counts from database
     live_hackathons_count = get_active_events_count()
     live_scholarships_count = get_active_scholarships_count()
+    live_news_count = get_active_stories_count()
 
     return {
         "status": "operational",
@@ -110,7 +135,7 @@ def get_admin_overview(
             "cms_modules": {
                 "hackathons": live_hackathons_count,
                 "scholarships": live_scholarships_count,
-                "news_updates": 15,
+                "news_updates": live_news_count,
                 "community_threads": 42,
             },
         },
@@ -457,5 +482,233 @@ async def upload_admin_scholarship_image(
         "success": True,
         "image_url": public_url,
     }
+
+
+# ============================================================================
+# TECH NEWS SOURCES (COMPANIES / PUBLISHERS) CMS ENDPOINTS
+# ============================================================================
+
+@router.get("/tech-news/sources", status_code=status.HTTP_200_OK)
+def list_admin_tech_news_sources(
+    search: Optional[str] = Query(None, description="Search company name or description"),
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Owner directory: returns all company sources with active story counts."""
+    sources = get_admin_sources(search=search)
+    return {
+        "total": len(sources),
+        "sources": sources,
+    }
+
+
+@router.get("/tech-news/sources/{source_id}", status_code=status.HTTP_200_OK)
+def get_admin_tech_news_source(
+    source_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Fetches a single tech news company source."""
+    source = get_admin_source_by_id(source_id)
+    if not source:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tech news source '{source_id}' not found.",
+        )
+    return source
+
+
+@router.post("/tech-news/sources", status_code=status.HTTP_201_CREATED)
+def create_admin_tech_news_source(
+    payload: CreateTechNewsSourceRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Creates a new tech news publisher/company source."""
+    created = create_source(data=payload)
+    return {
+        "success": True,
+        "message": f"Source '{created.get('name')}' created successfully.",
+        "source": created,
+    }
+
+
+@router.patch("/tech-news/sources/{source_id}", status_code=status.HTTP_200_OK)
+def update_admin_tech_news_source(
+    source_id: str,
+    payload: UpdateTechNewsSourceRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Updates an existing tech news source."""
+    updated = update_source(source_id=source_id, data=payload)
+    return {
+        "success": True,
+        "message": f"Source '{source_id}' updated successfully.",
+        "source": updated,
+    }
+
+
+@router.delete("/tech-news/sources/{source_id}", status_code=status.HTTP_200_OK)
+def delete_admin_tech_news_source(
+    source_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Permanently deletes a company source and its stories."""
+    delete_source(source_id=source_id)
+    return {
+        "success": True,
+        "message": f"Source '{source_id}' and all associated stories deleted permanently.",
+    }
+
+
+@router.post("/tech-news/sources/upload-logo", status_code=status.HTTP_200_OK)
+@router.post("/tech-news/sources/{source_id}/upload-logo", status_code=status.HTTP_200_OK)
+async def upload_admin_source_logo(
+    file: UploadFile = File(...),
+    source_id: Optional[str] = None,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Uploads a company logo to Supabase Storage 'tech-news-logos'."""
+    public_url = await upload_source_logo(file=file, user_id=owner["user_id"])
+    if source_id:
+        try:
+            update_source(source_id=source_id, data=UpdateTechNewsSourceRequest(logo_url=public_url))
+        except Exception as e:
+            logger.warning(f"Uploaded logo but could not auto-update source {source_id}: {e}")
+
+    return {
+        "success": True,
+        "logo_url": public_url,
+    }
+
+
+# ============================================================================
+# TECH NEWS STORIES CMS ENDPOINTS
+# ============================================================================
+
+@router.get("/tech-news/stories", status_code=status.HTTP_200_OK)
+def list_admin_tech_news_stories(
+    source_id: Optional[str] = Query(None, description="Filter stories by company source ID"),
+    status_filter: Optional[str] = Query(None, description="Filter by status: draft, published, archived"),
+    search: Optional[str] = Query(None, description="Search keyword in title, summary, content"),
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Owner directory: returns all stories with 48h active status indicators."""
+    stories = get_admin_stories(
+        source_id=source_id,
+        status_filter=status_filter,
+        search=search,
+    )
+    return {
+        "total": len(stories),
+        "stories": stories,
+    }
+
+
+@router.get("/tech-news/stories/{story_id}", status_code=status.HTTP_200_OK)
+def get_admin_tech_news_story(
+    story_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Fetches any single story (including draft/expired/archived)."""
+    story = get_admin_story_by_id(story_id)
+    if not story:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tech news story '{story_id}' not found.",
+        )
+    return story
+
+
+@router.post("/tech-news/stories", status_code=status.HTTP_201_CREATED)
+def create_admin_tech_news_story(
+    payload: CreateTechNewsRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Creates a new tech news story in draft or published status."""
+    created = create_story(data=payload, user_id=owner["user_id"])
+    return {
+        "success": True,
+        "message": f"Story '{created.get('headline')}' created successfully.",
+        "story": created,
+    }
+
+
+@router.patch("/tech-news/stories/{story_id}", status_code=status.HTTP_200_OK)
+def update_admin_tech_news_story(
+    story_id: str,
+    payload: UpdateTechNewsRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Partially updates an existing story."""
+    updated = update_story(story_id=story_id, data=payload)
+    return {
+        "success": True,
+        "message": f"Story '{story_id}' updated successfully.",
+        "story": updated,
+    }
+
+
+@router.post("/tech-news/stories/{story_id}/publish", status_code=status.HTTP_200_OK)
+def publish_admin_tech_news_story(
+    story_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Publishes a story with authoritative 48-Hour visibility:
+    visible_from = now(), visible_until = now() + 48h.
+    """
+    published = publish_story(story_id=story_id)
+    return {
+        "success": True,
+        "message": f"Story '{story_id}' published successfully for 48 hours.",
+        "story": published,
+    }
+
+
+@router.post("/tech-news/stories/{story_id}/archive", status_code=status.HTTP_200_OK)
+def archive_admin_tech_news_story(
+    story_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Archives a story, hiding it from students while retaining records."""
+    archived = archive_story(story_id=story_id)
+    return {
+        "success": True,
+        "message": f"Story '{story_id}' archived successfully.",
+        "story": archived,
+    }
+
+
+@router.delete("/tech-news/stories/{story_id}", status_code=status.HTTP_200_OK)
+def delete_admin_tech_news_story(
+    story_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Permanently deletes a story record."""
+    delete_story(story_id=story_id)
+    return {
+        "success": True,
+        "message": f"Story '{story_id}' deleted permanently.",
+    }
+
+
+@router.post("/tech-news/stories/upload-cover", status_code=status.HTTP_200_OK)
+@router.post("/tech-news/stories/{story_id}/upload-cover", status_code=status.HTTP_200_OK)
+async def upload_admin_story_cover(
+    file: UploadFile = File(...),
+    story_id: Optional[str] = None,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Uploads a story cover image to Supabase Storage 'tech-news-covers'."""
+    public_url = await upload_story_cover(file=file, user_id=owner["user_id"])
+    if story_id:
+        try:
+            update_story(story_id=story_id, data=UpdateTechNewsRequest(cover_image_url=public_url))
+        except Exception as e:
+            logger.warning(f"Uploaded cover image but could not auto-update story {story_id}: {e}")
+
+    return {
+        "success": True,
+        "cover_image_url": public_url,
+    }
+
 
 
