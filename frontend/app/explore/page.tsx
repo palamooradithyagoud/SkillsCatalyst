@@ -36,6 +36,7 @@ import CommunityWidget from "@/components/explore/CommunityWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
 import { fetchStudentEvents } from "@/lib/api/events";
 import type { EventItem } from "@/types/events";
+import StrokeText from "./StrokeText";
 
 // Foundation items for Explore feed
 const AI_PICKS = [
@@ -266,11 +267,47 @@ function ExplorePageContent() {
         <div className="flex flex-row items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
-              <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              {activeTab === "scholarships" ? (
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              ) : activeTab === "events" ? (
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              ) : activeTab === "news" ? (
+                <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              ) : activeTab === "community" ? (
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              ) : (
+                <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              )}
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-                Explore
+              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none flex items-center min-h-[28px] sm:min-h-[36px]">
+                <StrokeText
+                  key={activeTab}
+                  text={
+                    activeTab === "scholarships"
+                      ? "Scholarships"
+                      : activeTab === "events"
+                      ? "Events"
+                      : activeTab === "news"
+                      ? "Tech News"
+                      : activeTab === "community"
+                      ? "Community"
+                      : "Explore"
+                  }
+                  strokeColor="#A78BFA"
+                  fillColor="#A855F7"
+                  strokeWidth={1.4}
+                  drawDuration={1.6}
+                  fillDelay={0.2}
+                  stagger={0.05}
+                  ease="power2.out"
+                  trigger="mount"
+                  fillMode="wipe"
+                  fontSize={128}
+                  fontWeight={800}
+                  letterSpacing={-4}
+                  className="h-7 sm:h-9 w-auto"
+                />
               </h1>
               <p className="text-slate-500 text-[11px] sm:text-sm font-semibold mt-0.5">
                 {activeTab === "trending" && "Curated roadmaps & skill paths"}

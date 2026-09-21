@@ -6,12 +6,10 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   GraduationCap,
-  Sparkles,
   Building,
   BookOpen,
   ArrowRight,
   ExternalLink,
-  ShieldCheck,
   Search,
   AlertCircle,
   Clock,
@@ -19,7 +17,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStudentScholarships } from "@/lib/api/scholarships";
-import AntigravityHeroCard from "@/components/explore/AntigravityHeroCard";
 import type { ScholarshipItem } from "@/types/scholarships";
 
 export default function ScholarshipsWidget() {
@@ -41,48 +38,6 @@ export default function ScholarshipsWidget() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* ── Spatial Hero Banner ── */}
-      <AntigravityHeroCard glowColor="rgba(99, 102, 241, 0.25)">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="max-w-xl space-y-3.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 text-xs font-black tracking-wide uppercase shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-              <span>Verified Portals Only · Direct Links</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-snug">
-              Student Tech Scholarships
-            </h2>
-
-            <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              Discover verified scholarships, collegiate research grants, and global tech fellowships. Verified directly from authoritative foundations, universities, and tech institutions.
-            </p>
-
-            <div className="pt-1 flex flex-wrap items-center gap-3">
-              <span className="text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Zero Fake Listings · Official Portals Only</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Antigravity floating 3D emblem */}
-          <div
-            style={{ transform: "translateZ(45px)" }}
-            className="hidden lg:flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-800/70 border border-slate-700/80 shadow-2xl shrink-0 w-52 text-center backdrop-blur-2xl group-hover:shadow-[0_20px_40px_rgba(99,102,241,0.2)] transition-shadow"
-          >
-            <motion.div
-              animate={{ y: [0, -6, 0], rotate: [0, 1.5, -1.5, 0] }}
-              transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-[0_12px_28px_rgba(99,102,241,0.4)] mb-3"
-            >
-              <GraduationCap className="w-9 h-9 stroke-[2.2]" />
-            </motion.div>
-            <span className="text-xs font-black text-slate-200 block">Active Listings</span>
-            <span className="text-[11px] font-bold text-indigo-400 mt-0.5 block">Official Applications</span>
-          </div>
-        </div>
-      </AntigravityHeroCard>
 
       {/* ── Search Bar ── */}
       <div className="flex items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
