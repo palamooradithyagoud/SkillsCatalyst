@@ -19,7 +19,12 @@ export interface PricingModalProps {
 }
 
 export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
-  const { refetch: refetchSubscription } = useSubscription();
+  const {
+    plan: currentPlan,
+    isPremium,
+    expiresAt,
+    refetch: refetchSubscription,
+  } = useSubscription();
   const [mounted, setMounted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"1month" | "3months">("3months");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -37,6 +42,13 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     setIsTrialClaimed(isUserTrialClaimed());
     setTrialDaysLeft(getTrialDaysRemaining());
   }, []);
+
+  // When modal is opened, always refetch latest server subscription status
+  useEffect(() => {
+    if (isOpen) {
+      refetchSubscription();
+    }
+  }, [isOpen, refetchSubscription]);
 
   // Keyboard accessibility: ESC to close
   useEffect(() => {
@@ -77,6 +89,17 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     }, 2800);
   };
 
+  const formattedExpiry = expiresAt
+    ? new Date(expiresAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  const isMonthlyActive = isPremium && currentPlan === "premium_monthly";
+  const is3MonthsActive = isPremium && currentPlan === "premium_3_month";
+
   const pricingPlans: PricingPlan[] = [
     {
       name: "FREE PLAN",
@@ -85,7 +108,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       period: "forever",
       billingNote: "Free forever • No credit card required",
       description: "Essential foundational access to explore skills",
-      buttonText: "Current Plan",
+      buttonText: !isPremium ? "Current Plan" : "Included in Free",
       href: "#",
       isPopular: false,
       currencySymbol: "₹",
@@ -99,7 +122,11 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         "Other premium features: Limited access (AI mentor & roadmaps)",
       ],
       onAction: () => {
-        setToastMessage("You are currently on the Free Tier.");
+        if (!isPremium) {
+          setToastMessage("You are currently on the Free Tier.");
+        } else {
+          setToastMessage("You currently have full Pro access.");
+        }
         setTimeout(() => setToastMessage(null), 2500);
       },
     },
@@ -108,9 +135,15 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       price: "99",
       yearlyPrice: "99",
       period: "month",
-      billingNote: "Billed monthly • Cancel anytime",
+      billingNote: isMonthlyActive && formattedExpiry
+        ? `Active until ${formattedExpiry}`
+        : "Billed monthly • Cancel anytime",
       description: "Fast-paced interview sprint preparation",
-      buttonText: "Upgrade to 1 Month (₹99)",
+      buttonText: isMonthlyActive
+        ? "Current Plan (Active)"
+        : isPremium
+        ? "Switch to Monthly (₹99)"
+        : "Upgrade to 1 Month (₹99)",
       href: "#",
       isPopular: false,
       currencySymbol: "₹",
@@ -124,6 +157,11 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         "Other premium features: Full access",
       ],
       onAction: () => {
+        if (isMonthlyActive) {
+          setToastMessage(`Your 1-Month Premium is active until ${formattedExpiry}.`);
+          setTimeout(() => setToastMessage(null), 2500);
+          return;
+        }
         handleSelectPlan("1month", "Premium 1 Month Pass", "₹99", 99);
       },
     },
@@ -132,9 +170,15 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       price: "250",
       yearlyPrice: "250",
       period: "3 months",
-      billingNote: "Billed every 3 months • ₹83/month",
+      billingNote: is3MonthsActive && formattedExpiry
+        ? `Active until ${formattedExpiry}`
+        : "Billed every 3 months • ₹83/month",
       description: "Complete 90-day placement preparation pack (Save ~16%)",
-      buttonText: "Upgrade to 3 Months (₹250)",
+      buttonText: is3MonthsActive
+        ? "Current Plan (Active)"
+        : isMonthlyActive
+        ? "Extend for 3 Months (₹250)"
+        : "Upgrade to 3 Months (₹250)",
       href: "#",
       isPopular: true,
       currencySymbol: "₹",
@@ -148,6 +192,11 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         "Other premium features: Full access",
       ],
       onAction: () => {
+        if (is3MonthsActive) {
+          setToastMessage(`Your 3-Month Premium is active until ${formattedExpiry}.`);
+          setTimeout(() => setToastMessage(null), 2500);
+          return;
+        }
         handleSelectPlan("3months", "Premium 3 Months Pass", "₹250", 250);
       },
     },
