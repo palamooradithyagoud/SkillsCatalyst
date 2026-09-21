@@ -33,6 +33,8 @@ import {
 } from "@/data/career/constants";
 import { getFileExt } from "@/lib/career/helpers";
 import { UseResumeReviewReturn } from "@/hooks/useResumeReview";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradeCTA, UsageLimitIndicator } from "@/components/premium";
 
 interface ResumeReviewModalProps {
   isOpen: boolean;
@@ -45,6 +47,8 @@ export default function ResumeReviewModal({
   onClose,
   reviewState,
 }: ResumeReviewModalProps) {
+  const { isPremium, getLimit } = useSubscription();
+  const mentorLimit = isPremium ? null : (getLimit("ai_mentor") ?? 1);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -133,14 +137,23 @@ export default function ResumeReviewModal({
               <StageIndicator stage={4} currentStage={stageNum} label="Evaluate" />
             </div>
 
-            <button
-              id="close-resume-modal"
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <UsageLimitIndicator
+                used={0}
+                limit={mentorLimit}
+                unitName="AI Reviews"
+                isPremium={isPremium}
+                compact
+              />
+              <button
+                id="close-resume-modal"
+                onClick={onClose}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Modal Body */}
@@ -442,14 +455,27 @@ export default function ResumeReviewModal({
 
                       {/* Review error */}
                       {errorMessage && (
-                        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
-                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-semibold mb-0.5">
-                              AI Review Failed
-                            </p>
-                            <p>{errorMessage}</p>
+                        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-start gap-2.5">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                            <div>
+                              <p className="font-semibold mb-0.5 text-white">
+                                {errorMessage.toLowerCase().includes("limit")
+                                  ? "AI Review Quota Reached"
+                                  : "AI Review Failed"}
+                              </p>
+                              <p className="text-slate-300">{errorMessage}</p>
+                            </div>
                           </div>
+                          {(errorMessage.toLowerCase().includes("limit") ||
+                            errorMessage.toLowerCase().includes("premium")) && (
+                            <UpgradeCTA
+                              label="Upgrade for Unlimited Reviews"
+                              size="xs"
+                              variant="secondary"
+                              className="shrink-0"
+                            />
+                          )}
                         </div>
                       )}
 

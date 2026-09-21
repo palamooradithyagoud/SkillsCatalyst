@@ -30,12 +30,13 @@ export interface AdminStoriesResponse {
 export async function fetchStudentTechNews(
   search?: string
 ): Promise<StudentTechNewsFeedResponse> {
+  const headers = await getAuthHeaders().catch(() => ({}));
   const query = new URLSearchParams();
   if (search?.trim()) query.set("search", search.trim());
 
   const qs = query.toString();
   const url = `${API_BASE}/api/tech-news${qs ? `?${qs}` : ""}`;
-  const res = await apiFetch(url);
+  const res = await apiFetch(url, { headers });
 
   if (!res.ok) {
     throw new Error(`Failed to load tech news: HTTP ${res.status}`);
@@ -44,8 +45,17 @@ export async function fetchStudentTechNews(
 }
 
 export async function fetchStudentStoryById(id: string): Promise<TechNewsStory> {
-  const res = await apiFetch(`${API_BASE}/api/tech-news/${encodeURIComponent(id)}`);
+  const headers = await getAuthHeaders().catch(() => ({}));
+  const res = await apiFetch(`${API_BASE}/api/tech-news/${encodeURIComponent(id)}`, { headers });
   if (!res.ok) {
+    if (res.status === 403) {
+      const errorJson = await res.json().catch(() => ({}));
+      const err: any = new Error("Daily story limit reached. Upgrade to Premium for unlimited stories.");
+      err.status = 403;
+      err.code = errorJson?.detail?.code || "LIMIT_REACHED";
+      err.detail = errorJson?.detail;
+      throw err;
+    }
     if (res.status === 404) {
       throw new Error("Story not found or is no longer active (48-hour window expired).");
     }

@@ -14,7 +14,7 @@ import re
 import logging
 import httpx
 from typing import Optional
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from pydantic import BaseModel
 
 from backend.config import YOUTUBE_API_KEY
@@ -195,6 +195,42 @@ async def save_playlist(
             except Exception as yt_err:
                 logger.warning(f"Error fetching exact video count on save: {type(yt_err).__name__}")
 
+        # Phase 3 Entitlement Enforcement for saved_videos
+        from backend.services.subscription_service import SubscriptionService
+        _, is_premium = SubscriptionService.get_effective_plan(user_id)
+        if not is_premium:
+            is_already_saved = False
+            saved_count = 0
+            if sb:
+                try:
+                    if _is_uuid(user_id):
+                        existing_check = sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", req.playlist_id).execute()
+                        if existing_check.data and len(existing_check.data) > 0:
+                            is_already_saved = True
+                        count_res = sb.table("saved_playlists").select("id").eq("user_id", user_id).execute()
+                        saved_count = len(count_res.data or [])
+                    else:
+                        res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                        if res_lp.data and len(res_lp.data) > 0:
+                            existing_lp = res_lp.data[0].get("completed_steps", [])
+                            if any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
+                                is_already_saved = True
+                            saved_count = len(existing_lp)
+                except Exception as count_err:
+                    logger.warning(f"Error checking saved playlists count: {count_err}")
+
+            if not is_already_saved:
+                limit = SubscriptionService.get_feature_limit(user_id, "saved_videos") or 1
+                if saved_count >= limit:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail={
+                            "code": "LIMIT_REACHED",
+                            "feature": "saved_videos",
+                            "limit": limit,
+                        },
+                    )
+
         res_data = None
         if _is_uuid(user_id):
             data = {
@@ -268,6 +304,8 @@ async def save_playlist(
             pass
 
         return {"success": True, "data": res_data}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error saving playlist: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -304,6 +342,8 @@ async def unsave_playlist(
             logger.warning(f"Error removing playlist from learning_progress: {jsonb_err}")
 
         return {"success": True}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

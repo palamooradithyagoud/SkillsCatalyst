@@ -35,7 +35,12 @@ def test_ai_mentor_chat_requires_auth_or_guest_session(mock_chat):
     assert "reply" in guest_resp.json()
     print("[OK] AI Mentor chat auth requirement passed!")
 
-def test_practice_path_validation():
+@patch("backend.services.subscription_service.SubscriptionService.get_user_entitlements")
+def test_practice_path_validation(mock_entitlements):
+    from backend.models.subscription import AccessLevel, EntitlementDetailDTO, FeatureKey
+    mock_entitlements.return_value = {
+        FeatureKey.COMPANY_INTERVIEW_QUESTIONS.value: EntitlementDetailDTO(access=AccessLevel.FULL, limit=None)
+    }
     print("Testing practice company slug path validation...")
 
     # 1. Valid company slug returns 200

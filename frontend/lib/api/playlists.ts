@@ -39,12 +39,27 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
   // 1. Save via FastAPI backend
   try {
     const authHeaders = await getAuthHeaders();
-    await apiFetch(`${API_BASE}/api/learning/save`, {
+    const res = await apiFetch(`${API_BASE}/api/learning/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(row),
     });
-  } catch (e) {
+    if (!res.ok) {
+      if (res.status === 403) {
+        const errorBody = await res.json().catch(() => null);
+        const detail = errorBody?.detail;
+        const err: any = new Error(detail?.message || "Free plan limit reached. Upgrade to Premium for unlimited playlists.");
+        err.status = 403;
+        err.code = detail?.code || "LIMIT_REACHED";
+        err.detail = detail;
+        throw err;
+      }
+      console.warn("Backend save playlist returned non-OK status:", res.status);
+    }
+  } catch (e: any) {
+    if (e?.status === 403 || e?.code === "LIMIT_REACHED" || e?.code === "PREMIUM_REQUIRED") {
+      throw e;
+    }
     console.warn("Backend save playlist failed:", e);
   }
 

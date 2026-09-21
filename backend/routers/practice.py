@@ -7,6 +7,8 @@ from fastapi import APIRouter, HTTPException, Query, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from backend.services.auth_service import get_session_or_user_id
+from backend.models.subscription import FeatureKey
+from backend.dependencies.subscription import require_entitlement
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +92,9 @@ async def list_companies():
     return {"count": len(companies), "companies": companies}
 
 
-@router.get("/questions/{company}")
+@router.get(
+    "/questions/{company}",
+)
 async def get_company_questions(
     company: str,
     period: TimePeriod = Query("all", description="Time period: all | six-months | three-months | thirty-days | more-than-six-months"),
@@ -98,6 +102,7 @@ async def get_company_questions(
     search: Optional[str] = Query(None, description="Search term for title"),
     limit: int = Query(100, ge=1, le=1000, description="Max questions to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
+    user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Returns questions for a specific company from the CSV dataset.
@@ -114,6 +119,21 @@ async def get_company_questions(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Company '{company}' not found. Use GET /api/practice/companies to list all available companies.",
+        )
+
+    # Entitlement enforcement for company_interview_questions
+    from backend.services.subscription_service import SubscriptionService
+    from backend.models.subscription import AccessLevel
+    entitlements = SubscriptionService.get_user_entitlements(user_id)
+    ent = entitlements.get(FeatureKey.COMPANY_INTERVIEW_QUESTIONS.value)
+    if not ent or ent.access == AccessLevel.NONE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "PREMIUM_REQUIRED",
+                "feature": FeatureKey.COMPANY_INTERVIEW_QUESTIONS.value,
+                "message": "Premium subscription required",
+            },
         )
 
     csv_path = _csv_path(company_slug, period)
@@ -160,7 +180,10 @@ async def get_company_questions(
     }
 
 
-@router.get("/aptitude/{topic_slug}")
+@router.get(
+    "/aptitude/{topic_slug}",
+    dependencies=[Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value))],
+)
 def get_aptitude_questions(topic_slug: str):
     """Return placement prep questions for a specific quantitative aptitude topic."""
     slug_norm = topic_slug.lower().strip()
@@ -214,7 +237,10 @@ class AptitudeAttemptRequest(BaseModel):
     time_taken_seconds: int = Field(ge=0, description="Time spent in seconds on this question (correct or wrong)")
 
 
-@router.post("/aptitude/attempt")
+@router.post(
+    "/aptitude/attempt",
+    dependencies=[Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value))],
+)
 def record_aptitude_attempt(
     attempt: AptitudeAttemptRequest,
     current_user_id: str = Depends(get_session_or_user_id)

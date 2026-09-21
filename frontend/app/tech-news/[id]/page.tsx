@@ -3,6 +3,7 @@
 import React, { use } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -16,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { fetchStudentStoryById } from "@/lib/api/tech_news";
+import { PremiumLockCard } from "@/components/premium";
 
 interface TechNewsDetailPageProps {
   params: Promise<{ id: string }>;
@@ -32,6 +34,7 @@ function getHoursRemaining(visibleUntil?: string | null): string {
 }
 
 export default function TechNewsDetailPage({ params }: TechNewsDetailPageProps) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const storyId = resolvedParams.id;
 
@@ -62,6 +65,32 @@ export default function TechNewsDetailPage({ params }: TechNewsDetailPageProps) 
   }
 
   if (isError || !story) {
+    const isLimit =
+      (error as any)?.status === 403 ||
+      (error as any)?.code === "LIMIT_REACHED" ||
+      (error as any)?.detail?.code === "LIMIT_REACHED";
+
+    if (isLimit) {
+      return (
+        <div className="max-w-2xl mx-auto my-12 p-4">
+          <PremiumLockCard
+            title="Daily Tech News Limit Reached"
+            description="Free accounts can read up to 2 curated technical stories per day. Upgrade to Premium for unlimited daily stories, full 48-hour archive access, and real-time tech company briefings."
+            benefits={[
+              "Unlimited daily technical story drops",
+              "Full 48-hour archive access without daily throttling",
+              "Exclusive product engineering & executive summaries",
+              "Direct original source & company announcement links",
+            ]}
+            secondaryAction={{
+              label: "Return to Dashboard",
+              onClick: () => router.push("/dashboard"),
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-lg mx-auto my-14 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">

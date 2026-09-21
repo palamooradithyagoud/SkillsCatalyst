@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 # Add project root to sys.path
 root_dir = Path(__file__).resolve().parent.parent.parent
@@ -110,7 +111,12 @@ def test_security_headers_and_cors():
 
     print("[OK] CORS & Security Headers tests passed!")
 
-def test_aptitude_attempt_optional_user_id():
+@patch("backend.services.subscription_service.SubscriptionService.get_user_entitlements")
+def test_aptitude_attempt_optional_user_id(mock_entitlements):
+    from backend.models.subscription import AccessLevel, EntitlementDetailDTO, FeatureKey
+    mock_entitlements.return_value = {
+        FeatureKey.PLACEMENT_PREP.value: EntitlementDetailDTO(access=AccessLevel.FULL, limit=None)
+    }
     print("Testing aptitude attempt authorization consistency...")
     
     # Send attempt without client user_id in body

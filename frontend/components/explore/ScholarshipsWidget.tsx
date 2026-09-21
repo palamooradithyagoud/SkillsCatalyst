@@ -18,9 +18,13 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { fetchStudentScholarships } from "@/lib/api/scholarships";
 import type { ScholarshipItem } from "@/types/scholarships";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UsageLimitIndicator } from "@/components/premium";
 
 export default function ScholarshipsWidget() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isPremium, getLimit } = useSubscription();
+  const scholarshipLimit = isPremium ? null : getLimit("scholarships");
 
   const {
     data,
@@ -62,6 +66,17 @@ export default function ScholarshipsWidget() {
           </button>
         )}
       </div>
+
+      {/* ── Quota / Plan Status Indicator ── */}
+      {scholarshipLimit !== null && (
+        <UsageLimitIndicator
+          used={scholarships.length}
+          limit={scholarshipLimit}
+          unitName="Scholarships"
+          isPremium={isPremium}
+          compact
+        />
+      )}
 
       {/* ── Listings Container ── */}
       {isLoading ? (

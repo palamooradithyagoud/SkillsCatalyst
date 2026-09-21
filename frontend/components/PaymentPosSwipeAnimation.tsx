@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Sparkles, ShieldCheck, ArrowRight, Lock, X } from "lucide-react";
+import { CheckCircle2, Sparkles, ShieldCheck, ArrowRight, Lock, X, LogIn } from "lucide-react";
 
 import { createPaymentOrder } from "@/lib/api/payment";
+import { useAuth } from "@/lib/auth";
 
 interface PaymentPosSwipeAnimationProps {
   planId: "1month" | "3months";
@@ -23,6 +25,8 @@ export default function PaymentPosSwipeAnimation({
   onSuccess,
   onCancel,
 }: PaymentPosSwipeAnimationProps) {
+  const router = useRouter();
+  const { session, isLoading: authLoading } = useAuth();
   const [isSwiping, setIsSwiping] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -31,6 +35,12 @@ export default function PaymentPosSwipeAnimation({
 
   const handleTriggerPayment = async () => {
     if (isSwiping || isSuccess || isOpeningGateway) return;
+
+    if (!session) {
+      setErrorMessage("Please sign in or create an account to activate your subscription.");
+      return;
+    }
+
     setIsSwiping(true);
     setErrorMessage(null);
 
@@ -71,6 +81,17 @@ export default function PaymentPosSwipeAnimation({
             ? "Opening secure PhonePe gateway. Please complete payment..."
             : `Click below to proceed to PhonePe UPI, Cards, NetBanking, and Wallets.`}
         </p>
+        {!session && !authLoading && (
+          <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs text-center space-y-1.5 max-w-sm mx-auto">
+            <div className="font-semibold text-amber-300 flex items-center justify-center gap-1.5">
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Student Account Required</span>
+            </div>
+            <p className="text-slate-300 text-[11px] leading-relaxed">
+              Subscriptions attach directly to your student account. Please sign in or create an account to proceed with activation.
+            </p>
+          </div>
+        )}
         {errorMessage && (
           <div className="p-2.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-medium">
             {errorMessage}
@@ -400,6 +421,25 @@ export default function PaymentPosSwipeAnimation({
             <span>Success! {planName} Activated</span>
             <Sparkles className="w-4 h-4 text-yellow-300" />
           </motion.div>
+        ) : !session && !authLoading ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.setItem("skillscatalyst_selected_plan", planId);
+              }
+              router.push(
+                `/login?plan=${planId}&next=${encodeURIComponent(
+                  typeof window !== "undefined" ? window.location.pathname : "/dashboard"
+                )}`
+              );
+            }}
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg shadow-amber-500/25 active:scale-95 cursor-pointer flex items-center gap-2"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Sign In to Pay {price}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         ) : (
           <button
             type="button"

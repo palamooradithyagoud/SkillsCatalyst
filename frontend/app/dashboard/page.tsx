@@ -13,13 +13,15 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { usePricingModal } from "@/contexts/PricingModalContext";
+import { SubscriptionStatus } from "@/components/premium";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, FileText, Map, Sparkles, CheckCircle2, Zap, X } from "lucide-react";
 
 export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
-  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const { openPricingModal } = usePricingModal();
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
   const { isPremium, plan: subPlan, refetch: refetchSubscription } = useSubscription();
 
@@ -124,28 +126,23 @@ export default function DashboardPage() {
           variants={itemVariants}
           className="w-full max-w-[540px] space-y-3.5 sm:space-y-4"
         >
-          <EventHeroCard onOpenPricing={() => setIsPricingModalOpen(true)} />
+          <EventHeroCard onOpenPricing={openPricingModal} />
           {/* 48-Hour Tech News Stories (Compact icon strip below Event Hero Card) */}
           <TechNewsStories />
           <QuickHubNav />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
-        {/* Right / Middle Area: Learning Progress & Trending Skills (Top) + Calendar & Tasks (Below) */}
+        {/* Right / Middle Area: Subscription Status + Learning Progress & Trending Skills + Tasks */}
         <motion.div
           variants={rightPanelVariants}
           className="w-full max-w-[540px] space-y-4 sm:space-y-5 sticky top-6"
         >
+          <SubscriptionStatus />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="learning-and-skills" />
           <UpcomingList items={upcomingItems} />
         </motion.div>
       </div>
-
-      {/* ── Pricing & Free Trial Modal ── */}
-      <PricingModal
-        isOpen={isPricingModalOpen}
-        onClose={() => setIsPricingModalOpen(false)}
-      />
     </motion.div>
   );
 }

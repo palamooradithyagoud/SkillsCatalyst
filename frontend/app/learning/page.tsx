@@ -27,11 +27,17 @@ import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePricingModal } from "@/contexts/PricingModalContext";
+import { UsageLimitIndicator } from "@/components/premium";
 
 export default function LearningPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
   const qc = useQueryClient();
+  const { isPremium, getLimit } = useSubscription();
+  const { openPricingModal } = usePricingModal();
+  const savedLimit = isPremium ? null : (getLimit("saved_videos") ?? 1);
 
   const [activeCard, setActiveCard] = useState<ActiveCard>("explore");
   const [notification, setNotification] = useState<{
@@ -93,7 +99,26 @@ export default function LearningPage() {
       qc.refetchQueries({ queryKey: ["saved-playlists"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: () => showNotif("Failed to save. Check backend connection.", "error"),
+    onError: (err: any) => {
+      const isLimit =
+        err?.status === 403 ||
+        err?.code === "LIMIT_REACHED" ||
+        err?.detail?.code === "LIMIT_REACHED" ||
+        err?.code === "PREMIUM_REQUIRED" ||
+        err?.detail?.code === "PREMIUM_REQUIRED";
+
+      if (isLimit) {
+        showNotif(
+          "Free plan limit reached (1 saved course). Upgrade to Premium for unlimited saved courses!",
+          "error",
+          "Upgrade →",
+          () => openPricingModal()
+        );
+      } else {
+        const msg = err?.detail?.message || err?.message || "Failed to save. Check backend connection.";
+        showNotif(msg, "error");
+      }
+    },
   });
 
   const unsaveMut = useMutation({
@@ -204,10 +229,15 @@ export default function LearningPage() {
               : "border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md"
           }`}
         >
-          {/* Saved count badge */}
-          <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100/90 text-emerald-800 border border-emerald-200 shadow-xs">
-            <SaveIcon size={12} className="w-3 h-3 text-emerald-700" />
-            <span>{savedData?.count ?? 0} Saved</span>
+          {/* Saved count / limit badge */}
+          <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 flex items-center gap-1.5">
+            <UsageLimitIndicator
+              used={savedData?.count ?? 0}
+              limit={savedLimit}
+              unitName="Saved"
+              isPremium={isPremium}
+              compact
+            />
           </div>
           <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 tracking-widest uppercase mb-2">
             CARD 2
@@ -358,6 +388,14 @@ export default function LearningPage() {
                 </div>
               </div>
             </div>
+
+            {/* ── Usage Limit Banner */}
+            <UsageLimitIndicator
+              used={savedList.length}
+              limit={savedLimit}
+              unitName="Saved Playlists"
+              isPremium={isPremium}
+            />
 
             {/* ── Playlist rows */}
             {savedList.length === 0 ? (

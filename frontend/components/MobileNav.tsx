@@ -39,6 +39,8 @@ import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
 import ThemeSwitch from "@/components/ThemeSwitch";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PremiumBadge } from "@/components/premium";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -80,6 +82,7 @@ function MobileNavContent() {
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading } = useAuth();
+  const { isPremium } = useSubscription();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
@@ -144,10 +147,11 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar ── */}
       <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/40 border-b border-black/5 backdrop-blur-xl text-slate-900 shadow-xs">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/dashboard">
             <SkillsCatalystLogo size="sm" showText animated />
           </Link>
+          <PremiumBadge isPremium={isPremium} size="xs" />
         </div>
 
         <div className="flex items-center gap-2">

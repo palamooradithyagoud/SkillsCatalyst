@@ -66,7 +66,20 @@ export async function reviewResume(resumeText: string, targetRole: string, years
         job_description: jobDescription,
       }),
     });
-    if (!res.ok) throw new Error("Failed to evaluate resume");
+    if (!res.ok) {
+      if (res.status === 403) {
+        const errorBody = await res.json().catch(() => null);
+        const detail = errorBody?.detail;
+        const err: any = new Error(
+          detail?.message || "Free plan limit reached. Upgrade to Premium for unlimited AI Resume Reviews."
+        );
+        err.status = 403;
+        err.code = detail?.code || "LIMIT_REACHED";
+        err.detail = detail;
+        throw err;
+      }
+      throw new Error("Failed to evaluate resume");
+    }
     const data = await res.json();
     if (data?.review) {
       const match = data.review.match(/(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*\/\s*(100|10)/i) || data.review.match(/(\d+(?:\.\d+)?)\s*\/\s*(100|10)/);
@@ -104,7 +117,11 @@ export async function reviewResume(resumeText: string, targetRole: string, years
         }
       }
     }
+    return data;
   } catch (error: any) {
+    if (error?.status === 403 || error?.code === "LIMIT_REACHED") {
+      throw error;
+    }
     console.error("Resume review error:", error);
     return { review: "Error: Unable to connect to Groq AI Resume Evaluator. Please ensure the backend is running." };
   }
