@@ -24,6 +24,7 @@ import {
   X,
   Hash,
   Sparkles,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 
