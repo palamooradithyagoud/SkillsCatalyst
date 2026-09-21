@@ -41,6 +41,10 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
   }, []);
 
   useEffect(() => {
+    // Proactively unlock body overflow if previously stuck
+    if (typeof document !== "undefined" && document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "";
+    }
     loadFeed();
   }, [loadFeed]);
 
