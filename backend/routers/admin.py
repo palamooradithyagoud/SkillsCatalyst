@@ -28,6 +28,21 @@ from backend.services.event_service import (
     get_active_events_count,
     upload_banner_image,
 )
+from backend.models.scholarship import (
+    CreateScholarshipRequest,
+    UpdateScholarshipRequest,
+    ScholarshipStatus,
+)
+from backend.services.scholarship_service import (
+    get_admin_scholarships,
+    get_admin_scholarship_by_id,
+    create_scholarship,
+    update_scholarship,
+    set_scholarship_status,
+    delete_scholarship,
+    get_active_scholarships_count,
+    upload_scholarship_image,
+)
 
 logger = logging.getLogger("skillscatalyst.admin")
 
@@ -78,6 +93,7 @@ def get_admin_overview(
 
     # Derive real event/hackathon count from database
     live_hackathons_count = get_active_events_count()
+    live_scholarships_count = get_active_scholarships_count()
 
     return {
         "status": "operational",
@@ -93,7 +109,7 @@ def get_admin_overview(
             "academic_profiles_active": total_academic_profiles,
             "cms_modules": {
                 "hackathons": live_hackathons_count,
-                "scholarships": 8,
+                "scholarships": live_scholarships_count,
                 "news_updates": 15,
                 "community_threads": 42,
             },
@@ -304,4 +320,142 @@ async def upload_event_banner(
         "success": True,
         "banner_url": public_url,
     }
+
+
+# ── SCHOLARSHIPS CMS ENDPOINTS ───────────────────────────────────────────────
+
+@router.get("/scholarships", status_code=status.HTTP_200_OK)
+def list_admin_scholarships(
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status: 'draft', 'published', 'archived', or 'all'"),
+    search: Optional[str] = Query(None, description="Keyword search in name, provider, or qualification"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Owner directory: returns all scholarships with optional status and search filters."""
+    scholarships = get_admin_scholarships(
+        status_filter=status_filter,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+    return {
+        "total": len(scholarships),
+        "scholarships": scholarships,
+    }
+
+
+@router.get("/scholarships/{scholarship_id}", status_code=status.HTTP_200_OK)
+def get_admin_scholarship(
+    scholarship_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Fetches any single scholarship (including draft/archived) for Admin inspection or editing."""
+    scholarship = get_admin_scholarship_by_id(scholarship_id)
+    if not scholarship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scholarship '{scholarship_id}' not found.",
+        )
+    return scholarship
+
+
+@router.post("/scholarships", status_code=status.HTTP_201_CREATED)
+def create_admin_scholarship(
+    payload: CreateScholarshipRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Creates a new scholarship in draft or published status.
+    Authoritative created_by is assigned strictly from the authenticated owner's user_id.
+    """
+    created = create_scholarship(data=payload, user_id=owner["user_id"])
+    return {
+        "success": True,
+        "message": f"Scholarship '{payload.name}' created successfully.",
+        "scholarship": created,
+    }
+
+
+@router.patch("/scholarships/{scholarship_id}", status_code=status.HTTP_200_OK)
+def update_admin_scholarship(
+    scholarship_id: str,
+    payload: UpdateScholarshipRequest,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Partially updates an existing scholarship's content or visibility."""
+    updated = update_scholarship(scholarship_id=scholarship_id, data=payload)
+    return {
+        "success": True,
+        "message": "Scholarship updated successfully.",
+        "scholarship": updated,
+    }
+
+
+@router.post("/scholarships/{scholarship_id}/publish", status_code=status.HTTP_200_OK)
+def publish_admin_scholarship(
+    scholarship_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Publishes a scholarship to become student-visible within its visibility window."""
+    published = set_scholarship_status(scholarship_id=scholarship_id, new_status=ScholarshipStatus.PUBLISHED)
+    return {
+        "success": True,
+        "message": "Scholarship published successfully.",
+        "scholarship": published,
+    }
+
+
+@router.post("/scholarships/{scholarship_id}/archive", status_code=status.HTTP_200_OK)
+def archive_admin_scholarship(
+    scholarship_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Archives a scholarship, removing it from student visibility while retaining records."""
+    archived = set_scholarship_status(scholarship_id=scholarship_id, new_status=ScholarshipStatus.ARCHIVED)
+    return {
+        "success": True,
+        "message": "Scholarship archived successfully.",
+        "scholarship": archived,
+    }
+
+
+@router.delete("/scholarships/{scholarship_id}", status_code=status.HTTP_200_OK)
+def delete_admin_scholarship(
+    scholarship_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """Permanently deletes a scholarship record."""
+    delete_scholarship(scholarship_id=scholarship_id)
+    return {
+        "success": True,
+        "message": f"Scholarship '{scholarship_id}' deleted permanently.",
+    }
+
+
+@router.post("/scholarships/upload-image", status_code=status.HTTP_200_OK)
+@router.post("/scholarships/{scholarship_id}/upload-image", status_code=status.HTTP_200_OK)
+async def upload_admin_scholarship_image(
+    file: UploadFile = File(...),
+    scholarship_id: Optional[str] = None,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Uploads a scholarship poster / banner image to Supabase Storage 'scholarship-banners'.
+    Validates file type (JPEG/PNG/WebP) and 5MB limit.
+    Optionally associates the uploaded URL with an existing scholarship if scholarship_id is supplied.
+    """
+    public_url = await upload_scholarship_image(file=file, user_id=owner["user_id"])
+
+    if scholarship_id:
+        try:
+            update_scholarship(scholarship_id=scholarship_id, data=UpdateScholarshipRequest(image_url=public_url))
+        except Exception as e:
+            logger.warning(f"Uploaded image but could not auto-update scholarship {scholarship_id}: {e}")
+
+    return {
+        "success": True,
+        "image_url": public_url,
+    }
+
 

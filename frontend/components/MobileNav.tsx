@@ -70,7 +70,7 @@ const bottomBarItems = [
 
 const exploreBottomBarItems = [
   { id: "trending", name: "Trending", icon: Flame },
-  { id: "scholarships", name: "Grants", icon: GraduationCap },
+  { id: "scholarships", name: "Scholarships", icon: GraduationCap },
   { id: "news", name: "News", icon: Newspaper },
   { id: "events", name: "Events", icon: Calendar },
   { id: "community", name: "Guilds", icon: Users },

@@ -274,7 +274,7 @@ function ExplorePageContent() {
               </h1>
               <p className="text-slate-500 text-[11px] sm:text-sm font-semibold mt-0.5">
                 {activeTab === "trending" && "Curated roadmaps & skill paths"}
-                {activeTab === "scholarships" && "Global student grants & tech scholarships"}
+                {activeTab === "scholarships" && "Verified tech scholarships & fellowships"}
                 {activeTab === "news" && "Real-time AI & engineering news ticker"}
                 {activeTab === "events" && "Global hackathons, keynotes & summits"}
                 {activeTab === "community" && "Peer study pods, tech guilds & referrals"}
@@ -321,7 +321,7 @@ function ExplorePageContent() {
       <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
         {[
           { id: "trending", name: "Trending", icon: Flame },
-          { id: "scholarships", name: "Grants", icon: GraduationCap },
+          { id: "scholarships", name: "Scholarships", icon: GraduationCap },
           { id: "news", name: "News", icon: Newspaper },
           { id: "events", name: "Events", icon: Calendar },
           { id: "community", name: "Guilds", icon: Users },

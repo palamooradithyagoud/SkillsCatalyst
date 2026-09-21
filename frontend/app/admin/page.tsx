@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
 import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
+import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 
 type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users";
 
@@ -425,26 +426,9 @@ export default function AdminPage() {
             <AdminEventsCMS onEventCountChange={refreshAdminData} />
           )}
 
-          {/* TAB 3: SCHOLARSHIPS */}
+          {/* TAB 3: SCHOLARSHIPS CMS */}
           {activeTab === "scholarships" && (
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">Scholarships &amp; Grants</h3>
-                  <p className="text-xs text-slate-400">Manage funding opportunities and fellowship listings.</p>
-                </div>
-                <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  CMS Module Active
-                </span>
-              </div>
-              <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl space-y-2">
-                <Award className="w-8 h-8 text-amber-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">Scholarship Catalog Ready</p>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Direct management of global and national educational grants.
-                </p>
-              </div>
-            </div>
+            <AdminScholarshipsCMS onScholarshipCountChange={refreshAdminData} />
           )}
 
           {/* TAB 4: NEWS */}
