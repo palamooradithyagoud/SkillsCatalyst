@@ -1,4 +1,21 @@
-// frontend/lib/trial.ts
+/**
+ * frontend/lib/trial.ts
+ * 
+ * @deprecated
+ * LEGACY CLIENT-SIDE TRIAL & PRO MOCK SYSTEM.
+ * 
+ * WARNING & SECURITY INVARIANT:
+ * The localStorage keys `skillscatalyst_pro_member`, `skillscatalyst_pro_plan`,
+ * and `skillscatalyst_trial_end` are legacy frontend-only mock state used during
+ * early prototyping.
+ * 
+ * The FastAPI backend DOES NOT trust or read these localStorage keys. Authoritative
+ * subscription status and 7-feature entitlements are strictly managed by
+ * `public.user_subscriptions` and `public.plan_entitlements` via `/api/subscriptions/me`
+ * and the `useSubscription` hook.
+ * 
+ * In Phase 3, components will transition to `useSubscription()` for all entitlement checks.
+ */
 
 export const TRIAL_CONFIG = {
   name: "7-Day Free Trial",
@@ -8,7 +25,8 @@ export const TRIAL_CONFIG = {
 };
 
 /**
- * Checks if current user has active Pro access (either via active trial or stored pro status).
+ * @deprecated Use useSubscription().isPremium for verified server subscription status.
+ * Checks if current user has active Pro access in legacy local storage.
  */
 export function hasProAccess(): boolean {
   if (typeof window !== "undefined") {

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Sparkles, ShieldCheck, ArrowRight, Lock, X } from "lucide-react";
 
+import { createPaymentOrder } from "@/lib/api/payment";
+
 interface PaymentPosSwipeAnimationProps {
   planId: "1month" | "3months";
   planName: string;
@@ -24,18 +26,33 @@ export default function PaymentPosSwipeAnimation({
   const [isSwiping, setIsSwiping] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isOpeningGateway, setIsOpeningGateway] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleTriggerPayment = () => {
-    if (isSwiping || isSuccess) return;
+  const handleTriggerPayment = async () => {
+    if (isSwiping || isSuccess || isOpeningGateway) return;
     setIsSwiping(true);
+    setErrorMessage(null);
 
-    // After animation completes (1.4s), trigger success
-    setTimeout(() => {
-      setIsSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-      }, 1600);
-    }, 1400);
+    const planCode = planId === "1month" ? "premium_monthly" : "premium_3_month";
+
+    try {
+      setIsOpeningGateway(true);
+      const order = await createPaymentOrder(planCode);
+      if (order.checkout_url) {
+        // Authoritative redirect to PhonePe Standard Checkout
+        window.location.href = order.checkout_url;
+      } else {
+        throw new Error("PhonePe gateway did not return a valid checkout URL.");
+      }
+    } catch (err: any) {
+      console.error("[Payment] Failed to initiate PhonePe order:", err);
+      setIsSwiping(false);
+      setIsOpeningGateway(false);
+      setErrorMessage(
+        err?.message || "Failed to initialize PhonePe checkout session. Please try again."
+      );
+    }
   };
 
   return (
@@ -44,16 +61,21 @@ export default function PaymentPosSwipeAnimation({
       <div className="text-center space-y-1.5 mb-6">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-bold uppercase tracking-wider">
           <Lock className="w-3.5 h-3.5" />
-          <span>256-Bit Encrypted POS Gateway</span>
+          <span>PhonePe Standard Checkout • 256-Bit SSL</span>
         </div>
         <h3 className="text-xl sm:text-2xl font-black text-white">
-          {isSuccess ? "Payment Approved! 🎉" : `Activate ${planName}`}
+          {isOpeningGateway ? "Redirecting to PhonePe..." : `Activate ${planName}`}
         </h3>
         <p className="text-xs text-slate-300">
-          {isSuccess
-            ? "Your Pro pass is active with 7-Day Free Trial. Unlocking all roadmaps & practice..."
-            : `Includes 7-Day Free Trial • First 7 days ₹0 • Hover or click terminal to swipe card.`}
+          {isOpeningGateway
+            ? "Opening secure PhonePe gateway. Please complete payment..."
+            : `Click below to proceed to PhonePe UPI, Cards, NetBanking, and Wallets.`}
         </p>
+        {errorMessage && (
+          <div className="p-2.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-medium">
+            {errorMessage}
+          </div>
+        )}
       </div>
 
       {/* ── Exact CSS Card & POS Machine Terminal Animation ── */}
