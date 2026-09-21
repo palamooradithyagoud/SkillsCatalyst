@@ -282,6 +282,14 @@ def create_scholarship(data: CreateScholarshipRequest, user_id: str) -> Dict[str
     visible_from_iso = _format_datetime(data.visible_from) or now_iso
     visible_until_iso = _format_datetime(data.visible_until)
 
+    creator_uuid = None
+    if user_id:
+        try:
+            uuid.UUID(str(user_id))
+            creator_uuid = str(user_id)
+        except (ValueError, AttributeError):
+            creator_uuid = None
+
     row = {
         "id": str(uuid.uuid4()),
         "name": data.name.strip(),
@@ -294,7 +302,7 @@ def create_scholarship(data: CreateScholarshipRequest, user_id: str) -> Dict[str
         "status": _get_enum_val(data.status) or ScholarshipStatus.DRAFT.value,
         "visible_from": visible_from_iso,
         "visible_until": visible_until_iso,
-        "created_by": user_id,
+        "created_by": creator_uuid,
         "created_at": now_iso,
         "updated_at": now_iso,
     }
