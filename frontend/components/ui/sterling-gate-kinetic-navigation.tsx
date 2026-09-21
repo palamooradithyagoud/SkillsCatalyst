@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import { useAuth } from "@/lib/auth";
+import { useSubscription } from "@/hooks/useSubscription";
 
 // Register GSAP Plugins safely
 if (typeof window !== "undefined") {
@@ -132,6 +133,7 @@ export function Component({
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const router = useRouter();
   const { session, logout } = useAuth();
+  const { isPremium } = useSubscription();
 
   const isControlled = typeof isOpen === "boolean";
   const isMenuOpen = isControlled ? isOpen : internalMenuOpen;
@@ -335,8 +337,8 @@ export function Component({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isMenuOpen]);
 
-  const userEmail = session?.email || "adithya@skillscatalyst.io";
-  const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+  const userEmail = session?.email || "Learner";
+  const userInitial = (session?.name?.charAt(0) || userEmail.split("@")[0].substring(0, 2)).toUpperCase() || "SC";
 
   return (
     <div ref={containerRef}>
@@ -610,7 +612,15 @@ export function Component({
                     <p className="text-xs font-semibold text-slate-900 dark:text-purple-100 truncate max-w-[130px] sm:max-w-[170px]">
                       {userEmail}
                     </p>
-                    <p className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">Pro Explorer</p>
+                    <p
+                      className={`text-[10px] font-medium ${
+                        isPremium
+                          ? "text-purple-600 dark:text-purple-400 font-semibold"
+                          : "text-slate-500 dark:text-slate-400"
+                      }`}
+                    >
+                      {isPremium ? "Pro Explorer" : "Free Explorer"}
+                    </p>
                   </div>
                 </div>
 

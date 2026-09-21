@@ -24,8 +24,8 @@ import {
   X,
   Hash,
   Sparkles,
-} from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export type NavItemData = {
   id: string;
@@ -46,6 +46,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading, logout } = useAuth();
+  const { isPremium } = useSubscription();
 
   const [isOpen, setIsOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -237,8 +238,14 @@ export default function Sidebar() {
                       {userDisplayName}
                     </span>
                     <span className="text-[11px] text-slate-500 leading-tight flex items-center gap-1 mt-0.5">
-                      <Sparkles className="w-2.5 h-2.5 text-[#5227FF]" />
-                      Pro Learner
+                      {isPremium ? (
+                        <>
+                          <Sparkles className="w-2.5 h-2.5 text-[#5227FF]" />
+                          <span className="text-[#5227FF] font-semibold">Pro Learner</span>
+                        </>
+                      ) : (
+                        <span>Free Learner</span>
+                      )}
                     </span>
                   </div>
                 </div>
