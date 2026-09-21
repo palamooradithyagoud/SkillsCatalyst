@@ -11,6 +11,7 @@ import {
   activateUserTrial,
   isUserTrialClaimed,
 } from "@/lib/trial";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export interface PricingModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export interface PricingModalProps {
 }
 
 export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
+  const { refetch: refetchSubscription } = useSubscription();
   const [mounted, setMounted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"1month" | "3months">("3months");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -32,21 +34,16 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined") {
-      setIsTrialClaimed(isUserTrialClaimed());
-      setTrialDaysLeft(getTrialDaysRemaining());
-    }
-  }, [isOpen]);
+    setIsTrialClaimed(isUserTrialClaimed());
+    setTrialDaysLeft(getTrialDaysRemaining());
+  }, []);
 
-  // Handle escape key
+  // Keyboard accessibility: ESC to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
-        if (activeCheckout) {
-          setActiveCheckout(null);
-        } else {
-          onClose();
-        }
+        if (activeCheckout) setActiveCheckout(null);
+        else onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -69,17 +66,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   };
 
   const handlePaymentSuccess = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("skillscatalyst_pro_member", "true");
-      localStorage.setItem("skillscatalyst_pro_plan", activeCheckout?.planId || "3months");
-      localStorage.setItem(
-        "skillscatalyst_trial_end",
-        String(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      );
-      window.dispatchEvent(new Event("skillscatalyst_pro_updated"));
-    }
+    refetchSubscription();
     setToastMessage(
-      `🎉 Congratulations! Your ${activeCheckout?.planName || "Pro Pass"} is now ACTIVE!`
+      `🎉 Payment confirmed! Your ${activeCheckout?.planName || "Subscription"} is now ACTIVE!`
     );
     setActiveCheckout(null);
     setTimeout(() => {

@@ -39,6 +39,19 @@ REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 OWNER_EMAIL = os.getenv("OWNER_EMAIL", "palamooradithyagoud@gmail.com").strip().lower()
 
+# ── PhonePe Payment Gateway Configuration (Phase 2) ───────────────────────────
+PHONEPE_ENV = os.getenv("PHONEPE_ENV", "SANDBOX").strip().upper()
+PHONEPE_CLIENT_ID = os.getenv("PHONEPE_CLIENT_ID", "").strip()
+PHONEPE_CLIENT_SECRET = os.getenv("PHONEPE_CLIENT_SECRET", "").strip()
+try:
+    PHONEPE_CLIENT_VERSION = int(os.getenv("PHONEPE_CLIENT_VERSION", "1").strip() or 1)
+except ValueError:
+    PHONEPE_CLIENT_VERSION = 1
+PHONEPE_WEBHOOK_USERNAME = os.getenv("PHONEPE_WEBHOOK_USERNAME", "").strip()
+PHONEPE_WEBHOOK_PASSWORD = os.getenv("PHONEPE_WEBHOOK_PASSWORD", "").strip()
+PHONEPE_WEBHOOK_SECRET = os.getenv("PHONEPE_WEBHOOK_SECRET", "").strip()
+PHONEPE_REDIRECT_URL = os.getenv("PHONEPE_REDIRECT_URL", f"{FRONTEND_URL}/dashboard?payment=complete").strip()
+
 REQUIRED_ENV_VARS = {
     "SUPABASE_URL": SUPABASE_URL,
     "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
