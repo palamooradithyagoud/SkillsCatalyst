@@ -81,7 +81,7 @@ export default function DashboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-4 sm:space-y-5"
+      className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-4 sm:space-y-5 pb-16 sm:pb-24"
     >
       {/* ── Main Content Grid: Compact side-by-side without empty gap ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] xl:grid-cols-[510px_1fr] gap-5 sm:gap-6 items-start">

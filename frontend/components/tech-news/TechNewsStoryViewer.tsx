@@ -60,13 +60,17 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
   const [coverError, setCoverError] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
+  // Clean up body overflow and mount safely
   useEffect(() => {
     setMounted(true);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "";
+    }
     return () => {
       setMounted(false);
-      document.body.style.overflow = originalOverflow;
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "";
+      }
     };
   }, []);
 
@@ -74,8 +78,23 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
   const stories: TechNewsStory[] = currentSource?.stories || [];
   const currentStory: TechNewsStory | undefined = stories[storyIdx];
 
-  // Press-and-hold pause timer tracking
-  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Touch tracking for swipe-down to dismiss
+  const touchStartY = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsPaused(true);
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsPaused(false);
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffY = touchEndY - touchStartY.current;
+    // Swipe down gesture dismisses viewer
+    if (diffY > 80) {
+      onClose();
+    }
+  };
 
   // Navigate to next story or next source
   const handleNext = useCallback(() => {
@@ -126,15 +145,6 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNext, handlePrev, onClose]);
 
-  // Lock body scroll while modal is open
-  useEffect(() => {
-    const origStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = origStyle;
-    };
-  }, []);
-
   if (!mounted || !currentSource || !currentStory) {
     return null;
   }
@@ -175,11 +185,11 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
       {/* Main Story Phone / Card Frame */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[420px] h-[92vh] max-h-[760px] rounded-3xl overflow-hidden shadow-2xl bg-[#090D16] border border-white/10 flex flex-col justify-between"
+        className="relative w-full max-w-[420px] h-[88vh] sm:h-[90vh] max-h-[740px] rounded-3xl overflow-hidden shadow-2xl bg-[#090D16] border border-white/10 flex flex-col justify-between"
         onMouseDown={() => setIsPaused(true)}
         onMouseUp={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Background Visual Layer */}
         <div className="absolute inset-0 z-0">
@@ -297,32 +307,51 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
         </div>
 
         {/* ── BOTTOM CONTENT & CTA SECTION ── */}
-        <div className="relative z-20 p-5 space-y-4">
-          {/* Story Card Backdrop */}
-          <div className="bg-black/50 backdrop-blur-md border border-white/15 rounded-2xl p-4 shadow-xl space-y-2">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-300 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>48h Curated Tech Story</span>
+        <div className="relative z-20 p-4 sm:p-5 space-y-3">
+          {/* Story Card Backdrop (Scrollable to read full news details) */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            className="bg-black/65 backdrop-blur-md border border-white/15 rounded-2xl p-4 shadow-xl space-y-2 max-h-[46vh] overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-white/20 select-text"
+          >
+            <div className="flex items-center justify-between text-xs font-semibold text-purple-300 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>48h Curated Tech Story</span>
+              </div>
+              <span className="text-[10px] lowercase text-white/40 normal-case">
+                scroll to read
+              </span>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
               {currentStory.title || currentStory.headline}
             </h2>
 
-            <p className="text-xs sm:text-sm text-zinc-200 line-clamp-3 leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-normal">
               {currentStory.summary}
             </p>
+
+            {(currentStory.content || currentStory.why_it_matters) && (
+              <div className="pt-2 border-t border-white/10 text-xs text-zinc-300 space-y-1">
+                <span className="font-bold text-purple-300 block">Why it matters:</span>
+                <p className="text-zinc-300 leading-relaxed">
+                  {currentStory.content || currentStory.why_it_matters}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Action CTAs: Read Full News */}
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2 pt-0.5">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
                 router.push(`/tech-news/${currentStory.id}`);
               }}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-tight flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-tight flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all cursor-pointer"
             >
               <span>Read Full News</span>
               <ArrowRight className="w-4 h-4" />
