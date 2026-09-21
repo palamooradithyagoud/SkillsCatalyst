@@ -8,7 +8,6 @@ Phase: Payments Phase 1 — Subscription + Entitlement Foundation
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List, Tuple
-from dateutil.parser import isoparse
 
 from backend.services.supabase_service import get_supabase
 from backend.models.subscription import (
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_timestamp(val: Any) -> Optional[datetime]:
-    """Safely parse Supabase timestamp string into UTC datetime."""
+    """Safely parse Supabase timestamp string into UTC datetime using standard library."""
     if not val:
         return None
     if isinstance(val, datetime):
@@ -36,7 +35,8 @@ def _parse_timestamp(val: Any) -> Optional[datetime]:
             return val.replace(tzinfo=timezone.utc)
         return val
     try:
-        dt = isoparse(str(val))
+        clean_val = str(val).strip().replace("Z", "+00:00")
+        dt = datetime.fromisoformat(clean_val)
         if dt.tzinfo is None:
             return dt.replace(tzinfo=timezone.utc)
         return dt
