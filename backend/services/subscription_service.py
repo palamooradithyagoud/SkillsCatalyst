@@ -149,6 +149,15 @@ class SubscriptionService:
         sub = SubscriptionService.get_user_subscription_record(user_id)
         now = datetime.now(timezone.utc)
 
+        # If user has no active subscription or is expired, check if any pending payment completed
+        if not sub or (sub.get("expires_at") and (_parse_timestamp(sub.get("expires_at")) or now) <= now):
+            try:
+                from backend.services.payment_service import PaymentService
+                if PaymentService.sync_pending_user_payments(user_id):
+                    sub = SubscriptionService.get_user_subscription_record(user_id)
+            except Exception as sync_err:
+                logger.debug(f"Pending payment sync error for {user_id}: {sync_err}")
+
         if not sub:
             return {
                 "plan": PlanCode.FREE,

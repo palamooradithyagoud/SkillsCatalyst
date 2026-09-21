@@ -12,6 +12,7 @@ import { TechNewsStories } from "@/components/tech-news/TechNewsStories";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, FileText, Map, Sparkles, CheckCircle2, Zap, X } from "lucide-react";
 
@@ -19,6 +20,18 @@ export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [showPaymentBanner, setShowPaymentBanner] = useState(false);
+  const { isPremium, plan: subPlan, refetch: refetchSubscription } = useSubscription();
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("payment") === "complete") {
+        setShowPaymentBanner(true);
+        refetchSubscription();
+      }
+    }
+  }, [refetchSubscription]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", userId],
@@ -83,6 +96,27 @@ export default function DashboardPage() {
       animate="visible"
       className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-4 sm:space-y-5 pb-16 sm:pb-24"
     >
+      {/* ── Payment Confirmation Celebration Banner ── */}
+      {showPaymentBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -10, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 shadow-lg shadow-emerald-950/30"
+        >
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>🎉 Payment Confirmed! Your Premium access is active across all questions, prep, and roadmaps.</span>
+          </div>
+          <button
+            onClick={() => setShowPaymentBanner(false)}
+            className="p-1 rounded-lg hover:bg-white/10 text-emerald-300 hover:text-white transition-colors cursor-pointer"
+            aria-label="Dismiss banner"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </motion.div>
+      )}
+
       {/* ── Main Content Grid: Compact side-by-side without empty gap ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] xl:grid-cols-[510px_1fr] gap-5 sm:gap-6 items-start">
         {/* Left Main Area: Event Hero Banner + Tech Stories Icons + Quick Hub + Metric Cards */}

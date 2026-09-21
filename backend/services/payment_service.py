@@ -6,6 +6,7 @@ Phase: Payments Phase 2 — PhonePe Payment Integration (Backend-First)
 """
 
 import uuid
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
@@ -120,24 +121,29 @@ class PaymentService:
         )
 
     @staticmethod
-    def process_webhook(authorization_header: Optional[str], raw_body: str) -> Dict[str, Any]:
+    def process_webhook(
+        authorization_header: Optional[str],
+        raw_body: str,
+        is_internal_sync: bool = False,
+    ) -> Dict[str, Any]:
         """
         Processes server-to-server webhook callback from PhonePe.
-        1. Validates webhook SHA username/password or HMAC signature.
+        1. Validates webhook SHA username/password or HMAC signature (skipped for verified internal out-of-band sync).
         2. Normalizes callback event and payload.
         3. Enforces idempotency (ignores already succeeded payments).
         4. Verifies amount and currency against database transaction.
         5. On success: marks transaction 'success', activates or extends user subscription.
         6. On failure: marks transaction 'failed' with error code.
         """
-        # 1. Authenticate webhook caller
-        is_valid = PhonePeService.verify_webhook_signature(authorization_header, raw_body)
-        if not is_valid:
-            logger.warning("Rejected PhonePe webhook: Invalid authentication header.")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook authorization header.",
-            )
+        # 1. Authenticate webhook caller (unless initiated by verified internal out-of-band sync)
+        if not is_internal_sync:
+            is_valid = PhonePeService.verify_webhook_signature(authorization_header, raw_body)
+            if not is_valid:
+                logger.warning("Rejected PhonePe webhook: Invalid authentication header.")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid webhook authorization header.",
+                )
 
         # 2. Parse callback body
         callback = PhonePeService.parse_callback_payload(raw_body)
@@ -306,10 +312,19 @@ class PaymentService:
             remote_status = PhonePeService.get_order_status(merchant_order_id)
             remote_state = (remote_status.get("state") or "").upper()
             if remote_state in ("COMPLETED", "SUCCESS"):
-                # Synchronize success state
+                # Authoritative out-of-band synchronization
                 PaymentService.process_webhook(
-                    authorization_header=f"INTERNAL_SYNC",
-                    raw_body=f'{{"event":"checkout.order.completed","payload":{{"merchantOrderId":"{merchant_order_id}","state":"COMPLETED","amount":{tx["amount_in_paise"]}}}}}',
+                    authorization_header=None,
+                    raw_body=json.dumps({
+                        "event": "checkout.order.completed",
+                        "payload": {
+                            "merchantOrderId": merchant_order_id,
+                            "orderId": remote_status.get("order_id") or tx.get("provider_order_id"),
+                            "state": "COMPLETED",
+                            "amount": tx["amount_in_paise"],
+                        },
+                    }),
+                    is_internal_sync=True,
                 )
                 current_status = PaymentStatus.SUCCESS
 
@@ -324,6 +339,56 @@ class PaymentService:
             amount_in_paise=int(tx["amount_in_paise"]),
             created_at=tx.get("created_at"),
         )
+
+    @staticmethod
+    def sync_pending_user_payments(user_id: str) -> bool:
+        """
+        Reconciles any pending payment transactions for the user against PhonePe
+        authoritative state out-of-band. Returns True if any payment was activated.
+        """
+        if not user_id or not PhonePeService.is_configured():
+            return False
+
+        sb = get_supabase()
+        if not sb:
+            return False
+
+        try:
+            res = (
+                sb.from_("payment_transactions")
+                .select("merchant_order_id, amount_in_paise, provider_order_id")
+                .eq("user_id", user_id)
+                .eq("status", PaymentStatus.PENDING.value)
+                .order("created_at", desc=True)
+                .limit(3)
+                .execute()
+            )
+            rows = res.data or []
+            any_synced = False
+            for r in rows:
+                m_order_id = r.get("merchant_order_id")
+                if not m_order_id:
+                    continue
+                remote = PhonePeService.get_order_status(m_order_id)
+                if (remote.get("state") or "").upper() in ("COMPLETED", "SUCCESS"):
+                    PaymentService.process_webhook(
+                        authorization_header=None,
+                        raw_body=json.dumps({
+                            "event": "checkout.order.completed",
+                            "payload": {
+                                "merchantOrderId": m_order_id,
+                                "orderId": remote.get("order_id") or r.get("provider_order_id"),
+                                "state": "COMPLETED",
+                                "amount": r["amount_in_paise"],
+                            },
+                        }),
+                        is_internal_sync=True,
+                    )
+                    any_synced = True
+            return any_synced
+        except Exception as e:
+            logger.warning(f"Error syncing pending payments for user {user_id}: {e}")
+            return False
 
     @staticmethod
     def get_user_payment_history(user_id: str) -> List[PaymentTransactionDTO]:
