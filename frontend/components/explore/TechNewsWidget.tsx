@@ -78,8 +78,8 @@ export default function TechNewsWidget() {
 
   // Flatten all stories across sources with index references
   const allStories = useMemo(() => {
-    return sources.flatMap((src, srcIdx) =>
-      src.stories.map((story, storyIdx) => ({
+    return sources.flatMap((src, sourceIdx) =>
+      (src.stories || []).map((story, storyIdx) => ({
         ...story,
         sourceIdx,
         storyIdx,
