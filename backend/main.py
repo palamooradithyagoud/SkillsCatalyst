@@ -6,10 +6,13 @@ import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-# Ensure root directory is in sys.path for robust module loading
-_root_dir = Path(__file__).resolve().parent.parent
+# Ensure root and backend directories are in sys.path for robust module loading
+_backend_dir = Path(__file__).resolve().parent
+_root_dir = _backend_dir.parent
 if str(_root_dir) not in sys.path:
     sys.path.insert(0, str(_root_dir))
+if str(_backend_dir) not in sys.path:
+    sys.path.insert(0, str(_backend_dir))
 
 from fastapi import FastAPI, Request, Response, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -223,9 +226,20 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # ── Router Registrations ──────────────────────────────────────────────────────
 try:
-    from backend.routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin, events, scholarships, tech_news, subscriptions, payments
-except ModuleNotFoundError:
-    from routers import dashboard, ai_mentor, learning, resume, practice, profile, auth, support, admin, events, scholarships, tech_news, subscriptions, payments
+    from backend.routers import (
+        dashboard, ai_mentor, learning, resume, practice, profile,
+        auth, support, admin, events, scholarships, tech_news,
+        subscriptions, payments
+    )
+except ModuleNotFoundError as e:
+    if getattr(e, "name", None) in ("backend", "backend.routers") or "backend" in str(e):
+        from routers import (
+            dashboard, ai_mentor, learning, resume, practice, profile,
+            auth, support, admin, events, scholarships, tech_news,
+            subscriptions, payments
+        )
+    else:
+        raise e
 
 app.include_router(dashboard.router)
 app.include_router(ai_mentor.router)
