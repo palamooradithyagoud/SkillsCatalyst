@@ -312,7 +312,7 @@ function ExplorePageContent() {
               <p className="text-slate-500 text-[11px] sm:text-sm font-semibold mt-0.5">
                 {activeTab === "trending" && "Curated roadmaps & skill paths"}
                 {activeTab === "scholarships" && "Verified tech scholarships & fellowships"}
-                {activeTab === "news" && "Real-time AI & engineering news ticker"}
+                {activeTab === "news" && "48-hour curated tech stories & engineering drops"}
                 {activeTab === "events" && "Global hackathons, keynotes & summits"}
                 {activeTab === "community" && "Peer study pods, tech guilds & referrals"}
               </p>
@@ -333,9 +333,9 @@ function ExplorePageContent() {
               </span>
             )}
             {activeTab === "news" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-emerald-600/25 shrink-0">
-                <Newspaper className="w-3.5 h-3.5 text-white" />
-                <span>Tech News</span>
+              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-purple-600/25 shrink-0">
+                <Zap className="w-3.5 h-3.5 text-white" />
+                <span>Tech Stories</span>
               </span>
             )}
             {activeTab === "events" && (
