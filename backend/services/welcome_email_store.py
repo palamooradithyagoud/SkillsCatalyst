@@ -17,6 +17,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Tuple
 from pathlib import Path
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import is_valid_uuid
 
 logger = logging.getLogger("skillscatalyst.welcome_email")
 
@@ -90,6 +91,8 @@ def _is_supabase_table_available() -> bool:
 def get_welcome_email_event(user_id: str) -> Optional[Dict[str, Any]]:
     """Fetches the existing welcome email event for a given user_id."""
     clean_user_id = str(user_id).strip()
+    if not clean_user_id or not is_valid_uuid(clean_user_id):
+        return None
 
     if _is_supabase_table_available():
         try:
@@ -125,6 +128,8 @@ def create_welcome_email_event(user_id: str, email: str) -> Tuple[Optional[Dict[
     import uuid
     clean_user_id = str(user_id).strip()
     clean_email = str(email).strip().lower()
+    if not clean_user_id or not is_valid_uuid(clean_user_id):
+        return None, False
     now_iso = datetime.now(timezone.utc).isoformat()
     event_id = str(uuid.uuid4())
 
@@ -219,6 +224,8 @@ def claim_welcome_email_job(user_id: str, lease_seconds: int = 300) -> Optional[
     Returns the updated claimed event dict, or None if not eligible / already claimed.
     """
     clean_user_id = str(user_id).strip()
+    if not clean_user_id or not is_valid_uuid(clean_user_id):
+        return None
     now_dt = datetime.now(timezone.utc)
     now_iso = now_dt.isoformat()
     lease_until_dt = now_dt + timedelta(seconds=lease_seconds)
@@ -302,6 +309,8 @@ def claim_welcome_email_job(user_id: str, lease_seconds: int = 300) -> Optional[
 def mark_welcome_email_sent(user_id: str, resend_id: str) -> Optional[Dict[str, Any]]:
     """Marks the welcome email event as 'sent' after successful provider acceptance."""
     clean_user_id = str(user_id).strip()
+    if not clean_user_id or not is_valid_uuid(clean_user_id):
+        return None
     now_iso = datetime.now(timezone.utc).isoformat()
 
     if _is_supabase_table_available():
@@ -353,6 +362,8 @@ def mark_welcome_email_sent(user_id: str, resend_id: str) -> Optional[Dict[str, 
 def mark_welcome_email_failed(user_id: str, error_message: str) -> Optional[Dict[str, Any]]:
     """Marks the welcome email event as 'failed' with error reason and releases lease for retry."""
     clean_user_id = str(user_id).strip()
+    if not clean_user_id or not is_valid_uuid(clean_user_id):
+        return None
     now_iso = datetime.now(timezone.utc).isoformat()
 
     if _is_supabase_table_available():

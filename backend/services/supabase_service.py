@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 supabase_client: Client | None = None
 
 if SUPABASE_URL and (SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY):
+    if not SUPABASE_SERVICE_KEY and SUPABASE_ANON_KEY:
+        logger.warning("SUPABASE_SERVICE_KEY is not configured! Backend is running with anon key; admin operations and RLS bypass will not work.")
     key = SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY
     try:
         supabase_client = create_client(SUPABASE_URL, key)

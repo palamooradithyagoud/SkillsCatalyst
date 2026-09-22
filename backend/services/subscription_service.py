@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List, Tuple
 
 from backend.services.supabase_service import get_supabase
+from backend.services.auth_service import is_valid_uuid
 from backend.models.subscription import (
     PlanCode,
     SubscriptionStatus,
@@ -101,8 +102,9 @@ class SubscriptionService:
     def get_user_subscription_record(user_id: str) -> Optional[Dict[str, Any]]:
         """
         Queries raw user subscription records from Supabase, prioritizing active or recent subscriptions.
+        Guards against non-UUID / guest identifiers to prevent 22P02 database errors.
         """
-        if not user_id:
+        if not user_id or not is_valid_uuid(user_id):
             return None
 
         sb = get_supabase()
@@ -146,6 +148,17 @@ class SubscriptionService:
         - Cancelled subscription & expires_at > now() -> retains premium until expires_at, status=cancelled, is_premium = True.
         - Cancelled subscription & expires_at <= now() -> free, status=expired, is_premium = False.
         """
+        if not user_id or not is_valid_uuid(user_id):
+            return {
+                "plan": PlanCode.FREE,
+                "status": SubscriptionStatus.ACTIVE,
+                "is_premium": False,
+                "started_at": None,
+                "expires_at": None,
+                "cancelled_at": None,
+                "raw_sub": None,
+            }
+
         sub = SubscriptionService.get_user_subscription_record(user_id)
         now = datetime.now(timezone.utc)
 
@@ -265,7 +278,11 @@ class SubscriptionService:
         """
         Returns full 7-feature entitlement dictionary based on user's effective plan.
         Tries DB resolution first, falls back to canonical entitlements.
+        Guards against non-UUID / guest IDs to return default Free entitlements instantly.
         """
+        if not user_id or not is_valid_uuid(user_id):
+            return {k: v.model_copy() for k, v in DEFAULT_FREE_ENTITLEMENTS.items()}
+
         plan_code, is_premium = SubscriptionService.get_effective_plan(user_id)
 
         sb = get_supabase()

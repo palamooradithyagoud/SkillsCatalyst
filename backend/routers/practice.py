@@ -249,7 +249,7 @@ def record_aptitude_attempt(
     Store user practice attempt with correctness (true/false) and time taken in seconds for both correct and wrong answers.
     Binds attempt user_id strictly to verified JWT identity or session resolver to prevent IDOR / client identity spoofing.
     """
-    attempt_dict = attempt.dict()
+    attempt_dict = attempt.model_dump()
     attempt_dict["user_id"] = current_user_id
 
     logger.info(
