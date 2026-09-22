@@ -512,8 +512,8 @@ export function Component({
             {/* Menu Content Wrapper */}
             <div className="menu-content-wrapper">
               {/* Drawer Top Bar */}
-              <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 dark:border-purple-900/30 shrink-0">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 dark:border-purple-900/30 shrink-0 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <SkillsCatalystLogo size="sm" showText animated />
                 </div>
 
