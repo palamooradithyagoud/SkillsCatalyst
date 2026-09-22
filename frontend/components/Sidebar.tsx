@@ -28,6 +28,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionStatus } from "@/components/premium";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 export type NavItemData = {
   id: string;
@@ -294,12 +295,33 @@ export default function Sidebar() {
           ))}
         </div>
 
-        {/* Bottom Section: Settings, Support, Logout */}
-        <div className="mt-auto p-2.5 border-t border-slate-100 flex flex-col gap-1">
-          {isOpen && (
-            <div className="mb-1">
-              <SubscriptionStatus compact />
-            </div>
+        {/* Bottom Section: Plan Status, Theme Mode, Settings, Support, Logout */}
+        <div className="mt-auto p-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1.5">
+          {isOpen ? (
+            <>
+              <div className="mb-0.5">
+                <SubscriptionStatus compact />
+              </div>
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 my-0.5">
+                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  Theme Mode
+                </span>
+                <div style={{ transform: "scale(0.68)", transformOrigin: "right center" }}>
+                  <ThemeSwitch />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-center mb-0.5">
+                <SubscriptionStatus collapsedIconOnly />
+              </div>
+              <div className="flex justify-center my-0.5" title="Toggle Dark / Light Mode">
+                <div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
+                  <ThemeSwitch />
+                </div>
+              </div>
+            </>
           )}
           {bottomItems.map((item) => (
             <SidebarItem

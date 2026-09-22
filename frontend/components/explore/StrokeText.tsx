@@ -19,17 +19,27 @@ export interface StrokeTextProps {
   fillDelay?: number;
   stagger?: number;
   ease?: string;
-  trigger?: "mount" | "hover" | "scroll" | "loop";
+  trigger?: "mount" | "hover" | "scroll" | "loop" | "none";
   fillMode?: "wipe" | "fade" | "none";
   fontSize?: number;
   fontWeight?: number | string;
   letterSpacing?: number;
+  replayTrigger?: number | boolean;
   className?: string;
   style?: React.CSSProperties;
 }
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+const getApproxCharWidth = (char: string, fSize: number, lSpacing: number) => {
+  if (char === " ") return fSize * 0.32;
+  if ("ijlrtI!.:;,|'\"".includes(char)) return fSize * 0.28 + lSpacing;
+  if ("fksvyzJ".includes(char)) return fSize * 0.46 + lSpacing;
+  if ("mwMWQ_@#%&".includes(char)) return fSize * 0.82 + lSpacing;
+  if (char >= "A" && char <= "Z") return fSize * 0.64 + lSpacing;
+  return fSize * 0.52 + lSpacing;
+};
 
 export default function StrokeText({
   text,
@@ -45,6 +55,7 @@ export default function StrokeText({
   fontSize = 128,
   fontWeight = 800,
   letterSpacing = -4,
+  replayTrigger,
   className = "",
   style = {},
 }: StrokeTextProps) {
@@ -59,20 +70,23 @@ export default function StrokeText({
 
   const chars = useMemo(() => text.split(""), [text]);
 
-  // Initial heuristic character layout for immediate SSR render
+  // Initial proportional character layout for immediate SSR render
   const [charPositions, setCharPositions] = useState<number[]>(() => {
     let currentX = 0;
     return chars.map((char) => {
       const x = currentX;
-      const w = char === " " ? fontSize * 0.35 : fontSize * 0.62 + letterSpacing;
-      currentX += Math.max(w, fontSize * 0.2);
+      const w = getApproxCharWidth(char, fontSize, letterSpacing);
+      currentX += Math.max(w, fontSize * 0.15);
       return x;
     });
   });
 
-  const [svgDimensions, setSvgDimensions] = useState({
-    width: Math.max(200, chars.length * (fontSize * 0.62 + letterSpacing) + 30),
-    height: fontSize * 1.25,
+  const [svgDimensions, setSvgDimensions] = useState(() => {
+    const estimatedWidth = chars.reduce((sum, c) => sum + getApproxCharWidth(c, fontSize, letterSpacing), 0);
+    return {
+      width: Math.max(120, Math.ceil(estimatedWidth + 24)),
+      height: Math.ceil(fontSize * 1.25),
+    };
   });
 
   const baselineY = fontSize * 0.92;
@@ -83,7 +97,7 @@ export default function StrokeText({
   }, [chars]);
 
   // Measure exact character positions and glyph bounding box on client
-  useIsomorphicLayoutEffect(() => {
+  const measureGlyphs = () => {
     if (!measureTextRef.current) return;
 
     try {
@@ -96,19 +110,19 @@ export default function StrokeText({
         } else {
           // Heuristic fallback
           const prev = positions[i - 1] ?? 0;
-          const w = chars[i - 1] === " " ? fontSize * 0.35 : fontSize * 0.62 + letterSpacing;
+          const w = getApproxCharWidth(chars[i - 1] ?? "", fontSize, letterSpacing);
           positions.push(prev + w);
         }
       }
 
-      let totalWidth = chars.length * (fontSize * 0.62 + letterSpacing) + 20;
+      let totalWidth = chars.length * (fontSize * 0.52 + letterSpacing) + 20;
       let totalHeight = fontSize * 1.25;
 
       if (typeof measureTextRef.current.getBBox === "function") {
         const bbox = measureTextRef.current.getBBox();
-        const padding = strokeWidth * 4;
-        totalWidth = Math.ceil(bbox.width + padding * 2 + 16);
-        totalHeight = Math.ceil(bbox.height + padding * 2 + 10);
+        const padding = strokeWidth * 2;
+        totalWidth = Math.ceil(bbox.width + padding * 2 + 12);
+        totalHeight = Math.ceil(bbox.height + padding * 2 + 8);
       }
 
       setCharPositions(positions);
@@ -119,7 +133,20 @@ export default function StrokeText({
     } catch {
       // Keep SSR heuristic if SVG measurement fails in headless env
     }
+  };
+
+  useIsomorphicLayoutEffect(() => {
+    measureGlyphs();
   }, [text, fontSize, fontWeight, letterSpacing, strokeWidth, chars]);
+
+  // Re-measure once web fonts have finished downloading
+  useEffect(() => {
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(() => {
+        measureGlyphs();
+      });
+    }
+  }, [text, fontSize, fontWeight, letterSpacing, strokeWidth]);
 
   // GSAP animation engine
   const playAnimation = () => {
@@ -214,8 +241,15 @@ export default function StrokeText({
     fillMode,
   ]);
 
+  // Handle external replay trigger (e.g. parent hover)
+  useEffect(() => {
+    if (replayTrigger !== undefined && replayTrigger) {
+      playAnimation();
+    }
+  }, [replayTrigger]);
+
   const handleMouseEnter = () => {
-    if (trigger === "hover") {
+    if (trigger === "hover" || trigger === "mount") {
       playAnimation();
     }
   };
@@ -240,7 +274,7 @@ export default function StrokeText({
               ref={wipeRectRef}
               x="0"
               y="0"
-              width="0"
+              width={trigger === "none" ? "100%" : 0}
               height={svgDimensions.height + 20}
             />
           </clipPath>

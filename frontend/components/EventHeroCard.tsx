@@ -10,15 +10,18 @@ import {
   Sparkles,
   ExternalLink,
   Calendar,
+  Crown,
 } from "lucide-react";
 import type { EventItem } from "@/types/events";
 import { fetchStudentEvents } from "@/lib/api/events";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface EventHeroCardProps {
   onOpenPricing?: () => void;
 }
 
 export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
+  const { isPremium } = useSubscription();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -101,14 +104,24 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
             Stay tuned for upcoming registrations
           </span>
-          {onOpenPricing && (
-            <button
-              type="button"
-              onClick={onOpenPricing}
-              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs"
+          {isPremium ? (
+            <span
+              data-testid="event-hero-pro-badge"
+              className="px-2.5 py-1 rounded-lg bg-black/90 border border-white/20 text-white dark:bg-purple-600 dark:border-purple-400/60 dark:text-white text-[10px] sm:text-xs font-bold flex items-center gap-1.5 shadow-xs dark:shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all"
             >
-              Get PRO
-            </button>
+              <Crown className="w-3 h-3 text-white dark:text-purple-100 shrink-0" />
+              PRO User
+            </span>
+          ) : (
+            onOpenPricing && (
+              <button
+                type="button"
+                onClick={onOpenPricing}
+                className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs"
+              >
+                Get PRO
+              </button>
+            )
           )}
         </div>
       </motion.div>
@@ -262,14 +275,24 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
         </a>
 
-        {onOpenPricing && (
-          <button
-            type="button"
-            onClick={onOpenPricing}
-            className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 text-white text-[10px] font-bold transition-all cursor-pointer backdrop-blur-md"
+        {isPremium ? (
+          <span
+            data-testid="event-hero-pro-badge"
+            className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/90 border border-white/20 text-white dark:bg-purple-600 dark:border-purple-400/60 dark:text-white text-[10px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs dark:shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all"
           >
-            Get PRO
-          </button>
+            <Crown className="w-3 h-3 text-white dark:text-purple-100 shrink-0" />
+            PRO User
+          </span>
+        ) : (
+          onOpenPricing && (
+            <button
+              type="button"
+              onClick={onOpenPricing}
+              className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 text-white text-[10px] font-bold transition-all cursor-pointer backdrop-blur-md hover:scale-105 active:scale-95"
+            >
+              Get PRO
+            </button>
+          )
         )}
       </div>
     </motion.div>
