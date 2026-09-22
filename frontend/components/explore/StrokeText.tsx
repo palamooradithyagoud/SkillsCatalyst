@@ -33,12 +33,12 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const getApproxCharWidth = (char: string, fSize: number, lSpacing: number) => {
-  if (char === " ") return fSize * 0.32;
-  if ("ijlrtI!.:;,|'\"".includes(char)) return fSize * 0.28 + lSpacing;
-  if ("fksvyzJ".includes(char)) return fSize * 0.46 + lSpacing;
-  if ("mwMWQ_@#%&".includes(char)) return fSize * 0.82 + lSpacing;
-  if (char >= "A" && char <= "Z") return fSize * 0.64 + lSpacing;
-  return fSize * 0.52 + lSpacing;
+  if (char === " ") return fSize * 0.35;
+  if ("ijlrtI!.:;,|'\"".includes(char)) return fSize * 0.38 + lSpacing;
+  if ("fksvyzJ".includes(char)) return fSize * 0.58 + lSpacing;
+  if ("mwMWQ_@#%&".includes(char)) return fSize * 0.90 + lSpacing;
+  if (char >= "A" && char <= "Z") return fSize * 0.76 + lSpacing;
+  return fSize * 0.62 + lSpacing;
 };
 
 export default function StrokeText({
@@ -76,7 +76,7 @@ export default function StrokeText({
     return chars.map((char) => {
       const x = currentX;
       const w = getApproxCharWidth(char, fontSize, letterSpacing);
-      currentX += Math.max(w, fontSize * 0.15);
+      currentX += Math.max(w, fontSize * 0.2);
       return x;
     });
   });
@@ -84,8 +84,8 @@ export default function StrokeText({
   const [svgDimensions, setSvgDimensions] = useState(() => {
     const estimatedWidth = chars.reduce((sum, c) => sum + getApproxCharWidth(c, fontSize, letterSpacing), 0);
     return {
-      width: Math.max(120, Math.ceil(estimatedWidth + 24)),
-      height: Math.ceil(fontSize * 1.25),
+      width: Math.max(160, Math.ceil(estimatedWidth + fontSize * 1.5 + 80)),
+      height: Math.ceil(fontSize * 1.3),
     };
   });
 
@@ -101,35 +101,34 @@ export default function StrokeText({
     if (!measureTextRef.current) return;
 
     try {
-      const positions: number[] = [];
-      const len = chars.length;
-      for (let i = 0; i < len; i++) {
-        if (typeof measureTextRef.current.getStartPositionOfChar === "function") {
-          const startPos = measureTextRef.current.getStartPositionOfChar(i);
-          positions.push(startPos.x);
-        } else {
-          // Heuristic fallback
-          const prev = positions[i - 1] ?? 0;
-          const w = getApproxCharWidth(chars[i - 1] ?? "", fontSize, letterSpacing);
-          positions.push(prev + w);
-        }
-      }
-
-      let totalWidth = chars.length * (fontSize * 0.52 + letterSpacing) + 20;
-      let totalHeight = fontSize * 1.25;
-
       if (typeof measureTextRef.current.getBBox === "function") {
         const bbox = measureTextRef.current.getBBox();
-        const padding = strokeWidth * 2;
-        totalWidth = Math.ceil(bbox.width + padding * 2 + 12);
-        totalHeight = Math.ceil(bbox.height + padding * 2 + 8);
-      }
+        // Guard: ignore measurement if container is hidden/0
+        if (bbox.width > 20 && bbox.height > 10) {
+          const padding = strokeWidth * 2;
+          const totalWidth = Math.ceil(bbox.width + padding * 2 + 40);
+          const totalHeight = Math.ceil(bbox.height + padding * 2 + 16);
 
-      setCharPositions(positions);
-      setSvgDimensions({
-        width: Math.max(totalWidth, 100),
-        height: Math.max(totalHeight, Math.ceil(fontSize * 1.25)),
-      });
+          const positions: number[] = [];
+          const len = chars.length;
+          for (let i = 0; i < len; i++) {
+            if (typeof measureTextRef.current.getStartPositionOfChar === "function") {
+              const startPos = measureTextRef.current.getStartPositionOfChar(i);
+              positions.push(startPos.x);
+            } else {
+              const prev = positions[i - 1] ?? 0;
+              const w = getApproxCharWidth(chars[i - 1] ?? "", fontSize, letterSpacing);
+              positions.push(prev + w);
+            }
+          }
+
+          setCharPositions(positions);
+          setSvgDimensions({
+            width: Math.max(totalWidth, 120),
+            height: Math.max(totalHeight, Math.ceil(fontSize * 1.3)),
+          });
+        }
+      }
     } catch {
       // Keep SSR heuristic if SVG measurement fails in headless env
     }
@@ -197,7 +196,7 @@ export default function StrokeText({
       tl.to(
         wipeRectRef.current,
         {
-          attr: { width: svgDimensions.width + 40 },
+          attr: { width: Math.max(svgDimensions.width * 2, 4000) },
           duration: drawDuration * 0.75,
           ease: ease,
         },
