@@ -318,39 +318,6 @@ function ExplorePageContent() {
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            {activeTab === "trending" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-orange-500/25 shrink-0">
-                <Flame className="w-3.5 h-3.5 text-white fill-white" />
-                <span>Trending</span>
-              </span>
-            )}
-            {activeTab === "scholarships" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-indigo-600/25 shrink-0">
-                <GraduationCap className="w-3.5 h-3.5 text-white" />
-                <span>Scholarships</span>
-              </span>
-            )}
-            {activeTab === "news" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-purple-600/25 shrink-0">
-                <Zap className="w-3.5 h-3.5 text-white" />
-                <span>Tech Stories</span>
-              </span>
-            )}
-            {activeTab === "events" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-purple-600/25 shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-white" />
-                <span>Events</span>
-              </span>
-            )}
-            {activeTab === "community" && (
-              <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-teal-600 to-emerald-600 text-white flex items-center gap-1 sm:gap-1.5 shadow-md shadow-teal-600/25 shrink-0">
-                <Users className="w-3.5 h-3.5 text-white" />
-                <span>Community</span>
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
@@ -372,7 +339,7 @@ function ExplorePageContent() {
               onClick={() => handleSelectTab(item.id as ExploreTabId)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
                 isActive
-                  ? "bg-[#234b3b] text-white shadow-xs"
+                  ? "bg-pink-600 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200"
               }`}
             >
