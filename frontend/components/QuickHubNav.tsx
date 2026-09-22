@@ -73,11 +73,8 @@ export default function QuickHubNav() {
               className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <span className="text-[8px] sm:text-[10px] font-extrabold tracking-wider text-blue-600 uppercase block">
-                  LEARN
-                </span>
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors truncate">
-                  Courses
+                  Learn
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
                   Curated courses.
@@ -114,11 +111,8 @@ export default function QuickHubNav() {
               className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <span className="text-[8px] sm:text-[10px] font-extrabold tracking-wider text-[#e11d48] uppercase block">
-                  BUILD
-                </span>
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-[#e11d48] transition-colors truncate">
-                  Projects
+                  Courses
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
                   Apply & build.
@@ -130,7 +124,7 @@ export default function QuickHubNav() {
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/projects.png"
-                      alt="Projects 3D Code"
+                      alt="Course 3D Code"
                       fill
                       className="object-contain"
                     />
@@ -146,16 +140,82 @@ export default function QuickHubNav() {
         </div>
       </div>
 
-      {/* ── Bottom Tier: 4 Clean Feature Tiles (Mock, Assessment, Competition, Interview) - Small on Mobile ── */}
+      {/* ── Bottom Tier: 4 Clean Feature Tiles (Scholarships, Competitions, Mock, Assignments) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-        {/* Card 1: Mock -> Opens Placement Prep */}
+        {/* Card 1: Scholarships */}
+        <motion.div
+          whileHover={{ y: -3, scale: 1.018 }}
+          transition={{ type: "spring", stiffness: 350, damping: 24 }}
+        >
+          <Link
+            href="/explore?tab=scholarships"
+            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+          >
+            {/* 3D Illustration Container */}
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fefce8] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/hub/scholarships.png"
+                  alt="Scholarships 3D Graduation"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Label & Chevron */}
+            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+                Scholarships
+              </span>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+
+        {/* Card 2: Competitions */}
+        <motion.div
+          whileHover={{ y: -3, scale: 1.018 }}
+          transition={{ type: "spring", stiffness: 350, damping: 24 }}
+        >
+          <Link
+            href="/explore?tab=events"
+            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+          >
+            {/* 3D Illustration Container */}
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fffbeb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/hub/competition.png"
+                  alt="Competitions 3D Trophy"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Label & Chevron */}
+            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+                Competitions
+              </span>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+
+        {/* Card 3: Mock -> Opens Placement Prep */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
         >
           <div
             onClick={() => setIsPlacementPrepOpen(true)}
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-2 sm:p-3 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
             <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f4fa] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
@@ -170,32 +230,32 @@ export default function QuickHubNav() {
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1">
-              <span className="text-[10.5px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
                 Mock
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Card 2: Assessment */}
+        {/* Card 4: Assignments */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
         >
           <Link
             href="/practice?tab=assessment"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-2 sm:p-3 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
             <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f5fb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/assessment.png"
-                  alt="Assessment 3D Clipboard"
+                  alt="Assignments 3D Clipboard"
                   fill
                   className="object-contain"
                 />
@@ -203,77 +263,11 @@ export default function QuickHubNav() {
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1">
-              <span className="text-[10.5px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
-                Assessment
+            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+                Assignments
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
-                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
-              </div>
-            </div>
-          </Link>
-        </motion.div>
-
-        {/* Card 3: Competition */}
-        <motion.div
-          whileHover={{ y: -3, scale: 1.018 }}
-          transition={{ type: "spring", stiffness: 350, damping: 24 }}
-        >
-          <Link
-            href="/explore?tab=events"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-2 sm:p-3 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
-          >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fffbeb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/competition.png"
-                  alt="Competition 3D Trophy"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1">
-              <span className="text-[10.5px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
-                Competition
-              </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
-                <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
-              </div>
-            </div>
-          </Link>
-        </motion.div>
-
-        {/* Card 4: Interview */}
-        <motion.div
-          whileHover={{ y: -3, scale: 1.018 }}
-          transition={{ type: "spring", stiffness: 350, damping: 24 }}
-        >
-          <Link
-            href="/ai-mentor"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-2 sm:p-3 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
-          >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f1f3fd] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/interview.png"
-                  alt="Interview 3D Meeting"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1">
-              <span className="text-[10.5px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
-                Interview
-              </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
