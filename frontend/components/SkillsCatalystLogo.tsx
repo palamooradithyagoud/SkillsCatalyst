@@ -126,19 +126,33 @@ export default function SkillsCatalystLogo({
       {/* ── Brand Typography: SkillsCatalyst / Accelerated Learning ── */}
       {showText && (
         <div className="flex flex-col justify-center min-w-0 select-none">
-          <span
-            className={`leading-none font-black tracking-tight ${config.title} ${textColor || "text-purple-600 dark:text-purple-400"} transition-colors`}
-            style={
-              useStrokeText
-                ? {
-                    WebkitTextStroke: strokeWidth ? `${strokeWidth}px ${strokeColor || "#A855F7"}` : "0.75px #A855F7",
-                    paintOrder: "stroke fill",
-                  }
-                : undefined
-            }
-          >
-            SkillsCatalyst
-          </span>
+          {useStrokeText ? (
+            <div className="flex items-center -ml-0.5" title="SkillsCatalyst">
+              <StrokeText
+                text="SkillsCatalyst"
+                strokeColor={strokeColor || "#A855F7"}
+                fillColor={fillColor || "currentColor"}
+                strokeWidth={strokeWidth ?? config.defaultStrokeWidth}
+                drawDuration={1.2}
+                fillDelay={0.15}
+                stagger={0.035}
+                ease="power2.out"
+                trigger={animated ? "mount" : "none"}
+                fillMode="wipe"
+                fontSize={128}
+                fontWeight={900}
+                letterSpacing={-2.5}
+                replayTrigger={isHovered}
+                className={`${config.strokeHeight} w-auto ${textColor || "text-purple-600 dark:text-purple-400"}`}
+              />
+            </div>
+          ) : (
+            <span
+              className={`leading-none font-black tracking-tight ${config.title} ${textColor || "text-purple-600 dark:text-purple-400"} transition-colors`}
+            >
+              SkillsCatalyst
+            </span>
+          )}
           <span className={`font-semibold leading-tight mt-0.5 ${subTextColor || "text-slate-500 dark:text-purple-300/70"} ${config.sub}`}>
             Accelerated Learning
           </span>
