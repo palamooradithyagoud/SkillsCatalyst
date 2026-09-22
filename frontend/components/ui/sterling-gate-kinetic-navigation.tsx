@@ -22,6 +22,8 @@ import {
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionStatus } from "@/components/premium";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 // Register GSAP Plugins safely
 if (typeof window !== "undefined") {
@@ -597,6 +599,19 @@ export function Component({
                     );
                   })}
                 </ul>
+              </div>
+
+              {/* Drawer Plan Status & Theme Mode */}
+              <div data-menu-fade className="pt-2 pb-1 space-y-2 shrink-0">
+                <SubscriptionStatus compact variant="electric" />
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-purple-950/40 border border-slate-200/80 dark:border-purple-800/50">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-purple-200">
+                    Theme Mode
+                  </span>
+                  <div style={{ transform: "scale(0.72)", transformOrigin: "right center" }}>
+                    <ThemeSwitch />
+                  </div>
+                </div>
               </div>
 
               {/* Drawer Bottom Bar: User Info & Support */}

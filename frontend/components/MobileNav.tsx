@@ -38,9 +38,6 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
-import ThemeSwitch from "@/components/ThemeSwitch";
-import { useSubscription } from "@/hooks/useSubscription";
-import { PremiumBadge } from "@/components/premium";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -82,7 +79,6 @@ function MobileNavContent() {
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading } = useAuth();
-  const { isPremium } = useSubscription();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
@@ -151,7 +147,6 @@ function MobileNavContent() {
           <Link href="/dashboard">
             <SkillsCatalystLogo size="sm" showText animated />
           </Link>
-          <PremiumBadge isPremium={isPremium} size="xs" />
         </div>
 
         <div className="flex items-center gap-2">
@@ -174,11 +169,6 @@ function MobileNavContent() {
           >
             <span>{userInitial}</span>
           </button>
-
-          {/* Theme Toggle — scaled down to fit compact mobile bar */}
-          <div style={{ transform: "scale(0.65)", transformOrigin: "center" }} className="shrink-0">
-            <ThemeSwitch />
-          </div>
 
           {/* Menu Drawer Toggle Button */}
           <button

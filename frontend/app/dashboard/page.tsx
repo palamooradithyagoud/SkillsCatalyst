@@ -14,7 +14,6 @@ import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
-import { SubscriptionStatus } from "@/components/premium";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, FileText, Map, Sparkles, CheckCircle2, Zap, X } from "lucide-react";
 
@@ -133,12 +132,11 @@ export default function DashboardPage() {
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
-        {/* Right / Middle Area: Subscription Status + Learning Progress & Trending Skills + Tasks */}
+        {/* Right / Middle Area: Learning Progress & Trending Skills + Tasks */}
         <motion.div
           variants={rightPanelVariants}
           className="w-full max-w-[540px] space-y-4 sm:space-y-5 sticky top-6"
         >
-          <SubscriptionStatus />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="learning-and-skills" />
           <UpcomingList items={upcomingItems} />
         </motion.div>
