@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import StrokeText from "@/components/explore/StrokeText";
+import SplitText from "./SplitText";
 
 interface SkillsCatalystLogoProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
@@ -33,6 +34,10 @@ export default function SkillsCatalystLogo({
   onClick,
 }: SkillsCatalystLogoProps) {
   const [isHovered, setIsHovered] = useState(false);
+
+  const handleAnimationComplete = () => {
+    console.log('All letters have animated!');
+  };
 
   // Generous, prominent size configurations matching the official brand logo
   const config = {
@@ -153,9 +158,28 @@ export default function SkillsCatalystLogo({
               SkillsCatalyst
             </span>
           )}
-          <span className={`font-semibold leading-tight mt-0.5 ${subTextColor || "text-slate-500 dark:text-purple-300/70"} ${config.sub}`}>
-            Accelerated Learning
-          </span>
+          {animated ? (
+            <SplitText
+              text="Accelerated Learning"
+              className={`font-semibold leading-tight mt-0.5 ${subTextColor || "text-[#18191F] dark:text-[#E4E4E7]"} ${config.sub}`}
+              delay={50}
+              duration={1.25}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-100px"
+              textAlign="left"
+              tag="span"
+              onLetterAnimationComplete={handleAnimationComplete}
+              showCallback
+            />
+          ) : (
+            <span className={`font-semibold leading-tight mt-0.5 ${subTextColor || "text-[#18191F] dark:text-[#E4E4E7]"} ${config.sub}`}>
+              Accelerated Learning
+            </span>
+          )}
         </div>
       )}
     </div>
