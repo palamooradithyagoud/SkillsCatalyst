@@ -107,7 +107,7 @@ export default function QuickHubNav() {
             className="flex-1 flex"
           >
             <Link
-              href="/practice"
+              href="/courses"
               className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
@@ -115,7 +115,7 @@ export default function QuickHubNav() {
                   Courses
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
-                  Apply & build.
+                  Soon revealing.
                 </p>
               </div>
 
