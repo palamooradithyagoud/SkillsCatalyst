@@ -247,6 +247,28 @@ export default function StrokeText({
     }
   }, [replayTrigger]);
 
+  // Re-measure and replay when element becomes visible (e.g. mobile drawer opens)
+  useEffect(() => {
+    if (!containerRef.current || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio > 0) {
+            measureGlyphs();
+            if (trigger === "mount" || trigger === "scroll") {
+              playAnimation();
+            }
+          }
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [trigger]);
+
   const handleMouseEnter = () => {
     if (trigger === "hover" || trigger === "mount") {
       playAnimation();
@@ -273,8 +295,8 @@ export default function StrokeText({
               ref={wipeRectRef}
               x="0"
               y="0"
-              width={trigger === "none" ? "100%" : 0}
-              height={svgDimensions.height + 20}
+              width={trigger === "none" ? "200%" : 0}
+              height={svgDimensions.height + 40}
             />
           </clipPath>
         )}
@@ -295,23 +317,30 @@ export default function StrokeText({
         {text}
       </text>
 
-      {/* Flood Fill Layer */}
+      {/* Flood Fill Layer (perfectly aligned with stroke glyphs) */}
       {fillMode !== "none" && (
-        <text
-          ref={fillTextRef}
-          x="0"
-          y={baselineY}
-          fontSize={fontSize}
-          fontWeight={fontWeight}
-          letterSpacing={letterSpacing}
-          fill={fillColor}
-          clipPath={fillMode === "wipe" ? `url(#${clipId})` : undefined}
-          style={{
-            fontFamily: "inherit",
-          }}
-        >
-          {text}
-        </text>
+        <g clipPath={fillMode === "wipe" ? `url(#${clipId})` : undefined}>
+          {chars.map((char, i) => {
+            if (char === " ") return null;
+            return (
+              <text
+                key={`fill-${char}-${i}`}
+                ref={i === 0 ? fillTextRef : undefined}
+                x={charPositions[i] ?? 0}
+                y={baselineY}
+                fontSize={fontSize}
+                fontWeight={fontWeight}
+                letterSpacing={letterSpacing}
+                fill={fillColor}
+                style={{
+                  fontFamily: "inherit",
+                }}
+              >
+                {char}
+              </text>
+            );
+          })}
+        </g>
       )}
 
       {/* Stroke Outlines */}
