@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Query, Depends, HTTPException, status
 
 from backend.services.supabase_service import get_supabase
-from backend.services.auth_service import get_current_user_id, get_session_or_user_id
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
 from backend.config import YOUTUBE_API_KEY
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_SEARCH_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
@@ -264,7 +264,7 @@ async def generate_skill_roadmap(
     """
     if entitlement.limit is not None:
         sb = get_supabase()
-        if sb:
+        if sb and is_valid_uuid(user_id):
             try:
                 res = sb.table("roadmap_progress").select("roadmap_id").eq("user_id", user_id).execute()
                 active_ids = {r.get("roadmap_id") for r in (res.data or []) if r.get("roadmap_id")}

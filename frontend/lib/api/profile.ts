@@ -368,14 +368,45 @@ export function calculateProfileCompletion(data: CompleteProfileData): ProfileCo
   };
 }
 
+/**
+ * Ensures an active, unexpired session for mutations and queries.
+ * Proactively refreshes the token if expired or expiring within 60 seconds,
+ * preventing PostgreSQL RLS WITH CHECK violations caused by stale JWTs.
+ */
+export async function ensureFreshSession(): Promise<{ userId: string | null; token: string | null }> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id || !isValidUUID(session.user.id)) {
+      return { userId: null, token: null };
+    }
+
+    const isExpiringSoon = session.expires_at ? (session.expires_at * 1000) < Date.now() + 60000 : false;
+    if (isExpiringSoon) {
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (!error && refreshed.session?.user?.id && isValidUUID(refreshed.session.user.id)) {
+        return {
+          userId: refreshed.session.user.id,
+          token: refreshed.session.access_token,
+        };
+      }
+    }
+
+    return {
+      userId: session.user.id,
+      token: session.access_token,
+    };
+  } catch (err) {
+    console.warn("Session freshness check error:", err);
+    return { userId: null, token: null };
+  }
+}
+
 // ── Complete Profile Fetcher ──────────────────────────────────────────────────
 
 export async function fetchFullProfileData(): Promise<CompleteProfileData | null> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return null;
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return null;
 
     // Concurrently fetch all normalized tables with accurate ordering columns
     const [
@@ -703,10 +734,9 @@ export async function fetchFullProfileData(): Promise<CompleteProfileData | null
 
 export async function savePersonalProfile(data: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const userId = session.user.id;
     const payload = {
       id: userId,
       full_name: data.full_name?.trim() || "",
@@ -770,10 +800,9 @@ export async function saveSkill(skill: {
   proficiency?: "Beginner" | "Intermediate" | "Advanced" | "Expert";
 }): Promise<{ success: boolean; skill?: UserSkill; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const userId = session.user.id;
     const cleanName = skill.skill_name.trim();
     if (!cleanName) return { success: false, error: "Skill name cannot be empty." };
 
@@ -828,10 +857,8 @@ export async function saveSkill(skill: {
 
 export async function deleteSkill(skillId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
     const query = isValidUUID(skillId)
       ? supabase.from("user_skills").delete().eq("user_id", userId).eq("id", skillId)
@@ -871,10 +898,9 @@ export async function saveExperience(exp: {
   description?: string;
 }): Promise<{ success: boolean; experience?: UserExperience; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const userId = session.user.id;
     const cleanCompany = exp.company_name?.trim();
     const cleanRole = exp.role?.trim();
 
@@ -957,10 +983,8 @@ export async function saveExperience(exp: {
 
 export async function deleteExperience(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const { error } = await supabase.from("experiences").delete().eq("user_id", userId).eq("id", id);
     if (error) {
       console.error("Supabase delete experience error:", error);
@@ -992,10 +1016,9 @@ export async function saveEducation(edu: {
   currently_studying?: boolean;
 }): Promise<{ success: boolean; education?: UserEducation; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const userId = session.user.id;
     const cleanCollege = edu.college?.trim();
     if (!cleanCollege) {
       return { success: false, error: "College / University name is required." };
@@ -1079,10 +1102,8 @@ export async function saveEducation(edu: {
 
 export async function deleteEducation(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const { error } = await supabase.from("education").delete().eq("user_id", userId).eq("id", id);
     if (error) {
       console.error("Supabase delete education error:", error);
@@ -1115,10 +1136,9 @@ export async function saveProject(proj: {
   currently_working?: boolean;
 }): Promise<{ success: boolean; project?: UserProject; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const userId = session.user.id;
     const cleanTitle = proj.project_name?.trim();
     if (!cleanTitle) {
       return { success: false, error: "Project title is required." };
@@ -1184,10 +1204,8 @@ export async function saveProject(proj: {
 
 export async function deleteProject(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const { error } = await supabase.from("projects").delete().eq("user_id", userId).eq("id", id);
     if (error) {
       console.error("Supabase delete project error:", error);
@@ -1218,10 +1236,8 @@ export async function saveCertification(cert: {
   credential_url?: string;
 }): Promise<{ success: boolean; certification?: UserCertification; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const cleanName = cert.certification_name?.trim();
     const cleanOrg = cert.issuing_organization?.trim();
 
@@ -1285,10 +1301,8 @@ export async function saveCertification(cert: {
 
 export async function deleteCertification(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const { error } = await supabase.from("certifications").delete().eq("user_id", userId).eq("id", id);
     if (error) {
       console.error("Supabase delete cert error:", error);
@@ -1317,10 +1331,8 @@ export async function saveAchievement(ach: {
   description?: string;
 }): Promise<{ success: boolean; achievement?: UserAchievement; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const cleanTitle = ach.achievement_name?.trim();
     if (!cleanTitle) {
       return { success: false, error: "Honor / Award title is required." };
@@ -1378,10 +1390,8 @@ export async function saveAchievement(ach: {
 
 export async function deleteAchievement(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const { error } = await supabase.from("achievements").delete().eq("user_id", userId).eq("id", id);
     if (error) {
       console.error("Supabase delete achievement error:", error);
@@ -1410,10 +1420,8 @@ export async function saveCareerPreferences(data: {
   work_arrangements?: string[];
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-    const userId = session.user.id;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
     const payload = {
       user_id: userId,
       target_roles: Array.isArray(data.target_roles) ? data.target_roles : [],
@@ -1481,11 +1489,11 @@ export async function fetchProfileData() {
 
 export async function saveAcademicProfile(data: AcademicProfile) {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return null;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return null;
 
     const payload = {
-      user_id: session.user.id,
+      user_id: userId,
       full_name: data.full_name || "",
       college: data.college || "",
       department: data.department || "",
@@ -1518,11 +1526,11 @@ export async function saveAcademicProfile(data: AcademicProfile) {
 
 export async function saveCodingProfiles(data: CodingProfilesInput) {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return null;
+    const { userId } = await ensureFreshSession();
+    if (!userId) return null;
 
     const payload = {
-      user_id: session.user.id,
+      user_id: userId,
       leetcode_url: data.leetcode || "",
       github_url: data.github || "",
       hackerrank_url: data.hackerrank || "",
@@ -1568,8 +1576,7 @@ export async function sendWelcomeEmail(payload: {
   user_id?: string;
 } = {}): Promise<{ success: boolean; status?: string; message?: string; error?: string }> {
   try {
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
+    const { token } = await ensureFreshSession();
     if (!token) {
       return { success: false, error: "No active session token" };
     }

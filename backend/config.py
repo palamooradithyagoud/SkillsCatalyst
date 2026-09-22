@@ -9,7 +9,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
+SUPABASE_SERVICE_KEY = (os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY") or "").strip()
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "").strip()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "").strip()

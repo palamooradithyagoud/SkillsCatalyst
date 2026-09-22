@@ -2,7 +2,7 @@ import re
 import logging
 from fastapi import APIRouter, Depends
 from backend.services.supabase_service import get_supabase
-from backend.services.auth_service import get_current_user_id
+from backend.services.auth_service import get_current_user_id, is_valid_uuid
 from backend.routers.profile import _clean_handle
 
 logger = logging.getLogger(__name__)
@@ -207,6 +207,8 @@ def _build_roadmap_item(rid: str, completed_set: set, last_timestamp: str = None
 
 
 def get_active_roadmap_data(user_id: str) -> dict:
+    if not is_valid_uuid(user_id):
+        return {"has_active_roadmap": False}
     sb = get_supabase()
     if not sb:
         return {"has_active_roadmap": False}
@@ -274,6 +276,8 @@ def get_active_roadmap_endpoint(user_id: str = Depends(get_current_user_id)):
 
 @router.delete("/active-roadmap/{roadmap_id}")
 def delete_active_roadmap_endpoint(roadmap_id: str, user_id: str = Depends(get_current_user_id)):
+    if not is_valid_uuid(user_id):
+        return {"success": False, "message": "Invalid user ID"}
     sb = get_supabase()
     if not sb:
         return {"success": False, "message": "Database error"}

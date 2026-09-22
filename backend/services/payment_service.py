@@ -15,6 +15,7 @@ from fastapi import HTTPException, status
 from backend.services.supabase_service import get_supabase
 from backend.services.subscription_service import SubscriptionService
 from backend.services.phonepe_service import PhonePeService
+from backend.services.auth_service import is_valid_uuid
 from backend.models.payment import (
     PaymentStatus,
     CreatePaymentOrderResponse,
@@ -44,6 +45,12 @@ class PaymentService:
         3. Creates pending record in payment_transactions.
         4. Calls PhonePe Standard Checkout v2 API to generate redirect URL.
         """
+        if not user_id or not is_valid_uuid(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Valid authenticated user UUID required for purchasing subscriptions.",
+            )
+
         if plan_code == PlanCode.FREE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -282,6 +289,12 @@ class PaymentService:
         Returns the current state of a payment transaction.
         If still pending in database, checks PhonePe out-of-band status to catch delayed webhooks.
         """
+        if not user_id or not is_valid_uuid(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment transaction '{merchant_order_id}' not found.",
+            )
+
         sb = get_supabase()
         tx = None
 
@@ -346,7 +359,7 @@ class PaymentService:
         Reconciles any pending payment transactions for the user against PhonePe
         authoritative state out-of-band. Returns True if any payment was activated.
         """
-        if not user_id or not PhonePeService.is_configured():
+        if not user_id or not is_valid_uuid(user_id) or not PhonePeService.is_configured():
             return False
 
         sb = get_supabase()
@@ -395,6 +408,9 @@ class PaymentService:
         """
         Returns safe transaction history for the authenticated student.
         """
+        if not user_id or not is_valid_uuid(user_id):
+            return []
+
         sb = get_supabase()
         if not sb:
             return []

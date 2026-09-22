@@ -16,6 +16,13 @@ _UUID_REGEX = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 _SAFE_GUEST_REGEX = re.compile(r"^guest_[a-zA-Z0-9_-]{12,128}$")
 
 
+def is_valid_uuid(val: Any) -> bool:
+    """Returns True if val is a valid RFC 4122 UUID string, preventing 22P02 database errors."""
+    if not val:
+        return False
+    return bool(_UUID_REGEX.match(str(val).strip()))
+
+
 def get_user_role(user_id: str, supa_user: Any = None) -> str:
     """
     Authoritative Role Resolution:
