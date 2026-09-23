@@ -110,3 +110,22 @@ export interface AdminSkillBitsResponse {
   total: number;
   items: AdminSkillBit[];
 }
+
+export interface SkillBitProgress {
+  skillbit_id: string;
+  watched_seconds: number;
+  completion_percentage: number;
+  last_position_seconds: number;
+  started: boolean;
+  completed: boolean;
+  started_at?: string | null;
+  last_watched_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface UpdateSkillBitProgressPayload {
+  watched_seconds: number;
+  last_position_seconds: number;
+  completion_percentage: number;
+}
+

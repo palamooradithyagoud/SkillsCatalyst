@@ -16,6 +16,8 @@ from backend.models.skillbits import (
     SkillBitStatus,
     SkillBitDifficulty,
     VideoProvider,
+    UpdateSkillBitProgressRequest,
+    SkillBitProgressResponse,
 )
 
 logger = logging.getLogger("skillscatalyst.skillbits")
@@ -909,3 +911,176 @@ async def process_mux_webhook(raw_body: bytes, signature_header: Optional[str]) 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Webhook processing error: {str(e)}",
         )
+
+
+# ── Step 4: Student Video Learning Progress Service ───────────────────────────
+
+def get_user_skillbit_progress(skillbit_id: str, user_id: str) -> Dict[str, Any]:
+    """
+    Retrieves student learning progress for a specific published SkillBit.
+    Guarantees user isolation: only the authenticated user's row is returned.
+    If no progress row exists yet, returns a zeroed default representation
+    WITHOUT inserting an empty row into the database.
+    """
+    sb = get_supabase()
+
+    # 1. Verify SkillBit exists and is published
+    sb_res = sb.from_("skillbits").select("id, status, duration_seconds").eq("id", skillbit_id).execute()
+    if not sb_res.data or len(sb_res.data) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+    skillbit = sb_res.data[0]
+    if skillbit.get("status") != "published":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' is not published.",
+        )
+
+    # 2. Query user_skillbit_progress by (user_id, skillbit_id)
+    prog_res = (
+        sb.from_("user_skillbit_progress")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("skillbit_id", skillbit_id)
+        .execute()
+    )
+
+    if prog_res.data and len(prog_res.data) > 0:
+        row = prog_res.data[0]
+        watched_sec = int(row.get("watched_seconds") or 0)
+        pos_sec = float(row.get("last_position_seconds") or 0.0)
+        started = bool(row.get("started_at") or watched_sec > 0 or pos_sec > 0)
+        return {
+            "skillbit_id": skillbit_id,
+            "watched_seconds": watched_sec,
+            "completion_percentage": float(row.get("completion_percentage") or 0.0),
+            "last_position_seconds": pos_sec,
+            "started": started,
+            "completed": bool(row.get("completed", False)),
+            "started_at": _format_datetime(row.get("started_at")),
+            "last_watched_at": _format_datetime(row.get("last_watched_at")),
+            "completed_at": _format_datetime(row.get("completed_at")),
+        }
+
+    # Default representation for newly viewed SkillBit (no DB row inserted yet)
+    return {
+        "skillbit_id": skillbit_id,
+        "watched_seconds": 0,
+        "completion_percentage": 0.0,
+        "last_position_seconds": 0.0,
+        "started": False,
+        "completed": False,
+        "started_at": None,
+        "last_watched_at": None,
+        "completed_at": None,
+    }
+
+
+def update_user_skillbit_progress(
+    skillbit_id: str,
+    user_id: str,
+    payload: UpdateSkillBitProgressRequest,
+) -> Dict[str, Any]:
+    """
+    Updates or creates student learning progress for a published SkillBit using atomic upsert.
+    - Validates SkillBit exists and is published.
+    - Validates last_position_seconds is sensible relative to duration.
+    - Enforces completion threshold (completion_percentage >= 90%).
+    - Once completed, preserves completed=True and completed_at across subsequent rewinds/views.
+    - Accumulates watched_seconds monotonically.
+    """
+    sb = get_supabase()
+
+    # 1. Verify SkillBit exists and is published
+    sb_res = sb.from_("skillbits").select("id, status, duration_seconds").eq("id", skillbit_id).execute()
+    if not sb_res.data or len(sb_res.data) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+    skillbit = sb_res.data[0]
+    if skillbit.get("status") != "published":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Cannot record progress for unpublished SkillBit '{skillbit_id}'.",
+        )
+
+    duration_seconds = skillbit.get("duration_seconds")
+    if duration_seconds and duration_seconds > 0:
+        # Allow small buffer (+5s) for player drift or end of media
+        if payload.last_position_seconds > (duration_seconds + 5):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"last_position_seconds ({payload.last_position_seconds}s) exceeds video duration ({duration_seconds}s).",
+            )
+
+    # 2. Query existing progress to maintain state invariants
+    prog_res = (
+        sb.from_("user_skillbit_progress")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("skillbit_id", skillbit_id)
+        .execute()
+    )
+    existing = prog_res.data[0] if prog_res.data and len(prog_res.data) > 0 else None
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    started_at = (existing.get("started_at") if existing and existing.get("started_at") else now_iso)
+    last_watched_at = now_iso
+
+    # Watched seconds accumulates monotonically
+    existing_watched = int(existing.get("watched_seconds", 0)) if existing else 0
+    new_watched = max(existing_watched, int(payload.watched_seconds))
+
+    # Derive authoritative completion percentage
+    if duration_seconds and duration_seconds > 0:
+        calculated_pct = min(100.0, round((payload.last_position_seconds / duration_seconds) * 100.0, 1))
+        final_pct = max(float(payload.completion_percentage), calculated_pct)
+    else:
+        final_pct = float(payload.completion_percentage)
+    final_pct = min(100.0, max(0.0, round(final_pct, 1)))
+
+    # Completion rule: >= 90% marks completed. Once completed, always remains completed.
+    was_completed = bool(existing.get("completed", False)) if existing else False
+    is_now_completed = was_completed or (final_pct >= 90.0)
+
+    if is_now_completed:
+        completed_at = existing.get("completed_at") if (was_completed and existing.get("completed_at")) else now_iso
+    else:
+        completed_at = None
+
+    # 3. Atomic Upsert on (user_id, skillbit_id)
+    upsert_payload = {
+        "user_id": user_id,
+        "skillbit_id": skillbit_id,
+        "watched_seconds": new_watched,
+        "completion_percentage": final_pct,
+        "last_position_seconds": float(payload.last_position_seconds),
+        "started_at": started_at,
+        "last_watched_at": last_watched_at,
+        "completed_at": completed_at,
+        "completed": is_now_completed,
+        "updated_at": now_iso,
+    }
+
+    upsert_res = (
+        sb.from_("user_skillbit_progress")
+        .upsert(upsert_payload, on_conflict="user_id,skillbit_id")
+        .execute()
+    )
+    saved = upsert_res.data[0] if upsert_res.data and len(upsert_res.data) > 0 else upsert_payload
+
+    return {
+        "skillbit_id": skillbit_id,
+        "watched_seconds": int(saved.get("watched_seconds", new_watched)),
+        "completion_percentage": float(saved.get("completion_percentage", final_pct)),
+        "last_position_seconds": float(saved.get("last_position_seconds", payload.last_position_seconds)),
+        "started": True,
+        "completed": bool(saved.get("completed", is_now_completed)),
+        "started_at": _format_datetime(saved.get("started_at")),
+        "last_watched_at": _format_datetime(saved.get("last_watched_at")),
+        "completed_at": _format_datetime(saved.get("completed_at")),
+    }
+

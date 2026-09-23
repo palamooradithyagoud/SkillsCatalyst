@@ -13,9 +13,11 @@ import {
   ArrowRight,
   AlertCircle,
   RotateCcw,
+  CheckCircle2,
 } from "lucide-react";
 import type MuxPlayerElement from "@mux/mux-player";
 import type { StudentSkillBit } from "@/types/skillbits";
+import { fetchSkillBitProgress, saveSkillBitProgress } from "@/lib/api/skillbits";
 
 // Dynamically import MuxPlayer to ensure optimal client-side hydration
 const MuxPlayer = dynamic(
@@ -84,8 +86,66 @@ export default function SkillBitReelItem({
   const [videoError, setVideoError] = useState<boolean>(false);
   const [isEnded, setIsEnded] = useState<boolean>(false);
   const [expandedDesc, setExpandedDesc] = useState<boolean>(false);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+
+  const watchedSecondsRef = useRef<number>(0);
+  const lastPositionRef = useRef<number>(0);
+  const lastSavedTimeRef = useRef<number>(0);
+  const lastTickTimeRef = useRef<number>(0);
+  const hasInitialSeekRef = useRef<boolean>(false);
+  const durationRef = useRef<number>(skillbit.duration_seconds || 0);
+  const isCompletedRef = useRef<boolean>(false);
 
   const learnMore = resolveLearnMoreDestination(skillbit);
+
+  // Save progress helper (non-blocking)
+  const persistProgress = useCallback(
+    (pos: number, watched: number, pct: number) => {
+      if (!skillbit.id) return;
+      saveSkillBitProgress(skillbit.id, {
+        watched_seconds: Math.round(watched),
+        last_position_seconds: Math.round(pos * 100) / 100,
+        completion_percentage: Math.min(100, Math.max(0, Math.round(pct * 10) / 10)),
+      })
+        .then((res) => {
+          if (res.completed) {
+            setIsCompleted(true);
+            isCompletedRef.current = true;
+          }
+        })
+        .catch(() => {
+          // Safe fallback: keeps in-memory progress without breaking playback
+        });
+    },
+    [skillbit.id]
+  );
+
+  // Load progress when slide becomes active
+  useEffect(() => {
+    if (!isActive) return;
+
+    fetchSkillBitProgress(skillbit.id)
+      .then((p) => {
+        if (p.completed) {
+          setIsCompleted(true);
+          isCompletedRef.current = true;
+        }
+        watchedSecondsRef.current = p.watched_seconds || 0;
+        lastPositionRef.current = p.last_position_seconds || 0;
+
+        // Resume from saved position if not completed and position > 0
+        if (p.last_position_seconds > 0 && !p.completed && !hasInitialSeekRef.current) {
+          hasInitialSeekRef.current = true;
+          const player = playerRef.current;
+          if (player) {
+            player.currentTime = p.last_position_seconds;
+          }
+        }
+      })
+      .catch(() => {
+        // Resilience: fallback to 0:00 on unauthenticated or network error
+      });
+  }, [isActive, skillbit.id]);
 
   // Synchronize playback with active slide state
   useEffect(() => {
@@ -93,21 +153,28 @@ export default function SkillBitReelItem({
     if (!player) return;
 
     if (isActive) {
+      lastTickTimeRef.current = Date.now();
       const playPromise = player.play?.();
       if (playPromise !== undefined) {
-        playPromise
-          .catch(() => {
-            // Autoplay with sound might be blocked by browser policy
-            if (player.muted !== true) {
-              player.muted = true;
-              player.play?.().catch(() => {});
-            }
-          });
+        playPromise.catch(() => {
+          // Autoplay with sound might be blocked by browser policy
+          if (player.muted !== true) {
+            player.muted = true;
+            player.play?.().catch(() => {});
+          }
+        });
       }
     } else {
       player.pause?.();
+      // Immediately save position when leaving slide
+      if (lastPositionRef.current > 0) {
+        const curTime = lastPositionRef.current;
+        const dur = durationRef.current || skillbit.duration_seconds || 0;
+        const pct = dur > 0 ? (curTime / dur) * 100 : 0;
+        persistProgress(curTime, watchedSecondsRef.current, pct);
+      }
     }
-  }, [isActive]);
+  }, [isActive, skillbit.duration_seconds, persistProgress]);
 
   // Synchronize mute state
   useEffect(() => {
@@ -116,28 +183,92 @@ export default function SkillBitReelItem({
     }
   }, [isMuted]);
 
+  // Best effort save on window beforeunload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isActive && lastPositionRef.current > 0) {
+        const curTime = lastPositionRef.current;
+        const dur = durationRef.current || skillbit.duration_seconds || 0;
+        const pct = dur > 0 ? (curTime / dur) * 100 : 0;
+        persistProgress(curTime, watchedSecondsRef.current, pct);
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isActive, skillbit.duration_seconds, persistProgress]);
+
+  // Throttled time update & completion check
+  const handleTimeUpdate = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    const curTime = player.currentTime || 0;
+    lastPositionRef.current = curTime;
+    const dur = durationRef.current || player.duration || skillbit.duration_seconds || 0;
+    if (dur > 0 && durationRef.current <= 0) {
+      durationRef.current = dur;
+    }
+
+    const now = Date.now();
+    if (lastTickTimeRef.current > 0) {
+      const delta = (now - lastTickTimeRef.current) / 1000;
+      if (delta > 0 && delta < 3) {
+        watchedSecondsRef.current += Math.round(delta);
+      }
+    }
+    lastTickTimeRef.current = now;
+
+    const pct = dur > 0 ? Math.min(100, Math.round((curTime / dur) * 1000) / 10) : 0;
+    if (pct >= 90 && !isCompletedRef.current) {
+      setIsCompleted(true);
+      isCompletedRef.current = true;
+      persistProgress(curTime, watchedSecondsRef.current, pct);
+    } else if (now - lastSavedTimeRef.current >= 7000) {
+      lastSavedTimeRef.current = now;
+      persistProgress(curTime, watchedSecondsRef.current, pct);
+    }
+  }, [skillbit.duration_seconds, persistProgress]);
+
   // Tap video to toggle play/pause
   const handleTogglePlay = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
 
     if (player.paused) {
+      lastTickTimeRef.current = Date.now();
       player.play?.();
       setShowPlayFeedback("play");
     } else {
       player.pause?.();
       setShowPlayFeedback("pause");
+      // Save immediately on pause
+      const curTime = player.currentTime || lastPositionRef.current;
+      const dur = durationRef.current || skillbit.duration_seconds || 0;
+      const pct = dur > 0 ? Math.min(100, (curTime / dur) * 100) : 0;
+      persistProgress(curTime, watchedSecondsRef.current, pct);
     }
 
     setTimeout(() => {
       setShowPlayFeedback(null);
     }, 600);
-  }, []);
+  }, [skillbit.duration_seconds, persistProgress]);
+
+  const handleEnded = useCallback(() => {
+    setIsEnded(true);
+    setIsCompleted(true);
+    isCompletedRef.current = true;
+    const dur = durationRef.current || skillbit.duration_seconds || lastPositionRef.current;
+    persistProgress(dur, watchedSecondsRef.current, 100);
+  }, [skillbit.duration_seconds, persistProgress]);
 
   const handleReplay = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
     player.currentTime = 0;
+    lastPositionRef.current = 0;
+    lastTickTimeRef.current = Date.now();
     player.play?.();
     setIsEnded(false);
   }, []);
@@ -182,7 +313,8 @@ export default function SkillBitReelItem({
                 aspectRatio: "9/16",
                 objectFit: "cover",
               }}
-              onEnded={() => setIsEnded(true)}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleEnded}
               onError={() => setVideoError(true)}
             />
 
@@ -287,6 +419,12 @@ export default function SkillBitReelItem({
               <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-white/10 text-slate-200 backdrop-blur-sm border border-white/10">
                 <Clock className="w-3 h-3" />
                 {skillbit.duration_seconds}s
+              </span>
+            )}
+            {isCompleted && (
+              <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-sm">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                Completed
               </span>
             )}
           </div>
