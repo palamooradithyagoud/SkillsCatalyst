@@ -24,6 +24,7 @@ import {
   X,
   Hash,
   Sparkles,
+  Film,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -75,6 +76,7 @@ export default function Sidebar() {
   // Determine active item id based on current pathname
   const activeId = useMemo(() => {
     if (pathname.startsWith("/dashboard")) return "dashboard";
+    if (pathname.startsWith("/skillbits")) return "skillbits";
     if (pathname.startsWith("/learning")) return "learning";
     if (pathname.startsWith("/roadmaps")) return "roadmaps";
     if (pathname.startsWith("/practice")) return "practice";
@@ -101,6 +103,13 @@ export default function Sidebar() {
           title: "Dashboard",
           href: "/dashboard",
           icon: LayoutDashboard,
+        },
+        {
+          id: "skillbits",
+          title: "SkillBits",
+          href: "/skillbits",
+          icon: Film,
+          badge: "New",
         },
         {
           id: "learning",
@@ -182,6 +191,7 @@ export default function Sidebar() {
   // Quick search items list
   const searchableRoutes = [
     { title: "Dashboard Overview", href: "/dashboard", category: "Navigation", icon: LayoutDashboard },
+    { title: "SkillBits Reels", href: "/skillbits", category: "Learning", icon: Film },
     { title: "Learning & Courses", href: "/learning", category: "Learning", icon: BookOpen },
     { title: "Career Roadmaps", href: "/roadmaps", category: "Learning", icon: Map },
     { title: "Placement Practice", href: "/practice", category: "Practice", icon: Target },

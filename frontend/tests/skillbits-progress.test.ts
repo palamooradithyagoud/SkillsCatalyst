@@ -101,10 +101,11 @@ describe('SkillBits Step 4: Video Learning Progress Characterization Suite', () 
 
     onPauseHandler(14.8, 15, 60);
 
-    assert.notStrictEqual(savedPayload, null);
-    assert.strictEqual(savedPayload?.last_position_seconds, 14.8);
-    assert.strictEqual(savedPayload?.watched_seconds, 15);
-    assert.strictEqual(savedPayload?.completion_percentage, 24.7);
+    const payload = savedPayload as unknown as UpdateSkillBitProgressPayload;
+    assert.ok(payload);
+    assert.strictEqual(payload.last_position_seconds, 14.8);
+    assert.strictEqual(payload.watched_seconds, 15);
+    assert.strictEqual(payload.completion_percentage, 24.7);
   });
 
   // ── 5. Switching SkillBits saves previous progress ─────────────────────────

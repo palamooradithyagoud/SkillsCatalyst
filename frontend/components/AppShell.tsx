@@ -31,16 +31,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const isEditProfile = pathname.startsWith("/settings/edit") || pathname.startsWith("/profile/edit");
+  const isSkillBits = pathname.startsWith("/skillbits");
 
   return (
     <PricingModalProvider>
-      <div className="flex flex-col min-h-screen w-full relative">
-        {/* Subtle ambient orbs in background */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/8 blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-900/6 blur-[120px]" />
-          <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-purple-950/5 blur-[100px]" />
-        </div>
+      <div className={`flex flex-col min-h-screen w-full relative ${isSkillBits ? "bg-black text-white" : "bg-white text-[#18191F]"}`}>
+        {/* Subtle ambient orbs in background (disabled on full-screen SkillBits) */}
+        {!isSkillBits && (
+          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/8 blur-[120px]" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-900/6 blur-[120px]" />
+            <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-purple-950/5 blur-[100px]" />
+          </div>
+        )}
 
         {/* Top Navbar matching the reference design */}
         <TopNavbar />
@@ -51,9 +54,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 min-h-0 relative">
           <Sidebar />
           <main
-            className={`relative z-10 flex-1 p-3.5 sm:p-6 md:p-8 lg:p-10 ${
-              isEditProfile ? "pb-28 sm:pb-32 md:pb-28" : "pb-28 md:pb-8"
-            } overflow-y-auto max-w-full overflow-x-hidden min-w-0`}
+            className={`relative z-10 flex-1 ${
+              isSkillBits
+                ? "p-0 overflow-hidden h-[100dvh] md:h-[calc(100dvh-3.5rem)] bg-black"
+                : `${isEditProfile ? "pb-28 sm:pb-32 md:pb-28" : "pb-28 md:pb-8"} p-3.5 sm:p-6 md:p-8 lg:p-10 overflow-y-auto`
+            } max-w-full overflow-x-hidden min-w-0`}
           >
             <ErrorBoundary>
               {children}

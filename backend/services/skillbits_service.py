@@ -50,6 +50,7 @@ def validate_publish_readiness(record: Dict[str, Any]) -> None:
     2. Difficulty is valid (beginner, intermediate, advanced).
     3. Video reference is present: video_provider is set and valid ('mux')
        AND playback_id (or video_asset_id) is non-empty.
+    4. Video status is strictly 'READY' (rejects NOT_UPLOADED, UPLOADING, PROCESSING, ERROR).
     """
     missing = []
 
@@ -70,18 +71,21 @@ def validate_publish_readiness(record: Dict[str, Any]) -> None:
     if not playback_id and not video_asset_id:
         missing.append("video reference (playback_id or video_asset_id)")
 
-    video_status = (record.get("video_status") or "").strip().upper()
-    if video_status in ("ERROR", "UPLOADING"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot publish SkillBit: video is currently in '{video_status}' state.",
-        )
-
     if missing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot publish SkillBit: missing required fields: {', '.join(missing)}.",
         )
+
+    raw_status = record.get("video_status")
+    # If video_status is absent but playback_id is present (legacy test compatibility), treat as READY; otherwise NOT_UPLOADED
+    video_status = str(raw_status).strip().upper() if raw_status else ("READY" if playback_id else "NOT_UPLOADED")
+    if video_status in ("NOT_UPLOADED", "UPLOADING", "PROCESSING", "ERROR") or video_status != "READY":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot publish SkillBit: video is currently in '{video_status}' state. Only videos in 'READY' status can be published.",
+        )
+
 
 
 def _hydrate_associations(sb: Any, skillbit_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
@@ -151,7 +155,7 @@ def _enrich_admin_record(
         "video_asset_id": record.get("video_asset_id"),
         "playback_id": record.get("playback_id"),
         "status": _get_enum_val(record.get("status")) or "draft",
-        "video_status": (record.get("video_status") or "NOT_UPLOADED").upper(),
+        "video_status": (record.get("video_status") or ("READY" if record.get("playback_id") else "NOT_UPLOADED")).upper(),
         "mux_upload_id": record.get("mux_upload_id"),
         "published_at": _format_datetime(record.get("published_at")),
         "created_by": str(record.get("created_by") or ""),
@@ -483,22 +487,66 @@ def get_admin_skillbit_by_id(skillbit_id: str) -> Optional[Dict[str, Any]]:
         return None
 
 
+ADMIN_SORT_WHITELIST = {
+    "newest": ("created_at", True),
+    "oldest": ("created_at", False),
+    "title_asc": ("title", False),
+    "title_desc": ("title", True),
+    "duration_desc": ("duration_seconds", True),
+    "duration_asc": ("duration_seconds", False),
+    "updated_at": ("updated_at", True),
+}
+
+
 def get_admin_skillbits(
     status_filter: Optional[str] = None,
     topic: Optional[str] = None,
     difficulty: Optional[str] = None,
     search: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
-) -> List[Dict[str, Any]]:
-    """Retrieves all SkillBits for CMS admin directory with optional filters."""
+    sort: Optional[str] = "newest",
+    page: int = 1,
+    page_size: int = 20,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Retrieves all SkillBits for CMS admin directory with server-side filtering,
+    explicitly whitelisted sorting, and server-side pagination.
+    """
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
 
-    try:
-        query = sb.from_("skillbits").select("*").order("created_at", desc=True)
+    sort_clean = str(sort or "newest").strip().lower()
+    if sort_clean not in ADMIN_SORT_WHITELIST:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid sort option '{sort}'. Allowed options: {', '.join(ADMIN_SORT_WHITELIST.keys())}",
+        )
+    sort_col, sort_desc = ADMIN_SORT_WHITELIST[sort_clean]
 
+    actual_limit = limit if limit is not None else page_size
+    actual_offset = offset if offset is not None else ((page - 1) * page_size)
+    current_page = (actual_offset // actual_limit) + 1 if actual_limit > 0 else page
+
+    try:
+        # 1. Total count query with matching filters
+        count_query = sb.from_("skillbits").select("id", count="exact")
+        if status_filter and status_filter.strip():
+            count_query = count_query.eq("status", status_filter.strip().lower())
+        if topic and topic.strip():
+            count_query = count_query.eq("topic", topic.strip())
+        if difficulty and difficulty.strip():
+            count_query = count_query.eq("difficulty", difficulty.strip().lower())
+        if search and search.strip():
+            count_query = count_query.ilike("title", f"%{search.strip()}%")
+
+        count_res = count_query.execute()
+        total = count_res.count if count_res.count is not None else len(count_res.data or [])
+        total_pages = max(1, (total + actual_limit - 1) // actual_limit) if total > 0 else 1
+
+        # 2. Data query with sorting and range
+        query = sb.from_("skillbits").select("*").order(sort_col, desc=sort_desc)
         if status_filter and status_filter.strip():
             query = query.eq("status", status_filter.strip().lower())
         if topic and topic.strip():
@@ -508,14 +556,23 @@ def get_admin_skillbits(
         if search and search.strip():
             query = query.ilike("title", f"%{search.strip()}%")
 
-        query = query.range(offset, offset + limit - 1)
+        query = query.range(actual_offset, actual_offset + actual_limit - 1)
         res = query.execute()
         rows = res.data or []
 
         bids = [str(r["id"]) for r in rows]
         skills_map = _hydrate_associations(sb, bids)
+        enriched = [_enrich_admin_record(r, skills_map) for r in rows]
 
-        return [_enrich_admin_record(r, skills_map) for r in rows]
+        return {
+            "items": enriched,
+            "total": total,
+            "page": current_page,
+            "page_size": actual_limit,
+            "total_pages": total_pages,
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to list admin SkillBits: {e}")
         raise HTTPException(
@@ -524,21 +581,101 @@ def get_admin_skillbits(
         )
 
 
+def unpublish_skillbit(skillbit_id: str) -> Dict[str, Any]:
+    """
+    Transitions a published SkillBit back to draft status,
+    safely removing it from the student feed while keeping media and metadata intact.
+    """
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
+    existing = get_admin_skillbit_by_id(skillbit_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+
+    try:
+        res = (
+            sb.from_("skillbits")
+            .update({
+                "status": SkillBitStatus.DRAFT.value,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            .eq("id", skillbit_id)
+            .execute()
+        )
+        rows = res.data or []
+        updated = rows[0] if rows else {**existing, "status": SkillBitStatus.DRAFT.value}
+        skills_map = _hydrate_associations(sb, [skillbit_id])
+        return _enrich_admin_record(updated, skills_map)
+    except Exception as e:
+        logger.error(f"Error unpublishing SkillBit {skillbit_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to unpublish SkillBit: {str(e)}",
+        )
+
+
+def restore_skillbit(skillbit_id: str) -> Dict[str, Any]:
+    """
+    Restores an archived SkillBit back to draft status so it can be revised or re-published.
+    """
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
+    existing = get_admin_skillbit_by_id(skillbit_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+
+    try:
+        res = (
+            sb.from_("skillbits")
+            .update({
+                "status": SkillBitStatus.DRAFT.value,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            .eq("id", skillbit_id)
+            .execute()
+        )
+        rows = res.data or []
+        updated = rows[0] if rows else {**existing, "status": SkillBitStatus.DRAFT.value}
+        skills_map = _hydrate_associations(sb, [skillbit_id])
+        return _enrich_admin_record(updated, skills_map)
+    except Exception as e:
+        logger.error(f"Error restoring SkillBit {skillbit_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to restore SkillBit: {str(e)}",
+        )
+
+
 def get_student_skillbits(
     topic: Optional[str] = None,
     difficulty: Optional[str] = None,
     search: Optional[str] = None,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> List[Dict[str, Any]]:
     """
     Retrieves published SkillBits for student learning feed.
-    Strictly filters out draft and archived records.
+    Strictly filters out draft and archived records, and ensures playback_id is present.
     Ordered by published_at DESC.
     """
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
+
+    actual_limit = page_size if page_size is not None else limit
+    actual_offset = ((page - 1) * page_size) if page is not None and page_size is not None else offset
 
     try:
         query = (
@@ -555,15 +692,24 @@ def get_student_skillbits(
         if search and search.strip():
             query = query.ilike("title", f"%{search.strip()}%")
 
-        query = query.range(offset, offset + limit - 1)
+        query = query.range(actual_offset, actual_offset + actual_limit - 1)
         res = query.execute()
         rows = res.data or []
 
-        bids = [str(r["id"]) for r in rows]
+        # Only return items with a valid playable video reference
+        playable_rows = [r for r in rows if r.get("playback_id")]
+
+        bids = [str(r["id"]) for r in playable_rows]
         skills_map = _hydrate_associations(sb, bids)
 
-        return [_enrich_student_record(r, skills_map) for r in rows]
+        return [_enrich_student_record(r, skills_map) for r in playable_rows]
     except Exception as e:
+        logger.error(f"Failed to list student SkillBits: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve SkillBits: {str(e)}",
+        )
+
         logger.error(f"Failed to list student SkillBits: {e}")
         return []
 

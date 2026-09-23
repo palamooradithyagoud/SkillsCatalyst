@@ -11,6 +11,7 @@ import {
   BarChart3,
   Code2,
   Telescope,
+  Film,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -44,6 +45,13 @@ export default function MobileQuickDock() {
       href: "/dashboard",
       icon: LayoutGrid,
       desc: "Overview",
+    },
+    {
+      id: "skillbits",
+      name: "SkillBits",
+      href: "/skillbits",
+      icon: Film,
+      desc: "Reels",
     },
     {
       id: "learning",

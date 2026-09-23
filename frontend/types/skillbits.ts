@@ -101,14 +101,29 @@ export interface VideoStatusResponse {
   duration_seconds?: number | null;
 }
 
+export type SkillBitSortOption =
+  | "newest"
+  | "oldest"
+  | "title_asc"
+  | "title_desc"
+  | "duration_desc"
+  | "duration_asc"
+  | "updated_at";
+
 export interface StudentSkillBitsFeedResponse {
   total: number;
   items: StudentSkillBit[];
+  page?: number;
+  page_size?: number;
+  total_pages?: number;
 }
 
 export interface AdminSkillBitsResponse {
   total: number;
   items: AdminSkillBit[];
+  page?: number;
+  page_size?: number;
+  total_pages?: number;
 }
 
 export interface SkillBitProgress {
