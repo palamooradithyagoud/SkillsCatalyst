@@ -52,6 +52,12 @@ PHONEPE_WEBHOOK_PASSWORD = os.getenv("PHONEPE_WEBHOOK_PASSWORD", "").strip()
 PHONEPE_WEBHOOK_SECRET = os.getenv("PHONEPE_WEBHOOK_SECRET", "").strip()
 PHONEPE_REDIRECT_URL = os.getenv("PHONEPE_REDIRECT_URL", f"{FRONTEND_URL}/dashboard?payment=complete").strip()
 
+# ── Mux Video Configuration (SkillBits Step 2) ───────────────────────────────
+MUX_TOKEN_ID = os.getenv("MUX_TOKEN_ID", "").strip()
+MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET", "").strip()
+MUX_WEBHOOK_SECRET = os.getenv("MUX_WEBHOOK_SECRET", "").strip()
+
+
 REQUIRED_ENV_VARS = {
     "SUPABASE_URL": SUPABASE_URL,
     "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,

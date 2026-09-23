@@ -263,6 +263,16 @@ app.include_router(payments.router)
 app.include_router(skillbits.router)
 
 
+@app.post("/api/webhooks/mux", include_in_schema=False)
+async def mux_webhook_alias(request: Request):
+    """Convenience alias route for Mux webhooks."""
+    from backend.services.skillbits_service import process_mux_webhook
+    raw_body = await request.body()
+    sig = request.headers.get("Mux-Signature")
+    return await process_mux_webhook(raw_body=raw_body, signature_header=sig)
+
+
+
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
 @app.get("/api/health", status_code=status.HTTP_200_OK, tags=["System"])

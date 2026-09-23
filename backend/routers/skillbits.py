@@ -6,7 +6,7 @@ Phase: Step 1 (Foundation)
 """
 
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Request, Header
 
 from backend.models.skillbits import (
     StudentSkillBitResponse,
@@ -15,6 +15,7 @@ from backend.models.skillbits import (
 from backend.services.skillbits_service import (
     get_student_skillbits,
     get_student_skillbit_by_id,
+    process_mux_webhook,
 )
 
 router = APIRouter(prefix="/api/skillbits", tags=["skillbits"])
@@ -60,3 +61,18 @@ def get_student_skillbit(
             detail=f"SkillBit '{skillbit_id}' not found or not published.",
         )
     return StudentSkillBitResponse(**record)
+
+
+@router.post("/webhook/mux", status_code=status.HTTP_200_OK)
+async def mux_webhook(
+    request: Request,
+    mux_signature: Optional[str] = Header(None, alias="Mux-Signature"),
+) -> Dict[str, Any]:
+    """
+    Authoritative Webhook Receiver for Mux Video transcoding and ingestion notifications.
+    Validates HMAC-SHA256 signature using Mux-Signature header and MUX_WEBHOOK_SECRET.
+    Guarantees idempotency via public.mux_webhook_events.
+    """
+    raw_body = await request.body()
+    return await process_mux_webhook(raw_body=raw_body, signature_header=mux_signature)
+
