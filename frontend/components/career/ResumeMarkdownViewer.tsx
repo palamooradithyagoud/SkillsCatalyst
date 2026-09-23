@@ -136,10 +136,10 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <div
           key={index}
-          className="flex items-start gap-2 text-xs text-slate-700 ml-2 my-1 leading-relaxed"
+          className="flex items-start gap-2 text-xs text-slate-700 ml-2 my-1 leading-relaxed min-w-0"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
-          <span>
+          <span className="break-words min-w-0">
             {contentStr.split("**").map((part, i) =>
               i % 2 === 1 ? (
                 <strong key={i} className="text-slate-900 font-bold">
@@ -156,7 +156,7 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <p
           key={index}
-          className="text-xs text-slate-700 leading-relaxed my-1"
+          className="text-xs text-slate-700 leading-relaxed my-1 break-words"
         >
           {trimmed.split("**").map((part, i) =>
             i % 2 === 1 ? (
