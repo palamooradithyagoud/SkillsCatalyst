@@ -816,3 +816,94 @@ DROP POLICY IF EXISTS "Service role full access on welcome_email_events" ON publ
 DROP POLICY IF EXISTS "Users can view their own welcome_email_events" ON public.welcome_email_events;
 CREATE POLICY "Service role full access on welcome_email_events" ON public.welcome_email_events FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Users can view their own welcome_email_events" ON public.welcome_email_events FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- ====================================================================
+-- 20. SKILLBITS - SHORT-FORM EDUCATIONAL VIDEO LEARNING SYSTEM
+-- ====================================================================
+
+CREATE TABLE IF NOT EXISTS public.skillbits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    topic VARCHAR(100),
+    difficulty VARCHAR(32) NOT NULL DEFAULT 'beginner' CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
+    duration_seconds INTEGER CHECK (duration_seconds IS NULL OR duration_seconds > 0),
+    thumbnail_url TEXT,
+    video_provider VARCHAR(32) CHECK (video_provider IN ('mux')),
+    video_asset_id VARCHAR(255),
+    playback_id VARCHAR(255),
+    status VARCHAR(32) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    video_status VARCHAR(32) NOT NULL DEFAULT 'NOT_UPLOADED' CHECK (video_status IN ('NOT_UPLOADED', 'UPLOADING', 'PROCESSING', 'READY', 'ERROR')),
+    mux_upload_id VARCHAR(255),
+    published_at TIMESTAMPTZ,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.skillbit_skills (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    skillbit_id UUID NOT NULL REFERENCES public.skillbits(id) ON DELETE CASCADE,
+    skill_id UUID NOT NULL REFERENCES public.skills_cache(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    UNIQUE(skillbit_id, skill_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.user_skillbit_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    skillbit_id UUID NOT NULL REFERENCES public.skillbits(id) ON DELETE CASCADE,
+    watched_seconds NUMERIC(8, 2) NOT NULL DEFAULT 0.0 CHECK (watched_seconds >= 0),
+    completion_percentage NUMERIC(5, 2) NOT NULL DEFAULT 0.0 CHECK (completion_percentage >= 0 AND completion_percentage <= 100),
+    last_position_seconds NUMERIC(8, 2) NOT NULL DEFAULT 0.0 CHECK (last_position_seconds >= 0),
+    started BOOLEAN NOT NULL DEFAULT FALSE,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    started_at TIMESTAMPTZ,
+    last_watched_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    CONSTRAINT uq_user_skillbit UNIQUE (user_id, skillbit_id)
+);
+
+-- Performance & Discovery Indexes
+CREATE INDEX IF NOT EXISTS idx_skillbits_status_published ON public.skillbits(status, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skillbits_topic ON public.skillbits(topic);
+CREATE INDEX IF NOT EXISTS idx_skillbits_difficulty ON public.skillbits(difficulty);
+CREATE INDEX IF NOT EXISTS idx_skillbits_created_at ON public.skillbits(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skillbits_updated_at ON public.skillbits(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skillbits_video_status ON public.skillbits(video_status);
+CREATE INDEX IF NOT EXISTS idx_skillbits_status_topic ON public.skillbits(status, topic);
+CREATE INDEX IF NOT EXISTS idx_skillbits_status_difficulty ON public.skillbits(status, difficulty);
+CREATE INDEX IF NOT EXISTS idx_skillbits_title ON public.skillbits(title);
+CREATE INDEX IF NOT EXISTS idx_skillbits_mux_upload_id ON public.skillbits(mux_upload_id) WHERE mux_upload_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_skillbit_skills_lookup ON public.skillbit_skills(skillbit_id);
+CREATE INDEX IF NOT EXISTS idx_user_skillbit_progress_user ON public.user_skillbit_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_skillbit_progress_bit ON public.user_skillbit_progress(skillbit_id);
+
+-- RLS
+ALTER TABLE public.skillbits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.skillbit_skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_skillbit_progress ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can view published skillbits" ON public.skillbits;
+CREATE POLICY "Public can view published skillbits" ON public.skillbits
+    FOR SELECT USING (status = 'published');
+
+DROP POLICY IF EXISTS "Admins full management of skillbits" ON public.skillbits;
+CREATE POLICY "Admins full management of skillbits" ON public.skillbits
+    FOR ALL TO authenticated
+    USING (EXISTS (SELECT 1 FROM auth.users WHERE auth.users.id = auth.uid() AND (auth.users.raw_app_meta_data->>'role' IN ('owner', 'admin', 'editor'))))
+    WITH CHECK (EXISTS (SELECT 1 FROM auth.users WHERE auth.users.id = auth.uid() AND (auth.users.raw_app_meta_data->>'role' IN ('owner', 'admin', 'editor'))));
+
+DROP POLICY IF EXISTS "Public can view skillbit skills" ON public.skillbit_skills;
+CREATE POLICY "Public can view skillbit skills" ON public.skillbit_skills FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can read own skillbit progress" ON public.user_skillbit_progress;
+CREATE POLICY "Users can read own skillbit progress" ON public.user_skillbit_progress
+    FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can mutate own skillbit progress" ON public.user_skillbit_progress;
+CREATE POLICY "Users can mutate own skillbit progress" ON public.user_skillbit_progress
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+

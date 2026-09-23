@@ -31,6 +31,8 @@ def list_student_skillbits(
     topic: Optional[str] = Query(None, description="Filter by topic (e.g. React, Python)"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty (beginner, intermediate, advanced)"),
     search: Optional[str] = Query(None, description="Search keyword in title"),
+    page: Optional[int] = Query(None, ge=1, description="Page number"),
+    page_size: Optional[int] = Query(None, ge=1, le=100, description="Page size"),
     limit: int = Query(20, ge=1, le=100, description="Page limit"),
     offset: int = Query(0, ge=0, description="Page offset"),
 ) -> SkillBitsListResponse:
@@ -42,12 +44,16 @@ def list_student_skillbits(
         topic=topic,
         difficulty=difficulty,
         search=search,
+        page=page,
+        page_size=page_size,
         limit=limit,
         offset=offset,
     )
     return SkillBitsListResponse(
         total=len(items),
         items=[StudentSkillBitResponse(**item) for item in items],
+        page=page,
+        page_size=page_size or limit,
     )
 
 

@@ -18,6 +18,7 @@ import {
   LifeBuoy,
   LogOut,
   Sparkles,
+  Film,
 } from "lucide-react";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import { useAuth } from "@/lib/auth";
@@ -52,8 +53,18 @@ const defaultFeatures: NavFeatureItem[] = [
     accentColor: "rgba(99, 102, 241, 0.2)",
   },
   {
-    id: "learning",
+    id: "skillbits",
     shapeIndex: 2,
+    title: "SkillBits",
+    subtitle: "Bite-Sized Video Reels",
+    href: "/skillbits",
+    icon: Film,
+    badge: "New",
+    accentColor: "rgba(168, 85, 247, 0.2)",
+  },
+  {
+    id: "learning",
+    shapeIndex: 3,
     title: "Learning",
     subtitle: "Courses & Curated Playlists",
     href: "/learning",

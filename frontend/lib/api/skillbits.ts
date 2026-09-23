@@ -24,6 +24,8 @@ export async function fetchStudentSkillBits(params?: {
   topic?: string;
   difficulty?: string;
   search?: string;
+  page?: number;
+  page_size?: number;
   limit?: number;
   offset?: number;
 }): Promise<StudentSkillBitsFeedResponse> {
@@ -32,6 +34,8 @@ export async function fetchStudentSkillBits(params?: {
   if (params?.topic?.trim()) query.set("topic", params.topic.trim());
   if (params?.difficulty?.trim()) query.set("difficulty", params.difficulty.trim());
   if (params?.search?.trim()) query.set("search", params.search.trim());
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.page_size) query.set("page_size", String(params.page_size));
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.offset) query.set("offset", String(params.offset));
 
@@ -117,6 +121,9 @@ export async function fetchAdminSkillBits(params?: {
   topic?: string;
   difficulty?: string;
   search?: string;
+  sort?: string;
+  page?: number;
+  page_size?: number;
   limit?: number;
   offset?: number;
 }): Promise<AdminSkillBitsResponse> {
@@ -126,6 +133,9 @@ export async function fetchAdminSkillBits(params?: {
   if (params?.topic?.trim()) query.set("topic", params.topic.trim());
   if (params?.difficulty?.trim()) query.set("difficulty", params.difficulty.trim());
   if (params?.search?.trim()) query.set("search", params.search.trim());
+  if (params?.sort?.trim()) query.set("sort", params.sort.trim());
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.page_size) query.set("page_size", String(params.page_size));
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.offset) query.set("offset", String(params.offset));
 
@@ -192,6 +202,19 @@ export async function publishAdminSkillBit(id: string): Promise<AdminSkillBit> {
   return res.json();
 }
 
+export async function unpublishAdminSkillBit(id: string): Promise<AdminSkillBit> {
+  const headers = await getAuthHeaders();
+  const res = await apiFetch(`${API_BASE}/api/admin/skillbits/${encodeURIComponent(id)}/unpublish`, {
+    method: "POST",
+    headers,
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.detail || `Failed to unpublish SkillBit: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function archiveAdminSkillBit(id: string): Promise<AdminSkillBit> {
   const headers = await getAuthHeaders();
   const res = await apiFetch(`${API_BASE}/api/admin/skillbits/${encodeURIComponent(id)}/archive`, {
@@ -201,6 +224,19 @@ export async function archiveAdminSkillBit(id: string): Promise<AdminSkillBit> {
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData?.detail || `Failed to archive SkillBit: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function restoreAdminSkillBit(id: string): Promise<AdminSkillBit> {
+  const headers = await getAuthHeaders();
+  const res = await apiFetch(`${API_BASE}/api/admin/skillbits/${encodeURIComponent(id)}/restore`, {
+    method: "POST",
+    headers,
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.detail || `Failed to restore SkillBit: HTTP ${res.status}`);
   }
   return res.json();
 }

@@ -83,7 +83,9 @@ from backend.services.skillbits_service import (
     create_skillbit,
     update_skillbit,
     publish_skillbit,
+    unpublish_skillbit,
     archive_skillbit,
+    restore_skillbit,
     request_direct_upload,
     sync_video_status,
 )
@@ -750,25 +752,36 @@ def create_admin_skillbit(
 @router.get("/skillbits", status_code=status.HTTP_200_OK, response_model=AdminSkillBitsListResponse)
 def list_admin_skillbits(
     status_filter: Optional[str] = Query(None, description="Filter by status: draft, published, archived"),
+    status: Optional[str] = Query(None, description="Alias for status_filter"),
     topic: Optional[str] = Query(None, description="Filter by topic"),
     difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
     search: Optional[str] = Query(None, description="Keyword search in title"),
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    sort: Optional[str] = Query("newest", description="Sort by: newest, oldest, title_asc, title_desc, duration_desc, duration_asc, updated_at"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Page size"),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    offset: Optional[int] = Query(None, ge=0),
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> AdminSkillBitsListResponse:
-    """Lists all SkillBits for CMS management with optional filters."""
-    items = get_admin_skillbits(
-        status_filter=status_filter,
+    """Lists all SkillBits for CMS management with optional filters, whitelisted sorting, and server-side pagination."""
+    resolved_status = status_filter or status
+    result = get_admin_skillbits(
+        status_filter=resolved_status,
         topic=topic,
         difficulty=difficulty,
         search=search,
+        sort=sort,
+        page=page,
+        page_size=page_size,
         limit=limit,
         offset=offset,
     )
     return AdminSkillBitsListResponse(
-        total=len(items),
-        items=[AdminSkillBitResponse(**item) for item in items],
+        total=result.get("total", 0),
+        items=[AdminSkillBitResponse(**item) for item in result.get("items", [])],
+        page=result.get("page", page),
+        page_size=result.get("page_size", page_size),
+        total_pages=result.get("total_pages", 1),
     )
 
 
@@ -803,9 +816,19 @@ def publish_admin_skillbit(
     skillbit_id: str,
     admin: Dict[str, Any] = Depends(require_admin),
 ) -> AdminSkillBitResponse:
-    """Validates readiness and publishes a SkillBit to students."""
+    """Validates readiness (video_status MUST be READY) and publishes a SkillBit to students."""
     published = publish_skillbit(skillbit_id=skillbit_id)
     return AdminSkillBitResponse(**published)
+
+
+@router.post("/skillbits/{skillbit_id}/unpublish", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def unpublish_admin_skillbit(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Transitions a published SkillBit back to draft status, removing it from student feed."""
+    unpublished = unpublish_skillbit(skillbit_id=skillbit_id)
+    return AdminSkillBitResponse(**unpublished)
 
 
 @router.post("/skillbits/{skillbit_id}/archive", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
@@ -816,6 +839,16 @@ def archive_admin_skillbit(
     """Archives a SkillBit, hiding it from the student feed while preserving historical data."""
     archived = archive_skillbit(skillbit_id=skillbit_id)
     return AdminSkillBitResponse(**archived)
+
+
+@router.post("/skillbits/{skillbit_id}/restore", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def restore_admin_skillbit(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Restores an archived SkillBit back to draft status so it can be revised or re-published."""
+    restored = restore_skillbit(skillbit_id=skillbit_id)
+    return AdminSkillBitResponse(**restored)
 
 
 @router.post("/skillbits/{skillbit_id}/direct-upload", status_code=status.HTTP_200_OK, response_model=DirectUploadResponse)

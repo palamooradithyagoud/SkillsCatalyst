@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Film, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Sparkles,
+  Film,
+  AlertCircle,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  X,
+  SlidersHorizontal,
+  RotateCcw,
+} from "lucide-react";
 import type { StudentSkillBit } from "@/types/skillbits";
 import { fetchStudentSkillBits } from "@/lib/api/skillbits";
 import SkillBitReelItem from "@/components/skillbits/SkillBitReelItem";
@@ -20,6 +30,10 @@ export default function SkillBitsPage() {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Discovery Filters
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("");
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
+
   const BATCH_SIZE = 10;
   const isFetchingMoreRef = useRef<boolean>(false);
 
@@ -32,9 +46,13 @@ export default function SkillBitsPage() {
     }
   }, [router]);
 
-  // Initial Data Fetch
-  const loadInitialSkillBits = useCallback(() => {
+  // Manual reload for try-again button
+  const reloadSkillBits = useCallback((topic?: string, difficulty?: string) => {
+    setLoading(true);
+    setError(null);
     fetchStudentSkillBits({
+      topic: topic?.trim() || undefined,
+      difficulty: difficulty?.trim() || undefined,
       limit: BATCH_SIZE,
       offset: 0,
     })
@@ -43,6 +61,9 @@ export default function SkillBitsPage() {
         setSkillbits(items);
         setHasMore(items.length >= BATCH_SIZE);
         setActiveIndex(0);
+        if (containerRef.current) {
+          containerRef.current.scrollTop = 0;
+        }
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
@@ -54,8 +75,47 @@ export default function SkillBitsPage() {
   }, []);
 
   useEffect(() => {
-    loadInitialSkillBits();
-  }, [loadInitialSkillBits]);
+    let ignore = false;
+    fetchStudentSkillBits({
+      topic: selectedTopic.trim() || undefined,
+      difficulty: selectedDifficulty.trim() || undefined,
+      limit: BATCH_SIZE,
+      offset: 0,
+    })
+      .then((res) => {
+        if (!ignore) {
+          const items = res.items || [];
+          setSkillbits(items);
+          setHasMore(items.length >= BATCH_SIZE);
+          setActiveIndex(0);
+          setLoading(false);
+          if (containerRef.current) {
+            containerRef.current.scrollTop = 0;
+          }
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
+          setError(msg);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedTopic, selectedDifficulty]);
+
+  // Filter handlers
+  const handleDifficultyChange = (diff: string) => {
+    setSelectedDifficulty((prev) => (prev === diff ? "" : diff));
+  };
+
+  const handleClearFilters = () => {
+    setSelectedTopic("");
+    setSelectedDifficulty("");
+  };
 
   // Infinite Scroll Pagination Fetch
   const loadMoreSkillBits = useCallback(() => {
@@ -65,6 +125,8 @@ export default function SkillBitsPage() {
 
     const offset = skillbits.length;
     fetchStudentSkillBits({
+      topic: selectedTopic.trim() || undefined,
+      difficulty: selectedDifficulty.trim() || undefined,
       limit: BATCH_SIZE,
       offset,
     })
@@ -86,7 +148,7 @@ export default function SkillBitsPage() {
         setLoadingMore(false);
         isFetchingMoreRef.current = false;
       });
-  }, [hasMore, skillbits.length]);
+  }, [hasMore, skillbits.length, selectedTopic, selectedDifficulty]);
 
   // Check if approaching end of loaded items to trigger pagination
   useEffect(() => {
@@ -174,6 +236,8 @@ export default function SkillBitsPage() {
     };
   }, [activeIndex, scrollToIndex, handleBack]);
 
+  const hasActiveFilters = Boolean(selectedTopic || selectedDifficulty);
+
   // ── LOADING STATE ─────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -204,11 +268,7 @@ export default function SkillBitsPage() {
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              loadInitialSkillBits();
-            }}
+            onClick={() => reloadSkillBits(selectedTopic, selectedDifficulty)}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Try Again
@@ -229,27 +289,41 @@ export default function SkillBitsPage() {
     return (
       <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white p-6 space-y-4 text-center">
         <div className="p-4 bg-slate-900 border border-slate-800 rounded-full text-purple-400">
-          <Film className="w-8 h-8" />
+          {hasActiveFilters ? <SlidersHorizontal className="w-8 h-8" /> : <Film className="w-8 h-8" />}
         </div>
         <div className="space-y-1">
-          <h2 className="text-base font-bold text-white">No SkillBits Available Yet</h2>
+          <h2 className="text-base font-bold text-white">
+            {hasActiveFilters ? "No SkillBits Match Filters" : "No SkillBits Available Yet"}
+          </h2>
           <p className="text-xs text-slate-400 max-w-sm">
-            Our educators are transcoding fresh micro-learning reels. Check back soon for quick skill breakdowns!
+            {hasActiveFilters
+              ? "We couldn't find any short-form lessons matching your current difficulty or topic filter."
+              : "Our educators are transcoding fresh micro-learning reels. Check back soon for quick skill breakdowns!"}
           </p>
         </div>
-        <button
-          onClick={handleBack}
-          className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-purple-900/40"
-        >
-          Return to Explore
-        </button>
+        <div className="flex items-center gap-3 pt-2">
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearFilters}
+              className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-purple-900/40"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Clear Filters
+            </button>
+          )}
+          <button
+            onClick={handleBack}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all"
+          >
+            Return to Explore
+          </button>
+        </div>
       </div>
     );
   }
 
   // ── VERTICAL FEED ─────────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
       {/* DESKTOP SIDE NAVIGATION HINTS */}
       <div className="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-3 z-30">
         <button
@@ -289,7 +363,7 @@ export default function SkillBitsPage() {
             ref={(el) => {
               slideRefs.current[index] = el;
             }}
-            className="w-full h-[100dvh] snap-start"
+            className="w-full h-full snap-start"
           >
             <SkillBitReelItem
               skillbit={bit}

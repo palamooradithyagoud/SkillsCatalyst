@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Film,
-  Video,
   UploadCloud,
   CheckCircle2,
   AlertCircle,
@@ -14,24 +13,33 @@ import {
   Search,
   RefreshCw,
   Archive,
-  Eye,
   X,
   FileVideo,
   Loader2,
   Check,
   Send,
+  Edit3,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Undo2,
 } from "lucide-react";
 import type {
   AdminSkillBit,
   CreateSkillBitPayload,
+  UpdateSkillBitPayload,
   SkillBitDifficulty,
+  SkillBitSortOption,
   VideoStatus,
 } from "@/types/skillbits";
 import {
   fetchAdminSkillBits,
   createAdminSkillBit,
+  updateAdminSkillBit,
   publishAdminSkillBit,
+  unpublishAdminSkillBit,
   archiveAdminSkillBit,
+  restoreAdminSkillBit,
   requestDirectUpload,
   getVideoStatus,
   uploadFileToMuxDirect,
@@ -41,9 +49,17 @@ export default function AdminSkillBitsCMS() {
   const [skillbits, setSkillbits] = useState<AdminSkillBit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filters & Sorting & Pagination
   const [search, setSearch] = useState("");
+  const [topicFilter, setTopicFilter] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortOption, setSortOption] = useState<SkillBitSortOption>("newest");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Modal & Creation State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -60,6 +76,26 @@ export default function AdminSkillBitsCMS() {
     description: "",
   });
 
+  // Modal & Edit State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState<AdminSkillBit | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    topic: string;
+    difficulty: SkillBitDifficulty;
+    description: string;
+    duration_seconds: string;
+    thumbnail_url: string;
+  }>({
+    title: "",
+    topic: "",
+    difficulty: "beginner",
+    description: "",
+    duration_seconds: "",
+    thumbnail_url: "",
+  });
+
   // Direct Upload State tracking per skillbit: { [id]: { progress: number, isUploading: boolean, isPolling: boolean, error?: string } }
   const [uploadStates, setUploadStates] = useState<
     Record<string, { progress: number; isUploading: boolean; isPolling: boolean; error?: string }>
@@ -71,28 +107,65 @@ export default function AdminSkillBitsCMS() {
   // Hidden file input refs
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const loadSkillBits = useCallback(async () => {
+  // Triggered on user interaction to reload data with spinner
+  const reloadSkillBits = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await fetchAdminSkillBits({
         search: search || undefined,
+        topic: topicFilter || undefined,
         difficulty: difficultyFilter || undefined,
         status_filter: statusFilter || undefined,
-        limit: 100,
+        sort: sortOption,
+        page,
+        page_size: pageSize,
       });
       setSkillbits(res.items || []);
+      const count = res.total ?? (res.items || []).length;
+      setTotalCount(count);
+      setTotalPages(res.total_pages ?? Math.max(1, Math.ceil(count / pageSize)));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [search, difficultyFilter, statusFilter]);
+  }, [search, topicFilter, difficultyFilter, statusFilter, sortOption, page, pageSize]);
 
+  // Synchronize effect with external API
   useEffect(() => {
-    loadSkillBits();
-  }, [loadSkillBits]);
+    let ignore = false;
+    fetchAdminSkillBits({
+      search: search || undefined,
+      topic: topicFilter || undefined,
+      difficulty: difficultyFilter || undefined,
+      status_filter: statusFilter || undefined,
+      sort: sortOption,
+      page,
+      page_size: pageSize,
+    })
+      .then((res) => {
+        if (!ignore) {
+          setSkillbits(res.items || []);
+          const count = res.total ?? (res.items || []).length;
+          setTotalCount(count);
+          setTotalPages(res.total_pages ?? Math.max(1, Math.ceil(count / pageSize)));
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
+          setError(msg);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [search, topicFilter, difficultyFilter, statusFilter, sortOption, page, pageSize]);
 
   // Handle Create SkillBit
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -110,11 +183,52 @@ export default function AdminSkillBitsCMS() {
       await createAdminSkillBit(payload);
       setIsCreateOpen(false);
       setCreateForm({ title: "", topic: "", difficulty: "beginner", description: "" });
-      await loadSkillBits();
+      setPage(1);
+      await reloadSkillBits();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to create SkillBit");
     } finally {
       setCreateSubmitting(false);
+    }
+  };
+
+  // Open Edit Modal
+  const handleEditOpen = (bit: AdminSkillBit) => {
+    setEditItem(bit);
+    setEditForm({
+      title: bit.title || "",
+      topic: bit.topic || "",
+      difficulty: bit.difficulty,
+      description: bit.description || "",
+      duration_seconds: bit.duration_seconds ? String(bit.duration_seconds) : "",
+      thumbnail_url: bit.thumbnail_url || "",
+    });
+    setIsEditOpen(true);
+  };
+
+  // Handle Edit Submit
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editItem || !editForm.title.trim()) return;
+
+    try {
+      setEditSubmitting(true);
+      const payload: UpdateSkillBitPayload = {
+        title: editForm.title.trim(),
+        topic: editForm.topic.trim() || null,
+        difficulty: editForm.difficulty,
+        description: editForm.description.trim() || null,
+        duration_seconds: editForm.duration_seconds ? parseInt(editForm.duration_seconds, 10) : null,
+        thumbnail_url: editForm.thumbnail_url.trim() || null,
+      };
+      await updateAdminSkillBit(editItem.id, payload);
+      setIsEditOpen(false);
+      setEditItem(null);
+      await reloadSkillBits();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to update SkillBit");
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -138,9 +252,9 @@ export default function AdminSkillBitsCMS() {
             ...prev,
             [id]: { ...(prev[id] || { progress: 100, isUploading: false }), isPolling: false },
           }));
-          await loadSkillBits();
+          await reloadSkillBits();
         }
-      } catch (err) {
+      } catch {
         if (attempts >= maxAttempts) {
           clearInterval(interval);
           setUploadStates((prev) => ({
@@ -150,7 +264,7 @@ export default function AdminSkillBitsCMS() {
         }
       }
     }, 3000);
-  }, [loadSkillBits]);
+  }, [reloadSkillBits]);
 
   // Handle Direct Upload to Mux
   const handleFileSelect = async (skillbitId: string, file: File) => {
@@ -185,7 +299,7 @@ export default function AdminSkillBitsCMS() {
       }));
 
       // Immediate refresh to show UPLOADING/PROCESSING badge
-      await loadSkillBits();
+      await reloadSkillBits();
 
       // Poll until transcoding generates playback ID
       pollVideoStatus(skillbitId);
@@ -201,15 +315,28 @@ export default function AdminSkillBitsCMS() {
 
   // Handle Publish
   const handlePublish = async (item: AdminSkillBit) => {
-    if (item.video_status !== "READY" && !item.playback_id) {
-      alert("Cannot publish: Video must be uploaded and ready before publishing to students.");
+    if (item.video_status !== "READY") {
+      alert(
+        `Cannot publish: Video is currently in '${item.video_status}' state. Only videos in 'READY' status can be published.`
+      );
       return;
     }
     try {
       await publishAdminSkillBit(item.id);
-      await loadSkillBits();
+      await reloadSkillBits();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to publish SkillBit");
+    }
+  };
+
+  // Handle Unpublish
+  const handleUnpublish = async (item: AdminSkillBit) => {
+    if (!confirm(`Are you sure you want to unpublish "${item.title}"? It will return to draft and be removed from the student feed.`)) return;
+    try {
+      await unpublishAdminSkillBit(item.id);
+      await reloadSkillBits();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to unpublish SkillBit");
     }
   };
 
@@ -218,9 +345,19 @@ export default function AdminSkillBitsCMS() {
     if (!confirm(`Are you sure you want to archive "${item.title}"?`)) return;
     try {
       await archiveAdminSkillBit(item.id);
-      await loadSkillBits();
+      await reloadSkillBits();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to archive SkillBit");
+    }
+  };
+
+  // Handle Restore
+  const handleRestore = async (item: AdminSkillBit) => {
+    try {
+      await restoreAdminSkillBit(item.id);
+      await reloadSkillBits();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to restore SkillBit");
     }
   };
 
@@ -228,11 +365,25 @@ export default function AdminSkillBitsCMS() {
   const handleManualSync = async (id: string) => {
     try {
       await getVideoStatus(id);
-      await loadSkillBits();
+      await reloadSkillBits();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Sync failed");
     }
   };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearch("");
+    setTopicFilter("");
+    setDifficultyFilter("");
+    setStatusFilter("");
+    setSortOption("newest");
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    search.trim() || topicFilter.trim() || difficultyFilter || statusFilter || sortOption !== "newest"
+  );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -297,7 +448,7 @@ export default function AdminSkillBitsCMS() {
             <Film className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-white">{skillbits.length}</div>
+            <div className="text-2xl font-bold text-white">{totalCount}</div>
             <div className="text-xs text-slate-400">Total SkillBits</div>
           </div>
         </div>
@@ -308,7 +459,7 @@ export default function AdminSkillBitsCMS() {
           </div>
           <div>
             <div className="text-2xl font-bold text-white">{readyCount}</div>
-            <div className="text-xs text-slate-400">Videos Transcoded & Ready</div>
+            <div className="text-xs text-slate-400">Ready on Current Page</div>
           </div>
         </div>
 
@@ -318,7 +469,7 @@ export default function AdminSkillBitsCMS() {
           </div>
           <div>
             <div className="text-2xl font-bold text-white">{publishedCount}</div>
-            <div className="text-xs text-slate-400">Live for Students</div>
+            <div className="text-xs text-slate-400">Published on Current Page</div>
           </div>
         </div>
 
@@ -328,30 +479,50 @@ export default function AdminSkillBitsCMS() {
           </div>
           <div>
             <div className="text-2xl font-bold text-white">{processingCount}</div>
-            <div className="text-xs text-slate-400">Mux Transcoding Queue</div>
+            <div className="text-xs text-slate-400">Transcoding Queue</div>
           </div>
         </div>
       </div>
 
       {/* Main CMS Container */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-6">
-        {/* Top Controls: Search, Filters, New Bit Button */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Top Controls: Search, Filters, Sort, New Bit Button */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Search Input */}
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search SkillBits..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors w-52 sm:w-64"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-9 pr-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors w-44 sm:w-56"
               />
             </div>
 
+            {/* Topic Filter */}
+            <input
+              type="text"
+              placeholder="Filter by topic (e.g. React)"
+              value={topicFilter}
+              onChange={(e) => {
+                setTopicFilter(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors w-36 sm:w-44"
+            />
+
+            {/* Difficulty Filter */}
             <select
               value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
+              onChange={(e) => {
+                setDifficultyFilter(e.target.value);
+                setPage(1);
+              }}
               className="px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-purple-500"
             >
               <option value="">All Difficulties</option>
@@ -360,9 +531,13 @@ export default function AdminSkillBitsCMS() {
               <option value="advanced">Advanced</option>
             </select>
 
+            {/* Status Filter */}
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-purple-500"
             >
               <option value="">All Statuses</option>
@@ -371,19 +546,50 @@ export default function AdminSkillBitsCMS() {
               <option value="archived">Archived</option>
             </select>
 
+            {/* Sort Selector */}
+            <select
+              value={sortOption}
+              onChange={(e) => {
+                setSortOption(e.target.value as SkillBitSortOption);
+                setPage(1);
+              }}
+              className="px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-purple-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title_asc">Title (A–Z)</option>
+              <option value="title_desc">Title (Z–A)</option>
+              <option value="duration_desc">Duration (Longest)</option>
+              <option value="duration_asc">Duration (Shortest)</option>
+              <option value="updated_at">Recently Updated</option>
+            </select>
+
+            {/* Refresh */}
             <button
-              onClick={loadSkillBits}
+              onClick={reloadSkillBits}
               disabled={loading}
               title="Refresh list"
               className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                title="Clear all active filters"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl border border-slate-700 text-xs transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Clear
+              </button>
+            )}
           </div>
 
+          {/* New Bit Button */}
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-purple-900/30 transition-all hover:scale-[1.02]"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-purple-900/30 transition-all hover:scale-[1.02] flex-shrink-0"
           >
             <Plus className="w-4 h-4" /> New SkillBit
           </button>
@@ -406,153 +612,236 @@ export default function AdminSkillBitsCMS() {
             </div>
             <p className="text-sm font-medium text-slate-300">No SkillBits found</p>
             <p className="text-xs text-slate-500 max-w-sm">
-              Create your first educational micro-learning unit and upload video directly via Mux.
+              {hasActiveFilters
+                ? "No SkillBits match the active search or filters."
+                : "Create your first educational micro-learning unit and upload video directly via Mux."}
             </p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-2 px-3 py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-800">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-800/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-semibold">
-                <tr>
-                  <th className="py-3.5 px-4">Title & Topic</th>
-                  <th className="py-3.5 px-4">Difficulty</th>
-                  <th className="py-3.5 px-4">Publish State</th>
-                  <th className="py-3.5 px-4">Mux Video Pipeline</th>
-                  <th className="py-3.5 px-4">Duration</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/70">
-                {skillbits.map((bit) => {
-                  const uploadState = uploadStates[bit.id];
-                  const canPublish = bit.status !== "published" && (bit.video_status === "READY" || !!bit.playback_id);
+          <div className="space-y-4">
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-800/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-semibold">
+                  <tr>
+                    <th className="py-3.5 px-4">Title & Topic</th>
+                    <th className="py-3.5 px-4">Difficulty</th>
+                    <th className="py-3.5 px-4">Publish State</th>
+                    <th className="py-3.5 px-4">Mux Video Pipeline</th>
+                    <th className="py-3.5 px-4">Duration</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/70">
+                  {skillbits.map((bit) => {
+                    const uploadState = uploadStates[bit.id];
+                    const isVideoReady = bit.video_status === "READY";
+                    const canPublish = bit.status !== "published" && isVideoReady;
 
-                  return (
-                    <tr key={bit.id} className="hover:bg-slate-800/30 transition-colors">
-                      {/* Title & Topic */}
-                      <td className="py-3.5 px-4 max-w-xs">
-                        <div className="font-medium text-white truncate">{bit.title}</div>
-                        <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                          {bit.topic && <span className="text-purple-400 font-medium">#{bit.topic}</span>}
-                          <span>ID: {bit.id.slice(0, 8)}...</span>
-                        </div>
-                      </td>
+                    return (
+                      <tr key={bit.id} className="hover:bg-slate-800/30 transition-colors">
+                        {/* Title & Topic */}
+                        <td className="py-3.5 px-4 max-w-xs">
+                          <div className="font-medium text-white truncate">{bit.title}</div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                            {bit.topic && <span className="text-purple-400 font-medium">#{bit.topic}</span>}
+                            <span>ID: {bit.id.slice(0, 8)}...</span>
+                          </div>
+                        </td>
 
-                      {/* Difficulty */}
-                      <td className="py-3.5 px-4">
-                        <span className="capitalize text-slate-300 font-medium">{bit.difficulty}</span>
-                      </td>
+                        {/* Difficulty */}
+                        <td className="py-3.5 px-4">
+                          <span className="capitalize text-slate-300 font-medium">{bit.difficulty}</span>
+                        </td>
 
-                      {/* Publish State */}
-                      <td className="py-3.5 px-4">{getStatusBadge(bit.status)}</td>
+                        {/* Publish State */}
+                        <td className="py-3.5 px-4">{getStatusBadge(bit.status)}</td>
 
-                      {/* Video Status & Direct Upload Dropzone */}
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            {getVideoStatusBadge(bit.video_status, bit.id)}
-                            {bit.playback_id && (
+                        {/* Video Status & Direct Upload Dropzone */}
+                        <td className="py-3.5 px-4">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              {getVideoStatusBadge(bit.video_status, bit.id)}
+                              {bit.playback_id && (
+                                <button
+                                  onClick={() => setPreviewPlaybackId(bit.playback_id || null)}
+                                  className="text-purple-400 hover:text-purple-300 text-[11px] font-semibold flex items-center gap-1 hover:underline ml-1"
+                                  title="Preview video stream"
+                                >
+                                  <Play className="w-3 h-3 fill-current" /> Play
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Upload Progress Bar if currently uploading */}
+                            {uploadState?.isUploading && (
+                              <div className="w-36 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-200"
+                                  style={{ width: `${uploadState.progress}%` }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Upload / Replace Action Button */}
+                            <div>
+                              <input
+                                type="file"
+                                accept="video/mp4,video/quicktime,video/webm"
+                                className="hidden"
+                                ref={(el) => {
+                                  fileInputRefs.current[bit.id] = el;
+                                }}
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleFileSelect(bit.id, e.target.files[0]);
+                                  }
+                                }}
+                              />
                               <button
-                                onClick={() => setPreviewPlaybackId(bit.playback_id || null)}
-                                className="text-purple-400 hover:text-purple-300 text-[11px] font-semibold flex items-center gap-1 hover:underline ml-1"
-                                title="Preview video stream"
+                                onClick={() => fileInputRefs.current[bit.id]?.click()}
+                                disabled={uploadState?.isUploading}
+                                className="text-[11px] text-slate-400 hover:text-purple-400 transition-colors flex items-center gap-1 hover:underline"
                               >
-                                <Play className="w-3 h-3 fill-current" /> Play
+                                <UploadCloud className="w-3 h-3" />
+                                {bit.video_status === "READY" ? "Replace Video" : "Upload Video (.mp4)"}
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Duration */}
+                        <td className="py-3.5 px-4 text-slate-400">
+                          {bit.duration_seconds ? `${bit.duration_seconds}s` : "—"}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Sync Status Button */}
+                            <button
+                              onClick={() => handleManualSync(bit.id)}
+                              title="Sync status with Mux"
+                              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Edit Button */}
+                            <button
+                              onClick={() => handleEditOpen(bit)}
+                              title="Edit SkillBit metadata"
+                              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-purple-300 transition-colors"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Publish Button */}
+                            {bit.status !== "published" && (
+                              <button
+                                onClick={() => handlePublish(bit)}
+                                disabled={!canPublish}
+                                title={
+                                  canPublish
+                                    ? "Publish SkillBit to students"
+                                    : `Cannot publish: Video is in '${bit.video_status}' state (must be READY)`
+                                }
+                                className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors flex items-center gap-1 ${
+                                  canPublish
+                                    ? "bg-emerald-600/30 text-emerald-300 hover:bg-emerald-600/50 border border-emerald-500/40"
+                                    : "bg-slate-800/50 text-slate-600 cursor-not-allowed border border-slate-800"
+                                }`}
+                              >
+                                <Check className="w-3 h-3" /> Publish
+                              </button>
+                            )}
+
+                            {/* Unpublish Button */}
+                            {bit.status === "published" && (
+                              <button
+                                onClick={() => handleUnpublish(bit)}
+                                title="Unpublish SkillBit (returns to Draft)"
+                                className="px-2 py-1 text-[11px] font-semibold rounded-lg bg-amber-600/20 text-amber-300 hover:bg-amber-600/40 border border-amber-500/30 transition-colors flex items-center gap-1"
+                              >
+                                <Undo2 className="w-3 h-3" /> Unpublish
+                              </button>
+                            )}
+
+                            {/* Archive Button */}
+                            {bit.status !== "archived" && (
+                              <button
+                                onClick={() => handleArchive(bit)}
+                                title="Archive SkillBit"
+                                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-rose-400 transition-colors"
+                              >
+                                <Archive className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+
+                            {/* Restore Button */}
+                            {bit.status === "archived" && (
+                              <button
+                                onClick={() => handleRestore(bit)}
+                                title="Restore SkillBit back to Draft"
+                                className="px-2 py-1 text-[11px] font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1"
+                              >
+                                <RotateCcw className="w-3 h-3" /> Restore
                               </button>
                             )}
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                          {/* Upload Progress Bar if currently uploading */}
-                          {uploadState?.isUploading && (
-                            <div className="w-36 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className="bg-purple-500 h-1.5 rounded-full transition-all duration-200"
-                                style={{ width: `${uploadState.progress}%` }}
-                              />
-                            </div>
-                          )}
+            {/* Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-2 text-xs text-slate-400">
+              <div>
+                Showing{" "}
+                <span className="text-white font-medium">
+                  {totalCount === 0 ? 0 : (page - 1) * pageSize + 1}
+                </span>{" "}
+                to{" "}
+                <span className="text-white font-medium">
+                  {Math.min(page * pageSize, totalCount)}
+                </span>{" "}
+                of <span className="text-white font-medium">{totalCount}</span> SkillBits
+              </div>
 
-                          {/* Upload / Replace Action Button */}
-                          <div>
-                            <input
-                              type="file"
-                              accept="video/mp4,video/quicktime,video/webm"
-                              className="hidden"
-                              ref={(el) => {
-                                fileInputRefs.current[bit.id] = el;
-                              }}
-                              onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                  handleFileSelect(bit.id, e.target.files[0]);
-                                }
-                              }}
-                            />
-                            <button
-                              onClick={() => fileInputRefs.current[bit.id]?.click()}
-                              disabled={uploadState?.isUploading}
-                              className="text-[11px] text-slate-400 hover:text-purple-400 transition-colors flex items-center gap-1 hover:underline"
-                            >
-                              <UploadCloud className="w-3 h-3" />
-                              {bit.video_status === "READY" ? "Replace Video" : "Upload Video (.mp4)"}
-                            </button>
-                          </div>
-                        </div>
-                      </td>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={page <= 1 || loading}
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-800/80 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 transition-colors"
+                  title="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
 
-                      {/* Duration */}
-                      <td className="py-3.5 px-4 text-slate-400">
-                        {bit.duration_seconds ? `${bit.duration_seconds}s` : "—"}
-                      </td>
+                <span className="px-3 py-1 bg-slate-800/50 rounded-lg border border-slate-800 font-medium text-slate-300">
+                  Page {page} of {totalPages}
+                </span>
 
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Sync Status Button */}
-                          <button
-                            onClick={() => handleManualSync(bit.id)}
-                            title="Sync status with Mux"
-                            className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Publish Button */}
-                          {bit.status !== "published" && (
-                            <button
-                              onClick={() => handlePublish(bit)}
-                              disabled={!canPublish}
-                              title={
-                                canPublish
-                                  ? "Publish SkillBit to students"
-                                  : "Upload and transcode video before publishing"
-                              }
-                              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors flex items-center gap-1 ${
-                                canPublish
-                                  ? "bg-emerald-600/30 text-emerald-300 hover:bg-emerald-600/50 border border-emerald-500/40"
-                                  : "bg-slate-800/50 text-slate-600 cursor-not-allowed border border-slate-800"
-                              }`}
-                            >
-                              <Check className="w-3 h-3" /> Publish
-                            </button>
-                          )}
-
-                          {/* Archive Button */}
-                          {bit.status !== "archived" && (
-                            <button
-                              onClick={() => handleArchive(bit)}
-                              title="Archive SkillBit"
-                              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-amber-400 transition-colors"
-                            >
-                              <Archive className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                <button
+                  onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={page >= totalPages || loading}
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-800/80 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 transition-colors"
+                  title="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -651,6 +940,125 @@ export default function AdminSkillBitsCMS() {
                 >
                   {createSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Create Draft SkillBit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SKILLBIT MODAL */}
+      {isEditOpen && editItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-400">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Edit SkillBit</h3>
+                  <p className="text-xs text-slate-400">Update metadata and learning attributes</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Title <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Topic</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. React, Python"
+                    value={editForm.topic}
+                    onChange={(e) => setEditForm({ ...editForm, topic: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Difficulty</label>
+                  <select
+                    value={editForm.difficulty}
+                    onChange={(e) => setEditForm({ ...editForm, difficulty: e.target.value as SkillBitDifficulty })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Duration (Seconds)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 45"
+                    value={editForm.duration_seconds}
+                    onChange={(e) => setEditForm({ ...editForm, duration_seconds: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Thumbnail URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/thumb.jpg"
+                    value={editForm.thumbnail_url}
+                    onChange={(e) => setEditForm({ ...editForm, thumbnail_url: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-purple-900/40 transition-colors disabled:opacity-50"
+                >
+                  {editSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Save Changes
                 </button>
               </div>
             </form>

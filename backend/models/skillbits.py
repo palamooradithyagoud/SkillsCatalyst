@@ -303,14 +303,31 @@ class AdminSkillBitResponse(BaseModel):
     roadmaps: List[Dict[str, Any]] = Field(default_factory=list)
 
 
+class AdminSkillBitSort(str, Enum):
+    NEWEST = "newest"
+    OLDEST = "oldest"
+    TITLE_ASC = "title_asc"
+    TITLE_DESC = "title_desc"
+    DURATION_DESC = "duration_desc"
+    DURATION_ASC = "duration_asc"
+    UPDATED_AT = "updated_at"
+
+
 class SkillBitsListResponse(BaseModel):
     total: int
     items: List[StudentSkillBitResponse]
+    page: Optional[int] = None
+    page_size: Optional[int] = None
+    total_pages: Optional[int] = None
 
 
 class AdminSkillBitsListResponse(BaseModel):
     total: int
     items: List[AdminSkillBitResponse]
+    page: int = 1
+    page_size: int = 20
+    total_pages: int = 1
+
 
 
 class DirectUploadRequest(BaseModel):

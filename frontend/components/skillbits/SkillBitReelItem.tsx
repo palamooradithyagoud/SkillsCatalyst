@@ -302,6 +302,7 @@ export default function SkillBitReelItem({
               playbackId={skillbit.playback_id}
               streamType="on-demand"
               preload={isActive ? "auto" : isNext ? "metadata" : "none"}
+              autoPlay={isActive ? "muted" : false}
               muted={isMuted}
               playsInline
               loop={false}

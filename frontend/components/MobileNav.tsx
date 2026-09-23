@@ -27,6 +27,7 @@ import {
   Users,
   BookOpen,
   Compass,
+  Film,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,6 +42,7 @@ import { Component as SterlingGateKineticNavigation } from "@/components/ui/ster
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
+  { name: "SkillBits", href: "/skillbits", icon: Film, desc: "Bite-sized video reels" },
   { name: "Learning", href: "/learning", icon: BookIcon, desc: "Courses & YouTube playlists" },
   { name: "Roadmaps", href: "/roadmaps", icon: Map, desc: "Interactive career tracks" },
   { name: "Practice", href: "/practice", icon: Target, desc: "Aptitude & company questions" },
@@ -53,6 +55,7 @@ const navItems = [
 
 const mobileNavItems: NavItem[] = [
   { name: "Home", url: "/dashboard", icon: LayoutGrid },
+  { name: "SkillBits", url: "/skillbits", icon: Film },
   { name: "Learn", url: "/learning", icon: BookOpen },
   { name: "Explore", url: "/explore", icon: Compass },
   { name: "Practice", url: "/practice", icon: Target },
@@ -61,6 +64,7 @@ const mobileNavItems: NavItem[] = [
 
 const bottomBarItems = [
   { name: "Home", href: "/dashboard", icon: LayoutGrid },
+  { name: "SkillBits", href: "/skillbits", icon: Film },
   { name: "Learn", href: "/learning", icon: BookIcon },
   { name: "Explore", href: "/explore", icon: ExploreIcon },
   { name: "Practice", href: "/practice", icon: Target },
@@ -130,9 +134,10 @@ function MobileNavContent() {
   const userEmail = session?.email || "Guest User";
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
 
-  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, or edit profile page
+  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, edit profile page, or SkillBits reels
   const isHideBottomBar =
     isExplicitlyHidden ||
+    pathname.startsWith("/skillbits") ||
     (pathname === "/learning" && isLearningPlayer) ||
     (pathname === "/practice" && isPracticeSubView) ||
     pathname.startsWith("/roadmaps") ||
@@ -141,46 +146,48 @@ function MobileNavContent() {
 
   return (
     <>
-      {/* ── Mobile Native Top App Bar ── */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/40 border-b border-black/5 backdrop-blur-xl text-slate-900 shadow-xs">
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <SkillsCatalystLogo size="sm" showText animated />
-          </Link>
-        </div>
+      {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels) ── */}
+      {!pathname.startsWith("/skillbits") && (
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/40 border-b border-black/5 backdrop-blur-xl text-slate-900 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <SkillsCatalystLogo size="sm" showText animated />
+            </Link>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {/* Notification Bell Button */}
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
-          >
-            <Bell size={18} strokeWidth={2.2} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-[#EAB308] rounded-full ring-1.5 ring-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Notification Bell Button */}
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <Bell size={18} strokeWidth={2.2} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-[#EAB308] rounded-full ring-1.5 ring-white" />
+            </button>
 
-          {/* User's Profile Avatar (Transparent Background with Purple Initials) */}
-          <button
-            type="button"
-            onClick={() => router.push("/settings")}
-            aria-label="User Profile"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
-          >
-            <span>{userInitial}</span>
-          </button>
+            {/* User's Profile Avatar (Transparent Background with Purple Initials) */}
+            <button
+              type="button"
+              onClick={() => router.push("/settings")}
+              aria-label="User Profile"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span>{userInitial}</span>
+            </button>
 
-          {/* Menu Drawer Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            aria-label="Toggle Menu"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
-          >
-            {drawerOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
-          </button>
-        </div>
-      </header>
+            {/* Menu Drawer Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(!drawerOpen)}
+              aria-label="Toggle Menu"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              {drawerOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* ── Kinetic Mobile Navigation Drawer (Sterling Gate) ── */}
       <div className="md:hidden">
