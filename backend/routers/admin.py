@@ -10,8 +10,9 @@ from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from pydantic import BaseModel, Field
 
-from backend.services.auth_service import require_owner
+from backend.services.auth_service import require_owner, require_admin
 from backend.services.supabase_service import get_supabase
+
 from backend.services.cache_service import get_redis_client
 from backend.models.event import (
     CreateEventRequest,
@@ -67,8 +68,23 @@ from backend.services.tech_news_service import (
     upload_story_cover,
     get_active_stories_count,
 )
+from backend.models.skillbits import (
+    CreateSkillBitRequest,
+    UpdateSkillBitRequest,
+    AdminSkillBitResponse,
+    AdminSkillBitsListResponse,
+)
+from backend.services.skillbits_service import (
+    get_admin_skillbits,
+    get_admin_skillbit_by_id,
+    create_skillbit,
+    update_skillbit,
+    publish_skillbit,
+    archive_skillbit,
+)
 
 logger = logging.getLogger("skillscatalyst.admin")
+
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -709,6 +725,93 @@ async def upload_admin_story_cover(
         "success": True,
         "cover_image_url": public_url,
     }
+
+
+# ============================================================================
+# SKILLBITS (EDUCATIONAL REELS FOUNDATION) CMS ENDPOINTS
+# Protected by Depends(require_admin) - allows owner, admin, editor
+# ============================================================================
+
+@router.post("/skillbits", status_code=status.HTTP_201_CREATED, response_model=AdminSkillBitResponse)
+def create_admin_skillbit(
+    payload: CreateSkillBitRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Creates a new SkillBit in draft or published status."""
+    created = create_skillbit(data=payload, user_id=admin["user_id"])
+    return AdminSkillBitResponse(**created)
+
+
+@router.get("/skillbits", status_code=status.HTTP_200_OK, response_model=AdminSkillBitsListResponse)
+def list_admin_skillbits(
+    status_filter: Optional[str] = Query(None, description="Filter by status: draft, published, archived"),
+    topic: Optional[str] = Query(None, description="Filter by topic"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
+    search: Optional[str] = Query(None, description="Keyword search in title"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitsListResponse:
+    """Lists all SkillBits for CMS management with optional filters."""
+    items = get_admin_skillbits(
+        status_filter=status_filter,
+        topic=topic,
+        difficulty=difficulty,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+    return AdminSkillBitsListResponse(
+        total=len(items),
+        items=[AdminSkillBitResponse(**item) for item in items],
+    )
+
+
+@router.get("/skillbits/{skillbit_id}", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def get_admin_skillbit(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Fetches a single SkillBit for CMS administration (any status)."""
+    record = get_admin_skillbit_by_id(skillbit_id=skillbit_id)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+    return AdminSkillBitResponse(**record)
+
+
+@router.patch("/skillbits/{skillbit_id}", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def update_admin_skillbit(
+    skillbit_id: str,
+    payload: UpdateSkillBitRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Partially updates a SkillBit record and validates publish rules if transitioning to published."""
+    updated = update_skillbit(skillbit_id=skillbit_id, data=payload)
+    return AdminSkillBitResponse(**updated)
+
+
+@router.post("/skillbits/{skillbit_id}/publish", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def publish_admin_skillbit(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Validates readiness and publishes a SkillBit to students."""
+    published = publish_skillbit(skillbit_id=skillbit_id)
+    return AdminSkillBitResponse(**published)
+
+
+@router.post("/skillbits/{skillbit_id}/archive", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
+def archive_admin_skillbit(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSkillBitResponse:
+    """Archives a SkillBit, hiding it from the student feed while preserving historical data."""
+    archived = archive_skillbit(skillbit_id=skillbit_id)
+    return AdminSkillBitResponse(**archived)
+
 
 
 

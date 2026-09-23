@@ -234,14 +234,14 @@ try:
     from backend.routers import (
         dashboard, ai_mentor, learning, resume, practice, profile,
         auth, support, admin, events, scholarships, tech_news,
-        subscriptions, payments
+        subscriptions, payments, skillbits
     )
 except ModuleNotFoundError as e:
     if getattr(e, "name", None) in ("backend", "backend.routers") or "backend" in str(e):
         from routers import (
             dashboard, ai_mentor, learning, resume, practice, profile,
             auth, support, admin, events, scholarships, tech_news,
-            subscriptions, payments
+            subscriptions, payments, skillbits
         )
     else:
         raise e
@@ -260,6 +260,8 @@ app.include_router(scholarships.router)
 app.include_router(tech_news.router)
 app.include_router(subscriptions.router)
 app.include_router(payments.router)
+app.include_router(skillbits.router)
+
 
 # ── Railway Probes & System Endpoints ─────────────────────────────────────────
 @app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
