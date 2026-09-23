@@ -14,6 +14,8 @@ import type {
   AdminSkillBitsResponse,
   DirectUploadResponse,
   VideoStatusResponse,
+  SkillBitProgress,
+  UpdateSkillBitProgressPayload,
 } from "@/types/skillbits";
 
 // ── STUDENT APIS ─────────────────────────────────────────────────────────────
@@ -55,7 +57,60 @@ export async function fetchStudentSkillBitById(id: string): Promise<StudentSkill
   return res.json();
 }
 
+export async function fetchSkillBitProgress(skillbitId: string): Promise<SkillBitProgress> {
+  const headers = await getAuthHeaders().catch(() => ({}));
+  const res = await apiFetch(`${API_BASE}/api/skillbits/${encodeURIComponent(skillbitId)}/progress`, {
+    headers,
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      // Unauthenticated visitor: fallback to clean default progress representation
+      return {
+        skillbit_id: skillbitId,
+        watched_seconds: 0,
+        completion_percentage: 0,
+        last_position_seconds: 0,
+        started: false,
+        completed: false,
+      };
+    }
+    throw new Error(`Failed to load SkillBit progress: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function saveSkillBitProgress(
+  skillbitId: string,
+  payload: UpdateSkillBitProgressPayload
+): Promise<SkillBitProgress> {
+  const headers = await getAuthHeaders().catch(() => ({}));
+  const res = await apiFetch(`${API_BASE}/api/skillbits/${encodeURIComponent(skillbitId)}/progress`, {
+    method: "PATCH",
+    headers: {
+      ...headers,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      // Unauthenticated visitor: return updated in-memory state
+      return {
+        skillbit_id: skillbitId,
+        watched_seconds: payload.watched_seconds,
+        completion_percentage: payload.completion_percentage,
+        last_position_seconds: payload.last_position_seconds,
+        started: true,
+        completed: payload.completion_percentage >= 90,
+      };
+    }
+    throw new Error(`Failed to save SkillBit progress: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 // ── ADMIN CMS APIS ───────────────────────────────────────────────────────────
+
 
 export async function fetchAdminSkillBits(params?: {
   status_filter?: string;

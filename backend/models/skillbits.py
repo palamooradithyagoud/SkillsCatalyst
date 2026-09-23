@@ -330,3 +330,64 @@ class VideoStatusResponse(BaseModel):
     playback_id: Optional[str] = None
     duration_seconds: Optional[int] = None
 
+
+# ── Step 4: Video Learning Progress Models ────────────────────────────────────
+
+class UpdateSkillBitProgressRequest(BaseModel):
+    """
+    Client payload for updating student video learning progress.
+    User ID is strictly excluded; derived solely from JWT.
+    """
+    watched_seconds: int = Field(0, ge=0, description="Cumulative seconds meaningfully watched")
+    last_position_seconds: float = Field(0.0, ge=0.0, description="Current playback position in seconds")
+    completion_percentage: float = Field(0.0, ge=0.0, le=100.0, description="Current completion percentage (0-100)")
+
+    @field_validator("watched_seconds", mode="before")
+    @classmethod
+    def validate_watched_seconds(cls, v: Any) -> int:
+        try:
+            val = int(v)
+        except (ValueError, TypeError):
+            raise ValueError("watched_seconds must be a valid non-negative integer.")
+        if val < 0:
+            raise ValueError("watched_seconds cannot be negative.")
+        return val
+
+    @field_validator("last_position_seconds", mode="before")
+    @classmethod
+    def validate_last_position(cls, v: Any) -> float:
+        try:
+            val = float(v)
+        except (ValueError, TypeError):
+            raise ValueError("last_position_seconds must be a valid non-negative number.")
+        if val < 0:
+            raise ValueError("last_position_seconds cannot be negative.")
+        return round(val, 2)
+
+    @field_validator("completion_percentage", mode="before")
+    @classmethod
+    def validate_completion_percentage(cls, v: Any) -> float:
+        try:
+            val = float(v)
+        except (ValueError, TypeError):
+            raise ValueError("completion_percentage must be a valid number between 0 and 100.")
+        if val < 0.0 or val > 100.0:
+            raise ValueError("completion_percentage must be between 0 and 100.")
+        return round(val, 1)
+
+
+class SkillBitProgressResponse(BaseModel):
+    """
+    Student learning progress response for a single SkillBit.
+    """
+    skillbit_id: str
+    watched_seconds: int = 0
+    completion_percentage: float = 0.0
+    last_position_seconds: float = 0.0
+    started: bool = False
+    completed: bool = False
+    started_at: Optional[str] = None
+    last_watched_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+

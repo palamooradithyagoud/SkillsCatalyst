@@ -6,16 +6,21 @@ Phase: Step 1 (Foundation)
 """
 
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, HTTPException, Query, status, Request, Header
+from fastapi import APIRouter, HTTPException, Query, status, Request, Header, Depends
 
+from backend.services.auth_service import get_current_user_id
 from backend.models.skillbits import (
     StudentSkillBitResponse,
     SkillBitsListResponse,
+    UpdateSkillBitProgressRequest,
+    SkillBitProgressResponse,
 )
 from backend.services.skillbits_service import (
     get_student_skillbits,
     get_student_skillbit_by_id,
     process_mux_webhook,
+    get_user_skillbit_progress,
+    update_user_skillbit_progress,
 )
 
 router = APIRouter(prefix="/api/skillbits", tags=["skillbits"])
@@ -75,4 +80,49 @@ async def mux_webhook(
     """
     raw_body = await request.body()
     return await process_mux_webhook(raw_body=raw_body, signature_header=mux_signature)
+
+
+# ── Step 4: Video Learning Progress Endpoints ─────────────────────────────────
+
+@router.get(
+    "/{skillbit_id}/progress",
+    status_code=status.HTTP_200_OK,
+    response_model=SkillBitProgressResponse,
+)
+def get_skillbit_progress_endpoint(
+    skillbit_id: str,
+    user_id: str = Depends(get_current_user_id),
+) -> SkillBitProgressResponse:
+    """
+    Authenticated student endpoint: Retrieves personal video learning progress.
+    User ID is extracted strictly from the validated session JWT.
+    Returns 401 if unauthenticated, 404 if SkillBit does not exist or is unpublished.
+    """
+    record = get_user_skillbit_progress(skillbit_id=skillbit_id, user_id=user_id)
+    return SkillBitProgressResponse(**record)
+
+
+@router.patch(
+    "/{skillbit_id}/progress",
+    status_code=status.HTTP_200_OK,
+    response_model=SkillBitProgressResponse,
+)
+def update_skillbit_progress_endpoint(
+    skillbit_id: str,
+    payload: UpdateSkillBitProgressRequest,
+    user_id: str = Depends(get_current_user_id),
+) -> SkillBitProgressResponse:
+    """
+    Authenticated student endpoint: Updates personal video learning progress.
+    Atomic upsert with monotonic watched_seconds, position tracking, and server-side completion validation (>= 90%).
+    Returns 401 if unauthenticated, 404 if SkillBit does not exist or is unpublished,
+    and 400 if last_position_seconds exceeds video duration.
+    """
+    record = update_user_skillbit_progress(
+        skillbit_id=skillbit_id,
+        user_id=user_id,
+        payload=payload,
+    )
+    return SkillBitProgressResponse(**record)
+
 
