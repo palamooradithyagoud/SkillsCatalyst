@@ -25,7 +25,7 @@ import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 
-type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users";
+type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits";
 
 interface AdminOverviewData {
   stats: {
@@ -177,6 +177,7 @@ export default function AdminPage() {
     { id: "news", label: "Curated News", icon: Newspaper, badge: overviewData?.stats.cms_modules.news_updates },
     { id: "community", label: "Community", icon: MessageSquare, badge: overviewData?.stats.cms_modules.community_threads },
     { id: "users", label: "User Governance", icon: Users, badge: overviewData?.stats.total_users },
+    { id: "skillbits", label: "SkillBits", icon: Sparkles },
   ];
 
   return (
@@ -518,6 +519,30 @@ export default function AdminPage() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: SKILLBITS FOUNDATION */}
+          {activeTab === "skillbits" && (
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 animate-in fade-in duration-150">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">SkillBits Micro-Learning Foundation</h3>
+                  <p className="text-xs text-slate-400">Step 1 Persistent Foundation Active (Database Schema, RLS &amp; APIs Live)</p>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300 space-y-2">
+                <p className="font-semibold text-emerald-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                  Foundation Operational: Normalized skill relationships, publishing lifecycle, and REST endpoints are active.
+                </p>
+                <p className="text-slate-400">
+                  Step 2 will activate the Mux video transcoding pipeline and admin direct-upload component.
+                </p>
               </div>
             </div>
           )}

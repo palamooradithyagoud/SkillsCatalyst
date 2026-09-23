@@ -1,0 +1,62 @@
+"""
+backend/routers/skillbits.py
+Student-facing SkillBits API Router.
+Returns published educational short-form videos for the future Reels player.
+Phase: Step 1 (Foundation)
+"""
+
+from typing import Optional, Dict, Any, List
+from fastapi import APIRouter, HTTPException, Query, status
+
+from backend.models.skillbits import (
+    StudentSkillBitResponse,
+    SkillBitsListResponse,
+)
+from backend.services.skillbits_service import (
+    get_student_skillbits,
+    get_student_skillbit_by_id,
+)
+
+router = APIRouter(prefix="/api/skillbits", tags=["skillbits"])
+
+
+@router.get("", status_code=status.HTTP_200_OK, response_model=SkillBitsListResponse)
+def list_student_skillbits(
+    topic: Optional[str] = Query(None, description="Filter by topic (e.g. React, Python)"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty (beginner, intermediate, advanced)"),
+    search: Optional[str] = Query(None, description="Search keyword in title"),
+    limit: int = Query(20, ge=1, le=100, description="Page limit"),
+    offset: int = Query(0, ge=0, description="Page offset"),
+) -> SkillBitsListResponse:
+    """
+    Returns published SkillBits ready for student learning.
+    Draft and archived SkillBits are strictly omitted.
+    """
+    items = get_student_skillbits(
+        topic=topic,
+        difficulty=difficulty,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+    return SkillBitsListResponse(
+        total=len(items),
+        items=[StudentSkillBitResponse(**item) for item in items],
+    )
+
+
+@router.get("/{skillbit_id}", status_code=status.HTTP_200_OK, response_model=StudentSkillBitResponse)
+def get_student_skillbit(
+    skillbit_id: str,
+) -> StudentSkillBitResponse:
+    """
+    Returns a single published SkillBit by UUID.
+    Returns 404 Not Found if the SkillBit does not exist, or is in draft/archived status.
+    """
+    record = get_student_skillbit_by_id(skillbit_id)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found or not published.",
+        )
+    return StudentSkillBitResponse(**record)
