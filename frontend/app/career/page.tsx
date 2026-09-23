@@ -1,23 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
 import CareerHeader from "@/components/career/CareerHeader";
 import CareerCards from "@/components/career/CareerCards";
-import ResumeReviewModal from "@/components/career/ResumeReviewModal";
-import { useResumeReview } from "@/hooks/useResumeReview";
 
 export default function CareerPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const reviewState = useResumeReview();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
@@ -27,17 +20,8 @@ export default function CareerPage() {
       {/* ── Cards Grid ── */}
       <CareerCards
         onOpenPlacementPrep={() => setIsPlacementPrepOpen(true)}
-        onOpenResumeReview={() => setIsModalOpen(true)}
+        onOpenResumeReview={() => router.push("/career/resume-review")}
       />
-
-      {/* ── Resume Review Modal (Mounted via React Portal) ── */}
-      {mounted && (
-        <ResumeReviewModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          reviewState={reviewState}
-        />
-      )}
 
       {/* ── Placement Preparation Modal ── */}
       <PlacementPrepModal

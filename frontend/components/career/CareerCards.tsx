@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   FileCheck,
@@ -12,15 +13,25 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 interface CareerCardsProps {
   onOpenPlacementPrep: () => void;
-  onOpenResumeReview: () => void;
+  onOpenResumeReview?: () => void;
 }
 
 export default function CareerCards({
   onOpenPlacementPrep,
   onOpenResumeReview,
 }: CareerCardsProps) {
+  const router = useRouter();
   const { canAccess } = useSubscription();
   const hasPlacementAccess = canAccess("placement_prep");
+
+  const handleResumeReviewClick = () => {
+    if (onOpenResumeReview) {
+      onOpenResumeReview();
+    } else {
+      router.push("/career/resume-review");
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1: Placement Prep (Active - First) */}
@@ -84,37 +95,37 @@ export default function CareerCards({
         </BorderGlow>
       </motion.div>
 
-      {/* Card 2: Resume Review (Unlocked with 7-Day Free Trial) */}
+      {/* Card 2: Resume Review (Dedicated Page) */}
       <motion.div
         whileHover={{ y: -2 }}
         transition={{ duration: 0.2 }}
         className="h-full group cursor-pointer"
-        onClick={onOpenResumeReview}
+        onClick={handleResumeReviewClick}
       >
         <BorderGlow
           edgeSensitivity={30}
-          glowColor="245 158 11"
+          glowColor="147 51 234"
           backgroundColor="#ffffff"
           borderRadius={28}
           glowRadius={35}
           glowIntensity={1.2}
           animated={false}
-          colors={['#f59e0b', '#fbbf24', '#cbd5e1']}
+          colors={['#8b5cf6', '#a855f7', '#c084fc']}
           className="h-full p-6 md:p-7 flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-slate-200/90"
         >
           <div className="flex flex-col justify-between h-full space-y-6">
             <div>
               <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-500/30 group-hover:scale-105 transition-transform">
                   <FileCheck className="w-6 h-6 text-white" />
                 </div>
-                <div className="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white flex items-center gap-1.5 shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <div className="px-3 py-1 rounded-full text-[11px] font-black bg-purple-600 text-white flex items-center gap-1.5 shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-200" />
                   PRO FEATURE
                 </div>
               </div>
 
-              <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">
+              <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">
                 Resume Review
               </h3>
               <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed">
@@ -127,11 +138,11 @@ export default function CareerCards({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenResumeReview();
+                handleResumeReviewClick();
               }}
-              className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold py-3 rounded-xl transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 text-xs group/btn cursor-pointer"
+              className="w-full bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 text-xs group/btn cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-200" />
+              <Sparkles className="w-4 h-4 text-purple-200" />
               <span>Launch Resume Review (Free)</span>
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </button>

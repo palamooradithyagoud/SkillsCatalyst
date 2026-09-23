@@ -32,11 +32,11 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
         elements.push(
           <div
             key={`table-${index}`}
-            className="my-4 overflow-x-auto rounded-xl border border-slate-800 bg-[#091124]"
+            className="my-4 overflow-x-auto rounded-xl border border-purple-100 bg-white shadow-2xs"
           >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-indigo-950/40 text-indigo-300 border-b border-slate-800 font-semibold">
+                <tr className="bg-purple-50 text-purple-950 border-b border-purple-200 font-bold">
                   {header.map((h, i) => (
                     <th key={i} className="p-3">
                       {h}
@@ -44,11 +44,11 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-purple-100">
                 {body.map((r, ri) => (
                   <tr
                     key={ri}
-                    className="hover:bg-slate-900/50 text-slate-300"
+                    className="hover:bg-purple-50/50 text-slate-700"
                   >
                     {r.map((cell, ci) => (
                       <td key={ci} className="p-3 leading-relaxed">
@@ -73,9 +73,9 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <h4
           key={index}
-          className="text-base font-bold text-indigo-300 mt-5 mb-2 flex items-center gap-2"
+          className="text-base font-bold text-purple-900 mt-5 mb-2 flex items-center gap-2"
         >
-          <ChevronRight className="w-4 h-4 text-indigo-400" />
+          <ChevronRight className="w-4 h-4 text-purple-600" />
           {trimmed.replace("### ", "").replace(/\*\*/g, "")}
         </h4>
       );
@@ -83,7 +83,7 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <h3
           key={index}
-          className="text-lg font-extrabold text-white mt-6 mb-3 pb-2 border-b border-slate-800 flex items-center gap-2"
+          className="text-lg font-extrabold text-slate-900 mt-6 mb-3 pb-2 border-b border-purple-100 flex items-center gap-2"
         >
           {trimmed.replace("## ", "").replace(/\*\*/g, "")}
         </h3>
@@ -100,10 +100,10 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
           key={index}
           className={`p-3 rounded-xl border my-2 flex items-center gap-2 text-xs font-bold ${
             isHire
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
               : isNoHire
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
-              : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+              ? "bg-rose-50 border-rose-200 text-rose-800"
+              : "bg-amber-50 border-amber-200 text-amber-800"
           }`}
         >
           <Sparkles className="w-4 h-4 shrink-0" />
@@ -114,7 +114,7 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <div
           key={index}
-          className="mt-3 p-3 rounded-t-xl bg-slate-900/80 border border-slate-800 text-xs text-rose-300 line-through"
+          className="mt-3 p-3 rounded-t-xl bg-rose-50/70 border border-rose-200 text-xs text-rose-700 line-through"
         >
           {trimmed.replace("- **Before:**", "Original:").replace(/\*\*/g, "")}
         </div>
@@ -123,9 +123,9 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <div
           key={index}
-          className="mb-3 p-3 rounded-b-xl bg-emerald-950/40 border-x border-b border-emerald-500/30 text-xs text-emerald-300 font-medium flex items-start gap-2"
+          className="mb-3 p-3 rounded-b-xl bg-purple-50 border-x border-b border-purple-200 text-xs text-purple-900 font-semibold flex items-start gap-2"
         >
-          <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
           <span>
             {trimmed.replace("- **After:**", "AI Rewritten:").replace(/\*\*/g, "")}
           </span>
@@ -136,13 +136,13 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <div
           key={index}
-          className="flex items-start gap-2 text-xs text-slate-300 ml-2 my-1 leading-relaxed"
+          className="flex items-start gap-2 text-xs text-slate-700 ml-2 my-1 leading-relaxed"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
           <span>
             {contentStr.split("**").map((part, i) =>
               i % 2 === 1 ? (
-                <strong key={i} className="text-white font-semibold">
+                <strong key={i} className="text-slate-900 font-bold">
                   {part}
                 </strong>
               ) : (
@@ -156,11 +156,11 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       elements.push(
         <p
           key={index}
-          className="text-xs text-slate-300 leading-relaxed my-1"
+          className="text-xs text-slate-700 leading-relaxed my-1"
         >
           {trimmed.split("**").map((part, i) =>
             i % 2 === 1 ? (
-              <strong key={i} className="text-white font-semibold">
+              <strong key={i} className="text-slate-900 font-bold">
                 {part}
               </strong>
             ) : (

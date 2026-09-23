@@ -18,21 +18,21 @@ export default function StageIndicator({
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all ${
           done
-            ? "bg-emerald-500 border-emerald-400 text-white"
+            ? "bg-purple-600 border-purple-600 text-white shadow-xs"
             : active
-            ? "bg-indigo-600 border-indigo-400 text-white"
-            : "bg-slate-900 border-slate-700 text-slate-500"
+            ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-100"
+            : "bg-slate-100 border-slate-200 text-slate-400"
         }`}
       >
         {done ? "✓" : stage}
       </div>
       <span
-        className={`text-xs font-medium ${
+        className={`text-xs transition-colors ${
           done
-            ? "text-emerald-400"
+            ? "text-purple-700 font-semibold"
             : active
-            ? "text-white"
-            : "text-slate-500"
+            ? "text-purple-900 font-extrabold"
+            : "text-slate-400 font-medium"
         }`}
       >
         {label}
