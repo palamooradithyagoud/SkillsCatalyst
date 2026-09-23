@@ -68,6 +68,13 @@ def validate_publish_readiness(record: Dict[str, Any]) -> None:
     if not playback_id and not video_asset_id:
         missing.append("video reference (playback_id or video_asset_id)")
 
+    video_status = (record.get("video_status") or "").strip().upper()
+    if video_status in ("ERROR", "UPLOADING"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot publish SkillBit: video is currently in '{video_status}' state.",
+        )
+
     if missing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -142,6 +149,8 @@ def _enrich_admin_record(
         "video_asset_id": record.get("video_asset_id"),
         "playback_id": record.get("playback_id"),
         "status": _get_enum_val(record.get("status")) or "draft",
+        "video_status": (record.get("video_status") or "NOT_UPLOADED").upper(),
+        "mux_upload_id": record.get("mux_upload_id"),
         "published_at": _format_datetime(record.get("published_at")),
         "created_by": str(record.get("created_by") or ""),
         "created_at": _format_datetime(record.get("created_at")),
@@ -584,3 +593,319 @@ def get_student_skillbit_by_id(skillbit_id: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Failed to fetch student SkillBit {skillbit_id}: {e}")
         return None
+
+
+# ── MUX DIRECT UPLOAD & VIDEO PIPELINE (STEP 2) ──────────────────────────────
+
+async def request_direct_upload(skillbit_id: str, cors_origin: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Creates a direct upload session with Mux and persists the upload ID on the SkillBit record.
+    Video status is transitioned to 'UPLOADING'.
+    """
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service unavailable",
+        )
+
+    existing = get_admin_skillbit_by_id(skillbit_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+
+    from backend.services import video_service
+    upload_data = await video_service.create_direct_upload(skillbit_id=skillbit_id, cors_origin=cors_origin)
+    upload_id = upload_data["upload_id"]
+    upload_url = upload_data["upload_url"]
+
+    update_payload = {
+        "mux_upload_id": upload_id,
+        "video_status": "UPLOADING",
+        "video_provider": "mux",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        sb.from_("skillbits").update(update_payload).eq("id", skillbit_id).execute()
+    except Exception as e:
+        logger.error(f"Failed to save upload session for SkillBit {skillbit_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to record upload session in database.",
+        )
+
+    return {
+        "upload_id": upload_id,
+        "upload_url": upload_url,
+        "status": upload_data.get("status", "waiting"),
+    }
+
+
+async def sync_video_status(skillbit_id: str) -> Dict[str, Any]:
+    """
+    Polls/synchronizes video ingestion status from Mux.
+    If the asset is ready, updates playback_id, duration_seconds, and marks video_status as 'READY'.
+    """
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service unavailable",
+        )
+
+    existing = get_admin_skillbit_by_id(skillbit_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"SkillBit '{skillbit_id}' not found.",
+        )
+
+    curr_status = (existing.get("video_status") or "NOT_UPLOADED").upper()
+    upload_id = existing.get("mux_upload_id")
+    asset_id = existing.get("video_asset_id")
+    playback_id = existing.get("playback_id")
+    duration = existing.get("duration_seconds")
+
+    # If already marked READY with playback ID, return immediately
+    if curr_status == "READY" and playback_id:
+        return {
+            "video_status": "READY",
+            "video_provider": existing.get("video_provider") or "mux",
+            "video_asset_id": asset_id,
+            "playback_id": playback_id,
+            "duration_seconds": duration,
+        }
+
+    from backend.services import video_service
+
+    # Step A: If we have upload_id and need asset_id
+    if upload_id and not asset_id:
+        try:
+            upload_info = await video_service.get_upload_status(upload_id)
+            new_asset_id = upload_info.get("asset_id")
+            upload_status_val = upload_info.get("status")
+
+            if upload_status_val == "errored":
+                curr_status = "ERROR"
+                sb.from_("skillbits").update({"video_status": "ERROR"}).eq("id", skillbit_id).execute()
+            elif new_asset_id:
+                asset_id = new_asset_id
+                curr_status = "PROCESSING"
+                sb.from_("skillbits").update({
+                    "video_asset_id": asset_id,
+                    "video_status": "PROCESSING",
+                }).eq("id", skillbit_id).execute()
+        except Exception as e:
+            logger.warning(f"Error querying Mux upload {upload_id}: {e}")
+
+    # Step B: If we have asset_id, inspect asset status and details
+    if asset_id:
+        try:
+            asset_info = await video_service.get_asset_details(asset_id)
+            asset_status = asset_info.get("status")
+
+            if asset_status == "ready":
+                curr_status = "READY"
+                p_id = video_service.extract_playback_id(asset_info)
+                if p_id:
+                    playback_id = p_id
+                dur_raw = asset_info.get("duration")
+                if dur_raw is not None:
+                    try:
+                        duration = int(round(float(dur_raw)))
+                    except (ValueError, TypeError):
+                        pass
+
+                sb.from_("skillbits").update({
+                    "video_status": "READY",
+                    "playback_id": playback_id,
+                    "duration_seconds": duration,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }).eq("id", skillbit_id).execute()
+
+            elif asset_status == "errored":
+                curr_status = "ERROR"
+                sb.from_("skillbits").update({"video_status": "ERROR"}).eq("id", skillbit_id).execute()
+            elif asset_status == "preparing":
+                curr_status = "PROCESSING"
+                sb.from_("skillbits").update({"video_status": "PROCESSING"}).eq("id", skillbit_id).execute()
+        except Exception as e:
+            logger.warning(f"Error querying Mux asset {asset_id}: {e}")
+
+    return {
+        "video_status": curr_status,
+        "video_provider": existing.get("video_provider") or "mux",
+        "video_asset_id": asset_id,
+        "playback_id": playback_id,
+        "duration_seconds": duration,
+    }
+
+
+async def process_mux_webhook(raw_body: bytes, signature_header: Optional[str]) -> Dict[str, Any]:
+    """
+    Authoritative handler for Mux S2S Webhooks.
+    1. Validates HMAC-SHA256 signature against MUX_WEBHOOK_SECRET.
+    2. Enforces idempotency via public.mux_webhook_events.
+    3. Handles video.upload.asset_created, video.asset.ready, video.asset.errored.
+    """
+    from backend.services import video_service
+    import json
+
+    # 1. Cryptographic signature check
+    is_valid = video_service.verify_webhook_authenticity(raw_body, signature_header)
+    if not is_valid:
+        logger.warning("Rejected Mux webhook: invalid signature or expired timestamp.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature.",
+        )
+
+    # 2. Parse payload
+    try:
+        payload = json.loads(raw_body.decode("utf-8"))
+    except Exception as e:
+        logger.error(f"Failed to parse Mux webhook JSON payload: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON payload.",
+        )
+
+    event_id = payload.get("id")
+    event_type = payload.get("type", "")
+    event_data = payload.get("data", {})
+
+    if not event_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing event id in webhook payload.",
+        )
+
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database service unavailable.")
+
+    # 3. Idempotency Check
+    try:
+        existing_evt = sb.from_("mux_webhook_events").select("id, processing_status").eq("event_id", event_id).execute()
+        if existing_evt.data and len(existing_evt.data) > 0:
+            status_val = existing_evt.data[0].get("processing_status")
+            if status_val == "processed":
+                logger.info(f"Mux webhook event {event_id} already processed. Skipping idempotently.")
+                return {"success": True, "status": "already_processed", "event_id": event_id}
+    except Exception as e:
+        logger.warning(f"Error querying mux_webhook_events: {e}")
+
+    passthrough = event_data.get("passthrough") or ""
+    skillbit_id = None
+    if passthrough:
+        skillbit_id = str(passthrough).strip()
+
+    if not skillbit_id and event_type.startswith("video.upload."):
+        upload_id = event_data.get("id")
+        if upload_id:
+            try:
+                sb_res = sb.from_("skillbits").select("id").eq("mux_upload_id", upload_id).execute()
+                if sb_res.data and len(sb_res.data) > 0:
+                    skillbit_id = str(sb_res.data[0]["id"])
+            except Exception:
+                pass
+
+    # Record event in processing state
+    try:
+        sb.from_("mux_webhook_events").upsert({
+            "event_id": event_id,
+            "event_type": event_type,
+            "skillbit_id": skillbit_id,
+            "processing_status": "processing",
+            "payload_summary": {
+                "type": event_type,
+                "asset_id": event_data.get("asset_id") or event_data.get("id"),
+            },
+        }, on_conflict="event_id").execute()
+    except Exception as e:
+        logger.warning(f"Could not insert mux_webhook_events: {e}")
+
+    # 4. Handle Lifecycle
+    try:
+        if event_type == "video.upload.asset_created":
+            asset_id = event_data.get("asset_id")
+            upload_id = event_data.get("id")
+            if asset_id:
+                query = sb.from_("skillbits").update({
+                    "video_asset_id": asset_id,
+                    "video_status": "PROCESSING",
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                })
+                if skillbit_id:
+                    query.eq("id", skillbit_id).execute()
+                elif upload_id:
+                    query.eq("mux_upload_id", upload_id).execute()
+
+        elif event_type == "video.asset.ready":
+            asset_id = event_data.get("id")
+            playback_id = video_service.extract_playback_id(event_data)
+            duration_raw = event_data.get("duration")
+            duration_seconds = None
+            if duration_raw is not None:
+                try:
+                    duration_seconds = int(round(float(duration_raw)))
+                except (ValueError, TypeError):
+                    pass
+
+            update_dict: Dict[str, Any] = {
+                "video_status": "READY",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            if playback_id:
+                update_dict["playback_id"] = playback_id
+            if duration_seconds is not None:
+                update_dict["duration_seconds"] = duration_seconds
+            if asset_id:
+                update_dict["video_asset_id"] = asset_id
+
+            query = sb.from_("skillbits").update(update_dict)
+            if skillbit_id:
+                query.eq("id", skillbit_id).execute()
+            elif asset_id:
+                query.eq("video_asset_id", asset_id).execute()
+
+        elif event_type in ("video.asset.errored", "video.upload.errored", "video.upload.cancelled"):
+            asset_id = event_data.get("id") or event_data.get("asset_id")
+            upload_id = event_data.get("id")
+            update_dict = {
+                "video_status": "ERROR",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            query = sb.from_("skillbits").update(update_dict)
+            if skillbit_id:
+                query.eq("id", skillbit_id).execute()
+            elif asset_id:
+                query.eq("video_asset_id", asset_id).execute()
+            elif upload_id:
+                query.eq("mux_upload_id", upload_id).execute()
+
+        # Mark completed
+        try:
+            sb.from_("mux_webhook_events").update({
+                "processing_status": "processed",
+                "processed_at": datetime.now(timezone.utc).isoformat(),
+            }).eq("event_id", event_id).execute()
+        except Exception as e:
+            logger.warning(f"Could not mark mux_webhook_events as processed: {e}")
+
+        return {"success": True, "event_id": event_id, "type": event_type}
+
+    except Exception as e:
+        logger.error(f"Error handling Mux webhook {event_id}: {e}")
+        try:
+            sb.from_("mux_webhook_events").update({
+                "processing_status": "failed",
+            }).eq("event_id", event_id).execute()
+        except Exception:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Webhook processing error: {str(e)}",
+        )

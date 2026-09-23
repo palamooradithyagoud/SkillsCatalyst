@@ -12,6 +12,8 @@ import type {
   UpdateSkillBitPayload,
   StudentSkillBitsFeedResponse,
   AdminSkillBitsResponse,
+  DirectUploadResponse,
+  VideoStatusResponse,
 } from "@/types/skillbits";
 
 // ── STUDENT APIS ─────────────────────────────────────────────────────────────
@@ -147,3 +149,68 @@ export async function archiveAdminSkillBit(id: string): Promise<AdminSkillBit> {
   }
   return res.json();
 }
+
+export async function requestDirectUpload(
+  skillbitId: string,
+  corsOrigin?: string
+): Promise<DirectUploadResponse> {
+  const headers = await getAuthHeaders();
+  const res = await apiFetch(`${API_BASE}/api/admin/skillbits/${encodeURIComponent(skillbitId)}/direct-upload`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ cors_origin: corsOrigin }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.detail || `Failed to create upload session: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getVideoStatus(skillbitId: string): Promise<VideoStatusResponse> {
+  const headers = await getAuthHeaders();
+  const res = await apiFetch(`${API_BASE}/api/admin/skillbits/${encodeURIComponent(skillbitId)}/video-status`, {
+    headers,
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.detail || `Failed to fetch video status: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export function uploadFileToMuxDirect(
+  uploadUrl: string,
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl, true);
+    xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`Direct upload failed with status ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Network error during video upload to provider."));
+    };
+
+    xhr.send(file);
+  });
+}
+

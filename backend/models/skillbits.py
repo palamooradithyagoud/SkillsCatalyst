@@ -53,6 +53,24 @@ class VideoProvider(str, Enum):
         return None
 
 
+class VideoStatus(str, Enum):
+    NOT_UPLOADED = "NOT_UPLOADED"
+    UPLOADING = "UPLOADING"
+    PROCESSING = "PROCESSING"
+    READY = "READY"
+    ERROR = "ERROR"
+
+    @classmethod
+    def _missing_(cls, value: object) -> Optional["VideoStatus"]:
+        if isinstance(value, str):
+            val_upper = value.strip().upper()
+            for member in cls:
+                if member.value == val_upper:
+                    return member
+        return None
+
+
+
 # ── REQUEST SCHEMAS ───────────────────────────────────────────────────────────
 
 class CreateSkillBitRequest(BaseModel):
@@ -273,6 +291,8 @@ class AdminSkillBitResponse(BaseModel):
     video_asset_id: Optional[str] = None
     playback_id: Optional[str] = None
     status: str
+    video_status: str = "NOT_UPLOADED"
+    mux_upload_id: Optional[str] = None
     published_at: Optional[str] = None
     created_by: str
     created_at: str
@@ -291,3 +311,22 @@ class SkillBitsListResponse(BaseModel):
 class AdminSkillBitsListResponse(BaseModel):
     total: int
     items: List[AdminSkillBitResponse]
+
+
+class DirectUploadRequest(BaseModel):
+    cors_origin: Optional[str] = Field(None, description="Optional custom CORS origin for Mux direct upload")
+
+
+class DirectUploadResponse(BaseModel):
+    upload_id: str
+    upload_url: str
+    status: str = "waiting"
+
+
+class VideoStatusResponse(BaseModel):
+    video_status: str
+    video_provider: Optional[str] = None
+    video_asset_id: Optional[str] = None
+    playback_id: Optional[str] = None
+    duration_seconds: Optional[int] = None
+

@@ -73,6 +73,9 @@ from backend.models.skillbits import (
     UpdateSkillBitRequest,
     AdminSkillBitResponse,
     AdminSkillBitsListResponse,
+    DirectUploadRequest,
+    DirectUploadResponse,
+    VideoStatusResponse,
 )
 from backend.services.skillbits_service import (
     get_admin_skillbits,
@@ -81,6 +84,8 @@ from backend.services.skillbits_service import (
     update_skillbit,
     publish_skillbit,
     archive_skillbit,
+    request_direct_upload,
+    sync_video_status,
 )
 
 logger = logging.getLogger("skillscatalyst.admin")
@@ -811,6 +816,29 @@ def archive_admin_skillbit(
     """Archives a SkillBit, hiding it from the student feed while preserving historical data."""
     archived = archive_skillbit(skillbit_id=skillbit_id)
     return AdminSkillBitResponse(**archived)
+
+
+@router.post("/skillbits/{skillbit_id}/direct-upload", status_code=status.HTTP_200_OK, response_model=DirectUploadResponse)
+async def create_skillbit_direct_upload(
+    skillbit_id: str,
+    payload: Optional[DirectUploadRequest] = None,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> DirectUploadResponse:
+    """Initiates a Mux Direct Upload session for video ingestion without proxying media bytes."""
+    cors = payload.cors_origin if payload else None
+    result = await request_direct_upload(skillbit_id=skillbit_id, cors_origin=cors)
+    return DirectUploadResponse(**result)
+
+
+@router.get("/skillbits/{skillbit_id}/video-status", status_code=status.HTTP_200_OK, response_model=VideoStatusResponse)
+async def check_skillbit_video_status(
+    skillbit_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> VideoStatusResponse:
+    """Synchronizes and returns the current Mux video ingestion status, duration, and playback ID."""
+    status_info = await sync_video_status(skillbit_id=skillbit_id)
+    return VideoStatusResponse(**status_info)
+
 
 
 
