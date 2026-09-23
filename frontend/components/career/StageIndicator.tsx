@@ -27,7 +27,7 @@ export default function StageIndicator({
         {done ? "✓" : stage}
       </div>
       <span
-        className={`text-xs transition-colors ${
+        className={`text-xs transition-colors hidden sm:inline ${
           done
             ? "text-purple-700 font-semibold"
             : active
