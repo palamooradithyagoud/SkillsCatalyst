@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Briefcase,
   FileText,
@@ -30,9 +31,26 @@ import {
   Phone,
   MapPin,
   Globe,
+  Layers,
+  LayoutTemplate,
+  Sliders,
+  ExternalLink,
+  Printer,
+  Copy,
+  Code2,
+  Eye,
+  Download,
+  Save,
 } from "lucide-react";
 import StageIndicator from "@/components/career/StageIndicator";
 import ResumeMarkdownViewer from "@/components/career/ResumeMarkdownViewer";
+import TemplateSelectModal, {
+  ResumeTemplateId,
+  RESUME_TEMPLATES,
+} from "@/components/career/TemplateSelectModal";
+import ResumeLivePreview from "@/components/career/ResumeLivePreview";
+import { ResumeData } from "@/lib/career/latexExportHelper";
+import confetti from "canvas-confetti";
 import {
   COMMON_ROLES,
   COMPANY_TYPES,
@@ -51,9 +69,73 @@ interface SavedResumeItem {
   date: string;
   atsScore: number;
   starred?: boolean;
+  templateId?: ResumeTemplateId;
+  resumeData?: ResumeData;
 }
 
+const defaultResumeData: ResumeData = {
+  fullName: "Aadithya Goud",
+  role: "Fullstack Software Engineer",
+  email: "adithya@example.com",
+  phone: "+91 98765 43210",
+  location: "Hyderabad, India",
+  linkedin: "linkedin.com/in/adithya",
+  github: "github.com/adithya",
+  summary:
+    "Passionate Software Engineer skilled in modern web development, distributed architecture, and scalable full-stack applications with high ATS ranking standards.",
+  education: [
+    {
+      institution: "Indian Institute of Information Technology",
+      degree: "B.Tech in Computer Science & Engineering",
+      location: "Hyderabad, India",
+      dates: "2021 — 2025",
+      gpa: "8.9 / 10.0",
+    },
+  ],
+  experience: [
+    {
+      company: "SkillsCatalyst",
+      role: "Lead Fullstack Engineer",
+      location: "Remote / Hyderabad",
+      dates: "Jan 2024 — Present",
+      bullets: [
+        "Architected real-time AI career acceleration platform serving thousands of active developers.",
+        "Built resilient FastAPI microservices and optimized PostgreSQL indexing, reducing P99 latency by 45%.",
+        "Engineered responsive Next.js frontend with GSAP motion and high-contrast accessibility standards.",
+      ],
+    },
+    {
+      company: "HyperTech Labs",
+      role: "Software Engineering Intern",
+      location: "Bangalore, India",
+      dates: "May 2023 — Dec 2023",
+      bullets: [
+        "Designed and maintained scalable RESTful endpoints with automated OpenAPI schemas.",
+        "Integrated Redis caching layer, lowering repeated database queries by 60%.",
+      ],
+    },
+  ],
+  projects: [
+    {
+      name: "SkillsCatalyst AI Suite",
+      tech: "Next.js, FastAPI, Groq LLM, Supabase, Docker",
+      link: "skillscatalyst.in",
+      bullets: [
+        "Developed full-featured ATS resume score analyzer and interactive career roadmaps.",
+        "Integrated multi-model LLM benchmarking with structured fallback orchestration.",
+      ],
+    },
+  ],
+  skills: {
+    languages: "JavaScript, TypeScript, Python, C++, SQL, HTML/CSS",
+    frameworks: "React, Next.js, FastAPI, Node.js, Express, Tailwind CSS",
+    tools: "Docker, Git, PostgreSQL, Supabase, Redis, Linux, Vercel",
+    all: "React, Next.js, TypeScript, Python, FastAPI, Node.js, PostgreSQL, Docker, Redis, Tailwind CSS",
+  },
+};
+
 export default function ResumeWorkspacePage() {
+  const router = useRouter();
   const { session } = useAuth();
   const userName = session?.name || "Aadithya Goud";
 
@@ -63,24 +145,40 @@ export default function ResumeWorkspacePage() {
   // Main panel active mode: "empty" | "upload" | "create"
   const [viewMode, setViewMode] = useState<"empty" | "upload" | "create">("empty");
 
+  // Template modal state
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>("sb2nov");
+
+  // Builder section navigation & mobile view toggle
+  const [activeEditorSection, setActiveEditorSection] = useState<
+    "contact" | "experience" | "education" | "projects" | "skills"
+  >("contact");
+  const [mobileBuilderTab, setMobileBuilderTab] = useState<"editor" | "preview">("editor");
+
   // Saved resumes state
   const [savedResumes, setSavedResumes] = useState<SavedResumeItem[]>([]);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
 
-  // Resume builder state
-  const [builderData, setBuilderData] = useState({
+  // Resume builder data state
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    ...defaultResumeData,
     fullName: userName,
-    role: "Fullstack Software Engineer",
-    email: "adithya@example.com",
-    phone: "+91 98765 43210",
-    location: "Hyderabad, India",
-    linkedin: "linkedin.com/in/adithya",
-    summary:
-      "Passionate Software Engineer skilled in modern web development, distributed architecture, and scalable full-stack applications.",
-    education: "B.Tech in Computer Science & Engineering",
-    experience: "Software Engineer — Leading core product architecture & API scalability",
-    skills: "React, Next.js, TypeScript, Python, FastAPI, Node.js, PostgreSQL, Docker",
   });
+
+  // Load saved resumes from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("skillscatalyst_resumes");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedResumes(parsed);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   // Use the existing career resume review hook
   const reviewState = useResumeReview();
@@ -124,7 +222,13 @@ export default function ResumeWorkspacePage() {
           atsScore: 92,
           starred: false,
         };
-        setSavedResumes((prev) => [newItem, ...prev]);
+        setSavedResumes((prev) => {
+          const next = [newItem, ...prev];
+          try {
+            localStorage.setItem("skillscatalyst_resumes", JSON.stringify(next));
+          } catch {}
+          return next;
+        });
         setSelectedResumeId(newItem.id);
       }
     }
@@ -136,33 +240,62 @@ export default function ResumeWorkspacePage() {
   };
 
   const handleStartCreate = () => {
+    router.push("/career/resume-builder");
+  };
+
+  const handleTemplateChosen = (tmplId: ResumeTemplateId) => {
+    setSelectedTemplate(tmplId);
+    setIsTemplateModalOpen(false);
     setViewMode("create");
+    setMobileBuilderTab("editor");
   };
 
   const handleSaveCreatedResume = () => {
+    const tmplDef = RESUME_TEMPLATES.find((t) => t.id === selectedTemplate);
+    const score = tmplDef?.atsScore || 95;
     const newItem: SavedResumeItem = {
       id: `resume-${Date.now()}`,
-      title: `${builderData.fullName} — ${builderData.role}`,
-      role: builderData.role,
+      title: `${resumeData.fullName} — ${resumeData.role}`,
+      role: resumeData.role,
       date: "Just now",
-      atsScore: 88,
+      atsScore: score,
       starred: false,
+      templateId: selectedTemplate,
+      resumeData: { ...resumeData },
     };
-    setSavedResumes((prev) => [newItem, ...prev]);
+    const nextList = [newItem, ...savedResumes];
+    setSavedResumes(nextList);
+    try {
+      localStorage.setItem("skillscatalyst_resumes", JSON.stringify(nextList));
+    } catch (e) {
+      console.error(e);
+    }
     setSelectedResumeId(newItem.id);
-    setViewMode("empty");
+    try {
+      confetti({ particleCount: 75, spread: 70, origin: { y: 0.65 } });
+    } catch {}
   };
 
   const toggleStar = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedResumes((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, starred: !r.starred } : r))
-    );
+    setSavedResumes((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, starred: !r.starred } : r));
+      try {
+        localStorage.setItem("skillscatalyst_resumes", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   };
 
   const deleteResume = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedResumes((prev) => prev.filter((r) => r.id !== id));
+    setSavedResumes((prev) => {
+      const next = prev.filter((r) => r.id !== id);
+      try {
+        localStorage.setItem("skillscatalyst_resumes", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
     if (selectedResumeId === id) {
       setSelectedResumeId(null);
       setViewMode("empty");
@@ -555,7 +688,13 @@ export default function ResumeWorkspacePage() {
                       key={resume.id}
                       onClick={() => {
                         setSelectedResumeId(resume.id);
-                        setViewMode("upload");
+                        if (resume.templateId && resume.resumeData) {
+                          setSelectedTemplate(resume.templateId);
+                          setResumeData(resume.resumeData);
+                          setViewMode("create");
+                        } else {
+                          setViewMode("upload");
+                        }
                       }}
                       className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                         isSelected
@@ -571,9 +710,18 @@ export default function ResumeWorkspacePage() {
                           <p className="text-xs font-bold text-slate-900 truncate">
                             {resume.title}
                           </p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {resume.role} · {resume.date}
-                          </p>
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 truncate mt-0.5">
+                            {resume.templateId && (
+                              <span className="bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase">
+                                {resume.templateId === "sb2nov"
+                                  ? "SB2Nov"
+                                  : resume.templateId === "modern-cv"
+                                  ? "Modern CV"
+                                  : "Classic"}
+                              </span>
+                            )}
+                            <span className="truncate">{resume.role} · {resume.date}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -609,7 +757,9 @@ export default function ResumeWorkspacePage() {
 
         {/* ── Right Column: Main Detail / Workspace Panel ── */}
         <div
-          className={`lg:col-span-8 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 shadow-sm min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
+          className={`${
+            viewMode === "create" ? "lg:col-span-12" : "lg:col-span-8"
+          } bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
             viewMode === "empty" ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -662,161 +812,686 @@ export default function ResumeWorkspacePage() {
           )}
 
           {/* ──────────────────────────────────────────────────────────
-              STATE B: RESUME CREATOR / BUILDER WIZARD
+              STATE B: RESUME CREATOR / BUILDER STUDIO
           ────────────────────────────────────────────────────────── */}
           {viewMode === "create" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
+            <div className="space-y-5">
+              {/* Studio Header Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setViewMode("empty")}
-                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Back</span>
                   </button>
+
                   <div>
-                    <h3 className="text-lg font-black text-slate-900">
-                      Create New Resume
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium">
-                      Fill out your profile details to generate an ATS-optimized resume.
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-black text-slate-900">
+                        {resumeData.fullName}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setIsTemplateModalOpen(true)}
+                        className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-200 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <LayoutTemplate className="w-3 h-3" />
+                        <span>
+                          {selectedTemplate === "sb2nov"
+                            ? "Template: SB2Nov"
+                            : selectedTemplate === "modern-cv"
+                            ? "Template: Modern CV"
+                            : "Template: Simple & Classic"}
+                        </span>
+                        <span className="text-purple-400 font-normal">· Change</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 font-medium">
+                      Live preview updates instantly with your changes.
                     </p>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSaveCreatedResume}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Save &amp; Analyze
-                </button>
-              </div>
+                {/* Mobile View Toggle & Save Button */}
+                <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
+                  <div className="lg:hidden flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setMobileBuilderTab("editor")}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        mobileBuilderTab === "editor"
+                          ? "bg-white text-purple-700 shadow-xs"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      Edit Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileBuilderTab("preview")}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        mobileBuilderTab === "preview"
+                          ? "bg-white text-purple-700 shadow-xs"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      Preview
+                    </button>
+                  </div>
 
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.fullName}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, fullName: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Target Role
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.role}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, role: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={builderData.email}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, email: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.phone}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, phone: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.location}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, location: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    LinkedIn / Portfolio
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.linkedin}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, linkedin: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Professional Summary
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={builderData.summary}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, summary: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none resize-none"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-slate-800 block mb-1">
-                    Technical Skills (comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={builderData.skills}
-                    onChange={(e) =>
-                      setBuilderData({ ...builderData, skills: e.target.value })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-purple-600 focus:outline-none"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const originalTitle = document.title;
+                      const cleanFileName = `${(resumeData.fullName || "My").trim().replace(/\s+/g, "_")}_Resume`;
+                      document.title = cleanFileName;
+                      window.print();
+                      setTimeout(() => {
+                        document.title = originalTitle;
+                      }, 1500);
+                    }}
+                    className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <Download className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Download Resume</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveCreatedResume}
+                    className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-purple-600/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Save Resume</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("empty")}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer text-center"
+              {/* Studio Body: Form on Left, Live Preview on Right */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* ── Left Column: Editor Sections (lg: 5 cols) ── */}
+                <div
+                  className={`lg:col-span-5 space-y-4 ${
+                    mobileBuilderTab === "preview" ? "hidden lg:block" : "block"
+                  }`}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveCreatedResume}
-                  className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-purple-600/20 cursor-pointer text-center"
+                  {/* Section Switcher Tabs */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-slate-100 text-xs">
+                    {(
+                      [
+                        { id: "contact", label: "Contact" },
+                        { id: "experience", label: "Experience" },
+                        { id: "education", label: "Education" },
+                        { id: "projects", label: "Projects" },
+                        { id: "skills", label: "Skills" },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveEditorSection(tab.id)}
+                        className={`px-3 py-1.5 font-bold rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                          activeEditorSection === tab.id
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Section 1: Contact & Personal Details */}
+                  {activeEditorSection === "contact" && (
+                    <div className="space-y-3.5 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 text-xs">
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          value={resumeData.fullName}
+                          onChange={(e) =>
+                            setResumeData({ ...resumeData, fullName: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">Target Role / Headline</label>
+                        <input
+                          type="text"
+                          value={resumeData.role}
+                          onChange={(e) =>
+                            setResumeData({ ...resumeData, role: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">Email</label>
+                          <input
+                            type="email"
+                            value={resumeData.email}
+                            onChange={(e) =>
+                              setResumeData({ ...resumeData, email: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">Phone</label>
+                          <input
+                            type="text"
+                            value={resumeData.phone}
+                            onChange={(e) =>
+                              setResumeData({ ...resumeData, phone: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">Location</label>
+                          <input
+                            type="text"
+                            value={resumeData.location}
+                            onChange={(e) =>
+                              setResumeData({ ...resumeData, location: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-slate-800 block mb-1">LinkedIn Profile</label>
+                          <input
+                            type="text"
+                            value={resumeData.linkedin}
+                            onChange={(e) =>
+                              setResumeData({ ...resumeData, linkedin: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">GitHub / Portfolio</label>
+                        <input
+                          type="text"
+                          value={resumeData.github}
+                          onChange={(e) =>
+                            setResumeData({ ...resumeData, github: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">Professional Summary</label>
+                        <textarea
+                          rows={3}
+                          value={resumeData.summary}
+                          onChange={(e) =>
+                            setResumeData({ ...resumeData, summary: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none resize-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 2: Experience */}
+                  {activeEditorSection === "experience" && (
+                    <div className="space-y-4 text-xs">
+                      {resumeData.experience.map((exp, expIdx) => (
+                        <div
+                          key={expIdx}
+                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5 relative"
+                        >
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                            <span className="font-extrabold text-slate-800 text-[11px]">
+                              Position #{expIdx + 1}
+                            </span>
+                            {resumeData.experience.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = resumeData.experience.filter(
+                                    (_, i) => i !== expIdx
+                                  );
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Role Title</label>
+                              <input
+                                type="text"
+                                value={exp.role}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.experience];
+                                  updated[expIdx].role = e.target.value;
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Company</label>
+                              <input
+                                type="text"
+                                value={exp.company}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.experience];
+                                  updated[expIdx].company = e.target.value;
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Dates / Period</label>
+                              <input
+                                type="text"
+                                value={exp.dates}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.experience];
+                                  updated[expIdx].dates = e.target.value;
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Location</label>
+                              <input
+                                type="text"
+                                value={exp.location}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.experience];
+                                  updated[expIdx].location = e.target.value;
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="font-bold text-slate-700">Achievement Bullets</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...resumeData.experience];
+                                  updated[expIdx].bullets.push("Achieved measurable impact using modern tooling.");
+                                  setResumeData({ ...resumeData, experience: updated });
+                                }}
+                                className="text-purple-600 hover:text-purple-700 font-bold text-[10px] cursor-pointer"
+                              >
+                                + Add Bullet
+                              </button>
+                            </div>
+                            <div className="space-y-1.5">
+                              {exp.bullets.map((bullet, bIdx) => (
+                                <div key={bIdx} className="flex items-center gap-1.5">
+                                  <input
+                                    type="text"
+                                    value={bullet}
+                                    onChange={(e) => {
+                                      const updated = [...resumeData.experience];
+                                      updated[expIdx].bullets[bIdx] = e.target.value;
+                                      setResumeData({ ...resumeData, experience: updated });
+                                    }}
+                                    className="flex-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                                  />
+                                  {exp.bullets.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = [...resumeData.experience];
+                                        updated[expIdx].bullets = updated[expIdx].bullets.filter(
+                                          (_, i) => i !== bIdx
+                                        );
+                                        setResumeData({ ...resumeData, experience: updated });
+                                      }}
+                                      className="text-slate-400 hover:text-rose-600 p-1"
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResumeData({
+                            ...resumeData,
+                            experience: [
+                              ...resumeData.experience,
+                              {
+                                company: "Company Name",
+                                role: "Software Engineer",
+                                location: "City, Country",
+                                dates: "2023 — Present",
+                                bullets: ["Spearheaded new engineering workflows and improved metrics."],
+                              },
+                            ],
+                          });
+                        }}
+                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                      >
+                        + Add Another Work Experience
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Section 3: Education */}
+                  {activeEditorSection === "education" && (
+                    <div className="space-y-4 text-xs">
+                      {resumeData.education.map((edu, eduIdx) => (
+                        <div
+                          key={eduIdx}
+                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                            <span className="font-extrabold text-slate-800 text-[11px]">
+                              Education #{eduIdx + 1}
+                            </span>
+                            {resumeData.education.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = resumeData.education.filter(
+                                    (_, i) => i !== eduIdx
+                                  );
+                                  setResumeData({ ...resumeData, education: updated });
+                                }}
+                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Institution / University</label>
+                            <input
+                              type="text"
+                              value={edu.institution}
+                              onChange={(e) => {
+                                const updated = [...resumeData.education];
+                                updated[eduIdx].institution = e.target.value;
+                                setResumeData({ ...resumeData, education: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Degree &amp; Major</label>
+                            <input
+                              type="text"
+                              value={edu.degree}
+                              onChange={(e) => {
+                                const updated = [...resumeData.education];
+                                updated[eduIdx].degree = e.target.value;
+                                setResumeData({ ...resumeData, education: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Dates / Grad Year</label>
+                              <input
+                                type="text"
+                                value={edu.dates}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.education];
+                                  updated[eduIdx].dates = e.target.value;
+                                  setResumeData({ ...resumeData, education: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">GPA (optional)</label>
+                              <input
+                                type="text"
+                                value={edu.gpa || ""}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.education];
+                                  updated[eduIdx].gpa = e.target.value;
+                                  setResumeData({ ...resumeData, education: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResumeData({
+                            ...resumeData,
+                            education: [
+                              ...resumeData.education,
+                              {
+                                institution: "University Name",
+                                degree: "Degree Title",
+                                location: "City, Country",
+                                dates: "2020 — 2024",
+                              },
+                            ],
+                          });
+                        }}
+                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                      >
+                        + Add Education
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Section 4: Projects */}
+                  {activeEditorSection === "projects" && (
+                    <div className="space-y-4 text-xs">
+                      {resumeData.projects.map((proj, projIdx) => (
+                        <div
+                          key={projIdx}
+                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                            <span className="font-extrabold text-slate-800 text-[11px]">
+                              Project #{projIdx + 1}
+                            </span>
+                            {resumeData.projects.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = resumeData.projects.filter(
+                                    (_, i) => i !== projIdx
+                                  );
+                                  setResumeData({ ...resumeData, projects: updated });
+                                }}
+                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Project Name</label>
+                              <input
+                                type="text"
+                                value={proj.name}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.projects];
+                                  updated[projIdx].name = e.target.value;
+                                  setResumeData({ ...resumeData, projects: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-bold text-slate-700 block mb-0.5">Tech Stack</label>
+                              <input
+                                type="text"
+                                value={proj.tech}
+                                onChange={(e) => {
+                                  const updated = [...resumeData.projects];
+                                  updated[projIdx].tech = e.target.value;
+                                  setResumeData({ ...resumeData, projects: updated });
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-0.5">Link / Repository</label>
+                            <input
+                              type="text"
+                              value={proj.link || ""}
+                              onChange={(e) => {
+                                const updated = [...resumeData.projects];
+                                updated[projIdx].link = e.target.value;
+                                setResumeData({ ...resumeData, projects: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-bold text-slate-700 block mb-1">Description / Bullet</label>
+                            <input
+                              type="text"
+                              value={proj.bullets[0] || ""}
+                              onChange={(e) => {
+                                const updated = [...resumeData.projects];
+                                updated[projIdx].bullets = [e.target.value];
+                                setResumeData({ ...resumeData, projects: updated });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResumeData({
+                            ...resumeData,
+                            projects: [
+                              ...resumeData.projects,
+                              {
+                                name: "New Project",
+                                tech: "React, Next.js, Node.js",
+                                link: "github.com/project",
+                                bullets: ["Developed full-stack application with automated testing."],
+                              },
+                            ],
+                          });
+                        }}
+                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                      >
+                        + Add Project
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Section 5: Skills */}
+                  {activeEditorSection === "skills" && (
+                    <div className="space-y-3 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 text-xs">
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">
+                          Languages
+                        </label>
+                        <input
+                          type="text"
+                          value={resumeData.skills?.languages || ""}
+                          onChange={(e) =>
+                            setResumeData({
+                              ...resumeData,
+                              skills: { ...resumeData.skills, languages: e.target.value },
+                            })
+                          }
+                          placeholder="JavaScript, TypeScript, Python, C++, SQL..."
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">
+                          Frameworks &amp; Platforms
+                        </label>
+                        <input
+                          type="text"
+                          value={resumeData.skills?.frameworks || ""}
+                          onChange={(e) =>
+                            setResumeData({
+                              ...resumeData,
+                              skills: { ...resumeData.skills, frameworks: e.target.value },
+                            })
+                          }
+                          placeholder="React, Next.js, FastAPI, Node.js, Tailwind CSS..."
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-800 block mb-1">
+                          Developer Tools &amp; Cloud
+                        </label>
+                        <input
+                          type="text"
+                          value={resumeData.skills?.tools || ""}
+                          onChange={(e) =>
+                            setResumeData({
+                              ...resumeData,
+                              skills: { ...resumeData.skills, tools: e.target.value },
+                            })
+                          }
+                          placeholder="Git, Docker, PostgreSQL, Supabase, Linux, Vercel..."
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Right Column: Interactive Real-Time Live Preview (lg: 7 cols) ── */}
+                <div
+                  className={`lg:col-span-7 ${
+                    mobileBuilderTab === "editor" ? "hidden lg:block" : "block"
+                  }`}
                 >
-                  Save &amp; Generate Preview
-                </button>
+                  <ResumeLivePreview
+                    data={resumeData}
+                    templateId={selectedTemplate}
+                    onTemplateChange={(tmpl) => setSelectedTemplate(tmpl)}
+                  />
+                </div>
               </div>
             </div>
           )}
