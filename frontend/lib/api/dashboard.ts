@@ -188,7 +188,6 @@ async function getFallbackDashboardData() {
         subtitle: "Currently Locked",
       },
     },
-    upcoming: [],
     practiceOverview: {
       problemsSolved: 0,
       successRate: 0,

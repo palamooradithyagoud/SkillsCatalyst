@@ -19,3 +19,4 @@ CREATE INDEX IF NOT EXISTS idx_skillbits_difficulty_status
 
 CREATE INDEX IF NOT EXISTS idx_skillbits_title
     ON public.skillbits (title);
+

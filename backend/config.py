@@ -57,6 +57,12 @@ MUX_TOKEN_ID = os.getenv("MUX_TOKEN_ID", "").strip()
 MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET", "").strip()
 MUX_WEBHOOK_SECRET = os.getenv("MUX_WEBHOOK_SECRET", "").strip()
 
+# ── Web Push & VAPID Configuration (Production Web Push) ────────────────────
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", os.getenv("NEXT_PUBLIC_VAPID_PUBLIC_KEY", "")).strip()
+NEXT_PUBLIC_VAPID_PUBLIC_KEY = VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "").strip()
+VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:notifications@skillscatalyst.in").strip()
+
 
 REQUIRED_ENV_VARS = {
     "SUPABASE_URL": SUPABASE_URL,

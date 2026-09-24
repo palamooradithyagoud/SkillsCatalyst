@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronRight,
   Inbox,
-  Calendar,
   Activity,
   CreditCard,
   Globe,
@@ -59,7 +58,6 @@ const mockNavGroups: NavGroupData[] = [
           { id: 'p-archived', title: 'Archived', icon: Hash },
         ]
       },
-      { id: 'calendar', title: 'Calendar', icon: Calendar },
       { 
         id: 'team', 
         title: 'Team', 

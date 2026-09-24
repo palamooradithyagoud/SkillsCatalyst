@@ -1,12 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import MetricCards from "@/components/MetricCards";
 import QuickHubNav from "@/components/QuickHubNav";
-import UpcomingList from "@/components/UpcomingList";
-import PracticeOverview from "@/components/PracticeOverview";
-import PricingModal from "@/components/PricingModal";
 import EventHeroCard from "@/components/EventHeroCard";
 import { TechNewsStories } from "@/components/tech-news/TechNewsStories";
 import { useQuery } from "@tanstack/react-query";
@@ -14,15 +10,15 @@ import { fetchDashboardData } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { Target, FileText, Map, Sparkles, CheckCircle2, Zap, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { CheckCircle2, X } from "lucide-react";
 
 export default function DashboardPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
   const { openPricingModal } = usePricingModal();
   const [showPaymentBanner, setShowPaymentBanner] = useState(false);
-  const { isPremium, plan: subPlan, refetch: refetchSubscription } = useSubscription();
+  const { refetch: refetchSubscription } = useSubscription();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -34,21 +30,11 @@ export default function DashboardPage() {
     }
   }, [refetchSubscription]);
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["dashboard", userId],
     queryFn: () => fetchDashboardData(),
     enabled: !!session?.user_id,
   });
-
-  const displayName = session?.name || data?.user?.name || session?.email?.split("@")[0] || "Learner";
-
-  // Filter out any legacy mock items if backend deployment is pending
-  const upcomingItems = (data?.upcoming ?? []).filter(
-    (item: any) =>
-      item.title !== "Mock Interview" &&
-      item.title !== "System Design" &&
-      item.title !== "DSA Practice"
-  );
 
   // Framer Motion Animation Variants for smooth entrance
   const containerVariants = {
@@ -132,13 +118,12 @@ export default function DashboardPage() {
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
-        {/* Right / Middle Area: Learning Progress & Trending Skills + Tasks */}
+        {/* Right / Middle Area: Learning Progress & Trending Skills */}
         <motion.div
           variants={rightPanelVariants}
           className="w-full max-w-[540px] space-y-4 sm:space-y-5 sticky top-6"
         >
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="learning-and-skills" />
-          <UpcomingList items={upcomingItems} />
         </motion.div>
       </div>
     </motion.div>

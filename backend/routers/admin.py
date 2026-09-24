@@ -7,11 +7,12 @@ Students and unauthenticated callers are rejected with 403 Forbidden or 401 Unau
 
 import logging
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel, Field
 
 from backend.services.auth_service import require_owner, require_admin
 from backend.services.supabase_service import get_supabase
+from backend.services.notification_service import notify_new_event, notify_new_scholarship
 
 from backend.services.cache_service import get_redis_client
 from backend.models.event import (
@@ -284,6 +285,8 @@ def get_admin_event(
 @router.post("/events", status_code=status.HTTP_201_CREATED)
 def create_admin_event(
     payload: CreateEventRequest,
+    background_tasks: BackgroundTasks,
+    send_notification: bool = Query(default=True, description="Send Web Push and in-app notification if published"),
     owner: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """
@@ -291,6 +294,13 @@ def create_admin_event(
     Authoritative created_by is assigned strictly from the authenticated owner's user_id.
     """
     created = create_event(data=payload, user_id=owner["user_id"])
+    if send_notification and created.get("status") == "published":
+        background_tasks.add_task(
+            notify_new_event,
+            event_id=created.get("id"),
+            event_title=created.get("event_name", payload.event_name),
+            event_category=created.get("category", "Hackathons"),
+        )
     return {
         "success": True,
         "message": f"Event '{payload.event_name}' created successfully.",
@@ -316,10 +326,19 @@ def update_admin_event(
 @router.post("/events/{event_id}/publish", status_code=status.HTTP_200_OK)
 def publish_admin_event(
     event_id: str,
+    background_tasks: BackgroundTasks,
+    send_notification: bool = Query(default=True, description="Send Web Push and in-app notification to users"),
     owner: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """Publishes an event to become student-visible within its visibility window."""
     published = set_event_status(event_id=event_id, new_status=EventStatus.PUBLISHED)
+    if send_notification:
+        background_tasks.add_task(
+            notify_new_event,
+            event_id=event_id,
+            event_title=published.get("event_name", "New Event"),
+            event_category=published.get("category", "Hackathons"),
+        )
     return {
         "success": True,
         "message": "Event published successfully.",
@@ -411,6 +430,8 @@ def get_admin_scholarship(
 @router.post("/scholarships", status_code=status.HTTP_201_CREATED)
 def create_admin_scholarship(
     payload: CreateScholarshipRequest,
+    background_tasks: BackgroundTasks,
+    send_notification: bool = Query(default=True, description="Send Web Push and in-app notification if published"),
     owner: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """
@@ -418,6 +439,13 @@ def create_admin_scholarship(
     Authoritative created_by is assigned strictly from the authenticated owner's user_id.
     """
     created = create_scholarship(data=payload, user_id=owner["user_id"])
+    if send_notification and created.get("status") == "published":
+        background_tasks.add_task(
+            notify_new_scholarship,
+            scholarship_id=created.get("id"),
+            scholarship_title=created.get("name", payload.name),
+            scholarship_data=created,
+        )
     return {
         "success": True,
         "message": f"Scholarship '{payload.name}' created successfully.",
@@ -443,10 +471,19 @@ def update_admin_scholarship(
 @router.post("/scholarships/{scholarship_id}/publish", status_code=status.HTTP_200_OK)
 def publish_admin_scholarship(
     scholarship_id: str,
+    background_tasks: BackgroundTasks,
+    send_notification: bool = Query(default=True, description="Send Web Push and in-app notification to users"),
     owner: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """Publishes a scholarship to become student-visible within its visibility window."""
     published = set_scholarship_status(scholarship_id=scholarship_id, new_status=ScholarshipStatus.PUBLISHED)
+    if send_notification:
+        background_tasks.add_task(
+            notify_new_scholarship,
+            scholarship_id=scholarship_id,
+            scholarship_title=published.get("name", "New Scholarship"),
+            scholarship_data=published,
+        )
     return {
         "success": True,
         "message": "Scholarship published successfully.",

@@ -560,14 +560,6 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
                 "subtitle": "Unlocks at 50% completion"
             }
         },
-        "upcoming": [
-            {
-                "id": "1",
-                "title": "C Programming Assessment",
-                "type": "Practice",
-                "time": "Tomorrow, 10:00 AM"
-            }
-        ],
         "practiceOverview": {
             "problemsSolved": problems_solved,
             "successRate": calc_success_rate,

@@ -23,3 +23,4 @@ locust>=2.30.0
 resend>=2.40.0
 phonepe-pg-sdk-python==3.0.0
 python-dateutil>=2.9.0
+pywebpush>=2.5.0
