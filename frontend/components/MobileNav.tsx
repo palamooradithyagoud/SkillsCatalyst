@@ -39,6 +39,8 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
+import { useNotifications } from "@/contexts/NotificationContext";
+import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
@@ -84,10 +86,16 @@ function MobileNavContent() {
   const router = useRouter();
   const { session, isLoading } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { unreadCount } = useNotifications();
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
   const [exploreTab, setExploreTab] = useState<string>("trending");
   const [isExplicitlyHidden, setIsExplicitlyHidden] = useState(false);
+
+  useEffect(() => {
+    setIsNotificationOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.pathname === "/explore") {
@@ -148,7 +156,7 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels) ── */}
       {!pathname.startsWith("/skillbits") && (
-        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/40 border-b border-black/5 backdrop-blur-xl text-slate-900 shadow-xs">
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/60 dark:bg-slate-900/80 border-b border-black/5 dark:border-slate-800 backdrop-blur-xl text-slate-900 dark:text-white shadow-xs">
           <div className="flex items-center gap-2">
             <Link href="/dashboard">
               <SkillsCatalystLogo size="sm" showText animated />
@@ -156,15 +164,37 @@ function MobileNavContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Notification Bell Button */}
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
-            >
-              <Bell size={18} strokeWidth={2.2} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#EAB308] rounded-full ring-1.5 ring-white" />
-            </button>
+            {/* Notification Bell Button & Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                id="mobile-notifications-button"
+                onClick={() => {
+                  setIsNotificationOpen(!isNotificationOpen);
+                  setDrawerOpen(false);
+                }}
+                aria-label="Open notifications"
+                className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
+                  isNotificationOpen
+                    ? "bg-[#5227FF]/15 text-[#5227FF] border-[#5227FF]/30 dark:bg-[#5227FF]/25 dark:text-purple-300"
+                    : "bg-white/30 hover:bg-white/50 dark:bg-slate-800/50 dark:hover:bg-slate-800/80 border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200"
+                }`}
+              >
+                <Bell size={18} strokeWidth={2.2} className="transition-transform active:rotate-12" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EAB308] ring-1.5 ring-white dark:ring-slate-900" />
+                  </span>
+                )}
+              </button>
+
+              <NotificationPanel
+                isOpen={isNotificationOpen}
+                onClose={() => setIsNotificationOpen(false)}
+                align="mobile"
+              />
+            </div>
 
             {/* User's Profile Avatar (Transparent Background with Purple Initials) */}
             <button
@@ -179,7 +209,10 @@ function MobileNavContent() {
             {/* Menu Drawer Toggle Button */}
             <button
               type="button"
-              onClick={() => setDrawerOpen(!drawerOpen)}
+              onClick={() => {
+                setDrawerOpen(!drawerOpen);
+                setIsNotificationOpen(false);
+              }}
               aria-label="Toggle Menu"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
             >

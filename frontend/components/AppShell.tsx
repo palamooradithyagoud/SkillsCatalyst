@@ -7,6 +7,8 @@ import TopNavbar from "@/components/TopNavbar";
 import MobileNav from "@/components/MobileNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PricingModalProvider } from "@/contexts/PricingModalContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,15 +19,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isAuthPage || isLandingPage || isAdminPage) {
     return (
       <PricingModalProvider>
-        <div
-          className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
-            isLandingPage ? "bg-[#06070d] text-white" : isAdminPage ? "bg-[#0B0D17] text-white" : "bg-white text-[#18191F]"
-          }`}
-        >
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </div>
+        <NotificationProvider>
+          <div
+            className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
+              isLandingPage ? "bg-[#06070d] text-white" : isAdminPage ? "bg-[#0B0D17] text-white" : "bg-white text-[#18191F]"
+            }`}
+          >
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </div>
+        </NotificationProvider>
       </PricingModalProvider>
     );
   }
@@ -35,7 +39,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <PricingModalProvider>
-      <div className={`flex flex-col min-h-screen w-full relative ${isSkillBits ? "bg-black text-white" : "bg-white text-[#18191F]"}`}>
+      <NotificationProvider>
+        <div className={`flex flex-col min-h-screen w-full relative ${isSkillBits ? "bg-black text-white" : "bg-white text-[#18191F]"}`}>
         {/* Subtle ambient orbs in background (disabled on full-screen SkillBits) */}
         {!isSkillBits && (
           <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -65,7 +70,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </ErrorBoundary>
           </main>
         </div>
+        <NotificationPermissionBanner />
       </div>
+      </NotificationProvider>
     </PricingModalProvider>
   );
 }
