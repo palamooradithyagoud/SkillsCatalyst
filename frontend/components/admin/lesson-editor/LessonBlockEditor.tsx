@@ -589,7 +589,11 @@ export const LessonBlockEditor: React.FC<Props> = ({
                       totalBlocks={blocks.length}
                       errors={validationErrors[block.id]}
                       disabled={saveStatus === "saving"}
+                      courseId={courseId}
+                      moduleId={moduleId}
+                      lessonId={lessonId}
                       onUpdateContent={(content) => handleUpdateBlockContent(idx, content)}
+
                       onMoveUp={() => handleMoveBlock(idx, "up")}
                       onMoveDown={() => handleMoveBlock(idx, "down")}
                       onDuplicate={() => handleDuplicateBlock(idx)}

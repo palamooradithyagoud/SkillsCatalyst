@@ -185,6 +185,8 @@ class ImageBlockContent(BaseModel):
     url: str = Field(..., description="Image HTTP/HTTPS URL")
     alt: str = Field(..., min_length=1, max_length=500, description="Accessibility alt text")
     caption: Optional[str] = Field(default=None, max_length=500, description="Optional caption")
+    media_id: Optional[str] = Field(default=None, description="Optional reference to public.course_lesson_media UUID")
+
 
     @field_validator("url")
     @classmethod

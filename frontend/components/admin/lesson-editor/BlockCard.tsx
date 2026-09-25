@@ -44,6 +44,9 @@ interface Props {
   totalBlocks: number;
   errors?: string[];
   disabled?: boolean;
+  courseId?: string;
+  moduleId?: string;
+  lessonId?: string;
   onUpdateContent: (newContent: LessonBlock["content"]) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -51,6 +54,7 @@ interface Props {
   onDelete: () => void;
   onInsertAfter: () => void;
 }
+
 
 const ICON_MAP: Record<BlockType, React.ComponentType<{ className?: string }>> = {
   heading: Heading,
@@ -88,6 +92,9 @@ export const BlockCard: React.FC<Props> = ({
   totalBlocks,
   errors = [],
   disabled,
+  courseId,
+  moduleId,
+  lessonId,
   onUpdateContent,
   onMoveUp,
   onMoveDown,
@@ -95,6 +102,7 @@ export const BlockCard: React.FC<Props> = ({
   onDelete,
   onInsertAfter,
 }) => {
+
   const Icon = ICON_MAP[block.type] || AlignLeft;
   const label = LABEL_MAP[block.type] || block.type;
   const hasErrors = errors.length > 0;
@@ -214,8 +222,12 @@ export const BlockCard: React.FC<Props> = ({
             content={block.content}
             onChange={onUpdateContent}
             disabled={disabled}
+            courseId={courseId}
+            moduleId={moduleId}
+            lessonId={lessonId}
           />
         )}
+
         {block.type === "code" && (
           <CodeBlockEditor
             content={block.content}
