@@ -332,30 +332,38 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
 
     if sb:
         try:
-            # 1. Count completed videos for this user
-            res_completed = (
-                sb.table("video_progress")
-                .select("video_id", count="exact")
-                .eq("user_id", user_id)
-                .eq("watched", True)
-                .execute()
-            )
-            completed_count = res_completed.count or (len(res_completed.data) if res_completed.data else 0)
-
-            # 2. Get total videos and count from saved playlists
+            # 1. Get total videos and count from saved playlists
             res_saved = (
                 sb.table("saved_playlists")
-                .select("video_count")
+                .select("playlist_id, video_count")
                 .eq("user_id", user_id)
                 .execute()
             )
+            saved_pids = []
             if res_saved.data:
                 saved_playlists_count = len(res_saved.data)
                 for row in res_saved.data:
+                    pid = row.get("playlist_id")
+                    if pid:
+                        saved_pids.append(pid)
                     vc_str = str(row.get("video_count", "0"))
                     match = re.search(r'\d+', vc_str)
                     if match:
                         total_videos += int(match.group())
+
+            # 2. Count completed videos for this user belonging to saved playlists
+            if saved_pids:
+                res_completed = (
+                    sb.table("video_progress")
+                    .select("video_id", count="exact")
+                    .eq("user_id", user_id)
+                    .in_("playlist_id", saved_pids)
+                    .eq("watched", True)
+                    .execute()
+                )
+                completed_count = res_completed.count or (len(res_completed.data) if res_completed.data else 0)
+            else:
+                completed_count = 0
 
             # 3. Get problems solved count from leetcode_progress table
             res_problems = (
