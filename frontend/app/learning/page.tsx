@@ -11,6 +11,7 @@ import {
   ShieldAlert,
   Search,
   ArrowRight,
+  BarChart3,
 } from "lucide-react";
 import MagnifierIcon from "@/components/icons/MagnifierIcon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -265,7 +266,7 @@ export default function LearningPage() {
       />
 
       {/* ── Text Sub-Navigation Tabs: Explore Skills & Saved Videos ── */}
-      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 pb-3 pt-2">
+      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 pb-3 pt-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveCard("explore")}
           className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
@@ -423,36 +424,110 @@ export default function LearningPage() {
             transition={{ duration: 0.25 }}
             className="space-y-4"
           >
-            {/* ── Stats header */}
-            <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-3.5 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 shadow-md shadow-emerald-900/10">
-              <div className="space-y-1 sm:space-y-2 max-w-md text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] sm:text-[10px] font-extrabold tracking-widest uppercase shadow-xs">
-                    LEARNING TRACKS
+            {/* ── Stats header matching user screenshot ── */}
+            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-purple-200/80 shadow-xs p-4 sm:p-7 md:p-8 bg-gradient-to-r from-white via-[#faf5ff] to-[#d8b4fe]/60 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
+              {/* Background ambient orbs & luminous purple aura */}
+              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-purple-500/25 blur-3xl pointer-events-none" />
+              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-indigo-400/20 blur-2xl pointer-events-none" />
+
+              {/* Left Content */}
+              <div className="space-y-2 max-w-lg z-10">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-purple-100/90 border border-purple-200/70 text-purple-700 text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-2xs">
+                    <svg
+                      className="w-3.5 h-3.5 text-purple-600"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m12 3-8 4.5v9L12 21l8-4.5v-9L12 3z" />
+                    </svg>
+                    <span>LEARNING TRACKS</span>
                   </span>
-                  {loadingSaved && <Loader2 className="w-3 h-3 animate-spin text-emerald-200" />}
+                  {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />}
                 </div>
-                <h2 className="text-base sm:text-3xl font-extrabold tracking-tight">
-                  Saved Playlists &amp; Progress
+
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
+                  Saved Playlists &amp; <span className="text-purple-600">Progress</span>
                 </h2>
-                <p className="text-[11px] sm:text-sm text-emerald-100/90 font-medium leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
+
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
                   Watch your saved video playlists, track real video completion progress, and resume learning anytime.
                 </p>
               </div>
 
-              {/* Stats Counters */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="text-center px-4 py-2 sm:px-6 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-inner">
-                  <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-100 uppercase tracking-wider mb-0.5">
-                    SAVED TRACKS
+              {/* Center Floating 3D Player Card Graphic */}
+              <div className="hidden md:flex items-center justify-center relative z-10 shrink-0 mx-auto lg:mx-0">
+                {/* Ambient Sparkles */}
+                <span className="absolute -top-3 left-4 text-purple-200/90 text-xl font-bold select-none animate-pulse">
+                  ✦
+                </span>
+                <span
+                  className="absolute top-8 -right-4 text-purple-200/90 text-2xl font-bold select-none animate-pulse"
+                  style={{ animationDelay: "1s" }}
+                >
+                  ✦
+                </span>
+
+                {/* Floating Tilted 3D Glass Card */}
+                <div
+                  className="relative w-36 h-28 sm:w-44 sm:h-34 rounded-2xl bg-white/75 backdrop-blur-md border border-white/90 shadow-xl shadow-purple-900/10 flex flex-col items-center justify-center p-3 transition-transform duration-500 hover:scale-105"
+                  style={{
+                    transform: "perspective(700px) rotateY(-10deg) rotateX(6deg) rotate(-14deg)",
+                  }}
+                >
+                  {/* Subtle inner glass reflection */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/30 to-white/60 pointer-events-none" />
+
+                  {/* Play triangle */}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                    <svg className="w-9 h-9 drop-shadow-sm" viewBox="0 0 24 24" fill="#7c3aed">
+                      <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
+                    </svg>
                   </div>
-                  <div className="text-lg sm:text-2xl font-black text-white">{savedList.length}</div>
+
+                  {/* Bottom progress bar line */}
+                  <div className="w-full mt-4 px-2">
+                    <div className="w-full h-1.5 rounded-full bg-purple-100/80 overflow-hidden">
+                      <div className="h-full w-2/5 rounded-full bg-purple-600" />
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center px-4 py-2 sm:px-6 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-inner">
-                  <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-100 uppercase tracking-wider mb-0.5">
-                    VIDEOS WATCHED
+              </div>
+
+              {/* Right Stats Card with Dynamic Real User Data - Balanced for Mobile and Desktop */}
+              <div className="relative z-10 w-full lg:w-auto grid grid-cols-2 divide-x divide-slate-200/80 bg-white/90 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/90 shadow-xs shadow-purple-900/5 p-3 sm:px-6 sm:py-4 shrink-0">
+                {/* Column 1: Saved Tracks */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pr-2 sm:pr-6 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   </div>
-                  <div className="text-lg sm:text-2xl font-black text-emerald-300">{completedSavedVideosCount}</div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap">
+                      Saved Tracks
+                    </div>
+                    <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                      {savedList.length}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2: Videos Watched */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pl-3 sm:pl-6 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap">
+                      Videos Watched
+                    </div>
+                    <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                      {completedSavedVideosCount}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
