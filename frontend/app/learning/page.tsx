@@ -10,9 +10,9 @@ import {
   X,
   ShieldAlert,
   Search,
+  ArrowRight,
 } from "lucide-react";
 import MagnifierIcon from "@/components/icons/MagnifierIcon";
-import SaveIcon from "@/components/icons/SaveIcon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   savePlaylist,
@@ -29,6 +29,7 @@ import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
 import { LearningProgressCard } from "@/components/learning/LearningProgressCard";
+import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
@@ -294,9 +295,8 @@ export default function LearningPage() {
               : "text-slate-400 hover:text-slate-700"
           }`}
         >
-          <SaveIcon
-            size={18}
-            className={activeCard === "saved" ? "text-purple-600" : "text-slate-400"}
+          <Bookmark
+            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-purple-600" : "text-slate-400"}`}
           />
           <span>Saved Videos</span>
           {savedList.length > 0 && (
@@ -330,13 +330,12 @@ export default function LearningPage() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            {/* Search bar */}
-            <div className="bg-white rounded-[28px] p-6 border border-slate-200/90 shadow-sm space-y-4">
+            {/* Search bar matching Image 2 */}
+            <div className="bg-white rounded-[28px] p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1">
-                  <MagnifierIcon
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  <Search
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 pointer-events-none"
                   />
                   <input
                     type="text"
@@ -347,7 +346,7 @@ export default function LearningPage() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                    className={`w-full pl-11 pr-4 py-3 text-sm font-semibold bg-slate-50 border border-slate-200/90 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-600 transition-all shadow-xs ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 border border-slate-200/90 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none transition-all shadow-2xs ${
                       queryError ? "border-rose-500" : ""
                     }`}
                   />
@@ -356,9 +355,9 @@ export default function LearningPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={handleSearch}
+                  onClick={() => handleSearch()}
                   disabled={searching || !query.trim()}
-                  className="px-7 py-3 rounded-full text-white font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
+                  className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 whitespace-nowrap bg-gradient-to-r from-[#5f13e7] to-[#7928ca] hover:from-[#530dd4] hover:to-[#6b20b8] shadow-md shadow-purple-600/25 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {searching ? (
                     <>
@@ -366,11 +365,19 @@ export default function LearningPage() {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-emerald-200" /> Find Resources
+                      <Sparkles className="w-4 h-4 text-purple-200" />
+                      <span>Find Resources</span>
+                      <ArrowRight className="w-4 h-4 text-white" />
                     </>
                   )}
                 </motion.button>
               </div>
+
+              {/* Popular Skill Pills with authentic logos & Browse all */}
+              <PopularSkillPills
+                onSelectSkill={(skillName) => handleSearch(skillName)}
+                activeSkill={searchTerm}
+              />
 
               {/* Inline query error */}
               <AnimatePresence>
