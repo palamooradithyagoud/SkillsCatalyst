@@ -37,8 +37,9 @@ export function useLearningSearch() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleSearch = () => {
-    const trimmed = query.trim();
+  const handleSearch = (overrideQuery?: string) => {
+    const raw = typeof overrideQuery === "string" ? overrideQuery : query;
+    const trimmed = raw.trim();
     if (!trimmed) return;
 
     const validation = validateClientSkillQuery(trimmed);
@@ -47,6 +48,7 @@ export function useLearningSearch() {
       return;
     }
 
+    setQuery(trimmed);
     setQueryError(null);
     setSearchTerm(trimmed);
     setHasSearched(true);
