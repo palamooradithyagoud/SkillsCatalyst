@@ -592,9 +592,22 @@ async def save_personal_profile(
     """
     Save personal details (headline, location, phone, bio, avatar) into profiles table,
     and synchronizes full_name with user_academic_profile for 100% backward compatibility.
+    Enforces identity lock if student has already received a certificate.
     """
     user_id = current_user_id
     sb = get_supabase()
+
+    # Identity Lock Enforcement (Phase 7)
+    from backend.services.certificate_service import is_user_identity_locked
+    if is_user_identity_locked(user_id):
+        # Check if full_name is being modified
+        curr_p = sb.from_("profiles").select("full_name").eq("id", user_id).execute()
+        current_name = (curr_p.data[0].get("full_name") or "").strip() if (curr_p.data and len(curr_p.data) > 0) else ""
+        if body.full_name and body.full_name.strip() != current_name:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+            )
 
     prof_data = {
         "id": user_id,
@@ -618,7 +631,15 @@ async def save_personal_profile(
                     "user_id": user_id,
                     "full_name": body.full_name,
                 }, on_conflict="user_id").execute()
+        except HTTPException:
+            raise
         except Exception as e:
+            err_msg = str(e)
+            if "locked because a SkillsCatalyst certificate" in err_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+                )
             logger.error(f"Failed to save personal profile: {e}")
             raise HTTPException(status_code=500, detail="Failed to save personal profile.")
 
@@ -668,10 +689,26 @@ async def save_academic_profile(
 ):
     """
     Save academic profile info into Supabase.
+    Enforces identity lock if student has already received a certificate.
     """
     user_id = current_user_id  # Always derived from verified JWT — body user_id is ignored
     sb = get_supabase()
-    
+
+    # Identity Lock Enforcement (Phase 7)
+    from backend.services.certificate_service import is_user_identity_locked
+    if is_user_identity_locked(user_id):
+        curr_acad = sb.from_("user_academic_profile").select("full_name, college").eq("user_id", user_id).execute()
+        current_name = (curr_acad.data[0].get("full_name") or "").strip() if (curr_acad.data and len(curr_acad.data) > 0) else ""
+        current_college = (curr_acad.data[0].get("college") or "").strip() if (curr_acad.data and len(curr_acad.data) > 0) else ""
+
+        name_changed = bool(body.full_name and body.full_name.strip() != current_name)
+        college_changed = bool(body.college and body.college.strip() != current_college)
+        if name_changed or college_changed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+            )
+
     data = {
         "user_id": user_id,
         "full_name": body.full_name,
@@ -687,15 +724,56 @@ async def save_academic_profile(
             result = sb.from_("user_academic_profile").upsert(data, on_conflict="user_id").execute()
             logger.info(f"Academic profile saved: {result.data}")
             # Also keep profiles table in sync
+            profile_sync = {"id": user_id}
             if body.full_name:
-                sb.from_("profiles").upsert({
-                    "id": user_id,
-                    "full_name": body.full_name,
-                }, on_conflict="id").execute()
+                profile_sync["full_name"] = body.full_name
+            if body.college:
+                profile_sync["college"] = body.college
+            sb.from_("profiles").upsert(profile_sync, on_conflict="id").execute()
+        except HTTPException:
+            raise
         except Exception as e:
+            err_msg = str(e)
+            if "locked because a SkillsCatalyst certificate" in err_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+                )
             logger.error(f"Failed to save academic profile: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save academic profile.")
 
     return {"success": True, "message": "Academic profile saved successfully", "academic": data}
+
+
+@router.get("/identity")
+def get_certificate_identity_endpoint(
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """
+    Retrieves the authenticated student's authoritative certificate identity
+    and lock status.
+    """
+    from backend.services.certificate_service import get_authoritative_user_identity
+    return get_authoritative_user_identity(current_user_id)
+
+
+@router.patch("/identity")
+def update_certificate_identity_endpoint(
+    body: Dict[str, Any],
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """
+    Updates the student's authoritative full name and college before their first certificate.
+    Permanently locked if a certificate has already been issued.
+    """
+    from backend.services.certificate_service import update_student_certificate_identity
+    full_name = body.get("full_name", "")
+    college = body.get("college", "")
+    return update_student_certificate_identity(
+        user_id=current_user_id,
+        full_name=full_name,
+        college=college,
+    )
 
 
 

@@ -234,14 +234,16 @@ try:
     from backend.routers import (
         dashboard, ai_mentor, learning, resume, practice, profile,
         auth, support, admin, events, scholarships, tech_news,
-        subscriptions, payments, skillbits, notifications, courses
+        subscriptions, payments, skillbits, notifications, courses,
+        certificates
     )
 except ModuleNotFoundError as e:
     if getattr(e, "name", None) in ("backend", "backend.routers") or "backend" in str(e):
         from routers import (
             dashboard, ai_mentor, learning, resume, practice, profile,
             auth, support, admin, events, scholarships, tech_news,
-            subscriptions, payments, skillbits, notifications, courses
+            subscriptions, payments, skillbits, notifications, courses,
+            certificates
         )
     else:
         raise e
@@ -263,6 +265,7 @@ app.include_router(payments.router)
 app.include_router(skillbits.router)
 app.include_router(notifications.router)
 app.include_router(courses.router)
+app.include_router(certificates.router)
 
 
 @app.post("/api/webhooks/mux", include_in_schema=False)
