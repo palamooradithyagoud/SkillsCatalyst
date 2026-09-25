@@ -8,9 +8,7 @@ import {
   CheckCircle,
   Clock,
   ArrowRight,
-  ChevronRight,
   Crown,
-  Bookmark,
   Hourglass,
 } from "lucide-react";
 import type { Playlist } from "@/lib/api";
@@ -228,11 +226,12 @@ export function LearningProgressCard({
         </Link>
       </div>
 
-      {/* ── MAIN CONTENT: GAUGE + METRICS/PROGRESS BAR + WEEKLY ACTIVITY ── */}
-      <div className="relative flex flex-col lg:flex-row items-center lg:items-stretch gap-3 lg:gap-4.5">
-        {/* 1. Left: Circular Progress Ring strictly (completed / total * 100) */}
-        <div className="flex flex-col items-center justify-center shrink-0 w-24 sm:w-28 py-0.5">
-          <div className="relative w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center">
+      {/* ── MAIN CONTENT: GAUGE + 4 STATS + WEEKLY ACTIVITY ── */}
+      <div className="relative flex flex-col lg:flex-row items-center lg:items-stretch gap-4 lg:gap-6">
+        {/* 1. Left: Big Circular Progress Ring strictly (completed / total * 100) */}
+        <div className="flex flex-col items-center justify-center shrink-0 w-36 sm:w-40 lg:w-44 py-1">
+          {/* Big Circle */}
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
               <defs>
                 <linearGradient id="learningGaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -244,22 +243,22 @@ export function LearningProgressCard({
               <circle
                 cx="50"
                 cy="50"
-                r="38"
+                r="40"
                 className="stroke-slate-100"
-                strokeWidth="7"
+                strokeWidth="8"
                 fill="transparent"
               />
               {/* Progress active stroke */}
               <circle
                 cx="50"
                 cy="50"
-                r="38"
+                r="40"
                 stroke="url(#learningGaugeGradient)"
-                strokeWidth="7"
-                strokeDasharray={2 * Math.PI * 38}
+                strokeWidth="8"
+                strokeDasharray={2 * Math.PI * 40}
                 strokeDashoffset={
-                  2 * Math.PI * 38 -
-                  (2 * Math.PI * 38 * metrics.progressPct) / 100
+                  2 * Math.PI * 40 -
+                  (2 * Math.PI * 40 * metrics.progressPct) / 100
                 }
                 strokeLinecap="round"
                 fill="transparent"
@@ -267,32 +266,41 @@ export function LearningProgressCard({
               />
             </svg>
 
-            {/* Inner text: percentage, saved progress label, completed/total videos and remaining */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none px-1">
-              <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
+            {/* ONLY the percentage inside the big circle */}
+            <div className="absolute inset-0 flex items-center justify-center text-center select-none">
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
                 {metrics.progressPct}%
               </span>
-              <span className="text-[8px] sm:text-[8.5px] font-black text-purple-600 uppercase tracking-wider mt-0.5 leading-tight">
-                Saved Progress
-              </span>
-              <span className="text-[7.5px] sm:text-[8px] font-semibold text-slate-400 mt-0.5 tabular-nums">
+            </div>
+          </div>
+
+          {/* Text DOWNSIDE (below the circle, not inside) */}
+          <div className="flex flex-col items-center text-center mt-2.5">
+            <span className="text-xs sm:text-[13px] font-black text-purple-600 uppercase tracking-wider leading-tight">
+              Saved Progress
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-600 tabular-nums">
                 {metrics.totalVideos > 0
-                  ? `${metrics.completedVideos}/${metrics.totalVideos} vids`
+                  ? `${metrics.completedVideos}/${metrics.totalVideos} videos`
                   : "0 videos"}
               </span>
               {metrics.remainingVideos > 0 && (
-                <span className="text-[7px] sm:text-[7.5px] font-bold text-amber-600 uppercase tracking-tight">
-                  {metrics.remainingVideos} remaining
-                </span>
+                <>
+                  <span className="text-slate-300 text-xs">•</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-amber-600">
+                    {metrics.remainingVideos} to go
+                  </span>
+                </>
               )}
             </div>
           </div>
         </div>
 
-        {/* 2. Middle: 4 Stats (Streak, Completed, Remaining, Watch Time) + OVERALL PROGRESS BAR */}
-        <div className="flex-1 w-full min-w-0 flex flex-col justify-between gap-2.5">
+        {/* 2. Middle: 4 Stats (Streak, Completed, Remaining, Watch Time) */}
+        <div className="flex-1 w-full min-w-0 flex items-center justify-center py-1">
           {/* 4 Stats in one sleek row with subtle dividers */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100/90 py-0.5">
+          <div className="w-full grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100/90 py-3 sm:py-4 bg-slate-50/50 rounded-2xl border border-slate-100/80 shadow-2xs">
             {/* Stat 1: Day Streak from Supabase user_progress */}
             <div className="flex flex-col items-center text-center px-1.5 py-1 sm:py-0">
               <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-0.5 shadow-2xs">
@@ -359,86 +367,6 @@ export function LearningProgressCard({
                   ? `+${metrics.learningHours}h tracked`
                   : "0h tracked"}
               </span>
-            </div>
-          </div>
-
-          {/* ── OVERALL SAVED VIDEOS PROGRESS BAR: Clean, No Video Thumbnail, Compact ── */}
-          <div
-            onClick={() => {
-              if (savedList && savedList.length > 0 && onOpenSavedTab) {
-                onOpenSavedTab();
-              } else if (onExploreClick) {
-                onExploreClick();
-              }
-            }}
-            className="bg-slate-50/80 hover:bg-purple-50/30 border border-slate-200/80 hover:border-purple-200/90 rounded-xl p-2 sm:p-2.5 transition-all cursor-pointer group shadow-2xs"
-          >
-            <div className="flex flex-col gap-1.5">
-              {/* Top line: Label + Saved Courses Count + Watch time + Chevron */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 truncate">
-                  <div className="w-5 h-5 rounded-md bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                    <Bookmark className="w-3 h-3 text-purple-600" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 shrink-0 leading-tight">
-                    SAVED COURSES PROGRESS
-                  </span>
-                  <span className="text-slate-300 text-xs">•</span>
-                  <span className="text-xs font-bold text-slate-800 truncate leading-snug">
-                    {savedList.length > 0
-                      ? `${savedList.length} Saved Course${savedList.length !== 1 ? "s" : ""}`
-                      : "No saved courses yet"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-white/95 border border-slate-200/80 px-2 py-0.5 rounded-full shadow-2xs">
-                    <Clock className="w-2.5 h-2.5 text-purple-600" />
-                    <span>{metrics.formattedWatchTime} watched</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
-
-              {/* Real Progress Bar strictly (completed / total * 100) */}
-              <div className="flex items-center gap-2.5">
-                <div className="flex-1 h-2 bg-slate-200/80 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${Math.max(
-                        metrics.completedVideos > 0 ? 3 : 0,
-                        metrics.progressPct
-                      )}%`,
-                    }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
-                  />
-                </div>
-                <div className="flex items-center gap-1 text-[10px] sm:text-[10.5px] font-bold shrink-0 tabular-nums">
-                  <span className="text-slate-900 font-black">
-                    {metrics.completedVideos} / {metrics.totalVideos}
-                  </span>
-                  <span className="text-slate-400 font-semibold text-[9.5px]">videos</span>
-                  <span className="text-purple-600 font-black ml-0.5">
-                    ({metrics.progressPct}%)
-                  </span>
-                </div>
-              </div>
-
-              {/* Bottom summary line: Completed vs Remaining */}
-              <div className="flex items-center justify-between text-[9.5px] font-semibold text-slate-500 pt-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-700 font-bold">
-                    ✓ {metrics.completedVideos} Completed
-                  </span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-indigo-600 font-bold">
-                    ⏳ {metrics.remainingVideos} Remaining
-                  </span>
-                </div>
-                <span className="text-slate-400">{metrics.totalVideos} Total Videos</span>
-              </div>
             </div>
           </div>
         </div>
