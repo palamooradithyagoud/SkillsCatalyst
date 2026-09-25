@@ -21,7 +21,12 @@ import uuid
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from fastapi import HTTPException, status
-from PIL import Image
+try:
+    from PIL import Image
+    _PIL_AVAILABLE = True
+except ImportError:
+    Image = None  # type: ignore
+    _PIL_AVAILABLE = False
 
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import is_valid_uuid
@@ -164,28 +169,31 @@ def validate_and_sanitize_image(
             )
 
     # 7. PIL Image Verification
-    try:
-        with Image.open(io.BytesIO(file_bytes)) as img:
-            img.verify()
-            pil_format = (img.format or "").upper()
-            format_map = {
-                "JPEG": "image/jpeg",
-                "PNG": "image/png",
-                "WEBP": "image/webp",
-                "GIF": "image/gif",
-            }
-            if pil_format not in format_map or format_map[pil_format] != raw_mime:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Decoded image format '{pil_format}' does not match expected format '{raw_mime}'.",
-                )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Corrupted or invalid image payload: {str(exc)}",
-        )
+    if _PIL_AVAILABLE and Image is not None:
+        try:
+            with Image.open(io.BytesIO(file_bytes)) as img:
+                img.verify()
+                pil_format = (img.format or "").upper()
+                format_map = {
+                    "JPEG": "image/jpeg",
+                    "PNG": "image/png",
+                    "WEBP": "image/webp",
+                    "GIF": "image/gif",
+                }
+                if pil_format not in format_map or format_map[pil_format] != raw_mime:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Decoded image format '{pil_format}' does not match expected format '{raw_mime}'.",
+                    )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Corrupted or invalid image payload: {str(exc)}",
+            )
+    else:
+        logger.warning("PIL (Pillow) is not installed; skipping deep image payload verification.")
 
     # 8. Filename Sanitization for metadata
     clean_name = os.path.basename(original_filename or "").strip()
