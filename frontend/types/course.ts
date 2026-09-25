@@ -213,4 +213,7 @@ export * from "./student-course";
 // ── Student Progress Types Re-export (Phase 5) ────────────────────────────────
 export * from "./student-progress";
 
+// ── Quiz Attempt Types Re-export (Phase 6) ────────────────────────────────────
+export * from "./quiz-attempt";
+
 

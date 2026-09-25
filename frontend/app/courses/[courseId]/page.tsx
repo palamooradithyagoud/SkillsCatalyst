@@ -15,11 +15,17 @@ import {
   Layers,
   ChevronRight,
   CheckCircle2,
+  Lock,
+  RotateCcw,
+  Trophy,
+  XCircle,
+  Star,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
-import { fetchStudentCourseById, fetchCourseProgress } from "@/lib/api/courses";
+import { fetchStudentCourseById, fetchCourseProgress, fetchQuizAttempts, fetchModuleProgress } from "@/lib/api/courses";
 import type { StudentCourseDetail, StudentCourseProgress } from "@/types/course";
+import type { QuizAttemptHistory, StudentModuleProgress } from "@/types/quiz-attempt";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
@@ -28,6 +34,8 @@ export default function StudentCourseDetailPage() {
 
   const [course, setCourse] = useState<StudentCourseDetail | null>(null);
   const [progress, setProgress] = useState<StudentCourseProgress | null>(null);
+  const [moduleProgressMap, setModuleProgressMap] = useState<Record<string, StudentModuleProgress>>({});
+  const [moduleHistoryMap, setModuleHistoryMap] = useState<Record<string, QuizAttemptHistory>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,12 +51,33 @@ export default function StudentCourseDetailPage() {
           setCourse(cData);
         }
 
-        // If authenticated, fetch personal student progress
+        // If authenticated, fetch personal student progress + Phase 6 quiz state
         if (session?.user_id) {
           try {
             const pData = await fetchCourseProgress(courseIdOrSlug);
+            if (isMounted) setProgress(pData);
+
+            // Load per-module quiz progress and attempt history in parallel
+            const modules = cData.modules || [];
+            const modIds = modules.map((m: { id: string }) => m.id);
+            const [modProgressResults, modHistoryResults] = await Promise.all([
+              Promise.all(modIds.map((mid: string) =>
+                fetchModuleProgress(courseIdOrSlug, mid).catch(() => null)
+              )),
+              Promise.all(modIds.map((mid: string) =>
+                fetchQuizAttempts(courseIdOrSlug, mid).catch(() => null)
+              )),
+            ]);
+
             if (isMounted) {
-              setProgress(pData);
+              const progressMap: Record<string, StudentModuleProgress> = {};
+              const historyMap: Record<string, QuizAttemptHistory> = {};
+              modIds.forEach((mid: string, i: number) => {
+                if (modProgressResults[i]) progressMap[mid] = modProgressResults[i]!;
+                if (modHistoryResults[i]) historyMap[mid] = modHistoryResults[i]!;
+              });
+              setModuleProgressMap(progressMap);
+              setModuleHistoryMap(historyMap);
             }
           } catch (pErr) {
             // Non-blocking: progress failure should never prevent reading course details
@@ -376,20 +405,84 @@ export default function StudentCourseDetailPage() {
                         );
                       })}
 
-                      {/* Module Quiz Display-Only Outline (Pending Phase 6) */}
-                      {module.quiz && (
-                        <div className="p-4 sm:px-6 bg-purple-950/10 flex items-center justify-between text-xs text-purple-300/80 border-t border-purple-500/10">
-                          <div className="flex items-center gap-2.5">
-                            <HelpCircle className="w-4 h-4 text-purple-400" />
-                            <span className="font-semibold text-slate-300">
-                              Module Quiz: {module.quiz.title}
-                            </span>
+                      {/* Module Quiz — Phase 6 Live State */}
+                      {module.quiz && (() => {
+                        const modProg = moduleProgressMap[module.id];
+                        const modHist = moduleHistoryMap[module.id];
+                        const quizPassed = modProg?.quiz_passed || modHist?.ever_passed || false;
+                        const lessonsComplete = modProg?.lessons_complete || modProgress?.lessons_complete || false;
+                        const bestScore = modProg?.best_score ?? modHist?.best_score ?? null;
+                        const latestAttempt = modHist?.attempts?.length
+                          ? modHist.attempts[modHist.attempts.length - 1]
+                          : null;
+                        const quizTaken = (modHist?.attempts?.length ?? 0) > 0;
+
+                        return (
+                          <div className="border-t border-purple-500/10">
+                            <div className="p-4 sm:px-6 bg-purple-950/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-2.5">
+                                <HelpCircle className="w-4 h-4 text-purple-400 shrink-0" />
+                                <div>
+                                  <span className="font-semibold text-sm text-slate-200">
+                                    {module.quiz.title}
+                                  </span>
+                                  {quizPassed && bestScore !== null && (
+                                    <p className="text-[11px] text-emerald-400 font-medium mt-0.5">
+                                      Best score: {bestScore}%
+                                    </p>
+                                  )}
+                                  {!quizPassed && latestAttempt && !quizPassed && (
+                                    <p className="text-[11px] text-rose-400 font-medium mt-0.5">
+                                      Last attempt: {latestAttempt.score_percentage}% — Failed
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* State badges & actions */}
+                                {quizPassed ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    <Trophy className="w-3 h-3" />
+                                    Passed
+                                  </span>
+                                ) : !session?.user_id ? (
+                                  <span className="text-[11px] font-medium text-slate-400">Sign in to take quiz</span>
+                                ) : !lessonsComplete ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-white/10">
+                                    <Lock className="w-3 h-3" />
+                                    Complete lessons to unlock
+                                  </span>
+                                ) : quizTaken ? (
+                                  <Link
+                                    href={`/courses/${courseIdOrSlug}/modules/${module.id}/quiz`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/20 transition-all"
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    Retry Quiz
+                                  </Link>
+                                ) : (
+                                  <Link
+                                    href={`/courses/${courseIdOrSlug}/modules/${module.id}/quiz`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/20 transition-all"
+                                  >
+                                    <HelpCircle className="w-3 h-3" />
+                                    Take Quiz
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Module Complete Banner */}
+                            {modProg?.completed && (
+                              <div className="mx-4 mb-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Module Complete
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                            Quiz Pending
-                          </span>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 );
