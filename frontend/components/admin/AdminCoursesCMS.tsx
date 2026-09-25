@@ -77,10 +77,19 @@ import {
   deleteAdminOption,
   reorderAdminOptions,
 } from "@/lib/api/courses";
+import { LessonBlockEditor } from "./lesson-editor";
 
 export default function AdminCoursesCMS() {
   // Navigation / View State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [activeLessonEditor, setActiveLessonEditor] = useState<{
+    courseId: string;
+    courseTitle: string;
+    moduleId: string;
+    moduleTitle: string;
+    lessonId: string;
+    lessonTitle: string;
+  } | null>(null);
 
   // ── List View State ──────────────────────────────────────────────────────────
   const [courses, setCourses] = useState<CourseItem[]>([]);
@@ -930,6 +939,23 @@ export default function AdminCoursesCMS() {
   };
 
   // ═════════════════════════════════════════════════════════════════════════════
+  // LESSON BLOCK EDITOR VIEW (Phase 2B)
+  // ═════════════════════════════════════════════════════════════════════════════
+  if (activeLessonEditor) {
+    return (
+      <LessonBlockEditor
+        courseId={activeLessonEditor.courseId}
+        courseTitle={activeLessonEditor.courseTitle}
+        moduleId={activeLessonEditor.moduleId}
+        moduleTitle={activeLessonEditor.moduleTitle}
+        lessonId={activeLessonEditor.lessonId}
+        lessonTitle={activeLessonEditor.lessonTitle}
+        onBack={() => setActiveLessonEditor(null)}
+      />
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════════
   // DETAIL VIEW
   // ═════════════════════════════════════════════════════════════════════════════
   if (selectedCourseId) {
@@ -1211,6 +1237,24 @@ export default function AdminCoursesCMS() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1 self-end sm:self-auto shrink-0">
+                              <button
+                                onClick={() =>
+                                  setActiveLessonEditor({
+                                    courseId: courseDetail.id,
+                                    courseTitle: courseDetail.title,
+                                    moduleId: mod.id,
+                                    moduleTitle: mod.title,
+                                    lessonId: les.id,
+                                    lessonTitle: les.title,
+                                  })
+                                }
+                                disabled={actionInProgress}
+                                title="Edit Lesson Content Blocks"
+                                className="px-2.5 py-1 rounded-lg bg-sky-950/60 hover:bg-sky-900 border border-sky-800/60 text-sky-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors min-h-[32px]"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>Edit Content</span>
+                              </button>
                               <button
                                 onClick={() => handleReorderLessons(mod.id, "up", lesIdx)}
                                 disabled={lesIdx === 0 || actionInProgress}
