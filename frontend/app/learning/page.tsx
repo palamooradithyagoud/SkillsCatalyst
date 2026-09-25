@@ -99,12 +99,12 @@ export default function LearningPage() {
       if (!userId) return { watchedCount: 0, totalWatchTimeSeconds: 0 };
       const { data, error } = await supabase
         .from("video_progress")
-        .select("playlist_id, video_id, watched, watch_time, last_position")
+        .select("playlist_id, video_id, watched, watch_time, last_position, updated_at, completed_at")
         .eq("user_id", userId);
       if (error || !data) return { watchedCount: 0, totalWatchTimeSeconds: 0 };
       const watchedCount = data.filter((r) => !!r.watched).length;
       const totalWatchTimeSeconds = data.reduce(
-        (acc, r) => acc + (Number(r.watch_time) || Number(r.last_position) || 0),
+        (acc, r) => acc + Math.max(Number(r.watch_time) || 0, Number(r.last_position) || 0),
         0
       );
       return { watchedCount, totalWatchTimeSeconds, raw: data };
@@ -185,7 +185,7 @@ export default function LearningPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-6"
+      className="max-w-6xl mx-auto space-y-5"
     >
       {/* ── Toast */}
       <AnimatePresence>
@@ -224,6 +224,7 @@ export default function LearningPage() {
         videoProgressData={videoProgressData}
         savedList={savedList}
         onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
+        onOpenSavedTab={() => setActiveCard("saved")}
         onExploreClick={() => setActiveCard("explore")}
       />
 
@@ -433,7 +434,7 @@ export default function LearningPage() {
                 <Bookmark className="w-14 h-14 text-slate-700" />
                 <div className="text-slate-400 font-semibold">No saved playlists yet.</div>
                 <div className="text-slate-600 text-sm">
-                  Search for a skill in Card 1 and click the{" "}
+                  Search for a skill in Explore Skills and click the{" "}
                   <strong className="text-slate-400">Save</strong> button.
                 </div>
                 <button
