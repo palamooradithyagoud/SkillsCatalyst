@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -13,7 +13,13 @@ import {
   Clock,
   TrendingUp,
   Briefcase,
+  GraduationCap,
+  Layers,
+  ChevronRight,
 } from "lucide-react";
+
+import { fetchStudentCourses } from "@/lib/api/courses";
+import type { StudentCourseSummary } from "@/types/student-course";
 
 // ── Course Data with 100% Authentic Original Logos ────────────────────────────
 
@@ -61,6 +67,26 @@ const coreCourses = [
 ];
 
 export default function CoursesPage() {
+  const [publishedCourses, setPublishedCourses] = useState<StudentCourseSummary[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      try {
+        const res = await fetchStudentCourses({ page_size: 20 });
+        if (isMounted) {
+          setPublishedCourses(res.items || []);
+        }
+      } catch {
+        // Fall back gracefully if none published or network fails
+      }
+    }
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-[82vh] flex flex-col justify-start max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* ── Top Bar: Back to Dashboard ── */}
@@ -164,6 +190,76 @@ export default function CoursesPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Published Interactive Courses (Phase 4) ── */}
+      {publishedCourses.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-10 border border-slate-200/80 shadow-[0_8px_32px_rgba(0,0,0,0.03)] overflow-hidden mb-6 sm:mb-8"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  <GraduationCap className="w-4 h-4" />
+                </span>
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                  Available Courses
+                </h2>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                Structured courses with rich lessons, interactive visual blocks, and curriculum navigation.
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 self-start sm:self-auto">
+              {publishedCourses.length} {publishedCourses.length === 1 ? "Course Available" : "Courses Available"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            {publishedCourses.map((c) => (
+              <Link
+                key={c.id}
+                href={`/courses/${c.slug || c.id}`}
+                className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                      {c.category || "General"}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-500 capitalize">
+                      {c.difficulty}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-600 transition-colors mb-1.5">
+                    {c.title}
+                  </h3>
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4">
+                    {c.short_description || c.description || "Start learning this course today."}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <Layers className="w-3.5 h-3.5 text-slate-400" />
+                      {c.modules_count} {c.modules_count === 1 ? "Module" : "Modules"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                      {c.lessons_count} {c.lessons_count === 1 ? "Lesson" : "Lessons"}
+                    </span>
+                  </div>
+                  <span className="font-bold text-purple-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                    Explore <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Core Curriculum Tracks & Interactive Modules ── */}
       <motion.div
