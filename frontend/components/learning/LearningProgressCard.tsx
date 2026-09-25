@@ -6,13 +6,13 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Flame,
-  Target,
-  BarChart3,
+  CheckCircle,
   Clock,
   ArrowRight,
   ChevronRight,
   Crown,
   Bookmark,
+  Hourglass,
 } from "lucide-react";
 import type { Playlist } from "@/lib/api";
 
@@ -23,6 +23,11 @@ interface LearningProgressCardProps {
     totalWatchTimeSeconds: number;
     raw?: any[];
   };
+  userProgressData?: {
+    streak_days?: number;
+    total_xp?: number;
+    level?: number;
+  } | null;
   savedList: Playlist[];
   onOpenPlaylist?: (pl: Playlist) => void;
   onOpenSavedTab?: () => void;
@@ -52,50 +57,57 @@ export function formatWatchTime(totalSeconds: number): string {
 export function LearningProgressCard({
   dashboardData,
   videoProgressData,
+  userProgressData,
   savedList,
   onOpenSavedTab,
   onExploreClick,
 }: LearningProgressCardProps) {
-  // ── 1. Calculate Real User Data: Strictly (completed videos / total videos) * 100
+  // ── 1. Calculate Real User Data Directly from Supabase (Zero Hardcoding)
   const metrics = useMemo(() => {
     const user = dashboardData?.user || {};
     const dashLearning = dashboardData?.metrics?.learningProgress || {};
-    const dashRoadmap = dashboardData?.metrics?.roadmapProgress || {};
     const practice = dashboardData?.practiceOverview || {};
 
-    // 1. Active Streak (real user data)
-    const streak = typeof user.streakDays === "number" ? user.streakDays : 0;
+    // 1. Day Streak: Strictly from Supabase user_progress table
+    const streak =
+      typeof userProgressData?.streak_days === "number"
+        ? userProgressData.streak_days
+        : typeof user.streakDays === "number"
+        ? user.streakDays
+        : 0;
 
-    // 2. Completed Videos: Real count of watched videos from Supabase
+    // 2. Completed Videos: Real watched videos count strictly from Supabase video_progress
     const completedVideos =
       videoProgressData?.watchedCount ?? dashLearning.completedVideos ?? 0;
 
-    // 3. Total Videos: Sum of videos across all saved playlists / courses
+    // 3. Total Videos: Sum of video_count strictly from Supabase saved_playlists
     let totalVideos = 0;
     (savedList || []).forEach((pl) => {
       const c = extractPlaylistVideoCount(pl);
       totalVideos += Math.max(1, c);
     });
 
-    // Fallback to dashLearning if savedList is still hydrating
+    // Fallback if savedList is hydrating from backend cache
     if (totalVideos === 0 && dashLearning.totalVideos) {
       totalVideos = dashLearning.totalVideos;
     }
     if (dashLearning.totalVideos && dashLearning.totalVideos > totalVideos) {
       totalVideos = dashLearning.totalVideos;
     }
-    // Cap: totalVideos cannot be less than completedVideos
     if (completedVideos > totalVideos && totalVideos > 0) {
       totalVideos = completedVideos;
     }
 
-    // 4. Progress Percentage: Strictly (completed videos / total videos) * 100
+    // 4. Remaining Videos: Strictly (Total - Completed) from Supabase
+    const remainingVideos = Math.max(0, totalVideos - completedVideos);
+
+    // 5. Saved Progress Percentage: Strictly (completed videos / total videos) * 100
     const progressPct =
       totalVideos > 0
         ? Math.min(100, Math.round((completedVideos / totalVideos) * 100))
         : 0;
 
-    // 5. Watch Time
+    // 6. Learning Watch Time: Effective watch seconds strictly from Supabase video_progress
     const effectiveWatchSeconds = videoProgressData?.totalWatchTimeSeconds ?? 0;
     const formattedWatchTime = formatWatchTime(effectiveWatchSeconds);
     const learningHours =
@@ -103,39 +115,7 @@ export function LearningProgressCard({
         ? Math.round((effectiveWatchSeconds / 3600) * 10) / 10
         : Math.round(completedVideos * 0.4 * 10) / 10;
 
-    // 6. Goals Completed: Active Roadmap milestones or milestone target
-    let completedGoals = 0;
-    let totalGoals = 0;
-    if (dashRoadmap?.has_active_roadmap) {
-      const activeRm = dashRoadmap.roadmaps?.[0];
-      completedGoals =
-        dashRoadmap.completedMilestones ??
-        activeRm?.completed_milestones ??
-        dashRoadmap.count ??
-        0;
-      totalGoals =
-        dashRoadmap.totalMilestones ??
-        activeRm?.total_milestones ??
-        activeRm?.nodes?.length ??
-        0;
-
-      if (totalGoals === 0 && completedGoals > 0) {
-        totalGoals = completedGoals;
-      }
-      if (completedGoals > totalGoals && totalGoals > 0) {
-        completedGoals = totalGoals;
-      }
-    } else {
-      completedGoals = completedVideos;
-      totalGoals = Math.max(totalVideos, completedVideos);
-    }
-
-    const goalsPct =
-      totalGoals > 0
-        ? Math.min(100, Math.round((completedGoals / totalGoals) * 100))
-        : 0;
-
-    // 7. Real Weekly Activity Chart (Mon - Sun) from user's timestamps & practice
+    // 7. Real Weekly Activity Chart (Mon - Sun) strictly from Supabase video_progress timestamps
     const daysOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const chartMap: Record<string, number> = {
       Mon: 0,
@@ -188,16 +168,14 @@ export function LearningProgressCard({
     return {
       streak,
       completedVideos,
+      remainingVideos,
       totalVideos,
       progressPct,
       formattedWatchTime,
       learningHours,
-      completedGoals,
-      totalGoals,
-      goalsPct,
       weeklyBars,
     };
-  }, [dashboardData, videoProgressData, savedList]);
+  }, [dashboardData, videoProgressData, userProgressData, savedList]);
 
   return (
     <motion.div
@@ -235,7 +213,7 @@ export function LearningProgressCard({
 
       {/* ── MAIN CONTENT: GAUGE + METRICS/PROGRESS BAR + WEEKLY ACTIVITY ── */}
       <div className="relative flex flex-col lg:flex-row items-center lg:items-stretch gap-4 lg:gap-6 pt-3.5 sm:pt-4">
-        {/* 1. Left: Circular Progress Ring (completed / total * 100) */}
+        {/* 1. Left: Circular Progress Ring strictly (completed / total * 100) */}
         <div className="flex flex-col items-center justify-center shrink-0 w-32 sm:w-36 lg:w-40 py-1">
           <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
@@ -272,28 +250,33 @@ export function LearningProgressCard({
               />
             </svg>
 
-            {/* Inner text */}
+            {/* Inner text: percentage, saved progress label, completed/total videos and remaining */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none px-1">
               <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
                 {metrics.progressPct}%
               </span>
               <span className="text-[9px] sm:text-[9.5px] font-black text-purple-600 uppercase tracking-wider mt-1 leading-tight">
-                Overall Progress
+                Saved Progress
               </span>
-              <span className="text-[9px] font-semibold text-slate-400 mt-0.5 tabular-nums">
+              <span className="text-[8.5px] sm:text-[9px] font-semibold text-slate-400 mt-0.5 tabular-nums">
                 {metrics.totalVideos > 0
-                  ? `${metrics.completedVideos}/${metrics.totalVideos} videos`
+                  ? `${metrics.completedVideos}/${metrics.totalVideos} vids`
                   : "0 videos"}
               </span>
+              {metrics.remainingVideos > 0 && (
+                <span className="text-[7.5px] sm:text-[8px] font-bold text-amber-600/90 uppercase tracking-tight mt-0.5">
+                  {metrics.remainingVideos} remaining
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* 2. Middle: 4 Stats + OVERALL SAVED VIDEOS PROGRESS BAR */}
+        {/* 2. Middle: 4 Stats (Streak, Completed, Remaining, Watch Time) + OVERALL PROGRESS BAR */}
         <div className="flex-1 w-full min-w-0 flex flex-col justify-between gap-3">
           {/* 4 Stats in one sleek row with subtle dividers */}
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100/90 py-1">
-            {/* Stat 1: Day Streak */}
+            {/* Stat 1: Day Streak from Supabase user_progress */}
             <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-1 shadow-2xs">
                 <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-500" />
@@ -309,46 +292,41 @@ export function LearningProgressCard({
               </span>
             </div>
 
-            {/* Stat 2: Goals Completed */}
+            {/* Stat 2: Completed Videos from Supabase video_progress */}
             <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-1 shadow-2xs">
-                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-1 shadow-2xs">
+                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <span className="text-base sm:text-lg lg:text-xl font-black text-slate-900 leading-tight truncate max-w-full">
-                {metrics.completedGoals}
-                {metrics.totalGoals > 0 && (
-                  <span className="text-xs font-semibold text-slate-400">
-                    /{metrics.totalGoals}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5">
-                Goals Completed
-              </span>
-              <span className="text-[9px] font-extrabold text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
-                {metrics.goalsPct}% on track
-              </span>
-            </div>
-
-            {/* Stat 3: Videos Watched */}
-            <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-1 shadow-2xs">
-                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </div>
-              <span className="text-base sm:text-lg lg:text-xl font-black text-slate-900 leading-tight">
                 {metrics.completedVideos}
               </span>
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5">
-                Videos Watched
+                Completed Videos
               </span>
-              <span className="text-[9px] font-extrabold text-sky-700 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
-                {metrics.completedVideos > 0
-                  ? `+${metrics.completedVideos} completed`
-                  : "0 completed"}
+              <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
+                {metrics.progressPct}% done
               </span>
             </div>
 
-            {/* Stat 4: Learning Time */}
+            {/* Stat 3: Remaining Videos strictly (Total - Completed) */}
+            <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-1 shadow-2xs">
+                <Hourglass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              <span className="text-base sm:text-lg lg:text-xl font-black text-slate-900 leading-tight">
+                {metrics.remainingVideos}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5">
+                Remaining Videos
+              </span>
+              <span className="text-[9px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
+                {metrics.remainingVideos > 0
+                  ? `${metrics.remainingVideos} to go`
+                  : "All completed 🎉"}
+              </span>
+            </div>
+
+            {/* Stat 4: Learning Watch Time from Supabase video_progress */}
             <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center mb-1 shadow-2xs">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -359,7 +337,7 @@ export function LearningProgressCard({
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5">
                 Learning Time
               </span>
-              <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
+              <span className="text-[9px] font-extrabold text-sky-700 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
                 {metrics.learningHours > 0
                   ? `+${metrics.learningHours}h tracked`
                   : "0h tracked"}
@@ -367,7 +345,7 @@ export function LearningProgressCard({
             </div>
           </div>
 
-          {/* ── OVERALL SAVED VIDEOS PROGRESS BAR: completed / total * 100 ── */}
+          {/* ── OVERALL SAVED VIDEOS PROGRESS BAR: Completed, Remaining, Total ── */}
           <div
             onClick={() => {
               if (savedList && savedList.length > 0 && onOpenSavedTab) {
@@ -440,6 +418,19 @@ export function LearningProgressCard({
                     </span>
                   </div>
                 </div>
+
+                {/* Bottom summary line: Completed vs Remaining */}
+                <div className="flex items-center gap-3 mt-1 text-[10px] font-semibold text-slate-500">
+                  <span className="text-emerald-700 font-bold">
+                    ✓ {metrics.completedVideos} Completed
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-indigo-600 font-bold">
+                    ⏳ {metrics.remainingVideos} Remaining
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span>{metrics.totalVideos} Total Videos</span>
+                </div>
               </div>
 
               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -486,7 +477,7 @@ export function LearningProgressCard({
                 />
               </svg>
 
-              {/* 7 Day Bars */}
+              {/* 7 Day Bars from Supabase timestamps */}
               <div className="grid grid-cols-7 gap-1.5 items-end h-16 sm:h-18">
                 {metrics.weeklyBars.map((bar) => (
                   <div

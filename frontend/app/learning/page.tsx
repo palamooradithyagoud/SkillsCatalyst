@@ -92,7 +92,7 @@ export default function LearningPage() {
     refetchOnWindowFocus: true,
   });
 
-  // ── Real User Video Progress (Watched Videos, Watch Time)
+  // ── Real User Video Progress (Watched Videos, Watch Time) directly from Supabase
   const { data: videoProgressData } = useQuery({
     queryKey: ["user-video-progress", userId],
     queryFn: async () => {
@@ -108,6 +108,24 @@ export default function LearningPage() {
         0
       );
       return { watchedCount, totalWatchTimeSeconds, raw: data };
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
+
+  // ── Real User Progress (Streak Days) directly from Supabase
+  const { data: userProgressData } = useQuery({
+    queryKey: ["user-progress", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select("streak_days, total_xp, level")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data;
     },
     enabled: !!userId,
     staleTime: 1000 * 30,
@@ -238,6 +256,7 @@ export default function LearningPage() {
       <LearningProgressCard
         dashboardData={dashboardData}
         videoProgressData={videoProgressData}
+        userProgressData={userProgressData}
         savedList={savedList}
         onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
         onOpenSavedTab={() => setActiveCard("saved")}
