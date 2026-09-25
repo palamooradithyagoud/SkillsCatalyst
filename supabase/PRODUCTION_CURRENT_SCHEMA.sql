@@ -1288,3 +1288,159 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.resume_analysis TO authenti
 GRANT SELECT ON TABLE public.success_metrics TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.success_metrics TO authenticated, service_role;
 GRANT SELECT ON public.user_aptitude_question_analytics TO anon, authenticated, service_role;
+
+-- ====================================================================
+-- 21. COURSE SYSTEM - PHASE 1: FOUNDATION + MODULE QUIZ FOUNDATION
+-- ====================================================================
+
+CREATE TABLE IF NOT EXISTS public.courses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    short_description TEXT NULL,
+    description TEXT NULL,
+    thumbnail_url TEXT NULL,
+    category TEXT NULL,
+    difficulty TEXT NOT NULL,
+    estimated_duration_minutes INTEGER NULL,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    published_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
+    CONSTRAINT chk_courses_title_length CHECK (char_length(title) >= 1 AND char_length(title) <= 255),
+    CONSTRAINT chk_courses_slug_length CHECK (char_length(slug) >= 1 AND char_length(slug) <= 255),
+    CONSTRAINT chk_courses_short_desc_length CHECK (short_description IS NULL OR char_length(short_description) <= 1000),
+    CONSTRAINT chk_courses_difficulty CHECK (lower(difficulty) IN ('beginner', 'intermediate', 'advanced')),
+    CONSTRAINT chk_courses_duration CHECK (estimated_duration_minutes IS NULL OR estimated_duration_minutes >= 0),
+    CONSTRAINT chk_courses_status CHECK (status IN ('DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'))
+);
+
+CREATE TABLE IF NOT EXISTS public.course_modules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NULL,
+    position INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_course_modules_title_length CHECK (char_length(title) >= 1 AND char_length(title) <= 255),
+    CONSTRAINT chk_course_modules_position CHECK (position >= 1),
+    CONSTRAINT uq_course_modules_course_position UNIQUE (course_id, position) DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE IF NOT EXISTS public.course_lessons (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module_id UUID NOT NULL REFERENCES public.course_modules(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    slug TEXT NULL,
+    short_description TEXT NULL,
+    position INTEGER NOT NULL DEFAULT 1,
+    estimated_duration_minutes INTEGER NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_course_lessons_title_length CHECK (char_length(title) >= 1 AND char_length(title) <= 255),
+    CONSTRAINT chk_course_lessons_position CHECK (position >= 1),
+    CONSTRAINT chk_course_lessons_duration CHECK (estimated_duration_minutes IS NULL OR estimated_duration_minutes >= 0),
+    CONSTRAINT uq_course_lessons_module_position UNIQUE (module_id, position) DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE IF NOT EXISTS public.course_quizzes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module_id UUID NOT NULL REFERENCES public.course_modules(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NULL,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_course_quizzes_title_length CHECK (char_length(title) >= 1 AND char_length(title) <= 255),
+    CONSTRAINT chk_course_quizzes_status CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
+    CONSTRAINT uq_course_quizzes_module_id UNIQUE (module_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.quiz_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quiz_id UUID NOT NULL REFERENCES public.course_quizzes(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    question_type TEXT NOT NULL DEFAULT 'SINGLE_SELECT',
+    position INTEGER NOT NULL DEFAULT 1,
+    explanation TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_quiz_questions_text_length CHECK (char_length(question_text) >= 1),
+    CONSTRAINT chk_quiz_questions_type CHECK (question_type IN ('SINGLE_SELECT', 'MULTI_SELECT', 'TRUE_FALSE')),
+    CONSTRAINT chk_quiz_questions_position CHECK (position >= 1),
+    CONSTRAINT uq_quiz_questions_quiz_position UNIQUE (quiz_id, position) DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE IF NOT EXISTS public.quiz_options (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID NOT NULL REFERENCES public.quiz_questions(id) ON DELETE CASCADE,
+    option_text TEXT NOT NULL,
+    is_correct BOOLEAN NOT NULL DEFAULT false,
+    position INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_quiz_options_text_length CHECK (char_length(option_text) >= 1),
+    CONSTRAINT chk_quiz_options_position CHECK (position >= 1),
+    CONSTRAINT uq_quiz_options_question_position UNIQUE (question_id, position) DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    user_id UUID NULL,
+    details JSONB NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_courses_status ON public.courses(status);
+CREATE INDEX IF NOT EXISTS idx_courses_category ON public.courses(category);
+CREATE INDEX IF NOT EXISTS idx_courses_difficulty ON public.courses(difficulty);
+CREATE INDEX IF NOT EXISTS idx_courses_created_at ON public.courses(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_courses_slug ON public.courses(slug);
+
+CREATE INDEX IF NOT EXISTS idx_course_modules_course_id ON public.course_modules(course_id);
+CREATE INDEX IF NOT EXISTS idx_course_modules_course_pos ON public.course_modules(course_id, position);
+
+CREATE INDEX IF NOT EXISTS idx_course_lessons_module_id ON public.course_lessons(module_id);
+CREATE INDEX IF NOT EXISTS idx_course_lessons_module_pos ON public.course_lessons(module_id, position);
+
+CREATE INDEX IF NOT EXISTS idx_course_quizzes_module_id ON public.course_quizzes(module_id);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz_id ON public.quiz_questions(quiz_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz_pos ON public.quiz_questions(quiz_id, position);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_options_question_id ON public.quiz_options(question_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_options_question_pos ON public.quiz_options(question_id, position);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON public.audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON public.audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
+
+ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.course_modules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.course_lessons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.course_quizzes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON TABLE public.courses TO anon, authenticated;
+GRANT SELECT ON TABLE public.course_modules TO anon, authenticated;
+GRANT SELECT ON TABLE public.course_lessons TO anon, authenticated;
+GRANT SELECT ON TABLE public.course_quizzes TO anon, authenticated;
+GRANT SELECT ON TABLE public.quiz_questions TO anon, authenticated;
+GRANT SELECT ON TABLE public.quiz_options TO anon, authenticated;
+
+GRANT ALL ON TABLE public.courses TO service_role;
+GRANT ALL ON TABLE public.course_modules TO service_role;
+GRANT ALL ON TABLE public.course_lessons TO service_role;
+GRANT ALL ON TABLE public.course_quizzes TO service_role;
+GRANT ALL ON TABLE public.quiz_questions TO service_role;
+GRANT ALL ON TABLE public.quiz_options TO service_role;
+GRANT ALL ON TABLE public.audit_logs TO service_role;
+
