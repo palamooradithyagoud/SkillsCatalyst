@@ -12,22 +12,37 @@ import {
   Clock,
   AlertCircle,
   List,
+  CheckCircle2,
 } from "lucide-react";
 
-import { fetchStudentLesson, fetchStudentCourseById } from "@/lib/api/courses";
-import type { StudentLessonDetail, StudentCourseDetail } from "@/types/student-course";
+import { useAuth } from "@/lib/auth";
+import {
+  fetchStudentLesson,
+  fetchStudentCourseById,
+  recordLessonProgress,
+  fetchCourseProgress,
+} from "@/lib/api/courses";
+import type {
+  StudentLessonDetail,
+  StudentCourseDetail,
+  StudentCourseProgress,
+} from "@/types/course";
 import { StudentLessonRenderer } from "@/components/student/lesson-reader/StudentLessonRenderer";
 
 export default function StudentLessonReaderPage() {
   const params = useParams();
+  const { session } = useAuth();
 
   const courseIdOrSlug = params?.courseId as string;
   const lessonId = params?.lessonId as string;
 
   const [lessonData, setLessonData] = useState<StudentLessonDetail | null>(null);
   const [courseOutline, setCourseOutline] = useState<StudentCourseDetail | null>(null);
+  const [courseProgress, setCourseProgress] = useState<StudentCourseProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [progressError, setProgressError] = useState<string | null>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [prevLessonId, setPrevLessonId] = useState(lessonId);
 
@@ -44,6 +59,7 @@ export default function StudentLessonReaderPage() {
       if (!courseIdOrSlug || !lessonId) return;
       setLoading(true);
       setError(null);
+      setProgressError(null);
 
       try {
         const [lData, cData] = await Promise.all([
@@ -54,6 +70,25 @@ export default function StudentLessonReaderPage() {
         if (isMounted) {
           setLessonData(lData);
           setCourseOutline(cData);
+        }
+
+        // If authenticated student, track meaningful view and fetch course progress
+        if (session?.user_id) {
+          try {
+            const res = await recordLessonProgress(courseIdOrSlug, lessonId);
+            if (isMounted && res.course_progress) {
+              setCourseProgress(res.course_progress);
+            }
+          } catch (pErr) {
+            console.warn("Could not record lesson view activity:", pErr);
+            // Non-blocking fallback to get progress
+            try {
+              const pData = await fetchCourseProgress(courseIdOrSlug);
+              if (isMounted) {
+                setCourseProgress(pData);
+              }
+            } catch {}
+          }
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -72,7 +107,75 @@ export default function StudentLessonReaderPage() {
     return () => {
       isMounted = false;
     };
-  }, [courseIdOrSlug, lessonId]);
+  }, [courseIdOrSlug, lessonId, session]);
+
+  const isCompleted = Boolean(courseProgress?.completed_lesson_ids.includes(lessonId));
+
+  async function handleToggleComplete() {
+    if (!session?.user_id) {
+      setProgressError("Please sign in to save and track your lesson progress.");
+      return;
+    }
+    if (savingProgress) return;
+
+    setProgressError(null);
+    setSavingProgress(true);
+
+    const targetComplete = !isCompleted;
+    const prevProgress = courseProgress;
+
+    // Optimistic UI update
+    if (courseProgress) {
+      const nextCompletedIds = targetComplete
+        ? Array.from(new Set([...courseProgress.completed_lesson_ids, lessonId]))
+        : courseProgress.completed_lesson_ids.filter((id) => id !== lessonId);
+
+      const nextCompletedCount = nextCompletedIds.length;
+      const nextPct = courseProgress.total_lessons > 0
+        ? Math.round((nextCompletedCount / courseProgress.total_lessons) * 100)
+        : 0;
+
+      const nextModules = courseProgress.modules.map((m) => {
+        if (m.module_id === lessonData?.module.id) {
+          const modLessonIds = courseOutline?.modules
+            .find((mod) => mod.id === m.module_id)
+            ?.lessons.map((l) => l.id) || [];
+          const modComp = modLessonIds.filter((id) => nextCompletedIds.includes(id)).length;
+          const modPct = m.total_lessons > 0 ? Math.round((modComp / m.total_lessons) * 100) : 0;
+          return {
+            ...m,
+            completed_lessons: modComp,
+            progress_percentage: modPct,
+            lessons_complete: modComp === m.total_lessons && m.total_lessons > 0,
+          };
+        }
+        return m;
+      });
+
+      setCourseProgress({
+        ...courseProgress,
+        completed_lesson_ids: nextCompletedIds,
+        completed_lessons: nextCompletedCount,
+        progress_percentage: nextPct,
+        modules: nextModules,
+      });
+    }
+
+    try {
+      const res = await recordLessonProgress(courseIdOrSlug, lessonId, {
+        completed: targetComplete,
+      });
+      if (res.course_progress) {
+        setCourseProgress(res.course_progress);
+      }
+    } catch {
+      // Rollback optimistic state
+      setCourseProgress(prevProgress);
+      setProgressError("Could not save your progress. Please try again.");
+    } finally {
+      setSavingProgress(false);
+    }
+  }
 
   // Loading Skeleton State
   if (loading) {
@@ -138,75 +241,73 @@ export default function StudentLessonReaderPage() {
 
   const { course, module, lesson, content, prev_lesson, next_lesson } = lessonData;
 
-  // Active lesson helper
   const isCurrentLesson = (id: string) => id === lesson.id;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-purple-500/30">
-      {/* ── Top Navigation Bar ── */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Left: Back to Course & Breadcrumbs */}
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      {/* ── Top Header Navigation Bar ── */}
+      <header className="sticky top-0 z-30 h-16 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-4 min-w-0">
           <Link
             href={`/courses/${course.slug || course.id}`}
-            className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-            aria-label="Back to course overview"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-colors shrink-0"
+            title="Return to Course Syllabus"
           >
             <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Course Syllabus</span>
           </Link>
 
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 truncate">
-            <Link
-              href="/courses"
-              className="hover:text-slate-200 transition-colors hidden sm:inline"
-            >
-              Courses
-            </Link>
-            <span className="hidden sm:inline">/</span>
-            <Link
-              href={`/courses/${course.slug || course.id}`}
-              className="hover:text-slate-200 transition-colors truncate max-w-[150px] sm:max-w-[200px]"
-            >
+          <span className="text-white/20 hidden sm:inline">|</span>
+
+          {/* Breadcrumb Context */}
+          <div className="min-w-0 flex items-center gap-2 text-xs sm:text-sm">
+            <span className="text-slate-400 truncate max-w-[120px] sm:max-w-[200px] hidden md:inline">
               {course.title}
-            </Link>
-            <span>/</span>
-            <span className="text-slate-200 font-semibold truncate max-w-[120px] sm:max-w-[180px]">
+            </span>
+            <span className="text-slate-500 hidden md:inline">/</span>
+            <span className="text-purple-300 font-medium truncate max-w-[150px] sm:max-w-[240px]">
               {module.title}
             </span>
           </div>
         </div>
 
-        {/* Right: Mobile Outline Toggle Button */}
-        <div className="flex items-center gap-2">
+        {/* Right Nav Action: Outline Toggle for Mobile */}
+        <div className="flex items-center gap-3">
+          {courseProgress && (
+            <span className="text-xs font-semibold text-purple-300 hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+              {courseProgress.completed_lessons}/{courseProgress.total_lessons} completed ({courseProgress.progress_percentage}%)
+            </span>
+          )}
+
           <button
             type="button"
-            onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-            aria-label="Toggle Course Outline"
-            className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-all"
+            onClick={() => setMobileDrawerOpen(true)}
+            className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition-all border border-white/10"
+            aria-label="Open course outline drawer"
           >
-            <List className="w-3.5 h-3.5 text-purple-400" />
-            <span>Course Content</span>
+            <List className="w-4 h-4 text-purple-400" />
+            <span>Outline</span>
           </button>
         </div>
       </header>
 
-      {/* ── Main Layout (Content + Sticky Desktop Sidebar) ── */}
-      <div className="flex-1 flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-10 gap-8">
-        {/* Main Lesson Article Area */}
-        <main className="flex-1 min-w-0 max-w-4xl mx-auto">
-          {/* Module Eyebrow Context */}
-          <div className="mb-2">
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-purple-400">
-              {module.title} · Lesson {lesson.position}
+      {/* ── Main Layout: Content Reader + Sticky Sidebar ── */}
+      <div className="flex-1 flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 gap-8">
+        {/* Main Lesson Content Area */}
+        <main className="flex-1 min-w-0 max-w-4xl">
+          {/* Module & Lesson Label */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-md border border-purple-500/20">
+              Module {module.position} · Lesson {lesson.position}
             </span>
           </div>
 
-          {/* Primary Page Heading (H1) */}
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+          {/* Page H1: Single Authoritative Top Heading */}
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3">
             {lesson.title}
           </h1>
 
-          {/* Lesson Metadata */}
+          {/* Estimated duration */}
           {lesson.estimated_duration_minutes && (
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 font-medium mb-8 pb-4 border-b border-white/10">
               <Clock className="w-4 h-4 text-slate-500" />
@@ -215,8 +316,48 @@ export default function StudentLessonReaderPage() {
           )}
 
           {/* Render All 12 Block Types via Dedicated Student Renderer */}
-          <div className="mt-4 mb-16">
+          <div className="mt-4 mb-12">
             <StudentLessonRenderer blocks={content.blocks} />
+          </div>
+
+          {/* ── Lesson Completion Controls (Phase 5) ── */}
+          <div className="mb-12 p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-bold text-white mb-1">
+                {isCompleted ? "Lesson Completed" : "Ready to mark complete?"}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {isCompleted
+                  ? "You have completed this lesson. Progress is saved to your account."
+                  : "Mark this lesson complete to track your overall course progress."}
+              </p>
+              {progressError && (
+                <p className="text-xs text-rose-400 mt-2 font-medium">
+                  {progressError}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleComplete}
+              disabled={savingProgress}
+              aria-label={isCompleted ? "Lesson completed. Click to toggle." : "Mark lesson complete"}
+              className={`shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer ${
+                isCompleted
+                  ? "bg-emerald-500/20 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300"
+                  : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25 hover:scale-[1.01]"
+              }`}
+            >
+              <CheckCircle2 className={`w-4 h-4 ${isCompleted ? "text-emerald-400" : "text-white"}`} />
+              <span>
+                {savingProgress
+                  ? "Saving..."
+                  : isCompleted
+                  ? "✓ Lesson Complete"
+                  : "Mark Lesson Complete"}
+              </span>
+            </button>
           </div>
 
           {/* ── Bottom Sequential Navigation Bar ── */}
@@ -228,7 +369,7 @@ export default function StudentLessonReaderPage() {
             {prev_lesson ? (
               <Link
                 href={`/courses/${course.slug || course.id}/lessons/${prev_lesson.id}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all text-sm font-semibold group shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all text-sm font-semibold group shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-400 group-hover:-translate-x-0.5 transition-transform" />
                 <div className="text-left">
@@ -280,39 +421,62 @@ export default function StudentLessonReaderPage() {
                   Course Content
                 </h3>
               </div>
+              {courseProgress && (
+                <span className="text-xs font-semibold text-purple-300">
+                  {courseProgress.completed_lessons}/{courseProgress.total_lessons}
+                </span>
+              )}
             </div>
 
             {courseOutline?.modules && (
               <div className="space-y-4">
-                {courseOutline.modules.map((m, mIdx) => (
-                  <div key={m.id} className="space-y-1">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-2 mb-1">
-                      Module {mIdx + 1}: {m.title}
-                    </span>
+                {courseOutline.modules.map((m, mIdx) => {
+                  const modProgress = courseProgress?.modules.find((mp) => mp.module_id === m.id);
 
-                    <div className="space-y-0.5">
-                      {m.lessons.map((les) => {
-                        const active = isCurrentLesson(les.id);
-                        return (
-                          <Link
-                            key={les.id}
-                            href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
-                            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                              active
-                                ? "bg-purple-600/20 text-purple-200 border border-purple-500/40 font-bold shadow-xs"
-                                : "text-slate-300 hover:text-white hover:bg-white/5"
-                            }`}
-                          >
-                            <span className="truncate pr-2">{les.title}</span>
-                            {active && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
-                            )}
-                          </Link>
-                        );
-                      })}
+                  return (
+                    <div key={m.id} className="space-y-1">
+                      <div className="flex items-center justify-between px-2 mb-1">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          Module {mIdx + 1}: {m.title}
+                        </span>
+                        {modProgress?.lessons_complete && (
+                          <span className="text-[10px] font-bold text-emerald-400">
+                            Complete
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-0.5">
+                        {m.lessons.map((les) => {
+                          const active = isCurrentLesson(les.id);
+                          const isLessonDone = courseProgress?.completed_lesson_ids?.includes(les.id);
+
+                          return (
+                            <Link
+                              key={les.id}
+                              href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
+                              className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                                active
+                                  ? "bg-purple-600/20 text-purple-200 border border-purple-500/40 font-bold shadow-xs"
+                                  : "text-slate-300 hover:text-white hover:bg-white/5"
+                              }`}
+                            >
+                              <span className="truncate pr-2">{les.title}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {isLessonDone && (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                )}
+                                {active && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -340,7 +504,7 @@ export default function StudentLessonReaderPage() {
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
                 aria-label="Close outline drawer"
               >
                 <X className="w-5 h-5" />
@@ -349,35 +513,53 @@ export default function StudentLessonReaderPage() {
 
             {courseOutline?.modules && (
               <div className="space-y-6 flex-1">
-                {courseOutline.modules.map((m, mIdx) => (
-                  <div key={m.id} className="space-y-1.5">
-                    <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">
-                      Module {mIdx + 1}: {m.title}
-                    </span>
+                {courseOutline.modules.map((m, mIdx) => {
+                  const modProgress = courseProgress?.modules.find((mp) => mp.module_id === m.id);
 
-                    <div className="space-y-1">
-                      {m.lessons.map((les) => {
-                        const active = isCurrentLesson(les.id);
-                        return (
-                          <Link
-                            key={les.id}
-                            href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
-                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${
-                              active
-                                ? "bg-purple-600/25 text-purple-200 border border-purple-500/40 font-bold"
-                                : "text-slate-300 hover:bg-white/5 hover:text-white"
-                            }`}
-                          >
-                            <span className="truncate pr-2">{les.title}</span>
-                            {active && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
-                            )}
-                          </Link>
-                        );
-                      })}
+                  return (
+                    <div key={m.id} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">
+                          Module {mIdx + 1}: {m.title}
+                        </span>
+                        {modProgress?.lessons_complete && (
+                          <span className="text-[10px] font-bold text-emerald-400">
+                            Complete
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        {m.lessons.map((les) => {
+                          const active = isCurrentLesson(les.id);
+                          const isLessonDone = courseProgress?.completed_lesson_ids?.includes(les.id);
+
+                          return (
+                            <Link
+                              key={les.id}
+                              href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
+                              className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${
+                                active
+                                  ? "bg-purple-600/25 text-purple-200 border border-purple-500/40 font-bold"
+                                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                              }`}
+                            >
+                              <span className="truncate pr-2">{les.title}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {isLessonDone && (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                )}
+                                {active && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

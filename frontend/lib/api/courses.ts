@@ -35,7 +35,11 @@ import type {
   StudentCourseListResponse,
   StudentCourseDetail,
   StudentLessonDetail,
+  StudentCourseProgress,
+  StudentLessonProgressPayload,
+  StudentProgressMutationResponse,
 } from "@/types/course";
+
 
 
 // ── Courses ──────────────────────────────────────────────────────────────────
@@ -586,4 +590,39 @@ export async function fetchStudentLesson(
   }
   return res.json();
 }
+
+// ── Student Progress & Resume (Phase 5) ──────────────────────────────────────
+
+export async function fetchCourseProgress(
+  courseIdOrSlug: string
+): Promise<StudentCourseProgress> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/progress`;
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch progress: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function recordLessonProgress(
+  courseIdOrSlug: string,
+  lessonId: string,
+  payload?: StudentLessonProgressPayload
+): Promise<StudentProgressMutationResponse> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/lessons/${encodeURIComponent(lessonId)}/progress`;
+  const res = await apiFetch(url, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: payload ? JSON.stringify(payload) : JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to record lesson progress: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 

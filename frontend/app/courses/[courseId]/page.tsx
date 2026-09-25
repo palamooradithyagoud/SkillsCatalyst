@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   BookOpen,
   Clock,
   GraduationCap,
@@ -13,29 +14,46 @@ import {
   AlertCircle,
   Layers,
   ChevronRight,
+  CheckCircle2,
 } from "lucide-react";
 
-import { fetchStudentCourseById } from "@/lib/api/courses";
-import type { StudentCourseDetail } from "@/types/student-course";
+import { useAuth } from "@/lib/auth";
+import { fetchStudentCourseById, fetchCourseProgress } from "@/lib/api/courses";
+import type { StudentCourseDetail, StudentCourseProgress } from "@/types/course";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
   const courseIdOrSlug = params?.courseId as string;
+  const { session } = useAuth();
 
   const [course, setCourse] = useState<StudentCourseDetail | null>(null);
+  const [progress, setProgress] = useState<StudentCourseProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    async function loadCourse() {
+    async function loadCourseAndProgress() {
       if (!courseIdOrSlug) return;
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchStudentCourseById(courseIdOrSlug);
+        const cData = await fetchStudentCourseById(courseIdOrSlug);
         if (isMounted) {
-          setCourse(data);
+          setCourse(cData);
+        }
+
+        // If authenticated, fetch personal student progress
+        if (session?.user_id) {
+          try {
+            const pData = await fetchCourseProgress(courseIdOrSlug);
+            if (isMounted) {
+              setProgress(pData);
+            }
+          } catch (pErr) {
+            // Non-blocking: progress failure should never prevent reading course details
+            console.warn("Could not load student course progress:", pErr);
+          }
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -49,11 +67,11 @@ export default function StudentCourseDetailPage() {
       }
     }
 
-    loadCourse();
+    loadCourseAndProgress();
     return () => {
       isMounted = false;
     };
-  }, [courseIdOrSlug]);
+  }, [courseIdOrSlug, session]);
 
   // Loading Skeleton
   if (loading) {
@@ -101,7 +119,7 @@ export default function StudentCourseDetailPage() {
     );
   }
 
-  // Find first lesson for the "Start Learning" CTA
+  // Find first lesson for fallback CTA
   let firstLessonId: string | null = null;
   for (const m of course.modules) {
     if (m.lessons && m.lessons.length > 0) {
@@ -109,6 +127,17 @@ export default function StudentCourseDetailPage() {
       break;
     }
   }
+
+  // Resume lesson resolution
+  const resumeLessonId = progress?.last_lesson_id || firstLessonId;
+  const hasProgress = Boolean(
+    progress && (progress.completed_lessons > 0 || progress.last_lesson_id)
+  );
+  const isAllLessonsCompleted = Boolean(
+    progress &&
+    progress.total_lessons > 0 &&
+    progress.completed_lessons === progress.total_lessons
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
@@ -155,6 +184,33 @@ export default function StudentCourseDetailPage() {
               {course.short_description || course.description || "Master core concepts and advance your skills through structured learning."}
             </p>
 
+            {/* Student Course Progress Bar (Phase 5) */}
+            {progress && (
+              <div className="mb-6 p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                  <span className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider">
+                    Course Progress
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-purple-300">
+                    {progress.completed_lessons} of {progress.total_lessons} lessons completed ({progress.progress_percentage}%)
+                  </span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-valuenow={progress.progress_percentage}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Course completion progress"
+                  className="w-full h-3 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/5"
+                >
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, progress.progress_percentage))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Quick Stats & CTA */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/10">
               <div className="flex items-center gap-4 text-xs sm:text-sm text-slate-400 font-medium">
@@ -169,13 +225,17 @@ export default function StudentCourseDetailPage() {
                 </span>
               </div>
 
-              {firstLessonId ? (
+              {resumeLessonId ? (
                 <Link
-                  href={`/courses/${course.id}/lessons/${firstLessonId}`}
+                  href={`/courses/${course.slug || course.id}/lessons/${resumeLessonId}`}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-600/30 hover:scale-[1.02] transition-all"
                 >
                   <PlayCircle className="w-4 h-4" />
-                  Start Learning
+                  {hasProgress
+                    ? isAllLessonsCompleted
+                      ? "Review Course"
+                      : "Continue Learning"
+                    : "Start Learning"}
                 </Link>
               ) : (
                 <span className="text-xs font-semibold px-4 py-2 rounded-xl bg-white/5 text-slate-400 border border-white/10">
@@ -195,7 +255,7 @@ export default function StudentCourseDetailPage() {
                 Course Curriculum
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                Explore all modules and sequential lesson topics.
+                Explore all modules, progress status, and sequential lessons.
               </p>
             </div>
           </div>
@@ -208,84 +268,132 @@ export default function StudentCourseDetailPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {course.modules.map((module, mIdx) => (
-                <div
-                  key={module.id}
-                  className="rounded-2xl border border-white/10 bg-slate-900/40 overflow-hidden"
-                >
-                  {/* Module Header */}
-                  <div className="p-5 sm:p-6 bg-slate-900/80 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
-                        Module {mIdx + 1}
-                      </span>
-                      <h3 className="text-base sm:text-lg font-bold text-white mt-0.5">
-                        {module.title}
-                      </h3>
-                      {module.description && (
-                        <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-                          {module.description}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium shrink-0 self-start sm:self-auto">
-                      {module.lessons.length} {module.lessons.length === 1 ? "lesson" : "lessons"}
-                    </span>
-                  </div>
+              {course.modules.map((module, mIdx) => {
+                const modProgress = progress?.modules.find((m) => m.module_id === module.id);
 
-                  {/* Lessons List */}
-                  <div className="divide-y divide-white/5">
-                    {module.lessons.map((lesson, lIdx) => (
-                      <Link
-                        key={lesson.id}
-                        href={`/courses/${course.id}/lessons/${lesson.id}`}
-                        className="group flex items-center justify-between p-4 sm:px-6 hover:bg-white/[0.03] transition-colors"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0 pr-3">
-                          <span className="w-7 h-7 rounded-lg bg-white/5 text-slate-400 text-xs font-semibold flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 group-hover:text-purple-300 transition-colors">
-                            {lIdx + 1}
+                return (
+                  <div
+                    key={module.id}
+                    className="rounded-2xl border border-white/10 bg-slate-900/40 overflow-hidden"
+                  >
+                    {/* Module Header */}
+                    <div className="p-5 sm:p-6 bg-slate-900/80 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-purple-400">
+                          Module {mIdx + 1}
+                        </span>
+                        <h3 className="text-base sm:text-lg font-bold text-white mt-0.5">
+                          {module.title}
+                        </h3>
+                        {module.description && (
+                          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
+                            {module.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Module-level Lesson Progress */}
+                      <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                        {modProgress?.lessons_complete && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            Lessons Complete
                           </span>
-                          <div className="min-w-0">
-                            <h4 className="text-sm sm:text-base font-medium text-slate-200 group-hover:text-white truncate transition-colors">
-                              {lesson.title}
-                            </h4>
-                            {lesson.short_description && (
-                              <p className="text-xs text-slate-500 truncate max-w-md mt-0.5">
-                                {lesson.short_description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          {lesson.estimated_duration_minutes && (
-                            <span className="text-xs text-slate-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-500" />
-                              {lesson.estimated_duration_minutes}m
-                            </span>
-                          )}
-                          <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                      </Link>
-                    ))}
-
-                    {/* Module Quiz Display-Only Outline */}
-                    {module.quiz && (
-                      <div className="p-4 sm:px-6 bg-purple-950/10 flex items-center justify-between text-xs text-purple-300/80 border-t border-purple-500/10">
-                        <div className="flex items-center gap-2.5">
-                          <HelpCircle className="w-4 h-4 text-purple-400" />
-                          <span className="font-semibold text-slate-300">
-                            Module Quiz: {module.quiz.title}
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                          Available in Module
+                        )}
+                        <span className="text-xs text-slate-400 font-medium">
+                          {modProgress
+                            ? `${modProgress.completed_lessons} / ${modProgress.total_lessons} lessons`
+                            : `${module.lessons.length} ${module.lessons.length === 1 ? "lesson" : "lessons"}`}
                         </span>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Lessons List */}
+                    <div className="divide-y divide-white/5">
+                      {module.lessons.map((lesson, lIdx) => {
+                        const isCompleted = progress?.completed_lesson_ids?.includes(lesson.id);
+                        const isResume = progress?.last_lesson_id === lesson.id;
+
+                        return (
+                          <Link
+                            key={lesson.id}
+                            href={`/courses/${course.slug || course.id}/lessons/${lesson.id}`}
+                            className="group flex items-center justify-between p-4 sm:px-6 hover:bg-white/[0.03] transition-colors"
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                              {isCompleted ? (
+                                <span
+                                  aria-label="Completed lesson"
+                                  className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center justify-center shrink-0 border border-emerald-500/30"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </span>
+                              ) : isResume ? (
+                                <span
+                                  aria-label="Current resume lesson"
+                                  className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-semibold flex items-center justify-center shrink-0 border border-purple-500/30"
+                                >
+                                  <ArrowRight className="w-4 h-4" />
+                                </span>
+                              ) : (
+                                <span className="w-7 h-7 rounded-lg bg-white/5 text-slate-400 text-xs font-semibold flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 group-hover:text-purple-300 transition-colors">
+                                  {lIdx + 1}
+                                </span>
+                              )}
+
+                              <div className="min-w-0">
+                                <h4 className="text-sm sm:text-base font-medium text-slate-200 group-hover:text-white truncate transition-colors">
+                                  {lesson.title}
+                                </h4>
+                                {lesson.short_description && (
+                                  <p className="text-xs text-slate-500 truncate max-w-md mt-0.5">
+                                    {lesson.short_description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              {isCompleted && (
+                                <span className="text-[11px] font-semibold text-emerald-400/90 hidden sm:inline-block">
+                                  Completed
+                                </span>
+                              )}
+                              {isResume && !isCompleted && (
+                                <span className="text-[11px] font-semibold text-purple-300/90 hidden sm:inline-block">
+                                  Resume Here
+                                </span>
+                              )}
+                              {lesson.estimated_duration_minutes && (
+                                <span className="text-xs text-slate-500 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-slate-500" />
+                                  {lesson.estimated_duration_minutes}m
+                                </span>
+                              )}
+                              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+                            </div>
+                          </Link>
+                        );
+                      })}
+
+                      {/* Module Quiz Display-Only Outline (Pending Phase 6) */}
+                      {module.quiz && (
+                        <div className="p-4 sm:px-6 bg-purple-950/10 flex items-center justify-between text-xs text-purple-300/80 border-t border-purple-500/10">
+                          <div className="flex items-center gap-2.5">
+                            <HelpCircle className="w-4 h-4 text-purple-400" />
+                            <span className="font-semibold text-slate-300">
+                              Module Quiz: {module.quiz.title}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            Quiz Pending
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
