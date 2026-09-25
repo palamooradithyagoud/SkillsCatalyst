@@ -23,7 +23,7 @@ import {
 } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
-import { ActiveCard, LANGUAGES } from "@/lib/learning/searchValidation";
+import { ActiveCard, LANGUAGES, extractPlaylistId } from "@/lib/learning/searchValidation";
 import { SelectDropdown } from "@/components/learning/SelectDropdown";
 import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
