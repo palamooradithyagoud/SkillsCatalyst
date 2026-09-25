@@ -60,7 +60,9 @@ export interface ImageBlockContent {
   url: string;
   alt: string;
   caption?: string | null;
+  media_id?: string | null;
 }
+
 
 export interface CodeBlockContent {
   language: SupportedCodeLanguage;
