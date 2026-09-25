@@ -154,11 +154,16 @@ export default function SkillBitReelItem({
 
     if (isActive) {
       lastTickTimeRef.current = Date.now();
+      player.muted = isMuted;
       const playPromise = player.play?.();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Autoplay with sound might be blocked by browser policy
-          if (player.muted !== true) {
+          // Autoplay with sound might be blocked on fresh page load without prior user interaction
+          if (isMuted) {
+            player.muted = true;
+            player.play?.().catch(() => {});
+          } else {
+            // Attempt muted playback as fallback so video still starts playing
             player.muted = true;
             player.play?.().catch(() => {});
           }
@@ -174,14 +179,14 @@ export default function SkillBitReelItem({
         persistProgress(curTime, watchedSecondsRef.current, pct);
       }
     }
-  }, [isActive, skillbit.duration_seconds, persistProgress]);
+  }, [isActive, isMuted, skillbit.duration_seconds, persistProgress]);
 
-  // Synchronize mute state
+  // Synchronize mute state across slides and when user toggles mute
   useEffect(() => {
     if (playerRef.current) {
       playerRef.current.muted = isMuted;
     }
-  }, [isMuted]);
+  }, [isMuted, isActive]);
 
   // Best effort save on window beforeunload
   useEffect(() => {
@@ -238,6 +243,7 @@ export default function SkillBitReelItem({
 
     if (player.paused) {
       lastTickTimeRef.current = Date.now();
+      player.muted = isMuted;
       player.play?.();
       setShowPlayFeedback("play");
     } else {
@@ -302,7 +308,7 @@ export default function SkillBitReelItem({
               playbackId={skillbit.playback_id}
               streamType="on-demand"
               preload={isActive ? "auto" : isNext ? "metadata" : "none"}
-              autoPlay={isActive ? "muted" : false}
+              autoPlay={isActive ? (isMuted ? "muted" : "any") : false}
               muted={isMuted}
               playsInline
               loop={false}
@@ -313,6 +319,11 @@ export default function SkillBitReelItem({
                 height: "100%",
                 aspectRatio: "9/16",
                 objectFit: "cover",
+              }}
+              onPlay={() => {
+                if (playerRef.current && !isMuted && playerRef.current.muted) {
+                  playerRef.current.muted = false;
+                }
               }}
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
@@ -388,7 +399,10 @@ export default function SkillBitReelItem({
         {/* FLOATING ACTION: MUTE/UNMUTE BUTTON */}
         <div className="absolute right-4 bottom-32 z-20 flex flex-col items-center gap-4">
           <button
-            onClick={onToggleMute}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMute();
+            }}
             aria-label={isMuted ? "Unmute audio" : "Mute audio"}
             className="p-3 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-white border border-white/10 transition-transform active:scale-95 shadow-lg"
           >
