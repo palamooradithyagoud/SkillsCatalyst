@@ -146,7 +146,7 @@ describe("Phase 5 — Student Progress + Resume + Module Completion Suite", () =
     });
 
     it("11. Failed completion rolls back optimistic UI state honestly", () => {
-      let completedIds = [];
+      let completedIds: string[] = [];
       const previousState = [...completedIds];
 
       // Optimistic update
@@ -278,7 +278,7 @@ describe("Phase 5 — Student Progress + Resume + Module Completion Suite", () =
     });
 
     it("24. Module 2 progress computed accurately (0 of 2 = 0%)", () => {
-      const mod2Completed = 0;
+      const mod2Completed: number = 0;
       const mod2Total = 2;
       const mod2Pct = mod2Total > 0 ? Math.round((mod2Completed / mod2Total) * 100) : 0;
       const lessonsComplete = mod2Completed === mod2Total && mod2Total > 0;
@@ -315,9 +315,9 @@ describe("Phase 5 — Student Progress + Resume + Module Completion Suite", () =
       const modQuiz = mockCourse.modules[0].quiz;
       assert.ok(modQuiz);
       assert.equal(modQuiz?.title, "Foundations Quiz");
-      assert.equal((modQuiz as Record<string, unknown>).questions, undefined);
-      assert.equal((modQuiz as Record<string, unknown>).options, undefined);
-      assert.equal((modQuiz as Record<string, unknown>).is_correct, undefined);
+      assert.equal((modQuiz as unknown as Record<string, unknown>).questions, undefined);
+      assert.equal((modQuiz as unknown as Record<string, unknown>).options, undefined);
+      assert.equal((modQuiz as unknown as Record<string, unknown>).is_correct, undefined);
     });
 
     it("28. No quiz attempts or answer submissions are permitted in Phase 5", () => {

@@ -34,10 +34,13 @@ import {
   Globe,
   Settings as SettingsIcon,
   Award,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
+import { fetchCertificateIdentity } from "@/lib/api/certificates";
+import type { CertificateIdentity } from "@/types/certificate";
 import {
   fetchFullProfileData,
   savePersonalProfile,
@@ -223,8 +226,10 @@ function EditProfileContent() {
     gender: "Prefer not to say",
     about: "",
     avatar_url: "",
+    college: "",
   });
   const [savingPersonal, setSavingPersonal] = useState(false);
+  const [certIdentity, setCertIdentity] = useState<CertificateIdentity | null>(null);
 
   // Sub-views for list vs form
   const [expView, setExpView] = useState<"list" | "form">("list");
@@ -299,6 +304,19 @@ function EditProfileContent() {
           } else {
             setPersonalForm((prev) => ({ ...prev, full_name: defaultName }));
           }
+        }
+
+        // Phase 7: Fetch Authoritative Certificate Identity & Lock State
+        try {
+          const ident = await fetchCertificateIdentity();
+          if (ident) {
+            setCertIdentity(ident);
+            if (ident.college) {
+              setPersonalForm((prev) => ({ ...prev, college: ident.college }));
+            }
+          }
+        } catch {
+          // Ignore if unauthenticated or offline
         }
       } catch (err) {
         console.warn("Failed to load profile:", err);
@@ -726,18 +744,65 @@ function EditProfileContent() {
               </div>
             </div>
 
+            {/* Phase 7: Identity Lock Banner */}
+            {certIdentity?.is_identity_locked ? (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
+                <Lock className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>
+                  Your name and college are locked because a SkillsCatalyst certificate has already been issued.
+                </span>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs flex items-center gap-2.5">
+                <Award className="w-4 h-4 shrink-0 text-purple-400" />
+                <span>
+                  Please make sure your full name and college are accurate. These details will be permanently locked after your first certificate is issued.
+                </span>
+              </div>
+            )}
+
             {/* Full Name */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
-                Full Name <span className="text-rose-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                  Full Name <span className="text-rose-500">*</span>
+                </label>
+                {certIdentity?.is_identity_locked && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400">
+                    <Lock className="w-3 h-3" /> Locked
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 required
+                disabled={certIdentity?.is_identity_locked}
                 value={personalForm.full_name || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, full_name: e.target.value })}
                 placeholder="e.g. Palamoor Adithya Goud"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            {/* College Name */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                  College / University
+                </label>
+                {certIdentity?.is_identity_locked && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400">
+                    <Lock className="w-3 h-3" /> Locked
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                disabled={certIdentity?.is_identity_locked}
+                value={personalForm.college || ""}
+                onChange={(e) => setPersonalForm({ ...personalForm, college: e.target.value })}
+                placeholder="e.g. ABC Engineering College"
+                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 

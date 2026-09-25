@@ -45,6 +45,7 @@ export interface UserProfile {
   gender?: string;
   about?: string;
   avatar_url?: string;
+  college?: string;
   created_at?: string;
   updated_at?: string;
 }

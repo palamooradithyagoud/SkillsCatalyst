@@ -213,8 +213,8 @@ describe("Phase 4 — Student Course Experience Characterization Suite", () => {
       assert.equal(tableBlock.rows[0].length, 3);
     });
 
-    it("20. Callout block supports all 4 variants (note, tip, warning, important)", () => {
-      const variants: Array<CalloutBlockContent["variant"]> = ["note", "tip", "warning", "important"];
+    it("20. Callout block supports all 4 variants (info, tip, warning, important)", () => {
+      const variants: Array<CalloutBlockContent["variant"]> = ["info", "tip", "warning", "important"];
       for (const v of variants) {
         const callout: CalloutBlockContent = { variant: v, text: "Educational guidance" };
         assert.equal(callout.variant, v);
@@ -326,7 +326,7 @@ describe("Phase 4 — Student Course Experience Characterization Suite", () => {
     });
 
     it("32. Draft lesson access attempt returns 404", () => {
-      const courseStatus = "DRAFT";
+      const courseStatus: string = "DRAFT";
       const isAccessible = courseStatus === "PUBLISHED";
       assert.equal(isAccessible, false);
     });

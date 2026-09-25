@@ -408,8 +408,9 @@ describe("Phase 3B — Image Upload & Lesson Editor Integration Unit Tests", () 
     const saveSuccess = false;
     assert.equal(saveSuccess, false);
     // Assert working state was not reverted or erased
-    assert.equal(workingEditorState[0].content.url, "https://storage/uploaded-test.png");
-    assert.equal(workingEditorState[0].content.media_id, "media-123");
+    const imgContent = workingEditorState[0].content as ImageBlockContent;
+    assert.equal(imgContent.url, "https://storage/uploaded-test.png");
+    assert.equal(imgContent.media_id, "media-123");
   });
 
   // ── 21. 401 Unauthorized Error Mapping ─────────────────────────────────────

@@ -1169,6 +1169,30 @@ export default function SettingsPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* PHASE 7: COURSE CERTIFICATES CARD                                    */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-amber-50 text-amber-600">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Official Certificates</h3>
+              <p className="text-xs text-slate-500 font-medium">Verified credentials issued for completed courses</p>
+            </div>
+          </div>
+          <Link
+            href="/certificates"
+            className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50 text-slate-700 hover:text-amber-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          >
+            <Eye className="w-3.5 h-3.5 text-amber-600" />
+            <span>View Certificates</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 9. EDUCATION CARD                                                   */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div id="education" className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">

@@ -24,7 +24,19 @@ import {
   Archive,
   RotateCcw,
   Sparkles,
+  Award,
+  Eye,
+  UploadCloud,
 } from "lucide-react";
+import {
+  fetchCertificateTemplates,
+  fetchCourseCertificateConfig,
+  updateCourseCertificateConfig,
+  createCertificateTemplate,
+  uploadCertificateBackground,
+} from "@/lib/api/certificates";
+import type { CertificateTemplate, CourseCertificateConfig } from "@/types/certificate";
+import CertificateDisplay from "@/components/student/CertificateDisplay";
 import type {
   CourseItem,
   CourseDetail,
@@ -234,6 +246,25 @@ export default function AdminCoursesCMS() {
     name: "",
   });
 
+  // ── Phase 7: Certificate Configuration & Template State ──────────────────────
+  const [, setCertConfig] = useState<CourseCertificateConfig | null>(null);
+  const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
+  const [certEnabled, setCertEnabled] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [certSaving, setCertSaving] = useState(false);
+  const [certSuccessMsg, setCertSuccessMsg] = useState<string | null>(null);
+  const [certErrorMsg, setCertErrorMsg] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [manageTemplatesOpen, setManageTemplatesOpen] = useState(false);
+  const [newTemplateForm, setNewTemplateForm] = useState({
+    name: "",
+    description: "",
+    design_theme: "professional_blue",
+    background_media_url: "",
+  });
+  const [templateUploadLoading, setTemplateUploadLoading] = useState(false);
+  const [newTemplateSaving, setNewTemplateSaving] = useState(false);
+
   // ── Fetch Courses (List View) ────────────────────────────────────────────────
   const loadCourses = useCallback(async () => {
     try {
@@ -312,6 +343,8 @@ export default function AdminCoursesCMS() {
       fetchAdminCourseById(selectedCourseId)
         .then((data) => {
           if (!ignore) {
+            setCertSuccessMsg(null);
+            setCertErrorMsg(null);
             setCourseDetail(data);
             setDetailLoading(false);
           }
@@ -322,11 +355,103 @@ export default function AdminCoursesCMS() {
             setDetailLoading(false);
           }
         });
+
+      // Load certificate configuration & available templates (Phase 7)
+      Promise.all([
+        fetchCourseCertificateConfig(selectedCourseId).catch(() => null),
+        fetchCertificateTemplates(true).catch(() => []),
+      ]).then(([cfg, tmpls]) => {
+        if (!ignore) {
+          if (cfg) {
+            setCertConfig(cfg);
+            setCertEnabled(cfg.enabled);
+            setSelectedTemplateId(cfg.certificate_template_id || "");
+          }
+          if (tmpls && tmpls.length > 0) {
+            setTemplates(tmpls);
+            if (!cfg?.certificate_template_id && tmpls[0]) {
+              setSelectedTemplateId(tmpls[0].id);
+            }
+          }
+        }
+      });
     }
     return () => {
       ignore = true;
     };
   }, [selectedCourseId]);
+
+  const handleSaveCertificateConfig = async () => {
+    if (!selectedCourseId) return;
+    setCertSaving(true);
+    setCertSuccessMsg(null);
+    setCertErrorMsg(null);
+    try {
+      if (certEnabled && !selectedTemplateId) {
+        setCertErrorMsg("Please select a certificate template when certificates are enabled.");
+        setCertSaving(false);
+        return;
+      }
+      const updated = await updateCourseCertificateConfig(
+        selectedCourseId,
+        certEnabled,
+        certEnabled ? selectedTemplateId : null
+      );
+      setCertConfig(updated);
+      setCertSuccessMsg("Certificate configuration saved successfully.");
+      setTimeout(() => setCertSuccessMsg(null), 4000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save certificate configuration.";
+      setCertErrorMsg(msg);
+    } finally {
+      setCertSaving(false);
+    }
+  };
+
+  const handleCreateTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTemplateForm.name.trim()) return;
+    setNewTemplateSaving(true);
+    try {
+      const bgUrl =
+        newTemplateForm.background_media_url.trim() ||
+        (newTemplateForm.design_theme === "modern_gold"
+          ? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850"><rect width="1200" height="850" fill="%2318181b"/></svg>'
+          : newTemplateForm.design_theme === "technical_dark"
+          ? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850"><rect width="1200" height="850" fill="%23090d16"/></svg>'
+          : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850"><rect width="1200" height="850" fill="%230b1329"/></svg>');
+
+      const created = await createCertificateTemplate({
+        name: newTemplateForm.name.trim(),
+        description: newTemplateForm.description.trim() || undefined,
+        design_theme: newTemplateForm.design_theme,
+        background_media_url: bgUrl,
+        is_active: true,
+      });
+      setTemplates((prev) => [...prev, created]);
+      setSelectedTemplateId(created.id);
+      setNewTemplateForm({ name: "", description: "", design_theme: "professional_blue", background_media_url: "" });
+      setManageTemplatesOpen(false);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to create template");
+    } finally {
+      setNewTemplateSaving(false);
+    }
+  };
+
+  const handleUploadBackgroundFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setTemplateUploadLoading(true);
+    try {
+      const res = await uploadCertificateBackground(file);
+      setNewTemplateForm((prev) => ({ ...prev, background_media_url: res.background_media_url }));
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to upload background asset.");
+    } finally {
+      setTemplateUploadLoading(false);
+    }
+  };
 
   // ── Course Handlers ──────────────────────────────────────────────────────────
   const handleOpenCreateCourse = () => {
@@ -1101,6 +1226,156 @@ export default function AdminCoursesCMS() {
               </ul>
             </div>
           )}
+        </div>
+
+        {/* Phase 7: Course Certificate Configuration Section */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-400" />
+                <span>Certificate Settings</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Configure course-specific certificate issuance and design template
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setManageTemplatesOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Template Library</span>
+              </button>
+              {certEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Preview Certificate</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {certSuccessMsg && (
+            <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <span>{certSuccessMsg}</span>
+              </div>
+              <button onClick={() => setCertSuccessMsg(null)} className="p-1 text-emerald-400 hover:text-emerald-200 cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {certErrorMsg && (
+            <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{certErrorMsg}</span>
+              </div>
+              <button onClick={() => setCertErrorMsg(null)} className="p-1 text-rose-400 hover:text-rose-200 cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white block">Certificate Issuance</span>
+                  <span className="text-[11px] text-slate-400">
+                    Enable or disable completion certificate for this course
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={certEnabled}
+                    onChange={(e) => setCertEnabled(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                </label>
+              </div>
+
+              {!certEnabled ? (
+                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800/80 text-[11px] text-slate-400 italic">
+                  This course does not issue a certificate. Students who complete all requirements will receive course completion status without a certificate.
+                </div>
+              ) : (
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Assigned Certificate Template <span className="text-amber-400">*</span>
+                    </label>
+                    <select
+                      value={selectedTemplateId}
+                      onChange={(e) => setSelectedTemplateId(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-hidden focus:border-amber-500"
+                    >
+                      <option value="" disabled>
+                        Select a certificate template
+                      </option>
+                      {templates.map((tmpl) => (
+                        <option key={tmpl.id} value={tmpl.id}>
+                          {tmpl.name} ({tmpl.design_theme}) {!tmpl.is_active ? "— [Archived]" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedTemplateId && (
+                    <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                      <span>Selected: {templates.find((t) => t.id === selectedTemplateId)?.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewModalOpen(true)}
+                        className="text-amber-400 hover:text-amber-300 font-semibold underline text-[11px] cursor-pointer"
+                      >
+                        Preview design
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <span className="text-xs font-bold text-white block">Certificate Invariants &amp; Rules</span>
+              <ul className="space-y-1.5 text-[11px] text-slate-400">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-amber-400 font-bold">&bull;</span>
+                  <span>Issued certificates snapshot the active template design. Changing the template later will not modify already-issued certificates.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-amber-400 font-bold">&bull;</span>
+                  <span>Students cannot edit their name or college after their first certificate is issued.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-amber-400 font-bold">&bull;</span>
+                  <span>Certificates require 100% published lesson completion + passing all module quizzes.</span>
+                </li>
+              </ul>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleSaveCertificateConfig}
+                  disabled={certSaving}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md shadow-amber-600/20 inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>{certSaving ? "Saving Settings..." : "Save Certificate Settings"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Course Hierarchy Canvas */}
@@ -2475,6 +2750,237 @@ export default function AdminCoursesCMS() {
                 >
                   {actionInProgress ? "Deleting..." : "Confirm Delete"}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 7: Certificate Preview Modal */}
+        {previewModalOpen && courseDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-2xl my-auto">
+              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <Award className="w-4 h-4 text-amber-400" />
+                    <span>Certificate Live Preview</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Sample rendering for &quot;{courseDetail.title}&quot; using template &quot;{templates.find((t) => t.id === selectedTemplateId)?.name || "Default"}&quot;
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>
+                    This preview uses mock student details (John Doe, 92% score). No real certificate record has been issued.
+                  </span>
+                </div>
+
+                <div className="flex justify-center">
+                  <CertificateDisplay
+                    studentName="John Doe"
+                    collegeName="Example Institute of Technology"
+                    courseTitle={courseDetail.title}
+                    score={92}
+                    issuedDate={new Date().toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    certificateNumber="SC-CERT-2026-DEMO"
+                    verificationUrl={
+                      typeof window !== "undefined"
+                        ? `${window.location.origin}/verify/certificate/SC-DEMO-VERIFY`
+                        : "https://skillscatalyst.io/verify/certificate/SC-DEMO-VERIFY"
+                    }
+                    verificationId="SC-DEMO-VERIFY"
+                    designTheme={
+                      templates.find((t) => t.id === selectedTemplateId)?.design_theme ||
+                      "professional_blue"
+                    }
+                    backgroundMediaUrl={
+                      templates.find((t) => t.id === selectedTemplateId)?.background_media_url || ""
+                    }
+                    isPreview={true}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-slate-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 7: Certificate Template Library Modal */}
+        {manageTemplatesOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl my-auto">
+              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Certificate Template Library</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Manage reusable course certificate designs and background themes
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setManageTemplatesOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-6 text-xs">
+                {/* Existing Templates */}
+                <div className="space-y-3">
+                  <span className="font-bold text-slate-200 block text-xs">Available Templates</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {templates.map((tmpl) => (
+                      <div
+                        key={tmpl.id}
+                        className={`p-3 rounded-xl border transition-all ${
+                          selectedTemplateId === tmpl.id
+                            ? "bg-amber-950/20 border-amber-500/50 text-amber-200"
+                            : "bg-slate-950/60 border-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-white">{tmpl.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+                            {tmpl.design_theme}
+                          </span>
+                        </div>
+                        {tmpl.description && (
+                          <p className="text-[11px] text-slate-400 mt-1">{tmpl.description}</p>
+                        )}
+                        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                          <span className="text-[10px] text-slate-500">
+                            {tmpl.is_active ? "Active" : "Archived"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTemplateId(tmpl.id);
+                              setManageTemplatesOpen(false);
+                            }}
+                            className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                          >
+                            Select for Course
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Create New Template Form */}
+                <form
+                  onSubmit={handleCreateTemplate}
+                  className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3"
+                >
+                  <span className="font-bold text-white block text-xs">Create New Template</span>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">
+                      Template Name <span className="text-amber-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newTemplateForm.name}
+                      onChange={(e) =>
+                        setNewTemplateForm({ ...newTemplateForm, name: e.target.value })
+                      }
+                      placeholder="e.g. Executive Platinum"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Description</label>
+                    <input
+                      type="text"
+                      value={newTemplateForm.description}
+                      onChange={(e) =>
+                        setNewTemplateForm({ ...newTemplateForm, description: e.target.value })
+                      }
+                      placeholder="Optional brief description"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">Design Theme</label>
+                      <select
+                        value={newTemplateForm.design_theme}
+                        onChange={(e) =>
+                          setNewTemplateForm({ ...newTemplateForm, design_theme: e.target.value })
+                        }
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-hidden focus:border-amber-500"
+                      >
+                        <option value="professional_blue">Professional Blue</option>
+                        <option value="modern_gold">Modern Gold</option>
+                        <option value="technical_dark">Technical Dark</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Upload Custom Background (PNG/JPG/WEBP)
+                      </label>
+                      <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer">
+                        <UploadCloud className="w-4 h-4 text-amber-400" />
+                        <span className="truncate">
+                          {templateUploadLoading
+                            ? "Uploading..."
+                            : newTemplateForm.background_media_url
+                            ? "Background uploaded ✓"
+                            : "Choose image asset"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className="sr-only"
+                          onChange={handleUploadBackgroundFile}
+                          disabled={templateUploadLoading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={newTemplateSaving || templateUploadLoading}
+                      className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer disabled:opacity-50"
+                    >
+                      {newTemplateSaving ? "Creating..." : "Save New Template"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
