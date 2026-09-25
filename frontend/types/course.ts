@@ -210,3 +210,7 @@ export * from "./course-media";
 // ── Student Course Types Re-export (Phase 4) ──────────────────────────────────
 export * from "./student-course";
 
+// ── Student Progress Types Re-export (Phase 5) ────────────────────────────────
+export * from "./student-progress";
+
+
