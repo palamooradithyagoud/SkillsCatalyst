@@ -375,3 +375,25 @@ class CourseListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+# ── Lesson Content Models Re-export (Phase 2A) ────────────────────────────────
+from backend.models.lesson_content import (
+    BlockType,
+    LessonBlock,
+    LessonContentPayload,
+    LessonContentResponse,
+    HeadingBlockContent,
+    ParagraphBlockContent,
+    ImageBlockContent,
+    CodeBlockContent,
+    OutputBlockContent,
+    ListBlockContent,
+    TableBlockContent,
+    CalloutBlockContent,
+    QuoteBlockContent,
+    YouTubeBlockContent,
+    LinkBlockContent,
+    KeyTakeawaysBlockContent,
+    extract_youtube_video_id,
+)

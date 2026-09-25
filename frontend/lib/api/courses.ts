@@ -27,6 +27,8 @@ import type {
   CreateOptionPayload,
   UpdateOptionPayload,
   ReorderPayload,
+  LessonContentPayload,
+  LessonContentResponse,
 } from "@/types/course";
 
 // ── Courses ──────────────────────────────────────────────────────────────────
@@ -410,6 +412,49 @@ export async function reorderAdminOptions(questionId: string, payload: ReorderPa
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
     throw new Error(err.detail || `Failed to reorder options: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Lesson Content Architecture (Phase 2A) ───────────────────────────────────
+
+export async function fetchAdminLessonContent(
+  courseId: string,
+  moduleId: string,
+  lessonId: string
+): Promise<LessonContentResponse> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(
+    moduleId
+  )}/lessons/${encodeURIComponent(lessonId)}/content`;
+
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch lesson content: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function saveAdminLessonContent(
+  courseId: string,
+  moduleId: string,
+  lessonId: string,
+  payload: LessonContentPayload
+): Promise<LessonContentResponse> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(
+    moduleId
+  )}/lessons/${encodeURIComponent(lessonId)}/content`;
+
+  const res = await apiFetch(url, {
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to save lesson content: HTTP ${res.status}`);
   }
   return res.json();
 }
