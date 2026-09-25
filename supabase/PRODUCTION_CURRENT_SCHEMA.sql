@@ -1424,6 +1424,11 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(create
 CREATE INDEX IF NOT EXISTS idx_course_lesson_contents_lesson_id ON public.course_lesson_contents(lesson_id);
 CREATE INDEX IF NOT EXISTS idx_course_lesson_contents_blocks_gin ON public.course_lesson_contents USING GIN (blocks);
 
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_lesson_id ON public.course_lesson_media(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_course_id ON public.course_lesson_media(course_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_module_id ON public.course_lesson_media(module_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_created_by ON public.course_lesson_media(created_by);
+
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_modules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_lessons ENABLE ROW LEVEL SECURITY;
@@ -1432,6 +1437,7 @@ ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_lesson_contents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.course_lesson_media ENABLE ROW LEVEL SECURITY;
 
 GRANT SELECT ON TABLE public.courses TO anon, authenticated;
 GRANT SELECT ON TABLE public.course_modules TO anon, authenticated;
@@ -1440,6 +1446,7 @@ GRANT SELECT ON TABLE public.course_quizzes TO anon, authenticated;
 GRANT SELECT ON TABLE public.quiz_questions TO anon, authenticated;
 GRANT SELECT ON TABLE public.quiz_options TO anon, authenticated;
 GRANT SELECT ON TABLE public.course_lesson_contents TO anon, authenticated;
+GRANT SELECT ON TABLE public.course_lesson_media TO anon, authenticated;
 
 GRANT ALL ON TABLE public.courses TO service_role;
 GRANT ALL ON TABLE public.course_modules TO service_role;
@@ -1449,4 +1456,6 @@ GRANT ALL ON TABLE public.quiz_questions TO service_role;
 GRANT ALL ON TABLE public.quiz_options TO service_role;
 GRANT ALL ON TABLE public.audit_logs TO service_role;
 GRANT ALL ON TABLE public.course_lesson_contents TO service_role;
+GRANT ALL ON TABLE public.course_lesson_media TO service_role;
+
 

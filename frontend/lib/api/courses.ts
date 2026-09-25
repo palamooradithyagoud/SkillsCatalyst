@@ -29,7 +29,11 @@ import type {
   ReorderPayload,
   LessonContentPayload,
   LessonContentResponse,
+  CourseLessonMediaItem,
+  CourseLessonMediaListResponse,
+  CourseLessonMediaDeleteResponse,
 } from "@/types/course";
+
 
 // ── Courses ──────────────────────────────────────────────────────────────────
 
@@ -458,3 +462,76 @@ export async function saveAdminLessonContent(
   }
   return res.json();
 }
+
+// ── Course Lesson Media (Phase 3A) ───────────────────────────────────────────
+
+export async function uploadAdminLessonMedia(
+  courseId: string,
+  moduleId: string,
+  lessonId: string,
+  file: File
+): Promise<CourseLessonMediaItem> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(
+    moduleId
+  )}/lessons/${encodeURIComponent(lessonId)}/media`;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  // Exclude explicit Content-Type so browser sets boundary correctly
+  const headerObj = { ...(headers as Record<string, string>) };
+  delete headerObj["Content-Type"];
+
+  const res = await apiFetch(url, {
+    method: "POST",
+    headers: headerObj,
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to upload lesson media: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteAdminLessonMedia(
+  courseId: string,
+  moduleId: string,
+  lessonId: string,
+  mediaId: string
+): Promise<CourseLessonMediaDeleteResponse> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(
+    moduleId
+  )}/lessons/${encodeURIComponent(lessonId)}/media/${encodeURIComponent(mediaId)}`;
+
+  const res = await apiFetch(url, {
+    method: "DELETE",
+    headers,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to delete lesson media: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchAdminLessonMedia(
+  courseId: string,
+  moduleId: string,
+  lessonId: string
+): Promise<CourseLessonMediaListResponse> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(
+    moduleId
+  )}/lessons/${encodeURIComponent(lessonId)}/media`;
+
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch lesson media: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+

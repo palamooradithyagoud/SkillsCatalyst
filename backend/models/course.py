@@ -397,3 +397,11 @@ from backend.models.lesson_content import (
     KeyTakeawaysBlockContent,
     extract_youtube_video_id,
 )
+
+# ── Course Lesson Media Models Re-export (Phase 3A) ───────────────────────────
+from backend.models.course_media import (
+    CourseLessonMediaResponse,
+    CourseLessonMediaListResponse,
+    CourseLessonMediaDeleteResponse,
+)
+

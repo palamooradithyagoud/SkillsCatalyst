@@ -1201,4 +1201,48 @@ CREATE POLICY "Service role full access on lesson contents" ON public.course_les
 GRANT SELECT ON TABLE public.course_lesson_contents TO anon, authenticated;
 GRANT ALL ON TABLE public.course_lesson_contents TO service_role;
 
+-- ── 24. COURSE LESSON MEDIA (PHASE 3A) ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.course_lesson_media (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+    module_id UUID NOT NULL REFERENCES public.course_modules(id) ON DELETE CASCADE,
+    lesson_id UUID NOT NULL REFERENCES public.course_lessons(id) ON DELETE CASCADE,
+    storage_path TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    size_bytes BIGINT NOT NULL,
+    public_url TEXT NOT NULL,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT uq_course_lesson_media_storage_path UNIQUE (storage_path),
+    CONSTRAINT chk_course_lesson_media_size CHECK (size_bytes > 0 AND size_bytes <= 10485760),
+    CONSTRAINT chk_course_lesson_media_mime CHECK (mime_type IN ('image/jpeg', 'image/png', 'image/webp', 'image/gif'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_lesson_id ON public.course_lesson_media (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_course_id ON public.course_lesson_media (course_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_module_id ON public.course_lesson_media (module_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_media_created_by ON public.course_lesson_media (created_by);
+
+ALTER TABLE public.course_lesson_media ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS course_lesson_media_published_select ON public.course_lesson_media;
+CREATE POLICY course_lesson_media_published_select ON public.course_lesson_media FOR SELECT TO anon, authenticated
+    USING (EXISTS (SELECT 1 FROM public.courses c WHERE c.id = course_lesson_media.course_id AND c.status = 'PUBLISHED'));
+
+DROP POLICY IF EXISTS course_lesson_media_admin_all ON public.course_lesson_media;
+CREATE POLICY course_lesson_media_admin_all ON public.course_lesson_media FOR ALL TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('owner', 'admin', 'editor')) OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('owner', 'admin', 'editor'))
+    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('owner', 'admin', 'editor')) OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('owner', 'admin', 'editor'));
+
+DROP POLICY IF EXISTS course_lesson_media_service_role_all ON public.course_lesson_media;
+CREATE POLICY course_lesson_media_service_role_all ON public.course_lesson_media FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+GRANT SELECT ON TABLE public.course_lesson_media TO anon, authenticated;
+GRANT ALL ON TABLE public.course_lesson_media TO authenticated;
+GRANT ALL ON TABLE public.course_lesson_media TO service_role;
+
+
 

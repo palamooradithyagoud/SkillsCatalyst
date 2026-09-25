@@ -114,6 +114,9 @@ from backend.models.course import (
     ReorderRequest,
     LessonContentPayload,
     LessonContentResponse,
+    CourseLessonMediaResponse,
+    CourseLessonMediaListResponse,
+    CourseLessonMediaDeleteResponse,
 )
 from backend.services.course_service import (
     get_admin_courses,
@@ -153,6 +156,13 @@ from backend.services.course_service import (
     get_lesson_content,
     save_lesson_content,
 )
+from backend.services.course_media_service import (
+    upload_lesson_media,
+    delete_lesson_media,
+    list_lesson_media,
+    get_lesson_media_by_id,
+)
+
 
 logger = logging.getLogger("skillscatalyst.admin")
 
@@ -1234,7 +1244,112 @@ def save_admin_lesson_content_endpoint(
     return LessonContentResponse(**content)
 
 
+# ── Course Lesson Media Storage Foundation (Phase 3A) ─────────────────────────
+
+@router.post(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/media",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CourseLessonMediaResponse,
+)
+async def upload_admin_lesson_media_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    file: UploadFile = File(..., description="Image file to upload (JPEG, PNG, WebP, GIF, max 10MB)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonMediaResponse:
+    """
+    Uploads an image for a course lesson.
+    Validates course/module/lesson hierarchy, MIME type, file extension, magic bytes,
+    and size limit (10MB), uploading to Supabase Storage and storing metadata.
+    """
+    file_bytes = await file.read()
+    content = upload_lesson_media(
+        course_id=course_id,
+        module_id=module_id,
+        lesson_id=lesson_id,
+        file_bytes=file_bytes,
+        original_filename=file.filename or "lesson_image",
+        content_type=file.content_type or "",
+        user_id=admin.get("user_id"),
+    )
+    return CourseLessonMediaResponse(**content)
+
+
+@router.delete(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/media/{media_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CourseLessonMediaDeleteResponse,
+)
+def delete_admin_lesson_media_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    media_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonMediaDeleteResponse:
+    """
+    Deletes a course lesson media object from Supabase Storage and public.course_lesson_media.
+    Enforces that media belongs to the specified lesson.
+    """
+    res = delete_lesson_media(
+        course_id=course_id,
+        module_id=module_id,
+        lesson_id=lesson_id,
+        media_id=media_id,
+        user_id=admin.get("user_id"),
+    )
+    return CourseLessonMediaDeleteResponse(**res)
+
+
+@router.get(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/media",
+    status_code=status.HTTP_200_OK,
+    response_model=CourseLessonMediaListResponse,
+)
+def list_admin_lesson_media_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonMediaListResponse:
+    """
+    Lists all media metadata records associated with the specified lesson.
+    """
+    data = list_lesson_media(
+        course_id=course_id,
+        module_id=module_id,
+        lesson_id=lesson_id,
+    )
+    return CourseLessonMediaListResponse(**data)
+
+
+@router.get(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/media/{media_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CourseLessonMediaResponse,
+)
+def get_admin_lesson_media_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    media_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonMediaResponse:
+    """
+    Retrieves a single media metadata item by ID after hierarchy verification.
+    """
+    item = get_lesson_media_by_id(
+        course_id=course_id,
+        module_id=module_id,
+        lesson_id=lesson_id,
+        media_id=media_id,
+    )
+    return CourseLessonMediaResponse(**item)
+
+
 # ── Quizzes (One Quiz Per Module) ─────────────────────────────────────────────
+
 
 @router.post("/modules/{module_id}/quiz", status_code=status.HTTP_201_CREATED, response_model=CourseQuizResponse)
 def create_admin_quiz_endpoint(
