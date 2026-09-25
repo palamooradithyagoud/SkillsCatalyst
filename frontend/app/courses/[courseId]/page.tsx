@@ -20,12 +20,16 @@ import {
   Trophy,
   XCircle,
   Star,
+  Award,
+  Sparkles,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
 import { fetchStudentCourseById, fetchCourseProgress, fetchQuizAttempts, fetchModuleProgress } from "@/lib/api/courses";
+import { fetchCertificateEligibility } from "@/lib/api/certificates";
 import type { StudentCourseDetail, StudentCourseProgress } from "@/types/course";
 import type { QuizAttemptHistory, StudentModuleProgress } from "@/types/quiz-attempt";
+import type { CertificateEligibility } from "@/types/certificate";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
@@ -34,6 +38,7 @@ export default function StudentCourseDetailPage() {
 
   const [course, setCourse] = useState<StudentCourseDetail | null>(null);
   const [progress, setProgress] = useState<StudentCourseProgress | null>(null);
+  const [eligibility, setEligibility] = useState<CertificateEligibility | null>(null);
   const [moduleProgressMap, setModuleProgressMap] = useState<Record<string, StudentModuleProgress>>({});
   const [moduleHistoryMap, setModuleHistoryMap] = useState<Record<string, QuizAttemptHistory>>({});
   const [loading, setLoading] = useState(true);
@@ -51,11 +56,17 @@ export default function StudentCourseDetailPage() {
           setCourse(cData);
         }
 
-        // If authenticated, fetch personal student progress + Phase 6 quiz state
+        // If authenticated, fetch personal student progress + Phase 6 quiz state + Phase 7 certificate eligibility
         if (session?.user_id) {
           try {
-            const pData = await fetchCourseProgress(courseIdOrSlug);
-            if (isMounted) setProgress(pData);
+            const [pData, eligData] = await Promise.all([
+              fetchCourseProgress(courseIdOrSlug).catch(() => null),
+              fetchCertificateEligibility(courseIdOrSlug).catch(() => null),
+            ]);
+            if (isMounted) {
+              if (pData) setProgress(pData);
+              if (eligData) setEligibility(eligData);
+            }
 
             // Load per-module quiz progress and attempt history in parallel
             const modules = cData.modules || [];
@@ -237,6 +248,34 @@ export default function StudentCourseDetailPage() {
                     style={{ width: `${Math.min(100, Math.max(0, progress.progress_percentage))}%` }}
                   />
                 </div>
+              </div>
+            )}
+
+            {/* Course Completion & Certificate Banner */}
+            {eligibility?.course_completed && eligibility?.certificate_enabled && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-purple-950/20">
+                <div className="flex items-center gap-3.5 text-center sm:text-left">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shrink-0 text-purple-400">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white">
+                      🎉 Congratulations! You completed this course.
+                    </h3>
+                    <p className="text-xs text-purple-200 mt-0.5">
+                      {eligibility.certificate_already_issued
+                        ? "Your official completion certificate is ready to view."
+                        : "All requirements met! Your official course certificate is ready."}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={`/courses/${course.slug || course.id}/certificate`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>View Certificate</span>
+                </Link>
               </div>
             )}
 

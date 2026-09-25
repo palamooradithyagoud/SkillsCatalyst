@@ -585,7 +585,7 @@ describe("Phase 2B — Admin Lesson Block Editor Architecture & Unit Tests", () 
     assert.strictEqual(saveFailed, true);
     assert.ok(errorMsg.includes("500"));
     assert.strictEqual(localBlocks.length, 1);
-    assert.strictEqual(localBlocks[0].content.text, "My unsaved edits");
+    assert.strictEqual((localBlocks[0] as ParagraphLessonBlock).content.text, "My unsaved edits");
   });
 
   // ── 24. Unsaved state detection ──────────────────────────────────────────────
