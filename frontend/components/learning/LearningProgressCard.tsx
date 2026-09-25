@@ -13,10 +13,9 @@ import {
   ChevronRight,
   Crown,
   Bookmark,
-  Sparkles,
-  BookOpen,
 } from "lucide-react";
 import type { Playlist } from "@/lib/api";
+import { extractPlaylistId } from "@/lib/learning/searchValidation";
 
 interface LearningProgressCardProps {
   dashboardData: any;
@@ -58,7 +57,7 @@ export function LearningProgressCard({
   onOpenSavedTab,
   onExploreClick,
 }: LearningProgressCardProps) {
-  // ── 1. Calculate Real User Data (No hardcoded / static mock values)
+  // ── 1. Calculate Real User Data Strictly from Saved Playlists & User Activity
   const metrics = useMemo(() => {
     const user = dashboardData?.user || {};
     const dashLearning = dashboardData?.metrics?.learningProgress || {};
@@ -68,33 +67,68 @@ export function LearningProgressCard({
     // 1. Active Streak (real user data)
     const streak = typeof user.streakDays === "number" ? user.streakDays : 0;
 
-    // 2. Videos Watched: Real count from Supabase video_progress or backend metrics
-    const completedVideos =
-      videoProgressData?.watchedCount ?? dashLearning.completedVideos ?? 0;
+    // 2. Identify all playlist/video IDs saved by this user
+    const savedIds = new Set<string>();
+    (savedList || []).forEach((pl) => {
+      if (pl.id) savedIds.add(String(pl.id));
+      if ((pl as any).playlist_id) savedIds.add(String((pl as any).playlist_id));
+      const ext = extractPlaylistId(pl.playlist_url ?? "");
+      if (ext) savedIds.add(String(ext));
+    });
 
-    // 3. Total Videos across user's saved playlists
-    let totalVideos = 0;
-    if (savedList && savedList.length > 0) {
-      for (const pl of savedList) {
-        totalVideos += extractPlaylistVideoCount(pl);
-      }
-    }
-    if (dashLearning.totalVideos && dashLearning.totalVideos > totalVideos) {
-      totalVideos = dashLearning.totalVideos;
-    }
-    if (completedVideos > totalVideos && completedVideos > 0) {
-      totalVideos = completedVideos;
+    // 3. Total Videos across user's saved items (each saved item has at least 1 video)
+    let totalSavedVideos = 0;
+    (savedList || []).forEach((pl) => {
+      const c = extractPlaylistVideoCount(pl);
+      totalSavedVideos += Math.max(1, c);
+    });
+
+    // Fallback to dashLearning if savedList is still hydrating
+    if (totalSavedVideos === 0 && dashLearning.totalVideos) {
+      totalSavedVideos = dashLearning.totalVideos;
     }
 
-    // 4. Real Watch Time: effective watch time in seconds
-    const totalSeconds = videoProgressData?.totalWatchTimeSeconds ?? 0;
-    const formattedWatchTime = formatWatchTime(totalSeconds);
+    // 4. Watched videos strictly belonging to user's saved items
+    let watchedInSaved = 0;
+    let savedWatchTimeSeconds = 0;
+
+    if (Array.isArray(videoProgressData?.raw) && savedIds.size > 0) {
+      const savedRows = videoProgressData.raw.filter(
+        (r: any) =>
+          savedIds.has(String(r.playlist_id)) ||
+          savedIds.has(String(r.video_id))
+      );
+
+      watchedInSaved = savedRows.filter((r: any) => !!r.watched).length;
+      savedWatchTimeSeconds = savedRows.reduce(
+        (acc: number, r: any) =>
+          acc + Math.max(Number(r.watch_time) || 0, Number(r.last_position) || 0),
+        0
+      );
+    } else {
+      // Fallback if raw items not loaded yet
+      watchedInSaved = videoProgressData?.watchedCount ?? dashLearning.completedVideos ?? 0;
+      savedWatchTimeSeconds = videoProgressData?.totalWatchTimeSeconds ?? 0;
+    }
+
+    // Ensure watched never overflows total
+    if (watchedInSaved > totalSavedVideos && totalSavedVideos > 0) {
+      watchedInSaved = totalSavedVideos;
+    }
+
+    // Total watch time fallback if savedWatchTime is 0 but global exists
+    const effectiveWatchSeconds =
+      savedWatchTimeSeconds > 0
+        ? savedWatchTimeSeconds
+        : videoProgressData?.totalWatchTimeSeconds ?? 0;
+
+    const formattedWatchTime = formatWatchTime(effectiveWatchSeconds);
     const learningHours =
-      totalSeconds > 0
-        ? Math.round((totalSeconds / 3600) * 10) / 10
-        : Math.round(completedVideos * 0.4 * 10) / 10;
+      effectiveWatchSeconds > 0
+        ? Math.round((effectiveWatchSeconds / 3600) * 10) / 10
+        : Math.round(watchedInSaved * 0.4 * 10) / 10;
 
-    // 5. Goals Completed: Real Active Roadmap milestones or playlist completion
+    // 5. Goals Completed: Active Roadmap milestones or saved playlist milestones
     let completedGoals = 0;
     let totalGoals = 0;
     if (dashRoadmap?.has_active_roadmap) {
@@ -117,8 +151,8 @@ export function LearningProgressCard({
         completedGoals = totalGoals;
       }
     } else {
-      completedGoals = completedVideos;
-      totalGoals = Math.max(totalVideos, completedVideos);
+      completedGoals = watchedInSaved;
+      totalGoals = Math.max(totalSavedVideos, watchedInSaved);
     }
 
     const goalsPct =
@@ -126,11 +160,11 @@ export function LearningProgressCard({
         ? Math.min(100, Math.round((completedGoals / totalGoals) * 100))
         : 0;
 
-    // 6. Overall Saved Videos Progress Percentage (real percentage)
-    const overallProgressPct =
-      totalVideos > 0
-        ? Math.min(100, Math.round((completedVideos / totalVideos) * 100))
-        : dashLearning.percentage || goalsPct || 0;
+    // 6. Saved Progress Percentage: Strictly (watchedInSaved / totalSavedVideos) * 100
+    const savedProgressPct =
+      totalSavedVideos > 0
+        ? Math.min(100, Math.round((watchedInSaved / totalSavedVideos) * 100))
+        : 0;
 
     // 7. Real Weekly Activity Chart (Mon - Sun) from user's timestamps & practice
     const daysOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -174,7 +208,6 @@ export function LearningProgressCard({
 
     const weeklyBars = daysOrder.map((day) => {
       const val = chartMap[day] || 0;
-      // Real height percentage strictly driven by user data
       let heightPct = 6;
       if (hasAnyRealActivity) {
         heightPct =
@@ -185,15 +218,14 @@ export function LearningProgressCard({
 
     return {
       streak,
-      completedVideos,
-      totalVideos,
-      totalSeconds,
+      watchedInSaved,
+      totalSavedVideos,
       formattedWatchTime,
       learningHours,
       completedGoals,
       totalGoals,
       goalsPct,
-      overallProgressPct,
+      savedProgressPct,
       weeklyBars,
     };
   }, [dashboardData, videoProgressData, savedList]);
@@ -232,14 +264,14 @@ export function LearningProgressCard({
         </Link>
       </div>
 
-      {/* ── MAIN CONTENT: GAUGE + METRICS/OVERALL BAR + WEEKLY ACTIVITY ── */}
+      {/* ── MAIN CONTENT: SAVED PROGRESS GAUGE + METRICS/SAVED BAR + WEEKLY ACTIVITY ── */}
       <div className="relative flex flex-col lg:flex-row items-center lg:items-stretch gap-4 lg:gap-6 pt-3.5 sm:pt-4">
-        {/* 1. Left: Circular Progress Ring */}
+        {/* 1. Left: Circular Progress Ring (Real Saved Videos Progress) */}
         <div className="flex flex-col items-center justify-center shrink-0 w-32 sm:w-36 lg:w-40 py-1">
           <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
               <defs>
-                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="savedProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#8B5CF6" />
                   <stop offset="100%" stopColor="#6366F1" />
                 </linearGradient>
@@ -258,12 +290,12 @@ export function LearningProgressCard({
                 cx="50"
                 cy="50"
                 r="40"
-                stroke="url(#progressGradient)"
+                stroke="url(#savedProgressGradient)"
                 strokeWidth="8"
                 strokeDasharray={2 * Math.PI * 40}
                 strokeDashoffset={
                   2 * Math.PI * 40 -
-                  (2 * Math.PI * 40 * metrics.overallProgressPct) / 100
+                  (2 * Math.PI * 40 * metrics.savedProgressPct) / 100
                 }
                 strokeLinecap="round"
                 fill="transparent"
@@ -272,12 +304,17 @@ export function LearningProgressCard({
             </svg>
 
             {/* Inner text */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none px-1">
               <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-                {metrics.overallProgressPct}%
+                {metrics.savedProgressPct}%
               </span>
-              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                Overall Progress
+              <span className="text-[9px] sm:text-[9.5px] font-black text-purple-600 uppercase tracking-wider mt-1 leading-tight">
+                Saved Progress
+              </span>
+              <span className="text-[9px] font-semibold text-slate-400 mt-0.5 tabular-nums">
+                {metrics.totalSavedVideos > 0
+                  ? `${metrics.watchedInSaved}/${metrics.totalSavedVideos} vids`
+                  : "0 saved"}
               </span>
             </div>
           </div>
@@ -324,20 +361,20 @@ export function LearningProgressCard({
               </span>
             </div>
 
-            {/* Stat 3: Videos Watched */}
+            {/* Stat 3: Saved Videos Watched */}
             <div className="flex flex-col items-center text-center px-2 py-1.5 sm:py-0">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-1 shadow-2xs">
                 <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <span className="text-base sm:text-lg lg:text-xl font-black text-slate-900 leading-tight">
-                {metrics.completedVideos}
+                {metrics.watchedInSaved}
               </span>
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5">
                 Videos Watched
               </span>
               <span className="text-[9px] font-extrabold text-sky-700 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-full mt-1.5 shadow-2xs">
-                {metrics.completedVideos > 0
-                  ? `+${metrics.completedVideos} done`
+                {metrics.watchedInSaved > 0
+                  ? `+${metrics.watchedInSaved} done`
                   : "0 completed"}
               </span>
             </div>
@@ -392,7 +429,7 @@ export function LearningProgressCard({
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2 truncate">
                     <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-purple-600 shrink-0 leading-tight">
-                      OVERALL SAVED VIDEOS
+                      SAVED VIDEOS PROGRESS
                     </span>
                     <span className="text-slate-300 text-xs">•</span>
                     <span className="text-xs sm:text-[13px] font-bold text-slate-800 truncate leading-snug">
@@ -416,8 +453,8 @@ export function LearningProgressCard({
                       initial={{ width: 0 }}
                       animate={{
                         width: `${Math.max(
-                          metrics.completedVideos > 0 ? 3 : 0,
-                          metrics.overallProgressPct
+                          metrics.watchedInSaved > 0 ? 3 : 0,
+                          metrics.savedProgressPct
                         )}%`,
                       }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -426,11 +463,11 @@ export function LearningProgressCard({
                   </div>
                   <div className="flex items-center gap-1 text-[10.5px] sm:text-[11px] font-bold shrink-0 tabular-nums">
                     <span className="text-slate-900 font-black">
-                      {metrics.completedVideos} / {metrics.totalVideos}
+                      {metrics.watchedInSaved} / {metrics.totalSavedVideos}
                     </span>
                     <span className="text-slate-400 font-semibold">videos</span>
                     <span className="text-purple-600 font-black ml-0.5">
-                      ({metrics.overallProgressPct}%)
+                      ({metrics.savedProgressPct}%)
                     </span>
                   </div>
                 </div>
