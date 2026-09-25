@@ -254,17 +254,6 @@ export default function LearningPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Your Learning Progress Hero Card ── */}
-      <LearningProgressCard
-        dashboardData={dashboardData}
-        videoProgressData={videoProgressData}
-        userProgressData={userProgressData}
-        savedList={savedList}
-        onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
-        onOpenSavedTab={() => setActiveCard("saved")}
-        onExploreClick={() => setActiveCard("explore")}
-      />
-
       {/* ── Text Sub-Navigation Tabs: Explore Skills & Saved Videos ── */}
       <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 pb-3 pt-2 overflow-x-auto no-scrollbar">
         <button
@@ -331,6 +320,17 @@ export default function LearningPage() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
+            {/* ── Your Learning Progress Hero Card (Explore Only) ── */}
+            <LearningProgressCard
+              dashboardData={dashboardData}
+              videoProgressData={videoProgressData}
+              userProgressData={userProgressData}
+              savedList={savedList}
+              onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
+              onOpenSavedTab={() => setActiveCard("saved")}
+              onExploreClick={() => setActiveCard("explore")}
+            />
+
             {/* Search bar matching Image 2 */}
             <div className="bg-white rounded-[28px] p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex flex-col md:flex-row gap-3">
@@ -545,19 +545,19 @@ export default function LearningPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="rounded-2xl py-24 flex flex-col items-center gap-4 text-center"
-                style={{ background: "rgba(14,22,44,0.7)", border: "1px solid rgba(255,255,255,0.07)" }}
+                className="bg-white rounded-3xl py-16 sm:py-20 px-6 border border-slate-200/80 shadow-xs flex flex-col items-center gap-3.5 text-center"
               >
-                <Bookmark className="w-14 h-14 text-slate-700" />
-                <div className="text-slate-400 font-semibold">No saved playlists yet.</div>
-                <div className="text-slate-600 text-sm">
+                <div className="w-14 h-14 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-1 shadow-2xs">
+                  <Bookmark className="w-7 h-7 text-purple-600" />
+                </div>
+                <div className="text-slate-800 font-bold text-base sm:text-lg">No saved playlists yet</div>
+                <div className="text-slate-500 text-xs sm:text-sm max-w-sm leading-relaxed">
                   Search for a skill in Explore Skills and click the{" "}
-                  <strong className="text-slate-400">Save</strong> button.
+                  <strong className="text-purple-600 font-semibold">Save</strong> button to build your personal learning track.
                 </div>
                 <button
                   onClick={() => setActiveCard("explore")}
-                  className="mt-2 px-5 py-2.5 rounded-xl text-sm text-white font-bold flex items-center gap-2 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
+                  className="mt-3 px-6 py-2.5 rounded-xl text-sm text-white font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md shadow-purple-600/20 transition-all cursor-pointer"
                 >
                   <Search className="w-4 h-4" /> Explore Skills
                 </button>

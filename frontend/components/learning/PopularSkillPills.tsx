@@ -1,9 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
-import { ChevronRight, X, Sparkles, BookOpen, Layers, ExternalLink } from "lucide-react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
 
 // ── 100% Authentic Vector Icons Matching Image 2 ────────────────────────────
 
@@ -146,156 +141,40 @@ export const POPULAR_SKILLS = [
   { name: "System Design", icon: SystemDesignSkillIcon },
 ];
 
-// Expanded topics for the "Browse all" dialog
-const CATEGORIZED_TOPICS = [
-  {
-    category: "Languages & Core",
-    topics: ["Python", "Java", "JavaScript", "TypeScript", "C++", "C", "Go", "Rust"],
-  },
-  {
-    category: "Frontend & Mobile",
-    topics: ["React", "Next.js", "Vue", "Angular", "HTML5", "CSS3", "Tailwind CSS", "Flutter"],
-  },
-  {
-    category: "Data Structures & Systems",
-    topics: ["DSA", "System Design", "SQL", "PostgreSQL", "MongoDB", "Operating Systems", "Networking"],
-  },
-  {
-    category: "AI, Data & Cloud",
-    topics: ["Machine Learning", "Deep Learning", "Docker", "Kubernetes", "AWS", "Git & GitHub"],
-  },
-];
-
 interface PopularSkillPillsProps {
   onSelectSkill: (skillName: string) => void;
   activeSkill?: string;
 }
 
 export function PopularSkillPills({ onSelectSkill, activeSkill }: PopularSkillPillsProps) {
-  const [showBrowseAll, setShowBrowseAll] = useState(false);
-
   return (
-    <>
-      <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap sm:flex-nowrap pt-0.5">
-        {/* Left Side: Popular label + Scrollable Pill List */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 flex-1 min-w-0">
-          <span className="text-slate-500 font-semibold text-xs sm:text-sm shrink-0 select-none mr-1">
-            Popular:
-          </span>
+    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full min-w-0 scroll-smooth">
+      <span className="text-slate-500 font-semibold text-xs sm:text-sm shrink-0 select-none mr-1">
+        Popular:
+      </span>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {POPULAR_SKILLS.map((skill) => {
-              const Icon = skill.icon;
-              const isSelected = activeSkill?.toLowerCase() === skill.name.toLowerCase();
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {POPULAR_SKILLS.map((skill) => {
+          const Icon = skill.icon;
+          const isSelected = activeSkill?.toLowerCase() === skill.name.toLowerCase();
 
-              return (
-                <button
-                  key={skill.name}
-                  type="button"
-                  onClick={() => onSelectSkill(skill.name)}
-                  className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer select-none shrink-0 ${
-                    isSelected
-                      ? "bg-purple-100 text-purple-900 border border-purple-300 ring-2 ring-purple-500/20 shadow-xs scale-102"
-                      : "bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/50 text-slate-700 hover:text-slate-900 active:scale-97"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{skill.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right Side: Divider + Browse all > */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-1">
-          <div className="h-4 w-px bg-slate-200 hidden md:block" />
-          <button
-            type="button"
-            onClick={() => setShowBrowseAll(true)}
-            className="text-purple-600 hover:text-purple-700 font-semibold text-xs sm:text-sm flex items-center gap-0.5 cursor-pointer whitespace-nowrap transition-colors hover:underline group"
-          >
-            <span>Browse all</span>
-            <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Browse All Topics Modal ── */}
-      <AnimatePresence>
-        {showBrowseAll && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.18 }}
-              className="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl border border-slate-200 space-y-5"
+          return (
+            <button
+              key={skill.name}
+              type="button"
+              onClick={() => onSelectSkill(skill.name)}
+              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer select-none shrink-0 ${
+                isSelected
+                  ? "bg-purple-100 text-purple-900 border border-purple-300 ring-2 ring-purple-500/20 shadow-xs scale-102"
+                  : "bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/50 text-slate-700 hover:text-slate-900 active:scale-97"
+              }`}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-base sm:text-lg">
-                      Explore All Tech Skills &amp; Topics
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium">
-                      Select any topic to instantly view structured playlists and learning resources.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowBrowseAll(false)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Categorized Skills */}
-              <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
-                {CATEGORIZED_TOPICS.map((group) => (
-                  <div key={group.category} className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      {group.category}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {group.topics.map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => {
-                            onSelectSkill(t);
-                            setShowBrowseAll(false);
-                          }}
-                          className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-purple-50 hover:text-purple-700 border border-slate-200/80 hover:border-purple-300 text-xs sm:text-sm font-semibold text-slate-700 transition-all cursor-pointer"
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Footer action to full Courses Catalog */}
-              <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">
-                <span>Looking for complete tracks with roadmaps?</span>
-                <Link
-                  href="/courses"
-                  onClick={() => setShowBrowseAll(false)}
-                  className="inline-flex items-center gap-1.5 text-purple-600 hover:text-purple-700 font-bold hover:underline"
-                >
-                  <span>Go to Courses Catalog</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{skill.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
