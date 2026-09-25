@@ -24,7 +24,7 @@ export default function SkillBitsPage() {
 
   const [skillbits, setSkillbits] = useState<StudentSkillBit[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [isMuted, setIsMuted] = useState<boolean>(true); // Start muted for reliable mobile autoplay
+  const [isMuted, setIsMuted] = useState<boolean>(false); // Open with sound enabled; user can toggle mute anytime
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
