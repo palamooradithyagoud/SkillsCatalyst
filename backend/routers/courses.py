@@ -1,9 +1,13 @@
 """
 backend/routers/courses.py
-Student-Facing Course Router (Phase 4).
+Student-Facing Course Router (Phase 4 + Phase 5 + Phase 6).
 Provides read-only access to published courses, modules, lessons, and content.
-Enforces content visibility rules: draft/archived courses/lessons return 404.
-Omits administrative fields, audit logs, and quiz answer keys.
+Phase 6 adds server-authoritative quiz attempts, scoring, and module completion.
+
+Security contract:
+  - Quiz GET endpoints NEVER return is_correct or correct answers.
+  - Scoring, pass/fail, and attempt_number are computed server-side only.
+  - User identity is always derived from the authenticated Supabase JWT.
 """
 
 from typing import Optional
@@ -20,6 +24,13 @@ from backend.models.student_progress import (
     StudentLessonProgressPayload,
     StudentProgressMutationResponse,
 )
+from backend.models.quiz_attempt import (
+    StudentQuizResponse,
+    QuizSubmissionPayload,
+    QuizAttemptResult,
+    QuizAttemptHistoryResponse,
+    StudentModuleProgressResponse,
+)
 from backend.services.student_course_service import (
     get_published_courses,
     get_published_course_detail,
@@ -29,10 +40,17 @@ from backend.services.student_progress_service import (
     get_student_course_progress,
     record_student_lesson_progress,
 )
+from backend.services.quiz_attempt_service import (
+    get_student_quiz,
+    submit_quiz_attempt,
+    get_quiz_attempt_history,
+    get_student_module_progress,
+)
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
 
 
+# ── Phase 4: Course Listing & Detail ─────────────────────────────────────────
 
 @router.get("", status_code=status.HTTP_200_OK, response_model=StudentCourseListResponse)
 def list_student_courses(
@@ -87,7 +105,7 @@ def get_student_lesson(
     return StudentLessonDetailResponse(**res)
 
 
-# ── Student Progress & Resume (Phase 5) ──────────────────────────────────────
+# ── Phase 5: Student Progress & Resume ───────────────────────────────────────
 
 @router.get(
     "/{course_id_or_slug}/progress",
@@ -134,4 +152,107 @@ def record_lesson_progress(
         completed=completed,
     )
     return StudentProgressMutationResponse(**res)
+
+
+# ── Phase 6: Quiz Attempts, Scoring, and Module Completion ───────────────────
+
+@router.get(
+    "/{course_id_or_slug}/modules/{module_id}/quiz",
+    status_code=status.HTTP_200_OK,
+    response_model=StudentQuizResponse,
+)
+def get_module_quiz(
+    course_id_or_slug: str,
+    module_id: str,
+    user_id: str = Depends(get_current_user_id),
+) -> StudentQuizResponse:
+    """
+    Returns the quiz for the specified module.
+    NEVER returns is_correct or any answer key.
+    Requires authenticated student. Course must be PUBLISHED.
+    """
+    res = get_student_quiz(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+        module_id=module_id,
+    )
+    return StudentQuizResponse(**res)
+
+
+@router.post(
+    "/{course_id_or_slug}/modules/{module_id}/quiz/attempts",
+    status_code=status.HTTP_200_OK,
+    response_model=QuizAttemptResult,
+)
+def submit_module_quiz(
+    course_id_or_slug: str,
+    module_id: str,
+    payload: QuizSubmissionPayload,
+    user_id: str = Depends(get_current_user_id),
+) -> QuizAttemptResult:
+    """
+    Submits a quiz attempt for server-authoritative scoring.
+
+    Security contract:
+      - User identity from JWT only; never from request body.
+      - Score, passed, correct_count are calculated server-side.
+      - Lesson prerequisites are enforced server-side.
+      - Each answer's question/option hierarchy is validated.
+      - Module completion is evaluated and persisted atomically.
+    """
+    answers = [
+        {"question_id": a.question_id, "selected_option_id": a.selected_option_id}
+        for a in payload.answers
+    ]
+    res = submit_quiz_attempt(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+        module_id=module_id,
+        answers=answers,
+    )
+    return QuizAttemptResult(**res)
+
+
+@router.get(
+    "/{course_id_or_slug}/modules/{module_id}/quiz/attempts",
+    status_code=status.HTTP_200_OK,
+    response_model=QuizAttemptHistoryResponse,
+)
+def get_module_quiz_attempts(
+    course_id_or_slug: str,
+    module_id: str,
+    user_id: str = Depends(get_current_user_id),
+) -> QuizAttemptHistoryResponse:
+    """
+    Returns the authenticated student's quiz attempt history for this module.
+    Only own attempts are returned. No answer keys included.
+    """
+    res = get_quiz_attempt_history(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+        module_id=module_id,
+    )
+    return QuizAttemptHistoryResponse(**res)
+
+
+@router.get(
+    "/{course_id_or_slug}/modules/{module_id}/progress",
+    status_code=status.HTTP_200_OK,
+    response_model=StudentModuleProgressResponse,
+)
+def get_module_progress(
+    course_id_or_slug: str,
+    module_id: str,
+    user_id: str = Depends(get_current_user_id),
+) -> StudentModuleProgressResponse:
+    """
+    Returns the authoritative module completion state for the authenticated student.
+    Module is complete only when ALL required lessons are complete AND quiz is passed.
+    """
+    res = get_student_module_progress(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+        module_id=module_id,
+    )
+    return StudentModuleProgressResponse(**res)
 

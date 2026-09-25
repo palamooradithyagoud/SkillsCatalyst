@@ -13,6 +13,7 @@ import {
   AlertCircle,
   List,
   CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
@@ -404,9 +405,30 @@ export default function StudentLessonReaderPage() {
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             ) : (
-              <div className="w-full sm:w-auto text-center sm:text-right px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-purple-300">
-                Course lessons complete
-              </div>
+              /* At last lesson — show quiz CTA if module has a quiz */
+              (() => {
+                const moduleQuiz = courseOutline?.modules
+                  .find((m) => m.id === module.id)?.quiz;
+                return moduleQuiz ? (
+                  <Link
+                    href={`/courses/${course.slug || course.id}/modules/${module.id}/quiz`}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/25 hover:scale-[1.01] group"
+                    id="lesson-quiz-cta"
+                  >
+                    <div className="text-right">
+                      <span className="block text-[10px] uppercase tracking-wider text-purple-200 font-bold">
+                        Module Complete
+                      </span>
+                      <span className="block">Take the Module Quiz</span>
+                    </div>
+                    <HelpCircle className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <div className="w-full sm:w-auto text-center sm:text-right px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-purple-300">
+                    Course lessons complete
+                  </div>
+                );
+              })()
             )}
           </nav>
         </main>
@@ -473,6 +495,18 @@ export default function StudentLessonReaderPage() {
                             </Link>
                           );
                         })}
+                        {/* Quiz link in sidebar */}
+                        {m.quiz && (
+                          <Link
+                            href={`/courses/${course.slug || course.id}/modules/${m.id}/quiz`}
+                            className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-purple-300/80 hover:text-purple-200 hover:bg-purple-500/10 transition-all"
+                          >
+                            <span className="flex items-center gap-1.5 truncate pr-2">
+                              <HelpCircle className="w-3 h-3 text-purple-400 shrink-0" />
+                              {m.quiz.title}
+                            </span>
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );

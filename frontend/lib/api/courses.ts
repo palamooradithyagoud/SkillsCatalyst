@@ -626,3 +626,73 @@ export async function recordLessonProgress(
 }
 
 
+// ── Phase 6: Quiz Attempts & Module Completion ────────────────────────────────
+
+import type {
+  StudentQuizData,
+  QuizSubmissionPayload,
+  QuizAttemptResult,
+  QuizAttemptHistory,
+  StudentModuleProgress,
+} from "@/types/quiz-attempt";
+
+export async function fetchModuleQuiz(
+  courseIdOrSlug: string,
+  moduleId: string,
+): Promise<StudentQuizData> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/modules/${encodeURIComponent(moduleId)}/quiz`;
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch quiz: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function submitModuleQuiz(
+  courseIdOrSlug: string,
+  moduleId: string,
+  payload: QuizSubmissionPayload,
+): Promise<QuizAttemptResult> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/modules/${encodeURIComponent(moduleId)}/quiz/attempts`;
+  const res = await apiFetch(url, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to submit quiz: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchQuizAttempts(
+  courseIdOrSlug: string,
+  moduleId: string,
+): Promise<QuizAttemptHistory> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/modules/${encodeURIComponent(moduleId)}/quiz/attempts`;
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch quiz attempts: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchModuleProgress(
+  courseIdOrSlug: string,
+  moduleId: string,
+): Promise<StudentModuleProgress> {
+  const headers = await getAuthHeaders();
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/modules/${encodeURIComponent(moduleId)}/progress`;
+  const res = await apiFetch(url, { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch module progress: HTTP ${res.status}`);
+  }
+  return res.json();
+}
