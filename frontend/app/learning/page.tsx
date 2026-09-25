@@ -18,14 +18,17 @@ import {
   savePlaylist,
   unsavePlaylist,
   fetchSavedPlaylists,
+  fetchDashboardData,
   Playlist,
 } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { ActiveCard, LANGUAGES } from "@/lib/learning/searchValidation";
 import { SelectDropdown } from "@/components/learning/SelectDropdown";
 import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
+import { LearningProgressCard } from "@/components/learning/LearningProgressCard";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
@@ -78,6 +81,36 @@ export default function LearningPage() {
     queryKey: ["saved-playlists", userId],
     queryFn: () => fetchSavedPlaylists(),
     staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  // ── Real User Dashboard Data (Streak, Roadmap, Learning Metrics)
+  const { data: dashboardData } = useQuery({
+    queryKey: ["dashboard", userId],
+    queryFn: () => fetchDashboardData(),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
+
+  // ── Real User Video Progress (Watched Videos, Watch Time)
+  const { data: videoProgressData } = useQuery({
+    queryKey: ["user-video-progress", userId],
+    queryFn: async () => {
+      if (!userId) return { watchedCount: 0, totalWatchTimeSeconds: 0 };
+      const { data, error } = await supabase
+        .from("video_progress")
+        .select("playlist_id, video_id, watched, watch_time, last_position")
+        .eq("user_id", userId);
+      if (error || !data) return { watchedCount: 0, totalWatchTimeSeconds: 0 };
+      const watchedCount = data.filter((r) => !!r.watched).length;
+      const totalWatchTimeSeconds = data.reduce(
+        (acc, r) => acc + (Number(r.watch_time) || Number(r.last_position) || 0),
+        0
+      );
+      return { watchedCount, totalWatchTimeSeconds, raw: data };
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 30,
     refetchOnWindowFocus: true,
   });
 
@@ -185,77 +218,69 @@ export default function LearningPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Top Two Cards (Side-by-Side on Mobile Grid) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-5">
-        {/* Card 1 — Explore */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05, duration: 0.4, ease: "easeOut" }}
-          onClick={() => setActiveCard("explore")}
-          className={`relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-6 cursor-pointer transition-all overflow-hidden bg-white border ${
-            activeCard === "explore"
-              ? "border-2 border-emerald-600 bg-gradient-to-br from-emerald-50/70 via-emerald-50/20 to-transparent shadow-md shadow-emerald-600/10"
-              : "border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md"
-          }`}
-        >
-          <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 tracking-widest uppercase mb-2">
-            CARD 1
-          </div>
-          <div className="flex flex-col sm:flex-row items-start gap-2.5 sm:gap-4">
-            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 text-white shrink-0 shadow-sm shadow-emerald-600/30">
-              <MagnifierIcon size={20} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-lg font-bold text-slate-900 mb-0.5 sm:mb-1 leading-snug">
-                Explore Skills
-              </h3>
-              <p className="text-[11px] sm:text-sm text-slate-500 font-medium leading-normal line-clamp-2 sm:line-clamp-none">
-                AI-curated video playlists &amp; roadmaps.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+      {/* ── Your Learning Progress Hero Card ── */}
+      <LearningProgressCard
+        dashboardData={dashboardData}
+        videoProgressData={videoProgressData}
+        savedList={savedList}
+        onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
+        onExploreClick={() => setActiveCard("explore")}
+      />
 
-        {/* Card 2 — Saved */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-          onClick={() => setActiveCard("saved")}
-          className={`relative rounded-[20px] sm:rounded-[28px] p-3.5 sm:p-6 cursor-pointer transition-all overflow-hidden bg-white border ${
-            activeCard === "saved"
-              ? "border-2 border-emerald-600 bg-gradient-to-br from-emerald-50/70 via-emerald-50/20 to-transparent shadow-md shadow-emerald-600/10"
-              : "border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md"
+      {/* ── Text Sub-Navigation Tabs: Explore Skills & Saved Videos ── */}
+      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 pb-3 pt-2">
+        <button
+          onClick={() => setActiveCard("explore")}
+          className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeCard === "explore"
+              ? "text-slate-900"
+              : "text-slate-400 hover:text-slate-700"
           }`}
         >
-          {/* Saved count / limit badge */}
-          <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 flex items-center gap-1.5">
-            <UsageLimitIndicator
-              used={savedData?.count ?? 0}
-              limit={savedLimit}
-              unitName="Saved"
-              isPremium={isPremium}
-              compact
+          <MagnifierIcon
+            size={18}
+            className={activeCard === "explore" ? "text-purple-600" : "text-slate-400"}
+          />
+          <span>Explore Skills</span>
+          {activeCard === "explore" && (
+            <motion.div
+              layoutId="learningActiveTabIndicator"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
             />
-          </div>
-          <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 tracking-widest uppercase mb-2">
-            CARD 2
-          </div>
-          <div className="flex flex-col sm:flex-row items-start gap-2.5 sm:gap-4">
-            <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 text-white shrink-0 shadow-sm shadow-emerald-600/30">
-              <SaveIcon size={20} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-lg font-bold text-slate-900 mb-0.5 sm:mb-1 leading-snug">
-                Saved Playlists
-              </h3>
-              <p className="text-[11px] sm:text-sm text-slate-500 font-medium leading-normal line-clamp-2 sm:line-clamp-none">
-                Access saved tracks &amp; video progress.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveCard("saved")}
+          className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeCard === "saved"
+              ? "text-slate-900"
+              : "text-slate-400 hover:text-slate-700"
+          }`}
+        >
+          <SaveIcon
+            size={18}
+            className={activeCard === "saved" ? "text-purple-600" : "text-slate-400"}
+          />
+          <span>Saved Videos</span>
+          {savedList.length > 0 && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-extrabold transition-colors ${
+                activeCard === "saved"
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-slate-100 text-slate-500"
+              }`}
+            >
+              {savedList.length}
+            </span>
+          )}
+          {activeCard === "saved" && (
+            <motion.div
+              layoutId="learningActiveTabIndicator"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
+            />
+          )}
+        </button>
       </div>
 
       {/* ── EXPLORE Content */}
