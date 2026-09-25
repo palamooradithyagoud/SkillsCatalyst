@@ -200,3 +200,6 @@ export interface ReorderItemPayload {
 export interface ReorderPayload {
   items: ReorderItemPayload[];
 }
+
+// ── Lesson Content Types Re-export (Phase 2A) ─────────────────────────────────
+export * from "./lesson-content";

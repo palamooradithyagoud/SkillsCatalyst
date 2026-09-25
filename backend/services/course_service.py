@@ -1615,3 +1615,139 @@ def reorder_quiz_options(question_id: str, items: List[ReorderItem], user_id: st
         }
         for o in (opt_res.data or [])
     ]
+
+
+# ── Lesson Content Service Methods (Phase 2A) ─────────────────────────────────
+
+def verify_lesson_hierarchy(course_id: str, module_id: str, lesson_id: str) -> None:
+    """
+    Authoritatively validates the relational integrity of:
+      course -> module -> lesson
+    Rejects cross-course, cross-module, or non-existent entity access with 404.
+    """
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database service unavailable")
+
+    # 1. Verify module belongs to course
+    mod_res = sb.from_("course_modules").select("id, course_id").eq("id", module_id).limit(1).execute()
+    if not mod_res.data or str(mod_res.data[0].get("course_id")) != course_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Module not found or does not belong to the specified course."
+        )
+
+    # 2. Verify lesson belongs to module
+    les_res = sb.from_("course_lessons").select("id, module_id").eq("id", lesson_id).limit(1).execute()
+    if not les_res.data or str(les_res.data[0].get("module_id")) != module_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lesson not found or does not belong to the specified module."
+        )
+
+    return mod_res.data[0], les_res.data[0]
+
+
+def get_lesson_content(course_id: str, module_id: str, lesson_id: str) -> Dict[str, Any]:
+    """
+    Retrieves structured lesson content blocks.
+    Returns empty blocks list if no content has been saved yet (valid initial state).
+    """
+    verify_lesson_hierarchy(course_id, module_id, lesson_id)
+
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database service unavailable")
+
+    res = sb.from_("course_lesson_contents").select("*").eq("lesson_id", lesson_id).limit(1).execute()
+    if not res.data:
+        # Initial empty state is completely valid in Phase 2A
+        return {
+            "id": None,
+            "lesson_id": lesson_id,
+            "schema_version": 1,
+            "blocks": [],
+            "created_at": None,
+            "updated_at": None,
+        }
+
+    row = res.data[0]
+    return {
+        "id": str(row["id"]),
+        "lesson_id": str(row["lesson_id"]),
+        "schema_version": row.get("schema_version", 1),
+        "blocks": row.get("blocks", []),
+        "created_at": _format_datetime(row.get("created_at")),
+        "updated_at": _format_datetime(row.get("updated_at")),
+    }
+
+
+def save_lesson_content(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    payload_dict: Dict[str, Any],
+    user_id: str
+) -> Dict[str, Any]:
+    """
+    Persists validated and normalized structured content blocks for a lesson.
+    Atomically upserts into course_lesson_contents and records audit history.
+    """
+    from backend.models.lesson_content import LessonContentPayload
+
+    verify_lesson_hierarchy(course_id, module_id, lesson_id)
+
+    # Authoritative backend validation
+    validated_payload = LessonContentPayload.model_validate(payload_dict)
+
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database service unavailable")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    blocks_data = [b.model_dump() for b in validated_payload.blocks]
+
+    content_record = {
+        "lesson_id": lesson_id,
+        "schema_version": 1,
+        "blocks": blocks_data,
+        "updated_at": now_iso,
+    }
+
+    # Upsert on conflict (lesson_id)
+    upsert_res = sb.from_("course_lesson_contents").upsert(
+        content_record,
+        on_conflict="lesson_id"
+    ).execute()
+
+    if not upsert_res.data:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to persist lesson content."
+        )
+
+    saved_row = upsert_res.data[0]
+    content_id = str(saved_row["id"])
+
+    log_course_audit(
+        action="lesson_content_updated",
+        entity_type="lesson_content",
+        entity_id=content_id,
+        user_id=user_id,
+        details={
+            "course_id": course_id,
+            "module_id": module_id,
+            "lesson_id": lesson_id,
+            "block_count": len(blocks_data),
+            "block_types": [b["type"] for b in blocks_data],
+        },
+    )
+
+    return {
+        "id": content_id,
+        "lesson_id": lesson_id,
+        "schema_version": saved_row.get("schema_version", 1),
+        "blocks": saved_row.get("blocks", []),
+        "created_at": _format_datetime(saved_row.get("created_at")),
+        "updated_at": _format_datetime(saved_row.get("updated_at")),
+    }

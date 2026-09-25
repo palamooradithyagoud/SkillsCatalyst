@@ -1168,4 +1168,37 @@ GRANT ALL ON TABLE public.quiz_questions TO service_role;
 GRANT ALL ON TABLE public.quiz_options TO service_role;
 GRANT ALL ON TABLE public.audit_logs TO service_role;
 
+-- ── 23. COURSE LESSON CONTENTS (PHASE 2A) ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.course_lesson_contents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lesson_id UUID NOT NULL REFERENCES public.course_lessons(id) ON DELETE CASCADE,
+    schema_version INTEGER NOT NULL DEFAULT 1,
+    blocks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT uq_course_lesson_contents_lesson_id UNIQUE (lesson_id),
+    CONSTRAINT chk_course_lesson_contents_schema_version CHECK (schema_version >= 1)
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_lesson_contents_lesson_id ON public.course_lesson_contents (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_course_lesson_contents_blocks_gin ON public.course_lesson_contents USING GIN (blocks);
+
+ALTER TABLE public.course_lesson_contents ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can view published lesson contents" ON public.course_lesson_contents;
+CREATE POLICY "Public can view published lesson contents" ON public.course_lesson_contents FOR SELECT TO public
+    USING (EXISTS (SELECT 1 FROM public.course_lessons cl JOIN public.course_modules cm ON cm.id = cl.module_id JOIN public.courses c ON c.id = cm.course_id WHERE cl.id = course_lesson_contents.lesson_id AND c.status = 'PUBLISHED'));
+
+DROP POLICY IF EXISTS "Admins can manage lesson contents" ON public.course_lesson_contents;
+CREATE POLICY "Admins can manage lesson contents" ON public.course_lesson_contents FOR ALL TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('owner', 'admin', 'editor')) OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('owner', 'admin', 'editor'))
+    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('owner', 'admin', 'editor')) OR (auth.jwt() -> 'app_metadata' ->> 'role') IN ('owner', 'admin', 'editor'));
+
+DROP POLICY IF EXISTS "Service role full access on lesson contents" ON public.course_lesson_contents;
+CREATE POLICY "Service role full access on lesson contents" ON public.course_lesson_contents FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+GRANT SELECT ON TABLE public.course_lesson_contents TO anon, authenticated;
+GRANT ALL ON TABLE public.course_lesson_contents TO service_role;
+
 

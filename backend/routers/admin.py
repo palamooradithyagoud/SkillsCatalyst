@@ -112,6 +112,8 @@ from backend.models.course import (
     QuizOptionUpdate,
     QuizOptionResponse,
     ReorderRequest,
+    LessonContentPayload,
+    LessonContentResponse,
 )
 from backend.services.course_service import (
     get_admin_courses,
@@ -148,6 +150,8 @@ from backend.services.course_service import (
     update_quiz_option,
     delete_quiz_option,
     reorder_quiz_options,
+    get_lesson_content,
+    save_lesson_content,
 )
 
 logger = logging.getLogger("skillscatalyst.admin")
@@ -1182,6 +1186,52 @@ def delete_admin_lesson_endpoint(
     """Deletes a lesson."""
     delete_course_lesson(lesson_id=lesson_id, user_id=admin["user_id"])
     return {"success": True, "message": f"Lesson '{lesson_id}' deleted successfully."}
+
+
+# ── Lesson Content Architecture (Phase 2A) ───────────────────────────────────
+
+@router.get(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/content",
+    status_code=status.HTTP_200_OK,
+    response_model=LessonContentResponse,
+)
+def get_admin_lesson_content_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> LessonContentResponse:
+    """Retrieves structured content blocks for a lesson after verifying course/module/lesson hierarchy."""
+    content = get_lesson_content(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+    return LessonContentResponse(**content)
+
+
+@router.put(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/content",
+    status_code=status.HTTP_200_OK,
+    response_model=LessonContentResponse,
+)
+@router.patch(
+    "/courses/{course_id}/modules/{module_id}/lessons/{lesson_id}/content",
+    status_code=status.HTTP_200_OK,
+    response_model=LessonContentResponse,
+)
+def save_admin_lesson_content_endpoint(
+    course_id: str,
+    module_id: str,
+    lesson_id: str,
+    payload: LessonContentPayload,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> LessonContentResponse:
+    """Creates or updates structured content blocks for a lesson after verifying course/module/lesson hierarchy."""
+    content = save_lesson_content(
+        course_id=course_id,
+        module_id=module_id,
+        lesson_id=lesson_id,
+        payload_dict=payload.model_dump(),
+        user_id=admin["user_id"],
+    )
+    return LessonContentResponse(**content)
 
 
 # ── Quizzes (One Quiz Per Module) ─────────────────────────────────────────────
