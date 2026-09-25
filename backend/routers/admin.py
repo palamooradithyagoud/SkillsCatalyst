@@ -1475,6 +1475,191 @@ def delete_admin_option_endpoint(
     return {"success": True, "message": f"Option '{option_id}' deleted successfully."}
 
 
+# ============================================================================
+# PHASE 7 — CERTIFICATE TEMPLATES & COURSE CERTIFICATE CONFIGURATION CMS
+# ============================================================================
+
+from backend.models.certificate import (
+    CertificateTemplateCreate,
+    CertificateTemplateUpdate,
+    CertificateTemplateResponse,
+    CourseCertificateConfigUpdate,
+    CourseCertificateConfigResponse,
+    CertificatePreviewData,
+)
+from backend.services.certificate_service import (
+    list_certificate_templates,
+    get_certificate_template,
+    create_certificate_template,
+    update_certificate_template,
+    delete_certificate_template,
+    upload_certificate_background,
+    get_course_certificate_config,
+    set_course_certificate_config,
+)
+
+
+@router.get(
+    "/certificate-templates",
+    status_code=status.HTTP_200_OK,
+    response_model=List[CertificateTemplateResponse],
+)
+def list_admin_certificate_templates_endpoint(
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CertificateTemplateResponse]:
+    """Lists all certificate templates including inactive for admin management."""
+    templates = list_certificate_templates(include_inactive=True)
+    return [CertificateTemplateResponse(**t) for t in templates]
+
+
+@router.post(
+    "/certificate-templates",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CertificateTemplateResponse,
+)
+def create_admin_certificate_template_endpoint(
+    payload: CertificateTemplateCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CertificateTemplateResponse:
+    """Creates a new certificate template design."""
+    created = create_certificate_template(data=payload, user_id=admin["user_id"])
+    return CertificateTemplateResponse(**created)
+
+
+@router.get(
+    "/certificate-templates/{template_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificateTemplateResponse,
+)
+def get_admin_certificate_template_endpoint(
+    template_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CertificateTemplateResponse:
+    """Retrieves a certificate template by ID."""
+    t = get_certificate_template(template_id=template_id)
+    return CertificateTemplateResponse(**t)
+
+
+@router.patch(
+    "/certificate-templates/{template_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificateTemplateResponse,
+)
+def update_admin_certificate_template_endpoint(
+    template_id: str,
+    payload: CertificateTemplateUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CertificateTemplateResponse:
+    """Updates an existing certificate template."""
+    updated = update_certificate_template(template_id=template_id, data=payload, user_id=admin["user_id"])
+    return CertificateTemplateResponse(**updated)
+
+
+@router.delete(
+    "/certificate-templates/{template_id}",
+    status_code=status.HTTP_200_OK,
+)
+def delete_admin_certificate_template_endpoint(
+    template_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Safely archives or deletes a certificate template."""
+    return delete_certificate_template(template_id=template_id, user_id=admin["user_id"])
+
+
+@router.post("/certificate-templates/upload-background", status_code=status.HTTP_200_OK)
+async def upload_admin_certificate_background_endpoint(
+    file: UploadFile = File(...),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Validates and uploads a certificate background image to Supabase Storage."""
+    public_url = await upload_certificate_background(file=file, user_id=admin["user_id"])
+    return {"success": True, "background_media_url": public_url}
+
+
+@router.get(
+    "/courses/{course_id}/certificate",
+    status_code=status.HTTP_200_OK,
+    response_model=CourseCertificateConfigResponse,
+)
+def get_admin_course_certificate_config_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseCertificateConfigResponse:
+    """Retrieves certificate configuration for a course."""
+    cfg = get_course_certificate_config(course_id=course_id)
+    return CourseCertificateConfigResponse(**cfg)
+
+
+@router.put(
+    "/courses/{course_id}/certificate",
+    status_code=status.HTTP_200_OK,
+    response_model=CourseCertificateConfigResponse,
+)
+def update_admin_course_certificate_config_endpoint(
+    course_id: str,
+    payload: CourseCertificateConfigUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseCertificateConfigResponse:
+    """Configures whether a course issues certificates and assigns a template."""
+    cfg = set_course_certificate_config(
+        course_id=course_id,
+        enabled=payload.enabled,
+        template_id=payload.certificate_template_id,
+        user_id=admin["user_id"],
+    )
+    return CourseCertificateConfigResponse(**cfg)
+
+
+@router.get(
+    "/courses/{course_id}/certificate/preview",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificatePreviewData,
+)
+def get_admin_course_certificate_preview_endpoint(
+    course_id: str,
+    template_id: Optional[str] = None,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CertificatePreviewData:
+    """Generates realistic sample preview data for the certificate configuration."""
+    sb = get_supabase()
+    course_title = "Course Title"
+    c_res = sb.from_("courses").select("title").eq("id", course_id).execute()
+    if c_res.data:
+        course_title = c_res.data[0].get("title", "Course Title")
+
+    cfg = get_course_certificate_config(course_id=course_id)
+    target_template_id = template_id or cfg.get("certificate_template_id")
+
+    if target_template_id:
+        template = get_certificate_template(target_template_id)
+        theme = template.get("design_theme", "professional_blue")
+        bg_url = template.get("background_media_url", "")
+    else:
+        # Fallback to active template
+        templates = list_certificate_templates(include_inactive=False)
+        if templates:
+            theme = templates[0]["design_theme"]
+            bg_url = templates[0]["background_media_url"]
+        else:
+            theme = "professional_blue"
+            bg_url = ""
+
+    from datetime import date
+    return CertificatePreviewData(
+        student_name="John Doe",
+        college_name="Example Institute of Technology",
+        course_title=course_title,
+        score=92,
+        issued_date=date.today().strftime("%B %d, %Y"),
+        certificate_id="SC-CERT-2026-DEMO",
+        verification_url="https://www.skillscatalyst.in/verify/certificate/demo-preview",
+        design_theme=theme,
+        background_media_url=bg_url,
+    )
+
+
+
 
 
 

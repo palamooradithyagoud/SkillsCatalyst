@@ -245,6 +245,13 @@ def validate_course_publish_readiness(course_id: str) -> Dict[str, Any]:
                         f"Module '{mod_title}' -> Question #{q_idx} (SINGLE_SELECT) has {correct_count} correct options. Exactly one correct option is permitted."
                     )
 
+    # Check Certificate Configuration (Phase 7)
+    try:
+        from backend.services.certificate_service import validate_course_certificate_readiness
+        validate_course_certificate_readiness(course_id)
+    except HTTPException as cert_err:
+        errors.append(str(cert_err.detail))
+
     if errors:
         error_msg = "Course publication validation failed:\n" + "\n".join(f"• {e}" for e in errors)
         raise HTTPException(

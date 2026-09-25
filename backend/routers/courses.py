@@ -46,6 +46,15 @@ from backend.services.quiz_attempt_service import (
     get_quiz_attempt_history,
     get_student_module_progress,
 )
+from backend.models.certificate import (
+    CertificateResponse,
+    CertificateEligibilityResponse,
+)
+from backend.services.certificate_service import (
+    check_course_completion_and_eligibility,
+    issue_course_certificate,
+    get_student_certificate_by_course,
+)
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
 
@@ -255,4 +264,68 @@ def get_module_progress(
         module_id=module_id,
     )
     return StudentModuleProgressResponse(**res)
+
+
+# ── Phase 7: Course Certificates & Completion ────────────────────────────────
+
+@router.get(
+    "/{course_id_or_slug}/certificate/eligibility",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificateEligibilityResponse,
+)
+def get_course_certificate_eligibility(
+    course_id_or_slug: str,
+    user_id: str = Depends(get_current_user_id),
+) -> CertificateEligibilityResponse:
+    """
+    Evaluates backend-authoritative course completion, quiz passes,
+    certificate enablement, and identity lock status for the authenticated student.
+    """
+    res = check_course_completion_and_eligibility(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+    )
+    return CertificateEligibilityResponse(**res)
+
+
+@router.post(
+    "/{course_id_or_slug}/certificate/issue",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificateResponse,
+)
+def issue_course_certificate_endpoint(
+    course_id_or_slug: str,
+    user_id: str = Depends(get_current_user_id),
+) -> CertificateResponse:
+    """
+    Issues an official, immutable course certificate for the student.
+    Server validates full course completion, module quizzes, certificate config,
+    and authoritative identity. Idempotent and race condition safe.
+    """
+    res = issue_course_certificate(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+    )
+    return CertificateResponse(**res)
+
+
+@router.get(
+    "/{course_id_or_slug}/certificate",
+    status_code=status.HTTP_200_OK,
+    response_model=CertificateResponse,
+)
+def get_course_certificate_endpoint(
+    course_id_or_slug: str,
+    user_id: str = Depends(get_current_user_id),
+) -> CertificateResponse:
+    """
+    Retrieves the issued certificate for the authenticated student for this course.
+    If no certificate has been issued, returns 404.
+    """
+    res = get_student_certificate_by_course(
+        user_id=user_id,
+        course_id_or_slug=course_id_or_slug,
+    )
+    return CertificateResponse(**res)
+
 
