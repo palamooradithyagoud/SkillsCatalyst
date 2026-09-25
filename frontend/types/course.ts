@@ -203,3 +203,7 @@ export interface ReorderPayload {
 
 // ── Lesson Content Types Re-export (Phase 2A) ─────────────────────────────────
 export * from "./lesson-content";
+
+// ── Course Lesson Media Types Re-export (Phase 3A) ────────────────────────────
+export * from "./course-media";
+
