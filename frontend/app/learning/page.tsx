@@ -118,6 +118,22 @@ export default function LearningPage() {
   const savedList: Playlist[] = savedData?.saved ?? [];
   const results: Playlist[] = searchData?.results ?? [];
 
+  const completedSavedVideosCount = React.useMemo(() => {
+    if (!videoProgressData?.raw || savedList.length === 0) return 0;
+    const allSavedIds = new Set<string>();
+    savedList.forEach((pl) => {
+      if (pl.id) allSavedIds.add(String(pl.id));
+      if ((pl as any).playlist_id) allSavedIds.add(String((pl as any).playlist_id));
+      const ext = extractPlaylistId(pl.playlist_url ?? "");
+      if (ext) allSavedIds.add(String(ext));
+    });
+    return videoProgressData.raw.filter(
+      (r: any) =>
+        !!r.watched &&
+        (allSavedIds.has(String(r.playlist_id)) || allSavedIds.has(String(r.video_id)))
+    ).length;
+  }, [savedList, videoProgressData]);
+
   // ── Mutations
   const saveMut = useMutation({
     mutationFn: (pl: Playlist) => savePlaylist(pl, searchTerm),
@@ -408,9 +424,9 @@ export default function LearningPage() {
                 </div>
                 <div className="text-center px-4 py-2 sm:px-6 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-inner">
                   <div className="text-[9px] sm:text-[10px] font-extrabold text-emerald-100 uppercase tracking-wider mb-0.5">
-                    COMPLETED
+                    VIDEOS WATCHED
                   </div>
-                  <div className="text-lg sm:text-2xl font-black text-emerald-300">0</div>
+                  <div className="text-lg sm:text-2xl font-black text-emerald-300">{completedSavedVideosCount}</div>
                 </div>
               </div>
             </div>
