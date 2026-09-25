@@ -77,9 +77,9 @@ export function SavedPlaylistRow({
   const statusStyle = !hasLoaded
     ? "text-slate-500 bg-slate-100 border-slate-200"
     : pct === 100
-    ? "text-emerald-800 bg-emerald-100 border-emerald-200 font-bold"
+    ? "text-purple-700 bg-purple-50 border-purple-200/90 font-bold"
     : pct > 0
-    ? "text-amber-900 bg-amber-100 border-amber-200 font-bold"
+    ? "text-indigo-700 bg-indigo-50 border-indigo-200/90 font-bold"
     : "text-slate-600 bg-slate-100 border-slate-200 font-semibold";
 
   return (
@@ -112,7 +112,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onWatch(pl)}
-            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 cursor-pointer"
+            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#5f13e7] to-[#7928ca] hover:from-[#530dd4] hover:to-[#6b20b8] shadow-md shadow-purple-600/25 cursor-pointer"
           >
             Watch Track
           </motion.button>
@@ -120,7 +120,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onDelete(pl.id)}
-            className="px-3.5 py-2 rounded-full text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-full text-xs font-semibold text-slate-600 hover:text-purple-700 bg-slate-100/90 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-200 transition-all cursor-pointer"
           >
             Delete
           </motion.button>
@@ -131,7 +131,7 @@ export function SavedPlaylistRow({
       <div className="flex items-center justify-between px-6 pb-3 mt-1">
         {!hasLoaded ? (
           <span className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
             <span>Syncing video progress...</span>
           </span>
         ) : (
@@ -141,7 +141,7 @@ export function SavedPlaylistRow({
         )}
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors cursor-pointer"
+          className="text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors cursor-pointer"
         >
           {expanded
             ? "Hide Lessons ▲"
@@ -153,12 +153,12 @@ export function SavedPlaylistRow({
 
       {/* ── Progress bar */}
       {pct > 0 && (
-        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-slate-100 p-0.5 border border-slate-200/60">
+        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-purple-50/70 p-0.5 border border-purple-100/80">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full bg-gradient-to-r from-amber-400 via-emerald-500 to-teal-500"
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-600 to-[#7928ca]"
           />
         </div>
       )}
@@ -175,7 +175,7 @@ export function SavedPlaylistRow({
           >
             {loadingVideos ? (
               <div className="flex items-center justify-center gap-3 py-8 text-slate-500">
-                <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
                 <span className="text-xs font-semibold">Loading course lessons...</span>
               </div>
             ) : videos.length === 0 ? (
@@ -193,12 +193,12 @@ export function SavedPlaylistRow({
                       onClick={() => onWatchVideo(pl, i)}
                       className={`w-full flex items-center justify-between p-4 rounded-[20px] border text-left transition-all cursor-pointer ${
                         done
-                          ? "bg-amber-400 border-amber-400 text-slate-900 shadow-sm font-extrabold"
-                          : "bg-white border-slate-200/90 text-slate-900 font-bold hover:border-slate-300 hover:shadow-xs"
+                          ? "bg-purple-100 border-purple-300 text-purple-950 shadow-xs font-extrabold"
+                          : "bg-white border-slate-200/90 text-slate-900 font-bold hover:border-purple-300 hover:shadow-xs"
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0 pr-2 flex-1">
-                        {/* Circular badge icon matching Image 2 */}
+                        {/* Circular badge icon */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -206,12 +206,12 @@ export function SavedPlaylistRow({
                           }}
                           className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs shrink-0 transition-transform active:scale-95 ${
                             done
-                              ? "bg-slate-900/15 border border-slate-900/20 text-slate-900"
-                              : "bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800"
+                              ? "bg-purple-600 text-white"
+                              : "bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-800"
                           }`}
                         >
                           {done ? (
-                            <CheckCircle className="w-5 h-5 text-slate-900" />
+                            <CheckCircle className="w-4 h-4 text-white" />
                           ) : (
                             <span>{i + 1}</span>
                           )}
