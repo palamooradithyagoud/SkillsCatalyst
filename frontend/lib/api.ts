@@ -20,3 +20,4 @@ export * from "./api/scholarships";
 export * from "./api/tech_news";
 export * from "./api/subscription";
 export * from "./api/payment";
+export * from "./api/courses";

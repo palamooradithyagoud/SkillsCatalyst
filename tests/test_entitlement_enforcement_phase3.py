@@ -384,15 +384,21 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
         mock_sb.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(
             data=[{"roadmap_id": "rm-1"}, {"roadmap_id": "rm-2"}, {"roadmap_id": "rm-3"}]
         )
-        with patch("backend.routers.learning.get_supabase", return_value=mock_sb), \
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.routers.learning.get_supabase", return_value=mock_sb), \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
              patch.object(SubscriptionService, "get_user_entitlements", return_value={
                  FeatureKey.ROADMAPS.value: EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=1)
              }):
 
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.free_user)
+            mock_auth_sb.return_value = mock_auth_client
+
             resp = client.post(
                 "/api/learning/roadmap",
                 json={"skill": "Full Stack Development"},
+                headers={"Authorization": "Bearer free-token"},
             )
             self.assertEqual(resp.status_code, 403)
             data = resp.json()["detail"]

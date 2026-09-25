@@ -90,8 +90,68 @@ from backend.services.skillbits_service import (
     request_direct_upload,
     sync_video_status,
 )
+from backend.models.course import (
+    CourseCreate,
+    CourseUpdate,
+    CourseResponse,
+    CourseDetailResponse,
+    CourseListResponse,
+    CourseModuleCreate,
+    CourseModuleUpdate,
+    CourseModuleResponse,
+    CourseLessonCreate,
+    CourseLessonUpdate,
+    CourseLessonResponse,
+    CourseQuizCreate,
+    CourseQuizUpdate,
+    CourseQuizResponse,
+    QuizQuestionCreate,
+    QuizQuestionUpdate,
+    QuizQuestionResponse,
+    QuizOptionCreate,
+    QuizOptionUpdate,
+    QuizOptionResponse,
+    ReorderRequest,
+)
+from backend.services.course_service import (
+    get_admin_courses,
+    get_admin_course_by_id,
+    create_course,
+    update_course,
+    publish_course,
+    unpublish_course,
+    archive_course,
+    delete_course,
+    create_course_module,
+    get_course_modules,
+    get_course_module_by_id,
+    update_course_module,
+    delete_course_module,
+    reorder_course_modules,
+    create_course_lesson,
+    get_course_lessons,
+    get_course_lesson_by_id,
+    update_course_lesson,
+    delete_course_lesson,
+    reorder_course_lessons,
+    create_course_quiz,
+    get_course_quiz,
+    get_quiz_by_id,
+    update_course_quiz,
+    create_quiz_question,
+    get_quiz_question_by_id,
+    update_quiz_question,
+    delete_quiz_question,
+    reorder_quiz_questions,
+    create_quiz_option,
+    get_quiz_option_by_id,
+    update_quiz_option,
+    delete_quiz_option,
+    reorder_quiz_options,
+)
 
 logger = logging.getLogger("skillscatalyst.admin")
+
 
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -908,6 +968,347 @@ async def check_skillbit_video_status(
     """Synchronizes and returns the current Mux video ingestion status, duration, and playback ID."""
     status_info = await sync_video_status(skillbit_id=skillbit_id)
     return VideoStatusResponse(**status_info)
+
+
+# ============================================================================
+# COURSE SYSTEM (PHASE 1: FOUNDATION + MODULE QUIZ FOUNDATION) CMS ENDPOINTS
+# Protected by Depends(require_admin) - allows owner, admin, editor
+# ============================================================================
+
+# ── Courses ──────────────────────────────────────────────────────────────────
+
+@router.post("/courses", status_code=status.HTTP_201_CREATED, response_model=CourseResponse)
+def create_admin_course_endpoint(
+    payload: CourseCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseResponse:
+    """Creates a new course in DRAFT or IN_REVIEW status."""
+    created = create_course(data=payload, user_id=admin["user_id"])
+    return CourseResponse(**created)
+
+
+@router.get("/courses", status_code=status.HTTP_200_OK, response_model=CourseListResponse)
+def list_admin_courses_endpoint(
+    search: Optional[str] = Query(None, description="Keyword search in title"),
+    status: Optional[str] = Query(None, description="Filter by status: DRAFT, IN_REVIEW, PUBLISHED, ARCHIVED"),
+    status_filter: Optional[str] = Query(None, description="Alias for status"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty: beginner, intermediate, advanced"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    sort: Optional[str] = Query("newest", description="Sort by: newest, oldest, title_asc, title_desc, updated_at"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Page size"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseListResponse:
+    """Lists courses with server-side search, filtering, whitelisted sorting, and pagination."""
+    resolved_status = status_filter or status
+    result = get_admin_courses(
+        search=search,
+        status_filter=resolved_status,
+        difficulty=difficulty,
+        category=category,
+        sort=sort,
+        page=page,
+        page_size=page_size,
+    )
+    return CourseListResponse(**result)
+
+
+@router.get("/courses/{course_id}", status_code=status.HTTP_200_OK, response_model=CourseDetailResponse)
+def get_admin_course_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseDetailResponse:
+    """Fetches full course hierarchy: Course -> Modules -> Lessons & Quiz -> Questions -> Options."""
+    detail = get_admin_course_by_id(course_id=course_id)
+    return CourseDetailResponse(**detail)
+
+
+@router.patch("/courses/{course_id}", status_code=status.HTTP_200_OK, response_model=CourseResponse)
+def update_admin_course_endpoint(
+    course_id: str,
+    payload: CourseUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseResponse:
+    """Partially updates a course record."""
+    updated = update_course(course_id=course_id, data=payload, user_id=admin["user_id"])
+    return CourseResponse(**updated)
+
+
+@router.delete("/courses/{course_id}", status_code=status.HTTP_200_OK)
+def delete_admin_course_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Permanently deletes a course and all child modules, lessons, and quizzes."""
+    delete_course(course_id=course_id, user_id=admin["user_id"])
+    return {"success": True, "message": f"Course '{course_id}' deleted successfully."}
+
+
+@router.post("/courses/{course_id}/publish", status_code=status.HTTP_200_OK, response_model=CourseDetailResponse)
+def publish_admin_course_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseDetailResponse:
+    """Validates full publication readiness server-side and transitions course to PUBLISHED."""
+    detail = publish_course(course_id=course_id, user_id=admin["user_id"])
+    return CourseDetailResponse(**detail)
+
+
+@router.post("/courses/{course_id}/unpublish", status_code=status.HTTP_200_OK, response_model=CourseDetailResponse)
+def unpublish_admin_course_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseDetailResponse:
+    """Transitions a published course back to DRAFT."""
+    detail = unpublish_course(course_id=course_id, user_id=admin["user_id"])
+    return CourseDetailResponse(**detail)
+
+
+@router.post("/courses/{course_id}/archive", status_code=status.HTTP_200_OK, response_model=CourseDetailResponse)
+def archive_admin_course_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseDetailResponse:
+    """Transitions a course to ARCHIVED."""
+    detail = archive_course(course_id=course_id, user_id=admin["user_id"])
+    return CourseDetailResponse(**detail)
+
+
+# ── Modules ──────────────────────────────────────────────────────────────────
+
+@router.post("/courses/{course_id}/modules", status_code=status.HTTP_201_CREATED, response_model=CourseModuleResponse)
+def create_admin_module_endpoint(
+    course_id: str,
+    payload: CourseModuleCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseModuleResponse:
+    """Creates a new module in a course."""
+    created = create_course_module(course_id=course_id, data=payload, user_id=admin["user_id"])
+    return CourseModuleResponse(**created)
+
+
+@router.get("/courses/{course_id}/modules", status_code=status.HTTP_200_OK, response_model=List[CourseModuleResponse])
+def list_admin_modules_endpoint(
+    course_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CourseModuleResponse]:
+    """Lists all modules for a course."""
+    modules = get_course_modules(course_id=course_id)
+    return [CourseModuleResponse(**m) for m in modules]
+
+
+@router.patch("/courses/{course_id}/modules/reorder", status_code=status.HTTP_200_OK, response_model=List[CourseModuleResponse])
+def reorder_admin_modules_endpoint(
+    course_id: str,
+    payload: ReorderRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CourseModuleResponse]:
+    """Safely reorders modules in a course."""
+    modules = reorder_course_modules(course_id=course_id, items=payload.items, user_id=admin["user_id"])
+    return [CourseModuleResponse(**m) for m in modules]
+
+
+@router.patch("/modules/{module_id}", status_code=status.HTTP_200_OK, response_model=CourseModuleResponse)
+def update_admin_module_endpoint(
+    module_id: str,
+    payload: CourseModuleUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseModuleResponse:
+    """Updates module metadata."""
+    updated = update_course_module(module_id=module_id, data=payload, user_id=admin["user_id"])
+    return CourseModuleResponse(**updated)
+
+
+@router.delete("/modules/{module_id}", status_code=status.HTTP_200_OK)
+def delete_admin_module_endpoint(
+    module_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Deletes a module and cascades to child lessons and quiz."""
+    delete_course_module(module_id=module_id, user_id=admin["user_id"])
+    return {"success": True, "message": f"Module '{module_id}' deleted successfully."}
+
+
+# ── Lessons (Metadata Only) ───────────────────────────────────────────────────
+
+@router.post("/modules/{module_id}/lessons", status_code=status.HTTP_201_CREATED, response_model=CourseLessonResponse)
+def create_admin_lesson_endpoint(
+    module_id: str,
+    payload: CourseLessonCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonResponse:
+    """Creates a new lesson metadata record in a module."""
+    created = create_course_lesson(module_id=module_id, data=payload, user_id=admin["user_id"])
+    return CourseLessonResponse(**created)
+
+
+@router.get("/modules/{module_id}/lessons", status_code=status.HTTP_200_OK, response_model=List[CourseLessonResponse])
+def list_admin_lessons_endpoint(
+    module_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CourseLessonResponse]:
+    """Lists all lessons in a module."""
+    lessons = get_course_lessons(module_id=module_id)
+    return [CourseLessonResponse(**l) for l in lessons]
+
+
+@router.patch("/modules/{module_id}/lessons/reorder", status_code=status.HTTP_200_OK, response_model=List[CourseLessonResponse])
+def reorder_admin_lessons_endpoint(
+    module_id: str,
+    payload: ReorderRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CourseLessonResponse]:
+    """Safely reorders lessons in a module."""
+    lessons = reorder_course_lessons(module_id=module_id, items=payload.items, user_id=admin["user_id"])
+    return [CourseLessonResponse(**l) for l in lessons]
+
+
+@router.patch("/lessons/{lesson_id}", status_code=status.HTTP_200_OK, response_model=CourseLessonResponse)
+def update_admin_lesson_endpoint(
+    lesson_id: str,
+    payload: CourseLessonUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseLessonResponse:
+    """Updates lesson metadata."""
+    updated = update_course_lesson(lesson_id=lesson_id, data=payload, user_id=admin["user_id"])
+    return CourseLessonResponse(**updated)
+
+
+@router.delete("/lessons/{lesson_id}", status_code=status.HTTP_200_OK)
+def delete_admin_lesson_endpoint(
+    lesson_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Deletes a lesson."""
+    delete_course_lesson(lesson_id=lesson_id, user_id=admin["user_id"])
+    return {"success": True, "message": f"Lesson '{lesson_id}' deleted successfully."}
+
+
+# ── Quizzes (One Quiz Per Module) ─────────────────────────────────────────────
+
+@router.post("/modules/{module_id}/quiz", status_code=status.HTTP_201_CREATED, response_model=CourseQuizResponse)
+def create_admin_quiz_endpoint(
+    module_id: str,
+    payload: CourseQuizCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseQuizResponse:
+    """Creates a Quiz for a module. Rejects with 409 Conflict if one already exists."""
+    created = create_course_quiz(module_id=module_id, data=payload, user_id=admin["user_id"])
+    return CourseQuizResponse(**created)
+
+
+@router.get("/modules/{module_id}/quiz", status_code=status.HTTP_200_OK, response_model=Optional[CourseQuizResponse])
+def get_admin_module_quiz_endpoint(
+    module_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Optional[CourseQuizResponse]:
+    """Fetches the quiz for a module with all questions and options."""
+    quiz = get_course_quiz(module_id=module_id)
+    if not quiz:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No quiz found for module '{module_id}'.")
+    return CourseQuizResponse(**quiz)
+
+
+@router.patch("/quizzes/{quiz_id}", status_code=status.HTTP_200_OK, response_model=CourseQuizResponse)
+def update_admin_quiz_endpoint(
+    quiz_id: str,
+    payload: CourseQuizUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CourseQuizResponse:
+    """Updates quiz metadata."""
+    updated = update_course_quiz(quiz_id=quiz_id, data=payload, user_id=admin["user_id"])
+    return CourseQuizResponse(**updated)
+
+
+# ── Questions ─────────────────────────────────────────────────────────────────
+
+@router.post("/quizzes/{quiz_id}/questions", status_code=status.HTTP_201_CREATED, response_model=QuizQuestionResponse)
+def create_admin_question_endpoint(
+    quiz_id: str,
+    payload: QuizQuestionCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> QuizQuestionResponse:
+    """Creates a new question in a quiz."""
+    created = create_quiz_question(quiz_id=quiz_id, data=payload, user_id=admin["user_id"])
+    return QuizQuestionResponse(**created)
+
+
+@router.patch("/quizzes/{quiz_id}/questions/reorder", status_code=status.HTTP_200_OK, response_model=List[QuizQuestionResponse])
+def reorder_admin_questions_endpoint(
+    quiz_id: str,
+    payload: ReorderRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[QuizQuestionResponse]:
+    """Safely reorders questions in a quiz."""
+    questions = reorder_quiz_questions(quiz_id=quiz_id, items=payload.items, user_id=admin["user_id"])
+    return [QuizQuestionResponse(**q) for q in questions]
+
+
+@router.patch("/questions/{question_id}", status_code=status.HTTP_200_OK, response_model=QuizQuestionResponse)
+def update_admin_question_endpoint(
+    question_id: str,
+    payload: QuizQuestionUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> QuizQuestionResponse:
+    """Updates question prompt or metadata."""
+    updated = update_quiz_question(question_id=question_id, data=payload, user_id=admin["user_id"])
+    return QuizQuestionResponse(**updated)
+
+
+@router.delete("/questions/{question_id}", status_code=status.HTTP_200_OK)
+def delete_admin_question_endpoint(
+    question_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Deletes a question and its options."""
+    delete_quiz_question(question_id=question_id, user_id=admin["user_id"])
+    return {"success": True, "message": f"Question '{question_id}' deleted successfully."}
+
+
+# ── Options ───────────────────────────────────────────────────────────────────
+
+@router.post("/questions/{question_id}/options", status_code=status.HTTP_201_CREATED, response_model=QuizOptionResponse)
+def create_admin_option_endpoint(
+    question_id: str,
+    payload: QuizOptionCreate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> QuizOptionResponse:
+    """Creates an option for a question."""
+    created = create_quiz_option(question_id=question_id, data=payload, user_id=admin["user_id"])
+    return QuizOptionResponse(**created)
+
+
+@router.patch("/questions/{question_id}/options/reorder", status_code=status.HTTP_200_OK, response_model=List[QuizOptionResponse])
+def reorder_admin_options_endpoint(
+    question_id: str,
+    payload: ReorderRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[QuizOptionResponse]:
+    """Safely reorders options within a question."""
+    options = reorder_quiz_options(question_id=question_id, items=payload.items, user_id=admin["user_id"])
+    return [QuizOptionResponse(**o) for o in options]
+
+
+@router.patch("/options/{option_id}", status_code=status.HTTP_200_OK, response_model=QuizOptionResponse)
+def update_admin_option_endpoint(
+    option_id: str,
+    payload: QuizOptionUpdate,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> QuizOptionResponse:
+    """Updates an option text or correctness flag."""
+    updated = update_quiz_option(option_id=option_id, data=payload, user_id=admin["user_id"])
+    return QuizOptionResponse(**updated)
+
+
+@router.delete("/options/{option_id}", status_code=status.HTTP_200_OK)
+def delete_admin_option_endpoint(
+    option_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Deletes an option."""
+    delete_quiz_option(option_id=option_id, user_id=admin["user_id"])
+    return {"success": True, "message": f"Option '{option_id}' deleted successfully."}
+
 
 
 
