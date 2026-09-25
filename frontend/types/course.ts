@@ -207,3 +207,6 @@ export * from "./lesson-content";
 // ── Course Lesson Media Types Re-export (Phase 3A) ────────────────────────────
 export * from "./course-media";
 
+// ── Student Course Types Re-export (Phase 4) ──────────────────────────────────
+export * from "./student-course";
+

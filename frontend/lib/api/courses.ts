@@ -32,6 +32,9 @@ import type {
   CourseLessonMediaItem,
   CourseLessonMediaListResponse,
   CourseLessonMediaDeleteResponse,
+  StudentCourseListResponse,
+  StudentCourseDetail,
+  StudentLessonDetail,
 } from "@/types/course";
 
 
@@ -531,6 +534,55 @@ export async function fetchAdminLessonMedia(
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
     throw new Error(err.detail || `Failed to fetch lesson media: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Student Course Experience (Phase 4) ──────────────────────────────────────
+
+export async function fetchStudentCourses(params?: {
+  search?: string;
+  category?: string;
+  difficulty?: string;
+  page?: number;
+  page_size?: number;
+}): Promise<StudentCourseListResponse> {
+  const query = new URLSearchParams();
+  if (params?.search?.trim()) query.set("search", params.search.trim());
+  if (params?.category?.trim()) query.set("category", params.category.trim());
+  if (params?.difficulty?.trim()) query.set("difficulty", params.difficulty.trim());
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.page_size) query.set("page_size", String(params.page_size));
+
+  const qs = query.toString();
+  const url = `${API_BASE}/api/courses${qs ? `?${qs}` : ""}`;
+  const res = await apiFetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch published courses: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchStudentCourseById(courseIdOrSlug: string): Promise<StudentCourseDetail> {
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}`;
+  const res = await apiFetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch course: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchStudentLesson(
+  courseIdOrSlug: string,
+  lessonId: string
+): Promise<StudentLessonDetail> {
+  const url = `${API_BASE}/api/courses/${encodeURIComponent(courseIdOrSlug)}/lessons/${encodeURIComponent(lessonId)}`;
+  const res = await apiFetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || `Failed to fetch lesson: HTTP ${res.status}`);
   }
   return res.json();
 }
