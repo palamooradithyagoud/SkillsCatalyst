@@ -37,8 +37,8 @@ interface StudentLessonRendererProps {
 export function StudentLessonRenderer({ blocks }: StudentLessonRendererProps) {
   if (!blocks || blocks.length === 0) {
     return (
-      <div className="my-12 p-8 text-center rounded-2xl border border-white/10 bg-slate-900/30">
-        <p className="text-slate-400 text-sm font-medium">
+      <div className="my-12 p-8 text-center rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+        <p className="text-slate-500 text-sm font-medium">
           This lesson has no content published yet.
         </p>
       </div>

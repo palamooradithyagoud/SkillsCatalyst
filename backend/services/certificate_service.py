@@ -94,13 +94,15 @@ def list_certificate_templates(include_inactive: bool = False) -> List[Dict[str,
     res = query.order("created_at", desc=False).execute()
 
     items = res.data or []
+    # Place official SkillsCatalyst template at the top
+    items = sorted(items, key=lambda t: 0 if t.get("design_theme") == "skillscatalyst_official" else 1)
     return [
         {
             "id": str(t["id"]),
             "name": t["name"],
             "description": t.get("description"),
             "background_media_url": t["background_media_url"],
-            "design_theme": t.get("design_theme", "professional_blue"),
+            "design_theme": t.get("design_theme", "skillscatalyst_official"),
             "is_active": bool(t.get("is_active", True)),
             "created_at": _format_datetime(t.get("created_at")),
             "updated_at": _format_datetime(t.get("updated_at")),
@@ -128,7 +130,7 @@ def get_certificate_template(template_id: str) -> Dict[str, Any]:
         "name": t["name"],
         "description": t.get("description"),
         "background_media_url": t["background_media_url"],
-        "design_theme": t.get("design_theme", "professional_blue"),
+        "design_theme": t.get("design_theme", "skillscatalyst_official"),
         "is_active": bool(t.get("is_active", True)),
         "created_at": _format_datetime(t.get("created_at")),
         "updated_at": _format_datetime(t.get("updated_at")),
@@ -447,18 +449,16 @@ def get_authoritative_user_identity(user_id: str) -> Dict[str, Any]:
     }
 
 
-def update_student_certificate_identity(user_id: str, full_name: str, college: str) -> Dict[str, Any]:
+def update_student_certificate_identity(user_id: str, full_name: Optional[str] = "", college: Optional[str] = "") -> Dict[str, Any]:
     """
     Updates student's authoritative full name and college before their first certificate.
-    If any certificate has already been issued, this is strictly rejected with HTTP 403.
+    College is optional. If any certificate has already been issued, this is strictly rejected with HTTP 403.
     """
-    clean_name = full_name.strip()
-    clean_college = college.strip()
+    clean_name = (full_name or "").strip()
+    clean_college = (college or "").strip()
 
     if not clean_name:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Full Name cannot be empty.")
-    if not clean_college:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="College Name cannot be empty.")
 
     # 1. Authoritative check: Is identity locked?
     if is_user_identity_locked(user_id):
@@ -730,13 +730,13 @@ def issue_course_certificate(user_id: str, course_id_or_slug: str) -> Dict[str, 
 
     # 4. Authoritative Student Identity
     identity = get_authoritative_user_identity(user_id)
-    student_name = identity["full_name"].strip()
-    college_name = identity["college"].strip()
+    student_name = (identity.get("full_name") or "").strip()
+    college_name = (identity.get("college") or "").strip()
 
-    if not student_name or not college_name:
+    if not student_name:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Please provide your full legal name and college name before your certificate can be issued.",
+            detail="Please provide your full legal name before your certificate can be issued.",
         )
 
     score = eligibility["course_score"] or 100
@@ -756,7 +756,7 @@ def issue_course_certificate(user_id: str, course_id_or_slug: str) -> Dict[str, 
         "score_snapshot": score,
         "certificate_template_id_snapshot": template["id"],
         "certificate_background_snapshot": template["background_media_url"],
-        "design_theme_snapshot": template.get("design_theme", "professional_blue"),
+        "design_theme_snapshot": template.get("design_theme", "skillscatalyst_official"),
         "issued_at": now_iso,
         "status": "issued",
     }
@@ -802,7 +802,7 @@ def _format_certificate_response(cert_row: Dict[str, Any]) -> Dict[str, Any]:
         "score": cert_row["score_snapshot"],
         "issued_at": _format_datetime(cert_row["issued_at"]),
         "status": cert_row.get("status", "issued"),
-        "design_theme": cert_row.get("design_theme_snapshot", "professional_blue"),
+        "design_theme": cert_row.get("design_theme_snapshot", "skillscatalyst_official"),
         "background_media_url": cert_row.get("certificate_background_snapshot", ""),
         "verification_url": verification_url,
         "created_at": _format_datetime(cert_row.get("created_at")),
@@ -908,7 +908,7 @@ def verify_certificate_public(verification_id: str) -> Dict[str, Any]:
                     "score": row["score"],
                     "issued_at": _format_datetime(row["issued_at"]),
                     "status": row.get("status", "issued"),
-                    "design_theme": row.get("design_theme", "professional_blue"),
+                    "design_theme": row.get("design_theme", "skillscatalyst_official"),
                     "background_media_url": row.get("certificate_background", ""),
                     "verification_url": f"{FRONTEND_URL}/verify/certificate/{row['verification_id']}",
                 }
@@ -943,7 +943,7 @@ def verify_certificate_public(verification_id: str) -> Dict[str, Any]:
         "score": c["score_snapshot"],
         "issued_at": _format_datetime(c["issued_at"]),
         "status": c.get("status", "issued"),
-        "design_theme": c.get("design_theme_snapshot", "professional_blue"),
+        "design_theme": c.get("design_theme_snapshot", "skillscatalyst_official"),
         "background_media_url": c.get("certificate_background_snapshot", ""),
         "verification_url": f"{FRONTEND_URL}/verify/certificate/{c['verification_id']}",
     }

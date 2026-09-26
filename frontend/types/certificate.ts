@@ -3,7 +3,12 @@
  * Phase 7 — Certificate & Verification Type Definitions.
  */
 
-export type CertificateTheme = "professional_blue" | "modern_gold" | "technical_dark" | string;
+export type CertificateTheme =
+  | "skillscatalyst_official"
+  | "professional_blue"
+  | "modern_gold"
+  | "technical_dark"
+  | string;
 
 export interface CertificateTemplate {
   id: string;

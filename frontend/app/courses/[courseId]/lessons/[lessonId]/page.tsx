@@ -181,35 +181,35 @@ export default function StudentLessonReaderPage() {
   // Loading Skeleton State
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
         {/* Skeleton Top Nav */}
-        <div className="h-16 border-b border-white/10 bg-slate-900/50 px-4 sm:px-8 flex items-center justify-between animate-pulse">
-          <div className="h-5 w-48 bg-white/10 rounded-lg" />
-          <div className="h-8 w-28 bg-white/10 rounded-lg" />
+        <div className="h-16 border-b border-slate-200/90 bg-white/70 px-4 sm:px-8 flex items-center justify-between animate-pulse">
+          <div className="h-5 w-48 bg-slate-200 rounded-lg" />
+          <div className="h-8 w-28 bg-slate-200 rounded-lg" />
         </div>
 
         {/* Skeleton Body Layout */}
         <div className="flex-1 flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 gap-8 animate-pulse">
           {/* Main Skeleton */}
           <div className="flex-1 max-w-4xl space-y-6">
-            <div className="h-4 w-32 bg-purple-500/20 rounded-md" />
-            <div className="h-10 w-3/4 bg-white/10 rounded-xl" />
-            <div className="h-4 w-40 bg-white/5 rounded-md mb-8" />
-            <div className="space-y-4 pt-4 border-t border-white/5">
-              <div className="h-5 w-full bg-white/5 rounded-md" />
-              <div className="h-5 w-5/6 bg-white/5 rounded-md" />
-              <div className="h-5 w-4/6 bg-white/5 rounded-md" />
-              <div className="h-48 w-full bg-white/10 rounded-2xl my-6" />
-              <div className="h-5 w-full bg-white/5 rounded-md" />
-              <div className="h-5 w-3/4 bg-white/5 rounded-md" />
+            <div className="h-4 w-32 bg-purple-100 rounded-md" />
+            <div className="h-10 w-3/4 bg-slate-200 rounded-xl" />
+            <div className="h-4 w-40 bg-slate-100 rounded-md mb-8" />
+            <div className="space-y-4 pt-4 border-t border-slate-200/80">
+              <div className="h-5 w-full bg-slate-100 rounded-md" />
+              <div className="h-5 w-5/6 bg-slate-100 rounded-md" />
+              <div className="h-5 w-4/6 bg-slate-100 rounded-md" />
+              <div className="h-48 w-full bg-slate-100 rounded-2xl my-6" />
+              <div className="h-5 w-full bg-slate-100 rounded-md" />
+              <div className="h-5 w-3/4 bg-slate-100 rounded-md" />
             </div>
           </div>
 
           {/* Sidebar Skeleton (Desktop) */}
           <div className="hidden lg:block w-80 shrink-0 space-y-4">
-            <div className="h-6 w-36 bg-white/10 rounded-md" />
-            <div className="h-32 bg-white/5 rounded-xl" />
-            <div className="h-48 bg-white/5 rounded-xl" />
+            <div className="h-6 w-36 bg-slate-200 rounded-md" />
+            <div className="h-32 bg-white border border-slate-200 rounded-xl" />
+            <div className="h-48 bg-white border border-slate-200 rounded-xl" />
           </div>
         </div>
       </div>
@@ -219,19 +219,19 @@ export default function StudentLessonReaderPage() {
   // Error State
   if (error || !lessonData) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16 text-center max-w-md mx-auto">
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mb-4">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center px-4 py-16 text-center max-w-md mx-auto">
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 mb-4">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
           Lesson Unavailable
         </h1>
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
           {error || "The requested lesson could not be loaded or is not published."}
         </p>
         <Link
           href={`/courses/${courseIdOrSlug}`}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-all border border-white/10"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-md shadow-purple-600/25"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Course Overview
@@ -245,28 +245,28 @@ export default function StudentLessonReaderPage() {
   const isCurrentLesson = (id: string) => id === lesson.id;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full bg-[#F8FAFC] text-slate-900 flex flex-col">
       {/* ── Top Header Navigation Bar ── */}
-      <header className="sticky top-0 z-30 h-16 border-b border-white/10 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-30 h-16 border-b border-slate-200/90 bg-white/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-4 min-w-0">
           <Link
             href={`/courses/${course.slug || course.id}`}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-colors shrink-0"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
             title="Return to Course Syllabus"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-slate-500" />
             <span className="hidden sm:inline">Course Syllabus</span>
           </Link>
 
-          <span className="text-white/20 hidden sm:inline">|</span>
+          <span className="text-slate-300 hidden sm:inline">|</span>
 
           {/* Breadcrumb Context */}
           <div className="min-w-0 flex items-center gap-2 text-xs sm:text-sm">
-            <span className="text-slate-400 truncate max-w-[120px] sm:max-w-[200px] hidden md:inline">
+            <span className="text-slate-500 truncate max-w-[120px] sm:max-w-[200px] hidden md:inline">
               {course.title}
             </span>
-            <span className="text-slate-500 hidden md:inline">/</span>
-            <span className="text-purple-300 font-medium truncate max-w-[150px] sm:max-w-[240px]">
+            <span className="text-slate-400 hidden md:inline">/</span>
+            <span className="text-purple-700 font-semibold truncate max-w-[150px] sm:max-w-[240px]">
               {module.title}
             </span>
           </div>
@@ -275,7 +275,7 @@ export default function StudentLessonReaderPage() {
         {/* Right Nav Action: Outline Toggle for Mobile */}
         <div className="flex items-center gap-3">
           {courseProgress && (
-            <span className="text-xs font-semibold text-purple-300 hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+            <span className="text-xs font-bold text-purple-700 hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/80">
               {courseProgress.completed_lessons}/{courseProgress.total_lessons} completed ({courseProgress.progress_percentage}%)
             </span>
           )}
@@ -283,10 +283,10 @@ export default function StudentLessonReaderPage() {
           <button
             type="button"
             onClick={() => setMobileDrawerOpen(true)}
-            className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition-all border border-white/10"
+            className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all border border-slate-200"
             aria-label="Open course outline drawer"
           >
-            <List className="w-4 h-4 text-purple-400" />
+            <List className="w-4 h-4 text-purple-600" />
             <span>Outline</span>
           </button>
         </div>
@@ -298,20 +298,20 @@ export default function StudentLessonReaderPage() {
         <main className="flex-1 min-w-0 max-w-4xl">
           {/* Module & Lesson Label */}
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-md border border-purple-500/20">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-200/80">
               Module {module.position} · Lesson {lesson.position}
             </span>
           </div>
 
           {/* Page H1: Single Authoritative Top Heading */}
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3">
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight mb-3">
             {lesson.title}
           </h1>
 
           {/* Estimated duration */}
           {lesson.estimated_duration_minutes && (
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 font-medium mb-8 pb-4 border-b border-white/10">
-              <Clock className="w-4 h-4 text-slate-500" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 font-medium mb-8 pb-4 border-b border-slate-200/80">
+              <Clock className="w-4 h-4 text-slate-400" />
               <span>{lesson.estimated_duration_minutes} min read</span>
             </div>
           )}
@@ -322,18 +322,18 @@ export default function StudentLessonReaderPage() {
           </div>
 
           {/* ── Lesson Completion Controls (Phase 5) ── */}
-          <div className="mb-12 p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="mb-12 p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-bold text-white mb-1">
+              <h3 className="text-sm font-bold text-slate-900 mb-1">
                 {isCompleted ? "Lesson Completed" : "Ready to mark complete?"}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 {isCompleted
                   ? "You have completed this lesson. Progress is saved to your account."
                   : "Mark this lesson complete to track your overall course progress."}
               </p>
               {progressError && (
-                <p className="text-xs text-rose-400 mt-2 font-medium">
+                <p className="text-xs text-rose-600 mt-2 font-medium">
                   {progressError}
                 </p>
               )}
@@ -346,11 +346,11 @@ export default function StudentLessonReaderPage() {
               aria-label={isCompleted ? "Lesson completed. Click to toggle." : "Mark lesson complete"}
               className={`shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer ${
                 isCompleted
-                  ? "bg-emerald-500/20 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300"
+                  ? "bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-300 text-emerald-700 shadow-xs"
                   : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25 hover:scale-[1.01]"
               }`}
             >
-              <CheckCircle2 className={`w-4 h-4 ${isCompleted ? "text-emerald-400" : "text-white"}`} />
+              <CheckCircle2 className={`w-4 h-4 ${isCompleted ? "text-emerald-600" : "text-white"}`} />
               <span>
                 {savingProgress
                   ? "Saving..."
@@ -364,26 +364,26 @@ export default function StudentLessonReaderPage() {
           {/* ── Bottom Sequential Navigation Bar ── */}
           <nav
             aria-label="Lesson pagination"
-            className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4"
+            className="pt-8 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4"
           >
             {/* Previous Lesson Button */}
             {prev_lesson ? (
               <Link
                 href={`/courses/${course.slug || course.id}/lessons/${prev_lesson.id}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all text-sm font-semibold group shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 transition-all text-sm font-semibold group shadow-xs"
               >
-                <ChevronLeft className="w-4 h-4 text-slate-400 group-hover:-translate-x-0.5 transition-transform" />
+                <ChevronLeft className="w-4 h-4 text-slate-400 group-hover:-translate-x-0.5 group-hover:text-purple-600 transition-all" />
                 <div className="text-left">
                   <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">
                     Previous Lesson
                   </span>
-                  <span className="truncate max-w-[200px] block">
+                  <span className="truncate max-w-[200px] block text-slate-800 group-hover:text-purple-700 transition-colors">
                     {prev_lesson.title}
                   </span>
                 </div>
               </Link>
             ) : (
-              <div className="w-full sm:w-auto text-xs font-medium text-slate-500 py-2 sm:py-0 italic">
+              <div className="w-full sm:w-auto text-xs font-medium text-slate-400 py-2 sm:py-0 italic">
                 First lesson in course
               </div>
             )}
@@ -392,7 +392,7 @@ export default function StudentLessonReaderPage() {
             {next_lesson ? (
               <Link
                 href={`/courses/${course.slug || course.id}/lessons/${next_lesson.id}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/25 hover:scale-[1.01] group"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-md shadow-purple-600/25 hover:scale-[1.01] group"
               >
                 <div className="text-right">
                   <span className="block text-[10px] uppercase tracking-wider text-purple-200 font-bold">
@@ -412,7 +412,7 @@ export default function StudentLessonReaderPage() {
                 return moduleQuiz ? (
                   <Link
                     href={`/courses/${course.slug || course.id}/modules/${module.id}/quiz`}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/25 hover:scale-[1.01] group"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-md shadow-purple-600/25 hover:scale-[1.01] group"
                     id="lesson-quiz-cta"
                   >
                     <div className="text-right">
@@ -424,7 +424,7 @@ export default function StudentLessonReaderPage() {
                     <HelpCircle className="w-4 h-4" />
                   </Link>
                 ) : (
-                  <div className="w-full sm:w-auto text-center sm:text-right px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-purple-300">
+                  <div className="w-full sm:w-auto text-center sm:text-right px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-xs font-semibold text-purple-700">
                     Course lessons complete
                   </div>
                 );
@@ -435,16 +435,16 @@ export default function StudentLessonReaderPage() {
 
         {/* ── Desktop Course Content Sidebar ── */}
         <aside className="hidden lg:block w-80 shrink-0">
-          <div className="sticky top-24 rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl max-h-[calc(100vh-7rem)] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+          <div className="sticky top-24 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-purple-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-purple-600" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                   Course Content
                 </h3>
               </div>
               {courseProgress && (
-                <span className="text-xs font-semibold text-purple-300">
+                <span className="text-xs font-bold text-purple-700">
                   {courseProgress.completed_lessons}/{courseProgress.total_lessons}
                 </span>
               )}
@@ -458,11 +458,11 @@ export default function StudentLessonReaderPage() {
                   return (
                     <div key={m.id} className="space-y-1">
                       <div className="flex items-center justify-between px-2 mb-1">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Module {mIdx + 1}: {m.title}
                         </span>
                         {modProgress?.lessons_complete && (
-                          <span className="text-[10px] font-bold text-emerald-400">
+                          <span className="text-[10px] font-bold text-emerald-600">
                             Complete
                           </span>
                         )}
@@ -479,17 +479,17 @@ export default function StudentLessonReaderPage() {
                               href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
                               className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                                 active
-                                  ? "bg-purple-600/20 text-purple-200 border border-purple-500/40 font-bold shadow-xs"
-                                  : "text-slate-300 hover:text-white hover:bg-white/5"
+                                  ? "bg-purple-50 text-purple-700 border border-purple-200/90 font-bold shadow-2xs"
+                                  : "text-slate-700 hover:text-purple-700 hover:bg-purple-50/50 border border-transparent"
                               }`}
                             >
                               <span className="truncate pr-2">{les.title}</span>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLessonDone && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 )}
                                 {active && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
                                 )}
                               </div>
                             </Link>
@@ -499,10 +499,10 @@ export default function StudentLessonReaderPage() {
                         {m.quiz && (
                           <Link
                             href={`/courses/${course.slug || course.id}/modules/${m.id}/quiz`}
-                            className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-purple-300/80 hover:text-purple-200 hover:bg-purple-500/10 transition-all"
+                            className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:text-purple-700 hover:bg-purple-50/50 transition-all"
                           >
                             <span className="flex items-center gap-1.5 truncate pr-2">
-                              <HelpCircle className="w-3 h-3 text-purple-400 shrink-0" />
+                              <HelpCircle className="w-3 h-3 text-purple-600 shrink-0" />
                               {m.quiz.title}
                             </span>
                           </Link>
@@ -522,23 +522,23 @@ export default function StudentLessonReaderPage() {
         <div className="fixed inset-0 z-50 lg:hidden flex">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileDrawerOpen(false)}
           />
 
           {/* Drawer Body */}
-          <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-slate-900 border-l border-white/10 shadow-2xl p-6 flex flex-col z-10 overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+          <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-white border-l border-slate-200 shadow-2xl p-6 flex flex-col z-10 overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-purple-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-purple-600" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                   Course Outline
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
                 aria-label="Close outline drawer"
               >
                 <X className="w-5 h-5" />
@@ -553,11 +553,11 @@ export default function StudentLessonReaderPage() {
                   return (
                     <div key={m.id} className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">
+                        <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider block">
                           Module {mIdx + 1}: {m.title}
                         </span>
                         {modProgress?.lessons_complete && (
-                          <span className="text-[10px] font-bold text-emerald-400">
+                          <span className="text-[10px] font-bold text-emerald-600">
                             Complete
                           </span>
                         )}
@@ -574,17 +574,17 @@ export default function StudentLessonReaderPage() {
                               href={`/courses/${course.slug || course.id}/lessons/${les.id}`}
                               className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${
                                 active
-                                  ? "bg-purple-600/25 text-purple-200 border border-purple-500/40 font-bold"
-                                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                  ? "bg-purple-50 text-purple-700 border border-purple-200 font-bold"
+                                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                               }`}
                             >
                               <span className="truncate pr-2">{les.title}</span>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {isLessonDone && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 )}
                                 {active && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
                                 )}
                               </div>
                             </Link>

@@ -28,10 +28,10 @@ export function StudentLinkBlock({ content }: StudentLinkBlockProps) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 border border-purple-500/20 transition-all group font-medium text-sm sm:text-base break-all"
+        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100/80 text-purple-700 hover:text-purple-800 border border-purple-200/90 shadow-2xs transition-all group font-semibold text-sm sm:text-base break-all"
       >
         <span className="group-hover:underline underline-offset-4">{text}</span>
-        <ExternalLink className="w-4 h-4 shrink-0 text-purple-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        <ExternalLink className="w-4 h-4 shrink-0 text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
       </a>
     </div>
   );
