@@ -2326,14 +2326,42 @@ export default function AdminCoursesCMS() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Thumbnail URL</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-300 font-semibold">
+                      Course Hero Graphic / Thumbnail URL
+                    </label>
+                    <span className="text-[11px] text-purple-400 font-medium">Hero Visual</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mb-2">
+                    Enter an image URL for the course hero section. If left blank, the student course view will render the interactive 3D code laptop graphic.
+                  </p>
                   <input
                     type="url"
                     value={courseForm.thumbnail_url}
                     onChange={(e) => setCourseForm({ ...courseForm, thumbnail_url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder="https://example.com/course-hero-graphic.png"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-hidden focus:border-purple-500 font-mono text-[11px]"
                   />
+                  {courseForm.thumbnail_url.trim() && (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center gap-3">
+                      <img
+                        src={courseForm.thumbnail_url.trim()}
+                        alt="Hero Graphic Preview"
+                        className="w-16 h-11 object-cover rounded-lg border border-white/10 shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <span className="text-xs font-semibold text-slate-200 block truncate">
+                          Hero Graphic Live Preview
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-medium block">
+                          Will display in student hero section
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
