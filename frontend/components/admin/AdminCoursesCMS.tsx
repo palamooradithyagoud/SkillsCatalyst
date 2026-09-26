@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   BookOpen,
   Plus,
@@ -88,6 +88,7 @@ import {
   updateAdminOption,
   deleteAdminOption,
   reorderAdminOptions,
+  uploadAdminCourseHeroImage,
 } from "@/lib/api/courses";
 import { LessonBlockEditor } from "./lesson-editor";
 
@@ -130,6 +131,9 @@ export default function AdminCoursesCMS() {
   const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
   const [courseFormSubmitting, setCourseFormSubmitting] = useState(false);
+  const courseHeroFileRef = useRef<HTMLInputElement>(null);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [courseForm, setCourseForm] = useState<{
     title: string;
     slug: string;
@@ -455,6 +459,8 @@ export default function AdminCoursesCMS() {
 
   // ── Course Handlers ──────────────────────────────────────────────────────────
   const handleOpenCreateCourse = () => {
+    setHeroImageError(null);
+    setUploadingHeroImage(false);
     setCourseForm({
       title: "",
       slug: "",
@@ -469,6 +475,8 @@ export default function AdminCoursesCMS() {
   };
 
   const handleOpenEditCourse = (course: CourseItem | CourseDetail) => {
+    setHeroImageError(null);
+    setUploadingHeroImage(false);
     setCourseForm({
       title: course.title,
       slug: course.slug,
@@ -480,6 +488,34 @@ export default function AdminCoursesCMS() {
       thumbnail_url: course.thumbnail_url || "",
     });
     setIsEditCourseOpen(true);
+  };
+
+  const handleUploadCourseHeroFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setHeroImageError("Image exceeds 10MB limit.");
+      return;
+    }
+
+    setUploadingHeroImage(true);
+    setHeroImageError(null);
+    try {
+      const res = await uploadAdminCourseHeroImage(file);
+      setCourseForm((prev) => ({
+        ...prev,
+        thumbnail_url: res.thumbnail_url || res.url,
+      }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to upload image.";
+      setHeroImageError(msg);
+    } finally {
+      setUploadingHeroImage(false);
+      if (e.target) {
+        e.target.value = "";
+      }
+    }
   };
 
   const handleCreateCourseSubmit = async (e: React.FormEvent) => {
@@ -2325,41 +2361,98 @@ export default function AdminCoursesCMS() {
                   />
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-slate-300 font-semibold">
-                      Course Hero Graphic / Thumbnail URL
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-slate-300 font-semibold text-xs">
+                      Course Hero Graphic / Thumbnail
                     </label>
                     <span className="text-[11px] text-purple-400 font-medium">Hero Visual</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mb-2">
-                    Enter an image URL for the course hero section. If left blank, the student course view will render the interactive 3D code laptop graphic.
+                  <p className="text-[11px] text-slate-400">
+                    Upload an image (PNG, JPG, WebP) directly from your laptop or enter an image URL. If left blank, the student course view will render the interactive 3D code laptop graphic.
                   </p>
-                  <input
-                    type="url"
-                    value={courseForm.thumbnail_url}
-                    onChange={(e) => setCourseForm({ ...courseForm, thumbnail_url: e.target.value })}
-                    placeholder="https://example.com/course-hero-graphic.png"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-hidden focus:border-purple-500 font-mono text-[11px]"
-                  />
-                  {courseForm.thumbnail_url.trim() && (
-                    <div className="mt-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center gap-3">
-                      <img
-                        src={courseForm.thumbnail_url.trim()}
-                        alt="Hero Graphic Preview"
-                        className="w-16 h-11 object-cover rounded-lg border border-white/10 shrink-0"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
+
+                  <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        ref={courseHeroFileRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleUploadCourseHeroFile}
+                        disabled={uploadingHeroImage}
                       />
-                      <div className="min-w-0">
-                        <span className="text-xs font-semibold text-slate-200 block truncate">
-                          Hero Graphic Live Preview
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-medium block">
-                          Will display in student hero section
-                        </span>
+                      <button
+                        type="button"
+                        onClick={() => courseHeroFileRef.current?.click()}
+                        disabled={uploadingHeroImage}
+                        className="px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 hover:border-purple-500/60 text-purple-200 text-xs font-semibold inline-flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        {uploadingHeroImage ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            <span>Uploading PNG...</span>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-4 h-4 text-purple-400" />
+                            <span>Upload PNG from Laptop</span>
+                          </>
+                        )}
+                      </button>
+
+                      <span className="text-slate-500 text-xs text-center sm:text-left self-center font-medium">
+                        or paste URL:
+                      </span>
+
+                      <input
+                        type="url"
+                        value={courseForm.thumbnail_url}
+                        onChange={(e) => {
+                          setCourseForm({ ...courseForm, thumbnail_url: e.target.value });
+                          if (heroImageError) setHeroImageError(null);
+                        }}
+                        placeholder="https://example.com/course-hero-graphic.png or upload directly"
+                        className="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-hidden focus:border-purple-500 font-mono text-[11px]"
+                      />
+                    </div>
+
+                    {heroImageError && (
+                      <p className="text-[11px] text-rose-400 flex items-center gap-1.5 animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{heroImageError}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {courseForm.thumbnail_url.trim() && (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={courseForm.thumbnail_url.trim()}
+                          alt="Hero Graphic Preview"
+                          className="w-16 h-11 object-cover rounded-lg border border-white/10 shrink-0 bg-slate-900"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <span className="text-xs font-semibold text-slate-200 block truncate">
+                            Hero Graphic Live Preview
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-medium block">
+                            Active for student course hero section
+                          </span>
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setCourseForm({ ...courseForm, thumbnail_url: "" })}
+                        className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition-colors cursor-pointer"
+                        title="Remove graphic"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>

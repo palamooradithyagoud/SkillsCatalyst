@@ -542,6 +542,28 @@ export async function fetchAdminLessonMedia(
   return res.json();
 }
 
+export async function uploadAdminCourseHeroImage(
+  file: File
+): Promise<{ success: boolean; thumbnail_url: string; url: string }> {
+  const headers = await getAuthHeaders();
+  delete headers["Content-Type"];
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await apiFetch(`${API_BASE}/api/admin/courses/upload-hero`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+    throw new Error(err.detail || err.message || `Failed to upload course image: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 // ── Student Course Experience (Phase 4) ──────────────────────────────────────
 
 export async function fetchStudentCourses(params?: {

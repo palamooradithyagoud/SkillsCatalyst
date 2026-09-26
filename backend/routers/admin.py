@@ -155,6 +155,7 @@ from backend.services.course_service import (
     reorder_quiz_options,
     get_lesson_content,
     save_lesson_content,
+    upload_course_hero_image,
 )
 from backend.services.course_media_service import (
     upload_lesson_media,
@@ -1046,6 +1047,24 @@ def update_admin_course_endpoint(
     """Partially updates a course record."""
     updated = update_course(course_id=course_id, data=payload, user_id=admin["user_id"])
     return CourseResponse(**updated)
+
+
+@router.post("/courses/upload-hero", status_code=status.HTTP_200_OK)
+@router.post("/courses/upload-thumbnail", status_code=status.HTTP_200_OK)
+async def upload_admin_course_hero_endpoint(
+    file: UploadFile = File(..., description="Course hero / thumbnail image file (PNG, JPG, WebP, GIF, max 10MB)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Dict[str, Any]:
+    """
+    Uploads a course hero graphic or thumbnail image directly from admin's device.
+    Validates MIME type, extension, size (up to 10MB), and image signature.
+    """
+    public_url = await upload_course_hero_image(file=file, user_id=admin["user_id"])
+    return {
+        "success": True,
+        "thumbnail_url": public_url,
+        "url": public_url,
+    }
 
 
 @router.delete("/courses/{course_id}", status_code=status.HTTP_200_OK)

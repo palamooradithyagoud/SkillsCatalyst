@@ -537,6 +537,31 @@ class TestCourseSystemFoundation(unittest.TestCase):
         resp = client.post("/api/admin/courses", json={"title": "Student Write"})
         self.assertEqual(resp.status_code, 403)
 
+    # ── 7. COURSE HERO GRAPHIC UPLOAD ─────────────────────────────────────────
+
+    @patch("backend.services.course_service.get_supabase")
+    def test_upload_course_hero_png_success(self, mock_sb):
+        mock_client = MagicMock()
+        mock_sb.return_value = mock_client
+        mock_storage = MagicMock()
+        mock_client.storage.from_.return_value = mock_storage
+        mock_storage.get_public_url.return_value = "https://mock-supabase.co/storage/v1/object/public/course-hero-graphics/course_hero_test.png"
+
+        valid_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+
+        files = {"file": ("hero.png", valid_png, "image/png")}
+        resp = client.post("/api/admin/courses/upload-hero", files=files)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["success"])
+        self.assertIn("course_hero_test.png", data["thumbnail_url"])
+
+    def test_upload_course_hero_invalid_extension_rejected(self):
+        files = {"file": ("malicious.sh", b"#!/bin/bash\necho bad", "text/plain")}
+        resp = client.post("/api/admin/courses/upload-hero", files=files)
+        self.assertEqual(resp.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
+
