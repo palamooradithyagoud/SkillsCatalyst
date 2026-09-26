@@ -28,7 +28,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 : isAdminPage
                 ? "bg-[#0B0D17] text-white"
                 : isCourseDetailPage
-                ? "bg-slate-950 text-white"
+                ? "bg-[#F8FAFC] text-slate-900"
                 : "bg-white text-[#18191F]"
             }`}
           >

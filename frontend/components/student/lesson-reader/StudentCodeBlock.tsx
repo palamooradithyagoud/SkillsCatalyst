@@ -26,12 +26,12 @@ export function StudentCodeBlock({ content }: StudentCodeBlockProps) {
   };
 
   return (
-    <div className="my-6 rounded-2xl border border-white/10 bg-slate-950 shadow-xl shadow-black/40 overflow-hidden">
+    <div className="my-6 rounded-2xl border border-slate-200/90 bg-[#070a16] shadow-sm overflow-hidden">
       {/* Code Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/80 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0f1428] border-b border-white/10">
         <div className="flex items-center gap-2">
           <Code2 className="w-4 h-4 text-purple-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+          <span className="text-xs font-bold uppercase tracking-wider text-purple-300 font-mono">
             {language}
           </span>
         </div>
@@ -43,7 +43,7 @@ export function StudentCodeBlock({ content }: StudentCodeBlockProps) {
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
             copied
               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-              : "bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 hover:text-white"
+              : "bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15 hover:text-white cursor-pointer"
           }`}
         >
           {copied ? (

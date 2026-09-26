@@ -13,7 +13,7 @@ class CertificateTemplateCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=100, description="Template display name")
     description: Optional[str] = Field(None, max_length=500, description="Optional design notes or description")
     background_media_url: str = Field(..., min_length=5, description="Storage public URL or SVG data URL")
-    design_theme: str = Field("professional_blue", description="Theme identifier (e.g. professional_blue, modern_gold, technical_dark)")
+    design_theme: str = Field("skillscatalyst_official", description="Theme identifier (e.g. skillscatalyst_official, professional_blue, modern_gold, technical_dark)")
     is_active: bool = Field(True, description="Whether this template is available for course assignment")
 
 

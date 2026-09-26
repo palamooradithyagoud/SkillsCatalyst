@@ -10,27 +10,27 @@ interface StudentCalloutBlockProps {
 
 const CALLOUT_STYLES = {
   note: {
-    container: "bg-blue-950/20 border-blue-500/30 text-blue-200",
-    icon: <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />,
-    badge: "text-blue-300",
+    container: "bg-blue-50/80 border-blue-200/90 text-blue-950 shadow-2xs",
+    icon: <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />,
+    badge: "text-blue-800",
     titleDefault: "Note",
   },
   tip: {
-    container: "bg-emerald-950/20 border-emerald-500/30 text-emerald-200",
-    icon: <Lightbulb className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />,
-    badge: "text-emerald-300",
+    container: "bg-emerald-50/80 border-emerald-200/90 text-emerald-950 shadow-2xs",
+    icon: <Lightbulb className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />,
+    badge: "text-emerald-800",
     titleDefault: "Pro Tip",
   },
   warning: {
-    container: "bg-amber-950/20 border-amber-500/30 text-amber-200",
-    icon: <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />,
-    badge: "text-amber-300",
+    container: "bg-amber-50/80 border-amber-200/90 text-amber-950 shadow-2xs",
+    icon: <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />,
+    badge: "text-amber-800",
     titleDefault: "Warning",
   },
   important: {
-    container: "bg-rose-950/20 border-rose-500/30 text-rose-200",
-    icon: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />,
-    badge: "text-rose-300",
+    container: "bg-rose-50/80 border-rose-200/90 text-rose-950 shadow-2xs",
+    icon: <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />,
+    badge: "text-rose-800",
     titleDefault: "Important",
   },
 };
@@ -43,17 +43,17 @@ export function StudentCalloutBlock({ content }: StudentCalloutBlockProps) {
 
   return (
     <aside
-      className={`my-6 rounded-2xl border p-4 sm:p-5 flex items-start gap-3.5 shadow-md ${style.container}`}
+      className={`my-6 rounded-2xl border p-4 sm:p-5 flex items-start gap-3.5 ${style.container}`}
       aria-label={title}
     >
       {style.icon}
       <div className="min-w-0 flex-1">
         {title && (
-          <h4 className={`text-sm font-bold uppercase tracking-wider mb-1.5 ${style.badge}`}>
+          <h4 className={`text-xs font-black uppercase tracking-wider mb-1.5 ${style.badge}`}>
             {title}
           </h4>
         )}
-        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-line font-normal text-slate-200">
+        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-line font-normal text-slate-700">
           {text}
         </p>
       </div>

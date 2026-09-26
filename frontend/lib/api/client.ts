@@ -1,7 +1,11 @@
 import { supabase } from "@/lib/supabase";
 
 export function getApiBaseUrl(): string {
-  let url = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").trim().replace(/\/+$/, "");
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "").trim();
+  if (!raw) {
+    return "http://localhost:8000";
+  }
+  let url = raw.replace(/\/+$/, "");
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     url = `https://${url}`;
   }

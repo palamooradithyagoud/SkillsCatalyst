@@ -22,11 +22,11 @@ export function StudentImageBlock({ content }: StudentImageBlockProps) {
 
   return (
     <figure className="my-6 max-w-3xl mx-auto">
-      <div className="relative w-full rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden shadow-lg shadow-black/20">
+      <div className="relative w-full rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-xs">
         {hasError ? (
-          <div className="flex flex-col items-center justify-center p-10 text-center text-slate-400 min-h-[220px]">
-            <ImageOff className="w-10 h-10 mb-3 text-slate-500" />
-            <p className="text-sm font-semibold text-slate-300">Image unavailable</p>
+          <div className="flex flex-col items-center justify-center p-10 text-center text-slate-500 min-h-[220px]">
+            <ImageOff className="w-10 h-10 mb-3 text-slate-400" />
+            <p className="text-sm font-semibold text-slate-800">Image unavailable</p>
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
               The image could not be loaded. Please check your network connection.
             </p>
@@ -43,7 +43,7 @@ export function StudentImageBlock({ content }: StudentImageBlockProps) {
       </div>
 
       {caption && !hasError && (
-        <figcaption className="text-center text-xs sm:text-sm text-slate-400 italic mt-2.5 px-4">
+        <figcaption className="text-center text-xs sm:text-sm text-slate-500 italic mt-2.5 px-4">
           {caption}
         </figcaption>
       )}

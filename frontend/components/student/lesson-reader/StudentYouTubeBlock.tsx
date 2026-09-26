@@ -19,7 +19,7 @@ export function StudentYouTubeBlock({ content }: StudentYouTubeBlockProps) {
 
   return (
     <div className="my-6 max-w-3xl mx-auto">
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-xl shadow-black/40">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200/90 bg-black shadow-md">
         <iframe
           src={embedUrl}
           title="Course YouTube video player"

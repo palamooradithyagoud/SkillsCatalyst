@@ -17,9 +17,9 @@ export function StudentListBlock({ content }: StudentListBlockProps) {
 
   if (isNumbered) {
     return (
-      <ol className="my-5 list-decimal pl-6 space-y-2.5 text-slate-300 text-base sm:text-[17px] leading-relaxed">
+      <ol className="my-5 list-decimal pl-6 space-y-2.5 text-slate-700 text-base sm:text-[17px] leading-relaxed">
         {items.map((item, idx) => (
-          <li key={idx} className="pl-1 text-slate-200">
+          <li key={idx} className="pl-1 text-slate-800">
             {item}
           </li>
         ))}
@@ -28,9 +28,9 @@ export function StudentListBlock({ content }: StudentListBlockProps) {
   }
 
   return (
-    <ul className="my-5 list-disc pl-6 space-y-2.5 text-slate-300 text-base sm:text-[17px] leading-relaxed">
+    <ul className="my-5 list-disc pl-6 space-y-2.5 text-slate-700 text-base sm:text-[17px] leading-relaxed">
       {items.map((item, idx) => (
-        <li key={idx} className="pl-1 text-slate-200 marker:text-purple-400">
+        <li key={idx} className="pl-1 text-slate-800 marker:text-purple-600">
           {item}
         </li>
       ))}
