@@ -647,6 +647,15 @@ def publish_course(course_id: str, user_id: str) -> Dict[str, Any]:
     if not res.data:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to publish course.")
 
+    # Automatically set any DRAFT module quizzes to PUBLISHED when course is published
+    m_res = sb.from_("course_modules").select("id").eq("course_id", course_id).execute()
+    module_ids = [str(m["id"]) for m in (m_res.data or [])]
+    if module_ids:
+        sb.from_("course_quizzes").update({
+            "status": "PUBLISHED",
+            "updated_at": now_iso,
+        }).in_("module_id", module_ids).eq("status", "DRAFT").execute()
+
     log_course_audit(
         action="course_published",
         entity_type="course",
@@ -1122,11 +1131,22 @@ def create_course_quiz(module_id: str, data: CourseQuizCreate, user_id: str) -> 
             detail="A quiz already exists for this module. A module cannot have more than one quiz."
         )
 
+    quiz_status = data.status
+    if not quiz_status:
+        # Check if parent course is already PUBLISHED
+        m_check = sb.from_("course_modules").select("course_id").eq("id", module_id).limit(1).execute()
+        if m_check.data:
+            c_check = sb.from_("courses").select("status").eq("id", m_check.data[0]["course_id"]).limit(1).execute()
+            if c_check.data and c_check.data[0].get("status") == CourseStatus.PUBLISHED.value:
+                quiz_status = "PUBLISHED"
+    if not quiz_status:
+        quiz_status = "DRAFT"
+
     payload = {
         "module_id": module_id,
         "title": data.title.strip(),
         "description": data.description,
-        "status": data.status or "DRAFT",
+        "status": quiz_status,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
