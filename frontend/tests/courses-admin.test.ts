@@ -26,6 +26,7 @@ describe("Course System (Phase 1) - Frontend API & Types Integrity", () => {
     assert.strictEqual(FacadeAPI.publishAdminCourse, CoursesAPI.publishAdminCourse);
     assert.strictEqual(FacadeAPI.unpublishAdminCourse, CoursesAPI.unpublishAdminCourse);
     assert.strictEqual(FacadeAPI.archiveAdminCourse, CoursesAPI.archiveAdminCourse);
+    assert.strictEqual(FacadeAPI.uploadAdminCourseHeroImage, CoursesAPI.uploadAdminCourseHeroImage);
 
     // Module APIs
     assert.strictEqual(FacadeAPI.createAdminModule, CoursesAPI.createAdminModule);

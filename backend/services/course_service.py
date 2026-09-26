@@ -5,12 +5,16 @@ Manages: Courses, Modules, Lessons (Metadata Only), Quizzes, Questions, Options,
 Server-Side Publication Validation, and Structured Administrative Audit Logging.
 """
 
+import os
+import uuid
 import re
 import math
 import logging
+import base64
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 
 from backend.services.supabase_service import get_supabase
 from backend.models.course import (
@@ -1758,3 +1762,154 @@ def save_lesson_content(
         "created_at": _format_datetime(saved_row.get("created_at")),
         "updated_at": _format_datetime(saved_row.get("updated_at")),
     }
+
+
+# ── COURSE HERO / THUMBNAIL IMAGE UPLOAD ───────────────────────────────────────
+
+ALLOWED_COURSE_HERO_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+ALLOWED_COURSE_HERO_MIMES = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+}
+MAX_COURSE_HERO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+async def upload_course_hero_image(file: UploadFile, user_id: str) -> str:
+    """
+    Validates and stores a course hero / thumbnail graphic:
+    - Validates file extension (.png, .jpg, .jpeg, .webp, .gif)
+    - Validates MIME content type
+    - Validates 10MB size limit
+    - Validates magic bytes / binary signature
+    - Uploads to Supabase Storage 'course-hero-graphics' or 'course-lesson-media' bucket
+    - Falls back to local static directory or base64 data URI if bucket is unavailable
+    - Returns an accessible public URL
+    """
+    if not file or not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No image file provided.")
+
+    filename = file.filename
+    ext = Path(filename).suffix.lower()
+    if ext not in ALLOWED_COURSE_HERO_EXTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file extension '{ext}'. Allowed extensions: PNG, JPG, JPEG, WebP, GIF",
+        )
+
+    raw_content_type = (file.content_type or "").split(";")[0].strip().lower()
+    if raw_content_type and raw_content_type not in ALLOWED_COURSE_HERO_MIMES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid image type '{raw_content_type}'. Must be PNG, JPEG, WebP, or GIF.",
+        )
+
+    contents = await file.read()
+    if len(contents) == 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file is empty.")
+    if len(contents) > MAX_COURSE_HERO_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Image exceeds maximum allowed size of 10 MB.",
+        )
+
+    # Magic bytes verification
+    is_valid_magic = False
+    if ext == ".png" and contents.startswith(b"\x89PNG\r\n\x1a\n"):
+        is_valid_magic = True
+    elif ext in (".jpg", ".jpeg") and contents.startswith(b"\xff\xd8\xff"):
+        is_valid_magic = True
+    elif ext == ".webp" and contents[:4] == b"RIFF" and contents[8:12] == b"WEBP":
+        is_valid_magic = True
+    elif ext == ".gif" and contents.startswith((b"GIF87a", b"GIF89a")):
+        is_valid_magic = True
+
+    if not is_valid_magic:
+        try:
+            from PIL import Image
+            import io
+            img = Image.open(io.BytesIO(contents))
+            img.verify()
+            is_valid_magic = True
+        except Exception:
+            pass
+
+    if not is_valid_magic:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="File content does not match expected image format signature.",
+        )
+
+    unique_filename = f"course_hero_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}{ext}"
+    sb = get_supabase()
+
+    # Attempt Supabase Storage upload
+    if sb:
+        bucket_name = "course-hero-graphics"
+        try:
+            try:
+                sb.storage.from_(bucket_name).upload(
+                    path=unique_filename,
+                    file=contents,
+                    file_options={"content-type": raw_content_type or "image/png", "upsert": "true"},
+                )
+            except Exception as up_err:
+                if "Bucket not found" in str(up_err) or "404" in str(up_err):
+                    try:
+                        sb.storage.create_bucket(bucket_name, options={"public": True})
+                        sb.storage.from_(bucket_name).upload(
+                            path=unique_filename,
+                            file=contents,
+                            file_options={"content-type": raw_content_type or "image/png", "upsert": "true"},
+                        )
+                    except Exception:
+                        # Fall back to course-lesson-media bucket under hero/ prefix
+                        sb.storage.from_("course-lesson-media").upload(
+                            path=f"hero/{unique_filename}",
+                            file=contents,
+                            file_options={"content-type": raw_content_type or "image/png", "upsert": "true"},
+                        )
+                        unique_filename = f"hero/{unique_filename}"
+                        bucket_name = "course-lesson-media"
+                else:
+                    raise up_err
+
+            public_url = sb.storage.from_(bucket_name).get_public_url(unique_filename)
+            if public_url:
+                log_course_audit(
+                    action="course_hero_uploaded",
+                    entity_type="course_hero",
+                    entity_id=unique_filename,
+                    user_id=user_id,
+                    details={"public_url": public_url, "size_bytes": len(contents)},
+                )
+                return public_url
+        except Exception as e:
+            logger.warning(f"Supabase Storage course hero upload note: {e}. Utilizing fallback.")
+
+    # Fallback to local static directory inside frontend/public/images/courses/uploaded
+    try:
+        workspace_root = Path(__file__).resolve().parent.parent.parent
+        upload_dir = workspace_root / "frontend" / "public" / "images" / "courses" / "uploaded"
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        dest_file = upload_dir / Path(unique_filename).name
+        with open(dest_file, "wb") as f:
+            f.write(contents)
+
+        local_url = f"/images/courses/uploaded/{Path(unique_filename).name}"
+        log_course_audit(
+            action="course_hero_uploaded_local",
+            entity_type="course_hero",
+            entity_id=Path(unique_filename).name,
+            user_id=user_id,
+            details={"url": local_url, "size_bytes": len(contents)},
+        )
+        return local_url
+    except Exception as e:
+        logger.warning(f"Static upload fallback note: {e}. Generating base64 data URI.")
+        b64_data = base64.b64encode(contents).decode("utf-8")
+        mime = raw_content_type or "image/png"
+        return f"data:{mime};base64,{b64_data}"
+
