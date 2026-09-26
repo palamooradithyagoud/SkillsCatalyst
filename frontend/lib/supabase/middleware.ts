@@ -44,6 +44,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/support") ||
+    pathname.startsWith("/verify") ||
+    pathname.startsWith("/certificate-preview") ||
     isAuthPage ||
     isCallbackPage ||
     pathname.startsWith("/api/");
