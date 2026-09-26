@@ -328,7 +328,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isLoginPage = pathname === "/login";
     const isLandingPage = pathname === "/";
     const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
-    const isPublicPage = isLoginPage || isLandingPage;
+    const isVerifyPage = pathname.startsWith("/verify");
+    const isPreviewPage = pathname.startsWith("/certificate-preview");
+    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage;
 
     if (!session && !isPublicPage) {
       router.replace("/login");

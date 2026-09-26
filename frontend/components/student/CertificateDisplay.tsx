@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,6 +29,9 @@ interface CertificateDisplayProps {
   isPreview?: boolean;
 }
 
+const CANONICAL_WIDTH = 1120;
+const CANONICAL_HEIGHT = 630; // Standard 16:9 Landscape Aspect Ratio
+
 /**
  * Format date string into "DD MONTH YYYY" (e.g., "26 SEPTEMBER 2026")
  */
@@ -54,15 +57,36 @@ export default function CertificateDisplay({
   issuedDate,
   certificateNumber,
   verificationUrl,
-  courseDuration = "12 Hours",
+  courseDuration = "1 Hour",
   backgroundMediaUrl,
   isPreview = false,
 }: CertificateDisplayProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const certContainerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
 
   // Background image: defaults to our high-resolution custom template background
   const bgImage = backgroundMediaUrl || "/images/certificate_template_bg.jpg";
+
+  // Dynamically scale the canonical 1120x630 certificate canvas to fit the available container width
+  useEffect(() => {
+    function updateScale() {
+      if (!wrapperRef.current) return;
+      const availableWidth = wrapperRef.current.clientWidth;
+      if (availableWidth > 0) {
+        const targetScale = Math.min(1, Math.max(0.1, availableWidth / CANONICAL_WIDTH));
+        setScale(targetScale);
+      }
+    }
+    updateScale();
+    const timer = setTimeout(updateScale, 50);
+    window.addEventListener("resize", updateScale);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateScale);
+    };
+  }, []);
 
   const handleDownloadPdf = async () => {
     if (!certContainerRef.current || isExporting) return;
@@ -72,38 +96,74 @@ export default function CertificateDisplay({
       const certEl = certContainerRef.current;
 
       let imgData: string;
-      let imgWidth: number;
-      let imgHeight: number;
-
       try {
         const html2canvasPro = (await import("html2canvas-pro")).default;
         const canvas = await html2canvasPro(certEl, {
-          scale: 2.5,
+          scale: 2.5, // 2.5x retina clarity (2800 x 1575)
           useCORS: true,
           logging: false,
           backgroundColor: "#FFFFFF",
+          width: CANONICAL_WIDTH,
+          height: CANONICAL_HEIGHT,
+          windowWidth: CANONICAL_WIDTH,
+          windowHeight: CANONICAL_HEIGHT,
+          onclone: (clonedDoc) => {
+            const clonedCert = clonedDoc.getElementById("certificate-render-viewport");
+            if (clonedCert) {
+              clonedCert.style.transform = "none";
+              clonedCert.style.width = `${CANONICAL_WIDTH}px`;
+              clonedCert.style.height = `${CANONICAL_HEIGHT}px`;
+              clonedCert.style.minWidth = `${CANONICAL_WIDTH}px`;
+              clonedCert.style.maxWidth = `${CANONICAL_WIDTH}px`;
+              clonedCert.style.minHeight = `${CANONICAL_HEIGHT}px`;
+              clonedCert.style.maxHeight = `${CANONICAL_HEIGHT}px`;
+              clonedCert.style.borderRadius = "24px";
+              clonedCert.style.boxShadow = "none";
+
+              // Expand any clipped parent containers in the cloned tree
+              let parent = clonedCert.parentElement;
+              while (parent && parent !== clonedDoc.body) {
+                parent.style.width = `${CANONICAL_WIDTH}px`;
+                parent.style.height = `${CANONICAL_HEIGHT}px`;
+                parent.style.minWidth = `${CANONICAL_WIDTH}px`;
+                parent.style.minHeight = `${CANONICAL_HEIGHT}px`;
+                parent.style.overflow = "visible";
+                parent = parent.parentElement;
+              }
+            }
+          },
         });
         imgData = canvas.toDataURL("image/png");
-        imgWidth = canvas.width;
-        imgHeight = canvas.height;
       } catch {
         const { toPng } = await import("html-to-image");
         imgData = await toPng(certEl, {
           pixelRatio: 2.5,
           backgroundColor: "#FFFFFF",
           cacheBust: true,
+          width: CANONICAL_WIDTH,
+          height: CANONICAL_HEIGHT,
+          canvasWidth: CANONICAL_WIDTH,
+          canvasHeight: CANONICAL_HEIGHT,
+          style: {
+            transform: "none",
+            width: `${CANONICAL_WIDTH}px`,
+            height: `${CANONICAL_HEIGHT}px`,
+            minWidth: `${CANONICAL_WIDTH}px`,
+            maxWidth: `${CANONICAL_WIDTH}px`,
+            minHeight: `${CANONICAL_HEIGHT}px`,
+            maxHeight: `${CANONICAL_HEIGHT}px`,
+          },
         });
-        imgWidth = certEl.offsetWidth * 2.5;
-        imgHeight = certEl.offsetHeight * 2.5;
       }
 
+      // Canonical 16:9 Landscape PDF
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
-        format: [imgWidth, imgHeight],
+        format: [CANONICAL_WIDTH, CANONICAL_HEIGHT],
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.addImage(imgData, "PNG", 0, 0, CANONICAL_WIDTH, CANONICAL_HEIGHT, undefined, "FAST");
       const safeCourse = (courseTitle || "Course").replace(/[^a-zA-Z0-9_-]/g, "_");
       const safeName = (studentName || "Student").replace(/[^a-zA-Z0-9_-]/g, "_");
       pdf.save(`${safeCourse}_Certificate_${safeName}.pdf`);
@@ -122,6 +182,21 @@ export default function CertificateDisplay({
 
   return (
     <div className="w-full flex flex-col items-center">
+      {/* ── Print Specific Stylesheet ── */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: landscape;
+            margin: 0;
+          }
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            background: #ffffff !important;
+          }
+        }
+      `}</style>
+
       {/* ── Top Action Bar (Hidden when printing) ── */}
       {!isPreview && (
         <div className="w-full max-w-4xl flex items-center justify-between gap-3 mb-4 px-2 print:hidden">
@@ -162,183 +237,205 @@ export default function CertificateDisplay({
         </div>
       )}
 
-      {/* ── High-Quality Certificate Frame ── */}
+      {/* ── Scaled Certificate Viewport for Responsive Screens ── */}
       <div
-        ref={certContainerRef}
-        id="certificate-render-viewport"
-        className="relative w-full max-w-4xl aspect-[16/9] min-h-[520px] sm:min-h-[580px] md:min-h-[640px] rounded-2xl sm:rounded-3xl overflow-hidden p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between border border-purple-200/80 bg-white text-slate-900 shadow-2xl transition-all select-none print:border-none print:shadow-none print:rounded-none print:w-full print:h-screen print:p-8"
-        style={{
-          backgroundImage: `url('${bgImage}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
+        ref={wrapperRef}
+        className="w-full max-w-5xl flex flex-col items-center overflow-hidden my-1 sm:my-2"
       >
-        {/* ── 1. Top Header: Taglines & Official Skills Catalyst Logo ── */}
-        <header className="relative z-10 flex items-start justify-between w-full pt-1 sm:pt-2">
-          {/* Top Left Taglines */}
-          <div className="flex flex-col text-left">
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              LEARN
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              BUILD
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              GROW
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              ACCELERATE
-            </span>
-            <div className="w-5 sm:w-6 h-[1.5px] bg-purple-400 mt-1" />
-          </div>
-
-          {/* Top Center Logo */}
-          <div className="flex flex-col items-center -mt-1 sm:-mt-2">
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
-              <Image
-                src="/logo_black.png"
-                alt="Skills Catalyst Official Logo"
-                fill
-                sizes="96px"
-                className="object-contain"
-                priority
-                unoptimized
-              />
-            </div>
-          </div>
-
-          {/* Top Right Taglines */}
-          <div className="flex flex-col text-right items-end">
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              SKILLS
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              CAREERS
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              OPPORTUNITIES
-            </span>
-            <span className="text-[8px] sm:text-[9.5px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
-              COMMUNITY
-            </span>
-            <div className="w-5 sm:w-6 h-[1.5px] bg-purple-400 mt-1 ml-auto" />
-          </div>
-        </header>
-
-        {/* ── 2. Certificate Body: Typography & Dynamic Student Data ── */}
-        <main className="relative z-10 my-auto py-1 sm:py-2 flex flex-col items-center text-center px-2">
-          {/* Main Title */}
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[38px] font-black tracking-tight uppercase leading-tight">
-            <span className="text-slate-900">CERTIFICATE OF </span>
-            <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 bg-clip-text text-transparent">
-              COMPLETION
-            </span>
-          </h1>
-
-          {/* Presentation Tagline */}
-          <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-600 mt-1.5 sm:mt-2">
-            THIS CERTIFICATE IS PROUDLY PRESENTED TO
-          </p>
-
-          {/* Recipient Full Name */}
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[48px] font-black tracking-tight text-slate-900 mt-1 mb-1 sm:mt-1.5 sm:mb-1.5 drop-shadow-xs max-w-2xl break-words font-sans">
-            {studentName || "Your Name"}
-          </h2>
-
-          {/* Underline separator */}
-          <div className="w-36 sm:w-48 md:w-56 h-[1.5px] bg-purple-300 mx-auto mt-0.5 mb-1.5 sm:mt-1 sm:mb-2" />
-
-          {collegeName && (
-            <p className="text-[9.5px] sm:text-[10.5px] md:text-[11.5px] font-semibold text-slate-500 mb-1 sm:mb-1.5 max-w-xl truncate uppercase tracking-wider">
-              {collegeName}
-            </p>
-          )}
-
-          {/* Course Qualification Statement */}
-          <p className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-600 mb-1 sm:mb-1.5">
-            FOR SUCCESSFULLY COMPLETING THE COURSE
-          </p>
-
-          {/* Course Name */}
-          <h3 className="text-lg sm:text-xl md:text-2xl lg:text-[30px] font-black tracking-tight text-purple-700 drop-shadow-xs max-w-2xl break-words mb-3 sm:mb-4">
-            {courseTitle || "Course Name"}
-          </h3>
-
-          {/* Floating Stats Badges Container */}
-          <div className="inline-flex items-center justify-center gap-6 sm:gap-8 px-6 sm:px-8 py-2 sm:py-2.5 rounded-2xl bg-white/85 backdrop-blur-md border border-purple-100 shadow-xs mx-auto">
-            {/* Course Score */}
-            <div className="flex items-center gap-2.5 sm:gap-3 text-left">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-100/90 flex items-center justify-center text-purple-700 shrink-0">
-                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <span className="text-[8px] sm:text-[9.5px] font-bold uppercase tracking-wider text-slate-500 block leading-tight">
-                  Course Score
+        <div
+          style={{
+            width: `${CANONICAL_WIDTH * scale}px`,
+            height: `${CANONICAL_HEIGHT * scale}px`,
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: `${24 * scale}px`,
+            boxShadow:
+              "0 20px 45px -10px rgba(0, 0, 0, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.08)",
+          }}
+          className="transition-[width,height] duration-150 print:!w-full print:!h-full print:!overflow-visible print:!shadow-none print:!rounded-none"
+        >
+          <div
+            ref={certContainerRef}
+            id="certificate-render-viewport"
+            style={{
+              width: `${CANONICAL_WIDTH}px`,
+              height: `${CANONICAL_HEIGHT}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+              backgroundImage: `url('${bgImage}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }}
+            className="p-10 flex flex-col justify-between border border-purple-200/80 bg-white text-slate-900 select-none print:!transform-none print:!border-none print:!shadow-none print:!rounded-none print:!w-full print:!h-full print:p-8"
+          >
+            {/* ── 1. Top Header: Taglines & Official Skills Catalyst Logo ── */}
+            <header className="relative z-10 flex items-start justify-between w-full pt-2">
+              {/* Top Left Taglines */}
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  LEARN
                 </span>
-                <span className="text-sm sm:text-base md:text-lg font-black text-slate-900 leading-tight">
-                  {score}%
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  BUILD
                 </span>
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  GROW
+                </span>
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  ACCELERATE
+                </span>
+                <div className="w-6 h-[2px] bg-purple-400 mt-1" />
               </div>
-            </div>
 
-            {/* Vertical Divider */}
-            <div className="w-px h-7 sm:h-8 bg-slate-200" />
+              {/* Top Center Logo */}
+              <div className="flex flex-col items-center -mt-1">
+                <div className="relative w-20 h-20">
+                  <Image
+                    src="/logo_black.png"
+                    alt="Skills Catalyst Official Logo"
+                    fill
+                    sizes="80px"
+                    className="object-contain"
+                    priority
+                    unoptimized
+                  />
+                </div>
+              </div>
 
-            {/* Course Duration */}
-            <div className="flex items-center gap-2.5 sm:gap-3 text-left">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-100/90 flex items-center justify-center text-purple-700 shrink-0">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <span className="text-[8px] sm:text-[9.5px] font-bold uppercase tracking-wider text-slate-500 block leading-tight">
-                  Course Duration
+              {/* Top Right Taglines */}
+              <div className="flex flex-col text-right items-end">
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  SKILLS
                 </span>
-                <span className="text-sm sm:text-base md:text-lg font-black text-slate-900 leading-tight">
-                  {courseDuration}
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  CAREERS
                 </span>
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  OPPORTUNITIES
+                </span>
+                <span className="text-[10px] font-extrabold tracking-[0.22em] text-slate-600 leading-snug">
+                  COMMUNITY
+                </span>
+                <div className="w-6 h-[2px] bg-purple-400 mt-1 ml-auto" />
               </div>
-            </div>
+            </header>
+
+            {/* ── 2. Certificate Body: Typography & Dynamic Student Data ── */}
+            <main className="relative z-10 my-auto py-2 flex flex-col items-center text-center px-4">
+              {/* Main Title */}
+              <h1 className="text-[34px] font-black tracking-tight uppercase leading-tight">
+                <span className="text-slate-900">CERTIFICATE OF </span>
+                <span className="text-purple-700">
+                  COMPLETION
+                </span>
+              </h1>
+
+              {/* Presentation Tagline */}
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-600 mt-2">
+                THIS CERTIFICATE IS PROUDLY PRESENTED TO
+              </p>
+
+              {/* Recipient Full Name */}
+              <h2 className="text-[40px] font-black tracking-tight text-slate-900 mt-1 mb-1 drop-shadow-xs max-w-4xl break-words font-sans">
+                {studentName || "Your Name"}
+              </h2>
+
+              {/* Underline separator */}
+              <div className="w-56 h-[2px] bg-purple-300 mx-auto mt-0.5 mb-1.5" />
+
+              {collegeName && (
+                <p className="text-[12px] font-semibold text-slate-500 mb-1 max-w-2xl break-words uppercase tracking-wider">
+                  {collegeName}
+                </p>
+              )}
+
+              {/* Course Qualification Statement */}
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-slate-600 mb-1">
+                FOR SUCCESSFULLY COMPLETING THE COURSE
+              </p>
+
+              {/* Course Name */}
+              <h3 className="text-[26px] font-black tracking-tight text-purple-700 drop-shadow-xs max-w-3xl break-words mb-3.5">
+                {courseTitle || "Course Name"}
+              </h3>
+
+              {/* Floating Stats Badges Container */}
+              <div className="inline-flex items-center justify-center gap-8 px-8 py-2 rounded-2xl bg-white/85 backdrop-blur-md border border-purple-100 shadow-xs mx-auto">
+                {/* Course Score */}
+                <div className="flex items-center gap-2.5 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100/90 flex items-center justify-center text-purple-700 shrink-0">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block leading-tight">
+                      Course Score
+                    </span>
+                    <span className="text-base font-black text-slate-900 leading-tight">
+                      {score}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px h-7 bg-slate-200" />
+
+                {/* Course Duration */}
+                <div className="flex items-center gap-2.5 text-left">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100/90 flex items-center justify-center text-purple-700 shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block leading-tight">
+                      Course Duration
+                    </span>
+                    <span className="text-base font-black text-slate-900 leading-tight">
+                      {courseDuration}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </main>
+
+            {/* ── 3. Footer: Certificate ID, Date & Issuer Signature ── */}
+            <footer className="relative z-10 w-full pt-1">
+              {/* Subtle top divider line */}
+              <div className="w-full h-px bg-slate-200/90 mb-2.5" />
+
+              <div className="grid grid-cols-3 items-center w-full text-xs">
+                {/* Left: Certificate ID */}
+                <div className="text-left">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 block">
+                    CERTIFICATE ID
+                  </span>
+                  <span className="text-sm font-extrabold text-slate-900 font-mono tracking-wider block">
+                    {certificateNumber || "SC-XXXXXXXX"}
+                  </span>
+                </div>
+
+                {/* Center: Completed On Date */}
+                <div className="text-center">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 block">
+                    COMPLETED ON
+                  </span>
+                  <span className="text-sm font-extrabold text-slate-900 tracking-wider uppercase block">
+                    {formatCertificateDate(issuedDate)}
+                  </span>
+                </div>
+
+                {/* Right: SkillsCatalyst Authorized */}
+                <div className="text-right">
+                  <span className="text-sm font-black text-slate-900 tracking-tight block">
+                    SkillsCatalyst
+                  </span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-slate-500 block">
+                    AUTHORIZED CERTIFICATION
+                  </span>
+                </div>
+              </div>
+            </footer>
           </div>
-        </main>
-
-        {/* ── 3. Footer: Certificate ID, Date & Issuer Signature ── */}
-        <footer className="relative z-10 w-full pt-2">
-          {/* Subtle top divider line */}
-          <div className="w-full h-px bg-slate-200/90 mb-2.5 sm:mb-3" />
-
-          <div className="grid grid-cols-3 items-center w-full text-[10px] sm:text-xs">
-            {/* Left: Certificate ID */}
-            <div className="text-left">
-              <span className="text-[8px] sm:text-[9.5px] font-bold uppercase tracking-widest text-slate-500 block">
-                CERTIFICATE ID
-              </span>
-              <span className="text-xs sm:text-sm md:text-base font-extrabold text-slate-900 font-mono tracking-wider block">
-                {certificateNumber || "SC-XXXXXXXX"}
-              </span>
-            </div>
-
-            {/* Center: Completed On Date */}
-            <div className="text-center">
-              <span className="text-[8px] sm:text-[9.5px] font-bold uppercase tracking-widest text-slate-500 block">
-                COMPLETED ON
-              </span>
-              <span className="text-xs sm:text-sm md:text-base font-extrabold text-slate-900 tracking-wider uppercase block">
-                {formatCertificateDate(issuedDate)}
-              </span>
-            </div>
-
-            {/* Right: SkillsCatalyst Authorized */}
-            <div className="text-right">
-              <span className="text-xs sm:text-sm md:text-base font-black text-slate-900 tracking-tight block">
-                SkillsCatalyst
-              </span>
-              <span className="text-[7.5px] sm:text-[8.5px] font-bold uppercase tracking-widest text-slate-500 block">
-                AUTHORIZED CERTIFICATION
-              </span>
-            </div>
-          </div>
-        </footer>
+        </div>
       </div>
 
       {/* ── Public Verification Link below certificate ── */}
