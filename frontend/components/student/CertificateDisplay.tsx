@@ -51,7 +51,6 @@ function formatCertificateDate(dateStr: string): string {
 
 export default function CertificateDisplay({
   studentName,
-  collegeName,
   courseTitle,
   score,
   issuedDate,
@@ -342,13 +341,7 @@ export default function CertificateDisplay({
               </h2>
 
               {/* Underline separator */}
-              <div className="w-56 h-[2px] bg-purple-300 mx-auto mt-0.5 mb-1.5" />
-
-              {collegeName && (
-                <p className="text-[12px] font-semibold text-slate-500 mb-1 max-w-2xl break-words uppercase tracking-wider">
-                  {collegeName}
-                </p>
-              )}
+              <div className="w-56 h-[2px] bg-purple-300 mx-auto mt-1 mb-3" />
 
               {/* Course Qualification Statement */}
               <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-slate-600 mb-1">
