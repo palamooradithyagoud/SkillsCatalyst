@@ -541,73 +541,99 @@ export default function StudentCourseDetailPage() {
                   {dynamicSkills[3] || "Architecture"}
                 </div>
 
-                {/* Perspective 3D Laptop Screen & Deck */}
-                <div
-                  className="relative z-10 w-[380px] transition-transform duration-500 hover:scale-[1.03]"
-                  style={{
-                    perspective: "1000px",
-                    transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-1deg)",
-                  }}
-                >
-                  {/* Laptop Display Lid */}
-                  <div className="w-full rounded-2xl bg-[#090b16] border-2 border-slate-700/80 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
-                    {/* Top camera bezel dot */}
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-600 mx-auto mb-2" />
-
-                    {/* Screen Viewport with Code Editor */}
-                    <div className="rounded-xl bg-[#05060D] border border-white/10 p-3.5 font-mono text-[11px] leading-relaxed text-slate-300 relative overflow-hidden h-[180px]">
-                      {/* Window Controls */}
-                      <div className="flex items-center gap-1.5 mb-3 border-b border-white/10 pb-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                        <span className="text-[10px] text-slate-500 ml-2 font-sans font-medium">
-                          {course.slug || "main"}.dev
+                {/* Perspective Graphic: Admin-Uploaded Thumbnail OR 3D Code Laptop */}
+                {course.thumbnail_url ? (
+                  <div
+                    className="relative z-10 w-[380px] rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700/80 p-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:scale-[1.03]"
+                    style={{
+                      perspective: "1000px",
+                      transform: "rotateY(-8deg) rotateX(4deg)",
+                    }}
+                  >
+                    <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-[16/10] flex items-center justify-center border border-white/10">
+                      <img
+                        src={course.thumbnail_url}
+                        alt={course.title}
+                        className="w-full h-full object-cover object-center"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[11px] font-mono text-purple-300">
+                        <span className="truncate max-w-[200px]">{course.title}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-purple-600/60 text-white font-sans text-[10px] font-bold uppercase tracking-wider">
+                          {course.category || "Official"}
                         </span>
-                      </div>
-
-                      {/* Code Syntax Highlight Lines */}
-                      <div className="space-y-1">
-                        <p className="text-purple-400">
-                          <span className="text-slate-600">1</span> &lt;!DOCTYPE html&gt;
-                        </p>
-                        <p className="text-slate-300">
-                          <span className="text-slate-600">2</span> &lt;html lang=&quot;en&quot;&gt;
-                        </p>
-                        <p className="text-indigo-300 pl-3">
-                          <span className="text-slate-600">3</span> &lt;title&gt;{course.title}&lt;/title&gt;
-                        </p>
-                        <p className="text-slate-300 pl-3">
-                          <span className="text-slate-600">4</span> &lt;body&gt;
-                        </p>
-                        <p className="text-emerald-400 pl-6">
-                          <span className="text-slate-600">5</span> &lt;h1&gt;SkillsCatalyst&lt;/h1&gt;
-                        </p>
-                        <p className="text-slate-500 pl-3">
-                          <span className="text-slate-600">6</span> &lt;/body&gt;
-                        </p>
-                        <p className="text-slate-500">
-                          <span className="text-slate-600">7</span> &lt;/html&gt;
-                        </p>
-                      </div>
-
-                      {/* 3D Floating Technology Badge on Right Side of Screen */}
-                      <div className="absolute right-3.5 top-8 w-16 h-18 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 p-0.5 shadow-2xl flex flex-col items-center justify-center transform rotate-6 border border-white/20">
-                        <div className="w-full h-full rounded-[14px] bg-gradient-to-br from-purple-500/20 to-indigo-950 flex flex-col items-center justify-center text-white">
-                          <Sparkles className="w-6 h-6 text-purple-300 mb-0.5 animate-pulse" />
-                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-200">
-                            {course.category?.slice(0, 5) || "CORE"}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   </div>
+                ) : (
+                  /* Perspective 3D Laptop Screen & Deck */
+                  <div
+                    className="relative z-10 w-[380px] transition-transform duration-500 hover:scale-[1.03]"
+                    style={{
+                      perspective: "1000px",
+                      transform: "rotateY(-10deg) rotateX(6deg) rotateZ(-1deg)",
+                    }}
+                  >
+                    {/* Laptop Display Lid */}
+                    <div className="w-full rounded-2xl bg-[#090b16] border-2 border-slate-700/80 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
+                      {/* Top camera bezel dot */}
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-600 mx-auto mb-2" />
 
-                  {/* Laptop Keyboard Deck Base */}
-                  <div className="w-[106%] -ml-[3%] h-4 rounded-b-xl bg-gradient-to-b from-slate-700 to-slate-900 border-t border-slate-600 shadow-2xl flex items-center justify-center">
-                    <div className="w-16 h-1 rounded-full bg-slate-500/50" />
+                      {/* Screen Viewport with Code Editor */}
+                      <div className="rounded-xl bg-[#05060D] border border-white/10 p-3.5 font-mono text-[11px] leading-relaxed text-slate-300 relative overflow-hidden h-[180px]">
+                        {/* Window Controls */}
+                        <div className="flex items-center gap-1.5 mb-3 border-b border-white/10 pb-2">
+                          <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                          <span className="text-[10px] text-slate-500 ml-2 font-sans font-medium">
+                            {course.slug || "main"}.dev
+                          </span>
+                        </div>
+
+                        {/* Code Syntax Highlight Lines */}
+                        <div className="space-y-1">
+                          <p className="text-purple-400">
+                            <span className="text-slate-600">1</span> &lt;!DOCTYPE html&gt;
+                          </p>
+                          <p className="text-slate-300">
+                            <span className="text-slate-600">2</span> &lt;html lang=&quot;en&quot;&gt;
+                          </p>
+                          <p className="text-indigo-300 pl-3">
+                            <span className="text-slate-600">3</span> &lt;title&gt;{course.title}&lt;/title&gt;
+                          </p>
+                          <p className="text-slate-300 pl-3">
+                            <span className="text-slate-600">4</span> &lt;body&gt;
+                          </p>
+                          <p className="text-emerald-400 pl-6">
+                            <span className="text-slate-600">5</span> &lt;h1&gt;SkillsCatalyst&lt;/h1&gt;
+                          </p>
+                          <p className="text-slate-500 pl-3">
+                            <span className="text-slate-600">6</span> &lt;/body&gt;
+                          </p>
+                          <p className="text-slate-500">
+                            <span className="text-slate-600">7</span> &lt;/html&gt;
+                          </p>
+                        </div>
+
+                        {/* 3D Floating Technology Badge on Right Side of Screen */}
+                        <div className="absolute right-3.5 top-8 w-16 h-18 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 p-0.5 shadow-2xl flex flex-col items-center justify-center transform rotate-6 border border-white/20">
+                          <div className="w-full h-full rounded-[14px] bg-gradient-to-br from-purple-500/20 to-indigo-950 flex flex-col items-center justify-center text-white">
+                            <Sparkles className="w-6 h-6 text-purple-300 mb-0.5 animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-200">
+                              {course.category?.slice(0, 5) || "CORE"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Laptop Keyboard Deck Base */}
+                    <div className="w-[106%] -ml-[3%] h-4 rounded-b-xl bg-gradient-to-b from-slate-700 to-slate-900 border-t border-slate-600 shadow-2xl flex items-center justify-center">
+                      <div className="w-16 h-1 rounded-full bg-slate-500/50" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
