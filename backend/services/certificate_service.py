@@ -584,10 +584,10 @@ def check_course_completion_and_eligibility(user_id: str, course_id_or_slug: str
     all_modules_completed = True
 
     for mid in module_ids:
-        # Check if module has a published quiz
+        # Check if module has an active quiz
         q_res = sb.from_("course_quizzes").select("id, status").eq("module_id", mid).execute()
         quizzes = q_res.data or []
-        has_quiz = len(quizzes) > 0 and quizzes[0].get("status") == "PUBLISHED"
+        has_quiz = len(quizzes) > 0 and quizzes[0].get("status") != "ARCHIVED"
 
         mp_res = (
             sb.from_("student_module_progress")
@@ -599,6 +599,10 @@ def check_course_completion_and_eligibility(user_id: str, course_id_or_slug: str
         )
         mp_row = mp_res.data[0] if (mp_res.data and len(mp_res.data) > 0) else None
 
+        # Resilient quiz detection: count any quiz associated with the module, or check if student has quiz attempt/score in progress
+        if not has_quiz and mp_row and (mp_row.get("best_score") is not None or mp_row.get("quiz_passed")):
+            has_quiz = True
+
         if has_quiz:
             if not mp_row or not mp_row.get("quiz_passed"):
                 all_quizzes_passed = False
@@ -606,6 +610,8 @@ def check_course_completion_and_eligibility(user_id: str, course_id_or_slug: str
                 quiz_scores.append(int(mp_row["best_score"]))
             else:
                 quiz_scores.append(0)
+        elif mp_row and mp_row.get("best_score") is not None:
+            quiz_scores.append(int(mp_row["best_score"]))
 
         # Check module completed
         if not mp_row or not mp_row.get("completed"):
@@ -739,7 +745,7 @@ def issue_course_certificate(user_id: str, course_id_or_slug: str) -> Dict[str, 
             detail="Please provide your full legal name before your certificate can be issued.",
         )
 
-    score = eligibility["course_score"] or 100
+    score = eligibility["course_score"] if eligibility.get("course_score") is not None else 100
     certificate_number = _generate_certificate_number()
     verification_id = _generate_verification_id()
     now_iso = datetime.now(timezone.utc).isoformat()
