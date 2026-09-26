@@ -15,19 +15,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthPage = pathname === "/login";
   const isLandingPage = pathname === "/";
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isCourseDetailPage = /^\/courses\/[^\/]+/.test(pathname);
 
-  if (isAuthPage || isLandingPage || isAdminPage) {
+  if (isAuthPage || isLandingPage || isAdminPage || isCourseDetailPage) {
     return (
       <PricingModalProvider>
         <NotificationProvider>
           <div
             className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
-              isLandingPage ? "bg-[#06070d] text-white" : isAdminPage ? "bg-[#0B0D17] text-white" : "bg-white text-[#18191F]"
+              isLandingPage
+                ? "bg-[#06070d] text-white"
+                : isAdminPage
+                ? "bg-[#0B0D17] text-white"
+                : isCourseDetailPage
+                ? "bg-slate-950 text-white"
+                : "bg-white text-[#18191F]"
             }`}
           >
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
+            <NotificationPermissionBanner />
           </div>
         </NotificationProvider>
       </PricingModalProvider>
