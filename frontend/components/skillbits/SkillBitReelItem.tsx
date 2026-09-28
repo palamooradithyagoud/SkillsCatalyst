@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
   Volume2,
@@ -379,9 +380,16 @@ export default function SkillBitReelItem({
         {/* TOP OVERLAY BAR */}
         <div className="absolute top-0 inset-x-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center justify-between z-20">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-400">
-              <Sparkles className="w-4 h-4" />
-            </span>
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden shrink-0 shadow-md border border-purple-500/30 bg-purple-950/40">
+              <Image
+                src="/images/icons/skillbits-icon-tight.png"
+                alt="SkillBits Mascot"
+                fill
+                sizes="32px"
+                className="object-contain"
+                priority
+              />
+            </div>
             <span className="text-sm font-bold tracking-tight text-white drop-shadow">
               SkillBits
             </span>
