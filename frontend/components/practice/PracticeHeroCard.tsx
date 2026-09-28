@@ -278,57 +278,66 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
             </span>
           </h1>
 
-          {/* Subtitle */}
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight">
-            Over{" "}
-            <span className="text-[#D8B4FE]">1000+ questions</span> to choose from!
+          {/* Large Side Heading */}
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#F3E8FF] tracking-tight leading-snug">
+            Think. Code. Solve. Repeat.
           </h2>
-
-          {/* Paragraph */}
-          <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed max-w-xl">
-            From basic loops to advanced algorithmic puzzles, our coding challenges will give your coding practice an upgrade!
-          </p>
 
           {/* Category Eyebrow */}
           <div className="pt-2 sm:pt-3">
             <span className="text-[11px] sm:text-xs font-black tracking-widest uppercase text-[#F0ABFC]">
-              PRACTICE CODING WITH CHALLENGES THAT:
+              FROM CONCEPTS TO INTERVIEWS
             </span>
           </div>
 
-          {/* 3 Feature Bullets */}
-          <div className="space-y-2.5 pt-1">
-            {/* Bullet 1 */}
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs">
+          {/* 3 Feature Benefit Items */}
+          <div className="space-y-3 sm:space-y-3.5 pt-1">
+            {/* Benefit 1 */}
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
                 <div className="w-3.5 h-3.5 rounded-full border border-[#D8B4FE] overflow-hidden flex">
                   <div className="w-1/2 h-full bg-[#D8B4FE]" />
                   <div className="w-1/2 h-full bg-transparent" />
                 </div>
               </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-100">
-                Sharpen your logic.
-              </span>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                  Master the patterns
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                  Understand the ideas behind the problems, not just the solutions.
+                </p>
+              </div>
             </div>
 
-            {/* Bullet 2 */}
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs">
+            {/* Benefit 2 */}
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
                 <Lightbulb className="w-3.5 h-3.5 text-[#D8B4FE]" />
               </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-100">
-                Enhance your creativity.
-              </span>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                  Solve progressively
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                  Move from fundamentals to challenging problems as your skills grow.
+                </p>
+              </div>
             </div>
 
-            {/* Bullet 3 */}
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs">
+            {/* Benefit 3 */}
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
                 <Zap className="w-3.5 h-3.5 text-[#D8B4FE]" />
               </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-100">
-                Boost your coding speed.
-              </span>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                  Target real interviews
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                  Practice company-specific questions and track your progress.
+                </p>
+              </div>
             </div>
           </div>
         </div>
