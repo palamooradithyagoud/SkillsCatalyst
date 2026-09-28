@@ -13,7 +13,7 @@ export default function CareerPage() {
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="max-w-6xl mx-auto space-y-5 sm:space-y-8 pb-12 px-3 sm:px-6">
       {/* ── Page Header ── */}
       <CareerHeader />
 
@@ -35,7 +35,7 @@ export default function CareerPage() {
           setIsPlacementPrepOpen(true);
         }}
         icon={<Building2 className="w-5 h-5 text-white" />}
-        label="Placement Prep"
+        label="Aptitude & Reasoning"
       />
     </div>
   );
