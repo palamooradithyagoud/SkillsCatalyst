@@ -22,6 +22,7 @@ import {
   Award,
   BookOpen,
   Check,
+  Crop,
 } from "lucide-react";
 import type { ScholarshipItem, CreateScholarshipPayload, ScholarshipStatus } from "@/types/scholarships";
 import {
@@ -33,6 +34,14 @@ import {
   deleteAdminScholarship,
   uploadScholarshipImage,
 } from "@/lib/api/scholarships";
+import ImageCropModal, { type AspectRatioOption } from "./ImageCropModal";
+
+const SCHOLARSHIP_ASPECT_OPTIONS: AspectRatioOption[] = [
+  { id: "16:9", label: "16:9 (Widescreen Banner)", ratio: 16 / 9 },
+  { id: "4:3", label: "4:3 (Standard Card)", ratio: 4 / 3 },
+  { id: "1:1", label: "1:1 (Square)", ratio: 1 },
+  { id: "free", label: "Original", ratio: null },
+];
 
 interface AdminScholarshipsCMSProps {
   onScholarshipCountChange?: () => void;
@@ -86,6 +95,10 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState<string>("scholarship_image.jpg");
+  const [pendingRawFile, setPendingRawFile] = useState<File | null>(null);
 
   // Load scholarships
   const loadScholarships = useCallback(async () => {
@@ -214,8 +227,8 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
     }
   };
 
-  // Image Upload handler via Supabase Storage
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image Upload handler with Crop Option
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -232,6 +245,16 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    setCropImageSrc(objectUrl);
+    setCropFileName(file.name);
+    setPendingRawFile(file);
+    setCropModalOpen(true);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleExecuteScholarshipUpload = async (fileToUpload: File) => {
     setUploadingImage(true);
     setFormErrors((prev) => {
       const next = { ...prev };
@@ -240,7 +263,7 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
     });
 
     try {
-      const res = await uploadScholarshipImage(file, editingScholarshipId || undefined);
+      const res = await uploadScholarshipImage(fileToUpload, editingScholarshipId || undefined);
       if (res.image_url) {
         setForm((prev) => ({ ...prev, image_url: res.image_url }));
         setSuccessMsg("Image uploaded successfully to Supabase Storage.");
@@ -250,7 +273,17 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
       setFormErrors((prev) => ({ ...prev, image_url: msg }));
     } finally {
       setUploadingImage(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    await handleExecuteScholarshipUpload(croppedFile);
+  };
+
+  const handleSkipCrop = async () => {
+    if (pendingRawFile) {
+      setCropModalOpen(false);
+      await handleExecuteScholarshipUpload(pendingRawFile);
     }
   };
 
@@ -713,7 +746,7 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
                       id="scholarship-image-file"
                     />
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <label
                         htmlFor="scholarship-image-file"
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer select-none ${
@@ -723,11 +756,27 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
                         }`}
                       >
                         <UploadCloud className="w-3.5 h-3.5" />
-                        <span>{uploadingImage ? "Uploading..." : "Upload to Supabase Storage"}</span>
+                        <span>{uploadingImage ? "Uploading..." : "Upload & Crop Photo"}</span>
                       </label>
+
+                      {form.image_url && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCropImageSrc(form.image_url);
+                            setCropFileName("scholarship_image.jpg");
+                            setPendingRawFile(null);
+                            setCropModalOpen(true);
+                          }}
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 hover:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Crop className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Adjust / Re-Crop</span>
+                        </button>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Max file size: 5MB. Formats: JPG, PNG, WebP. Stored in Supabase bucket <code className="text-indigo-300">scholarship-banners</code>.
+                      Max file size: 5MB. Formats: JPG, PNG, WebP. Cropping options available before saving.
                     </p>
                     {formErrors.image_url && (
                       <p className="text-[11px] text-rose-400 font-semibold">{formErrors.image_url}</p>
@@ -858,6 +907,20 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
           </div>
         </div>
       )}
+
+      {/* ── Image Crop Modal for Scholarships ── */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={cropImageSrc}
+        fileName={cropFileName}
+        title="Crop & Adjust Scholarship Poster"
+        description="Select aspect ratio, zoom and position to frame the scholarship announcement poster."
+        aspectOptions={SCHOLARSHIP_ASPECT_OPTIONS}
+        defaultAspectId="16:9"
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropModalOpen(false)}
+        onSkipCrop={pendingRawFile ? handleSkipCrop : undefined}
+      />
     </div>
   );
 }
