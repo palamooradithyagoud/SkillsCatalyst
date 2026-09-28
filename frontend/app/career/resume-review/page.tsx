@@ -50,6 +50,7 @@ import TemplateSelectModal, {
 } from "@/components/career/TemplateSelectModal";
 import ResumeLivePreview from "@/components/career/ResumeLivePreview";
 import { ResumeData } from "@/lib/career/latexExportHelper";
+import { exportResumeAsPdf } from "@/lib/career/pdfExportHelper";
 import confetti from "canvas-confetti";
 import {
   COMMON_ROLES,
@@ -154,6 +155,7 @@ export default function ResumeWorkspacePage() {
     "contact" | "experience" | "education" | "projects" | "skills"
   >("contact");
   const [mobileBuilderTab, setMobileBuilderTab] = useState<"editor" | "preview">("editor");
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   // Saved resumes state
   const [savedResumes, setSavedResumes] = useState<SavedResumeItem[]>([]);
@@ -884,19 +886,37 @@ export default function ResumeWorkspacePage() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const originalTitle = document.title;
-                      const cleanFileName = `${(resumeData.fullName || "My").trim().replace(/\s+/g, "_")}_Resume`;
-                      document.title = cleanFileName;
-                      window.print();
-                      setTimeout(() => {
-                        document.title = originalTitle;
-                      }, 1500);
+                    disabled={isExportingPdf}
+                    onClick={async () => {
+                      if (isExportingPdf) return;
+                      setIsExportingPdf(true);
+                      try {
+                        await exportResumeAsPdf({
+                          elementId: "resume-printable-document",
+                          fullName: resumeData.fullName,
+                        });
+                        try {
+                          confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+                        } catch {}
+                      } catch (err) {
+                        console.error("Failed to export PDF:", err);
+                      } finally {
+                        setIsExportingPdf(false);
+                      }
                     }}
-                    className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                    className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Download Resume</span>
+                    {isExportingPdf ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin" />
+                        <span>Exporting PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Export as PDF</span>
+                      </>
+                    )}
                   </button>
 
                   <button

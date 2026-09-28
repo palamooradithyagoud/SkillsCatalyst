@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Printer,
   Copy,
   Check,
   Download,
@@ -46,10 +45,6 @@ export default function ResumeLivePreview({
 }: ResumeLivePreviewProps) {
   const [copiedLatex, setCopiedLatex] = useState(false);
   const [showLatexModal, setShowLatexModal] = useState(false);
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const handleCopyLatex = () => {
     const latex = generateSB2NovLaTeX(data);
