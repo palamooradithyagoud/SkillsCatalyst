@@ -1,6 +1,72 @@
 // Helper to generate compilable Overleaf / sb2nov LaTeX code from resume data
 
+export interface EducationItem {
+  institution: string;
+  degree: string;
+  fieldOfStudy?: string;
+  location: string;
+  startDate?: string;
+  endDate?: string;
+  dates: string;
+  gpaType?: string; // "CGPA" | "GPA" | "Percentage"
+  gpa?: string;
+  activities?: string;
+}
+
+export interface ExperienceItem {
+  company: string;
+  role: string;
+  location: string;
+  startDate?: string;
+  endDate?: string;
+  currentlyWorking?: boolean;
+  dates: string;
+  bullets: string[];
+}
+
+export interface ProjectItem {
+  name: string;
+  tech: string;
+  startDate?: string;
+  endDate?: string;
+  dates?: string;
+  link?: string;
+  githubUrl?: string;
+  bullets: string[];
+}
+
+export interface CertificateItem {
+  name: string;
+  issuer: string;
+  date: string;
+  credentialUrl?: string;
+}
+
+export interface SpokenLanguageItem {
+  name: string;
+  proficiency: string; // "Native" | "Fluent" | "Conversational" | "Basic"
+}
+
+export interface AchievementItem {
+  title: string;
+  description?: string;
+  date?: string;
+}
+
+export interface ResumeSkills {
+  languages?: string;
+  frameworks?: string;
+  databases?: string;
+  tools?: string;
+  cloudDevOps?: string;
+  softSkills?: string;
+  custom?: string;
+  libraries?: string;
+  all?: string;
+}
+
 export interface ResumeData {
+  // Contact
   fullName: string;
   role: string;
   email: string;
@@ -8,34 +74,49 @@ export interface ResumeData {
   location: string;
   linkedin: string;
   github: string;
+  leetcode?: string;
+  codechef?: string;
+  hackerrank?: string;
+  portfolio?: string;
+
+  // Summary
   summary: string;
-  education: Array<{
-    institution: string;
-    degree: string;
-    location: string;
-    dates: string;
-    gpa?: string;
-  }>;
-  experience: Array<{
-    company: string;
-    role: string;
-    location: string;
-    dates: string;
-    bullets: string[];
-  }>;
-  projects: Array<{
-    name: string;
-    tech: string;
-    link?: string;
-    bullets: string[];
-  }>;
-  skills: {
-    languages?: string;
-    frameworks?: string;
-    tools?: string;
-    libraries?: string;
-    all?: string;
-  };
+
+  // Education
+  education: EducationItem[];
+
+  // Work Experience
+  experience: ExperienceItem[];
+
+  // Projects
+  projects: ProjectItem[];
+
+  // Skills
+  skills: ResumeSkills;
+
+  // Certifications
+  certifications?: CertificateItem[];
+
+  // Languages (spoken)
+  spokenLanguages?: SpokenLanguageItem[];
+
+  // Achievements
+  achievements?: AchievementItem[];
+}
+
+export function hasAnySkill(skills?: ResumeSkills): boolean {
+  if (!skills) return false;
+  return Boolean(
+    (skills.languages && skills.languages.trim().length > 0) ||
+    (skills.frameworks && skills.frameworks.trim().length > 0) ||
+    (skills.databases && skills.databases.trim().length > 0) ||
+    (skills.tools && skills.tools.trim().length > 0) ||
+    (skills.cloudDevOps && skills.cloudDevOps.trim().length > 0) ||
+    (skills.softSkills && skills.softSkills.trim().length > 0) ||
+    (skills.custom && skills.custom.trim().length > 0) ||
+    (skills.libraries && skills.libraries.trim().length > 0) ||
+    (skills.all && skills.all.trim().length > 0)
+  );
 }
 
 export function generateSB2NovLaTeX(data: ResumeData): string {
@@ -56,26 +137,37 @@ export function generateSB2NovLaTeX(data: ResumeData): string {
   const cleanEmail = sanitize(data.email);
   const cleanLinkedIn = sanitize(data.linkedin);
   const cleanGithub = sanitize(data.github);
+  const cleanLeetCode = sanitize(data.leetcode || "");
+  const cleanCodeChef = sanitize(data.codechef || "");
+  const cleanHackerRank = sanitize(data.hackerrank || "");
+  const cleanPortfolio = sanitize(data.portfolio || "");
   const cleanLocation = sanitize(data.location);
 
   const contactItems: string[] = [];
   if (cleanPhone) contactItems.push(cleanPhone);
   if (cleanEmail) contactItems.push(`\\href{mailto:${cleanEmail}}{${cleanEmail}}`);
-  if (cleanLinkedIn) contactItems.push(`\\href{https://${cleanLinkedIn.replace(/^https?:\/\//, "")}}{${cleanLinkedIn}}`);
-  if (cleanGithub) contactItems.push(`\\href{https://${cleanGithub.replace(/^https?:\/\//, "")}}{${cleanGithub}}`);
+  if (cleanLinkedIn) contactItems.push(`\\href{https://${cleanLinkedIn.replace(/^https?:\/\//, "")}}{LinkedIn}`);
+  if (cleanGithub) contactItems.push(`\\href{https://${cleanGithub.replace(/^https?:\/\//, "")}}{GitHub}`);
+  if (cleanLeetCode) contactItems.push(`\\href{https://${cleanLeetCode.replace(/^https?:\/\//, "")}}{LeetCode}`);
+  if (cleanCodeChef) contactItems.push(`\\href{https://${cleanCodeChef.replace(/^https?:\/\//, "")}}{CodeChef}`);
+  if (cleanHackerRank) contactItems.push(`\\href{https://${cleanHackerRank.replace(/^https?:\/\//, "")}}{HackerRank}`);
+  if (cleanPortfolio) contactItems.push(`\\href{https://${cleanPortfolio.replace(/^https?:\/\//, "")}}{Portfolio}`);
   if (cleanLocation) contactItems.push(cleanLocation);
 
   const contactLine = contactItems.join(" $|$ ");
 
   const experienceItems = (data.experience || [])
+    .filter((exp) => (exp.company && exp.company.trim().length > 0) || (exp.role && exp.role.trim().length > 0))
     .map((exp) => {
       const bulletItems = (exp.bullets || [])
         .filter((b) => b.trim().length > 0)
         .map((b) => `      \\resumeItem{${sanitize(b)}}`)
         .join("\n");
 
+      const displayDates = exp.dates || (exp.startDate ? `${exp.startDate} -- ${exp.currentlyWorking ? "Present" : exp.endDate || "Present"}` : "");
+
       return `    \\resumeSubheading
-      {${sanitize(exp.role)}}{${sanitize(exp.dates)}}
+      {${sanitize(exp.role)}}{${sanitize(displayDates)}}
       {${sanitize(exp.company)}}{${sanitize(exp.location)}}
       \\resumeItemListStart
 ${bulletItems || "        \\resumeItem{Spearheaded core feature development and reduced system latency.}"}
@@ -84,14 +176,30 @@ ${bulletItems || "        \\resumeItem{Spearheaded core feature development and 
     .join("\n\n");
 
   const projectItems = (data.projects || [])
+    .filter((proj) => (proj.name && proj.name.trim().length > 0) || (proj.tech && proj.tech.trim().length > 0))
     .map((proj) => {
       const bulletItems = (proj.bullets || [])
         .filter((b) => b.trim().length > 0)
         .map((b) => `      \\resumeItem{${sanitize(b)}}`)
         .join("\n");
 
+      const linkParts: string[] = [];
+      if (proj.link) {
+        linkParts.push(`\\href{https://${proj.link.replace(/^https?:\/\//, "")}}{Live Demo}`);
+      }
+      if (proj.githubUrl) {
+        linkParts.push(`\\href{https://${proj.githubUrl.replace(/^https?:\/\//, "")}}{GitHub}`);
+      }
+      const linkPart = linkParts.join(" $|$ ");
+
+      const headingTitle = proj.name && proj.tech
+        ? `{\\textbf{${sanitize(proj.name)}} $|$ \\emph{${sanitize(proj.tech)}}}`
+        : proj.name
+        ? `{\\textbf{${sanitize(proj.name)}}}`
+        : `{\\emph{${sanitize(proj.tech)}}}`;
+
       return `    \\resumeProjectHeading
-      {\\textbf{${sanitize(proj.name)}} $|$ \\emph{${sanitize(proj.tech)}}}{${sanitize(proj.link || "")}}
+      ${headingTitle}{${linkPart}}
       \\resumeItemListStart
 ${bulletItems || "        \\resumeItem{Designed and implemented scalable application architecture.}"}
       \\resumeItemListEnd`;
@@ -99,22 +207,91 @@ ${bulletItems || "        \\resumeItem{Designed and implemented scalable applica
     .join("\n\n");
 
   const educationItems = (data.education || [])
+    .filter((edu) => (edu.institution && edu.institution.trim().length > 0) || (edu.degree && edu.degree.trim().length > 0))
     .map((edu) => {
+      const degreeLine = edu.fieldOfStudy
+        ? `${edu.degree} in ${edu.fieldOfStudy}`
+        : edu.degree;
+      const gpaLine = edu.gpa ? `; ${edu.gpaType || "GPA"}: ${edu.gpa}` : "";
+      const displayDates = edu.dates || (edu.startDate ? `${edu.startDate} -- ${edu.endDate || "Present"}` : "");
+
       return `    \\resumeSubheading
       {${sanitize(edu.institution)}}{${sanitize(edu.location)}}
-      {${sanitize(edu.degree)}}{${sanitize(edu.dates)}}`;
+      {${sanitize(degreeLine)}${sanitize(gpaLine)}}{${sanitize(displayDates)}}` +
+      (edu.activities
+        ? `\n      \\resumeItemListStart\n        \\resumeItem{Activities: ${sanitize(edu.activities)}}\n      \\resumeItemListEnd`
+        : "");
     })
     .join("\n\n");
 
-  const skillsBlock = data.skills?.all
-    ? `    \\small{\\item{
-     \\textbf{Skills}{: ${sanitize(data.skills.all)}}
-    }}`
-    : `    \\small{\\item{
-     \\textbf{Languages}{: ${sanitize(data.skills?.languages || "JavaScript, TypeScript, Python, C++, SQL")}} \\\\
-     \\textbf{Frameworks}{: ${sanitize(data.skills?.frameworks || "React, Next.js, FastAPI, Node.js, Tailwind CSS")}} \\\\
-     \\textbf{Developer Tools}{: ${sanitize(data.skills?.tools || "Git, Docker, PostgreSQL, Supabase, Linux, Vercel")}}
+  // Skills block with all categories
+  const skillLines: string[] = [];
+  if (data.skills?.languages?.trim()) {
+    skillLines.push(`\\textbf{Languages}{: ${sanitize(data.skills.languages.trim())}}`);
+  }
+  if (data.skills?.frameworks?.trim()) {
+    skillLines.push(`\\textbf{Frameworks}{: ${sanitize(data.skills.frameworks.trim())}}`);
+  }
+  if (data.skills?.databases?.trim()) {
+    skillLines.push(`\\textbf{Databases}{: ${sanitize(data.skills.databases.trim())}}`);
+  }
+  if (data.skills?.tools?.trim()) {
+    skillLines.push(`\\textbf{Developer Tools}{: ${sanitize(data.skills.tools.trim())}}`);
+  }
+  if (data.skills?.cloudDevOps?.trim()) {
+    skillLines.push(`\\textbf{Cloud \\& DevOps}{: ${sanitize(data.skills.cloudDevOps.trim())}}`);
+  }
+  if (data.skills?.softSkills?.trim()) {
+    skillLines.push(`\\textbf{Soft Skills}{: ${sanitize(data.skills.softSkills.trim())}}`);
+  }
+  if (data.skills?.custom?.trim()) {
+    skillLines.push(`\\textbf{Other}{: ${sanitize(data.skills.custom.trim())}}`);
+  }
+  if (data.skills?.libraries?.trim()) {
+    skillLines.push(`\\textbf{Libraries}{: ${sanitize(data.skills.libraries.trim())}}`);
+  }
+
+  let skillsBlock = "";
+  if (skillLines.length > 0) {
+    skillsBlock = `    \\small{\\item{
+     ${skillLines.join(" \\\\\n     ")}
     }}`;
+  } else if (data.skills?.all?.trim()) {
+    skillsBlock = `    \\small{\\item{
+     \\textbf{Skills}{: ${sanitize(data.skills.all.trim())}}
+    }}`;
+  }
+
+  // Certifications section
+  const certItems = (data.certifications || [])
+    .filter((c) => c.name.trim().length > 0)
+    .map((cert) => {
+      const urlPart = cert.credentialUrl
+        ? ` $|$ \\href{https://${cert.credentialUrl.replace(/^https?:\/\//, "")}}{Verify}`
+        : "";
+      return `    \\resumeProjectHeading
+      {\\textbf{${sanitize(cert.name)}} -- \\emph{${sanitize(cert.issuer)}}${urlPart}}{${sanitize(cert.date)}}`;
+    })
+    .join("\n");
+
+  // Achievements section
+  const achItems = (data.achievements || [])
+    .filter((a) => a.title.trim().length > 0)
+    .map((ach) => {
+      const datePart = ach.date ? `{${sanitize(ach.date)}}` : "{}";
+      const descPart = ach.description
+        ? `\\resumeItemListStart\n        \\resumeItem{${sanitize(ach.description)}}\n      \\resumeItemListEnd`
+        : "";
+      return `    \\resumeProjectHeading
+      {\\textbf{${sanitize(ach.title)}}}{${datePart}}` + (descPart ? `\n      ${descPart}` : "");
+    })
+    .join("\n");
+
+  // Spoken languages
+  const spokenLanguagesLine = (data.spokenLanguages || [])
+    .filter((l) => l.name.trim().length > 0)
+    .map((l) => `${sanitize(l.name)} (${sanitize(l.proficiency)})`)
+    .join(", ");
 
   return `%-------------------------
 % Resume in Latex (SB2Nov Template)
@@ -211,39 +388,79 @@ ${
 `
     : ""
 }
-%-----------EDUCATION-----------
+${
+  educationItems
+    ? `%-----------EDUCATION-----------
 \\section{Education}
   \\resumeSubHeadingListStart
-${educationItems || "    \\resumeSubheading{University of Engineering & Technology}{Hyderabad, India}{Bachelor of Technology in Computer Science; GPA: 8.9/10.0}{2021 -- 2025}"}
+${educationItems}
   \\resumeSubHeadingListEnd
-
-%-----------EXPERIENCE-----------
+`
+    : ""
+}
+${
+  experienceItems
+    ? `%-----------EXPERIENCE-----------
 \\section{Experience}
   \\resumeSubHeadingListStart
-${experienceItems || `    \\resumeSubheading
-      {Fullstack Software Engineer}{June 2024 -- Present}
-      {Tech Corp}{Remote}
-      \\resumeItemListStart
-        \\resumeItem{Architected high-throughput backend APIs processing 100k+ requests daily.}
-        \\resumeItem{Implemented Next.js frontend optimizing Largest Contentful Paint by 40\\%.}
-      \\resumeItemListEnd`}
+${experienceItems}
   \\resumeSubHeadingListEnd
-
-%-----------PROJECTS-----------
+`
+    : ""
+}
+${
+  projectItems
+    ? `%-----------PROJECTS-----------
 \\section{Projects}
   \\resumeSubHeadingListStart
-${projectItems || `    \\resumeProjectHeading
-      {\\textbf{SkillsCatalyst} $|$ \\emph{React, Next.js, FastAPI, PostgreSQL}}{github.com/skillscatalyst}
-      \\resumeItemListStart
-        \\resumeItem{Developed interactive AI career acceleration portal with real-time scoring.}
-      \\resumeItemListEnd`}
+${projectItems}
   \\resumeSubHeadingListEnd
-
-%-----------TECHNICAL SKILLS-----------
+`
+    : ""
+}
+${
+  skillsBlock
+    ? `%-----------TECHNICAL SKILLS-----------
 \\section{Technical Skills}
  \\begin{itemize}[leftmargin=0.15in, label={}]
 ${skillsBlock}
  \\end{itemize}
+`
+    : ""
+}
+
+${
+  certItems
+    ? `%-----------CERTIFICATIONS-----------
+\\section{Certifications}
+  \\resumeSubHeadingListStart
+${certItems}
+  \\resumeSubHeadingListEnd
+`
+    : ""
+}
+${
+  achItems
+    ? `%-----------ACHIEVEMENTS-----------
+\\section{Achievements \\& Honors}
+  \\resumeSubHeadingListStart
+${achItems}
+  \\resumeSubHeadingListEnd
+`
+    : ""
+}
+${
+  spokenLanguagesLine
+    ? `%-----------LANGUAGES-----------
+\\section{Languages}
+ \\begin{itemize}[leftmargin=0.15in, label={}]
+    \\small{\\item{
+     \\textbf{Spoken Languages}{: ${spokenLanguagesLine}}
+    }}
+ \\end{itemize}
+`
+    : ""
+}
 
 \\end{document}
 `;
