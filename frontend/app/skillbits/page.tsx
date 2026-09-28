@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -244,8 +245,17 @@ export default function SkillBitsPage() {
       <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white space-y-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-purple-400">
-            <Sparkles className="w-6 h-6 animate-pulse" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-8 h-8 rounded-lg overflow-hidden">
+              <Image
+                src="/images/icons/skillbits-icon-tight.png"
+                alt="SkillBits Mascot"
+                fill
+                sizes="32px"
+                className="object-contain animate-pulse"
+                priority
+              />
+            </div>
           </div>
         </div>
         <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
