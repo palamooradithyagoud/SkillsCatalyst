@@ -15,9 +15,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "google",
       name: "Google",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Google 2015 Multi-Color Wordmark */}
-          <svg viewBox="0 0 272 92" className="w-9 sm:w-11 h-auto" aria-label="Google">
+          <svg viewBox="0 0 272 92" className="w-6.5 sm:w-11 h-auto" aria-label="Google">
             <path fill="#EA4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" />
             <path fill="#FBBC05" d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" />
             <path fill="#4285F4" d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z" />
@@ -32,9 +32,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "amazon",
       name: "Amazon",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Amazon Wordmark with Curved Orange Smile Arrow */}
-          <svg viewBox="0 0 603 182" className="w-9 sm:w-11 h-auto" fill="#111827" aria-label="Amazon">
+          <svg viewBox="0 0 603 182" className="w-6.5 sm:w-11 h-auto" fill="#111827" aria-label="Amazon">
             <path
               d="m 374.00642,142.18404 c -34.99948,25.79739 -85.72909,39.56123 -129.40634,39.56123 -61.24255,0 -116.37656,-22.65135 -158.08757,-60.32496 -3.2771,-2.96252 -0.34083,-6.9999 3.59171,-4.69283 45.01431,26.19064 100.67269,41.94697 158.16623,41.94697 38.774689,0 81.4295,-8.02237 120.6499,-24.67006 5.92501,-2.51683 10.87999,3.88009 5.08607,8.17965"
               fill="#FF9900"
@@ -59,9 +59,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "meta",
       name: "Meta",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Meta Continuous Infinity Loop */}
-          <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="none" aria-label="Meta">
+          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 sm:w-7 sm:h-7" fill="none" aria-label="Meta">
             <path
               d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.908 44.908 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.358-2.602zm-10.201.553c1.265 0 2.058.791 2.675 1.446.307.327.737.871 1.234 1.579l-1.02 1.566c-.757 1.163-1.882 3.017-2.837 4.338-1.191 1.649-1.81 1.817-2.486 1.817-.524 0-1.038-.237-1.383-.794-.263-.426-.464-1.13-.464-2.046 0-2.221.63-4.535 1.66-6.088.454-.687.964-1.226 1.533-1.533a2.264 2.264 0 0 1 1.088-.285z"
               fill="url(#metaGradientHeroExact)"
@@ -80,9 +80,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "microsoft",
       name: "Microsoft",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Microsoft 4-Color Squares */}
-          <svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" aria-label="Microsoft">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-6 sm:h-6" aria-label="Microsoft">
             <rect x="1" y="1" width="10.5" height="10.5" rx="0.5" fill="#F25022" />
             <rect x="12.5" y="1" width="10.5" height="10.5" rx="0.5" fill="#7FBA00" />
             <rect x="1" y="12.5" width="10.5" height="10.5" rx="0.5" fill="#00A4EF" />
@@ -95,9 +95,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "apple",
       name: "Apple",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Apple Silhouette */}
-          <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="#000000" aria-label="Apple">
+          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 sm:w-7 sm:h-7" fill="#000000" aria-label="Apple">
             <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
           </svg>
         </div>
@@ -107,9 +107,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "netflix",
       name: "Netflix",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-[#0A0A0A] flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all border border-red-950/40">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#0A0A0A] flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all border border-red-950/40">
           {/* Official Netflix 3D Red 'N' Ribbon */}
-          <svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" aria-label="Netflix">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-6 sm:h-6" fill="none" aria-label="Netflix">
             <path d="M5.398 0v24c1.173-.418 2.37-.803 3.6-1.15V0h-3.6z" fill="#B1060F" />
             <path d="M15.002 0v19.467c1.229-.247 2.433-.464 3.6-.65V0h-3.6z" fill="#B1060F" />
             <path d="M9.002 0l5.996 19.34V0h3.6v24c-1.167.186-2.371.403-3.6.65L9.002 4.66V24c-1.23.347-2.427.732-3.6 1.15V0h3.6z" fill="#E50914" />
@@ -121,9 +121,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "uber",
       name: "Uber",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-[#000000] flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all border border-white/10">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#000000] flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all border border-white/10">
           {/* Official Uber Wordmark in Uber Move Typography */}
-          <svg viewBox="0 7 24 10" className="w-9 sm:w-11 h-auto" fill="white" aria-label="Uber">
+          <svg viewBox="0 7 24 10" className="w-6.5 sm:w-11 h-auto" fill="white" aria-label="Uber">
             <path d="M0 7.97v4.958c0 1.867 1.302 3.101 3 3.101.826 0 1.562-.316 2.094-.87v.736H6.27V7.97H5.082v4.888c0 1.257-.85 2.106-1.947 2.106-1.11 0-1.946-.827-1.946-2.106V7.971H0zm7.44 0v7.925h1.13v-.725c.521.532 1.257.86 2.06.86a3.006 3.006 0 0 0 3.034-3.01 3.01 3.01 0 0 0-3.033-3.024 2.86 2.86 0 0 0-2.049.861V7.971H7.439zm9.869 2.038c-1.687 0-2.965 1.37-2.965 3 0 1.72 1.334 3.01 3.066 3.01 1.053 0 1.913-.463 2.49-1.233l-.826-.611c-.43.577-.996.847-1.664.847-.973 0-1.753-.7-1.912-1.64h4.697v-.373c0-1.72-1.222-3-2.886-3zm6.295.068c-.634 0-1.098.294-1.381.758v-.713h-1.131v5.774h1.142V12.61c0-.894.544-1.47 1.291-1.47H24v-1.065h-.396zm-6.319.928c.85 0 1.564.588 1.756 1.47H15.52c.203-.882.916-1.47 1.765-1.47zm-6.732.012c1.086 0 1.98.883 1.98 2.004a1.993 1.993 0 0 1-1.98 2.001A1.989 1.989 0 0 1 8.56 13.02a1.99 1.99 0 0 1 1.992-2.004z" />
           </svg>
         </div>
@@ -133,9 +133,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "adobe",
       name: "Adobe",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-[#EB1000] flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#EB1000] flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Adobe 'A' Symbol */}
-          <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="white" aria-label="Adobe">
+          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 sm:w-7 sm:h-7" fill="white" aria-label="Adobe">
             <path d="M13.966 22.624l-1.69-4.281H8.122l3.892-9.144 5.662 13.425zM8.884 1.376H0v21.248zm15.116 0h-8.884L24 22.624Z" />
           </svg>
         </div>
@@ -145,9 +145,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "flipkart",
       name: "Flipkart",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-[#2874F0] flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#2874F0] flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Flipkart Shopping Bag with Speed 'f' */}
-          <svg viewBox="0 0 24 24" className="w-7 h-7 sm:w-8 sm:h-8" fill="#FFE500" aria-label="Flipkart">
+          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 sm:w-8 sm:h-8" fill="#FFE500" aria-label="Flipkart">
             <path d="M3.833 1.333a.993.993 0 0 0-.333.061V1c0-.551.449-1 1-1h14.667c.551 0 1 .449 1 1v.333H3.833zm17.334 2.334H2.833c-.551 0-1 .449-1 1V23c0 .551.449 1 1 1h7.3l1.098-5.645h-2.24c-.051 0-5.158-.241-5.158-.241l4.639-.327-.078-.366-1.978-.285 1.882-.158-.124-.449-3.075-.467s3.341-.373 3.392-.373h3.232l.247-1.331c.289-1.616.945-2.807 1.973-3.693 1.033-.892 2.344-1.332 3.937-1.332.643 0 1.053.151 1.231.463.118.186.201.516.279.859.074.352.14.671.095.903-.057.345-.461.465-1.197.465h-.253c-1.327 0-2.134.763-2.405 2.31l-.243 1.355h1.54c.574 0 .781.402.622 1.306-.17.941-.539 1.36-1.111 1.36H14.9L13.804 24h7.362c.551 0 1-.449 1-1V4.667a1 1 0 0 0-.999-1zM20.5 2.333A.334.334 0 0 0 20.167 2H3.833a.334.334 0 0 0-.333.333V3h17v-.667z" />
           </svg>
         </div>
@@ -157,9 +157,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "infosys",
       name: "Infosys",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Infosys Blue Signature Script Wordmark */}
-          <svg viewBox="0 7 24 9.5" className="w-9 sm:w-11 h-auto" fill="#007CC3" aria-label="Infosys">
+          <svg viewBox="0 7 24 9.5" className="w-6.5 sm:w-11 h-auto" fill="#007CC3" aria-label="Infosys">
             <path d="M23.2734 7.5703c-.3984 0-.7246.3282-.7246.7266 0 .4013.3262.7246.7246.7246.3982 0 .7266-.3233.7266-.7246 0-.3984-.3284-.7266-.7266-.7266zm0 .1074c.3395 0 .6192.2795.6192.6192 0 .3396-.2797.6172-.6192.6172-.3397 0-.6171-.2776-.6171-.6172 0-.3397.2774-.6192.6171-.6192zm-15.1367.0547c-.9001 0-1.549.5917-1.6387 1.6406h-.6953v.5215h.6856c.0028 1.6664-.002 3.334-.002 4.998h.7774c-.0022-1.6659-.002-3.3319-.002-4.998h1.748c-.646.5242-1.0663 1.3739-1.0663 2.334 0 1.593 1.1564 2.8848 2.582 2.8848 1.4258 0 2.582-1.2918 2.582-2.8848 0-.1896-.0174-.3753-.0488-.5547.2565.4131.7488.6133 1.4082.8985.7784.329 1.2129.6165 1.2129 1.1074 0 .5885-.556.8955-1.1817.8906-.611 0-1.0883-.249-1.6191-.7305v.9239c.3239.2088.8256.3281 1.3691.3281.6844-.0023 2.0918-.249 2.0918-1.6758-.0044-.8557-.715-1.2239-1.4863-1.5586-.9383-.4653-1.2965-.5629-1.2871-1.0957 0-.7088.6178-.9219 1.0996-.9219.2099 0 .3891.0293.5586.086.3163.1194.4209.3553.5332.6113.5283 1.2356 1.0344 2.4811 1.5488 3.7227-.2464.5637-.526 1.1519-.7168 1.5273l-.0039.0098-.1601.2969-.1797.336h.7617c.3322-.7342 1.7436-4.1688 2.0469-4.9083.1995.533.6857.7467 1.4297 1.0684.7783.329 1.2148.6166 1.2148 1.1074 0 .5886-.5562.8936-1.1816.8887-.6348 0-1.1257-.2685-1.6817-.7871l-.0507-.041v.9413c.3115.259.8713.4102 1.4824.4102.6844-.0022 2.0918-.249 2.0918-1.6758-.0042-.8557-.7151-1.2258-1.4863-1.5605-.9384-.4654-1.2593-.563-1.25-1.0957 0-.709.5787-.9219 1.0605-.9219.5483 0 .8958.2037 1.379.5547V9.584c-.3923-.1381-.7212-.1915-1.1642-.1895-.8912-.0018-1.6966.3234-1.9004 1.0762l-1.1054 2.7344-.1153.3437-.1015-.3437c-.5022-1.2089-.9934-2.4236-1.4863-3.6309-.3154-.0828-.8307-.201-1.1934-.1953-.0377-.0007-.0758-.0002-.1152 0-1.0302-.002-2.0235.4332-2.0235 1.457 0 .0596.0022.1155.006.17-.412-.9813-1.3036-1.6602-2.338-1.6602-.1245 0-.2472.0085-.3672.0273H7.254c-.1194-.733.2228-1.1503.7383-1.1503.6472-.0006.9242.192 1.205.4511 0 0 .0195-.0007.0274 0 .0038-.2457.002-.5318.002-.7949-.185-.0857-.5061-.1465-1.0899-.1465zM0 7.756v7.1367h.8594V7.7559zm23 .1386v.7657h.1387v-.3086h.164l.1192.3086h.1543l-.1407-.3301c.0494-.0248.1329-.0518.1329-.1875 0-.2224-.1673-.248-.3125-.248zm.1387.1328h.1543c.0834 0 .1289.0337.1289.1016 0 .068-.0524.0996-.1172.0996h-.166zM4.1719 9.3555c-.945 0-1.3429.3359-1.6582.6738a.2474.2474 0 00-.0352.0644h-.0078v-.043l-.0098-.623H1.707v5.4649h.7754v-3.9961c.0226-.4905.7134-.9746 1.252-.9746.6477 0 1.1777.4364 1.1777 1.039v3.9317h.7754c-.0019-1.429-.002-2.858-.002-4.2871-.0234-.4835-.6094-1.25-1.5136-1.25zm6.2832.5566c.9741-.0175 1.7825 1.0214 1.8047 2.3184.022 1.297-.7504 2.3614-1.7246 2.3789-.9742.0171-1.7825-1.0195-1.8047-2.3164-.0221-1.2971.7503-2.3634 1.7246-2.3809Z" />
           </svg>
         </div>
@@ -169,9 +169,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "accenture",
       name: "Accenture",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all">
           {/* Official Accenture Wordmark with Signature Purple Forward Chevron */}
-          <svg viewBox="0 0 204 56" className="w-10 sm:w-12 h-auto" aria-label="Accenture">
+          <svg viewBox="0 0 204 56" className="w-7 sm:w-12 h-auto" aria-label="Accenture">
             <path
               d="m 116.99973,0 v 5.97866 l 11.556,4.516 -11.556,4.296 v 6.15467 l 19.792,-8.016 V 7.97066 Z"
               fill="#A100FF"
@@ -188,9 +188,9 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       id: "deloitte",
       name: "Deloitte",
       render: (
-        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-black flex items-center justify-center p-2 shadow-md hover:scale-108 transition-all border border-white/10">
+        <div className="w-9 h-9 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-black flex items-center justify-center p-1.5 sm:p-2 shadow-md hover:scale-108 transition-all border border-white/10">
           {/* Official Deloitte Wordmark with Signature Green Dot */}
-          <svg viewBox="13.8 14.7 892.4 170.5" className="w-10 sm:w-12 h-auto" aria-label="Deloitte">
+          <svg viewBox="13.8 14.7 892.4 170.5" className="w-7 sm:w-12 h-auto" aria-label="Deloitte">
             <g transform="translate(-2521.9698,-654.34261)">
               <g transform="matrix(3.0676446,0,0,3.0676446,-6165.655,-2195.369)">
                 <g transform="matrix(1.7716542,0,0,1.7716542,-2301.0501,-745.37663)">
@@ -236,12 +236,17 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
     },
   ];
 
+  const row1 = companies.slice(0, 6);
+  const row2 = companies.slice(6, 12);
+  const row1Loop = [...row1, ...row1, ...row1, ...row1];
+  const row2Loop = [...row2, ...row2, ...row2, ...row2];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="relative rounded-[28px] sm:rounded-[32px] p-6 sm:p-9 md:p-11 bg-gradient-to-r from-[#0C0916] via-[#130E22] to-[#0A0713] border border-purple-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_60px_rgba(168,85,247,0.1)] overflow-hidden select-none min-h-[380px]"
+      className="relative rounded-2xl sm:rounded-[32px] p-4 sm:p-8 md:p-11 bg-gradient-to-r from-[#0C0916] via-[#130E22] to-[#0A0713] border border-purple-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_60px_rgba(168,85,247,0.1)] overflow-hidden select-none sm:min-h-[380px]"
     >
       {/* ── Interactive Cursor Grid Background Canvas ── */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
@@ -267,11 +272,11 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
       <div className="absolute -bottom-16 right-16 w-80 h-80 bg-fuchsia-600/10 blur-3xl rounded-full pointer-events-none" />
 
       {/* ── Foreground Content ── */}
-      <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12 pointer-events-none">
+      <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3.5 sm:gap-8 lg:gap-12 pointer-events-none">
         {/* ── Left Content Column ── */}
-        <div className="flex-1 space-y-3 sm:space-y-4 max-w-2xl pointer-events-none">
+        <div className="flex-1 space-y-2 sm:space-y-4 max-w-2xl pointer-events-none">
           {/* Main Title */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
             Welcome to{" "}
             <span className="bg-gradient-to-r from-[#F0ABFC] via-[#E879F9] to-[#C084FC] bg-clip-text text-transparent">
               Coding Practice!
@@ -279,62 +284,62 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
           </h1>
 
           {/* Large Side Heading */}
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#F3E8FF] tracking-tight leading-snug">
+          <h2 className="text-sm sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-[#F3E8FF] tracking-tight leading-snug">
             Think. Code. Solve. Repeat.
           </h2>
 
           {/* Category Eyebrow */}
-          <div className="pt-2 sm:pt-3">
-            <span className="text-[11px] sm:text-xs font-black tracking-widest uppercase text-[#F0ABFC]">
+          <div className="pt-0.5 sm:pt-3">
+            <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-[#F0ABFC]">
               FROM CONCEPTS TO INTERVIEWS
             </span>
           </div>
 
           {/* 3 Feature Benefit Items */}
-          <div className="space-y-3 sm:space-y-3.5 pt-1">
+          <div className="space-y-1.5 sm:space-y-3.5 pt-0.5 sm:pt-1">
             {/* Benefit 1 */}
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
-                <div className="w-3.5 h-3.5 rounded-full border border-[#D8B4FE] overflow-hidden flex">
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-5.5 h-5.5 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
+                <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border border-[#D8B4FE] overflow-hidden flex">
                   <div className="w-1/2 h-full bg-[#D8B4FE]" />
                   <div className="w-1/2 h-full bg-transparent" />
                 </div>
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-tight">
                   Master the patterns
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-normal leading-tight sm:leading-relaxed mt-0.5">
                   Understand the ideas behind the problems, not just the solutions.
                 </p>
               </div>
             </div>
 
             {/* Benefit 2 */}
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
-                <Lightbulb className="w-3.5 h-3.5 text-[#D8B4FE]" />
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-5.5 h-5.5 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
+                <Lightbulb className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D8B4FE]" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-tight">
                   Solve progressively
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-normal leading-tight sm:leading-relaxed mt-0.5">
                   Move from fundamentals to challenging problems as your skills grow.
                 </p>
               </div>
             </div>
 
             {/* Benefit 3 */}
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
-                <Zap className="w-3.5 h-3.5 text-[#D8B4FE]" />
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-5.5 h-5.5 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#231A38] border border-purple-500/25 flex items-center justify-center text-[#D8B4FE] shrink-0 shadow-2xs mt-0.5">
+                <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D8B4FE]" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-snug">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-100 leading-tight">
                   Target real interviews
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-400 font-normal leading-tight sm:leading-relaxed mt-0.5">
                   Practice company-specific questions and track your progress.
                 </p>
               </div>
@@ -342,13 +347,14 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
           </div>
         </div>
 
-        {/* ── Right Column: Target Top Companies 4x3 Grid ── */}
-        <div className="w-full lg:w-auto flex flex-col items-center lg:items-end shrink-0 pt-2 lg:pt-0 pointer-events-auto">
-          <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-[#94A3B8] mb-3 self-center lg:self-center">
+        {/* ── Right Column: Target Top Companies (Grid on Desktop, Horizontal Moving on Mobile) ── */}
+        <div className="w-full lg:w-auto flex flex-col items-center lg:items-end shrink-0 pt-1 sm:pt-2 lg:pt-0 pointer-events-auto">
+          <span className="text-[9px] sm:text-xs font-black tracking-widest uppercase text-[#94A3B8] mb-1.5 sm:mb-3 self-center lg:self-center">
             TARGET TOP COMPANIES
           </span>
 
-          <div className="grid grid-cols-4 gap-2.5 sm:gap-3 p-1">
+          {/* ── Desktop / Tablet: 4x3 Grid (sm and up) ── */}
+          <div className="hidden sm:grid grid-cols-4 gap-2.5 sm:gap-3 p-1">
             {companies.map((comp) => (
               <div
                 key={comp.id}
@@ -360,8 +366,63 @@ export function PracticeHeroCard({ onSelectCompany }: PracticeHeroCardProps) {
               </div>
             ))}
           </div>
+
+          {/* ── Mobile View: Dual Horizontal Moving Logo Marquees (sm:hidden) ── */}
+          <div className="sm:hidden w-full max-w-[calc(100vw-3rem)] overflow-hidden space-y-1.5 py-0.5 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+            {/* Row 1: Moves Left */}
+            <div className="animate-marquee-left flex gap-2 w-max hover:[animation-play-state:paused] active:[animation-play-state:paused]">
+              {row1Loop.map((comp, idx) => (
+                <div
+                  key={`m-r1-${comp.id}-${idx}`}
+                  onClick={() => onSelectCompany && onSelectCompany(comp.id)}
+                  title={`Target ${comp.name} Questions`}
+                  className="shrink-0 cursor-pointer active:scale-95 transition-transform"
+                >
+                  {comp.render}
+                </div>
+              ))}
+            </div>
+
+            {/* Row 2: Moves Right */}
+            <div className="animate-marquee-right flex gap-2 w-max hover:[animation-play-state:paused] active:[animation-play-state:paused]">
+              {row2Loop.map((comp, idx) => (
+                <div
+                  key={`m-r2-${comp.id}-${idx}`}
+                  onClick={() => onSelectCompany && onSelectCompany(comp.id)}
+                  title={`Target ${comp.name} Questions`}
+                  className="shrink-0 cursor-pointer active:scale-95 transition-transform"
+                >
+                  {comp.render}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ── Keyframes for Smooth Hardware-Accelerated Marquee on Mobile ── */}
+      <style>{`
+        @keyframes marqueeLeft {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-25%, 0, 0); }
+        }
+        @keyframes marqueeRight {
+          0% { transform: translate3d(-25%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+        .animate-marquee-left {
+          animation: marqueeLeft 20s linear infinite;
+        }
+        .animate-marquee-right {
+          animation: marqueeRight 20s linear infinite;
+        }
+        .animate-marquee-left:hover,
+        .animate-marquee-left:active,
+        .animate-marquee-right:hover,
+        .animate-marquee-right:active {
+          animation-play-state: paused;
+        }
+      `}</style>
     </motion.div>
   );
 }

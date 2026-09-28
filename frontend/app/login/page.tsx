@@ -313,6 +313,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={handleResendVerification}
                 disabled={resendLoading}
+                suppressHydrationWarning
                 className="w-full py-3.5 px-4 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? "animate-spin" : ""}`} />
@@ -325,6 +326,7 @@ export default function LoginPage() {
                   clearUnverifiedEmail();
                   switchMode("signin");
                 }}
+                suppressHydrationWarning
                 className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer"
               >
                 ← Back to Log In
@@ -363,6 +365,7 @@ export default function LoginPage() {
               <form
                 onSubmit={mode === "signin" ? handleSignIn : handleSignUp}
                 className="space-y-4"
+                suppressHydrationWarning
               >
                 {mode === "signup" && (
                   <div className="space-y-1">
@@ -376,6 +379,7 @@ export default function LoginPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Alex Mercer"
+                      suppressHydrationWarning
                       className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
                     />
                   </div>
@@ -394,6 +398,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     style={{ colorScheme: "light" }}
+                    suppressHydrationWarning
                     className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
                   />
                 </div>
@@ -412,11 +417,13 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       style={{ colorScheme: "light" }}
+                      suppressHydrationWarning
                       className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      suppressHydrationWarning
                       className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
@@ -441,6 +448,7 @@ export default function LoginPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Repeat your password"
+                      suppressHydrationWarning
                       className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
                     />
                   </div>
@@ -454,6 +462,7 @@ export default function LoginPage() {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
+                        suppressHydrationWarning
                         className="w-3.5 h-3.5 rounded border-zinc-300 text-[#18191F] focus:ring-0 cursor-pointer accent-[#18191F]"
                       />
                       <span className="font-medium">Remember for 30 days</span>
@@ -477,6 +486,7 @@ export default function LoginPage() {
                     id="auth-submit"
                     type="submit"
                     disabled={loading}
+                    suppressHydrationWarning
                     className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
                   >
                     {loading ? (
@@ -500,6 +510,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
+                  suppressHydrationWarning
                   className="w-full py-3.5 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#1F2937] font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
                 >
                   <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
@@ -534,6 +545,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => switchMode("signup")}
+                  suppressHydrationWarning
                   className="font-bold text-[#18191F] hover:underline cursor-pointer ml-1"
                 >
                   Sign Up
@@ -545,6 +557,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => switchMode("signin")}
+                  suppressHydrationWarning
                   className="font-bold text-[#18191F] hover:underline cursor-pointer ml-1"
                 >
                   Log In
