@@ -23,6 +23,7 @@ import {
   Award,
   Globe,
   Check,
+  Crop,
 } from "lucide-react";
 import type { EventItem, CreateEventPayload, EventCategory, EventMode, EventStatus } from "@/types/events";
 import {
@@ -34,6 +35,15 @@ import {
   deleteAdminEvent,
   uploadEventBanner,
 } from "@/lib/api/events";
+import ImageCropModal, { type AspectRatioOption } from "./ImageCropModal";
+
+const EVENT_ASPECT_OPTIONS: AspectRatioOption[] = [
+  { id: "hero", label: "2.6:1 (Event Hero Banner)", ratio: 2.63 },
+  { id: "16:9", label: "16:9 (Widescreen)", ratio: 16 / 9 },
+  { id: "4:3", label: "4:3 (Standard)", ratio: 4 / 3 },
+  { id: "1:1", label: "1:1 (Square)", ratio: 1 },
+  { id: "free", label: "Original", ratio: null },
+];
 
 interface AdminEventsCMSProps {
   onEventCountChange?: () => void;
@@ -95,8 +105,12 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // File input ref
+  // File input ref & Crop Modal State
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState<string>("event_banner.jpg");
+  const [pendingRawFile, setPendingRawFile] = useState<File | null>(null);
 
   // Load events
   const loadEvents = useCallback(async () => {
@@ -154,8 +168,8 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
     setIsModalOpen(true);
   };
 
-  // Upload poster image
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload poster image - open crop modal first
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -164,6 +178,16 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    setCropImageSrc(objectUrl);
+    setCropFileName(file.name);
+    setPendingRawFile(file);
+    setCropModalOpen(true);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleExecuteBannerUpload = async (fileToUpload: File) => {
     setUploadingImage(true);
     setFormErrors((prev) => {
       const copy = { ...prev };
@@ -172,7 +196,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
     });
 
     try {
-      const res = await uploadEventBanner(file);
+      const res = await uploadEventBanner(fileToUpload);
       setForm((prev) => ({ ...prev, banner_url: res.banner_url }));
       setSuccessMsg("Banner image uploaded successfully.");
       setTimeout(() => setSuccessMsg(null), 3500);
@@ -181,6 +205,17 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       setFormErrors((prev) => ({ ...prev, banner_url: msg }));
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    await handleExecuteBannerUpload(croppedFile);
+  };
+
+  const handleSkipCrop = async () => {
+    if (pendingRawFile) {
+      setCropModalOpen(false);
+      await handleExecuteBannerUpload(pendingRawFile);
     }
   };
 
@@ -731,16 +766,50 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                     </div>
                     {formErrors.banner_url && <p className="text-[11px] text-rose-400">{formErrors.banner_url}</p>}
 
-                    {/* Banner Image Preview */}
+                    {/* Banner Image Preview with Adjust/Crop button */}
                     {form.banner_url && (
-                      <div className="relative w-full h-32 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 mt-2">
-                        <Image
-                          src={form.banner_url}
-                          alt="Banner Preview"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
+                      <div className="space-y-1.5 mt-2">
+                        <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 group">
+                          <Image
+                            src={form.banner_url}
+                            alt="Banner Preview"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCropImageSrc(form.banner_url);
+                                setCropFileName("event_banner.jpg");
+                                setPendingRawFile(null);
+                                setCropModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer"
+                            >
+                              <Crop className="w-3.5 h-3.5" />
+                              <span>Adjust / Crop</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-slate-400">Current banner preview</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCropImageSrc(form.banner_url);
+                              setCropFileName("event_banner.jpg");
+                              setPendingRawFile(null);
+                              setCropModalOpen(true);
+                            }}
+                            className="text-xs text-purple-400 hover:text-purple-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Crop className="w-3.5 h-3.5" />
+                            <span>Adjust / Crop Framing</span>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -893,6 +962,20 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
           </div>
         </div>
       )}
+
+      {/* ── Image Crop Modal for Event Banner ── */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={cropImageSrc}
+        fileName={cropFileName}
+        title="Crop & Adjust Event Banner"
+        description="Select aspect ratio, zoom and drag to perfectly frame the event poster for hero banners."
+        aspectOptions={EVENT_ASPECT_OPTIONS}
+        defaultAspectId="hero"
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropModalOpen(false)}
+        onSkipCrop={pendingRawFile ? handleSkipCrop : undefined}
+      />
     </div>
   );
 }

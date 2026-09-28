@@ -23,7 +23,23 @@ import {
   Radio,
   Layers,
   ArrowRight,
+  Crop,
 } from "lucide-react";
+import ImageCropModal, { type AspectRatioOption } from "./ImageCropModal";
+
+const STORY_ASPECT_OPTIONS: AspectRatioOption[] = [
+  { id: "16:9", label: "16:9 (Widescreen)", ratio: 16 / 9 },
+  { id: "4:3", label: "4:3 (Standard)", ratio: 4 / 3 },
+  { id: "9:16", label: "9:16 (Story / Reel)", ratio: 9 / 16 },
+  { id: "1:1", label: "1:1 (Square)", ratio: 1 },
+  { id: "free", label: "Original", ratio: null },
+];
+
+const LOGO_ASPECT_OPTIONS: AspectRatioOption[] = [
+  { id: "1:1", label: "1:1 (Square Logo)", ratio: 1 },
+  { id: "4:3", label: "4:3 (Standard)", ratio: 4 / 3 },
+  { id: "free", label: "Original", ratio: null },
+];
 import type {
   TechNewsSource,
   TechNewsStory,
@@ -111,6 +127,29 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
   const [deleteConfirmSourceId, setDeleteConfirmSourceId] = useState<string | null>(null);
   const [deleteConfirmStoryId, setDeleteConfirmStoryId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Crop Modal State
+  const [cropModalConfig, setCropModalConfig] = useState<{
+    isOpen: boolean;
+    imageSrc: string | null;
+    fileName: string;
+    title: string;
+    description: string;
+    aspectOptions: AspectRatioOption[];
+    defaultAspectId: string;
+    pendingFile: File | null;
+    targetType: "logo" | "cover";
+  }>({
+    isOpen: false,
+    imageSrc: null,
+    fileName: "image.jpg",
+    title: "Crop Image",
+    description: "Adjust framing",
+    aspectOptions: STORY_ASPECT_OPTIONS,
+    defaultAspectId: "16:9",
+    pendingFile: null,
+    targetType: "cover",
+  });
 
   // ── LOAD SOURCES ─────────────────────────────────────────────────────────────
   const loadSources = useCallback(async () => {
@@ -226,13 +265,31 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setCropModalConfig({
+      isOpen: true,
+      imageSrc: objectUrl,
+      fileName: file.name,
+      title: "Crop Company / Publisher Logo",
+      description: "Square 1:1 framing is ideal for company brand logos and source badges.",
+      aspectOptions: LOGO_ASPECT_OPTIONS,
+      defaultAspectId: "1:1",
+      pendingFile: file,
+      targetType: "logo",
+    });
+
+    if (logoInputRef.current) logoInputRef.current.value = "";
+  };
+
+  const handleExecuteLogoUpload = async (fileToUpload: File) => {
     setUploadingLogo(true);
     setErrorMsg(null);
     try {
-      const res = await uploadAdminSourceLogo(file, editingSourceId || undefined);
+      const res = await uploadAdminSourceLogo(fileToUpload, editingSourceId || undefined);
       setSourceForm((prev) => ({ ...prev, logo_url: res.logo_url }));
       setSuccessMsg("Logo uploaded to Supabase Storage.");
     } catch (err: unknown) {
@@ -364,13 +421,31 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
     }
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setCropModalConfig({
+      isOpen: true,
+      imageSrc: objectUrl,
+      fileName: file.name,
+      title: "Crop Story Cover Image",
+      description: "Adjust framing and zoom for tech news cards and story reels.",
+      aspectOptions: STORY_ASPECT_OPTIONS,
+      defaultAspectId: "16:9",
+      pendingFile: file,
+      targetType: "cover",
+    });
+
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  };
+
+  const handleExecuteCoverUpload = async (fileToUpload: File) => {
     setUploadingCover(true);
     setErrorMsg(null);
     try {
-      const res = await uploadAdminStoryCover(file, editingStoryId || undefined);
+      const res = await uploadAdminStoryCover(fileToUpload, editingStoryId || undefined);
       setStoryForm((prev) => ({ ...prev, cover_image_url: res.cover_image_url }));
       setSuccessMsg("Cover image uploaded to Supabase Storage.");
     } catch (err: unknown) {
@@ -378,6 +453,26 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
       setErrorMsg(msg);
     } finally {
       setUploadingCover(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    if (cropModalConfig.targetType === "logo") {
+      await handleExecuteLogoUpload(croppedFile);
+    } else {
+      await handleExecuteCoverUpload(croppedFile);
+    }
+  };
+
+  const handleSkipCrop = async () => {
+    const raw = cropModalConfig.pendingFile;
+    setCropModalConfig((prev) => ({ ...prev, isOpen: false }));
+    if (raw) {
+      if (cropModalConfig.targetType === "logo") {
+        await handleExecuteLogoUpload(raw);
+      } else {
+        await handleExecuteCoverUpload(raw);
+      }
     }
   };
 
@@ -807,6 +902,40 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
                     <span>{uploadingLogo ? "Uploading..." : "Upload"}</span>
                   </button>
                 </div>
+                {sourceForm.logo_url && (
+                  <div className="flex items-center gap-2.5 mt-2 p-2 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                    <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-slate-700 shrink-0">
+                      <Image
+                        src={sourceForm.logo_url}
+                        alt="Logo Preview"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-300 truncate flex-1">Logo uploaded</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCropModalConfig({
+                          isOpen: true,
+                          imageSrc: sourceForm.logo_url,
+                          fileName: "logo.jpg",
+                          title: "Crop Company / Publisher Logo",
+                          description: "Square 1:1 framing is ideal for company brand logos.",
+                          aspectOptions: LOGO_ASPECT_OPTIONS,
+                          defaultAspectId: "1:1",
+                          pendingFile: null,
+                          targetType: "logo",
+                        });
+                      }}
+                      className="text-xs text-purple-400 hover:text-purple-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Crop className="w-3.5 h-3.5" />
+                      <span>Crop Logo</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -948,6 +1077,65 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
                     <span>{uploadingCover ? "Uploading..." : "Upload"}</span>
                   </button>
                 </div>
+
+                {storyForm.cover_image_url && (
+                  <div className="space-y-1 mt-2">
+                    <div className="relative w-full h-28 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 group">
+                      <Image
+                        src={storyForm.cover_image_url}
+                        alt="Story Cover Preview"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCropModalConfig({
+                              isOpen: true,
+                              imageSrc: storyForm.cover_image_url,
+                              fileName: "cover.jpg",
+                              title: "Crop Story Cover Image",
+                              description: "Adjust framing for tech news cards and story reels.",
+                              aspectOptions: STORY_ASPECT_OPTIONS,
+                              defaultAspectId: "16:9",
+                              pendingFile: null,
+                              targetType: "cover",
+                            });
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-md cursor-pointer"
+                        >
+                          <Crop className="w-3.5 h-3.5" />
+                          <span>Adjust / Crop</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-400">Cover preview</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCropModalConfig({
+                            isOpen: true,
+                            imageSrc: storyForm.cover_image_url,
+                            fileName: "cover.jpg",
+                            title: "Crop Story Cover Image",
+                            description: "Adjust framing for tech news cards and story reels.",
+                            aspectOptions: STORY_ASPECT_OPTIONS,
+                            defaultAspectId: "16:9",
+                            pendingFile: null,
+                            targetType: "cover",
+                          });
+                        }}
+                        className="text-xs text-purple-400 hover:text-purple-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Crop className="w-3.5 h-3.5" />
+                        <span>Adjust / Crop Framing</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Source Original URL */}
@@ -1056,6 +1244,20 @@ export default function AdminTechNewsCMS({ onNewsCountChange }: AdminTechNewsCMS
           </div>
         </div>
       )}
+
+      {/* ── Image Crop Modal for Tech News (Logos & Covers) ── */}
+      <ImageCropModal
+        isOpen={cropModalConfig.isOpen}
+        imageSrc={cropModalConfig.imageSrc}
+        fileName={cropModalConfig.fileName}
+        title={cropModalConfig.title}
+        description={cropModalConfig.description}
+        aspectOptions={cropModalConfig.aspectOptions}
+        defaultAspectId={cropModalConfig.defaultAspectId}
+        onCropComplete={handleCropComplete}
+        onClose={() => setCropModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        onSkipCrop={cropModalConfig.pendingFile ? handleSkipCrop : undefined}
+      />
     </div>
   );
 }
