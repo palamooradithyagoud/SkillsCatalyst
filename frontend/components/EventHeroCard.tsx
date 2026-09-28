@@ -296,24 +296,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
         </a>
 
-        {/* Bottom-Center Pagination Dots */}
-        {events.length > 1 && (
-          <div className="pointer-events-auto hidden xs:flex sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xs border border-white/10">
-            {events.map((ev, idx) => (
-              <button
-                key={ev.id}
-                type="button"
-                onClick={() => setCurrentIndex(idx)}
-                aria-label={`Go to event ${idx + 1}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  currentIndex === idx
-                    ? "w-3.5 sm:w-4 h-1 sm:h-1.5 bg-purple-500 shadow-xs shadow-purple-500/50"
-                    : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/40 hover:bg-white/80"
-                }`}
-              />
-            ))}
-          </div>
-        )}
 
         {/* Secondary Status Badge (PRO User vs Get PRO) */}
         {isPremium ? (
