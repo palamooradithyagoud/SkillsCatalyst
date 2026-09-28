@@ -15,18 +15,7 @@ export function PracticeHeader({
   companiesCount,
 }: PracticeHeaderProps) {
   if (selectedMode === "index") {
-    return (
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Practice &amp; Problem Solving
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Choose your path to practice data structures &amp; algorithms step-by-step or target top companies.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (selectedMode === "beginner") {

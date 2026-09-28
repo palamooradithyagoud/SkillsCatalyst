@@ -53,6 +53,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/verify") ||
     pathname.startsWith("/certificate-preview") ||
     pathname.startsWith("/career/resume-builder") ||
+    pathname.startsWith("/practice") ||
     isAuthPage ||
     isCallbackPage ||
     pathname.startsWith("/api/");
