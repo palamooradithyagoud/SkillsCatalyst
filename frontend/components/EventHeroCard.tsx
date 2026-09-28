@@ -111,49 +111,52 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   if (!loading && events.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="relative overflow-hidden rounded-[18px] sm:rounded-[24px] w-full max-w-[460px] sm:max-w-[480px] h-[165px] sm:h-[185px] md:h-[195px] shadow-sm hover:shadow-md border border-slate-200/70 select-none group bg-slate-950 transition-all flex flex-col justify-between p-4 sm:p-5"
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all flex flex-col justify-between p-4 sm:p-5"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/70 via-slate-950 to-purple-950/60 pointer-events-none" />
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-white/95 border border-slate-200/80 text-[10px] sm:text-xs font-semibold shadow-xs backdrop-blur-md">
-            <Trophy className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-            <span className="text-black font-bold">Prize:</span>
-            <span className="text-purple-600 font-bold">$50,000</span>
-            <span className="text-slate-300 font-normal">|</span>
-            <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
-            <span className="text-black font-semibold">Aug 26, 2026</span>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-purple-950/40 pointer-events-none" />
+
+        {/* ── Top-Left Metadata Pill ── */}
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
+            <Trophy className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-900 leading-none">Prize:</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-purple-600 leading-none">$50,000</span>
+            <span className="text-slate-300 font-light text-[9px] leading-none mx-0.5">|</span>
+            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 leading-none">Upcoming 2026</span>
           </div>
         </div>
 
-        <div className="relative z-10 space-y-1">
-          <h3 className="text-sm sm:text-base font-black text-white">
+        {/* ── Main Content Hierarchy ── */}
+        <div className="relative z-10 space-y-0.5 sm:space-y-1">
+          <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-white tracking-tight leading-snug">
             Campus Hackathons &amp; Tech Sprints
           </h3>
-          <p className="text-[11px] sm:text-xs text-slate-300 font-medium line-clamp-2">
+          <p className="text-[11px] sm:text-xs text-slate-300/90 font-medium line-clamp-1">
             Verified collegiate hackathons, competitions, and technical sprints will be published here.
           </p>
         </div>
 
-        <div className="relative z-10 pt-1 flex items-center justify-between">
+        {/* ── Bottom Actions (12-16px breathing room) ── */}
+        <div className="relative z-10 flex items-center justify-between pt-1">
           <button
             type="button"
-            className="pointer-events-auto group bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+            className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <ExternalLink className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
-            <span className="text-[10px] sm:text-[11px] font-bold tracking-tight text-white">
-              Register / View Event
-            </span>
-            <ChevronRight className="w-3 h-3 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+            <span>Register / View Event</span>
+            <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
+
           {isPremium ? (
             <span
               data-testid="event-hero-pro-badge"
-              className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 border border-slate-200/80 text-black text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs"
+              className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[10px] sm:text-xs font-semibold shadow-xs"
             >
-              <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              <Crown className="w-3 h-3 text-purple-600 shrink-0" />
               <span>PRO User</span>
             </span>
           ) : (
@@ -161,9 +164,9 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               type="button"
               onClick={handleOpenPricing}
               data-testid="event-hero-get-pro-btn"
-              className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-300 text-black hover:text-purple-700 text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
             >
-              <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              <Crown className="w-3 h-3 text-purple-600 shrink-0" />
               <span>Get PRO</span>
             </button>
           )}
@@ -176,30 +179,31 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const currentEvent = events[currentIndex] || events[0];
   if (!currentEvent) {
     return (
-      <div className="w-full max-w-[460px] h-[165px] sm:h-[185px] rounded-[24px] bg-slate-900/80 animate-pulse" />
+      <div className="w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] rounded-2xl sm:rounded-3xl bg-slate-900/80 animate-pulse" />
     );
   }
 
   const startDateStr = formatEventDate(currentEvent.start_date);
   const cleanPrize = formatPrizePool(currentEvent.prize_pool);
+  const organizerText = [currentEvent.conducted_by_college, currentEvent.location].filter(Boolean).join(" • ");
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative overflow-hidden rounded-[18px] sm:rounded-[24px] w-full max-w-[460px] sm:max-w-[480px] h-[165px] sm:h-[185px] md:h-[195px] shadow-sm hover:shadow-md border border-slate-200/70 select-none group bg-slate-950 transition-all"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all"
     >
-      {/* ── Background Event Banner Image ── */}
+      {/* ── Background Event Banner Image with Adaptive Readability Scrim ── */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentEvent.id}
-          initial={{ opacity: 0, scale: 1.04 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, x: 14 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -14 }}
+          transition={{ duration: 0.35, ease: "easeInOut" }}
           className="absolute inset-0 w-full h-full"
         >
           {currentEvent.banner_url ? (
@@ -208,115 +212,116 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               alt={currentEvent.event_name}
               fill
               priority={currentIndex === 0}
-              sizes="(max-width: 768px) 100vw, 70vw"
+              sizes="(max-width: 768px) 100vw, 540px"
               className="object-cover object-center"
               unoptimized
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-purple-950 to-slate-950" />
           )}
-
-          {/* Vignette & gradient overlay for high contrast readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/45 pointer-events-none" />
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Top-Left Bar: Badge & Start Date ── */}
-      <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 pointer-events-none">
+      {/* ── Top-Left Bar: Compact Prize + Date Metadata Pill ── */}
+      <div className="absolute top-2.5 sm:top-3 left-3.5 sm:left-4 z-20 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentEvent.id}
-            initial={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, y: -3 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.3 }}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-white/95 border border-slate-200/80 text-[10px] sm:text-xs font-semibold shadow-xs backdrop-blur-md"
+            exit={{ opacity: 0, y: 3 }}
+            transition={{ duration: 0.2 }}
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md"
           >
-            <Trophy className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-            <span className="text-black font-bold">Prize:</span>
-            <span className="text-purple-600 font-bold">{cleanPrize}</span>
-            <span className="text-slate-300 font-normal">|</span>
-            <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
-            <span className="text-black font-semibold">{startDateStr}</span>
+            <Trophy className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-900 leading-none">Prize:</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-purple-600 leading-none">{cleanPrize}</span>
+            <span className="text-slate-300 font-light text-[9px] leading-none mx-0.5">|</span>
+            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 leading-none">{startDateStr}</span>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* ── Top-Right Bar: Carousel Controls ── */}
+      {/* ── Vertically Centered Edge Arrows ── */}
       {events.length > 1 && (
-        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 pointer-events-auto flex items-center gap-1 bg-black/55 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-white/20">
+        <>
           <button
             type="button"
             onClick={handlePrev}
             aria-label="Previous event"
-            className="text-white/70 hover:text-white transition-colors p-0.5 cursor-pointer"
+            className="absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 z-30 pointer-events-auto w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-black/40 hover:bg-black/70 text-white/80 hover:text-white backdrop-blur-xs flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/10 hover:border-white/25 active:scale-90"
           >
-            <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
-
-          {/* Indicators */}
-          <div className="flex items-center gap-1 px-1">
-            {events.map((ev, idx) => (
-              <button
-                key={ev.id}
-                type="button"
-                onClick={() => setCurrentIndex(idx)}
-                aria-label={`Go to ${ev.event_name}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  currentIndex === idx
-                    ? "w-3.5 h-1.5 bg-white"
-                    : "w-1.5 h-1.5 bg-white/40 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
 
           <button
             type="button"
             onClick={handleNext}
             aria-label="Next event"
-            className="text-white/70 hover:text-white transition-colors p-0.5 cursor-pointer"
+            className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 z-30 pointer-events-auto w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-black/40 hover:bg-black/70 text-white/80 hover:text-white backdrop-blur-xs flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/10 hover:border-white/25 active:scale-90"
           >
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
-        </div>
+        </>
       )}
 
-      {/* ── Center Content: Event Name & Host College ── */}
-      <div className="absolute inset-x-3 sm:inset-x-4 top-11 sm:top-12 z-20 pointer-events-none pr-12">
-        <h3 className="text-xs sm:text-sm font-black text-white line-clamp-1 drop-shadow-md">
+      {/* ── Center Content Area: Dominant Title & Subtitle ── */}
+      <div className="absolute inset-x-4 sm:inset-x-5 top-11 sm:top-12 z-20 pointer-events-none pr-8">
+        <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-white tracking-tight leading-snug line-clamp-1 drop-shadow-md">
           {currentEvent.event_name}
         </h3>
-        <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium line-clamp-1 drop-shadow">
-          {currentEvent.conducted_by_college} {currentEvent.location ? `• ${currentEvent.location}` : ""}
-        </p>
+        {organizerText && (
+          <p className="text-[10px] sm:text-xs text-slate-200/90 font-medium line-clamp-1 mt-0.5 sm:mt-1 drop-shadow-sm">
+            {organizerText}
+          </p>
+        )}
       </div>
 
-      {/* ── Downside Area: Register / View Event Link & Actions ── */}
+      {/* ── Downside Area: Breathing room, Primary CTA, Pagination Dots, PRO Badge ── */}
       <div
-        className="absolute bottom-2 sm:bottom-2.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-3 sm:px-4"
+        className="absolute bottom-3 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-4 sm:px-5"
         style={{ left: 0, right: 0 }}
       >
+        {/* Primary CTA */}
         <a
           href={currentEvent.event_link || "#"}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Register for ${currentEvent.event_name}`}
-          className="pointer-events-auto group bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-md flex items-center gap-1.5 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+          className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
-          <span className="text-[10px] sm:text-[11px] font-bold tracking-tight text-white">
-            Register / View Event
-          </span>
-          <ChevronRight className="w-3 h-3 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+          <span>Register / View Event</span>
+          <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
         </a>
 
+        {/* Bottom-Center Pagination Dots */}
+        {events.length > 1 && (
+          <div className="pointer-events-auto hidden xs:flex sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xs border border-white/10">
+            {events.map((ev, idx) => (
+              <button
+                key={ev.id}
+                type="button"
+                onClick={() => setCurrentIndex(idx)}
+                aria-label={`Go to event ${idx + 1}`}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  currentIndex === idx
+                    ? "w-3.5 sm:w-4 h-1 sm:h-1.5 bg-purple-500 shadow-xs shadow-purple-500/50"
+                    : "w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/40 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Secondary Status Badge (PRO User vs Get PRO) */}
         {isPremium ? (
           <span
             data-testid="event-hero-pro-badge"
-            className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 border border-slate-200/80 text-black text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs"
+            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[10px] sm:text-xs font-semibold shadow-xs"
           >
-            <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <Crown className="w-3 h-3 text-purple-600 shrink-0" />
             <span>PRO User</span>
           </span>
         ) : (
@@ -324,9 +329,9 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             type="button"
             onClick={handleOpenPricing}
             data-testid="event-hero-get-pro-btn"
-            className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-300 text-black hover:text-purple-700 text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
           >
-            <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <Crown className="w-3 h-3 text-purple-600 shrink-0" />
             <span>Get PRO</span>
           </button>
         )}
