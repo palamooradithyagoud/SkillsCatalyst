@@ -804,7 +804,7 @@ export default function PenguinMountainCanvas({ className = "" }: PenguinMountai
   }, []);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden select-none ${className}`}>
+    <div className={`w-full h-full overflow-hidden select-none ${className}`}>
       <canvas ref={canvasRef} className="w-full h-full block" />
     </div>
   );
