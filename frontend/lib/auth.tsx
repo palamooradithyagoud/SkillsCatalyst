@@ -330,7 +330,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
     const isVerifyPage = pathname.startsWith("/verify");
     const isPreviewPage = pathname.startsWith("/certificate-preview");
-    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage;
+    const isResumeBuilderPage = pathname.startsWith("/career/resume-builder");
+    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage;
 
     if (!session && !isPublicPage) {
       router.replace("/login");
@@ -408,8 +409,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmail,
   };
 
-  // On /login and / landing page: ALWAYS render children immediately without showing full-screen loading screen
-  if (pathname === "/login" || pathname === "/") {
+  // On /login, / landing page, and /career/resume-builder: ALWAYS render children immediately
+  if (pathname === "/login" || pathname === "/" || pathname.startsWith("/career/resume-builder")) {
     return (
       <AuthContext.Provider value={contextValue}>
         {children}
