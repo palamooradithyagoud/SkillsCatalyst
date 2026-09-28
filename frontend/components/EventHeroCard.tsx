@@ -20,6 +20,31 @@ interface EventHeroCardProps {
   onOpenPricing?: () => void;
 }
 
+function formatPrizePool(prize?: string | null): string {
+  if (!prize) return "$50,000";
+  const cleaned = prize.replace(/^prize\s*[:\-]?\s*/i, "").trim();
+  if (!cleaned) return "$50,000";
+  if (/^\d+$/.test(cleaned)) {
+    return `$${Number(cleaned).toLocaleString()}`;
+  }
+  return cleaned;
+}
+
+function formatEventDate(dateStr?: string | null): string {
+  if (!dateStr) return "Aug 26, 2026";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "Aug 26, 2026";
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return "Aug 26, 2026";
+  }
+}
+
 export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const { isPremium } = useSubscription();
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -27,6 +52,14 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleOpenPricing = () => {
+    if (onOpenPricing) {
+      onOpenPricing();
+    } else {
+      window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+    }
+  };
 
   // Fetch student visible events from backend
   useEffect(() => {
@@ -85,10 +118,14 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       >
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/70 via-slate-950 to-purple-950/60 pointer-events-none" />
         <div className="relative z-10 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-[10px] sm:text-xs font-bold tracking-wide">
-            <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
-            <span>Upcoming Hackathons &amp; Events</span>
-          </span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-white/95 border border-slate-200/80 text-[10px] sm:text-xs font-semibold shadow-xs backdrop-blur-md">
+            <Trophy className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span className="text-black font-bold">Prize:</span>
+            <span className="text-purple-600 font-bold">$50,000</span>
+            <span className="text-slate-300 font-normal">|</span>
+            <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
+            <span className="text-black font-semibold">Aug 26, 2026</span>
+          </div>
         </div>
 
         <div className="relative z-10 space-y-1">
@@ -101,27 +138,34 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         </div>
 
         <div className="relative z-10 pt-1 flex items-center justify-between">
-          <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
-            Stay tuned for upcoming registrations
-          </span>
+          <button
+            type="button"
+            className="pointer-events-auto group bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+            <span className="text-[10px] sm:text-[11px] font-bold tracking-tight text-white">
+              Register / View Event
+            </span>
+            <ChevronRight className="w-3 h-3 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </button>
           {isPremium ? (
             <span
               data-testid="event-hero-pro-badge"
-              className="px-2.5 py-1 rounded-lg bg-black/90 border border-white/20 text-white dark:bg-purple-600 dark:border-purple-400/60 dark:text-white text-[10px] sm:text-xs font-bold flex items-center gap-1.5 shadow-xs dark:shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all"
+              className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 border border-slate-200/80 text-black text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs"
             >
-              <Crown className="w-3 h-3 text-white dark:text-purple-100 shrink-0" />
-              PRO User
+              <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              <span>PRO User</span>
             </span>
           ) : (
-            onOpenPricing && (
-              <button
-                type="button"
-                onClick={onOpenPricing}
-                className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs"
-              >
-                Get PRO
-              </button>
-            )
+            <button
+              type="button"
+              onClick={handleOpenPricing}
+              data-testid="event-hero-get-pro-btn"
+              className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-300 text-black hover:text-purple-700 text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+            >
+              <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              <span>Get PRO</span>
+            </button>
           )}
         </div>
       </motion.div>
@@ -136,12 +180,8 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
     );
   }
 
-  // Format display date
-  const startDateStr = new Date(currentEvent.start_date).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const startDateStr = formatEventDate(currentEvent.start_date);
+  const cleanPrize = formatPrizePool(currentEvent.prize_pool);
 
   return (
     <motion.div
@@ -190,18 +230,14 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.3 }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold tracking-wide shadow-sm"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-white/95 border border-slate-200/80 text-[10px] sm:text-xs font-semibold shadow-xs backdrop-blur-md"
           >
-            <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
-            <span>
-              {currentEvent.is_hackathon
-                ? currentEvent.prize_pool
-                  ? `Prize: ${currentEvent.prize_pool}`
-                  : "Hackathon"
-                : "Live Event"}
-            </span>
-            <span className="text-white/40">•</span>
-            <span className="text-emerald-300 font-semibold">{startDateStr}</span>
+            <Trophy className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span className="text-black font-bold">Prize:</span>
+            <span className="text-purple-600 font-bold">{cleanPrize}</span>
+            <span className="text-slate-300 font-normal">|</span>
+            <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
+            <span className="text-black font-semibold">{startDateStr}</span>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -262,37 +298,37 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         style={{ left: 0, right: 0 }}
       >
         <a
-          href={currentEvent.event_link}
+          href={currentEvent.event_link || "#"}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Register for ${currentEvent.event_name}`}
-          className="pointer-events-auto group bg-white/95 hover:bg-white text-slate-900 rounded-xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-lg border border-white/80 flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-md"
+          className="pointer-events-auto group bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-1.5 px-3 sm:py-2 sm:px-3.5 shadow-md flex items-center gap-1.5 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] sm:text-[11px] font-black tracking-tight">
+          <ExternalLink className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-tight text-white">
             Register / View Event
           </span>
-          <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-3 h-3 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
         </a>
 
         {isPremium ? (
           <span
             data-testid="event-hero-pro-badge"
-            className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/90 border border-white/20 text-white dark:bg-purple-600 dark:border-purple-400/60 dark:text-white text-[10px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs dark:shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all"
+            className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 border border-slate-200/80 text-black text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs"
           >
-            <Crown className="w-3 h-3 text-white dark:text-purple-100 shrink-0" />
-            PRO User
+            <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span>PRO User</span>
           </span>
         ) : (
-          onOpenPricing && (
-            <button
-              type="button"
-              onClick={onOpenPricing}
-              className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/50 hover:bg-black/70 border border-white/20 text-white text-[10px] font-bold transition-all cursor-pointer backdrop-blur-md hover:scale-105 active:scale-95"
-            >
-              Get PRO
-            </button>
-          )
+          <button
+            type="button"
+            onClick={handleOpenPricing}
+            data-testid="event-hero-get-pro-btn"
+            className="pointer-events-auto px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/95 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-300 text-black hover:text-purple-700 text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <Crown className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span>Get PRO</span>
+          </button>
         )}
       </div>
     </motion.div>
