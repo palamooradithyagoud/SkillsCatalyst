@@ -132,10 +132,10 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
 
         {/* ── Main Content Hierarchy ── */}
         <div className="relative z-10 space-y-0.5 sm:space-y-1">
-          <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-white tracking-tight leading-snug">
+          <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-purple-400 tracking-tight leading-snug">
             Campus Hackathons &amp; Tech Sprints
           </h3>
-          <p className="text-[11px] sm:text-xs text-slate-300/90 font-medium line-clamp-1">
+          <p className="text-[11px] sm:text-xs text-purple-300 font-medium line-clamp-1">
             Verified collegiate hackathons, competitions, and technical sprints will be published here.
           </p>
         </div>
@@ -185,7 +185,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
 
   const startDateStr = formatEventDate(currentEvent.start_date);
   const cleanPrize = formatPrizePool(currentEvent.prize_pool);
-  const organizerText = [currentEvent.conducted_by_college, currentEvent.location].filter(Boolean).join(" • ");
 
   return (
     <motion.div
@@ -266,17 +265,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         </>
       )}
 
-      {/* ── Center Content Area: Dominant Title & Subtitle ── */}
-      <div className="absolute inset-x-4 sm:inset-x-5 top-11 sm:top-12 z-20 pointer-events-none pr-8">
-        <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-white tracking-tight leading-snug line-clamp-1 drop-shadow-md">
-          {currentEvent.event_name}
-        </h3>
-        {organizerText && (
-          <p className="text-[10px] sm:text-xs text-slate-200/90 font-medium line-clamp-1 mt-0.5 sm:mt-1 drop-shadow-sm">
-            {organizerText}
-          </p>
-        )}
-      </div>
 
       {/* ── Downside Area: Breathing room, Primary CTA, Pagination Dots, PRO Badge ── */}
       <div
