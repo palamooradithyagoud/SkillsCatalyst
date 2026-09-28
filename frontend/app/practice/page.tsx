@@ -22,6 +22,7 @@ import {
 } from "@/lib/practice/practiceHelpers";
 import { usePracticeSolvedState } from "@/hooks/usePracticeSolvedState";
 import { PracticeHeader } from "@/components/practice/PracticeHeader";
+import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
@@ -211,12 +212,21 @@ function PracticeContent() {
         companiesCount={companiesList.length}
       />
 
-      {/* ── MODE 0: INDEX PAGE CARDS */}
+      {/* ── MODE 0: INDEX PAGE (HERO CARD FIRST + MODE CARDS) */}
       {selectedMode === "index" && (
-        <PracticeModeCards
-          onSelectMode={setSelectedMode}
-          companiesCount={companiesList.length}
-        />
+        <div className="space-y-6 sm:space-y-8">
+          <PracticeHeroCard
+            onSelectCompany={(companyId) => {
+              setSelectedCompany(companyId);
+              setSelectedMode("company");
+            }}
+          />
+
+          <PracticeModeCards
+            onSelectMode={setSelectedMode}
+            companiesCount={companiesList.length}
+          />
+        </div>
       )}
 
       {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
