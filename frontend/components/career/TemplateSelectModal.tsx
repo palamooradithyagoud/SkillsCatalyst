@@ -148,7 +148,7 @@ export default function TemplateSelectModal({
           </div>
 
           {/* Cards Grid */}
-          <div className="p-4 sm:p-6 md:p-8 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="p-3 sm:p-6 md:p-8 overflow-y-auto flex-1 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6">
             {RESUME_TEMPLATES.map((tmpl) => {
               const isSelected = selectedTemplate === tmpl.id;
 
@@ -156,7 +156,7 @@ export default function TemplateSelectModal({
                 <div
                   key={tmpl.id}
                   onClick={() => onSelectTemplate(tmpl.id)}
-                  className={`group relative rounded-2xl border-2 transition-all duration-200 flex flex-col p-4 sm:p-5 cursor-pointer text-left ${
+                  className={`group relative rounded-xl sm:rounded-2xl border-2 transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left ${
                     isSelected
                       ? "border-purple-600 bg-purple-50/40 shadow-lg shadow-purple-600/10 ring-4 ring-purple-600/10"
                       : "border-slate-200 hover:border-purple-300 bg-white hover:shadow-md"
@@ -171,7 +171,7 @@ export default function TemplateSelectModal({
                   )}
 
                   {/* Visual Skeleton Thumbnail (Faithful representation of the layout) */}
-                  <div className="w-full h-36 sm:h-40 rounded-xl bg-slate-50 border border-slate-200 p-3 mb-4 overflow-hidden flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
+                  <div className="w-full h-28 sm:h-40 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-200 p-2 sm:p-3 mb-2.5 sm:mb-4 overflow-hidden flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
                     {/* Template 1: Simple & Classic Preview */}
                     {tmpl.id === "simple-classic" && (
                       <div className="w-full h-full flex flex-col space-y-1.5 select-none font-serif text-[7px] text-slate-700 opacity-90">
@@ -299,38 +299,38 @@ export default function TemplateSelectModal({
                   </div>
 
                   {/* Badges & ATS Rating */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2">
                     <span
-                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${tmpl.badgeColor}`}
+                      className={`text-[8.5px] sm:text-[10px] font-extrabold px-1.5 sm:px-2.5 py-0.5 rounded-full border ${tmpl.badgeColor}`}
                     >
                       {tmpl.badge}
                     </span>
-                    <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      <Zap className="w-3 h-3 text-emerald-600 fill-emerald-600" />
+                    <div className="flex items-center gap-1 text-[8.5px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200">
+                      <Zap className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-600 fill-emerald-600" />
                       <span>{tmpl.atsScore}% ATS</span>
                     </div>
                   </div>
 
                   {/* Title & Tagline */}
-                  <h3 className="text-base font-black text-slate-900 group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-xs sm:text-base font-black text-slate-900 group-hover:text-purple-600 transition-colors">
                     {tmpl.name}
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
+                  <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-relaxed mt-0.5 sm:mt-1 line-clamp-2">
                     {tmpl.tagline}
                   </p>
 
                   {/* Best For */}
-                  <div className="my-3 pt-2 border-t border-slate-100 text-[11px]">
+                  <div className="my-2 sm:my-3 pt-1.5 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] line-clamp-2">
                     <span className="font-bold text-slate-700">Best for: </span>
                     <span className="text-slate-500">{tmpl.bestFor}</span>
                   </div>
 
                   {/* Feature Bullets */}
-                  <ul className="space-y-1.5 text-xs text-slate-600 flex-1 mb-4">
+                  <ul className="space-y-1 sm:space-y-1.5 text-[10px] sm:text-xs text-slate-600 flex-1 mb-2.5 sm:mb-4">
                     {tmpl.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5 text-[11px] leading-tight">
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5 stroke-[2.5]" />
-                        <span>{feat}</span>
+                      <li key={idx} className="flex items-start gap-1 sm:gap-1.5 text-[9.5px] sm:text-[11px] leading-tight">
+                        <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0 mt-0.5 stroke-[2.5]" />
+                        <span className="line-clamp-1">{feat}</span>
                       </li>
                     ))}
                   </ul>
@@ -342,14 +342,14 @@ export default function TemplateSelectModal({
                       e.stopPropagation();
                       onSelectTemplate(tmpl.id);
                     }}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    className={`w-full py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                       isSelected
                         ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
                         : "bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-700"
                     }`}
                   >
-                    <span>{isSelected ? "Template Selected" : "Use This Template"}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>{isSelected ? "Selected" : "Use Template"}</span>
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </div>
               );

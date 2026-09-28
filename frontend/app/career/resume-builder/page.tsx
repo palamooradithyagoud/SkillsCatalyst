@@ -29,10 +29,12 @@ import {
   AlertCircle,
   HelpCircle,
   RotateCcw,
+  Loader2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import ResumeLivePreview from "@/components/career/ResumeLivePreview";
 import { ResumeTemplateId, RESUME_TEMPLATES } from "@/components/career/TemplateSelectModal";
+import { exportResumeAsPdf } from "@/lib/career/pdfExportHelper";
 import {
   ResumeData,
   generateSB2NovLaTeX,
@@ -280,6 +282,7 @@ function ResumeBuilderInner() {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showLatexModal, setShowLatexModal] = useState(false);
   const [copiedLatex, setCopiedLatex] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   // Compute ATS completeness score
   const computeATSScore = () => {
@@ -305,14 +308,22 @@ function ResumeBuilderInner() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDownloadResume = () => {
-    const originalTitle = document.title;
-    const cleanFileName = `${(resumeData.fullName || "My").trim().replace(/\s+/g, "_")}_Resume`;
-    document.title = cleanFileName;
-    window.print();
-    setTimeout(() => {
-      document.title = originalTitle;
-    }, 1500);
+  const handleDownloadResume = async () => {
+    if (isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      await exportResumeAsPdf({
+        elementId: "resume-printable-document",
+        fullName: resumeData.fullName,
+      });
+      try {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+      } catch {}
+    } catch (err) {
+      console.error("Failed to export resume as PDF:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const handleCopyLatex = () => {
@@ -419,39 +430,39 @@ function ResumeBuilderInner() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto pt-1">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 max-w-5xl mx-auto pt-1">
             {TEMPLATE_CARDS.map((tmpl) => (
               <div
                 key={tmpl.id}
-                className="bg-white rounded-2xl border border-slate-200/90 hover:border-pink-400 p-2.5 sm:p-3 shadow-2xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between group"
+                className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/90 hover:border-pink-400 p-2 sm:p-3 shadow-2xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between group"
               >
-                <div className="aspect-[1/1.32] w-full bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden relative p-3 text-[6.5px] leading-tight select-none flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="bg-[#24292e] text-white text-[10px] font-bold px-2.5 py-0.5 rounded shadow-xs tracking-tight">
+                <div className="aspect-[1/1.32] w-full bg-white rounded-lg sm:rounded-xl border border-slate-200 shadow-2xs overflow-hidden relative p-1.5 sm:p-3 text-[5.5px] sm:text-[6.5px] leading-tight select-none flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
+                  <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10">
+                    <span className="bg-[#24292e] text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded shadow-xs tracking-tight">
                       {tmpl.badgeTitle}
                     </span>
                   </div>
 
                   {tmpl.id === "simple-classic" && (
-                    <div className="pt-7 font-serif space-y-2 text-slate-800">
-                      <div className="text-center pb-1 border-b border-slate-400">
-                        <div className="font-bold text-[9px] text-slate-900 tracking-wider">JOHN DOE</div>
-                        <div className="text-[5.5px] text-slate-500">john@example.com · New York, NY</div>
+                    <div className="pt-5 sm:pt-7 font-serif space-y-1 sm:space-y-2 text-slate-800">
+                      <div className="text-center pb-0.5 sm:pb-1 border-b border-slate-400">
+                        <div className="font-bold text-[7.5px] sm:text-[9px] text-slate-900 tracking-wider">JOHN DOE</div>
+                        <div className="text-[4.5px] sm:text-[5.5px] text-slate-500">john@example.com · New York, NY</div>
                       </div>
                       <div>
-                        <div className="font-bold text-[6.5px] uppercase border-b border-slate-200 pb-0.5 text-slate-900">
+                        <div className="font-bold text-[5.5px] sm:text-[6.5px] uppercase border-b border-slate-200 pb-0.5 text-slate-900">
                           EDUCATION
                         </div>
-                        <div className="flex justify-between text-[5.5px] pt-0.5 font-semibold">
+                        <div className="flex justify-between text-[4.5px] sm:text-[5.5px] pt-0.5 font-semibold">
                           <span>Stanford University</span>
                           <span className="text-slate-400">2020 – 2024</span>
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold text-[6.5px] uppercase border-b border-slate-200 pb-0.5 text-slate-900">
+                        <div className="font-bold text-[5.5px] sm:text-[6.5px] uppercase border-b border-slate-200 pb-0.5 text-slate-900">
                           EXPERIENCE
                         </div>
-                        <div className="flex justify-between text-[5.5px] pt-0.5 font-semibold">
+                        <div className="flex justify-between text-[4.5px] sm:text-[5.5px] pt-0.5 font-semibold">
                           <span>Software Engineer — TechCorp</span>
                           <span className="text-slate-400">2024 – Present</span>
                         </div>
@@ -460,52 +471,52 @@ function ResumeBuilderInner() {
                   )}
 
                   {tmpl.id === "modern-cv" && (
-                    <div className="pt-7 font-sans space-y-2 text-slate-800">
-                      <div className="pb-1 border-b-2 border-purple-600">
-                        <div className="font-black text-[9px] text-slate-900">JOHN DOE</div>
-                        <div className="text-[5px] text-purple-600 font-bold">Full Stack Engineer</div>
+                    <div className="pt-5 sm:pt-7 font-sans space-y-1 sm:space-y-2 text-slate-800">
+                      <div className="pb-0.5 sm:pb-1 border-b-2 border-purple-600">
+                        <div className="font-black text-[7.5px] sm:text-[9px] text-slate-900">JOHN DOE</div>
+                        <div className="text-[4.5px] sm:text-[5px] text-purple-600 font-bold">Full Stack Engineer</div>
                       </div>
                       <div>
-                        <div className="font-bold text-[6px] text-purple-700 uppercase">Core Skills</div>
-                        <div className="flex gap-1 pt-0.5">
-                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[5px]">React</span>
-                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[5px]">FastAPI</span>
-                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[5px]">Docker</span>
+                        <div className="font-bold text-[5px] sm:text-[6px] text-purple-700 uppercase">Core Skills</div>
+                        <div className="flex gap-0.5 sm:gap-1 pt-0.5 flex-wrap">
+                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[4.5px] sm:text-[5px]">React</span>
+                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[4.5px] sm:text-[5px]">FastAPI</span>
+                          <span className="bg-purple-100 text-purple-800 px-1 rounded text-[4.5px] sm:text-[5px]">Docker</span>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {tmpl.id === "sb2nov" && (
-                    <div className="pt-7 font-serif space-y-1.5 text-slate-900">
-                      <div className="text-center pb-1">
-                        <div className="font-bold text-[10px] uppercase">JOHN DOE</div>
-                        <div className="text-[5px] text-slate-600 font-sans">
-                          john@example.com | github.com/johndoe | leetcode
+                    <div className="pt-5 sm:pt-7 font-serif space-y-1 sm:space-y-1.5 text-slate-900">
+                      <div className="text-center pb-0.5 sm:pb-1">
+                        <div className="font-bold text-[8px] sm:text-[10px] uppercase">JOHN DOE</div>
+                        <div className="text-[4px] sm:text-[5px] text-slate-600 font-sans truncate">
+                          john@example.com | github | leetcode
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold text-[6px] uppercase border-b border-slate-900 pb-0.5">
+                        <div className="font-bold text-[5px] sm:text-[6px] uppercase border-b border-slate-900 pb-0.5">
                           Technical Skills
                         </div>
-                        <div className="text-[5px] pt-0.5 font-sans">
-                          Languages: Python, TypeScript, C++, SQL
+                        <div className="text-[4.5px] sm:text-[5px] pt-0.5 font-sans line-clamp-2">
+                          Languages: Python, TypeScript, SQL
                         </div>
                       </div>
                     </div>
                   )}
 
                   {tmpl.id === "ultra-minimal" && (
-                    <div className="pt-7 font-sans space-y-2 text-slate-800">
-                      <div className="pb-1 border-b border-slate-200">
-                        <div className="font-black text-[9px] text-slate-900 tracking-tight">JOHN DOE</div>
-                        <div className="text-[5px] text-slate-500">New York, NY · john@example.com</div>
+                    <div className="pt-5 sm:pt-7 font-sans space-y-1 sm:space-y-2 text-slate-800">
+                      <div className="pb-0.5 sm:pb-1 border-b border-slate-200">
+                        <div className="font-black text-[7.5px] sm:text-[9px] text-slate-900 tracking-tight">JOHN DOE</div>
+                        <div className="text-[4.5px] sm:text-[5px] text-slate-500 truncate">New York, NY · john@example.com</div>
                       </div>
                       <div>
-                        <div className="font-extrabold text-[6px] tracking-widest text-slate-400 uppercase">
+                        <div className="font-extrabold text-[5px] sm:text-[6px] tracking-widest text-slate-400 uppercase">
                           Experience
                         </div>
-                        <div className="text-[5.5px] font-bold">Software Engineer (2022–Present)</div>
+                        <div className="text-[4.5px] sm:text-[5.5px] font-bold">Software Engineer (2022–Present)</div>
                       </div>
                     </div>
                   )}
@@ -514,7 +525,7 @@ function ResumeBuilderInner() {
                 <button
                   type="button"
                   onClick={() => handleSelectTemplate(tmpl.id)}
-                  className="w-full mt-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-bold py-2 px-3 rounded-lg text-xs sm:text-sm tracking-wide shadow-xs shadow-pink-500/20 text-center transition-all cursor-pointer"
+                  className="w-full mt-2 bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-bold py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs tracking-wide shadow-xs shadow-pink-500/20 text-center transition-all cursor-pointer"
                 >
                   Use Template
                 </button>
@@ -626,10 +637,20 @@ function ResumeBuilderInner() {
               <button
                 type="button"
                 onClick={handleDownloadResume}
-                className="bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                disabled={isExportingPdf}
+                className="bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Download className="w-3.5 h-3.5 text-pink-600" />
-                <span>Download Resume</span>
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 text-pink-600 animate-spin" />
+                    <span>Exporting PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-pink-600" />
+                    <span>Export as PDF</span>
+                  </>
+                )}
               </button>
 
               <button
@@ -2018,10 +2039,20 @@ function ResumeBuilderInner() {
                     <button
                       type="button"
                       onClick={handleDownloadResume}
-                      className="py-3 bg-pink-600 hover:bg-pink-700 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-pink-500/25 transition-all text-xs"
+                      disabled={isExportingPdf}
+                      className="py-3 bg-pink-600 hover:bg-pink-700 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-pink-500/25 transition-all text-xs disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>Download / Print PDF</span>
+                      {isExportingPdf ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Generating A4 PDF...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Export as PDF</span>
+                        </>
+                      )}
                     </button>
                     <button
                       type="button"
@@ -2095,10 +2126,20 @@ function ResumeBuilderInner() {
                   <button
                     type="button"
                     onClick={handleDownloadResume}
-                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                    disabled={isExportingPdf}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs disabled:opacity-70 disabled:cursor-not-allowed font-bold"
                   >
-                    <span>Download PDF</span>
-                    <Download className="w-3.5 h-3.5" />
+                    {isExportingPdf ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Exporting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Export as PDF</span>
+                        <Download className="w-3.5 h-3.5" />
+                      </>
+                    )}
                   </button>
                 )}
               </div>
