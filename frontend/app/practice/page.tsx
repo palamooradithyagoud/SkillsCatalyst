@@ -28,6 +28,7 @@ import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
 import { CompanyProgressTracker } from "@/components/practice/CompanyProgressTracker";
+import { CompanyQuestionFilters } from "@/components/practice/CompanyQuestionFilters";
 import { QuestionListTable } from "@/components/practice/QuestionListTable";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PremiumLockCard } from "@/components/premium";
@@ -281,8 +282,18 @@ function PracticeContent() {
               filteredCompaniesDropdown={filteredCompaniesDropdown}
               companySearchInput={companySearchInput}
               onCompanySearchChange={setCompanySearchInput}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
+            />
+
+            {/* Progress Tracker Banner */}
+            <CompanyProgressTracker
+              company={selectedCompany}
+              solvedCount={companySolvedCount}
+              totalCount={questions.length}
+              progressPercent={companyProgressPercent}
+            />
+
+            {/* Filter Bar: Time Frame & Difficulty (styled like Image 2, below Company Tracker) */}
+            <CompanyQuestionFilters
               selectedPeriod={selectedPeriod}
               onSelectPeriod={(p) => {
                 setSelectedPeriod(p);
@@ -292,14 +303,8 @@ function PracticeContent() {
               onSelectDifficulty={setSelectedDifficulty}
               selectedStatus={selectedStatus}
               onSelectStatus={setSelectedStatus}
-            />
-
-            {/* Progress Tracker Banner */}
-            <CompanyProgressTracker
-              company={selectedCompany}
-              solvedCount={companySolvedCount}
-              totalCount={questions.length}
-              progressPercent={companyProgressPercent}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
             />
 
             {/* Question List Table */}
