@@ -54,9 +54,6 @@ export function QuestionListTable({
                 {company}
               </span>
             </h3>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Interview questions fetched from CSV dataset ({periodLabel})
-            </p>
           </div>
         </div>
 
@@ -64,7 +61,7 @@ export function QuestionListTable({
           {loadingQuestions ? (
             <div className="flex items-center gap-2 text-xs text-[#234B3B] font-bold">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Loading CSV data...</span>
+              <span>Loading questions...</span>
             </div>
           ) : (
             <span className="text-xs text-slate-500 font-bold px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200">
@@ -80,7 +77,7 @@ export function QuestionListTable({
         <div className="py-16 text-center space-y-3">
           <Loader2 className="w-8 h-8 text-[#234B3B] animate-spin mx-auto" />
           <p className="text-sm font-medium text-slate-500">
-            Parsing CSV question bank for {formatCompanyName(company)}...
+            Loading question bank for {formatCompanyName(company)}...
           </p>
         </div>
       ) : filteredQuestions.length === 0 ? (
