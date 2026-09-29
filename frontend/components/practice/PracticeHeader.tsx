@@ -4,7 +4,7 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 
 interface PracticeHeaderProps {
-  selectedMode: "index" | "beginner" | "company";
+  selectedMode: "index" | "beginner" | "company" | "penguin-sheet";
   onBack: () => void;
   companiesCount?: number;
 }

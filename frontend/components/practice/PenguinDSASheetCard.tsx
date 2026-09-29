@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Bookmark } from "lucide-react";
+import { TOTAL_PENGUIN_PROBLEMS } from "@/data/practice/penguinDsaSheetData";
 
 interface PenguinDSASheetCardProps {
   onSelect?: () => void;
@@ -353,7 +354,7 @@ export function PenguinDSASheetCard({ onSelect }: PenguinDSASheetCardProps) {
         {/* Problems Count with Bookmark/Book Icon */}
         <div className="flex items-center gap-1.5 text-slate-700 text-xs sm:text-[13px] font-semibold mt-3.5 pt-2.5 border-t border-slate-100">
           <Bookmark className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-          <span>455 Problems</span>
+          <span>{TOTAL_PENGUIN_PROBLEMS} Problems</span>
         </div>
       </div>
     </motion.div>
