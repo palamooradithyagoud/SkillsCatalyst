@@ -25,6 +25,7 @@ import { PracticeHeader } from "@/components/practice/PracticeHeader";
 import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
 import { PenguinDSASheetCard } from "@/components/practice/PenguinDSASheetCard";
+import { PenguinDSASheetView } from "@/components/practice/PenguinDSASheetView";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
@@ -45,9 +46,10 @@ function PracticeContent() {
   const urlPeriod = searchParams?.get("period");
   const urlMode = searchParams?.get("mode");
 
-  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company">(() => {
+  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company" | "penguin-sheet">(() => {
     if (urlCompany || urlMode === "company") return "company";
     if (urlMode === "beginner") return "beginner";
+    if (urlMode === "sheet" || urlMode === "penguin-sheet") return "penguin-sheet";
     return "index";
   });
 
@@ -239,9 +241,14 @@ function PracticeContent() {
 
           {/* ── Penguin DSA Sheet Card ── */}
           <div className="max-w-5xl mx-auto w-full flex justify-start">
-            <PenguinDSASheetCard onSelect={() => setSelectedMode("beginner")} />
+            <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
           </div>
         </div>
+      )}
+
+      {/* ── MODE 3: PENGUIN DSA SHEET VIEW ── */}
+      {selectedMode === "penguin-sheet" && (
+        <PenguinDSASheetView />
       )}
 
       {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
