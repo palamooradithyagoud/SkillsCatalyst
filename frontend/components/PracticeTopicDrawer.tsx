@@ -202,6 +202,81 @@ const TOPIC_DATASET: Record<string, PracticeTopicData> = {
       { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
     ],
   },
+
+  "prefix sum + hashmap": {
+    definition:
+      "Combining Prefix Sum with a Hash Map stores running prefix sums and their frequencies. This allows checking if (currSum - K) was seen earlier in O(1) time, turning O(N²) subarray sum queries into O(N) linear time passes.",
+    timeComplexity: "O(N)",
+    spaceComplexity: "O(N)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=fFVZt-6sgyo",
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 560, number: 560, title: "Subarray Sum Equals K", url: "https://leetcode.com/problems/subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 525, number: 525, title: "Contiguous Array", url: "https://leetcode.com/problems/contiguous-array/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 523, number: 523, title: "Continuous Subarray Sum", url: "https://leetcode.com/problems/continuous-subarray-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 974, number: 974, title: "Subarray Sums Divisible by K", url: "https://leetcode.com/problems/subarray-sums-divisible-by-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 930, number: 930, title: "Binary Subarrays With Sum", url: "https://leetcode.com/problems/binary-subarrays-with-sum/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 1248, number: 1248, title: "Count Number of Nice Subarrays", url: "https://leetcode.com/problems/count-number-of-nice-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 1590, number: 1590, title: "Make Sum Divisible by P", url: "https://leetcode.com/problems/make-sum-divisible-by-p/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 2845, number: 2845, title: "Count of Interesting Subarrays", url: "https://leetcode.com/problems/count-of-interesting-subarrays/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 325, number: 325, title: "Maximum Size Subarray Sum Equals k", url: "https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/", difficulty: "Medium", pattern: "Prefix Sum + Hash Map" },
+      { id: 437, number: 437, title: "Path Sum III", url: "https://leetcode.com/problems/path-sum-iii/", difficulty: "Medium", pattern: "Tree Prefix Sum + Hash Map" },
+    ],
+  },
+
+  "lower / upper bound": {
+    definition:
+      "Lower Bound finds the first element >= target, while Upper Bound finds the first element > target. Crucial for range queries, search insert positions, and counting occurrences in sorted arrays in O(log N) time.",
+    timeComplexity: "O(log N)",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=6-15eWD_RxQ",
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 35, number: 35, title: "Search Insert Position", url: "https://leetcode.com/problems/search-insert-position/", difficulty: "Easy", pattern: "Lower Bound" },
+      { id: 744, number: 744, title: "Find Smallest Letter Greater Than Target", url: "https://leetcode.com/problems/find-smallest-letter-greater-than-target/", difficulty: "Easy", pattern: "Upper Bound" },
+      { id: 34, number: 34, title: "Find First and Last Position of Element in Sorted Array", url: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", difficulty: "Medium", pattern: "Lower & Upper Bound" },
+    ],
+  },
+
+  "binary search on answers": {
+    definition:
+      "When the answer lies within a known monotonic range [low, high] and a predicate function `isValid(mid)` is monotonic, binary search can find the minimum or maximum feasible answer in O(N log(range)) time.",
+    timeComplexity: "O(N log(range))",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=s4DPM8ct1pI",
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 69, number: 69, title: "Sqrt(x)", url: "https://leetcode.com/problems/sqrtx/", difficulty: "Easy", pattern: "Binary Search on Answer" },
+      { id: 367, number: 367, title: "Valid Perfect Square", url: "https://leetcode.com/problems/valid-perfect-square/", difficulty: "Easy", pattern: "Binary Search on Answer" },
+      { id: 875, number: 875, title: "Koko Eating Bananas", url: "https://leetcode.com/problems/koko-eating-bananas/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1011, number: 1011, title: "Capacity To Ship Packages Within D Days", url: "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1283, number: 1283, title: "Find the Smallest Divisor Given a Threshold", url: "https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1482, number: 1482, title: "Minimum Number of Days to Make m Bouquets", url: "https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1552, number: 1552, title: "Magnetic Force Between Two Balls", url: "https://leetcode.com/problems/magnetic-force-between-two-balls/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1760, number: 1760, title: "Minimum Limit of Balls in a Bag", url: "https://leetcode.com/problems/minimum-limit-of-balls-in-a-bag/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 1870, number: 1870, title: "Minimum Speed to Arrive on Time", url: "https://leetcode.com/problems/minimum-speed-to-arrive-on-time/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2187, number: 2187, title: "Minimum Time to Complete Trips", url: "https://leetcode.com/problems/minimum-time-to-complete-trips/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2226, number: 2226, title: "Maximum Candies Allocated to K Children", url: "https://leetcode.com/problems/maximum-candies-allocated-to-k-children/", difficulty: "Medium", pattern: "Binary Search on Answer" },
+      { id: 2251, number: 2251, title: "Number of Flowers in Full Bloom", url: "https://leetcode.com/problems/number-of-flowers-in-full-bloom/", difficulty: "Hard", pattern: "Binary Search + Sweep" },
+      { id: 410, number: 410, title: "Split Array Largest Sum", url: "https://leetcode.com/problems/split-array-largest-sum/", difficulty: "Hard", pattern: "Binary Search on Answer" },
+    ],
+  },
+
+  "search in 2d matrix": {
+    definition:
+      "2D Matrix Binary Search maps 2D coordinates `(row, col)` to 1D index `mid` via `row = mid / cols` and `col = mid % cols` for row-major sorted grids, achieving O(log(M * N)) search time.",
+    timeComplexity: "O(log(M * N))",
+    spaceComplexity: "O(1)",
+    masterclassVideoUrl: "https://www.youtube.com/watch?v=Ber2pi2C0j0",
+    prerequisites: COMMON_PREREQS,
+    problems: [
+      { id: 74, number: 74, title: "Search a 2D Matrix", url: "https://leetcode.com/problems/search-a-2d-matrix/", difficulty: "Medium", pattern: "2D Binary Search" },
+      { id: 240, number: 240, title: "Search a 2D Matrix II", url: "https://leetcode.com/problems/search-a-2d-matrix-ii/", difficulty: "Medium", pattern: "2D Matrix Search (Corner Walk)" },
+      { id: 1901, number: 1901, title: "Find a Peak Element II", url: "https://leetcode.com/problems/find-a-peak-element-ii/", difficulty: "Medium", pattern: "2D Binary Search" },
+      { id: 1428, number: 1428, title: "Leftmost Column with at Least a One", url: "https://leetcode.com/problems/leftmost-column-with-at-least-a-one/", difficulty: "Medium", pattern: "2D Binary Search" },
+      { id: 302, number: 302, title: "Smallest Rectangle Enclosing Black Pixels", url: "https://leetcode.com/problems/smallest-rectangle-enclosing-black-pixels/", difficulty: "Hard", pattern: "2D Binary Search" },
+    ],
+  },
 };
 
 // Helper to construct exact YouTube Solution video search URL for any problem

@@ -46,6 +46,13 @@ export const NODE_PROBLEM_IDS: Record<string, number[]> = {
   "search-2d-matrix":   [240, 74, 1901, 1428, 302],
 };
 
+// All distinct problem IDs in the beginner DSA roadmap (129 unique questions)
+export const ALL_BEGINNER_PROBLEM_IDS: number[] = Array.from(
+  new Set(Object.values(NODE_PROBLEM_IDS).flat())
+);
+
+export const TOTAL_BEGINNER_QUESTIONS = ALL_BEGINNER_PROBLEM_IDS.length;
+
 export const BEGINNER_TREE_DATA: TreeCategory[] = [
   {
     id: "arrays",

@@ -25,6 +25,7 @@ import { PracticeHeader } from "@/components/practice/PracticeHeader";
 import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
+import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
 import { CompanyProgressTracker } from "@/components/practice/CompanyProgressTracker";
 import { QuestionListTable } from "@/components/practice/QuestionListTable";
@@ -231,10 +232,14 @@ function PracticeContent() {
 
       {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
       {selectedMode === "beginner" && (
-        <BeginnerDSATree
-          drawerSolved={drawerSolved}
-          onSelectTopic={setActivePracticeTopic}
-        />
+        <div className="space-y-6 sm:space-y-8">
+          <BeginnerRoadmapCard drawerSolved={drawerSolved} />
+
+          <BeginnerDSATree
+            drawerSolved={drawerSolved}
+            onSelectTopic={setActivePracticeTopic}
+          />
+        </div>
       )}
 
       {/* ── MODE 2: COMPANY WISE QUESTION BANK */}
