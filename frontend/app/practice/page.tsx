@@ -24,6 +24,7 @@ import { usePracticeSolvedState } from "@/hooks/usePracticeSolvedState";
 import { PracticeHeader } from "@/components/practice/PracticeHeader";
 import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
+import { PenguinDSASheetCard } from "@/components/practice/PenguinDSASheetCard";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
@@ -228,6 +229,18 @@ function PracticeContent() {
             onSelectMode={setSelectedMode}
             companiesCount={companiesList.length}
           />
+
+          {/* ── DSA SHEETS Heading ── */}
+          <div className="max-w-5xl mx-auto w-full text-left pt-2 sm:pt-4">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              DSA SHEETS
+            </h2>
+          </div>
+
+          {/* ── Penguin DSA Sheet Card ── */}
+          <div className="max-w-5xl mx-auto w-full flex justify-start">
+            <PenguinDSASheetCard onSelect={() => setSelectedMode("beginner")} />
+          </div>
         </div>
       )}
 
