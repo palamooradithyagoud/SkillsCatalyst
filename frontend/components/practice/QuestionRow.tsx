@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
-import { CheckSquare, Square, Check, ExternalLink } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { PracticeQuestion } from "@/lib/api";
 import { getLeetCodeUrl } from "@/lib/practice/practiceHelpers";
 
@@ -35,19 +34,16 @@ export function QuestionRow({
   const leetCodeUrl = getLeetCodeUrl(q);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border transition-all gap-4 group shadow-xs ${
-        isDone
-          ? "bg-emerald-50/60 border-emerald-200"
-          : "bg-white border-slate-100 hover:border-slate-200 hover:shadow-md"
+    <div
+      className={`flex items-center justify-between py-3 px-3.5 sm:px-4.5 transition-colors gap-3 group ${
+        isDone ? "bg-emerald-50/20 hover:bg-emerald-50/40" : "hover:bg-slate-50/80"
       }`}
     >
-      <div className="flex items-start sm:items-center gap-3.5">
-        {/* Interactive Checkbox Button with Live Supabase Sync */}
+      {/* Left: Minimal Checkbox + Title (matching Image 2) */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Checkbox */}
         <button
+          type="button"
           onClick={() =>
             onToggleSolved(key, {
               company,
@@ -58,91 +54,76 @@ export function QuestionRow({
               frequency: q.frequency,
             })
           }
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer select-none shrink-0 ${
+          className={`w-4.5 h-4.5 rounded-[4px] border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
             isDone
-              ? "bg-emerald-100 border-emerald-300 text-emerald-800 font-bold"
-              : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold"
+              ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
+              : "border-slate-300 hover:border-slate-400 bg-white"
           }`}
-          title={isDone ? "Click to mark as incomplete" : "Click to mark as completed"}
+          aria-label={isDone ? "Mark unsolved" : "Mark solved"}
         >
-          {isDone ? (
-            <CheckSquare className="w-4 h-4 text-emerald-700 shrink-0" />
-          ) : (
-            <Square className="w-4 h-4 text-slate-400 shrink-0" />
-          )}
-          <span className="text-[11px] font-extrabold tracking-wide">
-            {isDone ? "Completed" : "Mark Solved"}
-          </span>
+          {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
         </button>
 
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-mono text-slate-400 font-bold">
-              #{q.id || idx + 1}
-            </span>
-            <a
-              href={leetCodeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`text-sm font-bold transition-colors flex items-center gap-1.5 ${
-                isDone
-                  ? "text-slate-400 line-through"
-                  : "text-slate-900 group-hover:text-[#234B3B]"
-              }`}
-            >
-              <span>{q.title}</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#234B3B] transition-opacity" />
-            </a>
-
-            {isDone && (
-              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-700" />
-                Solved
-              </span>
-            )}
-          </div>
+        {/* Number & Question Title */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-mono text-slate-400 font-semibold shrink-0">
+            #{q.id || idx + 1}
+          </span>
+          <a
+            href={leetCodeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-sm font-medium transition-colors truncate hover:text-indigo-600 flex items-center gap-1.5 group/link ${
+              isDone ? "text-slate-700" : "text-slate-900"
+            }`}
+          >
+            <span className="truncate">{q.title}</span>
+            <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover/link:opacity-100 transition-opacity shrink-0" />
+          </a>
         </div>
       </div>
 
-      <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+      {/* Right: Metadata & Actions */}
+      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
         {/* Acceptance Rate */}
         {q.acceptance && (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="text-xs text-slate-500 font-medium hidden md:inline-block tabular-nums">
             {q.acceptance} Acc.
           </span>
         )}
 
-        {/* Frequency Rate */}
+        {/* Frequency */}
         {q.frequency && (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
-            {q.frequency} Freq.
+          <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 border border-purple-100/80 px-2 py-0.5 rounded-md hidden sm:inline-block tabular-nums">
+            {q.frequency} Freq
           </span>
         )}
 
         {/* Difficulty Badge */}
         <span
-          className={`text-xs font-bold px-3 py-1 rounded-full ${
+          className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
             q.difficulty === "Easy"
-              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+              ? "text-emerald-700 bg-emerald-50 border border-emerald-200/60"
               : q.difficulty === "Medium"
-              ? "bg-amber-100 text-amber-900 border border-amber-200"
-              : "bg-rose-100 text-rose-800 border border-rose-200"
+              ? "text-amber-700 bg-amber-50 border border-amber-200/60"
+              : "text-rose-700 bg-rose-50 border border-rose-200/60"
           }`}
         >
           {q.difficulty}
         </span>
 
-        {/* Direct LeetCode External Link Button */}
+        {/* Clean Solve Link Button */}
         <a
           href={leetCodeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#234B3B] hover:bg-[#1b3b2e] shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-all cursor-pointer"
+          title="Solve on LeetCode"
         >
           <span>Solve</span>
           <ExternalLink className="w-3 h-3" />
         </a>
       </div>
-    </motion.div>
+    </div>
   );
 }
