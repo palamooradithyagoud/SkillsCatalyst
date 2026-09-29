@@ -23,6 +23,7 @@ import {
   Platform,
 } from "@/data/practice/penguinDsaSheetData";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
+import InteractiveCharacter from "@/components/ui/interactive-3d-character";
 
 const STORAGE_KEY = "penguin_sheet_solved_v1";
 
@@ -199,44 +200,90 @@ export function PenguinDSASheetView() {
       {/* ─────────────────────────────────────────────────────────────
           1. HERO HEADER: REDESIGNED WITH "YOUR PROGRESS" TRACKING SYSTEM
           ───────────────────────────────────────────────────────────── */}
+      {/* Inline styles for Aurora Background & Character Container */}
+      <style>{`
+        .aurora-background {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .aurora-blob {
+          position: absolute;
+          filter: blur(65px);
+          border-radius: 9999px;
+          opacity: 0.55;
+          mix-blend-mode: screen;
+          pointer-events: none;
+          animation: aurora-drift 11s ease-in-out infinite alternate;
+        }
+        .aurora-blob:nth-child(1) {
+          top: -20%;
+          left: 8%;
+          width: 380px;
+          height: 380px;
+          background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+          animation-duration: 10s;
+        }
+        .aurora-blob:nth-child(2) {
+          bottom: -15%;
+          left: 38%;
+          width: 420px;
+          height: 380px;
+          background: radial-gradient(circle, #4f46e5 0%, rgba(79, 70, 229, 0) 70%);
+          animation-duration: 14s;
+          animation-delay: -3s;
+        }
+        .aurora-blob:nth-child(3) {
+          top: 15%;
+          right: 8%;
+          width: 350px;
+          height: 350px;
+          background: radial-gradient(circle, #a855f7 0%, rgba(168, 85, 247, 0) 70%);
+          animation-duration: 12s;
+          animation-delay: -6s;
+        }
+        @keyframes aurora-drift {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(30px, -25px) scale(1.15); }
+          100% { transform: translate(-25px, 20px) scale(0.92); }
+        }
+        .character-container {
+          position: relative;
+          z-index: 10;
+        }
+      `}</style>
+
       <div
         ref={heroCardRef}
-        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0d0722] via-[#140b33] to-[#240c4d] border border-purple-500/25 p-5 sm:p-7 md:p-8 text-white shadow-xl"
+        className="hero-container relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0d0722] via-[#140b33] to-[#240c4d] border border-purple-500/30 p-6 sm:p-8 md:p-10 text-white shadow-2xl min-h-[290px] flex flex-col justify-between"
       >
         {/* Custom Smooth Physics Cursor Scoped to this Card */}
         <SmoothCursor containerRef={heroCardRef} />
 
-        {/* Soft Ambient Flares */}
-        <div className="absolute -top-16 -left-16 w-56 h-56 bg-purple-600/15 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute top-1/2 -right-10 -translate-y-1/2 w-80 h-80 bg-indigo-600/15 blur-3xl rounded-full pointer-events-none" />
+        {/* Aurora Background with Animated Glowing Blobs */}
+        <div className="aurora-background">
+          <div className="aurora-blob"></div>
+          <div className="aurora-blob"></div>
+          <div className="aurora-blob"></div>
+        </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
-          {/* Left Column: Title & Subtitle */}
-          <div className="space-y-3 max-w-xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 my-auto">
+          {/* Left Column: Big Bold Title (Text removed as requested) */}
+          <div className="space-y-1.5 max-w-sm">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-none drop-shadow-md">
               Penguin&apos;s <span className="text-[#8B5CF6]">DSA Sheet</span>
             </h1>
+          </div>
 
-            <p className="text-slate-300/90 text-sm sm:text-base font-normal leading-relaxed">
-              Structured roadmap of {TOTAL_PENGUIN_PROBLEMS} handpicked DSA problems across {PENGUIN_DSA_SHEET_CATEGORIES.length} topics to build strong problem-solving mastery.
-            </p>
-
-            {/* Quick Feature Badges */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs font-bold px-3 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/90">
-                {PENGUIN_DSA_SHEET_CATEGORIES.length} Topics
-              </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/90">
-                Topic-wise
-              </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/90">
-                Curated & Interview Focused
-              </span>
-            </div>
+          {/* Center Column: 3D Interactive Penguin Character */}
+          <div className="character-container flex items-center justify-center shrink-0">
+            <InteractiveCharacter width={220} height={220} />
           </div>
 
           {/* ─────────────────────────────────────────────────────────
-              Right Column: "YOUR PROGRESS" TRACKER (MATCHING IMAGE 2 EXACTLY)
+              Right Column: "YOUR PROGRESS" TRACKER (MATCHING EXACTLY)
               ───────────────────────────────────────────────────────── */}
           <div className="bg-[#140827]/90 border border-purple-500/25 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full lg:w-[340px] shrink-0">
 
