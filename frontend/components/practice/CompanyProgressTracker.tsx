@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { formatCompanyName } from "@/lib/practice/practiceHelpers";
-import GlareHover from "./GlareHover";
+import GlowCursor from "./GlowCursor";
 
 interface CompanyProgressTrackerProps {
   company: string;
@@ -33,18 +33,28 @@ export function CompanyProgressTracker({
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
-    <GlareHover
-      glareColor="#ffffff"
-      glareOpacity={0.25}
-      glareAngle={-30}
-      glareSize={300}
-      transitionDuration={800}
-      playOnce={false}
-      borderRadius="24px"
-      background="#0C0B14"
-      className="w-full rounded-2xl sm:rounded-[24px] border border-purple-500/20 shadow-[0_16px_45px_rgba(0,0,0,0.5),0_0_50px_rgba(168,85,247,0.06)]"
-    >
-      <div className="relative w-full p-5 sm:p-6 md:p-7 select-none flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="relative w-full rounded-2xl sm:rounded-[24px] border border-purple-500/20 shadow-[0_16px_45px_rgba(0,0,0,0.5),0_0_50px_rgba(168,85,247,0.06)] overflow-hidden bg-[#0C0B14]">
+      <GlowCursor
+        color="#67E8F9"
+        secondaryColor="#A78BFA"
+        trailLength={40}
+        trailWidth={8}
+        trailTaper={0.8}
+        followSpeed={0.16}
+        glowIntensity={1.9}
+        glowSpread={1.2}
+        hotspot={0.65}
+        brightness={1.25}
+        opacity={1}
+        pulseSpeed={1.1}
+        noiseStrength={0.035}
+        idleFade
+        idleTimeout={700}
+        fadeDuration={900}
+        blendMode="screen"
+        className="w-full"
+      >
+        <div className="relative w-full p-5 sm:p-6 md:p-7 select-none flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Soft Ambient Glows */}
         <div className="absolute -top-16 left-12 w-64 h-64 bg-purple-600/10 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute -bottom-16 right-16 w-64 h-64 bg-fuchsia-600/10 blur-3xl rounded-full pointer-events-none" />
@@ -147,7 +157,8 @@ export function CompanyProgressTracker({
           </div>
         </div>
       </div>
-    </GlareHover>
-  );
+    </GlowCursor>
+  </div>
+);
 }
 

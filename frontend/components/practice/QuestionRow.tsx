@@ -73,11 +73,15 @@ export function QuestionRow({
             href={leetCodeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-sm font-medium transition-colors truncate hover:text-indigo-600 flex items-center gap-1.5 group/link ${
-              isDone ? "text-slate-700" : "text-slate-900"
+            className={`text-sm font-medium transition-colors truncate flex items-center gap-1.5 group/link ${
+              isDone
+                ? "text-slate-400 hover:text-slate-600"
+                : "text-slate-900 hover:text-indigo-600"
             }`}
           >
-            <span className="truncate">{q.title}</span>
+            <span className={`truncate ${isDone ? "line-through decoration-slate-400" : ""}`}>
+              {q.title}
+            </span>
             <ExternalLink className="w-3 h-3 text-slate-400 opacity-0 group-hover/link:opacity-100 transition-opacity shrink-0" />
           </a>
         </div>
