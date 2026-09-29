@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Map, Briefcase, ArrowLeft } from "lucide-react";
+import { Briefcase, ArrowLeft } from "lucide-react";
 
 interface PracticeHeaderProps {
   selectedMode: "index" | "beginner" | "company";
@@ -20,26 +20,12 @@ export function PracticeHeader({
 
   if (selectedMode === "beginner") {
     return (
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-emerald-100 border border-emerald-200 text-[#234B3B]">
-            <Map className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Beginner Level — DSA Learning Roadmap
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Follow the prerequisite tree from core data structures to advanced algorithm patterns.
-            </p>
-          </div>
-        </div>
-
+      <div className="flex items-center justify-start">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm transition-all shadow-sm self-start md:self-auto cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-extrabold text-xs transition-all shadow-sm hover:shadow-md cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 text-slate-600" />
           <span>Back to Practice Cards</span>
         </button>
       </div>
