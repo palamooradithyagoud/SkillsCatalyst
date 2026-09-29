@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
   ExternalLink,
@@ -22,6 +22,7 @@ import {
   Difficulty,
   Platform,
 } from "@/data/practice/penguinDsaSheetData";
+import { SmoothCursor } from "@/components/ui/smooth-cursor";
 
 const STORAGE_KEY = "penguin_sheet_solved_v1";
 
@@ -38,6 +39,8 @@ export function PenguinDSASheetView() {
     });
     return init;
   });
+
+  const heroCardRef = useRef<HTMLDivElement>(null);
 
   // Load solved state from localStorage
   useEffect(() => {
@@ -196,7 +199,13 @@ export function PenguinDSASheetView() {
       {/* ─────────────────────────────────────────────────────────────
           1. HERO HEADER: REDESIGNED WITH "YOUR PROGRESS" TRACKING SYSTEM
           ───────────────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0d0722] via-[#140b33] to-[#240c4d] border border-purple-500/25 p-5 sm:p-7 md:p-8 text-white shadow-xl">
+      <div
+        ref={heroCardRef}
+        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0d0722] via-[#140b33] to-[#240c4d] border border-purple-500/25 p-5 sm:p-7 md:p-8 text-white shadow-xl"
+      >
+        {/* Custom Smooth Physics Cursor Scoped to this Card */}
+        <SmoothCursor containerRef={heroCardRef} />
+
         {/* Soft Ambient Flares */}
         <div className="absolute -top-16 -left-16 w-56 h-56 bg-purple-600/15 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute top-1/2 -right-10 -translate-y-1/2 w-80 h-80 bg-indigo-600/15 blur-3xl rounded-full pointer-events-none" />
@@ -204,11 +213,6 @@ export function PenguinDSASheetView() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
           {/* Left Column: Title & Subtitle */}
           <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#26104d] border border-purple-500/40 text-purple-300 font-extrabold text-[11px] uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-              <span>PRACTICE SHEET</span>
-            </div>
-
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
               Penguin&apos;s <span className="text-[#8B5CF6]">DSA Sheet</span>
             </h1>
@@ -235,6 +239,7 @@ export function PenguinDSASheetView() {
               Right Column: "YOUR PROGRESS" TRACKER (MATCHING IMAGE 2 EXACTLY)
               ───────────────────────────────────────────────────────── */}
           <div className="bg-[#140827]/90 border border-purple-500/25 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full lg:w-[340px] shrink-0">
+
             {/* Header with Divider Line */}
             <div className="text-[11px] font-black text-slate-300 tracking-wider uppercase pb-2.5 border-b border-white/10">
               YOUR PROGRESS
