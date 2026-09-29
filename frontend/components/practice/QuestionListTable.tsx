@@ -92,7 +92,7 @@ export function QuestionListTable({
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="bg-white rounded-2xl border border-slate-200/90 divide-y divide-slate-100 overflow-hidden shadow-2xs">
           {filteredQuestions.map((q, idx) => {
             const key = `q_${company}_${q.id}_${q.title}`;
             const isDone = !!solvedState[key] || !!solvedState[q.id.toString()];
