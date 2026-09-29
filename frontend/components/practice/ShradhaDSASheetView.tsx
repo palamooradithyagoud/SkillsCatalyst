@@ -9,7 +9,6 @@ import {
   ChevronUp,
   Bookmark,
   Sparkles,
-  Flame,
   Filter,
   Check,
   Building2,
@@ -26,6 +25,7 @@ import {
   Platform,
 } from "@/data/practice/shradhaDsaSheetData";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
+import CursorGrid from "@/components/practice/CursorGrid";
 
 const STORAGE_KEY = "shradha_sheet_solved_v1";
 
@@ -267,7 +267,7 @@ export function ShradhaDSASheetView() {
 
       <div
         ref={heroCardRef}
-        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#180803] via-[#240c04] to-[#3a1306] border border-orange-500/30 p-6 sm:p-8 md:p-9 text-white shadow-2xl min-h-[300px] flex flex-col justify-between"
+        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#160602] via-[#240a04] to-[#140502] border border-orange-500/30 p-6 sm:p-8 md:p-9 text-white shadow-2xl min-h-[300px] flex flex-col justify-between"
       >
         {/* Custom Physics Cursor */}
         <SmoothCursor containerRef={heroCardRef} />
@@ -279,33 +279,27 @@ export function ShradhaDSASheetView() {
           <div className="shradha-aurora-blob" />
         </div>
 
-        {/* Circuit Pattern Overlay */}
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, #fb923c 1px, transparent 0)`,
-            backgroundSize: "28px 28px",
-          }}
-        />
+        {/* Interactive Cursor Grid on Backside */}
+        <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl pointer-events-auto">
+          <CursorGrid
+            color="#FB923C"
+            cellSize={48}
+            gridOpacity={0.16}
+            maxOpacity={0.75}
+            fillOpacity={0.08}
+            radius={150}
+            holdTime={400}
+            fadeDuration={800}
+            clickPulse={true}
+            pulseSpeed={600}
+            className="w-full h-full"
+          />
+        </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 my-auto">
-          {/* Left Column: Heading + Details */}
-          <div className="space-y-3 max-w-md">
-            {/* Top Pill Tags */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-900/40 border border-orange-300/30">
-                <Flame className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                30 DAYS SERIES
-              </span>
-              <span className="px-2.5 py-1 rounded-full bg-orange-950/80 border border-orange-500/30 text-orange-200 text-xs font-semibold backdrop-blur-sm">
-                Apna College
-              </span>
-              <span className="px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-500/30 text-amber-200 text-xs font-bold backdrop-blur-sm">
-                Ex-Microsoft
-              </span>
-            </div>
-
-            {/* Title */}
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
+          {/* Left Column: Clean Title + Progress Tracker */}
+          <div className="flex flex-col gap-4 sm:gap-5 flex-1 w-full max-w-lg pointer-events-auto">
+            {/* Clean Bold Title */}
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
                 DSA 30 DAYS <br />
@@ -313,118 +307,105 @@ export function ShradhaDSASheetView() {
                   SHEET SERIES
                 </span>
               </h1>
-              <p className="text-orange-200/90 text-sm sm:text-base font-medium mt-2 leading-relaxed">
-                By Shradha Khapra — The curated question roadmap to crack FAANG & Tier-1 tech interviews in 30 days.
+              <p className="text-orange-300/80 text-xs sm:text-sm font-semibold tracking-wide pt-1">
+                By Shradha Khapra
               </p>
             </div>
 
-            {/* Target Companies Strip */}
-            <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <span className="text-xs text-orange-300/80 font-bold uppercase tracking-wider">Targets:</span>
-              {["Microsoft", "Apple", "Amazon", "Netflix", "Google"].map((co) => (
-                <span
-                  key={co}
-                  className="px-2 py-0.5 rounded-md bg-white/10 text-white text-[11px] font-extrabold backdrop-blur-sm border border-white/15"
-                >
-                  {co}
+            {/* "YOUR PROGRESS" TRACKER (on Left Side) */}
+            <div className="bg-[#1c0a04]/90 border border-orange-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[340px]">
+              {/* Header */}
+              <div className="text-[11px] font-black text-orange-300 tracking-wider uppercase pb-2.5 border-b border-white/10 flex items-center justify-between">
+                <span>YOUR PROGRESS</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950 text-orange-300 font-bold border border-orange-500/30">
+                  {totalSolved} / {TOTAL_SHRADHA_PROBLEMS}
                 </span>
-              ))}
+              </div>
+
+              {/* Tracker Body */}
+              <div className="pt-3.5 flex items-center justify-between gap-5">
+                {/* Circular Gauge */}
+                <div className="relative w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r={ringRadius}
+                      stroke="rgba(255, 255, 255, 0.08)"
+                      strokeWidth="7"
+                      fill="none"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r={ringRadius}
+                      stroke="url(#shradhaRingGrad)"
+                      strokeWidth="7"
+                      strokeDasharray={ringCircumference}
+                      strokeDashoffset={ringOffset}
+                      strokeLinecap="round"
+                      fill="none"
+                      className="transition-all duration-700 ease-out"
+                    />
+                    <defs>
+                      <linearGradient id="shradhaRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F59E0B" />
+                        <stop offset="50%" stopColor="#EA580C" />
+                        <stop offset="100%" stopColor="#DC2626" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+
+                  {/* Center Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
+                    <span className="text-xl font-black text-white leading-none tracking-tight">
+                      {progressPercent}%
+                    </span>
+                    <span className="text-[9px] font-semibold text-orange-300 mt-1 uppercase tracking-wider">
+                      Completed
+                    </span>
+                  </div>
+                </div>
+
+                {/* Difficulty Breakdown */}
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
+                    <span className="text-emerald-400">Easy</span>
+                    <span className="text-white font-extrabold">
+                      {stats.easySolved} / {stats.easyTotal}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
+                    <span className="text-amber-400">Medium</span>
+                    <span className="text-white font-extrabold">
+                      {stats.medSolved} / {stats.medTotal}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
+                    <span className="text-rose-400">Hard</span>
+                    <span className="text-white font-extrabold">
+                      {stats.hardSolved} / {stats.hardTotal}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Center Column: Visual Card Cutout with Glowing Border */}
-          <div className="relative group shrink-0 mx-auto lg:mx-0">
-            <div className="relative w-44 h-44 sm:w-48 sm:h-48 md:w-52 md:h-52 rounded-2xl overflow-hidden border-2 border-orange-500/40 shadow-[0_0_35px_rgba(249,115,22,0.35)] group-hover:shadow-[0_0_50px_rgba(249,115,22,0.55)] transition-all duration-500">
+          {/* Right Column: Shradha Didi Image (At Right Side) */}
+          <div className="shrink-0 flex items-center justify-center pointer-events-auto">
+            <div className="relative w-52 h-52 sm:w-60 sm:h-60 md:w-68 md:h-68 rounded-2xl overflow-hidden border-2 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.35)] hover:shadow-[0_0_60px_rgba(249,115,22,0.55)] transition-all duration-300 group">
               <Image
                 src="/images/practice/shradha_dsa_30_days.jpg"
                 alt="Shradha Khapra DSA 30 Days"
                 fill
-                sizes="210px"
+                sizes="(max-width: 768px) 240px, 280px"
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2 left-2 right-2 text-center text-[10px] font-bold text-orange-200 bg-black/60 backdrop-blur-md py-0.5 rounded border border-white/10">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-center text-[11px] font-bold text-orange-200 bg-black/65 backdrop-blur-md py-1 rounded-lg border border-white/10 shadow-sm">
                 Shradha Khapra
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: "YOUR PROGRESS" TRACKER */}
-          <div className="bg-[#1c0a04]/90 border border-orange-500/25 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full lg:w-[320px] shrink-0">
-            {/* Header */}
-            <div className="text-[11px] font-black text-orange-300 tracking-wider uppercase pb-2.5 border-b border-white/10 flex items-center justify-between">
-              <span>YOUR PROGRESS</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950 text-orange-300 font-bold border border-orange-500/30">
-                {totalSolved} / {TOTAL_SHRADHA_PROBLEMS}
-              </span>
-            </div>
-
-            {/* Tracker Body */}
-            <div className="pt-3.5 flex items-center justify-between gap-5">
-              {/* Circular Gauge */}
-              <div className="relative w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r={ringRadius}
-                    stroke="rgba(255, 255, 255, 0.08)"
-                    strokeWidth="7"
-                    fill="none"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r={ringRadius}
-                    stroke="url(#shradhaRingGrad)"
-                    strokeWidth="7"
-                    strokeDasharray={ringCircumference}
-                    strokeDashoffset={ringOffset}
-                    strokeLinecap="round"
-                    fill="none"
-                    className="transition-all duration-700 ease-out"
-                  />
-                  <defs>
-                    <linearGradient id="shradhaRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#F59E0B" />
-                      <stop offset="50%" stopColor="#EA580C" />
-                      <stop offset="100%" stopColor="#DC2626" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Center Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
-                  <span className="text-xl font-black text-white leading-none tracking-tight">
-                    {progressPercent}%
-                  </span>
-                  <span className="text-[9px] font-semibold text-orange-300 mt-1 uppercase tracking-wider">
-                    Completed
-                  </span>
-                </div>
-              </div>
-
-              {/* Difficulty Breakdown */}
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
-                  <span className="text-emerald-400">Easy</span>
-                  <span className="text-white font-extrabold">
-                    {stats.easySolved} / {stats.easyTotal}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
-                  <span className="text-amber-400">Medium</span>
-                  <span className="text-white font-extrabold">
-                    {stats.medSolved} / {stats.medTotal}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-white/5">
-                  <span className="text-rose-400">Hard</span>
-                  <span className="text-white font-extrabold">
-                    {stats.hardSolved} / {stats.hardTotal}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
