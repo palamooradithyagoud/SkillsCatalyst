@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   ExternalLink,
@@ -14,6 +15,9 @@ import {
   Building2,
   Calendar,
   Layers,
+  Video,
+  X,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -22,14 +26,110 @@ import {
   TOTAL_SHRADHA_PROBLEMS,
   ShradhaProblem,
   Difficulty,
-  Platform,
 } from "@/data/practice/shradhaDsaSheetData";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import CursorGrid from "@/components/practice/CursorGrid";
 
 const STORAGE_KEY = "shradha_sheet_solved_v1";
 
+function parseYouTubeTimestamp(url: string): number | null {
+  try {
+    let urlToParse = url.trim();
+    if (!urlToParse.startsWith("http://") && !urlToParse.startsWith("https://")) {
+      urlToParse = `https://${urlToParse}`;
+    }
+    const parsed = new URL(urlToParse);
+    let tParam = parsed.searchParams.get("t") || parsed.searchParams.get("start");
+
+    // Check hash fragment (e.g. #t=1m30s or #t=60 or #start=60)
+    if (!tParam && parsed.hash) {
+      const hashMatch = parsed.hash.match(/[#&?](?:t|start)=([^&#]+)/i);
+      if (hashMatch) {
+        tParam = hashMatch[1];
+      }
+    }
+
+    if (!tParam) return null;
+
+    // Colon format: "mm:ss" or "hh:mm:ss" (e.g. "1:30" or "01:25:30")
+    if (tParam.includes(":")) {
+      const parts = tParam.split(":").map((p) => parseInt(p, 10) || 0);
+      if (parts.length === 2) {
+        return parts[0] * 60 + parts[1];
+      }
+      if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      }
+    }
+
+    // Pure number or with trailing 's' (e.g. "1s", "120s", "120")
+    const pureSecMatch = tParam.match(/^(\d+)s?$/i);
+    if (pureSecMatch) {
+      return parseInt(pureSecMatch[1], 10);
+    }
+
+    // Combined formats (e.g. "1h30m20s", "14m20s", "1m")
+    let totalSeconds = 0;
+    const hoursMatch = tParam.match(/(\d+)h/i);
+    const minsMatch = tParam.match(/(\d+)m/i);
+    const secsMatch = tParam.match(/(\d+)s/i);
+
+    if (hoursMatch) totalSeconds += parseInt(hoursMatch[1], 10) * 3600;
+    if (minsMatch) totalSeconds += parseInt(minsMatch[1], 10) * 60;
+    if (secsMatch) totalSeconds += parseInt(secsMatch[1], 10);
+
+    return totalSeconds > 0 ? totalSeconds : null;
+  } catch {
+    const match = url.match(/[?&#](?:t|start)=([^&#]+)/i);
+    if (!match) return null;
+    const val = match[1];
+    if (val.includes(":")) {
+      const parts = val.split(":").map((p) => parseInt(p, 10) || 0);
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    const pureSec = val.match(/^(\d+)s?$/i);
+    if (pureSec) return parseInt(pureSec[1], 10);
+    return null;
+  }
+}
+
+function formatTimestampBadge(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) {
+    return `${h}h ${m}m ${s}s`;
+  }
+  if (m > 0) {
+    return `${m}m ${s}s`;
+  }
+  return `${s}s`;
+}
+
+function getYouTubeEmbedUrl(urlOrId: string): string | null {
+  if (!urlOrId) return null;
+  const match = urlOrId.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/
+  );
+  if (!match || !match[1]) return null;
+
+  const videoId = match[1];
+  const startSeconds = parseYouTubeTimestamp(urlOrId);
+
+  let embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`;
+  if (startSeconds !== null && startSeconds >= 0) {
+    embedUrl += `&start=${startSeconds}`;
+  }
+  return embedUrl;
+}
+
 export function ShradhaDSASheetView() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
@@ -43,6 +143,41 @@ export function ShradhaDSASheetView() {
     });
     return init;
   });
+
+  // Track which problems have their full companies list expanded
+  const [expandedCompanyIds, setExpandedCompanyIds] = useState<Set<string>>(() => new Set());
+
+  // Active video problem for embedded in-app YouTube player modal
+  const [activeVideoProblem, setActiveVideoProblem] = useState<ShradhaProblem | null>(null);
+
+  // Close modal on Escape key and lock background scroll
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveVideoProblem(null);
+      }
+    };
+    if (activeVideoProblem) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [activeVideoProblem]);
+
+  const toggleCompanyExpand = (id: string) => {
+    setExpandedCompanyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const heroCardRef = useRef<HTMLDivElement>(null);
 
@@ -109,12 +244,11 @@ export function ShradhaDSASheetView() {
       }
 
       const matchingProblems = cat.problems.filter((prob) => {
-        // Search query (title, platform, or company)
+        // Search query (title or company)
         if (q) {
           const matchTitle = prob.title.toLowerCase().includes(q);
-          const matchPlatform = prob.platform.toLowerCase().includes(q);
           const matchCompany = prob.companies.some((c) => c.toLowerCase().includes(q));
-          if (!matchTitle && !matchPlatform && !matchCompany) {
+          if (!matchTitle && !matchCompany) {
             return false;
           }
         }
@@ -557,95 +691,172 @@ export function ShradhaDSASheetView() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="border-t border-slate-100 divide-y divide-slate-100"
+                      className="border-t border-slate-100"
                     >
-                      {category.filteredProblems.map((problem) => {
-                        const isSolved = solvedIds.has(problem.id);
+                      {/* Table Header: Problem | Youtube | Practice | Level | Company */}
+                      <div className="hidden md:grid md:grid-cols-12 gap-3 px-5 py-2.5 bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                        <div className="col-span-5 flex items-center gap-2">
+                          <span>Problem</span>
+                        </div>
+                        <div className="col-span-1 text-center">
+                          <span>Youtube</span>
+                        </div>
+                        <div className="col-span-1 text-center">
+                          <span>Practice</span>
+                        </div>
+                        <div className="col-span-2 text-center">
+                          <span>Level</span>
+                        </div>
+                        <div className="col-span-3 text-left">
+                          <span>Company</span>
+                        </div>
+                      </div>
 
-                        return (
-                          <div
-                            key={problem.id}
-                            className={`p-3.5 sm:p-4 px-4 sm:px-6 flex items-center justify-between gap-3 transition-colors ${
-                              isSolved ? "bg-emerald-50/40" : "hover:bg-slate-50/60"
-                            }`}
-                          >
-                            {/* Left: Checkbox + Title + Day */}
-                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                              <button
-                                onClick={() => toggleSolved(problem.id)}
-                                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                                  isSolved
-                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
-                                    : "border-slate-300 hover:border-orange-500 bg-white"
-                                }`}
-                                aria-label={isSolved ? "Mark unsolved" : "Mark solved"}
-                              >
-                                {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                              </button>
+                      {/* Problems List in Category */}
+                      <div className="divide-y divide-slate-100">
+                        {category.filteredProblems.map((problem) => {
+                          const isSolved = solvedIds.has(problem.id);
+                          const isCompanyExpanded = expandedCompanyIds.has(problem.id);
+                          const hasMoreCompanies = problem.companies.length > 2;
+                          const displayCompanies = isCompanyExpanded
+                            ? problem.companies
+                            : problem.companies.slice(0, 2);
 
-                              <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
-                                Day {problem.day}
-                              </span>
+                          return (
+                            <div
+                              key={problem.id}
+                              className={`px-3.5 sm:px-5 py-3 md:py-3.5 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-3 items-start md:items-center transition-colors ${
+                                isSolved ? "bg-emerald-50/40" : "hover:bg-slate-50/60"
+                              }`}
+                            >
+                              {/* 1. Problem Top Line on Mobile / Col 5 on Desktop */}
+                              <div className="col-span-5 flex items-center justify-between gap-2.5 min-w-0 w-full">
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSolved(problem.id)}
+                                    className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                      isSolved
+                                        ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                                        : "border-slate-300 hover:border-orange-500 bg-white"
+                                    }`}
+                                    aria-label={isSolved ? "Mark unsolved" : "Mark solved"}
+                                  >
+                                    {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  </button>
 
-                              <a
-                                href={problem.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`font-bold text-xs sm:text-sm tracking-tight truncate transition-colors flex items-center gap-1.5 group ${
-                                  isSolved
-                                    ? "text-slate-500 line-through decoration-slate-300"
-                                    : "text-slate-800 hover:text-orange-600"
-                                }`}
-                              >
-                                <span>{problem.title}</span>
-                                <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-orange-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </a>
-                            </div>
+                                  <span className="text-[10px] sm:text-[11px] font-extrabold text-orange-700 bg-orange-50 border border-orange-200/80 px-1.5 py-0.5 rounded shrink-0">
+                                    Q{problem.qno}
+                                  </span>
 
-                            {/* Right: Company Pills + Difficulty + Platform Link */}
-                            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                              {/* Company Tags */}
-                              <div className="hidden sm:flex items-center gap-1">
-                                {problem.companies.slice(0, 3).map((comp) => (
+                                  <a
+                                    href={problem.leetcode_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`font-bold text-xs sm:text-sm tracking-tight truncate transition-colors flex items-center gap-1.5 group ${
+                                      isSolved
+                                        ? "text-slate-400 line-through decoration-slate-300 font-normal"
+                                        : "text-slate-800 hover:text-orange-600"
+                                    }`}
+                                    title={problem.title}
+                                  >
+                                    <span className="truncate">{problem.title}</span>
+                                    <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-orange-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </a>
+                                </div>
+
+                                {/* Difficulty Badge: Right-aligned on mobile next to title */}
+                                <div className="md:hidden shrink-0">
                                   <span
-                                    key={comp}
-                                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getCompanyColor(
-                                      comp
+                                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${getDifficultyBadge(
+                                      problem.difficulty
                                     )}`}
                                   >
-                                    {comp}
+                                    {problem.difficulty}
                                   </span>
-                                ))}
-                                {problem.companies.length > 3 && (
-                                  <span className="text-[10px] font-bold text-slate-400 px-1">
-                                    +{problem.companies.length - 3}
-                                  </span>
-                                )}
+                                </div>
                               </div>
 
-                              {/* Difficulty */}
-                              <span
-                                className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${getDifficultyBadge(
-                                  problem.difficulty
-                                )}`}
-                              >
-                                {problem.difficulty}
-                              </span>
+                              {/* 2. Actions & Companies: Bottom line on Mobile / Columns 6-12 on Desktop */}
+                              <div className="flex md:contents items-center justify-between w-full gap-2 pl-7.5 md:pl-0">
+                                {/* Action Buttons Group (YouTube + Practice) */}
+                                <div className="flex items-center gap-2 md:contents shrink-0">
+                                  {/* YouTube (Col 1 on Desktop) */}
+                                  <div className="col-span-1 flex md:justify-center items-center">
+                                    {problem.youtube_url ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveVideoProblem(problem)}
+                                        className="h-7 px-2.5 md:px-0 md:w-8 md:h-8 rounded-lg bg-red-50 hover:bg-red-500 text-red-600 hover:text-white border border-red-200/80 hover:border-red-500 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-xs group/yt"
+                                        title="Watch Embedded Video Solution"
+                                      >
+                                        <Video className="w-3.5 h-3.5 group-hover/yt:fill-white transition-colors" />
+                                        <span className="text-[11px] font-extrabold md:hidden">Watch</span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-300 text-sm font-semibold hidden md:inline">—</span>
+                                    )}
+                                  </div>
 
-                              {/* Direct Solve Link Button */}
-                              <a
-                                href={problem.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-600 border border-slate-200/80 text-slate-700 text-xs font-bold flex items-center gap-1 transition-all"
-                              >
-                                <span>Solve</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
+                                  {/* Practice Code (Col 1 on Desktop) */}
+                                  <div className="col-span-1 flex md:justify-center items-center">
+                                    <a
+                                      href={problem.leetcode_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="h-7 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-[11px] font-extrabold flex items-center gap-1 transition-all active:scale-95 shadow-xs"
+                                      title="Practice on LeetCode"
+                                    >
+                                      <span>Code</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  </div>
+                                </div>
+
+                                {/* Difficulty Badge (Col 2 on Desktop - hidden on mobile since it's beside title) */}
+                                <div className="hidden md:flex col-span-2 justify-center items-center">
+                                  <span
+                                    className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${getDifficultyBadge(
+                                      problem.difficulty
+                                    )}`}
+                                  >
+                                    {problem.difficulty}
+                                  </span>
+                                </div>
+
+                                {/* Companies (Col 3 on Desktop, Right side on Mobile) */}
+                                <div className="col-span-3 flex items-center gap-1 flex-wrap justify-end md:justify-start min-w-0">
+                                  {displayCompanies.map((comp) => (
+                                    <span
+                                      key={comp}
+                                      onClick={() => hasMoreCompanies && toggleCompanyExpand(problem.id)}
+                                      className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all truncate max-w-[110px] ${getCompanyColor(
+                                        comp
+                                      )} ${hasMoreCompanies ? "cursor-pointer hover:opacity-80 active:scale-95" : ""}`}
+                                      title={hasMoreCompanies ? (isCompanyExpanded ? "Click to collapse" : "Click to view all companies") : undefined}
+                                    >
+                                      {comp}
+                                    </span>
+                                  ))}
+                                  {hasMoreCompanies && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleCompanyExpand(problem.id);
+                                      }}
+                                      className="text-[9px] sm:text-[10px] font-extrabold text-orange-700 bg-orange-50 hover:bg-orange-100 px-1.5 py-0.5 rounded border border-orange-200/80 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
+                                      title={isCompanyExpanded ? "Click to show less" : "Click to view all companies"}
+                                    >
+                                      {isCompanyExpanded ? "Less" : `+${problem.companies.length - 2}`}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -654,6 +865,167 @@ export function ShradhaDSASheetView() {
           })
         )}
       </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          4. EMBEDDED YOUTUBE THEATER MODAL (IN-SYSTEM PLAYER)
+          ───────────────────────────────────────────────────────────── */}
+      {mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {activeVideoProblem && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 md:p-6"
+                onClick={() => setActiveVideoProblem(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0, y: 12 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 12 }}
+                  transition={{ type: "spring", damping: 26, stiffness: 320 }}
+                  className="relative w-full max-w-4xl max-h-[92vh] bg-[#120502] border border-orange-500/35 rounded-2xl sm:rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_40px_rgba(249,115,22,0.2)] overflow-hidden flex flex-col text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5 border-b border-white/10 bg-gradient-to-r from-[#1c0803] via-[#240b04] to-[#1c0803] shrink-0">
+                    <div className="flex items-center gap-3 min-w-0 pr-3">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <Video className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="text-[10px] sm:text-[11px] font-black text-orange-400 uppercase tracking-wider">
+                            Q{activeVideoProblem.qno} • Video Solution
+                          </span>
+                          <span
+                            className={`text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${getDifficultyBadge(
+                              activeVideoProblem.difficulty
+                            )}`}
+                          >
+                            {activeVideoProblem.difficulty}
+                          </span>
+                          {activeVideoProblem.youtube_url && parseYouTubeTimestamp(activeVideoProblem.youtube_url) !== null && (
+                            <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-orange-400" />
+                              <span>Starts at {formatTimestampBadge(parseYouTubeTimestamp(activeVideoProblem.youtube_url)!)}</span>
+                            </span>
+                          )}
+                        </div>
+                        <h2 className="text-sm sm:text-base font-black text-white truncate tracking-tight">
+                          {activeVideoProblem.title}
+                        </h2>
+                      </div>
+                    </div>
+
+                    {/* Header Actions */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {activeVideoProblem.youtube_url && (
+                        <a
+                          href={activeVideoProblem.youtube_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-red-600 text-slate-200 hover:text-white text-xs font-bold transition-all border border-white/10 shadow-sm"
+                          title="Open on YouTube at exact timestamp in new tab"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Watch on YouTube</span>
+                        </a>
+                      )}
+
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setActiveVideoProblem(null)}
+                        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                        aria-label="Close video player"
+                        title="Close (Esc)"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 16:9 Video Player Container (Height-constrained so it never pushes the footer off-screen) */}
+                  <div className="relative w-full aspect-video max-h-[58vh] bg-black shrink-1 flex items-center justify-center overflow-hidden">
+                    {activeVideoProblem.youtube_url && getYouTubeEmbedUrl(activeVideoProblem.youtube_url) ? (
+                      <iframe
+                        key={getYouTubeEmbedUrl(activeVideoProblem.youtube_url) || activeVideoProblem.id}
+                        src={getYouTubeEmbedUrl(activeVideoProblem.youtube_url)!}
+                        title={`${activeVideoProblem.title} - Video Solution`}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-sm">
+                        <p>Video solution not available for this problem.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-t border-white/10 bg-[#160602] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shrink-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] sm:text-xs text-orange-300 font-bold">Asked in:</span>
+                      {activeVideoProblem.companies.slice(0, 5).map((co) => (
+                        <span
+                          key={co}
+                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border ${getCompanyColor(co)}`}
+                        >
+                          {co}
+                        </span>
+                      ))}
+                      {activeVideoProblem.companies.length > 5 && (
+                        <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+                          +{activeVideoProblem.companies.length - 5} more
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                      {activeVideoProblem.youtube_url && (
+                        <a
+                          href={activeVideoProblem.youtube_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="sm:hidden px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-200 font-bold text-xs flex items-center gap-1.5 transition-all"
+                        >
+                          <span>YouTube</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+
+                      <button
+                        onClick={() => toggleSolved(activeVideoProblem.id)}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                          solvedIds.has(activeVideoProblem.id)
+                            ? "bg-emerald-600 text-white"
+                            : "bg-white/10 hover:bg-white/20 text-slate-200"
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{solvedIds.has(activeVideoProblem.id) ? "Solved" : "Mark as Solved"}</span>
+                      </button>
+
+                      <a
+                        href={activeVideoProblem.leetcode_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-orange-900/30"
+                      >
+                        <span>Practice on LeetCode</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 }
