@@ -26,6 +26,8 @@ import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
 import { PenguinDSASheetCard } from "@/components/practice/PenguinDSASheetCard";
 import { PenguinDSASheetView } from "@/components/practice/PenguinDSASheetView";
+import { ShradhaDSASheetCard } from "@/components/practice/ShradhaDSASheetCard";
+import { ShradhaDSASheetView } from "@/components/practice/ShradhaDSASheetView";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
@@ -46,10 +48,11 @@ function PracticeContent() {
   const urlPeriod = searchParams?.get("period");
   const urlMode = searchParams?.get("mode");
 
-  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company" | "penguin-sheet">(() => {
+  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company" | "penguin-sheet" | "shradha-sheet">(() => {
     if (urlCompany || urlMode === "company") return "company";
     if (urlMode === "beginner") return "beginner";
     if (urlMode === "sheet" || urlMode === "penguin-sheet") return "penguin-sheet";
+    if (urlMode === "shradha" || urlMode === "shradha-sheet") return "shradha-sheet";
     return "index";
   });
 
@@ -97,6 +100,10 @@ function PracticeContent() {
       if (per) setSelectedPeriod(per as QuestionPeriod);
     } else if (m === "beginner") {
       setSelectedMode("beginner");
+    } else if (m === "sheet" || m === "penguin-sheet") {
+      setSelectedMode("penguin-sheet");
+    } else if (m === "shradha" || m === "shradha-sheet") {
+      setSelectedMode("shradha-sheet");
     } else if (m === "index") {
       setSelectedMode("index");
     }
@@ -239,9 +246,10 @@ function PracticeContent() {
             </h2>
           </div>
 
-          {/* ── Penguin DSA Sheet Card ── */}
-          <div className="max-w-5xl mx-auto w-full flex justify-start">
+          {/* ── DSA Sheet Cards: Penguin Sheet & Shradha Didi Sheet Side-by-Side ── */}
+          <div className="max-w-5xl mx-auto w-full flex flex-wrap gap-6 items-stretch justify-start">
             <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
+            <ShradhaDSASheetCard onSelect={() => setSelectedMode("shradha-sheet")} />
           </div>
         </div>
       )}
@@ -249,6 +257,11 @@ function PracticeContent() {
       {/* ── MODE 3: PENGUIN DSA SHEET VIEW ── */}
       {selectedMode === "penguin-sheet" && (
         <PenguinDSASheetView />
+      )}
+
+      {/* ── MODE 4: SHRADHA DIDI DSA SHEET VIEW ── */}
+      {selectedMode === "shradha-sheet" && (
+        <ShradhaDSASheetView />
       )}
 
       {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
