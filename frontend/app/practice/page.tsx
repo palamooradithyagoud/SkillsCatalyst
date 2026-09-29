@@ -247,7 +247,7 @@ function PracticeContent() {
           </div>
 
           {/* ── DSA Sheet Cards: Penguin Sheet & Shradha Didi Sheet Side-by-Side ── */}
-          <div className="max-w-5xl mx-auto w-full flex flex-wrap gap-6 items-stretch justify-start">
+          <div className="max-w-5xl mx-auto w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-6 items-stretch justify-start">
             <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
             <ShradhaDSASheetCard onSelect={() => setSelectedMode("shradha-sheet")} />
           </div>

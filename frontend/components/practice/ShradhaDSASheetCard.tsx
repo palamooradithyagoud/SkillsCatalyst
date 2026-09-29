@@ -17,12 +17,12 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.05 }}
       onClick={onSelect}
-      className="w-full max-w-[320px] sm:max-w-[335px] rounded-[20px] bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_36px_rgba(234,88,12,0.18)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none relative"
+      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white border border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_36px_rgba(234,88,12,0.18)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none relative h-full"
     >
       {/* ─────────────────────────────────────────────────────────────
           TOP BANNER / THUMBNAIL (USING USER'S SHRADHA DIDI IMAGE)
           ───────────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-[185px] sm:h-[195px] bg-[#120502] overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-[95px] xs:h-[115px] sm:h-[195px] bg-[#120502] overflow-hidden flex items-center justify-center">
         {/* Ambient blurred glow from the image itself to fill banner borders seamlessly */}
         <Image
           src="/images/practice/shradha_dsa_30_days.jpg"
@@ -39,7 +39,7 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
             src="/images/practice/shradha_dsa_30_days.jpg"
             alt="Shradha Didi DSA 30 Days Sheet Series"
             fill
-            sizes="(max-width: 768px) 100vw, 340px"
+            sizes="(max-width: 768px) 50vw, 340px"
             className="object-contain object-center drop-shadow-[0_4px_16px_rgba(0,0,0,0.45)] group-hover:scale-104 transition-transform duration-300 ease-out"
             priority
           />
@@ -49,24 +49,25 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
       {/* ─────────────────────────────────────────────────────────────
           BOTTOM CARD BODY (PARALLEL TO PENGUIN CARD)
           ───────────────────────────────────────────────────────────── */}
-      <div className="p-4 sm:p-5 pt-3.5 sm:pt-4 bg-white flex flex-col justify-between flex-1 text-left">
+      <div className="p-2.5 sm:p-5 pt-2 sm:pt-4 bg-white flex flex-col justify-between flex-1 text-left">
         <div>
           {/* Title */}
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-slate-900 font-extrabold text-[17px] sm:text-[18px] tracking-tight group-hover:text-orange-600 transition-colors leading-snug">
+            <h3 className="text-slate-900 font-extrabold text-[13px] sm:text-[18px] tracking-tight group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
               Shradha Didi&apos;s 30 Days Sheet
             </h3>
           </div>
 
           {/* Subtitle / Curated By */}
-          <p className="text-slate-500 font-medium text-xs sm:text-[13px] mt-1 flex items-center gap-1.5">
+          <p className="text-slate-500 font-medium text-[10px] sm:text-[13px] mt-0.5 sm:mt-1 flex items-center gap-1 truncate">
             <span>Curated by Apna College</span>
             <span className="text-slate-300">•</span>
-            <span className="text-orange-600 font-bold">Ex-Microsoft</span>
+            <span className="text-orange-600 font-bold hidden sm:inline">Ex-Microsoft</span>
+            <span className="text-orange-600 font-bold sm:hidden">Ex-MSFT</span>
           </p>
 
-          {/* Company Badges Strip */}
-          <div className="flex items-center gap-1 mt-2.5 flex-wrap">
+          {/* Company Badges Strip (Desktop only to maintain symmetrical height on mobile) */}
+          <div className="hidden sm:flex items-center gap-1 mt-2.5 flex-wrap">
             {["Microsoft", "Apple", "Amazon", "Netflix", "Google"].map((co) => (
               <span
                 key={co}
@@ -79,11 +80,11 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
         </div>
 
         {/* Problems Count with Bookmark/Book Icon */}
-        <div className="flex items-center gap-1.5 text-slate-700 text-xs sm:text-[13px] font-semibold mt-3.5 pt-2.5 border-t border-slate-100">
-          <Bookmark className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+        <div className="flex items-center gap-1 sm:gap-1.5 text-slate-700 text-[10px] sm:text-[13px] font-semibold mt-2 sm:mt-3.5 pt-1.5 sm:pt-2.5 border-t border-slate-100">
+          <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500 shrink-0" />
           <span className="text-slate-900 font-bold">{TOTAL_SHRADHA_PROBLEMS} Problems</span>
-          <span className="text-slate-300">•</span>
-          <span className="text-slate-500 font-medium">30 Days</span>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="text-slate-500 font-medium hidden sm:inline">30 Days</span>
         </div>
       </div>
     </motion.div>
