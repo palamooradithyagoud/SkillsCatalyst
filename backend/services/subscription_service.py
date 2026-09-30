@@ -23,6 +23,11 @@ from backend.models.subscription import (
     DEFAULT_FREE_ENTITLEMENTS,
     DEFAULT_PREMIUM_ENTITLEMENTS,
 )
+from backend.services.cache_service import (
+    get_cached_user_subscription,
+    set_cached_user_subscription,
+    invalidate_user_subscription,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,11 +147,10 @@ class SubscriptionService:
     def resolve_effective_subscription(user_id: str) -> Dict[str, Any]:
         """
         Authoritative calculation of effective plan, status, and premium flag:
-        - No active subscription -> free, is_premium = False.
-        - Active subscription & expires_at > now() -> premium_monthly/premium_3_month, is_premium = True.
-        - Active subscription & expires_at <= now() -> free, status=expired, is_premium = False.
-        - Cancelled subscription & expires_at > now() -> retains premium until expires_at, status=cancelled, is_premium = True.
-        - Cancelled subscription & expires_at <= now() -> free, status=expired, is_premium = False.
+        - Checks Redis cache first (TTL 10m) for accelerated response.
+        - On cache miss, queries authoritative Supabase user_subscriptions table.
+        - Caches minimal resolved state in Redis before returning.
+        - If Redis is unavailable, cleanly falls through to Supabase without failing.
         """
         if not user_id or not is_valid_uuid(user_id):
             return {
@@ -159,6 +163,31 @@ class SubscriptionService:
                 "raw_sub": None,
             }
 
+        # 1. Check Redis Cache
+        try:
+            cached = get_cached_user_subscription(user_id)
+            if cached and isinstance(cached, dict):
+                try:
+                    p_code = PlanCode(cached.get("plan", "free"))
+                except Exception:
+                    p_code = PlanCode.FREE
+                try:
+                    s_enum = SubscriptionStatus(cached.get("status", "active"))
+                except Exception:
+                    s_enum = SubscriptionStatus.ACTIVE
+                return {
+                    "plan": p_code,
+                    "status": s_enum,
+                    "is_premium": bool(cached.get("is_premium", False)),
+                    "started_at": _parse_timestamp(cached.get("started_at")),
+                    "expires_at": _parse_timestamp(cached.get("expires_at")),
+                    "cancelled_at": _parse_timestamp(cached.get("cancelled_at")),
+                    "raw_sub": None,
+                }
+        except Exception as cache_err:
+            logger.warning(f"Error reading subscription cache for {user_id}: {cache_err}")
+
+        # 2. Authoritative Supabase Lookup
         sub = SubscriptionService.get_user_subscription_record(user_id)
         now = datetime.now(timezone.utc)
 
@@ -172,7 +201,7 @@ class SubscriptionService:
                 logger.debug(f"Pending payment sync error for {user_id}: {sync_err}")
 
         if not sub:
-            return {
+            result = {
                 "plan": PlanCode.FREE,
                 "status": SubscriptionStatus.ACTIVE,
                 "is_premium": False,
@@ -181,6 +210,11 @@ class SubscriptionService:
                 "cancelled_at": None,
                 "raw_sub": None,
             }
+            try:
+                set_cached_user_subscription(user_id, result)
+            except Exception as cache_err:
+                logger.warning(f"Error caching subscription for {user_id}: {cache_err}")
+            return result
 
         status_str = str(sub.get("status", "expired")).lower()
         started_at = _parse_timestamp(sub.get("started_at"))
@@ -196,7 +230,7 @@ class SubscriptionService:
 
         # Case 1: Free plan row
         if stored_plan_code == PlanCode.FREE:
-            return {
+            result = {
                 "plan": PlanCode.FREE,
                 "status": SubscriptionStatus.ACTIVE,
                 "is_premium": False,
@@ -207,65 +241,73 @@ class SubscriptionService:
             }
 
         # Case 2: Active or Cancelled with Future Expiry
-        is_unexpired = expires_at is None or expires_at > now
-
-        if status_str == "active":
-            if is_unexpired:
-                return {
-                    "plan": stored_plan_code,
-                    "status": SubscriptionStatus.ACTIVE,
-                    "is_premium": True,
-                    "started_at": started_at,
-                    "expires_at": expires_at,
-                    "cancelled_at": None,
-                    "raw_sub": sub,
-                }
+        else:
+            is_unexpired = expires_at is None or expires_at > now
+            if status_str == "active":
+                if is_unexpired:
+                    result = {
+                        "plan": stored_plan_code,
+                        "status": SubscriptionStatus.ACTIVE,
+                        "is_premium": True,
+                        "started_at": started_at,
+                        "expires_at": expires_at,
+                        "cancelled_at": None,
+                        "raw_sub": sub,
+                    }
+                else:
+                    # Expired active subscription
+                    result = {
+                        "plan": PlanCode.FREE,
+                        "status": SubscriptionStatus.EXPIRED,
+                        "is_premium": False,
+                        "started_at": started_at,
+                        "expires_at": expires_at,
+                        "cancelled_at": None,
+                        "raw_sub": sub,
+                    }
+            elif status_str == "cancelled":
+                if is_unexpired:
+                    # User cancelled renewal but retains paid access until period end
+                    result = {
+                        "plan": stored_plan_code,
+                        "status": SubscriptionStatus.CANCELLED,
+                        "is_premium": True,
+                        "started_at": started_at,
+                        "expires_at": expires_at,
+                        "cancelled_at": cancelled_at,
+                        "raw_sub": sub,
+                    }
+                else:
+                    # Cancelled and now expired
+                    result = {
+                        "plan": PlanCode.FREE,
+                        "status": SubscriptionStatus.EXPIRED,
+                        "is_premium": False,
+                        "started_at": started_at,
+                        "expires_at": expires_at,
+                        "cancelled_at": cancelled_at,
+                        "raw_sub": sub,
+                    }
             else:
-                # Expired active subscription
-                return {
+                # Case 3: Explicitly marked expired
+                result = {
                     "plan": PlanCode.FREE,
                     "status": SubscriptionStatus.EXPIRED,
                     "is_premium": False,
                     "started_at": started_at,
                     "expires_at": expires_at,
-                    "cancelled_at": None,
-                    "raw_sub": sub,
-                }
-
-        elif status_str == "cancelled":
-            if is_unexpired:
-                # User cancelled renewal but retains paid access until period end
-                return {
-                    "plan": stored_plan_code,
-                    "status": SubscriptionStatus.CANCELLED,
-                    "is_premium": True,
-                    "started_at": started_at,
-                    "expires_at": expires_at,
-                    "cancelled_at": cancelled_at,
-                    "raw_sub": sub,
-                }
-            else:
-                # Cancelled and now expired
-                return {
-                    "plan": PlanCode.FREE,
-                    "status": SubscriptionStatus.EXPIRED,
-                    "is_premium": False,
-                    "started_at": started_at,
-                    "expires_at": expires_at,
                     "cancelled_at": cancelled_at,
                     "raw_sub": sub,
                 }
 
-        # Case 3: Explicitly marked expired
-        return {
-            "plan": PlanCode.FREE,
-            "status": SubscriptionStatus.EXPIRED,
-            "is_premium": False,
-            "started_at": started_at,
-            "expires_at": expires_at,
-            "cancelled_at": cancelled_at,
-            "raw_sub": sub,
-        }
+        # 3. Store Authoritative Result in Cache
+        try:
+            set_cached_user_subscription(user_id, result)
+        except Exception as cache_err:
+            logger.warning(f"Error caching subscription for {user_id}: {cache_err}")
+
+        return result
+
 
     @staticmethod
     def get_effective_plan(user_id: str) -> Tuple[PlanCode, bool]:
@@ -439,6 +481,12 @@ class SubscriptionService:
                         "expires_at": new_expires_at.isoformat(),
                     },
                 }).execute()
+
+                # Invalidate Redis cache on DB write
+                try:
+                    invalidate_user_subscription(user_id)
+                except Exception as inv_err:
+                    logger.warning(f"Failed to invalidate subscription cache for {user_id}: {inv_err}")
             except Exception as e:
                 logger.error(f"Failed to persist subscription activation for user {user_id}: {e}", exc_info=True)
 

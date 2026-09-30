@@ -20,6 +20,13 @@ from backend.models.tech_news import (
     UpdateTechNewsRequest,
     TechNewsStatus,
 )
+from backend.services.cache_service import (
+    get_cached_tech_news_grouped,
+    set_cached_tech_news_grouped,
+    get_cached_tech_news_story,
+    set_cached_tech_news_story,
+    invalidate_tech_news_cache,
+)
 
 logger = logging.getLogger("skillscatalyst.tech_news")
 
@@ -121,7 +128,16 @@ def get_student_grouped_tech_news(search: Optional[str] = None) -> List[Dict[str
     formatted as Instagram-Stories style groups.
     Omit any source that currently has zero active stories.
     Optional search keyword matches company name, story title, or story summary.
+    Caches shared response in Redis (TTL 15m).
     """
+    # 1. Check Redis shared cache
+    try:
+        cached = get_cached_tech_news_grouped(search=search)
+        if cached is not None:
+            return cached
+    except Exception as cache_err:
+        logger.warning(f"Error reading tech news cache: {cache_err}")
+
     sb = get_supabase()
     if not sb:
         logger.warning("Supabase client unavailable when fetching tech news feed")
@@ -197,6 +213,12 @@ def get_student_grouped_tech_news(search: Optional[str] = None) -> List[Dict[str
                     _enrich_story_dict(st, src)
                 src_copy["stories"] = matching_stories
                 grouped.append(src_copy)
+
+        # Cache shared response
+        try:
+            set_cached_tech_news_grouped(grouped, search=search)
+        except Exception as cache_err:
+            logger.warning(f"Error caching grouped tech news: {cache_err}")
 
         return grouped
     except Exception as e:
@@ -297,6 +319,10 @@ def create_source(data: CreateTechNewsSourceRequest) -> Dict[str, Any]:
         created = res.data[0]
         created["created_at"] = _format_datetime(created.get("created_at"))
         created["updated_at"] = _format_datetime(created.get("updated_at"))
+        try:
+            invalidate_tech_news_cache()
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return created
     except HTTPException:
         raise
@@ -333,6 +359,10 @@ def update_source(source_id: str, data: UpdateTechNewsSourceRequest) -> Dict[str
         updated = res.data[0]
         updated["created_at"] = _format_datetime(updated.get("created_at"))
         updated["updated_at"] = _format_datetime(updated.get("updated_at"))
+        try:
+            invalidate_tech_news_cache()
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return updated
     except HTTPException:
         raise
@@ -351,6 +381,10 @@ def delete_source(source_id: str) -> bool:
     clean_id = str(source_id).strip()
     try:
         sb.from_("tech_news_sources").delete().eq("id", clean_id).execute()
+        try:
+            invalidate_tech_news_cache()
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return True
     except Exception as e:
         logger.error(f"Failed to delete source {clean_id}: {e}")
@@ -367,11 +401,21 @@ def get_student_story_by_id(story_id: str) -> Optional[Dict[str, Any]]:
     """
     if not story_id:
         return None
+
+    clean_id = str(story_id).strip()
+
+    # 1. Check Redis cache
+    try:
+        cached = get_cached_tech_news_story(clean_id)
+        if cached is not None:
+            return cached
+    except Exception as cache_err:
+        logger.warning(f"Error checking tech news story cache: {cache_err}")
+
     sb = get_supabase()
     if not sb:
         return None
 
-    clean_id = str(story_id).strip()
     now_dt = datetime.now(timezone.utc)
 
     try:
@@ -399,6 +443,12 @@ def get_student_story_by_id(story_id: str) -> Optional[Dict[str, Any]]:
         story["created_at"] = _format_datetime(story.get("created_at"))
         story["updated_at"] = _format_datetime(story.get("updated_at"))
         _enrich_story_dict(story, src)
+
+        try:
+            set_cached_tech_news_story(clean_id, story)
+        except Exception as cache_err:
+            logger.warning(f"Error caching tech news story {clean_id}: {cache_err}")
+
         return story
     except Exception as e:
         logger.error(f"Failed to fetch student story {clean_id}: {e}")
@@ -570,6 +620,10 @@ def create_story(data: CreateTechNewsRequest, user_id: Optional[str] = None) -> 
         created["created_at"] = _format_datetime(created.get("created_at"))
         created["updated_at"] = _format_datetime(created.get("updated_at"))
         _enrich_story_dict(created)
+        try:
+            invalidate_tech_news_cache(created.get("id"))
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return created
     except HTTPException:
         raise
@@ -626,6 +680,10 @@ def update_story(story_id: str, data: UpdateTechNewsRequest) -> Dict[str, Any]:
         updated["created_at"] = _format_datetime(updated.get("created_at"))
         updated["updated_at"] = _format_datetime(updated.get("updated_at"))
         _enrich_story_dict(updated)
+        try:
+            invalidate_tech_news_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return updated
     except HTTPException:
         raise
@@ -671,6 +729,10 @@ def publish_story(story_id: str) -> Dict[str, Any]:
         updated["created_at"] = _format_datetime(updated.get("created_at"))
         updated["updated_at"] = _format_datetime(updated.get("updated_at"))
         _enrich_story_dict(updated)
+        try:
+            invalidate_tech_news_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return updated
     except HTTPException:
         raise
@@ -704,6 +766,10 @@ def archive_story(story_id: str) -> Dict[str, Any]:
         updated["created_at"] = _format_datetime(updated.get("created_at"))
         updated["updated_at"] = _format_datetime(updated.get("updated_at"))
         _enrich_story_dict(updated)
+        try:
+            invalidate_tech_news_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return updated
     except HTTPException:
         raise
@@ -722,6 +788,10 @@ def delete_story(story_id: str) -> bool:
     clean_id = str(story_id).strip()
     try:
         sb.from_("tech_news").delete().eq("id", clean_id).execute()
+        try:
+            invalidate_tech_news_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate tech news cache: {inv_err}")
         return True
     except Exception as e:
         logger.error(f"Failed to delete story {clean_id}: {e}")
