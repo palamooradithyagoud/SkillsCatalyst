@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Sparkles, ChevronLeft, ChevronRight, RefreshCw, Zap } from "lucide-react";
 import type { GroupedTechNewsSource } from "@/types/tech_news";
-import { fetchStudentTechNews } from "@/lib/api/tech_news";
+import { useStudentTechNews } from "@/hooks/useStudentTechNews";
 import { TechNewsSourceCircle } from "./TechNewsSourceCircle";
 import { TechNewsStoryViewer } from "./TechNewsStoryViewer";
 import { TechNewsEmptyState } from "./TechNewsEmptyState";
@@ -13,9 +13,9 @@ interface TechNewsStoriesProps {
 }
 
 export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = "" }) => {
-  const [sources, setSources] = useState<GroupedTechNewsSource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error: queryError, refetch } = useStudentTechNews();
+  const sources = data?.sources || [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load stories feed") : null;
 
   // Viewer Modal State
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -27,26 +27,15 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const loadFeed = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchStudentTechNews();
-      setSources(data.sources || []);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load stories feed";
-      setError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    await refetch();
+  }, [refetch]);
 
   useEffect(() => {
     // Proactively unlock body overflow if previously stuck
     if (typeof document !== "undefined" && document.body.style.overflow === "hidden") {
       document.body.style.overflow = "";
     }
-    loadFeed();
-  }, [loadFeed]);
+  }, []);
 
   // Check scroll position for chevrons
   const updateScrollButtons = useCallback(() => {

@@ -15,7 +15,7 @@ import {
   ArrowUpRight,
   Sparkles,
 } from "lucide-react";
-import { fetchStudentEvents } from "@/lib/api/events";
+import { useStudentEvents } from "@/hooks/useStudentEvents";
 import type { EventItem } from "@/types/events";
 
 function cleanEventDescription(text: string): string {
@@ -39,29 +39,9 @@ function cleanEventDescription(text: string): string {
 }
 
 export default function EventsWidget() {
-  const [liveEvents, setLiveEvents] = useState<EventItem[]>([]);
-  const [loadingLiveEvents, setLoadingLiveEvents] = useState(true);
+  const { data, isLoading: loadingLiveEvents } = useStudentEvents();
+  const liveEvents = data?.events ?? [];
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const res = await fetchStudentEvents();
-        if (active && res.events) {
-          setLiveEvents(res.events);
-        }
-      } catch {
-        // Silently handled
-      } finally {
-        if (active) setLoadingLiveEvents(false);
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Close modal on ESC key
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
