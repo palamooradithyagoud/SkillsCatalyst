@@ -3,16 +3,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   X,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
+  ChevronUp,
   Clock,
-  ArrowRight,
-  Sparkles,
   Pause,
 } from "lucide-react";
 import type { GroupedTechNewsSource, TechNewsStory } from "@/types/tech_news";
@@ -78,21 +75,40 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
   const stories: TechNewsStory[] = currentSource?.stories || [];
   const currentStory: TechNewsStory | undefined = stories[storyIdx];
 
-  // Touch tracking for swipe-down to dismiss
+  const handleRedirectToNews = useCallback(() => {
+    if (!currentStory?.id) return;
+    onClose();
+    router.push(`/tech-news/${currentStory.id}`);
+  }, [currentStory?.id, onClose, router]);
+
+  // Touch tracking for swipe-up (to read) and swipe-down (to dismiss)
   const touchStartY = useRef<number>(0);
+  const touchStartX = useRef<number>(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsPaused(true);
     touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     setIsPaused(false);
     const touchEndY = e.changedTouches[0].clientY;
+    const touchEndX = e.changedTouches[0].clientX;
     const diffY = touchEndY - touchStartY.current;
-    // Swipe down gesture dismisses viewer
-    if (diffY > 80) {
-      onClose();
+    const diffX = touchEndX - touchStartX.current;
+
+    // Dominant vertical gesture
+    if (Math.abs(diffY) > Math.abs(diffX)) {
+      if (diffY < -50) {
+        // Swipe up gesture triggers direct navigation into Tech News
+        handleRedirectToNews();
+        return;
+      } else if (diffY > 80) {
+        // Swipe down gesture dismisses viewer
+        onClose();
+        return;
+      }
     }
   };
 
@@ -127,7 +143,7 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
     }
   }, [storyIdx, sourceIdx, sources]);
 
-  // Keyboard accessibility: Left, Right, Escape
+  // Keyboard accessibility: Left, Right, Up, Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -136,6 +152,8 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
         handleNext();
       } else if (e.key === "ArrowLeft") {
         handlePrev();
+      } else if (e.key === "ArrowUp") {
+        handleRedirectToNews();
       } else if (e.key === " ") {
         setIsPaused((p) => !p);
       }
@@ -143,7 +161,7 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNext, handlePrev, onClose]);
+  }, [handleNext, handlePrev, handleRedirectToNews, onClose]);
 
   if (!mounted || !currentSource || !currentStory) {
     return null;
@@ -209,8 +227,8 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/15 via-purple-500/10 to-transparent" />
             </div>
           )}
-          {/* Dark scrim overlay gradient for readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 to-black/95" />
+          {/* Subtle gradient scrim overlays for top header and bottom swipe up */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/80 pointer-events-none" />
         </div>
 
         {/* ── TOP HEADER SECTION ── */}
@@ -285,7 +303,7 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
         </div>
 
         {/* ── INTERACTIVE TAP ZONES ── */}
-        <div className="absolute inset-y-20 inset-x-0 z-10 flex">
+        <div className="absolute top-20 bottom-28 inset-x-0 z-10 flex">
           {/* Left 35% tap area: Previous */}
           <div
             onClick={(e) => {
@@ -306,71 +324,35 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
           />
         </div>
 
-        {/* ── BOTTOM CONTENT & CTA SECTION ── */}
-        <div className="relative z-20 p-4 sm:p-5 space-y-3">
-          {/* Story Card Backdrop (Scrollable to read full news details) */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            className="bg-black/65 backdrop-blur-md border border-white/15 rounded-2xl p-4 shadow-xl space-y-2 max-h-[46vh] overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-white/20 select-text"
+        {/* ── BOTTOM SWIPE UP REDIRECT SECTION ── */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="relative z-20 pb-8 pt-4 px-6 flex flex-col items-center justify-center text-center"
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRedirectToNews();
+            }}
+            aria-label="Swipe up to read full tech news"
+            className="group/swipe flex flex-col items-center gap-1.5 focus:outline-none transition-all duration-300 hover:-translate-y-1 active:scale-95 cursor-pointer"
           >
-            <div className="flex items-center justify-between text-xs font-semibold text-purple-300 uppercase tracking-wider">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                <span>48h Curated Tech Story</span>
-              </div>
-              <span className="text-[10px] lowercase text-white/40 normal-case">
-                scroll to read
-              </span>
+            {/* Animated Bouncing Upward Indicator */}
+            <div className="flex flex-col items-center -space-y-2 text-white/90 group-hover/swipe:text-purple-300 transition-colors">
+              <ChevronUp className="w-5 h-5 animate-bounce" />
             </div>
 
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
-              {currentStory.title || currentStory.headline}
-            </h2>
-
-            <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-normal">
-              {currentStory.summary}
-            </p>
-
-            {(currentStory.content || currentStory.why_it_matters) && (
-              <div className="pt-2 border-t border-white/10 text-xs text-zinc-300 space-y-1">
-                <span className="font-bold text-purple-300 block">Why it matters:</span>
-                <p className="text-zinc-300 leading-relaxed">
-                  {currentStory.content || currentStory.why_it_matters}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Action CTAs: Read Full News */}
-          <div className="space-y-2 pt-0.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-                router.push(`/tech-news/${currentStory.id}`);
-              }}
-              className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-tight flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <span>Read Full News</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            {/* Optional Original Source Link */}
-            {currentStory.source_url && (
-              <a
-                href={currentStory.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="w-full py-2 px-3 rounded-lg bg-white/10 hover:bg-white/15 text-zinc-300 hover:text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span>Visit Original Source</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-          </div>
+            {/* Glowing Glassmorphic Pill */}
+            <div className="px-5 py-2.5 rounded-full bg-black/40 hover:bg-black/60 active:bg-black/70 backdrop-blur-xl border border-white/25 group-hover/swipe:border-purple-400/60 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group-hover/swipe:shadow-[0_0_25px_rgba(168,85,247,0.4)] flex items-center gap-2.5 transition-all duration-300">
+              <span className="text-xs sm:text-sm font-bold text-white tracking-wider uppercase">
+                Swipe Up
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 group-hover/swipe:animate-ping" />
+              <span className="text-[11px] sm:text-xs font-semibold text-purple-200">
+                Read News
+              </span>
+            </div>
+          </button>
         </div>
       </div>
 
