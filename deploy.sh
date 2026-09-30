@@ -54,7 +54,8 @@ gcloud run deploy $BACKEND_SERVICE \
   --set-env-vars "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" \
   --set-env-vars "SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}" \
   --set-env-vars "GROQ_API_KEY=${GROQ_API_KEY}" \
-  --set-env-vars "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}"
+  --set-env-vars "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}" \
+  --set-env-vars "REDIS_URL=${REDIS_URL}"
 
 # Get the deployed backend URL
 BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE --region $REGION --format "value(status.url)")

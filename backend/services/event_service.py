@@ -21,6 +21,13 @@ from backend.models.event import (
     EventCategory,
     EventMode,
 )
+from backend.services.cache_service import (
+    get_cached_event_hero,
+    set_cached_event_hero,
+    get_cached_featured_events,
+    set_cached_featured_events,
+    invalidate_event_cache,
+)
 
 logger = logging.getLogger("skillscatalyst.events")
 
@@ -100,7 +107,17 @@ def get_student_events(
     - status = 'published'
     - visible_from <= NOW() (or NULL)
     - visible_until > NOW() (or NULL)
+    - Shared featured events response cached in Redis (TTL 30m).
     """
+    is_featured_default = (category is None and is_hackathon is None and search is None)
+    if is_featured_default:
+        try:
+            cached = get_cached_featured_events()
+            if cached is not None:
+                return cached
+        except Exception as cache_err:
+            logger.warning(f"Error reading featured events cache: {cache_err}")
+
     sb = get_supabase()
     if not sb:
         logger.warning("Supabase client unavailable when fetching student events")
@@ -145,6 +162,12 @@ def get_student_events(
                         continue
                 visible_events.append(ev)
 
+        if is_featured_default:
+            try:
+                set_cached_featured_events(visible_events)
+            except Exception as cache_err:
+                logger.warning(f"Error caching featured events: {cache_err}")
+
         return visible_events
 
     except Exception as e:
@@ -157,11 +180,20 @@ def get_student_events(
 
 
 def get_student_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
-    """Fetches a single published visible event by ID/UUID."""
+    """Fetches a single published visible event by ID/UUID, cached in Redis (TTL 30m)."""
     if not event_id:
         return None
 
     clean_id = str(event_id).strip()
+
+    # 1. Check Redis hero/banner cache
+    try:
+        cached = get_cached_event_hero(clean_id)
+        if cached is not None:
+            return cached
+    except Exception as cache_err:
+        logger.warning(f"Error checking event hero cache: {cache_err}")
+
     sb = get_supabase()
     if not sb:
         return None
@@ -174,6 +206,10 @@ def get_student_event_by_id(event_id: str) -> Optional[Dict[str, Any]]:
 
         event = res.data[0]
         if _is_event_visible_now(event, now_dt):
+            try:
+                set_cached_event_hero(clean_id, event)
+            except Exception as cache_err:
+                logger.warning(f"Error caching event hero {clean_id}: {cache_err}")
             return event
         return None
     except Exception as e:
@@ -304,8 +340,14 @@ def create_event(data: CreateEventRequest, user_id: str) -> Dict[str, Any]:
     try:
         res = sb.from_("events").insert(record).execute()
         if res.data and len(res.data) > 0:
-            return res.data[0]
-        return record
+            created = res.data[0]
+        else:
+            created = record
+        try:
+            invalidate_event_cache(created.get("id"))
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate event cache: {inv_err}")
+        return created
     except Exception as e:
         err_msg = str(e)
         logger.error(f"Failed to insert event into database: {e}")
@@ -420,8 +462,14 @@ def update_event(event_id: str, data: UpdateEventRequest) -> Dict[str, Any]:
     try:
         res = sb.from_("events").update(update_payload).eq("id", clean_id).execute()
         if res.data and len(res.data) > 0:
-            return res.data[0]
-        return {**existing, **update_payload}
+            updated = res.data[0]
+        else:
+            updated = {**existing, **update_payload}
+        try:
+            invalidate_event_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate event cache: {inv_err}")
+        return updated
     except Exception as e:
         err_msg = str(e)
         logger.error(f"Failed to update event {clean_id}: {e}")
@@ -471,7 +519,12 @@ def set_event_status(event_id: str, new_status: Any) -> Dict[str, Any]:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Event '{clean_id}' not found.",
             )
-        return res.data[0]
+        updated = res.data[0]
+        try:
+            invalidate_event_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate event cache: {inv_err}")
+        return updated
     except HTTPException:
         raise
     except Exception as e:
@@ -506,6 +559,10 @@ def delete_event(event_id: str) -> bool:
 
     try:
         res = sb.from_("events").delete().eq("id", clean_id).execute()
+        try:
+            invalidate_event_cache(clean_id)
+        except Exception as inv_err:
+            logger.warning(f"Failed to invalidate event cache: {inv_err}")
         return True
     except Exception as e:
         err_msg = str(e)

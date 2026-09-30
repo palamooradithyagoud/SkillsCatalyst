@@ -3,7 +3,8 @@ import json
 import re
 import time
 import logging
-from typing import Any, Optional, Tuple, Dict
+import fnmatch
+from typing import Any, Optional, Tuple, Dict, List
 from backend.config import REDIS_URL
 from backend.services.observability import (
     record_redis_hit,
@@ -165,6 +166,65 @@ def delete_key(key: str) -> bool:
     return True
 
 
+def delete_many(keys: List[str]) -> bool:
+    """Delete multiple keys from Redis and in-memory cache."""
+    if not keys:
+        return True
+    try:
+        r = get_redis_client()
+        if r:
+            r.delete(*keys)
+    except Exception as e:
+        record_redis_error()
+        logger.warning(f"Redis delete_many error: {type(e).__name__}")
+
+    for k in keys:
+        _in_memory_cache.pop(k, None)
+    return True
+
+
+def delete_pattern(pattern: str) -> int:
+    """
+    Safely delete keys matching a glob pattern using SCAN (never blocking KEYS).
+    Also evicts matching entries from in-memory fallback cache.
+    """
+    count = 0
+    try:
+        r = get_redis_client()
+        if r:
+            cursor = 0
+            while True:
+                cursor, keys = r.scan(cursor=cursor, match=pattern, count=100)
+                if keys:
+                    r.delete(*keys)
+                    count += len(keys)
+                if cursor == 0:
+                    break
+    except Exception as e:
+        record_redis_error()
+        logger.warning(f"Redis delete_pattern error for '{pattern}': {type(e).__name__}")
+
+    # Synchronize in-memory fallback
+    matching_in_mem = [k for k in list(_in_memory_cache.keys()) if fnmatch.fnmatch(k, pattern)]
+    for k in matching_in_mem:
+        _in_memory_cache.pop(k, None)
+        count += 1
+
+    return count
+
+
+def log_cache_event(category: str, event: str, key: Optional[str] = None, reason: Optional[str] = None) -> None:
+    """
+    Standardized, safe observability logging for cache operations.
+    Strictly avoids logging passwords, tokens, full user objects, or secrets.
+    """
+    msg = f"redis_cache category={category} event={event}"
+    if reason:
+        msg += f" reason={reason}"
+    logger.info(msg)
+
+
+
 # ── Canonical Key Builders & Domain Helpers ───────────────────────────────────
 
 def make_learning_cache_key(topic: str, language: str) -> str:
@@ -221,3 +281,272 @@ def cache_profile_stats(platform: str, username: str, stats: dict, ttl_seconds: 
         return False
     key = make_profile_cache_key(platform, username)
     return set_json(key, stats, ttl_seconds=ttl_seconds)
+
+
+# ── 1. User Subscription / Entitlement Cache ─────────────────────────────────
+
+USER_SUBSCRIPTION_CACHE_TTL = 600  # 10 minutes
+
+
+def make_subscription_cache_key(user_id: str) -> str:
+    """
+    Generate canonical user subscription cache key:
+    Format: `user:subscription:{clean_user_id}`
+    """
+    clean_user = re.sub(r"[^\w\-]", "", str(user_id or "").strip())
+    return f"user:subscription:{clean_user}"
+
+
+def get_cached_user_subscription(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve minimal cached entitlement payload for a user.
+    Returns None on cache miss, corruption, or Redis failure.
+    """
+    if not user_id:
+        return None
+    key = make_subscription_cache_key(user_id)
+    cached = get_json(key)
+    if cached is not None and isinstance(cached, dict):
+        log_cache_event("user_subscription", "hit")
+        return cached
+    log_cache_event("user_subscription", "miss")
+    return None
+
+
+def set_cached_user_subscription(
+    user_id: str,
+    data: Dict[str, Any],
+    ttl_seconds: int = USER_SUBSCRIPTION_CACHE_TTL,
+) -> bool:
+    """
+    Store minimal, safe entitlement representation into Redis.
+    Strictly excludes raw DB rows, internal tokens, credentials, or billing secrets.
+    """
+    if not user_id or not isinstance(data, dict):
+        return False
+
+    # Extract minimal canonical fields
+    plan_val = data.get("plan")
+    plan_str = getattr(plan_val, "value", str(plan_val or "free")).lower()
+
+    status_val = data.get("status")
+    status_str = getattr(status_val, "value", str(status_val or "active")).lower()
+
+    minimal: Dict[str, Any] = {
+        "plan": plan_str,
+        "status": status_str,
+        "is_premium": bool(data.get("is_premium", False)),
+        "started_at": str(data["started_at"]) if data.get("started_at") else None,
+        "expires_at": str(data["expires_at"]) if data.get("expires_at") else None,
+        "cancelled_at": str(data["cancelled_at"]) if data.get("cancelled_at") else None,
+    }
+
+    key = make_subscription_cache_key(user_id)
+    success = set_json(key, minimal, ttl_seconds=ttl_seconds)
+    if success:
+        log_cache_event("user_subscription", "set")
+    return success
+
+
+def invalidate_user_subscription(user_id: str) -> bool:
+    """
+    Invalidate user subscription cache upon database state mutation.
+    """
+    if not user_id:
+        return False
+    key = make_subscription_cache_key(user_id)
+    success = delete_key(key)
+    log_cache_event("user_subscription", "invalidate")
+    return success
+
+
+# ── 2. Tech News Shared Cache ────────────────────────────────────────────────
+
+TECH_NEWS_CACHE_TTL = 900  # 15 minutes
+
+
+def make_tech_news_grouped_cache_key(search: Optional[str] = None) -> str:
+    """
+    Generate deterministic cache key for shared tech news list.
+    Format: `technews:v1:grouped` or `technews:v1:search:{clean_search}`
+    """
+    if search:
+        clean = re.sub(r"[^\w\s\-]", "", search.lower()).strip()
+        clean = re.sub(r"\s+", "-", clean)[:60]
+        if clean:
+            return f"technews:v1:search:{clean}"
+    return "technews:v1:grouped"
+
+
+def make_tech_news_story_cache_key(story_id: str) -> str:
+    """
+    Generate cache key for single tech news story.
+    Format: `technews:v1:story:{clean_story_id}`
+    """
+    clean_id = re.sub(r"[^\w\-]", "", str(story_id or "").strip())
+    return f"technews:v1:story:{clean_id}"
+
+
+def get_cached_tech_news_grouped(search: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+    """Retrieve cached grouped tech news sources and stories."""
+    key = make_tech_news_grouped_cache_key(search)
+    cached = get_json(key)
+    if cached is not None and isinstance(cached, list):
+        log_cache_event("technews", "hit")
+        return cached
+    log_cache_event("technews", "miss")
+    return None
+
+
+def set_cached_tech_news_grouped(
+    data: List[Dict[str, Any]],
+    search: Optional[str] = None,
+    ttl_seconds: int = TECH_NEWS_CACHE_TTL,
+) -> bool:
+    """Cache serialized public grouped tech news."""
+    if not isinstance(data, list):
+        return False
+    key = make_tech_news_grouped_cache_key(search)
+    success = set_json(key, data, ttl_seconds=ttl_seconds)
+    if success:
+        log_cache_event("technews", "set")
+    return success
+
+
+def get_cached_tech_news_story(story_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve single cached tech news story."""
+    if not story_id:
+        return None
+    key = make_tech_news_story_cache_key(story_id)
+    cached = get_json(key)
+    if cached is not None and isinstance(cached, dict):
+        log_cache_event("technews", "hit")
+        return cached
+    log_cache_event("technews", "miss")
+    return None
+
+
+def set_cached_tech_news_story(
+    story_id: str,
+    data: Dict[str, Any],
+    ttl_seconds: int = TECH_NEWS_CACHE_TTL,
+) -> bool:
+    """Cache serialized single tech news story."""
+    if not story_id or not isinstance(data, dict):
+        return False
+    key = make_tech_news_story_cache_key(story_id)
+    success = set_json(key, data, ttl_seconds=ttl_seconds)
+    if success:
+        log_cache_event("technews", "set")
+    return success
+
+
+def invalidate_tech_news_cache(story_id: Optional[str] = None) -> bool:
+    """
+    Invalidate shared tech news cache on admin publishing, updating, or deleting stories/sources.
+    Purges main grouped list, search keys, and specific story key.
+    """
+    delete_key("technews:v1:grouped")
+    delete_pattern("technews:v1:*")
+    if story_id:
+        delete_key(make_tech_news_story_cache_key(story_id))
+    log_cache_event("technews", "invalidate")
+    return True
+
+
+# ── 3. Event Hero / Banner Shared Cache ──────────────────────────────────────
+
+EVENT_HERO_CACHE_TTL = 1800  # 30 minutes
+
+
+def make_event_hero_cache_key(event_id: str) -> str:
+    """
+    Generate cache key for single event hero/banner.
+    Format: `events:v1:hero:{clean_event_id}`
+    """
+    clean_id = re.sub(r"[^\w\-]", "", str(event_id or "").strip())
+    return f"events:v1:hero:{clean_id}"
+
+
+def make_event_featured_cache_key() -> str:
+    """Generate cache key for public featured / default event list."""
+    return "events:v1:featured"
+
+
+def get_cached_event_hero(event_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve cached event hero/banner details."""
+    if not event_id:
+        return None
+    key = make_event_hero_cache_key(event_id)
+    cached = get_json(key)
+    if cached is not None and isinstance(cached, dict):
+        log_cache_event("event_hero", "hit")
+        return cached
+    log_cache_event("event_hero", "miss")
+    return None
+
+
+def set_cached_event_hero(
+    event_id: str,
+    data: Dict[str, Any],
+    ttl_seconds: int = EVENT_HERO_CACHE_TTL,
+) -> bool:
+    """
+    Cache public event hero/banner metadata.
+    Guarantees no binary image blobs are stored; banner URLs only.
+    """
+    if not event_id or not isinstance(data, dict):
+        return False
+
+    # Filter out any binary data or non-serializable fields
+    safe_data = {
+        k: v for k, v in data.items()
+        if not isinstance(v, (bytes, bytearray))
+    }
+    key = make_event_hero_cache_key(event_id)
+    success = set_json(key, safe_data, ttl_seconds=ttl_seconds)
+    if success:
+        log_cache_event("event_hero", "set")
+    return success
+
+
+def get_cached_featured_events() -> Optional[List[Dict[str, Any]]]:
+    """Retrieve cached list of published featured events for hero rendering."""
+    key = make_event_featured_cache_key()
+    cached = get_json(key)
+    if cached is not None and isinstance(cached, list):
+        log_cache_event("event_hero", "hit")
+        return cached
+    log_cache_event("event_hero", "miss")
+    return None
+
+
+def set_cached_featured_events(
+    data: List[Dict[str, Any]],
+    ttl_seconds: int = EVENT_HERO_CACHE_TTL,
+) -> bool:
+    """Cache public featured events list."""
+    if not isinstance(data, list):
+        return False
+    safe_list = [
+        {k: v for k, v in item.items() if not isinstance(v, (bytes, bytearray))}
+        for item in data if isinstance(item, dict)
+    ]
+    key = make_event_featured_cache_key()
+    success = set_json(key, safe_list, ttl_seconds=ttl_seconds)
+    if success:
+        log_cache_event("event_hero", "set")
+    return success
+
+
+def invalidate_event_cache(event_id: Optional[str] = None) -> bool:
+    """
+    Invalidate event hero and featured event caches upon admin event mutations.
+    """
+    delete_key(make_event_featured_cache_key())
+    if event_id:
+        delete_key(make_event_hero_cache_key(event_id))
+    delete_pattern("events:v1:*")
+    log_cache_event("event_hero", "invalidate")
+    return True
+
