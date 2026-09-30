@@ -13,7 +13,7 @@ import {
   Crown,
 } from "lucide-react";
 import type { EventItem } from "@/types/events";
-import { fetchStudentEvents } from "@/lib/api/events";
+import { useStudentEvents } from "@/hooks/useStudentEvents";
 import { useSubscription } from "@/hooks/useSubscription";
 
 interface EventHeroCardProps {
@@ -47,8 +47,9 @@ function formatEventDate(dateStr?: string | null): string {
 
 export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const { isPremium } = useSubscription();
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useStudentEvents();
+  const events = data?.events ?? [];
+  const loading = isLoading;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -60,27 +61,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       window.dispatchEvent(new CustomEvent("open-pricing-modal"));
     }
   };
-
-  // Fetch student visible events from backend
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const res = await fetchStudentEvents();
-        if (active && res.events) {
-          setEvents(res.events);
-        }
-      } catch {
-        // Handled silently: events array will be empty
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Auto-advance slideshow every 4.5 seconds if multiple events exist
   useEffect(() => {
