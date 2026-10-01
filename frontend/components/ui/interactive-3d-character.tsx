@@ -341,12 +341,12 @@ export function InteractiveCharacter({
             wingAngle = 0.3 + swayDirection * 0.55 - Math.sin(dancePhase) * 0.12;
           }
         } else if (isSlapping) {
-          // Dramatic comic slap strike: right flipper whips across in a high-speed slap arc
-          if (isLeft) {
-            wingAngle = -0.65;
-          } else {
-            wingAngle = 0.35 + Math.cos(nowSec * 9) * 0.95;
+          if (!isLeft) {
+            // Right arm is punching directly forward toward camera in Layer 11!
+            return;
           }
+          // Left wing in tight boxer guard stance
+          wingAngle = -0.7;
         } else if (isAngryOrSad) {
           // Cute, defiant arms-on-hips / wings-tucked-akimbo stance with gentle breathing (NO jitter)
           wingAngle = isLeft
@@ -362,7 +362,7 @@ export function InteractiveCharacter({
         }
 
         ctx.save();
-        ctx.translate(wingBaseX, -6);
+        ctx.translate(wingBaseX, isSlapping && isLeft ? 0 : -6);
         ctx.rotate(wingAngle);
 
         // Wing 3D Gradient
@@ -398,15 +398,6 @@ export function InteractiveCharacter({
           isLeft ? -7 : 7, 42
         );
         ctx.stroke();
-
-        // Comic slap speed swoosh effect on right slapping flipper
-        if (isSlapping && !isLeft) {
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-          ctx.lineWidth = 2.4;
-          ctx.beginPath();
-          ctx.arc(8, 22, 22, -0.3, 1.2);
-          ctx.stroke();
-        }
 
         ctx.restore();
       };
@@ -1164,6 +1155,147 @@ export function InteractiveCharacter({
 
       ctx.restore(); // Head group restore
       ctx.restore(); // Main body restore
+
+      // ── Layer 11: 3D Foreground Knockout Punch Attack ──
+      if (isSlapping) {
+        // Fast, heavy, explosive boxing punch strikes (~2.2 punches per second)
+        const punchPeriod = 0.44;
+        const punchProgress = (nowSec % punchPeriod) / punchPeriod;
+
+        let thrust = 0;
+        let fistScale = 1;
+        let fistX = 0;
+        let fistY = 0;
+
+        if (punchProgress < 0.22) {
+          // 1. Windup: pull fist back & compress energy
+          const t = punchProgress / 0.22;
+          thrust = -10 * t;
+          fistScale = 0.85 + 0.15 * t;
+          fistX = 22 - 6 * t;
+          fistY = 8 - 4 * t;
+        } else if (punchProgress < 0.48) {
+          // 2. EXPLOSIVE STRAIGHT PUNCH THRUST straight toward the camera!
+          const t = (punchProgress - 0.22) / 0.26;
+          // Sine ease-out punch velocity
+          thrust = -10 + 44 * Math.sin(t * Math.PI * 0.5);
+          fistScale = 1.0 + 1.45 * t; // Massive 2.45x scale foreshortening!
+          fistX = 16 - 22 * t;
+          fistY = 4 + 14 * t;
+        } else if (punchProgress < 0.74) {
+          // 3. Impact freeze & micro-vibration!
+          thrust = 34 + Math.sin(nowSec * 50) * 1.5;
+          fistScale = 2.45;
+          fistX = -6;
+          fistY = 18;
+        } else {
+          // 4. Snap recoil back for the next punch!
+          const t = (punchProgress - 0.74) / 0.26;
+          thrust = 34 * (1 - t);
+          fistScale = 2.45 - 1.6 * t;
+          fistX = -6 + 28 * t;
+          fistY = 18 - 10 * t;
+        }
+
+        ctx.save();
+        ctx.translate(cx + fistX, cy + fistY);
+        ctx.scale(fistScale, fistScale);
+
+        // A. Radiating Anime Punch Speedlines (when extending and impacting)
+        if (punchProgress >= 0.26 && punchProgress <= 0.76) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.lineWidth = 2.2;
+          ctx.lineCap = "round";
+
+          [-24, -14, 0, 14, 24].forEach((lx, i) => {
+            const ly = -16 - (i % 2) * 8;
+            ctx.beginPath();
+            ctx.moveTo(lx * 0.5, ly * 0.5);
+            ctx.lineTo(lx * 1.5, ly * 1.5);
+            ctx.stroke();
+          });
+
+          // B. Comic POW Impact Starburst detonating at the fist knuckles!
+          const starTime = nowSec * 24;
+          ctx.fillStyle = "#FBBF24"; // golden shockwave
+          ctx.beginPath();
+          const spikes = 8;
+          for (let s = 0; s < spikes * 2; s++) {
+            const r = s % 2 === 0 ? 20 : 9;
+            const angle = (s * Math.PI) / spikes + starTime * 0.05;
+            const px = Math.cos(angle) * r;
+            const py = Math.sin(angle) * r;
+            if (s === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Hot white core burst
+          ctx.fillStyle = "#FFFFFF";
+          ctx.beginPath();
+          ctx.arc(0, 0, 7.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // C. Arm Sleeve / Extension
+        ctx.fillStyle = "#181432";
+        ctx.beginPath();
+        ctx.moveTo(12, -4);
+        ctx.lineTo(24, -18);
+        ctx.lineTo(16, -26);
+        ctx.lineTo(2, -10);
+        ctx.closePath();
+        ctx.fill();
+
+        // D. Heavy Crimson 3D Boxing Glove Fist (Facing screen)
+        const gloveGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 15);
+        gloveGrad.addColorStop(0, "#EF4444");
+        gloveGrad.addColorStop(0.5, "#DC2626");
+        gloveGrad.addColorStop(0.85, "#B91C1C");
+        gloveGrad.addColorStop(1, "#7F1D1D");
+
+        ctx.fillStyle = gloveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 15, 13.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glove Knuckle Ridges
+        ctx.strokeStyle = "#991B1B";
+        ctx.lineWidth = 1.8;
+        [-6, -1, 4].forEach((kx) => {
+          ctx.beginPath();
+          ctx.arc(kx, -5, 4.5, 0.2, Math.PI * 0.9);
+          ctx.stroke();
+        });
+
+        // Clenched Thumb Wrapped Tight
+        const thumbGrad = ctx.createLinearGradient(-10, 4, 8, 8);
+        thumbGrad.addColorStop(0, "#EF4444");
+        thumbGrad.addColorStop(1, "#991B1B");
+        ctx.fillStyle = thumbGrad;
+        ctx.beginPath();
+        ctx.ellipse(-2, 5, 8.5, 4.5, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#7F1D1D";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // White Glove Laces / Wrist Band
+        ctx.fillStyle = "#F8FAFC";
+        ctx.beginPath();
+        ctx.ellipse(0, 12, 10, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Specular Punch Highlight
+        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.beginPath();
+        ctx.arc(-4, -4, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
       ctx.restore(); // High-DPI restore
 
       animationFrameId = requestAnimationFrame(render);

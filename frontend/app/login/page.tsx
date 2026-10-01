@@ -351,33 +351,33 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Reacts to Auth Errors, Slap & Hook Step) */}
+        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Reacts to Auth Errors, Knockout Punch & Hook Step) */}
         <motion.div
-          animate={reactionPhase === "slap" ? { x: [-4, 4, -3, 3, 0], y: [-2, 2, 0] } : {}}
+          animate={reactionPhase === "slap" ? { x: [-8, 8, -6, 6, -3, 3, 0], y: [-4, 4, -2, 2, 0] } : {}}
           transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
           className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-4 pb-1 sm:py-2 relative"
         >
-          {/* Animated Comic Speech Bubble: "Try Again! 💢" during slap attack */}
+          {/* Animated Comic Punch Speech Bubble: "👊 TRY AGAIN! 💥" */}
           <AnimatePresence>
             {reactionPhase === "slap" && (
               <motion.div
                 initial={{ scale: 0.2, opacity: 0, y: 16 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.6, opacity: 0, transition: { duration: 0.15 } }}
-                transition={{ type: "spring", stiffness: 400, damping: 18 }}
-                className="absolute -top-14 sm:-top-16 left-1/2 -translate-x-1/2 z-50 bg-[#18191F] text-white px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 border-2 border-amber-400 whitespace-nowrap pointer-events-none select-none"
+                transition={{ type: "spring", stiffness: 450, damping: 16 }}
+                className="absolute -top-14 sm:-top-18 left-1/2 -translate-x-1/2 z-50 bg-[#18191F] text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl shadow-[0_10px_35px_rgba(239,68,68,0.35)] flex items-center gap-3 border-2 border-rose-500 whitespace-nowrap pointer-events-none select-none"
               >
-                <span className="text-xl sm:text-2xl animate-bounce">👋</span>
+                <span className="text-2xl sm:text-3xl animate-bounce">👊</span>
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="font-black text-xs sm:text-sm tracking-wide text-amber-300 flex items-center gap-1">
-                    Try Again! 💢
+                  <span className="font-black text-xs sm:text-sm tracking-wider text-amber-300 flex items-center gap-1">
+                    TRY AGAIN! 💥
                   </span>
-                  <span className="text-[10px] sm:text-xs text-zinc-300 font-semibold">
-                    Wrong password!
+                  <span className="text-[10px] sm:text-xs text-rose-300 font-extrabold uppercase tracking-wide">
+                    Wrong Password! Pow!
                   </span>
                 </div>
                 {/* Speech bubble pointer triangle tail */}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#18191F]" />
+                <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-t-[9px] border-t-rose-500" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -400,11 +400,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Center Leader: Original Classic Penguin (Larger, in front) */}
+          {/* Center Leader: Original Classic Penguin (Larger, in front - Delivers Knockout Punch!) */}
           <div
             className={`flex flex-col items-center relative -mb-2 transition-all duration-300 ease-out ${
               reactionPhase === "slap"
-                ? "scale-125 sm:scale-135 -translate-y-5 z-30"
+                ? "scale-130 sm:scale-145 -translate-y-6 z-30"
                 : isHookStep
                 ? "scale-105 z-10"
                 : "scale-100 z-10"
