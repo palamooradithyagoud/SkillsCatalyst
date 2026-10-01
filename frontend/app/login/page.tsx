@@ -42,10 +42,12 @@ export default function LoginPage() {
   const [resendSent, setResendSent] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // Synchronized Penguin States: Opening 3s Hook Step Dance & 5s Angry/Disappointed Timeout
-  const [isAngry, setIsAngry] = useState(false);
+  // Synchronized Penguin States: Opening 3s Hook Step Dance & 2s Angry -> Slap + "Try Again" Sequence
+  type ReactionPhase = "idle" | "angry" | "slap";
+  const [reactionPhase, setReactionPhase] = useState<ReactionPhase>("idle");
   const [isHookStep, setIsHookStep] = useState(true);
-  const angryTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const reactionTimer1Ref = React.useRef<NodeJS.Timeout | null>(null);
+  const reactionTimer2Ref = React.useRef<NodeJS.Timeout | null>(null);
 
   // Hook step dance on open for the first 3 seconds
   React.useEffect(() => {
@@ -55,31 +57,52 @@ export default function LoginPage() {
     return () => clearTimeout(hookTimer);
   }, []);
 
-  // Cleanup angry timer on unmount
+  // Cleanup reaction timers on unmount
   React.useEffect(() => {
     return () => {
-      if (angryTimerRef.current) clearTimeout(angryTimerRef.current);
+      if (reactionTimer1Ref.current) clearTimeout(reactionTimer1Ref.current);
+      if (reactionTimer2Ref.current) clearTimeout(reactionTimer2Ref.current);
     };
   }, []);
 
-  // Helper to trigger disappointed & angry mood for exactly 5 seconds (not more)
-  const triggerAngryMood = () => {
-    setIsAngry(true);
-    if (angryTimerRef.current) clearTimeout(angryTimerRef.current);
-    angryTimerRef.current = setTimeout(() => {
-      setIsAngry(false);
-    }, 5000);
+  // Trigger sequence: exactly 2 seconds of disappointed/angry -> then 2.2 seconds of slap & "Try Again!"
+  const triggerWrongCredentialsSequence = () => {
+    if (reactionTimer1Ref.current) clearTimeout(reactionTimer1Ref.current);
+    if (reactionTimer2Ref.current) clearTimeout(reactionTimer2Ref.current);
+
+    // Phase 1: Angry for exactly 2 seconds
+    setReactionPhase("angry");
+
+    // Phase 2: After 2 seconds, come front, slap, and say "Try Again!"
+    reactionTimer1Ref.current = setTimeout(() => {
+      setReactionPhase("slap");
+
+      // Phase 3: Settle smoothly back to normal idle
+      reactionTimer2Ref.current = setTimeout(() => {
+        setReactionPhase("idle");
+      }, 2200);
+    }, 2000);
   };
 
-  const clearAngryMood = () => {
-    setIsAngry(false);
-    if (angryTimerRef.current) {
-      clearTimeout(angryTimerRef.current);
-      angryTimerRef.current = null;
+  const clearReactionSequence = () => {
+    setReactionPhase("idle");
+    if (reactionTimer1Ref.current) {
+      clearTimeout(reactionTimer1Ref.current);
+      reactionTimer1Ref.current = null;
+    }
+    if (reactionTimer2Ref.current) {
+      clearTimeout(reactionTimer2Ref.current);
+      reactionTimer2Ref.current = null;
     }
   };
 
-  const currentMood = isHookStep ? "dance" : isAngry ? "angry" : "normal";
+  const currentMood = isHookStep
+    ? "dance"
+    : reactionPhase === "slap"
+    ? "slap"
+    : reactionPhase === "angry"
+    ? "angry"
+    : "normal";
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -87,7 +110,7 @@ export default function LoginPage() {
       const urlError = params.get("error");
       if (urlError) {
         setErrorMessage(decodeURIComponent(urlError));
-        triggerAngryMood();
+        triggerWrongCredentialsSequence();
       }
     }
   }, []);
@@ -95,7 +118,7 @@ export default function LoginPage() {
   const switchMode = (newMode: "signin" | "signup") => {
     setMode(newMode);
     setErrorMessage("");
-    clearAngryMood();
+    clearReactionSequence();
     setSuccessMessage("");
     clearUnverifiedEmail();
   };
@@ -104,7 +127,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password) {
       setErrorMessage("Please enter both email and password.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
       return;
     }
     setLoading(true);
@@ -124,7 +147,7 @@ export default function LoginPage() {
         } else {
           setErrorMessage(error.message);
         }
-        triggerAngryMood();
+        triggerWrongCredentialsSequence();
         setLoading(false);
         return;
       }
@@ -134,7 +157,7 @@ export default function LoginPage() {
         if (!isConfirmed) {
           setUnverifiedEmail(data.user.email || email.trim());
           setErrorMessage("Please verify your email address to continue to the dashboard.");
-          triggerAngryMood();
+          triggerWrongCredentialsSequence();
           await supabase.auth.signOut();
           setLoading(false);
           return;
@@ -151,7 +174,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "An unexpected error occurred during sign in.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
       setLoading(false);
     }
   };
@@ -160,17 +183,17 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password || !fullName) {
       setErrorMessage("Please fill in all required fields.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
       return;
     }
     if (password.length < 6) {
       setErrorMessage("Password must be at least 6 characters long.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
       return;
     }
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
       return;
     }
 
@@ -192,7 +215,7 @@ export default function LoginPage() {
 
       if (error) {
         setErrorMessage(error.message);
-        triggerAngryMood();
+        triggerWrongCredentialsSequence();
         setLoading(false);
         return;
       }
@@ -207,7 +230,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "An error occurred during registration.");
-      triggerAngryMood();
+      triggerWrongCredentialsSequence();
     } finally {
       setLoading(false);
     }
@@ -328,12 +351,45 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Reacts to Auth Errors & Hook Step) */}
-        <div className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-2 pb-1 sm:py-2">
+        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Reacts to Auth Errors, Slap & Hook Step) */}
+        <motion.div
+          animate={reactionPhase === "slap" ? { x: [-4, 4, -3, 3, 0], y: [-2, 2, 0] } : {}}
+          transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
+          className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-4 pb-1 sm:py-2 relative"
+        >
+          {/* Animated Comic Speech Bubble: "Try Again! 💢" during slap attack */}
+          <AnimatePresence>
+            {reactionPhase === "slap" && (
+              <motion.div
+                initial={{ scale: 0.2, opacity: 0, y: 16 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.6, opacity: 0, transition: { duration: 0.15 } }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className="absolute -top-14 sm:-top-16 left-1/2 -translate-x-1/2 z-50 bg-[#18191F] text-white px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 border-2 border-amber-400 whitespace-nowrap pointer-events-none select-none"
+              >
+                <span className="text-xl sm:text-2xl animate-bounce">👋</span>
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="font-black text-xs sm:text-sm tracking-wide text-amber-300 flex items-center gap-1">
+                    Try Again! 💢
+                  </span>
+                  <span className="text-[10px] sm:text-xs text-zinc-300 font-semibold">
+                    Wrong password!
+                  </span>
+                </div>
+                {/* Speech bubble pointer triangle tail */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#18191F]" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Left Friend: Scholar Penguin (Cap, Glasses, Bowtie) */}
           <div
-            className={`flex flex-col items-center relative z-0 transition-transform duration-700 ease-out ${
-              isHookStep ? "translate-x-3 sm:translate-x-6" : "translate-x-0"
+            className={`flex flex-col items-center relative transition-all duration-300 ease-out ${
+              reactionPhase === "slap"
+                ? "scale-115 sm:scale-120 translate-x-3 sm:translate-x-6 -translate-y-3 z-20"
+                : isHookStep
+                ? "translate-x-3 sm:translate-x-6 z-0"
+                : "translate-x-0 z-0"
             }`}
           >
             <div className="hidden sm:block">
@@ -346,8 +402,12 @@ export default function LoginPage() {
 
           {/* Center Leader: Original Classic Penguin (Larger, in front) */}
           <div
-            className={`flex flex-col items-center relative z-10 -mb-2 transition-transform duration-700 ease-out ${
-              isHookStep ? "scale-105" : "scale-100"
+            className={`flex flex-col items-center relative -mb-2 transition-all duration-300 ease-out ${
+              reactionPhase === "slap"
+                ? "scale-125 sm:scale-135 -translate-y-5 z-30"
+                : isHookStep
+                ? "scale-105 z-10"
+                : "scale-100 z-10"
             }`}
           >
             <div className="hidden sm:block">
@@ -360,8 +420,12 @@ export default function LoginPage() {
 
           {/* Right Friend: DJ & Coder Penguin (Headphones, Striped Scarf) */}
           <div
-            className={`flex flex-col items-center relative z-0 transition-transform duration-700 ease-out ${
-              isHookStep ? "-translate-x-3 sm:-translate-x-6" : "translate-x-0"
+            className={`flex flex-col items-center relative transition-all duration-300 ease-out ${
+              reactionPhase === "slap"
+                ? "scale-115 sm:scale-120 -translate-x-3 sm:-translate-x-6 -translate-y-3 z-20"
+                : isHookStep
+                ? "-translate-x-3 sm:-translate-x-6 z-0"
+                : "translate-x-0 z-0"
             }`}
           >
             <div className="hidden sm:block">
@@ -371,7 +435,7 @@ export default function LoginPage() {
               <InteractiveCharacter width={140} height={160} outfit="headphones" mood={currentMood} />
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Bottom invisible spacer to maintain optical vertical balance */}
         <div className="hidden lg:block h-11 w-full pointer-events-none" />
@@ -541,7 +605,7 @@ export default function LoginPage() {
                       onChange={(e) => {
                         setFullName(e.target.value);
                         if (errorMessage) setErrorMessage("");
-                        clearAngryMood();
+                        clearReactionSequence();
                       }}
                       placeholder="Alex Mercer"
                       suppressHydrationWarning
@@ -563,7 +627,7 @@ export default function LoginPage() {
                     onChange={(e) => {
                       setEmail(e.target.value);
                       if (errorMessage) setErrorMessage("");
-                      clearAngryMood();
+                      clearReactionSequence();
                     }}
                     placeholder="Enter your email"
                     style={{ colorScheme: "light" }}
@@ -586,7 +650,7 @@ export default function LoginPage() {
                       onChange={(e) => {
                         setPassword(e.target.value);
                         if (errorMessage) setErrorMessage("");
-                        clearAngryMood();
+                        clearReactionSequence();
                       }}
                       placeholder="••••••••"
                       style={{ colorScheme: "light" }}
@@ -622,7 +686,7 @@ export default function LoginPage() {
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
                         if (errorMessage) setErrorMessage("");
-                        clearAngryMood();
+                        clearReactionSequence();
                       }}
                       placeholder="Repeat your password"
                       suppressHydrationWarning

@@ -7,7 +7,7 @@ export interface InteractiveCharacterProps {
   width?: number;
   height?: number;
   outfit?: "none" | "scholar" | "headphones" | "glasses" | "scarf";
-  mood?: "normal" | "happy" | "angry" | "disappointed" | "dance";
+  mood?: "normal" | "happy" | "angry" | "disappointed" | "dance" | "slap";
 }
 
 export function InteractiveCharacter({
@@ -165,6 +165,7 @@ export function InteractiveCharacter({
 
       const isAngryOrSad = mood === "angry" || mood === "disappointed";
       const isDancing = mood === "dance";
+      const isSlapping = mood === "slap";
 
       // Precise wall-clock time in seconds for microsecond-perfect synchronization among all canvases
       const nowSec = now / 1000;
@@ -173,8 +174,9 @@ export function InteractiveCharacter({
       const danceBounce = -Math.abs(Math.sin(dancePhase)) * 8.5;
       const danceSway = Math.sin(dancePhase * 0.5) * 0.13;
 
-      const effectiveJumpY = isDancing ? danceBounce : jumpY;
-      const cy = height / (2 * scale) + 4 + effectiveJumpY + (isAngryOrSad ? 2.5 : 0);
+      const slapBounce = -Math.abs(Math.sin(nowSec * 8)) * 4.5;
+      const effectiveJumpY = isDancing ? danceBounce : isSlapping ? slapBounce : jumpY;
+      const cy = height / (2 * scale) + 4 + effectiveJumpY + (isAngryOrSad ? 2.5 : isSlapping ? -5 : 0);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
@@ -189,6 +191,11 @@ export function InteractiveCharacter({
         breathBob = Math.sin(dancePhase) * 1.5;
         breathScale = 1 + Math.sin(dancePhase) * 0.02;
         bodyWaddle = danceSway;
+      } else if (isSlapping) {
+        // Dramatic comic lunging torque
+        breathBob = Math.sin(nowSec * 10) * 2;
+        breathScale = 1.1; // rushes forward larger
+        bodyWaddle = Math.sin(nowSec * 9) * 0.12; // body twist with slap
       } else if (isAngryOrSad) {
         // Slow, heavy, disappointed sigh (smooth and subtle, no jitter!)
         breathBob = Math.sin(time * 2.2) * 1.8;
@@ -333,6 +340,13 @@ export function InteractiveCharacter({
           } else {
             wingAngle = 0.3 + swayDirection * 0.55 - Math.sin(dancePhase) * 0.12;
           }
+        } else if (isSlapping) {
+          // Dramatic comic slap strike: right flipper whips across in a high-speed slap arc
+          if (isLeft) {
+            wingAngle = -0.65;
+          } else {
+            wingAngle = 0.35 + Math.cos(nowSec * 9) * 0.95;
+          }
         } else if (isAngryOrSad) {
           // Cute, defiant arms-on-hips / wings-tucked-akimbo stance with gentle breathing (NO jitter)
           wingAngle = isLeft
@@ -384,6 +398,15 @@ export function InteractiveCharacter({
           isLeft ? -7 : 7, 42
         );
         ctx.stroke();
+
+        // Comic slap speed swoosh effect on right slapping flipper
+        if (isSlapping && !isLeft) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.arc(8, 22, 22, -0.3, 1.2);
+          ctx.stroke();
+        }
 
         ctx.restore();
       };
@@ -575,6 +598,11 @@ export function InteractiveCharacter({
         headTilt = Math.sin(dancePhase * 0.5) * 0.12 + Math.sin(dancePhase) * 0.04;
         headX = Math.sin(dancePhase * 0.5) * 4;
         headY = -38 + Math.sin(dancePhase) * 1.5;
+      } else if (isSlapping) {
+        // Aggressive forward combat lunge toward screen
+        headTilt = Math.sin(nowSec * 9) * 0.1;
+        headX = Math.sin(nowSec * 9) * 2.5;
+        headY = -34;
       } else if (isAngryOrSad) {
         // Slow, clear, disapproving "tsk-tsk" head shake (gentle & rhythmic, no rapid twitch)
         const angryShake = Math.sin(time * 3.4) * 0.08;
@@ -595,7 +623,9 @@ export function InteractiveCharacter({
       const eyeSpacing = 13.5;
       const eyeY = -3;
       const eyeRadius = 7.5;
-      const eyeScaleY = isAngryOrSad
+      const eyeScaleY = isSlapping
+        ? 0.42 // sharp fierce squint
+        : isAngryOrSad
         ? 0.55
         : isBlinking
         ? Math.max(0.06, 1 - Math.sin(blinkProgress))
@@ -652,13 +682,15 @@ export function InteractiveCharacter({
 
         // If eyes are open enough, render pupils & reflections
         if (!isBlinking || eyeScaleY > 0.35) {
-          // Pupil tracking across spherical surface (skeptical glance if angry)
+          // Pupil tracking across spherical surface (skeptical glance if angry, locked forward if slapping)
           const pupilLimitX = 3.6;
           const pupilLimitY = 3.2;
-          const pupilX = isAngryOrSad
+          const pupilX = isSlapping
+            ? 0
+            : isAngryOrSad
             ? currentLookX * 2.2 + (isLeft ? 0.8 : -0.8)
             : currentLookX * pupilLimitX;
-          const pupilY = isAngryOrSad ? -1.0 : currentLookY * pupilLimitY;
+          const pupilY = isSlapping ? 0 : isAngryOrSad ? -1.0 : currentLookY * pupilLimitY;
 
           const pupilRadius = 3.8 + mouseProximity * 0.6;
 
@@ -705,10 +737,10 @@ export function InteractiveCharacter({
       drawExpressiveEye(true);
       drawExpressiveEye(false);
 
-      // ── Angry / Disappointed Furrowed Eyebrows ──
-      if (isAngryOrSad) {
+      // ── Angry / Combat Furrowed Eyebrows ──
+      if (isAngryOrSad || isSlapping) {
         ctx.strokeStyle = "#0A0718";
-        ctx.lineWidth = 3.2;
+        ctx.lineWidth = isSlapping ? 3.8 : 3.2;
         ctx.lineCap = "round";
 
         // Left Eyebrow (slants aggressively down toward beak)
@@ -749,6 +781,12 @@ export function InteractiveCharacter({
         ctx.quadraticCurveTo(0, -5, 7.5, -1);
         ctx.quadraticCurveTo(4, 9, 0, 15);
         ctx.quadraticCurveTo(-4, 9, -7.5, -1);
+      } else if (isSlapping) {
+        // Determined combat beak
+        ctx.moveTo(-7.5, 1);
+        ctx.quadraticCurveTo(0, -3, 7.5, 1);
+        ctx.quadraticCurveTo(5, 9, 0, 14);
+        ctx.quadraticCurveTo(-5, 9, -7.5, 1);
       } else if (isAngryOrSad) {
         // Disappointed downturned pouty frown
         ctx.moveTo(-7.5, 3);
@@ -789,7 +827,7 @@ export function InteractiveCharacter({
 
       ctx.restore(); // Beak restore
 
-      // ── Layer 10: Rosy or Angry Cheeks & Steam ──
+      // ── Layer 10: Rosy, Angry, or Slap Cheeks & Sparks ──
       if (isDancing) {
         // Vibrant celebration pink blush
         ctx.fillStyle = "rgba(244, 114, 182, 0.7)";
@@ -799,6 +837,25 @@ export function InteractiveCharacter({
         ctx.beginPath();
         ctx.ellipse(19, 2, 6, 3.5, 0.12, 0, Math.PI * 2);
         ctx.fill();
+      } else if (isSlapping) {
+        // Combat slap blush + action star sparks
+        ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+        ctx.beginPath();
+        ctx.ellipse(-19, 2, 7, 4, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(19, 2, 7, 4, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Comic golden impact star sparks
+        const starTime = nowSec * 7;
+        ctx.fillStyle = "#FBBF24";
+        [-24, 24].forEach((sx, i) => {
+          const sy = -16 + Math.sin(starTime + i * 2) * 5;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
       } else if (isAngryOrSad) {
         // Hot flustered red cheeks
         ctx.fillStyle = "rgba(239, 68, 68, 0.65)";
@@ -1077,8 +1134,8 @@ export function InteractiveCharacter({
           ctx.lineWidth = 1;
           ctx.stroke();
 
-          // 4. Glowing Neon Center Ring & Logo Plate (Red if angry, Gold if dancing, Cyan if normal)
-          ctx.strokeStyle = isAngryOrSad ? "#EF4444" : isDancing ? "#F59E0B" : "#38BDF8";
+          // 4. Glowing Neon Center Ring & Logo Plate (Red if angry/slap, Gold if dancing, Cyan if normal)
+          ctx.strokeStyle = (isAngryOrSad || isSlapping) ? "#EF4444" : isDancing ? "#F59E0B" : "#38BDF8";
           ctx.lineWidth = 1.3;
           ctx.beginPath();
           ctx.ellipse(isLeft ? -2.5 : 2.5, 2, 3.8, 7.5, 0, 0, Math.PI * 2);
