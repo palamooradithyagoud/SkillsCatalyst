@@ -156,8 +156,8 @@ export function InteractiveCharacter({
         }
       }
 
-      // Responsive scale factor based on reference dimension (195px for bold, prominent character size)
-      const baseDim = 195;
+      // Responsive scale factor based on reference dimension (170px for bold, prominent character size)
+      const baseDim = 170;
       const scale = Math.min(width / baseDim, height / baseDim);
       const cx = width / (2 * scale);
       const cy = height / (2 * scale) + 4 + jumpY;

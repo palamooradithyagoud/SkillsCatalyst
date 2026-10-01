@@ -213,7 +213,7 @@ export default function LoginPage() {
   return (
     <div className="w-full min-h-screen min-h-[100dvh] bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
       {/* ── LEFT / TOP HERO: FoldText "Skills" + 3D Interactive Penguin Character ── */}
-      <div className="w-full lg:w-1/2 min-h-[290px] sm:min-h-[360px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-white self-stretch flex flex-col justify-between items-start p-4 sm:p-8 lg:p-12 pb-3 sm:pb-8 select-none border-b lg:border-b-0 lg:border-r border-zinc-100">
+      <div className="w-full lg:w-1/2 min-h-[320px] sm:min-h-[360px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-white self-stretch flex flex-col justify-between items-start p-4 sm:p-8 lg:p-12 pb-3 sm:pb-8 select-none border-b lg:border-b-0 lg:border-r border-zinc-100">
         {/* Top-Left Header: FoldText "Skills" (top fold) + "Catalyst" (bottom fold) */}
         <div className="w-full flex items-center justify-start z-10">
           <div className="hidden sm:flex items-baseline gap-1.5 sm:gap-2">
@@ -278,15 +278,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Big & Close Together in Laptop View) */}
-        <div className="w-full flex items-end justify-center -space-x-8 sm:-space-x-14 lg:-space-x-18 my-auto pt-2 pb-1 sm:py-2">
+        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Big & Close Together) */}
+        <div className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-2 pb-1 sm:py-2">
           {/* Left Friend: Scholar Penguin (Cap, Glasses, Bowtie) */}
           <div className="flex flex-col items-center relative z-0">
             <div className="hidden sm:block">
               <InteractiveCharacter width={210} height={240} outfit="scholar" />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={115} height={130} outfit="scholar" />
+              <InteractiveCharacter width={140} height={160} outfit="scholar" />
             </div>
           </div>
 
@@ -296,7 +296,7 @@ export default function LoginPage() {
               <InteractiveCharacter width={280} height={310} outfit="none" />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={145} height={160} outfit="none" />
+              <InteractiveCharacter width={170} height={190} outfit="none" />
             </div>
           </div>
 
@@ -306,7 +306,7 @@ export default function LoginPage() {
               <InteractiveCharacter width={210} height={240} outfit="headphones" />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={115} height={130} outfit="headphones" />
+              <InteractiveCharacter width={140} height={160} outfit="headphones" />
             </div>
           </div>
         </div>
