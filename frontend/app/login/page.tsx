@@ -42,12 +42,52 @@ export default function LoginPage() {
   const [resendSent, setResendSent] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
+  // Synchronized Penguin States: Opening 3s Hook Step Dance & 5s Angry/Disappointed Timeout
+  const [isAngry, setIsAngry] = useState(false);
+  const [isHookStep, setIsHookStep] = useState(true);
+  const angryTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Hook step dance on open for the first 3 seconds
+  React.useEffect(() => {
+    const hookTimer = setTimeout(() => {
+      setIsHookStep(false);
+    }, 3000);
+    return () => clearTimeout(hookTimer);
+  }, []);
+
+  // Cleanup angry timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (angryTimerRef.current) clearTimeout(angryTimerRef.current);
+    };
+  }, []);
+
+  // Helper to trigger disappointed & angry mood for exactly 5 seconds (not more)
+  const triggerAngryMood = () => {
+    setIsAngry(true);
+    if (angryTimerRef.current) clearTimeout(angryTimerRef.current);
+    angryTimerRef.current = setTimeout(() => {
+      setIsAngry(false);
+    }, 5000);
+  };
+
+  const clearAngryMood = () => {
+    setIsAngry(false);
+    if (angryTimerRef.current) {
+      clearTimeout(angryTimerRef.current);
+      angryTimerRef.current = null;
+    }
+  };
+
+  const currentMood = isHookStep ? "dance" : isAngry ? "angry" : "normal";
+
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const urlError = params.get("error");
       if (urlError) {
         setErrorMessage(decodeURIComponent(urlError));
+        triggerAngryMood();
       }
     }
   }, []);
@@ -55,6 +95,7 @@ export default function LoginPage() {
   const switchMode = (newMode: "signin" | "signup") => {
     setMode(newMode);
     setErrorMessage("");
+    clearAngryMood();
     setSuccessMessage("");
     clearUnverifiedEmail();
   };
@@ -63,6 +104,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password) {
       setErrorMessage("Please enter both email and password.");
+      triggerAngryMood();
       return;
     }
     setLoading(true);
@@ -82,6 +124,7 @@ export default function LoginPage() {
         } else {
           setErrorMessage(error.message);
         }
+        triggerAngryMood();
         setLoading(false);
         return;
       }
@@ -91,6 +134,7 @@ export default function LoginPage() {
         if (!isConfirmed) {
           setUnverifiedEmail(data.user.email || email.trim());
           setErrorMessage("Please verify your email address to continue to the dashboard.");
+          triggerAngryMood();
           await supabase.auth.signOut();
           setLoading(false);
           return;
@@ -107,6 +151,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "An unexpected error occurred during sign in.");
+      triggerAngryMood();
       setLoading(false);
     }
   };
@@ -115,14 +160,17 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password || !fullName) {
       setErrorMessage("Please fill in all required fields.");
+      triggerAngryMood();
       return;
     }
     if (password.length < 6) {
       setErrorMessage("Password must be at least 6 characters long.");
+      triggerAngryMood();
       return;
     }
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
+      triggerAngryMood();
       return;
     }
 
@@ -144,6 +192,7 @@ export default function LoginPage() {
 
       if (error) {
         setErrorMessage(error.message);
+        triggerAngryMood();
         setLoading(false);
         return;
       }
@@ -158,6 +207,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setErrorMessage(err?.message || "An error occurred during registration.");
+      triggerAngryMood();
     } finally {
       setLoading(false);
     }
@@ -278,35 +328,47 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Big & Close Together) */}
+        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Reacts to Auth Errors & Hook Step) */}
         <div className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-2 pb-1 sm:py-2">
           {/* Left Friend: Scholar Penguin (Cap, Glasses, Bowtie) */}
-          <div className="flex flex-col items-center relative z-0">
+          <div
+            className={`flex flex-col items-center relative z-0 transition-transform duration-700 ease-out ${
+              isHookStep ? "translate-x-3 sm:translate-x-6" : "translate-x-0"
+            }`}
+          >
             <div className="hidden sm:block">
-              <InteractiveCharacter width={210} height={240} outfit="scholar" />
+              <InteractiveCharacter width={210} height={240} outfit="scholar" mood={currentMood} />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={140} height={160} outfit="scholar" />
+              <InteractiveCharacter width={140} height={160} outfit="scholar" mood={currentMood} />
             </div>
           </div>
 
           {/* Center Leader: Original Classic Penguin (Larger, in front) */}
-          <div className="flex flex-col items-center relative z-10 -mb-2">
+          <div
+            className={`flex flex-col items-center relative z-10 -mb-2 transition-transform duration-700 ease-out ${
+              isHookStep ? "scale-105" : "scale-100"
+            }`}
+          >
             <div className="hidden sm:block">
-              <InteractiveCharacter width={280} height={310} outfit="none" />
+              <InteractiveCharacter width={280} height={310} outfit="none" mood={currentMood} />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={170} height={190} outfit="none" />
+              <InteractiveCharacter width={170} height={190} outfit="none" mood={currentMood} />
             </div>
           </div>
 
           {/* Right Friend: DJ & Coder Penguin (Headphones, Striped Scarf) */}
-          <div className="flex flex-col items-center relative z-0">
+          <div
+            className={`flex flex-col items-center relative z-0 transition-transform duration-700 ease-out ${
+              isHookStep ? "-translate-x-3 sm:-translate-x-6" : "translate-x-0"
+            }`}
+          >
             <div className="hidden sm:block">
-              <InteractiveCharacter width={210} height={240} outfit="headphones" />
+              <InteractiveCharacter width={210} height={240} outfit="headphones" mood={currentMood} />
             </div>
             <div className="block sm:hidden">
-              <InteractiveCharacter width={140} height={160} outfit="headphones" />
+              <InteractiveCharacter width={140} height={160} outfit="headphones" mood={currentMood} />
             </div>
           </div>
         </div>
@@ -476,7 +538,11 @@ export default function LoginPage() {
                       type="text"
                       required
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        if (errorMessage) setErrorMessage("");
+                        clearAngryMood();
+                      }}
                       placeholder="Alex Mercer"
                       suppressHydrationWarning
                       className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
@@ -494,7 +560,11 @@ export default function LoginPage() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMessage) setErrorMessage("");
+                      clearAngryMood();
+                    }}
                     placeholder="Enter your email"
                     style={{ colorScheme: "light" }}
                     suppressHydrationWarning
@@ -513,7 +583,11 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errorMessage) setErrorMessage("");
+                        clearAngryMood();
+                      }}
                       placeholder="••••••••"
                       style={{ colorScheme: "light" }}
                       suppressHydrationWarning
@@ -545,7 +619,11 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       required
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (errorMessage) setErrorMessage("");
+                        clearAngryMood();
+                      }}
                       placeholder="Repeat your password"
                       suppressHydrationWarning
                       className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"

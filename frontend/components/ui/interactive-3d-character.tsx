@@ -7,6 +7,7 @@ export interface InteractiveCharacterProps {
   width?: number;
   height?: number;
   outfit?: "none" | "scholar" | "headphones" | "glasses" | "scarf";
+  mood?: "normal" | "happy" | "angry" | "disappointed" | "dance";
 }
 
 export function InteractiveCharacter({
@@ -14,6 +15,7 @@ export function InteractiveCharacter({
   width = 260,
   height = 260,
   outfit = "none",
+  mood = "normal",
 }: InteractiveCharacterProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -160,19 +162,46 @@ export function InteractiveCharacter({
       const baseDim = 170;
       const scale = Math.min(width / baseDim, height / baseDim);
       const cx = width / (2 * scale);
-      const cy = height / (2 * scale) + 4 + jumpY;
+
+      const isAngryOrSad = mood === "angry" || mood === "disappointed";
+      const isDancing = mood === "dance";
+
+      // Precise wall-clock time in seconds for microsecond-perfect synchronization among all canvases
+      const nowSec = now / 1000;
+      // 4-beat synchronized hook step dance groove (~128 BPM)
+      const dancePhase = nowSec * 4.4;
+      const danceBounce = -Math.abs(Math.sin(dancePhase)) * 8.5;
+      const danceSway = Math.sin(dancePhase * 0.5) * 0.13;
+
+      const effectiveJumpY = isDancing ? danceBounce : jumpY;
+      const cy = height / (2 * scale) + 4 + effectiveJumpY + (isAngryOrSad ? 2.5 : 0);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(dpr * scale, dpr * scale);
 
-      // Organic breathing bob & idle waddle
-      const breathBob = Math.sin(time * 2.2) * 2.2;
-      const breathScale = 1 + Math.sin(time * 2.2) * 0.018;
-      const bodyWaddle = Math.sin(time * 2.2) * 0.025 + currentLookX * 0.08;
+      // Organic breathing & posture (Smooth & pleasant: no jitter or seizure-like vibrations)
+      let breathBob = 0;
+      let breathScale = 1;
+      let bodyWaddle = 0;
+
+      if (isDancing) {
+        breathBob = Math.sin(dancePhase) * 1.5;
+        breathScale = 1 + Math.sin(dancePhase) * 0.02;
+        bodyWaddle = danceSway;
+      } else if (isAngryOrSad) {
+        // Slow, heavy, disappointed sigh (smooth and subtle, no jitter!)
+        breathBob = Math.sin(time * 2.2) * 1.8;
+        breathScale = 1 + Math.sin(time * 2.2) * 0.015;
+        bodyWaddle = currentLookX * 0.04 + Math.sin(time * 1.5) * 0.015;
+      } else {
+        breathBob = Math.sin(time * 2.2) * 2.2;
+        breathScale = 1 + Math.sin(time * 2.2) * 0.018;
+        bodyWaddle = Math.sin(time * 2.2) * 0.025 + currentLookX * 0.08;
+      }
 
       // ── Layer 1: Multi-tier 3D Ambient Contact Shadow ──
-      const shadowCompression = Math.max(0.35, 1 - Math.abs(jumpY) / 45);
+      const shadowCompression = Math.max(0.35, 1 - Math.abs(effectiveJumpY) / 45);
       const shadowWidth = 52 * shadowCompression;
       const shadowHeight = 14 * shadowCompression;
 
@@ -205,8 +234,14 @@ export function InteractiveCharacter({
       const waddleCycle = excitedWaddle > 0 ? Math.sin(time * 16) * 3.5 : 0;
       const drawFoot = (isLeft: boolean) => {
         const footX = isLeft ? -20 : 20;
-        const footStep = isLeft ? -waddleCycle : waddleCycle;
-        const footAngle = (isLeft ? -0.18 : 0.18) + currentLookX * 0.08;
+        let footStep = isLeft ? -waddleCycle : waddleCycle;
+        if (isDancing) {
+          // Synchronized stepping in rhythm with the sway
+          footStep = isLeft
+            ? Math.max(0, Math.sin(dancePhase * 0.5)) * 4.5
+            : Math.max(0, -Math.sin(dancePhase * 0.5)) * 4.5;
+        }
+        const footAngle = (isLeft ? -0.18 : 0.18) + (isDancing ? danceSway * 0.4 : currentLookX * 0.08);
 
         ctx.save();
         ctx.translate(footX, 51 - footStep);
@@ -280,19 +315,37 @@ export function InteractiveCharacter({
       ctx.strokeStyle = rimGrad;
       ctx.stroke();
 
-      // ── Layer 4: 3D Articulated Flippers (Wings React to Cursor) ──
+      // ── Layer 4: 3D Articulated Flippers (Wings React to Cursor & Dance) ──
       const drawWing = (isLeft: boolean) => {
         const wingBaseX = isLeft ? -33 : 33;
         const excitedFlutter = excitedWaddle > 0 ? Math.sin(time * 20) * 0.4 : 0;
         const proximityWave = mouseProximity * (isLeft ? -currentLookX : currentLookX) * 0.22;
         const idleWave = Math.sin(time * 2.2 + (isLeft ? 0 : Math.PI)) * 0.06;
 
-        const wingAngle =
-          (isLeft ? -0.2 : 0.2) +
-          currentLookX * 0.12 +
-          excitedFlutter +
-          proximityWave +
-          idleWave;
+        let wingAngle = 0;
+        if (isDancing) {
+          // Energetic 4-beat synchronized hook step wing choreography
+          // Sway left -> left wing pumps up high, right grooves at hip
+          // Sway right -> right wing pumps up high, left grooves at hip
+          const swayDirection = Math.sin(dancePhase * 0.5);
+          if (isLeft) {
+            wingAngle = -0.3 + swayDirection * 0.55 + Math.sin(dancePhase) * 0.12;
+          } else {
+            wingAngle = 0.3 + swayDirection * 0.55 - Math.sin(dancePhase) * 0.12;
+          }
+        } else if (isAngryOrSad) {
+          // Cute, defiant arms-on-hips / wings-tucked-akimbo stance with gentle breathing (NO jitter)
+          wingAngle = isLeft
+            ? -0.42 + Math.sin(time * 2.2) * 0.03
+            : 0.42 - Math.sin(time * 2.2) * 0.03;
+        } else {
+          wingAngle =
+            (isLeft ? -0.2 : 0.2) +
+            currentLookX * 0.12 +
+            excitedFlutter +
+            proximityWave +
+            idleWave;
+        }
 
         ctx.save();
         ctx.translate(wingBaseX, -6);
@@ -513,26 +566,68 @@ export function InteractiveCharacter({
         ctx.restore();
       }
 
-      // ── Layer 7: Articulated 3D Head Group (Follows Cursor Vector) ──
-      const headX = currentLookX * 11;
-      const headY = -38 + currentLookY * 6;
-      const headTilt = curiosityTilt + currentLookX * 0.14;
+      // ── Layer 7: Articulated 3D Head Group (Follows Cursor Vector & Rhythmic Groove) ──
+      let headTilt = 0;
+      let headX = 0;
+      let headY = 0;
+
+      if (isDancing) {
+        headTilt = Math.sin(dancePhase * 0.5) * 0.12 + Math.sin(dancePhase) * 0.04;
+        headX = Math.sin(dancePhase * 0.5) * 4;
+        headY = -38 + Math.sin(dancePhase) * 1.5;
+      } else if (isAngryOrSad) {
+        // Slow, clear, disapproving "tsk-tsk" head shake (gentle & rhythmic, no rapid twitch)
+        const angryShake = Math.sin(time * 3.4) * 0.08;
+        headTilt = curiosityTilt * 0.5 + currentLookX * 0.08 + angryShake;
+        headX = currentLookX * 8;
+        headY = -36 + currentLookY * 4;
+      } else {
+        headTilt = curiosityTilt + currentLookX * 0.14;
+        headX = currentLookX * 11;
+        headY = -38 + currentLookY * 6;
+      }
 
       ctx.save();
       ctx.translate(headX, headY);
       ctx.rotate(headTilt);
 
-      // ── Layer 8: Expressive Realistic Eyes ──
+      // ── Layer 8: Expressive Realistic Eyes (Dancing Smile / Skeptical Glare / Natural Look) ──
       const eyeSpacing = 13.5;
       const eyeY = -3;
       const eyeRadius = 7.5;
-      const eyeScaleY = isBlinking ? Math.max(0.06, 1 - Math.sin(blinkProgress)) : 1;
+      const eyeScaleY = isAngryOrSad
+        ? 0.55
+        : isBlinking
+        ? Math.max(0.06, 1 - Math.sin(blinkProgress))
+        : 1;
 
       const drawExpressiveEye = (isLeft: boolean) => {
-        const eyeX = (isLeft ? -eyeSpacing : eyeSpacing) + currentLookX * 3;
+        const eyeX =
+          (isLeft ? -eyeSpacing : eyeSpacing) +
+          (isDancing ? Math.sin(dancePhase * 0.5) * 1.5 : currentLookX * 3);
 
         ctx.save();
         ctx.translate(eyeX, eyeY);
+
+        if (isDancing) {
+          // Cheerful dancing happy eye crescents (^ ^)
+          ctx.strokeStyle = "#0F172A";
+          ctx.lineWidth = 2.6;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.arc(0, 1.5, eyeRadius * 0.85, Math.PI * 1.15, Math.PI * 1.85);
+          ctx.stroke();
+
+          // Cute twinkle glint above crescent
+          ctx.fillStyle = "#FFFFFF";
+          ctx.beginPath();
+          ctx.arc(isLeft ? -2 : 2, -3, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+          return;
+        }
+
         ctx.scale(1, eyeScaleY);
 
         // Eye Socket Ambient Occlusion
@@ -557,17 +652,25 @@ export function InteractiveCharacter({
 
         // If eyes are open enough, render pupils & reflections
         if (!isBlinking || eyeScaleY > 0.35) {
-          // Pupil tracking across spherical surface
+          // Pupil tracking across spherical surface (skeptical glance if angry)
           const pupilLimitX = 3.6;
           const pupilLimitY = 3.2;
-          const pupilX = currentLookX * pupilLimitX;
-          const pupilY = currentLookY * pupilLimitY;
+          const pupilX = isAngryOrSad
+            ? currentLookX * 2.2 + (isLeft ? 0.8 : -0.8)
+            : currentLookX * pupilLimitX;
+          const pupilY = isAngryOrSad ? -1.0 : currentLookY * pupilLimitY;
 
-          // Pupil dilation increases slightly when close to cursor
           const pupilRadius = 3.8 + mouseProximity * 0.6;
 
           // Iris / Deep Pupil Gradient
-          const irisGrad = ctx.createRadialGradient(pupilX - 0.5, pupilY - 0.5, 0.5, pupilX, pupilY, pupilRadius);
+          const irisGrad = ctx.createRadialGradient(
+            pupilX - 0.5,
+            pupilY - 0.5,
+            0.5,
+            pupilX,
+            pupilY,
+            pupilRadius
+          );
           irisGrad.addColorStop(0, "#1E1B4B");
           irisGrad.addColorStop(0.65, "#0F172A");
           irisGrad.addColorStop(1, "#020617");
@@ -602,18 +705,37 @@ export function InteractiveCharacter({
       drawExpressiveEye(true);
       drawExpressiveEye(false);
 
+      // ── Angry / Disappointed Furrowed Eyebrows ──
+      if (isAngryOrSad) {
+        ctx.strokeStyle = "#0A0718";
+        ctx.lineWidth = 3.2;
+        ctx.lineCap = "round";
+
+        // Left Eyebrow (slants aggressively down toward beak)
+        ctx.beginPath();
+        ctx.moveTo(-21 + currentLookX * 2, -13);
+        ctx.lineTo(-6 + currentLookX * 2, -6.5);
+        ctx.stroke();
+
+        // Right Eyebrow (slants aggressively down toward beak)
+        ctx.beginPath();
+        ctx.moveTo(21 + currentLookX * 2, -13);
+        ctx.lineTo(6 + currentLookX * 2, -6.5);
+        ctx.stroke();
+      }
+
       // ── Layer 9: Realistic 3D Emperor Beak (Mandible Shading & Glint) ──
-      const beakCenterX = currentLookX * 4;
-      const beakCenterY = 4 + currentLookY * 3;
+      const beakCenterX = isDancing ? Math.sin(dancePhase * 0.5) * 2 : currentLookX * 4;
+      const beakCenterY = 4 + (isDancing ? Math.sin(dancePhase) * 1 : currentLookY * 3);
 
       ctx.save();
       ctx.translate(beakCenterX, beakCenterY);
 
       // Dynamic Beak 3D Perspective Tilt
-      const beakTilt = currentLookX * 0.12;
+      const beakTilt = isDancing ? Math.sin(dancePhase * 0.5) * 0.1 : currentLookX * 0.12;
       ctx.rotate(beakTilt);
 
-      // Upper Mandible (Sleek dark gunmetal horn)
+      // Upper Mandible (Sleek dark gunmetal horn, smiling if dancing, downturned if angry)
       const upperBeakGrad = ctx.createLinearGradient(0, -6, 0, 4);
       upperBeakGrad.addColorStop(0, "#27223D");
       upperBeakGrad.addColorStop(0.5, "#1B172E");
@@ -621,10 +743,24 @@ export function InteractiveCharacter({
 
       ctx.fillStyle = upperBeakGrad;
       ctx.beginPath();
-      ctx.moveTo(-7.5, -2);
-      ctx.quadraticCurveTo(0, -6, 7.5, -2);
-      ctx.quadraticCurveTo(5, 7, 0, 13);
-      ctx.quadraticCurveTo(-5, 7, -7.5, -2);
+      if (isDancing) {
+        // Happy open smiling / singing beak
+        ctx.moveTo(-7.5, -1);
+        ctx.quadraticCurveTo(0, -5, 7.5, -1);
+        ctx.quadraticCurveTo(4, 9, 0, 15);
+        ctx.quadraticCurveTo(-4, 9, -7.5, -1);
+      } else if (isAngryOrSad) {
+        // Disappointed downturned pouty frown
+        ctx.moveTo(-7.5, 3);
+        ctx.quadraticCurveTo(0, -2, 7.5, 3);
+        ctx.quadraticCurveTo(4, 13, 0, 15);
+        ctx.quadraticCurveTo(-4, 13, -7.5, 3);
+      } else {
+        ctx.moveTo(-7.5, -2);
+        ctx.quadraticCurveTo(0, -6, 7.5, -2);
+        ctx.quadraticCurveTo(5, 7, 0, 13);
+        ctx.quadraticCurveTo(-5, 7, -7.5, -2);
+      }
       ctx.closePath();
       ctx.fill();
 
@@ -653,16 +789,47 @@ export function InteractiveCharacter({
 
       ctx.restore(); // Beak restore
 
-      // ── Layer 10: Soft Rosy Cheeks when Happy or Hovered ──
-      const blushIntensity = isHappy || excitedWaddle > 0 ? 0.5 : mouseProximity * 0.28;
-      if (blushIntensity > 0.05) {
-        ctx.fillStyle = `rgba(244, 114, 182, ${blushIntensity})`;
+      // ── Layer 10: Rosy or Angry Cheeks & Steam ──
+      if (isDancing) {
+        // Vibrant celebration pink blush
+        ctx.fillStyle = "rgba(244, 114, 182, 0.7)";
         ctx.beginPath();
-        ctx.ellipse(-19, 2, 5.5, 3.2, -0.12, 0, Math.PI * 2);
+        ctx.ellipse(-19, 2, 6, 3.5, -0.12, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(19, 2, 5.5, 3.2, 0.12, 0, Math.PI * 2);
+        ctx.ellipse(19, 2, 6, 3.5, 0.12, 0, Math.PI * 2);
         ctx.fill();
+      } else if (isAngryOrSad) {
+        // Hot flustered red cheeks
+        ctx.fillStyle = "rgba(239, 68, 68, 0.65)";
+        ctx.beginPath();
+        ctx.ellipse(-19, 2, 6.5, 3.8, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(19, 2, 6.5, 3.8, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Smooth gentle steam puffs floating slowly (no rapid flicker)
+        const steamProgress = (time * 1.4) % 1;
+        const puffAlpha = Math.max(0, 0.7 - steamProgress * 0.7);
+        ctx.fillStyle = `rgba(255, 255, 255, ${puffAlpha})`;
+        ctx.beginPath();
+        ctx.arc(-22 - steamProgress * 6, -20 - steamProgress * 12, 2.5 + steamProgress * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(22 + steamProgress * 6, -20 - steamProgress * 12, 2.5 + steamProgress * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const blushIntensity = isHappy || excitedWaddle > 0 ? 0.5 : mouseProximity * 0.28;
+        if (blushIntensity > 0.05) {
+          ctx.fillStyle = `rgba(244, 114, 182, ${blushIntensity})`;
+          ctx.beginPath();
+          ctx.ellipse(-19, 2, 5.5, 3.2, -0.12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(19, 2, 5.5, 3.2, 0.12, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // ── Outfit: Head Accessories (Follows Head Group Rotation & Perspective) ──
@@ -910,8 +1077,8 @@ export function InteractiveCharacter({
           ctx.lineWidth = 1;
           ctx.stroke();
 
-          // 4. Glowing Neon Center Ring & Logo Plate
-          ctx.strokeStyle = "#38BDF8"; // Cyan Cyber Glint
+          // 4. Glowing Neon Center Ring & Logo Plate (Red if angry, Gold if dancing, Cyan if normal)
+          ctx.strokeStyle = isAngryOrSad ? "#EF4444" : isDancing ? "#F59E0B" : "#38BDF8";
           ctx.lineWidth = 1.3;
           ctx.beginPath();
           ctx.ellipse(isLeft ? -2.5 : 2.5, 2, 3.8, 7.5, 0, 0, Math.PI * 2);
@@ -952,7 +1119,7 @@ export function InteractiveCharacter({
       window.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("click", handleClick);
     };
-  }, [width, height, isHappy, outfit]);
+  }, [width, height, isHappy, outfit, mood]);
 
   return (
     <div
