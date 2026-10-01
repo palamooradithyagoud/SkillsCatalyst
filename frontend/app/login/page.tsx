@@ -19,8 +19,9 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
-import PenguinMountainCanvas from "@/components/PenguinMountainCanvas";
+import InteractiveCharacter from "@/components/ui/interactive-3d-character";
 import RotatingText from "@/components/RotatingText";
+import FoldText from "@/components/FoldText";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -211,9 +212,86 @@ export default function LoginPage() {
 
   return (
     <div className="w-full min-h-screen min-h-[100dvh] bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
-      {/* ── LEFT / TOP HEADER: Realistic Animated Mountain Canvas with Penguin in Pure Code ── */}
-      <div className="w-full lg:w-1/2 h-[260px] sm:h-[320px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-[#1F1B2C] self-stretch">
-        <PenguinMountainCanvas className="absolute inset-0 w-full h-full" />
+      {/* ── LEFT / TOP HERO: FoldText "Skills" + 3D Interactive Penguin Character ── */}
+      <div className="w-full lg:w-1/2 min-h-[300px] sm:min-h-[360px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-white self-stretch flex flex-col justify-between items-start p-6 sm:p-8 lg:p-12 select-none border-b lg:border-b-0 lg:border-r border-zinc-100">
+        {/* Top-Left Header: FoldText "Skills" (top fold) + "Catalyst" (bottom fold) */}
+        <div className="w-full flex items-center justify-start z-10">
+          <div className="hidden sm:flex items-baseline gap-1.5 sm:gap-2">
+            <FoldText
+              text="Skills"
+              splitBy="char"
+              hinge="top"
+              trigger="mount"
+              duration={0.65}
+              stagger={0.045}
+              ease="power3.out"
+              perspective={700}
+              creaseShading={0.55}
+              fontSize={44}
+              fontWeight={800}
+              color="#18191F"
+            />
+            <FoldText
+              text="Catalyst"
+              splitBy="char"
+              hinge="bottom"
+              trigger="mount"
+              duration={0.65}
+              stagger={0.045}
+              ease="power3.out"
+              perspective={700}
+              creaseShading={0.55}
+              fontSize={44}
+              fontWeight={800}
+              color="#18191F"
+            />
+          </div>
+          <div className="flex sm:hidden items-baseline gap-1">
+            <FoldText
+              text="Skills"
+              splitBy="char"
+              hinge="top"
+              trigger="mount"
+              duration={0.65}
+              stagger={0.045}
+              ease="power3.out"
+              perspective={700}
+              creaseShading={0.55}
+              fontSize={32}
+              fontWeight={800}
+              color="#18191F"
+            />
+            <FoldText
+              text="Catalyst"
+              splitBy="char"
+              hinge="bottom"
+              trigger="mount"
+              duration={0.65}
+              stagger={0.045}
+              ease="power3.out"
+              perspective={700}
+              creaseShading={0.55}
+              fontSize={32}
+              fontWeight={800}
+              color="#18191F"
+            />
+          </div>
+        </div>
+
+        {/* Center: Desktop & Mobile Penguin */}
+        <div className="w-full flex items-center justify-center my-auto py-2">
+          {/* Desktop Penguin */}
+          <div className="hidden sm:block">
+            <InteractiveCharacter width={320} height={320} />
+          </div>
+          {/* Mobile Penguin */}
+          <div className="block sm:hidden">
+            <InteractiveCharacter width={220} height={220} />
+          </div>
+        </div>
+
+        {/* Bottom invisible spacer to maintain optical vertical balance */}
+        <div className="hidden lg:block h-11 w-full pointer-events-none" />
       </div>
 
       {/* ── RIGHT / BOTTOM CARD: Crisp White Auth Container (Seamless Alignment) ── */}
