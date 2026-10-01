@@ -213,7 +213,7 @@ export default function LoginPage() {
   return (
     <div className="w-full min-h-screen min-h-[100dvh] bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
       {/* ── LEFT / TOP HERO: FoldText "Skills" + 3D Interactive Penguin Character ── */}
-      <div className="w-full lg:w-1/2 min-h-[300px] sm:min-h-[360px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-white self-stretch flex flex-col justify-between items-start p-6 sm:p-8 lg:p-12 select-none border-b lg:border-b-0 lg:border-r border-zinc-100">
+      <div className="w-full lg:w-1/2 min-h-[290px] sm:min-h-[360px] lg:h-auto lg:min-h-screen shrink-0 relative overflow-hidden bg-white self-stretch flex flex-col justify-between items-start p-4 sm:p-8 lg:p-12 pb-3 sm:pb-8 select-none border-b lg:border-b-0 lg:border-r border-zinc-100">
         {/* Top-Left Header: FoldText "Skills" (top fold) + "Catalyst" (bottom fold) */}
         <div className="w-full flex items-center justify-start z-10">
           <div className="hidden sm:flex items-baseline gap-1.5 sm:gap-2">
@@ -257,7 +257,7 @@ export default function LoginPage() {
               ease="power3.out"
               perspective={700}
               creaseShading={0.55}
-              fontSize={32}
+              fontSize={28}
               fontWeight={800}
               color="#18191F"
             />
@@ -271,22 +271,43 @@ export default function LoginPage() {
               ease="power3.out"
               perspective={700}
               creaseShading={0.55}
-              fontSize={32}
+              fontSize={28}
               fontWeight={800}
               color="#18191F"
             />
           </div>
         </div>
 
-        {/* Center: Desktop & Mobile Penguin */}
-        <div className="w-full flex items-center justify-center my-auto py-2">
-          {/* Desktop Penguin */}
-          <div className="hidden sm:block">
-            <InteractiveCharacter width={320} height={320} />
+        {/* Center: Interactive Penguin Trio (Leader + 2 Friends with Outfits, Big & Close Together in Laptop View) */}
+        <div className="w-full flex items-end justify-center -space-x-8 sm:-space-x-14 lg:-space-x-18 my-auto pt-2 pb-1 sm:py-2">
+          {/* Left Friend: Scholar Penguin (Cap, Glasses, Bowtie) */}
+          <div className="flex flex-col items-center relative z-0">
+            <div className="hidden sm:block">
+              <InteractiveCharacter width={210} height={240} outfit="scholar" />
+            </div>
+            <div className="block sm:hidden">
+              <InteractiveCharacter width={115} height={130} outfit="scholar" />
+            </div>
           </div>
-          {/* Mobile Penguin */}
-          <div className="block sm:hidden">
-            <InteractiveCharacter width={220} height={220} />
+
+          {/* Center Leader: Original Classic Penguin (Larger, in front) */}
+          <div className="flex flex-col items-center relative z-10 -mb-2">
+            <div className="hidden sm:block">
+              <InteractiveCharacter width={280} height={310} outfit="none" />
+            </div>
+            <div className="block sm:hidden">
+              <InteractiveCharacter width={145} height={160} outfit="none" />
+            </div>
+          </div>
+
+          {/* Right Friend: DJ & Coder Penguin (Headphones, Striped Scarf) */}
+          <div className="flex flex-col items-center relative z-0">
+            <div className="hidden sm:block">
+              <InteractiveCharacter width={210} height={240} outfit="headphones" />
+            </div>
+            <div className="block sm:hidden">
+              <InteractiveCharacter width={115} height={130} outfit="headphones" />
+            </div>
           </div>
         </div>
 
@@ -295,7 +316,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── RIGHT / BOTTOM CARD: Crisp White Auth Container (Seamless Alignment) ── */}
-      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none -mt-4 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-2xl relative z-10 overflow-hidden">
+      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none mt-0 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-lg lg:shadow-2xl relative z-10 overflow-hidden">
         {/* ── Low-Opacity Background Watermark Logo Emblem ── */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
           <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.045] mix-blend-multiply">

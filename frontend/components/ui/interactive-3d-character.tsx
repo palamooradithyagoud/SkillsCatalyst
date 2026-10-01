@@ -6,12 +6,14 @@ export interface InteractiveCharacterProps {
   className?: string;
   width?: number;
   height?: number;
+  outfit?: "none" | "scholar" | "headphones" | "glasses" | "scarf";
 }
 
 export function InteractiveCharacter({
   className = "",
   width = 260,
   height = 260,
+  outfit = "none",
 }: InteractiveCharacterProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -154,13 +156,15 @@ export function InteractiveCharacter({
         }
       }
 
+      // Responsive scale factor based on reference dimension (195px for bold, prominent character size)
+      const baseDim = 195;
+      const scale = Math.min(width / baseDim, height / baseDim);
+      const cx = width / (2 * scale);
+      const cy = height / (2 * scale) + 4 + jumpY;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.scale(dpr, dpr);
-
-      // Center baseline coordinates
-      const cx = width / 2;
-      const cy = height / 2 + 18 + jumpY;
+      ctx.scale(dpr * scale, dpr * scale);
 
       // Organic breathing bob & idle waddle
       const breathBob = Math.sin(time * 2.2) * 2.2;
@@ -403,6 +407,112 @@ export function InteractiveCharacter({
       ctx.ellipse(bellyX, -21, 16, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      // ── Outfit: Neck Accessories (Follows Body Space) ──
+      if (outfit === "scholar") {
+        // Crimson Silk Bow Tie with Gold Knot
+        const bowX = currentLookX * 6;
+        const bowY = -18;
+        ctx.save();
+        ctx.translate(bowX, bowY);
+        ctx.rotate(currentLookX * 0.08);
+
+        const bowGrad = ctx.createLinearGradient(-15, -7, 15, 7);
+        bowGrad.addColorStop(0, "#EF4444");
+        bowGrad.addColorStop(0.5, "#DC2626");
+        bowGrad.addColorStop(1, "#B91C1C");
+        ctx.fillStyle = bowGrad;
+
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-13, -7);
+        ctx.lineTo(-11, 7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(13, -7);
+        ctx.lineTo(11, 7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Central Gold knot
+        ctx.fillStyle = "#F59E0B";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 3.5, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (outfit === "headphones" || outfit === "scarf") {
+        // Cozy Sky-Blue & Yellow Striped Winter Scarf
+        const scarfX = currentLookX * 6;
+        const scarfY = -17;
+        ctx.save();
+        ctx.translate(scarfX, scarfY);
+        ctx.rotate(currentLookX * 0.05);
+
+        // Main collar wrap loop
+        const scarfGrad = ctx.createLinearGradient(-24, 0, 24, 0);
+        scarfGrad.addColorStop(0, "#0284C7");
+        scarfGrad.addColorStop(0.3, "#0EA5E9");
+        scarfGrad.addColorStop(0.7, "#38BDF8");
+        scarfGrad.addColorStop(1, "#0284C7");
+
+        ctx.fillStyle = scarfGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 23, 7.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Yellow Accent Stripes on collar
+        ctx.strokeStyle = "#FDE047";
+        ctx.lineWidth = 2.5;
+        [-12, -4, 4, 12].forEach((stripeX) => {
+          ctx.beginPath();
+          ctx.moveTo(stripeX, -5);
+          ctx.lineTo(stripeX + 2, 5);
+          ctx.stroke();
+        });
+
+        // Hanging Scarf Tail (Sways gently with time & motion)
+        const tailSway = Math.sin(time * 2.5) * 3 + currentLookX * 4;
+        ctx.save();
+        ctx.translate(7, 2);
+        ctx.rotate(0.12 + tailSway * 0.03);
+
+        ctx.fillStyle = "#0284C7";
+        ctx.beginPath();
+        ctx.moveTo(-5, 0);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(6, 26);
+        ctx.lineTo(-4, 26);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tail yellow stripes
+        ctx.strokeStyle = "#FDE047";
+        ctx.lineWidth = 2.2;
+        [8, 16].forEach((stripeY) => {
+          ctx.beginPath();
+          ctx.moveTo(-4.5, stripeY);
+          ctx.lineTo(6.5, stripeY);
+          ctx.stroke();
+        });
+
+        // Scarf Fringe Tassels
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1.2;
+        for (let fx = -3; fx <= 5; fx += 2) {
+          ctx.beginPath();
+          ctx.moveTo(fx, 26);
+          ctx.lineTo(fx, 31);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.restore();
+      }
+
       // ── Layer 7: Articulated 3D Head Group (Follows Cursor Vector) ──
       const headX = currentLookX * 11;
       const headY = -38 + currentLookY * 6;
@@ -555,6 +665,279 @@ export function InteractiveCharacter({
         ctx.fill();
       }
 
+      // ── Outfit: Head Accessories (Follows Head Group Rotation & Perspective) ──
+      if (outfit === "scholar") {
+        // ── 1. Snug Mortarboard Graduation Cap ──
+        ctx.save();
+        // 3D perspective shift with look vector
+        const capX = currentLookX * 2;
+        const capY = -23;
+        ctx.translate(capX, capY);
+        ctx.rotate(-0.05 + currentLookX * 0.06);
+
+        // A. Snug Fabric Skullcap (wraps around the head dome)
+        const capDomeGrad = ctx.createLinearGradient(0, 0, 0, 12);
+        capDomeGrad.addColorStop(0, "#1E1B4B");
+        capDomeGrad.addColorStop(0.6, "#130F30");
+        capDomeGrad.addColorStop(1, "#0A0718");
+        ctx.fillStyle = capDomeGrad;
+        ctx.beginPath();
+        ctx.moveTo(-21, 10);
+        ctx.bezierCurveTo(-22, 2, -15, -3, 0, -3);
+        ctx.bezierCurveTo(15, -3, 22, 2, 21, 10);
+        ctx.quadraticCurveTo(0, 13, -21, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Golden Embroidered Forehead Rim
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.85)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-21, 10);
+        ctx.quadraticCurveTo(0, 13, 21, 10);
+        ctx.stroke();
+
+        // B. Mortarboard Board 3D Thickness (Under-edge bevel for depth)
+        const boardY = -3;
+        const boardTilt = currentLookX * 0.03;
+        ctx.save();
+        ctx.translate(0, boardY);
+        ctx.rotate(boardTilt);
+
+        // Board Thickness / Bottom Edge
+        ctx.fillStyle = "#0D0A1E";
+        ctx.beginPath();
+        ctx.moveTo(-27, 0);
+        ctx.lineTo(0, 10);
+        ctx.lineTo(27, 0);
+        ctx.lineTo(27, 2.5);
+        ctx.lineTo(0, 12.5);
+        ctx.lineTo(-27, 2.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Board Top Diamond Surface
+        const boardGrad = ctx.createLinearGradient(-27, -9, 27, 9);
+        boardGrad.addColorStop(0, "#312E81");
+        boardGrad.addColorStop(0.35, "#25215A");
+        boardGrad.addColorStop(0.7, "#1B1740");
+        boardGrad.addColorStop(1, "#100C28");
+        ctx.fillStyle = boardGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, -9.5);
+        ctx.lineTo(27, 0);
+        ctx.lineTo(0, 9.5);
+        ctx.lineTo(-27, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Board Edge Highlight
+        ctx.strokeStyle = "rgba(129, 140, 248, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // C. Central Golden Button
+        ctx.fillStyle = "#F59E0B";
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // D. Hanging Golden Braided Tassel
+        const tasselSway = Math.sin(time * 3) * 3.5 + currentLookX * 5;
+        // Ribbon across the board
+        ctx.strokeStyle = "#FBBF24";
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(10, 2, 20 + tasselSway * 0.3, 5);
+        ctx.stroke();
+
+        // Hanging Tassel Cord
+        ctx.beginPath();
+        ctx.moveTo(20 + tasselSway * 0.3, 5);
+        ctx.quadraticCurveTo(22 + tasselSway * 0.6, 12, 22 + tasselSway, 21);
+        ctx.stroke();
+
+        // Tassel Ring
+        ctx.fillStyle = "#D97706";
+        ctx.beginPath();
+        ctx.arc(22 + tasselSway, 21.5, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tassel Fringe Brush
+        const brushGrad = ctx.createLinearGradient(0, 22, 0, 31);
+        brushGrad.addColorStop(0, "#F59E0B");
+        brushGrad.addColorStop(1, "#D97706");
+        ctx.fillStyle = brushGrad;
+        ctx.beginPath();
+        ctx.moveTo(20 + tasselSway, 22);
+        ctx.lineTo(24 + tasselSway, 22);
+        ctx.lineTo(26 + tasselSway, 31);
+        ctx.lineTo(18 + tasselSway, 31);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore(); // board restore
+        ctx.restore(); // cap restore
+
+        // ── 2. Developer Round Wireframe Glasses (Snug Fit Over Eyes) ──
+        const glassY = eyeY;
+        const glassRadius = eyeRadius + 1.8;
+        const leftGlassX = -eyeSpacing + currentLookX * 3;
+        const rightGlassX = eyeSpacing + currentLookX * 3;
+
+        ctx.strokeStyle = "#F59E0B"; // Warm Gold Wireframes
+        ctx.lineWidth = 1.7;
+
+        // Left Rim
+        ctx.beginPath();
+        ctx.arc(leftGlassX, glassY, glassRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Left Lens Glint
+        ctx.fillStyle = "rgba(255, 255, 255, 0.32)";
+        ctx.beginPath();
+        ctx.arc(leftGlassX - 2.2, glassY - 2.2, glassRadius * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right Rim
+        ctx.beginPath();
+        ctx.arc(rightGlassX, glassY, glassRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Right Lens Glint
+        ctx.beginPath();
+        ctx.arc(rightGlassX - 2.2, glassY - 2.2, glassRadius * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Nose Bridge Arcing over Beak
+        ctx.beginPath();
+        ctx.moveTo(leftGlassX + glassRadius, glassY - 0.5);
+        ctx.quadraticCurveTo(0, glassY - 3.5, rightGlassX - glassRadius, glassY - 0.5);
+        ctx.stroke();
+
+        // Frame Temples
+        ctx.beginPath();
+        ctx.moveTo(leftGlassX - glassRadius, glassY);
+        ctx.lineTo(leftGlassX - glassRadius - 7, glassY - 2.5);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(rightGlassX + glassRadius, glassY);
+        ctx.lineTo(rightGlassX + glassRadius + 7, glassY - 2.5);
+        ctx.stroke();
+      } else if (outfit === "headphones") {
+        // ── Ergonomic Over-Ear DJ Headphones (Snug Clamped Fit) ──
+        ctx.save();
+
+        // 1. Headband Assembly (Follows Crown Curvature)
+        // A. Inner Cushion (Black leatherette resting on feathers)
+        ctx.strokeStyle = "#0F172A";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-28, -10);
+        ctx.bezierCurveTo(-27, -24, -14, -26.5, 0, -26.5);
+        ctx.bezierCurveTo(14, -26.5, 27, -24, 28, -10);
+        ctx.stroke();
+
+        // B. Outer Metallic Headband Spring (Vibrant Purple)
+        const bandGrad = ctx.createLinearGradient(-28, 0, 28, 0);
+        bandGrad.addColorStop(0, "#6D28D9");
+        bandGrad.addColorStop(0.3, "#8B5CF6");
+        bandGrad.addColorStop(0.7, "#A855F7");
+        bandGrad.addColorStop(1, "#6D28D9");
+        ctx.strokeStyle = bandGrad;
+        ctx.lineWidth = 3.2;
+        ctx.beginPath();
+        ctx.moveTo(-29, -11);
+        ctx.bezierCurveTo(-28, -26, -14, -28.5, 0, -28.5);
+        ctx.bezierCurveTo(14, -28.5, 28, -26, 29, -11);
+        ctx.stroke();
+
+        // C. Left and Right Ear Cups (Snug against cheek/temple at x = ±28, y = -6)
+        const drawEarCup = (isLeft: boolean) => {
+          const cupBaseX = isLeft ? -28.5 : 28.5;
+          const cupBaseY = -6;
+          // Perspective scale: cup facing viewer gets slightly larger
+          const persScale = isLeft ? 1 - currentLookX * 0.12 : 1 + currentLookX * 0.12;
+          const cupTilt = (isLeft ? -0.16 : 0.16) + currentLookX * 0.08;
+
+          ctx.save();
+          ctx.translate(cupBaseX, cupBaseY);
+          ctx.rotate(cupTilt);
+          ctx.scale(persScale, persScale);
+
+          // 1. Metallic Slider Yoke (Connects headband to cup)
+          ctx.strokeStyle = "#94A3B8";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.lineTo(0, -1);
+          ctx.stroke();
+          // Gimbal pivot circle
+          ctx.fillStyle = "#CBD5E1";
+          ctx.beginPath();
+          ctx.arc(0, -1, 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Memory Foam Ear Cushion (Clamped against penguin head)
+          const cushionGrad = ctx.createLinearGradient(isLeft ? -4 : 4, -8, isLeft ? 3 : -3, 8);
+          cushionGrad.addColorStop(0, "#1E1B4B");
+          cushionGrad.addColorStop(0.6, "#0F172A");
+          cushionGrad.addColorStop(1, "#020617");
+          ctx.fillStyle = cushionGrad;
+          ctx.beginPath();
+          ctx.ellipse(isLeft ? 2 : -2, 2, 5.5, 13.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3. Ear Cup Outer Shell (Curved Capsule)
+          const shellGrad = ctx.createRadialGradient(
+            isLeft ? -2 : 2,
+            0,
+            1,
+            isLeft ? -1 : 1,
+            2,
+            11
+          );
+          shellGrad.addColorStop(0, "#C084FC");
+          shellGrad.addColorStop(0.4, "#9333EA");
+          shellGrad.addColorStop(0.85, "#6B21A8");
+          shellGrad.addColorStop(1, "#3B0764");
+          ctx.fillStyle = shellGrad;
+          ctx.beginPath();
+          ctx.ellipse(isLeft ? -2.5 : 2.5, 2, 6.5, 12.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Outer Chamfer Rim
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // 4. Glowing Neon Center Ring & Logo Plate
+          ctx.strokeStyle = "#38BDF8"; // Cyan Cyber Glint
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.ellipse(isLeft ? -2.5 : 2.5, 2, 3.8, 7.5, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Center metallic badge
+          ctx.fillStyle = "#1E1B4B";
+          ctx.beginPath();
+          ctx.ellipse(isLeft ? -2.5 : 2.5, 2, 2.5, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Specular glint
+          ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+          ctx.beginPath();
+          ctx.arc(isLeft ? -3.5 : 1.5, -0.5, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        };
+
+        drawEarCup(true);
+        drawEarCup(false);
+
+        ctx.restore();
+      }
+
       ctx.restore(); // Head group restore
       ctx.restore(); // Main body restore
       ctx.restore(); // High-DPI restore
@@ -569,7 +952,7 @@ export function InteractiveCharacter({
       window.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("click", handleClick);
     };
-  }, [width, height, isHappy]);
+  }, [width, height, isHappy, outfit]);
 
   return (
     <div
