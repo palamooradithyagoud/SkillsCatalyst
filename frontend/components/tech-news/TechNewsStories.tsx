@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Sparkles, ChevronLeft, ChevronRight, RefreshCw, Zap } from "lucide-react";
 import type { GroupedTechNewsSource } from "@/types/tech_news";
 import { useStudentTechNews } from "@/hooks/useStudentTechNews";
+import { useWatchedStories } from "@/hooks/useWatchedStories";
 import { TechNewsSourceCircle } from "./TechNewsSourceCircle";
 import { TechNewsStoryViewer } from "./TechNewsStoryViewer";
 import { TechNewsEmptyState } from "./TechNewsEmptyState";
@@ -16,10 +17,29 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
   const { data, isLoading, error: queryError, refetch } = useStudentTechNews();
   const sources = data?.sources || [];
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load stories feed") : null;
+  const { watchedIds } = useWatchedStories();
 
   // Viewer Modal State
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedSourceIndex, setSelectedSourceIndex] = useState(0);
+  const [viewerSources, setViewerSources] = useState<GroupedTechNewsSource[]>([]);
+
+  // Sort sources: unwatched sources come first, completely watched sources move to the end
+  const sortedSources = useMemo(() => {
+    if (!sources || sources.length === 0) return [];
+
+    return [...sources].sort((a, b) => {
+      const aHasUnwatched = a.stories?.some((s) => !watchedIds.has(s.id)) ?? false;
+      const bHasUnwatched = b.stories?.some((s) => !watchedIds.has(s.id)) ?? false;
+
+      // Unwatched sources come first (-1), watched sources go to last (+1)
+      if (aHasUnwatched && !bHasUnwatched) return -1;
+      if (!aHasUnwatched && bHasUnwatched) return 1;
+
+      // Secondary sorting: keep consistent display order
+      return (a.display_order ?? 0) - (b.display_order ?? 0);
+    });
+  }, [sources, watchedIds]);
 
   // Scroll Container Ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -56,7 +76,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
         window.removeEventListener("resize", updateScrollButtons);
       };
     }
-  }, [sources, updateScrollButtons]);
+  }, [sortedSources, updateScrollButtons]);
 
   const scrollBy = (offset: number) => {
     if (scrollContainerRef.current) {
@@ -66,6 +86,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
 
   const openViewerForSource = (index: number) => {
     setSelectedSourceIndex(index);
+    setViewerSources(sortedSources);
     setViewerOpen(true);
   };
 
@@ -127,7 +148,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             Retry
           </button>
         </div>
-      ) : sources.length === 0 ? (
+      ) : sortedSources.length === 0 ? (
         <TechNewsEmptyState compact={true} onRefresh={loadFeed} />
       ) : (
         <div className="relative">
@@ -148,13 +169,19 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             className="flex items-center gap-2.5 sm:gap-3.5 overflow-x-auto py-1 px-1 no-scrollbar scroll-smooth"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {sources.map((src, idx) => (
-              <TechNewsSourceCircle
-                key={src.id}
-                source={src}
-                onClick={() => openViewerForSource(idx)}
-              />
-            ))}
+            {sortedSources.map((src, idx) => {
+              const unwatchedStories = src.stories?.filter((s) => !watchedIds.has(s.id)) || [];
+              const hasUnviewed = unwatchedStories.length > 0;
+              return (
+                <TechNewsSourceCircle
+                  key={src.id}
+                  source={src}
+                  hasUnviewed={hasUnviewed}
+                  unwatchedCount={unwatchedStories.length}
+                  onClick={() => openViewerForSource(idx)}
+                />
+              );
+            })}
           </div>
 
           {/* Right scroll chevron */}
@@ -171,9 +198,9 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
       )}
 
       {/* ── Story Viewer Fullscreen Modal ── */}
-      {viewerOpen && sources.length > 0 && (
+      {viewerOpen && sortedSources.length > 0 && (
         <TechNewsStoryViewer
-          sources={sources}
+          sources={viewerSources.length > 0 ? viewerSources : sortedSources}
           initialSourceIndex={selectedSourceIndex}
           onClose={() => setViewerOpen(false)}
         />

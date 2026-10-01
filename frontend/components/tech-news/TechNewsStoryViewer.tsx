@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { GroupedTechNewsSource, TechNewsStory } from "@/types/tech_news";
 import { TechNewsStoryProgress } from "./TechNewsStoryProgress";
+import { useWatchedStories } from "@/hooks/useWatchedStories";
 
 interface TechNewsStoryViewerProps {
   sources: GroupedTechNewsSource[];
@@ -50,6 +51,7 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
   onClose,
 }) => {
   const router = useRouter();
+  const { markStoryAsWatched } = useWatchedStories();
   const [mounted, setMounted] = useState(false);
   const [sourceIdx, setSourceIdx] = useState(initialSourceIndex);
   const [storyIdx, setStoryIdx] = useState(initialStoryIndex);
@@ -75,11 +77,19 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
   const stories: TechNewsStory[] = currentSource?.stories || [];
   const currentStory: TechNewsStory | undefined = stories[storyIdx];
 
+  // Mark current story as watched when viewed
+  useEffect(() => {
+    if (currentStory?.id) {
+      markStoryAsWatched(currentStory.id);
+    }
+  }, [currentStory?.id, markStoryAsWatched]);
+
   const handleRedirectToNews = useCallback(() => {
     if (!currentStory?.id) return;
+    markStoryAsWatched(currentStory.id);
     onClose();
     router.push(`/tech-news/${currentStory.id}`);
-  }, [currentStory?.id, onClose, router]);
+  }, [currentStory?.id, markStoryAsWatched, onClose, router]);
 
   // Touch tracking for swipe-up (to read) and swipe-down (to dismiss)
   const touchStartY = useRef<number>(0);
@@ -114,6 +124,9 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
 
   // Navigate to next story or next source
   const handleNext = useCallback(() => {
+    if (currentStory?.id) {
+      markStoryAsWatched(currentStory.id);
+    }
     if (storyIdx + 1 < stories.length) {
       setStoryIdx((prev) => prev + 1);
       setCoverError(false);
@@ -126,7 +139,7 @@ export const TechNewsStoryViewer: React.FC<TechNewsStoryViewerProps> = ({
       // Reached the end of all stories in all sources
       onClose();
     }
-  }, [storyIdx, stories.length, sourceIdx, sources.length, onClose]);
+  }, [currentStory?.id, markStoryAsWatched, storyIdx, stories.length, sourceIdx, sources.length, onClose]);
 
   // Navigate to previous story or previous source
   const handlePrev = useCallback(() => {
