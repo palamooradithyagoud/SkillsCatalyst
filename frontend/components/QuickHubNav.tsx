@@ -21,33 +21,37 @@ export default function QuickHubNav() {
         >
           <Link
             href="/roadmaps"
-            className="group flex-1 bg-white rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
+            className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-[#171527] dark:via-[#1A172E] dark:to-[#221B3C] rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-indigo-900/40 shadow-[0_4px_24px_rgba(99,102,241,0.05)] hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
-            <div className="relative z-10 max-w-[70%] sm:max-w-[58%] flex flex-col justify-between h-full">
+            <div className="relative z-10 max-w-[65%] sm:max-w-[54%] flex flex-col justify-between h-full">
               <div>
-                <span className="text-[8.5px] sm:text-[11px] font-extrabold tracking-widest text-[#5c56df] uppercase block mb-0.5 sm:mb-1">
-                  PLAN
-                </span>
-                <h3 className="text-sm sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight group-hover:text-[#4f46e5] transition-colors">
-                  Careerpath
+                <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
+                  <span className="text-[9px] sm:text-[11px] font-black tracking-widest text-[#5c56df] dark:text-[#818CF8] uppercase">
+                    PLAN
+                  </span>
+                  <span className="w-4 sm:w-5 h-[2px] rounded-full bg-[#5c56df]/50 dark:bg-[#818CF8]/50" />
+                </div>
+                <h3 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                  Career
+                  <span className="text-[#635BFF] dark:text-[#818CF8]">path</span>
                 </h3>
-                <p className="text-[10px] sm:text-[13px] text-slate-500 font-normal leading-tight sm:leading-relaxed mt-1 hidden xs:block line-clamp-2">
-                  Discover roles, skills and roadmaps.
+                <p className="text-[10px] sm:text-[12.5px] text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-snug mt-1 hidden xs:block line-clamp-2 max-w-[190px]">
+                  Get a personalized roadmap to your dream career.
                 </p>
               </div>
 
               {/* Action Button */}
               <div className="mt-2.5 sm:mt-5">
-                <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#4f46e5] text-white flex items-center justify-center shadow-md shadow-indigo-200/80 group-hover:scale-108 group-hover:bg-[#4338ca] transition-all">
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 stroke-[2.5]" />
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#5442F6] via-[#635BFF] to-[#7B73FF] text-white flex items-center justify-center shadow-md shadow-indigo-500/35 group-hover:scale-110 group-hover:shadow-indigo-500/50 transition-all">
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                 </div>
               </div>
             </div>
 
             {/* Right 3D Illustration - Transparent PNG seamlessly floating on card */}
-            <div className="absolute right-0 sm:right-1 bottom-0 top-auto sm:top-0 w-[58%] h-[68%] sm:w-[49%] sm:h-full flex items-end justify-end pointer-events-none select-none overflow-hidden">
-              <div className="relative w-full h-full min-h-[100px] sm:min-h-[150px] flex items-end justify-end group-hover:scale-103 transition-transform duration-500">
+            <div className="absolute right-0 bottom-0 top-auto sm:top-0 w-[54%] h-[78%] sm:w-[50%] sm:h-full flex items-end justify-end pointer-events-none select-none overflow-hidden">
+              <div className="relative w-full h-full min-h-[110px] sm:min-h-[160px] flex items-end justify-end group-hover:scale-104 transition-transform duration-500">
                 <Image
                   src="/images/hub/careerpath_hero.png"
                   alt="Careerpath 3D Stairs"
