@@ -7,17 +7,9 @@ import {
   FileText,
   Users,
   Target,
-  Search,
-  Star,
-  FileEdit,
-  Mic,
-  Code2,
-  BarChart3,
-  Lock,
   Crown,
+  Lock,
   ArrowRight,
-  Pause,
-  PhoneOff,
 } from "lucide-react";
 
 interface CareerCardsProps {
@@ -186,254 +178,72 @@ export default function CareerCards({
       {/* ── CARD 2: Resume Review ── */}
       <div
         onClick={handleResumeReviewClick}
-        className="bg-white rounded-2xl sm:rounded-[24px] md:rounded-[28px] border border-slate-200/80 p-3.5 sm:p-5 md:p-6 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between h-full cursor-pointer group"
+        className="bg-white rounded-2xl sm:rounded-[24px] md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden self-start cursor-pointer group hover:shadow-md transition-shadow"
       >
-        <div>
-          {/* Top Hero Banner */}
-          <div className="bg-[#FFF9F2] rounded-xl sm:rounded-2xl p-3.5 sm:p-4 md:p-5 relative overflow-hidden mb-3.5 sm:mb-5 md:mb-6 min-h-[160px] sm:min-h-[190px] md:min-h-[220px] flex flex-col justify-between">
-            {/* Top row */}
-            <div className="flex items-center justify-between relative z-10">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-white shadow-xs border border-amber-200/60 flex items-center justify-center text-[#D97706]">
-                <FileText className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 text-[#D97706]" />
-              </div>
-              <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FEF3C7] text-[#92400E] border border-amber-200/50 text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
-                <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-700" />
-                <span>Pro Feature</span>
-              </div>
-            </div>
-
-            {/* Bottom content with Resume Card */}
-            <div className="flex items-end justify-between gap-2 sm:gap-3 mt-3 sm:mt-4 relative z-10">
-              <div className="max-w-[48%]">
-                <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-slate-900 tracking-tight mb-1 sm:mb-1.5 group-hover:text-amber-700 transition-colors leading-tight">
-                  Resume Review
-                </h3>
-                <p className="text-[10.5px] sm:text-xs text-slate-500 leading-snug sm:leading-relaxed font-normal">
-                  AI-powered resume analysis with ATS scoring, recruiter insights, and actionable suggestions.
-                </p>
-              </div>
-
-              {/* Mini Resume Card Mockup - compact scale on mobile */}
-              <div className="scale-80 sm:scale-95 md:scale-100 origin-bottom-right shrink-0">
-                <div className="w-[140px] sm:w-[145px] bg-white rounded-xl shadow-md border border-slate-100/90 p-2 sm:p-2.5 flex flex-col gap-1 sm:gap-1.5 shrink-0 select-none transition-transform group-hover:scale-[1.02]">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[9.5px] font-bold text-slate-800 leading-tight block">Your Resume</span>
-                      <div className="space-y-0.5 sm:space-y-1 mt-1">
-                        <div className="w-10 h-1 bg-slate-200 rounded-full" />
-                        <div className="w-7 h-1 bg-slate-200 rounded-full" />
-                      </div>
-                    </div>
-                    {/* Gauge */}
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#10B981] flex flex-col items-center justify-center bg-white shrink-0">
-                      <span className="text-[10px] sm:text-[11px] font-black text-[#10B981] leading-none">82</span>
-                      <span className="text-[5px] font-bold text-slate-400 uppercase leading-none mt-0.5">ATS Score</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-0.5 sm:space-y-1 pt-1 border-t border-slate-100">
-                    <div className="bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="text-[7px] font-medium text-slate-700 truncate">Strong experience section</span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                      <span className="text-[7px] font-medium text-slate-700 truncate">Add more quantifiable results</span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                      <span className="text-[7px] font-medium text-slate-700 truncate">Missing key skills (e.g. System Design)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Top Pale Blue Gradient Header filled till Resume Review */}
+        <div className="w-full bg-gradient-to-r from-[#DCEEFB] via-[#E8F3FD] to-[#D8EAFD] p-3.5 sm:p-4.5 pt-3 sm:pt-3.5 pb-3 sm:pb-3.5 border-b border-[#BFDBFE]/60">
+          <div className="flex items-center justify-end mb-1 sm:mb-1.5">
+            <div className="h-5 px-2.5 rounded-full bg-white/90 backdrop-blur-xs text-[#0369A1] border border-sky-200/60 text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
+              <Crown className="w-3 h-3 text-amber-600" />
+              <span>Pro Feature</span>
             </div>
           </div>
-
-          {/* Features List */}
-          <div className="space-y-2.5 sm:space-y-3.5 md:space-y-4 px-0.5 sm:px-1">
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  ATS Compatibility Check
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  See how well your resume passes ATS
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  Recruiter-style Feedback
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  Get actionable, role-specific suggestions
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <FileEdit className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  Bullet Point Rewrite
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  Turn generic points into impactful ones
-                </p>
-              </div>
-            </div>
-          </div>
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-[#0284C7] transition-colors">
+            Resume Review
+          </h3>
         </div>
 
-        {/* Action Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleResumeReviewClick();
-          }}
-          className="w-full bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold py-2.5 sm:py-3 md:py-3.5 px-3 sm:px-4 rounded-xl transition-all shadow-md shadow-slate-900/15 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm cursor-pointer mt-4 sm:mt-6 md:mt-7"
-        >
-          <span>Launch Resume Review (Free)</span>
-          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
+        {/* Card Body */}
+        <div className="p-3.5 sm:p-4.5 flex flex-col justify-between flex-1">
+          <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed min-h-[36px] sm:min-h-[40px]">
+            AI-powered resume analysis with real-time ATS scoring, recruiter insights, and actionable suggestions.
+          </p>
+
+          {/* Action Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResumeReviewClick();
+            }}
+            className="w-full h-10 bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold px-3 sm:px-4 rounded-xl transition-all shadow-md shadow-slate-900/10 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm cursor-pointer mt-3.5 sm:mt-4 shrink-0"
+          >
+            <span>Launch Resume Review (Free)</span>
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+        </div>
       </div>
 
       {/* ── CARD 3: AI Interviews (Locked) ── */}
-      <div className="bg-white rounded-2xl sm:rounded-[24px] md:rounded-[28px] border border-slate-200/80 p-3.5 sm:p-5 md:p-6 shadow-xs flex flex-col justify-between h-full">
-        <div>
-          {/* Top Hero Banner */}
-          <div className="bg-[#F0F5FD] rounded-xl sm:rounded-2xl p-3.5 sm:p-4 md:p-5 relative overflow-hidden mb-3.5 sm:mb-5 md:mb-6 min-h-[160px] sm:min-h-[190px] md:min-h-[220px] flex flex-col justify-between">
-            {/* Top row */}
-            <div className="flex items-center justify-between relative z-10">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-white shadow-xs border border-sky-100 flex items-center justify-center text-[#0284C7]">
-                <Mic className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 text-[#0284C7]" />
-              </div>
-              <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FEE2E2]/70 text-[#DC2626] border border-rose-200/50 text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
-                <Lock className="w-3 h-3 text-[#DC2626]" />
-                <span>Locked</span>
-              </div>
-            </div>
-
-            {/* Bottom content with 3D Laptop */}
-            <div className="flex items-end justify-between gap-2 sm:gap-3 mt-3 sm:mt-4 relative z-10">
-              <div className="max-w-[48%]">
-                <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-slate-900 tracking-tight mb-1 sm:mb-1.5 leading-tight">
-                  AI Interviews
-                </h3>
-                <p className="text-[10.5px] sm:text-xs text-slate-500 leading-snug sm:leading-relaxed font-normal">
-                  Real-time AI voice &amp; technical mock interviews with instant feedback and improvement tips.
-                </p>
-              </div>
-
-              {/* Laptop illustration - compact scale on mobile */}
-              <div className="scale-80 sm:scale-95 md:scale-100 origin-bottom-right shrink-0">
-                <div className="relative w-[130px] sm:w-[138px] flex flex-col items-center shrink-0 select-none">
-                  {/* Screen */}
-                  <div className="w-full bg-[#0F172A] rounded-t-lg border border-slate-700/80 p-1.5 sm:p-2 shadow-lg flex flex-col justify-between h-[76px] sm:h-[84px] relative">
-                    <div className="text-[7px] text-slate-400 font-mono flex items-center justify-between leading-none">
-                      <span>05:34</span>
-                    </div>
-
-                    {/* Waveform */}
-                    <div className="flex items-center justify-center gap-[2px] sm:gap-[2.5px] h-6 sm:h-7 my-auto">
-                      {[4, 8, 14, 20, 12, 17, 24, 18, 13, 21, 15, 9, 5].map((h, i) => (
-                        <span
-                          key={i}
-                          style={{ height: `${h * 0.9}px` }}
-                          className="w-[2px] sm:w-[2.5px] bg-gradient-to-t from-cyan-400 via-sky-400 to-indigo-400 rounded-full drop-shadow-[0_0_4px_rgba(56,189,248,0.7)]"
-                        />
-                      ))}
-                    </div>
-
-                    {/* Controls */}
-                    <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-auto">
-                      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center">
-                        <Mic className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-slate-300" />
-                      </span>
-                      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#4F46E5] text-white flex items-center justify-center">
-                        <Pause className="w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current" />
-                      </span>
-                      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-rose-600 text-white flex items-center justify-center">
-                        <PhoneOff className="w-1.5 h-1.5 sm:w-2 sm:h-2" />
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Base */}
-                  <div className="w-[114%] h-2 sm:h-2.5 bg-gradient-to-b from-slate-300 via-slate-400 to-slate-500 rounded-b-md shadow-md flex justify-center items-start pt-0.5 border-t border-slate-400/80">
-                    <div className="w-6 sm:w-7 h-0.5 bg-slate-600/70 rounded-full" />
-                  </div>
-                </div>
-              </div>
+      <div className="bg-white rounded-2xl sm:rounded-[24px] md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden self-start">
+        {/* Top Pink Gradient Header filled till AI Interviews */}
+        <div className="w-full bg-gradient-to-r from-[#F0D5EC] via-[#FCE3F4] to-[#EBD5F5] p-3.5 sm:p-4.5 pt-3 sm:pt-3.5 pb-3 sm:pb-3.5 border-b border-[#ECCEE7]/70">
+          <div className="flex items-center justify-end mb-1 sm:mb-1.5">
+            <div className="h-5 px-2.5 rounded-full bg-white/90 backdrop-blur-xs text-[#DC2626] border border-rose-200/60 text-[10px] sm:text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
+              <Lock className="w-3 h-3 text-[#DC2626]" />
+              <span>Locked</span>
             </div>
           </div>
-
-          {/* Features List */}
-          <div className="space-y-2.5 sm:space-y-3.5 md:space-y-4 px-0.5 sm:px-1">
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  Real-time AI Interviewer
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  Voice &amp; technical mock interviews
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <Code2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  DSA Practice Problems
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  Practice curated company questions
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 border border-slate-100">
-                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                  Detailed Performance Report
-                </h4>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5">
-                  Get scored feedback &amp; improvement tips
-                </p>
-              </div>
-            </div>
-          </div>
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+            AI Interviews
+          </h3>
         </div>
 
-        {/* Action Button */}
-        <button
-          disabled
-          className="w-full bg-[#F1F5F9] border border-slate-200/70 text-slate-400 font-bold py-2.5 sm:py-3 md:py-3.5 px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm cursor-not-allowed mt-4 sm:mt-6 md:mt-7"
-        >
-          <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
-          <span>AI Interviews Locked</span>
-        </button>
+        {/* Card Body */}
+        <div className="p-3.5 sm:p-4.5 flex flex-col justify-between flex-1">
+          <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed min-h-[36px] sm:min-h-[40px]">
+            A real-time AI interview simulator that evaluates your voice, technical responses, and communication from start to finish.
+          </p>
+
+          {/* Action Button */}
+          <button
+            disabled
+            className="w-full h-10 bg-[#F1F5F9] border border-slate-200/70 text-slate-400 font-bold px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm cursor-not-allowed mt-3.5 sm:mt-4 shrink-0"
+          >
+            <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+            <span>AI Interviews Locked</span>
+          </button>
+        </div>
       </div>
     </div>
   );
