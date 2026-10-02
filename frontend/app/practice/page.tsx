@@ -311,13 +311,13 @@ function PracticeContent() {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
+              <StriverA2ZDSASheetCard onSelect={() => setSelectedMode("striver-sheet")} />
+            </div>
+            <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
               <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
             </div>
             <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
               <ShradhaDSASheetCard onSelect={() => setSelectedMode("shradha-sheet")} />
-            </div>
-            <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
-              <StriverA2ZDSASheetCard onSelect={() => setSelectedMode("striver-sheet")} />
             </div>
           </div>
         </div>
