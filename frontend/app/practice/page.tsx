@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
 import {
@@ -28,6 +28,8 @@ import { PenguinDSASheetCard } from "@/components/practice/PenguinDSASheetCard";
 import { PenguinDSASheetView } from "@/components/practice/PenguinDSASheetView";
 import { ShradhaDSASheetCard } from "@/components/practice/ShradhaDSASheetCard";
 import { ShradhaDSASheetView } from "@/components/practice/ShradhaDSASheetView";
+import { StriverA2ZDSASheetCard } from "@/components/practice/StriverA2ZDSASheetCard";
+import { StriverA2ZDSASheetView } from "@/components/practice/StriverA2ZDSASheetView";
 import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
 import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
 import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
@@ -43,16 +45,24 @@ function PracticeContent() {
   const { canAccess, isPremium } = useSubscription();
   const hasCompanyAccess = canAccess("company_interview_questions");
   const searchParams = useSearchParams();
+  const sheetsScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollSheets = (distance: number) => {
+    if (sheetsScrollRef.current) {
+      sheetsScrollRef.current.scrollBy({ left: distance, behavior: "smooth" });
+    }
+  };
 
   const urlCompany = searchParams?.get("company");
   const urlPeriod = searchParams?.get("period");
   const urlMode = searchParams?.get("mode");
 
-  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company" | "penguin-sheet" | "shradha-sheet">(() => {
+  const [selectedMode, setSelectedMode] = useState<"index" | "beginner" | "company" | "penguin-sheet" | "shradha-sheet" | "striver-sheet">(() => {
     if (urlCompany || urlMode === "company") return "company";
     if (urlMode === "beginner") return "beginner";
     if (urlMode === "sheet" || urlMode === "penguin-sheet") return "penguin-sheet";
     if (urlMode === "shradha" || urlMode === "shradha-sheet") return "shradha-sheet";
+    if (urlMode === "striver" || urlMode === "striver-sheet") return "striver-sheet";
     return "index";
   });
 
@@ -104,6 +114,8 @@ function PracticeContent() {
       setSelectedMode("penguin-sheet");
     } else if (m === "shradha" || m === "shradha-sheet") {
       setSelectedMode("shradha-sheet");
+    } else if (m === "striver" || m === "striver-sheet") {
+      setSelectedMode("striver-sheet");
     } else if (m === "index") {
       setSelectedMode("index");
     }
@@ -239,17 +251,52 @@ function PracticeContent() {
             companiesCount={companiesList.length}
           />
 
-          {/* ── DSA SHEETS Heading ── */}
-          <div className="max-w-5xl mx-auto w-full text-left pt-2 sm:pt-4">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              DSA SHEETS
-            </h2>
+          {/* ── DSA SHEETS Heading with Horizontal Scroll Controls ── */}
+          <div className="max-w-5xl mx-auto w-full flex items-center justify-between pt-2 sm:pt-4">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                DSA SHEETS
+              </h2>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200/80">
+                Scroll sideways →
+              </span>
+            </div>
+
+            {/* Scroll Navigation Chevrons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => scrollSheets(-340)}
+                aria-label="Scroll left"
+                className="w-8 h-8 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollSheets(340)}
+                aria-label="Scroll right"
+                className="w-8 h-8 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* ── DSA Sheet Cards: Penguin Sheet & Shradha Didi Sheet Side-by-Side ── */}
-          <div className="max-w-5xl mx-auto w-full grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-6 items-stretch justify-start">
-            <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
-            <ShradhaDSASheetCard onSelect={() => setSelectedMode("shradha-sheet")} />
+          {/* ── DSA Sheet Cards: Horizontal Scrollable Row Side-by-Side ── */}
+          <div
+            ref={sheetsScrollRef}
+            className="max-w-5xl mx-auto w-full flex items-stretch gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 px-1 no-scrollbar mobile-touch-scroll scroll-smooth snap-x snap-mandatory"
+          >
+            <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
+              <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />
+            </div>
+            <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
+              <ShradhaDSASheetCard onSelect={() => setSelectedMode("shradha-sheet")} />
+            </div>
+            <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
+              <StriverA2ZDSASheetCard onSelect={() => setSelectedMode("striver-sheet")} />
+            </div>
           </div>
         </div>
       )}
@@ -262,6 +309,11 @@ function PracticeContent() {
       {/* ── MODE 4: SHRADHA DIDI DSA SHEET VIEW ── */}
       {selectedMode === "shradha-sheet" && (
         <ShradhaDSASheetView />
+      )}
+
+      {/* ── MODE 5: STRIVER A2Z DSA SHEET VIEW ── */}
+      {selectedMode === "striver-sheet" && (
+        <StriverA2ZDSASheetView />
       )}
 
       {/* ── MODE 1: BEGINNER LEVEL — DSA LEARNING ROADMAP TREE */}
