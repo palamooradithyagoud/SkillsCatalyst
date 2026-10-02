@@ -14,7 +14,7 @@ export default function CareerHeader() {
               Career Acceleration
             </h1>
             <span className="px-3 py-0.5 rounded-full bg-[#EEF2FF] border border-indigo-100 text-[#4F46E5] text-[10px] font-black tracking-wider uppercase shadow-2xs">
-              AI CAREER SUITE
+              PLACEMENT PREP
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
