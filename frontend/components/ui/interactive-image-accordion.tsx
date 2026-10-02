@@ -253,10 +253,10 @@ export function LandingAccordionItem({
             </h2>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch gap-2.5 sm:gap-3 mt-1 sm:mt-2">
-            {/* Card 1: Dark Purple Card (~260px) */}
-            <div className="w-full sm:w-[210px] md:w-[220px] bg-[#2E1065] rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-950/70 min-h-[240px] sm:min-h-[260px] flex flex-col justify-around">
-              <div className="space-y-3.5 sm:space-y-4 text-left">
+          <div className="flex flex-row items-stretch gap-2 sm:gap-2.5 md:gap-3 mt-1 sm:mt-2 w-full max-w-full">
+            {/* Card 1: Dark Purple Card */}
+            <div className="flex-1 min-w-0 bg-[#2E1065] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-950/70 min-h-[220px] sm:min-h-[250px] flex flex-col justify-around">
+              <div className="space-y-3 sm:space-y-3.5 text-left">
                 {items.map((item, idx) => (
                   <div
                     key={item.id}
@@ -265,7 +265,7 @@ export function LandingAccordionItem({
                       handleActionClick(item);
                     }}
                     onMouseEnter={() => setActiveIndex(idx)}
-                    className="flex items-center gap-2.5 cursor-pointer group py-0.5"
+                    className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group py-0.5"
                   >
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 transition-all ${
@@ -275,7 +275,7 @@ export function LandingAccordionItem({
                       }`}
                     />
                     <span
-                      className={`text-xs sm:text-sm tracking-tight transition-colors ${
+                      className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
                         activeIndex === idx
                           ? "text-white font-black"
                           : "text-purple-100 font-semibold group-hover:text-white"
@@ -288,9 +288,9 @@ export function LandingAccordionItem({
               </div>
             </div>
 
-            {/* Card 2: White Card (~260px) with Dark Text */}
-            <div className="w-full sm:w-[210px] md:w-[220px] bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-200/90 min-h-[240px] sm:min-h-[260px] flex flex-col justify-around">
-              <div className="space-y-3.5 sm:space-y-4 text-left">
+            {/* Card 2: White Card with Dark Text */}
+            <div className="flex-1 min-w-0 bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-200/90 min-h-[220px] sm:min-h-[250px] flex flex-col justify-around">
+              <div className="space-y-3 sm:space-y-3.5 text-left">
                 {[
                   { title: "ATS Resume Scan", index: 0 },
                   { title: "Practice Questions", index: 1 },
@@ -305,7 +305,7 @@ export function LandingAccordionItem({
                       handleActionClick(items[feature.index]);
                     }}
                     onMouseEnter={() => setActiveIndex(feature.index)}
-                    className="flex items-center gap-2.5 cursor-pointer group py-0.5"
+                    className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group py-0.5"
                   >
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 transition-all ${
@@ -315,7 +315,7 @@ export function LandingAccordionItem({
                       }`}
                     />
                     <span
-                      className={`text-xs sm:text-sm tracking-tight transition-colors ${
+                      className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
                         activeIndex === feature.index
                           ? "text-black font-black"
                           : "text-slate-800 font-semibold group-hover:text-black"
@@ -330,8 +330,8 @@ export function LandingAccordionItem({
           </div>
         </div>
 
-        {/* Right Side: Clean Interactive Image Accordion */}
-        <div className="w-full xl:w-7/12 flex items-center justify-center">
+        {/* Right Side: Clean Interactive Image Accordion (Desktop only) */}
+        <div className="hidden xl:flex w-full xl:w-7/12 items-center justify-center">
           <div className="flex flex-row items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 w-full">
             {items.map((item, index) => (
               <AccordionItem
