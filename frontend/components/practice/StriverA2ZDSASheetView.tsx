@@ -373,9 +373,9 @@ export function StriverA2ZDSASheetView() {
           />
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
           {/* Left Column: Clean Title + Progress Tracker */}
-          <div className="flex flex-col gap-4 sm:gap-5 flex-1 w-full max-w-lg pointer-events-auto">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-4 sm:gap-5 flex-1 w-full max-w-lg lg:max-w-md pointer-events-auto">
             {/* Title */}
             <div>
               <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-[40px] font-black text-white tracking-tight leading-tight drop-shadow-md">
@@ -387,7 +387,7 @@ export function StriverA2ZDSASheetView() {
             </div>
 
             {/* "YOUR PROGRESS" TRACKER CARD (MATCHING REFERENCE WITH OUR PALETTE) */}
-            <div className="bg-[#0b1410]/95 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[360px]">
+            <div className="bg-[#0b1410]/95 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full max-w-[380px] text-left">
               {/* Header */}
               <div className="text-[11px] font-bold text-slate-400 tracking-wider uppercase pb-3 border-b border-white/10">
                 YOUR PROGRESS
@@ -463,8 +463,8 @@ export function StriverA2ZDSASheetView() {
           </div>
 
           {/* Right Column: Striver 16:9 Thumbnail (Fits completely without cropping) */}
-          <div className="shrink-0 flex items-center justify-center pointer-events-auto w-full md:w-auto">
-            <div className="relative w-full max-w-[340px] xs:max-w-[380px] sm:max-w-[420px] md:w-[410px] lg:w-[450px] aspect-[16/9] rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)] hover:shadow-[0_0_60px_rgba(16,185,129,0.55)] transition-all duration-300 group">
+          <div className="shrink-0 flex items-center justify-center pointer-events-auto w-full lg:w-auto">
+            <div className="relative w-full max-w-[340px] xs:max-w-[380px] sm:max-w-[420px] md:max-w-[450px] lg:w-[450px] aspect-[16/9] rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)] hover:shadow-[0_0_60px_rgba(16,185,129,0.55)] transition-all duration-300 group">
               <Image
                 src="/images/practice/striver_a2z_sheet.jpg"
                 alt="Striver A2Z DSA Sheet"

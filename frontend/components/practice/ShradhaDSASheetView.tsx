@@ -439,9 +439,9 @@ export function ShradhaDSASheetView() {
           />
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
           {/* Left Column: Clean Title + Progress Tracker */}
-          <div className="flex flex-col gap-4 sm:gap-5 flex-1 w-full max-w-lg pointer-events-auto">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-4 sm:gap-5 flex-1 w-full max-w-lg pointer-events-auto">
             {/* Clean Bold Title */}
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
@@ -536,7 +536,7 @@ export function ShradhaDSASheetView() {
           </div>
 
           {/* Right Column: Shradha Didi Image (At Right Side) */}
-          <div className="shrink-0 flex items-center justify-center pointer-events-auto">
+          <div className="shrink-0 flex items-center justify-center pointer-events-auto w-full lg:w-auto">
             <div className="relative w-52 h-52 sm:w-60 sm:h-60 md:w-68 md:h-68 rounded-2xl overflow-hidden border-2 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.35)] hover:shadow-[0_0_60px_rgba(249,115,22,0.55)] transition-all duration-300 group">
               <Image
                 src="/images/practice/shradha_dsa_30_days.jpg"

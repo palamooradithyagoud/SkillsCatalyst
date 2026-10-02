@@ -64,18 +64,6 @@ export function StriverA2ZDSASheetCard({ onSelect }: StriverA2ZDSASheetCardProps
             <span className="text-emerald-600 font-bold hidden sm:inline">Ex-Google</span>
             <span className="text-emerald-600 font-bold sm:hidden">Ex-Googler</span>
           </p>
-
-          {/* Company Badges Strip (Desktop only to maintain symmetrical height on mobile) */}
-          <div className="hidden sm:flex items-center gap-1 mt-2.5 flex-wrap">
-            {["Google", "Amazon", "Microsoft", "Meta", "Uber"].map((co) => (
-              <span
-                key={co}
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200/60"
-              >
-                {co}
-              </span>
-            ))}
-          </div>
         </div>
 
         {/* Problems Count with Bookmark/Book Icon */}
