@@ -246,134 +246,45 @@ export function LandingAccordionItem({
 
       <div className="relative z-10 flex flex-col xl:flex-row items-start justify-between gap-4 md:gap-5">
         {/* Left Side: Placement Copy & 5 Interactive Module Selectors */}
-        <div className="w-full xl:w-5/12 text-center xl:text-left flex flex-col justify-between self-stretch pt-0.5 sm:pt-1">
+        <div className="w-full xl:w-5/12 text-center xl:text-left flex flex-col justify-start self-start pt-0.5 sm:pt-1">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-[26px] font-black text-slate-900 leading-tight tracking-tight mb-3 sm:mb-3.5">
+            <h2 className="text-xl sm:text-2xl md:text-[26px] font-black text-slate-900 leading-tight tracking-tight mb-2 sm:mb-2.5">
               Placement &amp; Career Acceleration
             </h2>
           </div>
 
-          {/* Quick value props pill list - All 5 distinct placement areas */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-1.5 text-left mt-auto">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIndex(0);
-                handleActionClick(items[0]);
-              }}
-              onMouseEnter={() => setActiveIndex(0)}
-              className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                activeIndex === 0
-                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
-                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                <FileText className="w-3 h-3" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10.5px] font-bold text-slate-900 block truncate">
-                  Resume Review
-                </span>
-                <span className="text-[9px] text-slate-500 block truncate">ATS Score &amp; Rewrites</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIndex(1);
-                handleActionClick(items[1]);
-              }}
-              onMouseEnter={() => setActiveIndex(1)}
-              className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                activeIndex === 1
-                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
-                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                <Calculator className="w-3 h-3" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10.5px] font-bold text-slate-900 block truncate">
-                  Quantitative Aptitude
-                </span>
-                <span className="text-[9px] text-slate-500 block truncate">Formulas &amp; Tests</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIndex(2);
-                handleActionClick(items[2]);
-              }}
-              onMouseEnter={() => setActiveIndex(2)}
-              className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                activeIndex === 2
-                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
-                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-violet-100 text-violet-700 flex items-center justify-center shrink-0">
-                <Brain className="w-3 h-3" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10.5px] font-bold text-slate-900 block truncate">
-                  Logical Reasoning
-                </span>
-                <span className="text-[9px] text-slate-500 block truncate">Puzzles &amp; Patterns</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIndex(3);
-                handleActionClick(items[3]);
-              }}
-              onMouseEnter={() => setActiveIndex(3)}
-              className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                activeIndex === 3
-                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
-                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-3 h-3" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10.5px] font-bold text-slate-900 block truncate">
-                  Verbal Ability
-                </span>
-                <span className="text-[9px] text-slate-500 block truncate">Grammar &amp; GD Prep</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIndex(4);
-                handleActionClick(items[4]);
-              }}
-              onMouseEnter={() => setActiveIndex(4)}
-              className={`col-span-2 sm:col-span-1 xl:col-span-2 flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                activeIndex === 4
-                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
-                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
-              }`}
-            >
-              <div className="w-5 h-5 rounded-md bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
-                <Mic className="w-3 h-3" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10.5px] font-bold text-slate-900 block truncate">
-                  AI Interviews
-                </span>
-                <span className="text-[9px] text-slate-500 block truncate">Live Technical &amp; HR Mock</span>
-              </div>
-            </button>
+          {/* Single Dark Purple Card - Taller Height & Generous Vertical Spacing */}
+          <div className="w-fit min-w-[220px] max-w-[270px] bg-[#2E1065] rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm border border-purple-950/70 mt-1 sm:mt-2 min-h-[240px] sm:min-h-[260px] flex flex-col justify-around">
+            <div className="space-y-3.5 sm:space-y-4 text-left">
+              {items.map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    setActiveIndex(idx);
+                    handleActionClick(item);
+                  }}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  className="flex items-center gap-2.5 cursor-pointer group py-0.5"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 transition-all ${
+                      activeIndex === idx
+                        ? "bg-white ring-2 ring-purple-400 scale-125"
+                        : "bg-purple-400/50 group-hover:bg-purple-300"
+                    }`}
+                  />
+                  <span
+                    className={`text-xs sm:text-sm tracking-tight transition-colors ${
+                      activeIndex === idx
+                        ? "text-white font-black"
+                        : "text-purple-100 font-semibold group-hover:text-white"
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
