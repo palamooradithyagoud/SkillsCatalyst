@@ -244,15 +244,17 @@ export function LandingAccordionItem({
       <div className="absolute -top-28 -left-28 w-72 h-72 bg-[#D4B5F3]/35 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-28 -right-28 w-72 h-72 bg-[#C8A2C8]/25 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-4 md:gap-5">
+      <div className="relative z-10 flex flex-col xl:flex-row items-start justify-between gap-4 md:gap-5">
         {/* Left Side: Placement Copy & 5 Interactive Module Selectors */}
-        <div className="w-full xl:w-5/12 text-center xl:text-left space-y-2.5">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight">
-            Placement &amp; Career Acceleration
-          </h2>
+        <div className="w-full xl:w-5/12 text-center xl:text-left flex flex-col justify-between self-stretch pt-0.5 sm:pt-1">
+          <div>
+            <h2 className="text-xl sm:text-2xl md:text-[26px] font-black text-slate-900 leading-tight tracking-tight mb-3 sm:mb-3.5">
+              Placement &amp; Career Acceleration
+            </h2>
+          </div>
 
           {/* Quick value props pill list - All 5 distinct placement areas */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-1.5 text-left pt-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-1.5 text-left mt-auto">
             <button
               type="button"
               onClick={() => {
