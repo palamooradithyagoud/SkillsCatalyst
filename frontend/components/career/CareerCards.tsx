@@ -37,8 +37,9 @@ export default function CareerCards({
           </h2>
         </div>
 
-        {/* ── TOP: Aptitude & Reasoning ── */}
-        <div className="flex">
+        {/* ── TOP ROW: Aptitude & Reasoning + Reasoning ── */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6">
+          {/* ── CARD 1: Aptitude & Reasoning ── */}
           <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
             <div
               onClick={onOpenPlacementPrep}
@@ -70,6 +71,43 @@ export default function CareerCards({
                 >
                   <span className="sm:hidden">Start</span>
                   <span className="hidden sm:inline">Start Aptitude &amp; Reasoning</span>
+                  <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CARD: Reasoning (Pale Purple) ── */}
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <div
+              onClick={onOpenPlacementPrep}
+              className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
+            >
+              {/* Top Pale Purple Gradient Header */}
+              <div className="w-full bg-gradient-to-r from-[#EDE9FE] via-[#F5F3FF] to-[#E0E7FF] p-2 sm:p-3.5 md:p-4.5 pt-2 sm:pt-3 pb-2 sm:pb-3 border-b border-[#DDD6FE]/70">
+                <div className="h-4 sm:h-5 mb-1 sm:mb-1.5" />
+                <h3 className="text-xs sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-purple-700 transition-colors">
+                  Reasoning
+                </h3>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-2 sm:p-3.5 md:p-4.5 flex flex-col justify-between flex-1">
+                <p className="text-[10px] sm:text-xs md:text-sm text-slate-600 font-normal leading-snug sm:leading-relaxed min-h-[28px] sm:min-h-[40px] line-clamp-3 sm:line-clamp-none">
+                  Logical puzzles, deductive reasoning, analytical seating, and pattern problem-solving.
+                </p>
+
+                {/* Action Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenPlacementPrep();
+                  }}
+                  className="w-full h-8 sm:h-10 bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold px-2 sm:px-4 rounded-lg sm:rounded-xl transition-all shadow-md shadow-slate-900/10 flex items-center justify-center gap-1 sm:gap-2 text-[10.5px] sm:text-xs cursor-pointer mt-2.5 sm:mt-4 shrink-0"
+                >
+                  <span className="sm:hidden">Start</span>
+                  <span className="hidden sm:inline">Start Reasoning</span>
                   <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 </button>
               </div>
