@@ -239,93 +239,89 @@ export function LandingAccordionItem({
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-[#EFE5FB] via-[#E8DCF8] to-[#DFCEF5] hover:from-[#EDE1FA] hover:to-[#DAC7F2] transition-colors rounded-2xl p-3 sm:p-4 md:p-4.5 shadow-sm border border-[#CFB6EE]/90 relative overflow-hidden">
+    <div className="w-full bg-gradient-to-br from-[#EFE5FB] via-[#E8DCF8] to-[#DFCEF5] hover:from-[#EDE1FA] hover:to-[#DAC7F2] transition-colors rounded-none xl:rounded-2xl px-3 py-3 sm:px-5 sm:py-4 xl:p-4.5 shadow-sm border-y xl:border border-[#CFB6EE]/90 relative overflow-hidden">
       {/* Decorative subtle lilac aura */}
       <div className="absolute -top-28 -left-28 w-72 h-72 bg-[#D4B5F3]/35 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-28 -right-28 w-72 h-72 bg-[#C8A2C8]/25 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col xl:flex-row items-start justify-between gap-4 md:gap-5">
+      <div className="relative z-10 flex flex-col xl:flex-row items-start justify-between gap-3 md:gap-5">
         {/* Left Side: Placement Copy & 2 Cards Side-by-Side */}
-        <div className="w-full xl:w-auto xl:flex-1 text-center xl:text-left flex flex-col justify-start self-start pt-0.5 sm:pt-1">
+        <div className="w-full xl:w-auto xl:flex-1 text-center xl:text-left flex flex-col justify-start self-start">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-[26px] font-black text-slate-900 leading-tight tracking-tight mb-2 sm:mb-2.5">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight mb-2 sm:mb-2.5">
               Placement &amp; Career Acceleration
             </h2>
           </div>
 
-          <div className="flex flex-row items-stretch gap-2 sm:gap-2.5 md:gap-3 mt-1 sm:mt-2 w-full max-w-full">
+          <div className="flex flex-row items-stretch gap-2 sm:gap-2.5 md:gap-3 w-full max-w-full">
             {/* Card 1: Dark Purple Card */}
-            <div className="flex-1 min-w-0 bg-[#2E1065] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-950/70 min-h-[220px] sm:min-h-[250px] flex flex-col justify-around">
-              <div className="space-y-3 sm:space-y-3.5 text-left">
-                {items.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      setActiveIndex(idx);
-                      handleActionClick(item);
-                    }}
-                    onMouseEnter={() => setActiveIndex(idx)}
-                    className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group py-0.5"
+            <div className="flex-1 min-w-0 bg-[#2E1065] rounded-xl sm:rounded-2xl px-2.5 py-3 sm:px-3.5 sm:py-3.5 md:px-4 md:py-4 shadow-sm border border-purple-950/70 flex flex-col justify-between gap-2.5 sm:gap-3 text-left">
+              {items.map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    setActiveIndex(idx);
+                    handleActionClick(item);
+                  }}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group py-0.5"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 transition-all ${
+                      activeIndex === idx
+                        ? "bg-white ring-2 ring-purple-400 scale-125"
+                        : "bg-purple-400/50 group-hover:bg-purple-300"
+                    }`}
+                  />
+                  <span
+                    className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
+                      activeIndex === idx
+                        ? "text-white font-black"
+                        : "text-purple-100 font-semibold group-hover:text-white"
+                    }`}
                   >
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 transition-all ${
-                        activeIndex === idx
-                          ? "bg-white ring-2 ring-purple-400 scale-125"
-                          : "bg-purple-400/50 group-hover:bg-purple-300"
-                      }`}
-                    />
-                    <span
-                      className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
-                        activeIndex === idx
-                          ? "text-white font-black"
-                          : "text-purple-100 font-semibold group-hover:text-white"
-                      }`}
-                    >
-                      {item.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    {item.title}
+                  </span>
+                </div>
+              ))}
             </div>
 
             {/* Card 2: White Card with Dark Text */}
-            <div className="flex-1 min-w-0 bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-200/90 min-h-[220px] sm:min-h-[250px] flex flex-col justify-around">
-              <div className="space-y-3 sm:space-y-3.5 text-left">
-                {[
-                  { title: "ATS Resume Scan", index: 0 },
-                  { title: "Practice Questions", index: 1 },
-                  { title: "Reasoning Puzzles", index: 2 },
-                  { title: "Verbal & GD Prep", index: 3 },
-                  { title: "AI Mock Tests", index: 4 },
-                ].map((feature) => (
-                  <div
-                    key={feature.title}
-                    onClick={() => {
-                      setActiveIndex(feature.index);
-                      handleActionClick(items[feature.index]);
-                    }}
-                    onMouseEnter={() => setActiveIndex(feature.index)}
-                    className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group py-0.5"
+            <div className="flex-1 min-w-0 bg-white rounded-xl sm:rounded-2xl px-2.5 py-3 sm:px-3.5 sm:py-3.5 md:px-4 md:py-4 shadow-sm border border-purple-200/90 flex flex-col justify-between gap-2.5 sm:gap-3 text-left">
+              {[
+                { title: "ATS Resume Scan", index: 0 },
+                { title: "Practice Questions", index: 1 },
+                { title: "Reasoning Puzzles", index: 2 },
+                { title: "Verbal & GD Prep", index: 3 },
+                { title: "AI Mock Tests", index: 4 },
+              ].map((feature) => (
+                <div
+                  key={feature.title}
+                  onClick={() => {
+                    setActiveIndex(feature.index);
+                    handleActionClick(items[feature.index]);
+                  }}
+                  onMouseEnter={() => setActiveIndex(feature.index)}
+                  className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group py-0.5"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 transition-all ${
+                      activeIndex === feature.index
+                        ? "bg-[#2E1065] ring-2 ring-purple-400 scale-125"
+                        : "bg-slate-300 group-hover:bg-purple-500"
+                    }`}
+                  />
+                  <span
+                    className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
+                      activeIndex === feature.index
+                        ? "text-black font-black"
+                        : "text-slate-800 font-semibold group-hover:text-black"
+                    }`}
                   >
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 transition-all ${
-                        activeIndex === feature.index
-                          ? "bg-[#2E1065] ring-2 ring-purple-400 scale-125"
-                          : "bg-slate-300 group-hover:bg-purple-500"
-                      }`}
-                    />
-                    <span
-                      className={`text-[11.5px] sm:text-xs md:text-sm tracking-tight truncate transition-colors ${
-                        activeIndex === feature.index
-                          ? "text-black font-black"
-                          : "text-slate-800 font-semibold group-hover:text-black"
-                      }`}
-                    >
-                      {feature.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    {feature.title}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
