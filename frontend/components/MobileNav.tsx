@@ -20,7 +20,6 @@ import {
   Search,
   Bell,
   LifeBuoy,
-  ArrowLeft,
   GraduationCap,
   Newspaper,
   Calendar,
@@ -142,9 +141,10 @@ function MobileNavContent() {
   const userEmail = session?.email || "Guest User";
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
 
-  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, edit profile page, or SkillBits reels
+  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, edit profile page, SkillBits reels, or career page
   const isHideBottomBar =
     isExplicitlyHidden ||
+    pathname.startsWith("/career") ||
     pathname.startsWith("/skillbits") ||
     (pathname === "/learning" && isLearningPlayer) ||
     (pathname === "/practice" && isPracticeSubView) ||

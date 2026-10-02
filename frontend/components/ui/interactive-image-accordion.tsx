@@ -8,6 +8,7 @@ import {
   Brain,
   MessageSquare,
   Mic,
+  ArrowLeft,
 } from "lucide-react";
 
 export interface AccordionItemData {
@@ -196,15 +197,29 @@ export interface LandingAccordionItemProps {
   items?: AccordionItemData[];
   onOpenPlacementPrep?: () => void;
   onOpenResumeReview?: () => void;
+  onBack?: () => void;
+  showBackButton?: boolean;
 }
 
 export function LandingAccordionItem({
   items = CAREER_ACCORDION_ITEMS,
   onOpenPlacementPrep,
   onOpenResumeReview,
+  onBack,
+  showBackButton = true,
 }: LandingAccordionItemProps) {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   const handleActionClick = (item: AccordionItemData) => {
     if (item.key === "resume-review") {
@@ -247,8 +262,18 @@ export function LandingAccordionItem({
       <div className="relative z-10 flex flex-col xl:flex-row items-start justify-between gap-3 md:gap-5">
         {/* Left Side: Placement Copy & 2 Cards Side-by-Side */}
         <div className="w-full xl:w-auto xl:flex-1 text-center xl:text-left flex flex-col justify-start self-start">
-          <div>
-            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight mb-2 sm:mb-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 mb-2 sm:mb-2.5 justify-start">
+            {showBackButton && (
+              <button
+                type="button"
+                onClick={handleBack}
+                aria-label="Go Back"
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-black text-white hover:bg-neutral-800 active:scale-95 transition-all flex items-center justify-center shadow-xs shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </button>
+            )}
+            <h2 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 leading-tight tracking-tight text-left">
               Placement &amp; Career Acceleration
             </h2>
           </div>

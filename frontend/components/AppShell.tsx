@@ -44,6 +44,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const isEditProfile = pathname.startsWith("/settings/edit") || pathname.startsWith("/profile/edit");
   const isSkillBits = pathname.startsWith("/skillbits");
+  const isCareer = pathname.startsWith("/career");
 
   return (
     <PricingModalProvider>
@@ -70,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             className={`relative z-10 flex-1 ${
               isSkillBits
                 ? "p-0 overflow-hidden h-[100dvh] md:h-[calc(100dvh-3.5rem)] bg-black"
-                : `${isEditProfile ? "pb-28 sm:pb-32 md:pb-28" : "pb-28 md:pb-8"} p-3.5 sm:p-6 md:p-8 lg:p-10 overflow-y-auto`
+                : `${isEditProfile ? "pb-28 sm:pb-32 md:pb-28" : isCareer ? "pb-8" : "pb-28 md:pb-8"} p-3.5 sm:p-6 md:p-8 lg:p-10 overflow-y-auto`
             } max-w-full overflow-x-hidden min-w-0`}
           >
             <ErrorBoundary>
