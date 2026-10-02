@@ -82,6 +82,30 @@ function PracticeContent() {
     };
   }, [selectedMode]);
 
+  // Ensure view resets to top whenever user opens any card or switches mode
+  useEffect(() => {
+    const resetScroll = () => {
+      if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+        const mainElem = document.querySelector("main");
+        if (mainElem) {
+          mainElem.scrollTop = 0;
+        }
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    };
+
+    resetScroll();
+    const frameId = requestAnimationFrame(resetScroll);
+    const timerId = setTimeout(resetScroll, 60);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timerId);
+    };
+  }, [selectedMode]);
+
   const [companiesList, setCompaniesList] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(() => {
     if (urlCompany) return urlCompany.toLowerCase();

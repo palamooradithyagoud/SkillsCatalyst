@@ -43,8 +43,17 @@ export function PenguinDSASheetView() {
 
   const heroCardRef = useRef<HTMLDivElement>(null);
 
-  // Load solved state from localStorage
+  // Load solved state from localStorage & scroll to top
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+      const mainElem = document.querySelector("main");
+      if (mainElem) {
+        mainElem.scrollTop = 0;
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {

@@ -128,6 +128,15 @@ export function ShradhaDSASheetView() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+      const mainElem = document.querySelector("main");
+      if (mainElem) {
+        mainElem.scrollTop = 0;
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   }, []);
 
   const [solvedIds, setSolvedIds] = useState<Set<string>>(() => new Set());

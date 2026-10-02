@@ -81,9 +81,9 @@ export function StriverA2ZDSASheetCard({ onSelect }: StriverA2ZDSASheetCardProps
         {/* Problems Count with Bookmark/Book Icon */}
         <div className="flex items-center gap-1 sm:gap-1.5 text-slate-700 text-[10px] sm:text-[13px] font-semibold mt-2 sm:mt-3.5 pt-1.5 sm:pt-2.5 border-t border-slate-100">
           <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 shrink-0" />
-          <span className="text-slate-900 font-bold">A2Z DSA Sheet</span>
-          <span className="text-slate-300 hidden sm:inline">•</span>
-          <span className="text-slate-500 font-medium hidden sm:inline">Step-by-Step</span>
+          <span className="text-slate-900 font-bold">455 Problems</span>
+          <span className="text-slate-300">•</span>
+          <span className="text-slate-500 font-medium">18 Steps</span>
         </div>
       </div>
     </motion.div>
