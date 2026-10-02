@@ -54,9 +54,12 @@ const TOPIC_ID_MAP: Record<string, number> = {
   "Sentence Correction": 15,
 };
 
+export type PrepCategory = "Quantitative Aptitude" | "Logical Reasoning" | "Verbal Ability" | "All";
+
 interface PlacementPrepModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialCategory?: PrepCategory | null;
 }
 
 const PLACEMENT_PREP_DATA = {
@@ -162,7 +165,11 @@ const PLACEMENT_PREP_DATA = {
   ],
 };
 
-export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepModalProps) {
+export default function PlacementPrepModal({
+  isOpen,
+  onClose,
+  initialCategory = null,
+}: PlacementPrepModalProps) {
   const { canAccess } = useSubscription();
   const hasPlacementAccess = canAccess("placement_prep");
   const [activeTab, setActiveTab] = useState<"aptitude" | "mockTests">("aptitude");
@@ -172,6 +179,21 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Filter sections according to initialCategory
+  const filteredAptitudeSections = React.useMemo(() => {
+    if (!initialCategory || initialCategory === "All") {
+      return PLACEMENT_PREP_DATA.aptitude;
+    }
+    const catLower = initialCategory.toLowerCase();
+    return PLACEMENT_PREP_DATA.aptitude.filter((sec) => {
+      const secLower = sec.category.toLowerCase();
+      if (catLower.includes("quant") && secLower.includes("quant")) return true;
+      if (catLower.includes("reason") && secLower.includes("reason")) return true;
+      if (catLower.includes("verbal") && secLower.includes("verbal")) return true;
+      return secLower === catLower;
+    });
+  }, [initialCategory]);
 
   // Practice State
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -456,11 +478,17 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
               )}
               <div className="min-w-0 flex-1">
                 <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight truncate leading-tight">
-                  {selectedTopic ? `${selectedTopic} Practice` : "Placement Preparation"}
+                  {selectedTopic
+                    ? `${selectedTopic} Practice`
+                    : initialCategory && initialCategory !== "All"
+                    ? `${initialCategory} Questions`
+                    : "Placement Preparation"}
                 </h2>
                 <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block mt-0.5">
                   {selectedTopic
                     ? `${totalQuestions} Questions • Practice Mode`
+                    : initialCategory && initialCategory !== "All"
+                    ? `${initialCategory} topic questions and step-by-step solutions`
                     : "Aptitude, Reasoning, Verbal & Mock Tests"}
                 </p>
               </div>
@@ -537,7 +565,11 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                   }`}
                 >
                   <Brain className="w-4 h-4" />
-                  <span>Aptitude &amp; Reasoning</span>
+                  <span>
+                    {initialCategory && initialCategory !== "All"
+                      ? initialCategory
+                      : "Aptitude & Reasoning"}
+                  </span>
                 </button>
 
                 <button
@@ -556,8 +588,8 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
               {/* Content Body */}
               <div className="p-6 md:p-8 overflow-y-auto flex-1 space-y-6 bg-[#f4f6f3]">
                 {activeTab === "aptitude" && (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {PLACEMENT_PREP_DATA.aptitude.map((section, idx) => {
+                  <div className={`grid grid-cols-1 ${filteredAptitudeSections.length === 1 ? "max-w-3xl mx-auto w-full" : "lg:grid-cols-3"} gap-6`}>
+                    {filteredAptitudeSections.map((section, idx) => {
                       const Icon = section.icon;
                       return (
                         <motion.div
@@ -581,7 +613,7 @@ export default function PlacementPrepModal({ isOpen, onClose }: PlacementPrepMod
                               {section.category}
                             </h3>
 
-                            <div className="space-y-2.5">
+                            <div className={filteredAptitudeSections.length === 1 ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "space-y-2.5"}>
                               {section.topics.map((t) => (
                                 <div
                                   key={t.name}

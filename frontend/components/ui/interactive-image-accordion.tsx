@@ -195,7 +195,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 
 export interface LandingAccordionItemProps {
   items?: AccordionItemData[];
-  onOpenPlacementPrep?: () => void;
+  onOpenPlacementPrep?: (category?: "Quantitative Aptitude" | "Logical Reasoning" | "Verbal Ability") => void;
   onOpenResumeReview?: () => void;
   onBack?: () => void;
   showBackButton?: boolean;
@@ -231,13 +231,27 @@ export function LandingAccordionItem({
       return;
     }
 
-    if (
-      item.key === "quant-aptitude" ||
-      item.key === "logical-reasoning" ||
-      item.key === "verbal-ability"
-    ) {
+    if (item.key === "quant-aptitude") {
       if (onOpenPlacementPrep) {
-        onOpenPlacementPrep();
+        onOpenPlacementPrep("Quantitative Aptitude");
+      } else {
+        router.push("/career#placement-prep");
+      }
+      return;
+    }
+
+    if (item.key === "logical-reasoning") {
+      if (onOpenPlacementPrep) {
+        onOpenPlacementPrep("Logical Reasoning");
+      } else {
+        router.push("/career#placement-prep");
+      }
+      return;
+    }
+
+    if (item.key === "verbal-ability") {
+      if (onOpenPlacementPrep) {
+        onOpenPlacementPrep("Verbal Ability");
       } else {
         router.push("/career#placement-prep");
       }

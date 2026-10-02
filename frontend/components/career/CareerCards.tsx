@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 interface CareerCardsProps {
-  onOpenPlacementPrep: () => void;
+  onOpenPlacementPrep: (category?: "Quantitative Aptitude" | "Logical Reasoning" | "Verbal Ability") => void;
   onOpenResumeReview?: () => void;
 }
 
@@ -41,7 +41,7 @@ export default function CareerCards({
         <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-6 w-full items-stretch">
           {/* ── CARD 1: Quantitative Aptitude (Pale Yellow) ── */}
           <div
-            onClick={onOpenPlacementPrep}
+            onClick={() => onOpenPlacementPrep("Quantitative Aptitude")}
             className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
           >
             {/* Top Pale Yellow Gradient Header */}
@@ -64,7 +64,7 @@ export default function CareerCards({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenPlacementPrep();
+                  onOpenPlacementPrep("Quantitative Aptitude");
                 }}
                 className="w-full h-7 sm:h-10 bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold px-1 sm:px-4 rounded-md sm:rounded-xl transition-all shadow-md shadow-slate-900/10 flex items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs cursor-pointer mt-1.5 sm:mt-4 shrink-0"
               >
@@ -77,7 +77,7 @@ export default function CareerCards({
 
           {/* ── CARD 2: Reasoning (Pale Purple) ── */}
           <div
-            onClick={onOpenPlacementPrep}
+            onClick={() => onOpenPlacementPrep("Logical Reasoning")}
             className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
           >
             {/* Top Pale Purple Gradient Header */}
@@ -99,7 +99,7 @@ export default function CareerCards({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenPlacementPrep();
+                  onOpenPlacementPrep("Logical Reasoning");
                 }}
                 className="w-full h-7 sm:h-10 bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold px-1 sm:px-4 rounded-md sm:rounded-xl transition-all shadow-md shadow-slate-900/10 flex items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs cursor-pointer mt-1.5 sm:mt-4 shrink-0"
               >
@@ -112,7 +112,7 @@ export default function CareerCards({
 
           {/* ── CARD 3: Verbal Ability (Green Grape) ── */}
           <div
-            onClick={onOpenPlacementPrep}
+            onClick={() => onOpenPlacementPrep("Verbal Ability")}
             className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
           >
             {/* Top Green Grape Gradient Header */}
@@ -134,7 +134,7 @@ export default function CareerCards({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onOpenPlacementPrep();
+                  onOpenPlacementPrep("Verbal Ability");
                 }}
                 className="w-full h-7 sm:h-10 bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold px-1 sm:px-4 rounded-md sm:rounded-xl transition-all shadow-md shadow-slate-900/10 flex items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs cursor-pointer mt-1.5 sm:mt-4 shrink-0"
               >
