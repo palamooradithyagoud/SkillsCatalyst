@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
-import CareerHeader from "@/components/career/CareerHeader";
 import CareerCards from "@/components/career/CareerCards";
 import { LandingAccordionItem } from "@/components/ui/interactive-image-accordion";
 
@@ -14,11 +13,8 @@ export default function CareerPage() {
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 px-3 sm:px-6">
-      {/* ── Page Header ── */}
-      <CareerHeader />
-
-      {/* ── Featured Interactive Placement Accordion (First Card) ── */}
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 px-3 sm:px-6 pt-1 sm:pt-2">
+      {/* ── Featured Interactive Placement Accordion (Top Card) ── */}
       <LandingAccordionItem
         onOpenPlacementPrep={() => setIsPlacementPrepOpen(true)}
         onOpenResumeReview={() => router.push("/career/resume-review")}
