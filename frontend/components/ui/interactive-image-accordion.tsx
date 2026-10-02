@@ -251,12 +251,6 @@ export function LandingAccordionItem({
             Placement &amp; Career Acceleration
           </h2>
 
-          <p className="text-xs sm:text-[13px] text-slate-600 max-w-xl mx-auto xl:mx-0 leading-relaxed font-normal">
-            Master every phase of campus &amp; tech placement: practice
-            structured quantitative, logical, and verbal aptitude tracks, audit
-            your resume with AI ATS intelligence, and prepare for live mock interviews.
-          </p>
-
           {/* Quick value props pill list - All 5 distinct placement areas */}
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-1.5 text-left pt-0.5">
             <button
