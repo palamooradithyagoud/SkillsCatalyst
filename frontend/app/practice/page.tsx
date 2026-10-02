@@ -253,13 +253,10 @@ function PracticeContent() {
 
           {/* ── DSA SHEETS Heading with Horizontal Scroll Controls ── */}
           <div className="max-w-5xl mx-auto w-full flex items-center justify-between pt-2 sm:pt-4">
-            <div className="flex items-center gap-2.5">
+            <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 DSA SHEETS
               </h2>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200/80">
-                Scroll sideways →
-              </span>
             </div>
 
             {/* Scroll Navigation Chevrons */}
@@ -286,7 +283,8 @@ function PracticeContent() {
           {/* ── DSA Sheet Cards: Horizontal Scrollable Row Side-by-Side ── */}
           <div
             ref={sheetsScrollRef}
-            className="max-w-5xl mx-auto w-full flex items-stretch gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 px-1 no-scrollbar mobile-touch-scroll scroll-smooth snap-x snap-mandatory"
+            className="max-w-5xl mx-auto w-full flex items-stretch gap-4 sm:gap-6 overflow-x-auto pb-1 pt-1 px-1 no-scrollbar mobile-touch-scroll scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             <div className="shrink-0 w-[275px] xs:w-[310px] sm:w-[335px] snap-start flex flex-col">
               <PenguinDSASheetCard onSelect={() => setSelectedMode("penguin-sheet")} />

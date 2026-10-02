@@ -110,58 +110,112 @@ export function StriverA2ZDSASheetView() {
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-10 my-auto w-full pointer-events-none">
           {/* Left Column: Clean Title + Progress Tracker */}
           <div className="flex flex-col gap-4 sm:gap-5 flex-1 w-full max-w-lg pointer-events-auto">
-            {/* Clean Bold Title */}
+            {/* Title */}
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>take U-forward</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                STRIVER&apos;S A2Z <br />
-                <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-lime-300 bg-clip-text text-transparent">
-                  DSA SHEET
-                </span>
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-[40px] font-black text-white tracking-tight leading-tight drop-shadow-md">
+                Strivers A2Z DSA Sheet
               </h1>
-              <p className="text-emerald-300/80 text-xs sm:text-sm font-semibold tracking-wide pt-1">
-                By Raj Vikramaditya (Striver) • Ex-Google
+              <p className="text-slate-400 text-xs sm:text-sm font-semibold tracking-wide pt-1">
+                Curated by Striver (TakeUForward)
               </p>
             </div>
 
-            {/* "DATA STATUS" / PROGRESS CARD */}
-            <div className="bg-[#051c0f]/90 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[340px]">
+            {/* "YOUR PROGRESS" TRACKER CARD (MATCHING REFERENCE WITH OUR PALETTE) */}
+            <div className="bg-[#0b1410]/95 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[360px]">
               {/* Header */}
-              <div className="text-[11px] font-black text-emerald-300 tracking-wider uppercase pb-2.5 border-b border-white/10 flex items-center justify-between">
-                <span>SHEET STATUS</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold border border-emerald-500/30">
-                  Ready For Data
-                </span>
+              <div className="text-[11px] font-bold text-slate-400 tracking-wider uppercase pb-3 border-b border-white/10">
+                YOUR PROGRESS
               </div>
 
               {/* Tracker Body */}
-              <div className="pt-3.5 flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="text-2xl font-black text-white tracking-tight">0 Problems</div>
-                  <p className="text-xs text-emerald-200/70">Awaiting your question list</p>
+              <div className="pt-4 flex items-center justify-between gap-5">
+                {/* Left: Circular Progress Ring */}
+                <div className="relative w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96">
+                    <defs>
+                      <linearGradient id="striverProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                    </defs>
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="rgba(255, 255, 255, 0.08)"
+                      strokeWidth="7"
+                      fill="none"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="url(#striverProgressGrad)"
+                      strokeWidth="7"
+                      strokeDasharray={2 * Math.PI * 40}
+                      strokeDashoffset={2 * Math.PI * 40}
+                      strokeLinecap="round"
+                      fill="none"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span className="text-lg sm:text-xl font-black text-white leading-none">
+                      0%
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium mt-1">
+                      Complete
+                    </span>
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-6 h-6 text-emerald-400" />
+
+                {/* Right: Solved, Topics, Difficulty breakdown */}
+                <div className="flex-1 flex flex-col justify-between gap-2.5">
+                  {/* Row 1: Solved */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-medium">Solved</span>
+                    <span className="font-bold text-white tracking-tight">
+                      <span className="text-white">0</span> / 455
+                    </span>
+                  </div>
+
+                  {/* Row 2: Topics */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-medium">Topics</span>
+                    <span className="font-bold text-white tracking-tight">18</span>
+                  </div>
+
+                  {/* Row 3: Difficulty breakdown */}
+                  <div className="flex items-center justify-between pt-1 border-t border-white/5 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-emerald-400">E</span>
+                      <span className="font-bold text-white">148</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-amber-400">M</span>
+                      <span className="font-bold text-white">251</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-rose-500">H</span>
+                      <span className="font-bold text-white">56</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Striver Image (At Right Side) */}
-          <div className="shrink-0 flex items-center justify-center pointer-events-auto">
-            <div className="relative w-52 h-52 sm:w-60 sm:h-60 md:w-68 md:h-68 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)] hover:shadow-[0_0_60px_rgba(16,185,129,0.55)] transition-all duration-300 group">
+          {/* Right Column: Striver 16:9 Thumbnail (Fits completely without cropping) */}
+          <div className="shrink-0 flex items-center justify-center pointer-events-auto w-full md:w-auto">
+            <div className="relative w-full max-w-[340px] xs:max-w-[380px] sm:max-w-[420px] md:w-[410px] lg:w-[450px] aspect-[16/9] rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(16,185,129,0.35)] hover:shadow-[0_0_60px_rgba(16,185,129,0.55)] transition-all duration-300 group">
               <Image
                 src="/images/practice/striver_a2z_sheet.jpg"
                 alt="Striver A2Z DSA Sheet"
                 fill
-                sizes="(max-width: 768px) 240px, 280px"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 380px, 450px"
+                className="object-cover object-center group-hover:scale-102 transition-transform duration-500"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-2.5 left-2.5 right-2.5 text-center text-[11px] font-bold text-emerald-200 bg-black/65 backdrop-blur-md py-1 rounded-lg border border-white/10 shadow-sm">
                 Raj Vikramaditya (Striver)
               </div>
