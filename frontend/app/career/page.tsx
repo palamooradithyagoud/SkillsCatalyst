@@ -7,15 +7,22 @@ import PlacementPrepModal from "@/components/PlacementPrepModal";
 import FloatingCTA from "@/components/mobile/FloatingCTA";
 import CareerHeader from "@/components/career/CareerHeader";
 import CareerCards from "@/components/career/CareerCards";
+import { LandingAccordionItem } from "@/components/ui/interactive-image-accordion";
 
 export default function CareerPage() {
   const router = useRouter();
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5 sm:space-y-8 pb-12 px-3 sm:px-6">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 px-3 sm:px-6">
       {/* ── Page Header ── */}
       <CareerHeader />
+
+      {/* ── Featured Interactive Placement Accordion (First Card) ── */}
+      <LandingAccordionItem
+        onOpenPlacementPrep={() => setIsPlacementPrepOpen(true)}
+        onOpenResumeReview={() => router.push("/career/resume-review")}
+      />
 
       {/* ── Cards Grid ── */}
       <CareerCards
