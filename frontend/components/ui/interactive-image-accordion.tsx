@@ -144,10 +144,10 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
       className={`
         relative h-[250px] sm:h-[275px] md:h-[295px] rounded-xl overflow-hidden cursor-pointer
         transition-all duration-500 ease-out select-none shadow-xs
-        border border-violet-200/80
+        border border-[#CFB6EE]/85
         ${
           isActive
-            ? "flex-[3.5] min-w-[180px] sm:min-w-[210px] md:min-w-[240px] ring-2 ring-violet-500/80 shadow-md"
+            ? "flex-[3.5] min-w-[180px] sm:min-w-[210px] md:min-w-[240px] ring-2 ring-[#8B5CF6]/90 shadow-md"
             : "flex-1 min-w-[40px] sm:min-w-[46px] md:min-w-[50px] opacity-85 hover:opacity-100 hover:flex-[1.2]"
         }
       `}
@@ -239,10 +239,10 @@ export function LandingAccordionItem({
   };
 
   return (
-    <div className="w-full bg-[#EDE9FE]/70 hover:bg-[#EDE9FE]/85 transition-colors rounded-2xl p-3 sm:p-4 md:p-4.5 shadow-sm border border-violet-200/90 relative overflow-hidden">
-      {/* Decorative subtle lavender aura */}
-      <div className="absolute -top-28 -left-28 w-72 h-72 bg-violet-300/25 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-28 -right-28 w-72 h-72 bg-purple-300/25 rounded-full blur-3xl pointer-events-none" />
+    <div className="w-full bg-gradient-to-br from-[#EFE5FB] via-[#E8DCF8] to-[#DFCEF5] hover:from-[#EDE1FA] hover:to-[#DAC7F2] transition-colors rounded-2xl p-3 sm:p-4 md:p-4.5 shadow-sm border border-[#CFB6EE]/90 relative overflow-hidden">
+      {/* Decorative subtle lilac aura */}
+      <div className="absolute -top-28 -left-28 w-72 h-72 bg-[#D4B5F3]/35 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-28 -right-28 w-72 h-72 bg-[#C8A2C8]/25 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-4 md:gap-5">
         {/* Left Side: Placement Copy & 5 Interactive Module Selectors */}
@@ -262,8 +262,8 @@ export function LandingAccordionItem({
               onMouseEnter={() => setActiveIndex(0)}
               className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                 activeIndex === 0
-                  ? "bg-white border-violet-500 shadow-xs ring-1 ring-violet-400"
-                  : "bg-white/70 border-violet-200/60 hover:bg-white"
+                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
+                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
               }`}
             >
               <div className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
@@ -286,8 +286,8 @@ export function LandingAccordionItem({
               onMouseEnter={() => setActiveIndex(1)}
               className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                 activeIndex === 1
-                  ? "bg-white border-violet-500 shadow-xs ring-1 ring-violet-400"
-                  : "bg-white/70 border-violet-200/60 hover:bg-white"
+                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
+                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
               }`}
             >
               <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
@@ -310,8 +310,8 @@ export function LandingAccordionItem({
               onMouseEnter={() => setActiveIndex(2)}
               className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                 activeIndex === 2
-                  ? "bg-white border-violet-500 shadow-xs ring-1 ring-violet-400"
-                  : "bg-white/70 border-violet-200/60 hover:bg-white"
+                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
+                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
               }`}
             >
               <div className="w-5 h-5 rounded-md bg-violet-100 text-violet-700 flex items-center justify-center shrink-0">
@@ -334,8 +334,8 @@ export function LandingAccordionItem({
               onMouseEnter={() => setActiveIndex(3)}
               className={`flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                 activeIndex === 3
-                  ? "bg-white border-violet-500 shadow-xs ring-1 ring-violet-400"
-                  : "bg-white/70 border-violet-200/60 hover:bg-white"
+                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
+                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
               }`}
             >
               <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
@@ -358,8 +358,8 @@ export function LandingAccordionItem({
               onMouseEnter={() => setActiveIndex(4)}
               className={`col-span-2 sm:col-span-1 xl:col-span-2 flex items-center gap-2 p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                 activeIndex === 4
-                  ? "bg-white border-violet-500 shadow-xs ring-1 ring-violet-400"
-                  : "bg-white/70 border-violet-200/60 hover:bg-white"
+                  ? "bg-white border-[#8B5CF6] shadow-xs ring-1 ring-[#8B5CF6]"
+                  : "bg-white/85 border-[#D8C2F2]/80 hover:bg-white"
               }`}
             >
               <div className="w-5 h-5 rounded-md bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
