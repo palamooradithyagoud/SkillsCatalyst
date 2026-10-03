@@ -23,6 +23,11 @@ import {
   Zap,
   Grid,
   LayoutGrid,
+  Sparkles,
+  Search,
+  Shuffle,
+  Bookmark,
+  RotateCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
@@ -67,19 +72,20 @@ const PLACEMENT_PREP_DATA = {
     {
       category: "Quantitative Aptitude",
       icon: Calculator,
-      color: "from-blue-50/90 via-indigo-50/40 to-white",
-      borderColor: "border-blue-200/90",
-      iconBg: "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xs",
-      itemBorder: "border-blue-200/80 hover:border-blue-500 hover:bg-blue-50/50",
-      badgeColor: "text-blue-700 bg-blue-100/90 border-blue-200/90",
-      footerColor: "text-blue-600 hover:text-blue-800",
+      color: "from-[#FEF9C3] via-[#FFFBEB] to-[#FEF08A]/80",
+      borderColor: "border-amber-300/80",
+      iconBg: "bg-amber-400 text-slate-950",
+      itemBorder: "border-amber-200/90 hover:border-amber-400 hover:bg-amber-50/50",
+      badgeColor: "text-amber-900 bg-amber-100/90 border-amber-200/80",
+      footerColor: "text-amber-900 hover:text-amber-950",
+      description: "A comprehensive test to evaluate technical skills and problem-solving abilities.",
       topics: [
-        { name: "Percentages", count: "41 Questions & Solutions", status: "Ready" },
-        { name: "Profit & Loss", count: "38 Questions", status: "Ready" },
-        { name: "Time & Work", count: "42 Questions", status: "Ready" },
-        { name: "Time, Speed & Distance", count: "50 Questions", status: "Ready" },
-        { name: "Probability", count: "30 Questions", status: "Ready" },
-        { name: "Permutations & Combinations", count: "35 Questions", status: "Ready" },
+        { name: "Percentages", status: "Ready" },
+        { name: "Profit & Loss", status: "Ready" },
+        { name: "Time & Work", status: "Ready" },
+        { name: "Time, Speed & Distance", status: "Ready" },
+        { name: "Probability", status: "Ready" },
+        { name: "Permutations & Combinations", status: "Ready" },
       ],
     },
     {
@@ -91,12 +97,13 @@ const PLACEMENT_PREP_DATA = {
       itemBorder: "border-purple-200/80 hover:border-purple-500 hover:bg-purple-50/50",
       badgeColor: "text-purple-700 bg-purple-100/90 border-purple-200/90",
       footerColor: "text-purple-600 hover:text-purple-800",
+      description: "Analytical reasoning, pattern recognition, and critical deduction assessments.",
       topics: [
-        { name: "Blood Relations", count: "28 Questions", status: "Ready" },
-        { name: "Seating Arrangement", count: "34 Questions", status: "Ready" },
-        { name: "Coding-Decoding", count: "40 Questions", status: "Ready" },
-        { name: "Syllogisms", count: "25 Questions", status: "Ready" },
-        { name: "Puzzles", count: "32 Questions", status: "Ready" },
+        { name: "Blood Relations", status: "Ready" },
+        { name: "Seating Arrangement", status: "Ready" },
+        { name: "Coding-Decoding", status: "Ready" },
+        { name: "Syllogisms", status: "Ready" },
+        { name: "Puzzles", status: "Ready" },
       ],
     },
     {
@@ -108,11 +115,12 @@ const PLACEMENT_PREP_DATA = {
       itemBorder: "border-emerald-200/80 hover:border-emerald-500 hover:bg-emerald-50/50",
       badgeColor: "text-emerald-700 bg-emerald-100/90 border-emerald-200/90",
       footerColor: "text-emerald-600 hover:text-emerald-800",
+      description: "English grammar, vocabulary mastery, comprehension, and sentence structuring.",
       topics: [
-        { name: "Grammar", count: "60 Questions", status: "Ready" },
-        { name: "Reading Comprehension", count: "20 Passages", status: "Ready" },
-        { name: "Vocabulary", count: "100+ Words", status: "Ready" },
-        { name: "Sentence Correction", count: "45 Questions", status: "Ready" },
+        { name: "Grammar", status: "Ready" },
+        { name: "Reading Comprehension", status: "Ready" },
+        { name: "Vocabulary", status: "Ready" },
+        { name: "Sentence Correction", status: "Ready" },
       ],
     },
   ],
@@ -223,9 +231,9 @@ export default function PlacementPrepModal({
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const startTopicQuiz = (topicName: string) => {
+  const startTopicQuiz = (topicName: string, startIdx: number = 0) => {
     setSelectedTopic(topicName);
-    setCurrentIndex(0);
+    setCurrentIndex(startIdx);
     setUserAnswers({});
     setQuestionTimes({});
     setShowCorrectOptionMap({});
@@ -233,6 +241,205 @@ export default function PlacementPrepModal({
     setPracticeViewMode("card");
     setQuestionTimerSeconds(0);
     setQuizFinished(false);
+  };
+
+  // Aggregated live progress statistics per category (dynamic, zero hardcoding)
+  const [categoryStats, setCategoryStats] = useState<Record<string, {
+    totalQuestions: number;
+    solvedCount: number;
+    startedCount: number;
+    totalAttempts: number;
+    accuracy: number;
+    progressPercent: number;
+  }>>({});
+
+  const refreshCategoryStats = React.useCallback(async () => {
+    const statsRecord: Record<string, {
+      totalQuestions: number;
+      solvedCount: number;
+      startedCount: number;
+      totalAttempts: number;
+      accuracy: number;
+      progressPercent: number;
+    }> = {};
+
+    for (const section of PLACEMENT_PREP_DATA.aptitude) {
+      let totalQuestions = 0;
+      let solvedCount = 0;
+      let startedCount = 0;
+      let totalAttempts = 0;
+      let correctCount = 0;
+
+      for (const t of section.topics) {
+        const qList = QUANTITATIVE_APTITUDE_MAP[t.name] || [];
+        totalQuestions += qList.length;
+
+        try {
+          const storageKey = `skillscatalyst_aptitude_progress_${t.name}`;
+          const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const savedAns: Record<number, number> = parsed.userAnswers || {};
+            const answeredIds = Object.keys(savedAns);
+            if (answeredIds.length > 0) {
+              startedCount += 1;
+              solvedCount += answeredIds.length;
+              totalAttempts += answeredIds.length;
+              qList.forEach((q) => {
+                if (savedAns[q.id] === q.correctIndex) {
+                  correctCount += 1;
+                }
+              });
+            }
+          }
+        } catch (e) {
+          // ignore error
+        }
+      }
+
+      // Check current answers in active topic if not yet written to localStorage
+      if (selectedTopic && section.topics.some((t) => t.name === selectedTopic)) {
+        const currentAnsKeys = Object.keys(userAnswers);
+        if (currentAnsKeys.length > 0) {
+          try {
+            const storageKey = `skillscatalyst_aptitude_progress_${selectedTopic}`;
+            const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+            if (!saved) {
+              startedCount = Math.max(startedCount, 1);
+            }
+          } catch (_) {}
+        }
+      }
+
+      const accuracy = solvedCount > 0 ? (correctCount / solvedCount) * 100 : 0;
+      const progressPercent = totalQuestions > 0 ? Math.min(100, Math.round((solvedCount / totalQuestions) * 100)) : 0;
+
+      statsRecord[section.category] = {
+        totalQuestions,
+        solvedCount,
+        startedCount,
+        totalAttempts,
+        accuracy,
+        progressPercent,
+      };
+    }
+
+    setCategoryStats(statsRecord);
+  }, [selectedTopic, userAnswers]);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshCategoryStats();
+    }
+  }, [isOpen, refreshCategoryStats]);
+
+  // Image 1 Reference: Topic Explorer & Filter States
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
+  const [selectedSort, setSelectedSort] = useState<string>("default");
+  const [quickFilterTab, setQuickFilterTab] = useState<"all" | "bookmarks" | "attempted" | "solved">("all");
+  const [bookmarkedTopicKeys, setBookmarkedTopicKeys] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("skillscatalyst_bookmarked_topics");
+      if (saved) setBookmarkedTopicKeys(JSON.parse(saved));
+    } catch (_) {}
+  }, []);
+
+  const toggleTopicBookmark = (topicName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBookmarkedTopicKeys((prev) => {
+      const updated = { ...prev, [topicName]: !prev[topicName] };
+      try {
+        localStorage.setItem("skillscatalyst_bookmarked_topics", JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  // Aggregate all Quantitative Aptitude topics with dynamic question counts, attempts & solve status (Zero hardcoding)
+  const allQuantTopics = React.useMemo(() => {
+    const quantTopics = [
+      "Percentages",
+      "Profit & Loss",
+      "Time & Work",
+      "Time, Speed & Distance",
+      "Probability",
+      "Permutations & Combinations",
+    ];
+
+    return quantTopics.map((topicName) => {
+      const qArray = QUANTITATIVE_APTITUDE_MAP[topicName] || [];
+      const questionCount = qArray.length;
+      let savedAns: Record<number, number> = {};
+      try {
+        const saved = typeof window !== "undefined" ? localStorage.getItem(`skillscatalyst_aptitude_progress_${topicName}`) : null;
+        if (saved) {
+          savedAns = JSON.parse(saved).userAnswers || {};
+        }
+      } catch (_) {}
+
+      const answeredIds = Object.keys(savedAns);
+      const attemptedCount = answeredIds.length;
+      let correctCount = 0;
+      qArray.forEach((q) => {
+        if (savedAns[q.id] === q.correctIndex) {
+          correctCount++;
+        }
+      });
+
+      const isSolved = attemptedCount > 0 && correctCount === questionCount && questionCount > 0;
+      const isAttempted = attemptedCount > 0;
+
+      return {
+        name: topicName,
+        questionCount,
+        attemptedCount,
+        solvedCount: correctCount,
+        isSolved,
+        isAttempted,
+        isBookmarked: !!bookmarkedTopicKeys[topicName],
+        points: questionCount * 10,
+      };
+    });
+  }, [bookmarkedTopicKeys, categoryStats]);
+
+  // Filtered Topics according to Search, Status, Sort, and Quick Filter Tabs
+  const filteredTopicList = React.useMemo(() => {
+    return allQuantTopics
+      .filter((item) => {
+        // Quick filter tab
+        if (quickFilterTab === "bookmarks" && !item.isBookmarked) return false;
+        if (quickFilterTab === "attempted" && !item.isAttempted) return false;
+        if (quickFilterTab === "solved" && !item.isSolved) return false;
+
+        // Search Query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchTopic = item.name.toLowerCase().includes(q);
+          if (!matchTopic) return false;
+        }
+
+        // Status Dropdown
+        if (selectedStatusFilter === "solved" && !item.isSolved) return false;
+        if (selectedStatusFilter === "attempted" && !item.isAttempted) return false;
+        if (selectedStatusFilter === "unattempted" && item.isAttempted) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (selectedSort === "name") return a.name.localeCompare(b.name);
+        if (selectedSort === "questions") return b.questionCount - a.questionCount;
+        return 0; // default order
+      });
+  }, [allQuantTopics, quickFilterTab, searchQuery, selectedStatusFilter, selectedSort]);
+
+  const handlePickRandomTopic = () => {
+    if (filteredTopicList.length === 0) return;
+    const rand = Math.floor(Math.random() * filteredTopicList.length);
+    const target = filteredTopicList[rand];
+    startTopicQuiz(target.name, 0);
   };
 
   // Escape key handler
@@ -369,6 +576,7 @@ export default function PlacementPrepModal({
           { onConflict: "user_id,question_id" }
         );
       }
+      refreshCategoryStats();
     } catch (err) {
       console.warn("Database persist warning:", err);
     }
@@ -458,10 +666,22 @@ export default function PlacementPrepModal({
           transition={{ duration: 0.2 }}
           className="bg-[#f4f6f3] w-full h-full flex flex-col overflow-hidden"
         >
-          {/* Compact Header Bar */}
-          <div className="px-3 py-2 sm:px-6 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0 shadow-2xs">
-            <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
-              {selectedTopic ? (
+          {/* Sleek Floating Close Button for Main View */}
+          {!selectedTopic && (
+            <button
+              onClick={onClose}
+              className="fixed top-4 right-4 sm:top-5 sm:right-6 z-50 px-3.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-black transition-all border border-slate-700/80 shadow-lg backdrop-blur-md cursor-pointer flex items-center gap-1.5 active:scale-95"
+              aria-label="Close modal"
+            >
+              <span>Close</span>
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Compact Header Bar (Only visible during active Topic Practice / Quiz Mode) */}
+          {selectedTopic && (
+            <div className="px-3 py-2 sm:px-6 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0 shadow-2xs">
+              <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
                 <button
                   onClick={() => setSelectedTopic(null)}
                   className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all flex items-center gap-1 text-xs font-black cursor-pointer border border-slate-200/80 shrink-0 active:scale-95 shadow-2xs"
@@ -471,66 +691,54 @@ export default function PlacementPrepModal({
                   <span className="hidden sm:inline">Back to Topics</span>
                   <span className="sm:hidden">Back</span>
                 </button>
-              ) : (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 shrink-0">
-                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight truncate leading-tight">
+                    {selectedTopic} Practice
+                  </h2>
+                  <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block mt-0.5">
+                    {totalQuestions} Questions • Practice Mode
+                  </p>
                 </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight truncate leading-tight">
-                  {selectedTopic
-                    ? `${selectedTopic} Practice`
-                    : initialCategory && initialCategory !== "All"
-                    ? `${initialCategory} Questions`
-                    : "Placement Preparation"}
-                </h2>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block mt-0.5">
-                  {selectedTopic
-                    ? `${totalQuestions} Questions • Practice Mode`
-                    : initialCategory && initialCategory !== "All"
-                    ? `${initialCategory} topic questions and step-by-step solutions`
-                    : "Aptitude, Reasoning, Verbal & Mock Tests"}
-                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                {/* Practice View Switcher */}
+                {!quizFinished && (
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[10px] sm:text-xs font-bold">
+                    <button
+                      onClick={() => setPracticeViewMode("card")}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
+                        practiceViewMode === "card"
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                      }`}
+                    >
+                      Single
+                    </button>
+                    <button
+                      onClick={() => setPracticeViewMode("sheet")}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
+                        practiceViewMode === "sheet"
+                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                      }`}
+                    >
+                      Sheet
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={onClose}
+                  className="p-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all border border-slate-800 shadow-md cursor-pointer flex items-center gap-1 active:scale-95"
+                  aria-label="Close modal"
+                >
+                  <span className="hidden sm:inline">Close</span>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-              {/* Practice View Switcher */}
-              {selectedTopic && !quizFinished && (
-                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[10px] sm:text-xs font-bold">
-                  <button
-                    onClick={() => setPracticeViewMode("card")}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
-                      practiceViewMode === "card"
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                    }`}
-                  >
-                    Single
-                  </button>
-                  <button
-                    onClick={() => setPracticeViewMode("sheet")}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
-                      practiceViewMode === "sheet"
-                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                    }`}
-                  >
-                    Sheet
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={onClose}
-                className="p-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all border border-slate-800 shadow-md cursor-pointer flex items-center gap-1 active:scale-95"
-                aria-label="Close modal"
-              >
-                <span className="hidden sm:inline">Close</span>
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          )}
 
           {!hasPlacementAccess ? (
             <div className="p-6 md:p-12 flex items-center justify-center flex-1 bg-[#f4f6f3] overflow-y-auto">
@@ -554,91 +762,293 @@ export default function PlacementPrepModal({
               {/* Main Topic Selection View */}
               {!selectedTopic && (
                 <>
-                  {/* Navigation Tabs */}
-              <div className="px-6 py-3 border-b border-slate-200 bg-slate-100/90 flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => setActiveTab("aptitude")}
-                  className={`px-5 py-2 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-                    activeTab === "aptitude"
-                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/25 border border-purple-400"
-                      : "bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-2xs"
-                  }`}
-                >
-                  <Brain className="w-4 h-4" />
-                  <span>
-                    {initialCategory && initialCategory !== "All"
-                      ? initialCategory
-                      : "Aptitude & Reasoning"}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("mockTests")}
-                  className={`px-5 py-2 rounded-xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-                    activeTab === "mockTests"
-                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/25 border border-purple-400"
-                      : "bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-2xs"
-                  }`}
-                >
-                  <FileCheck2 className="w-4 h-4" />
-                  <span>Mock Tests</span>
-                </button>
-              </div>
-
-              {/* Content Body */}
-              <div className="p-6 md:p-8 overflow-y-auto flex-1 space-y-6 bg-[#f4f6f3]">
-                {activeTab === "aptitude" && (
-                  <div className={`grid grid-cols-1 ${filteredAptitudeSections.length === 1 ? "max-w-3xl mx-auto w-full" : "lg:grid-cols-3"} gap-6`}>
-                    {filteredAptitudeSections.map((section, idx) => {
+                  {/* Content Body */}
+                  <div className="p-4 sm:p-6 md:p-8 pt-5 sm:pt-6 overflow-y-auto flex-1 space-y-6 bg-[#f4f6f3]">
+                    {activeTab === "aptitude" && (
+                      <div className="max-w-5xl mx-auto w-full space-y-6">
+                        {filteredAptitudeSections.map((section, idx) => {
                       const Icon = section.icon;
+                      const isQuantitative = section.category === "Quantitative Aptitude";
+
+                      // Derive dynamic stats (zero hardcoded numbers)
+                      const stats = categoryStats[section.category] || {
+                        totalQuestions: section.topics.reduce(
+                          (acc, t) => acc + (QUANTITATIVE_APTITUDE_MAP[t.name]?.length || 0),
+                          0
+                        ),
+                        solvedCount: 0,
+                        startedCount: 0,
+                        totalAttempts: 0,
+                        accuracy: 0,
+                        progressPercent: 0,
+                      };
+
                       return (
-                        <motion.div
-                          key={section.category}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className={`p-6 rounded-3xl bg-gradient-to-b ${section.color} border ${section.borderColor} flex flex-col justify-between shadow-md`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-4">
-                              <div className={`p-2.5 rounded-xl ${section.iconBg}`}>
-                                <Icon className="w-5 h-5 text-white" />
-                              </div>
-                              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/80 border border-slate-200 text-slate-700 shadow-2xs">
-                                {section.topics.length} Topics
-                              </span>
-                            </div>
+                        <React.Fragment key={section.category}>
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={`p-4 sm:p-5 md:p-6 rounded-[20px] sm:rounded-[24px] relative overflow-hidden flex flex-col justify-between shadow-md transition-all ${
+                              isQuantitative
+                                ? "bg-gradient-to-br from-[#FEF9C3] via-[#FFFBEB] to-[#FEF08A]/80 border border-amber-300/80 shadow-amber-950/5"
+                                : `bg-gradient-to-b ${section.color} border ${section.borderColor}`
+                            }`}
+                          >
+                            {/* Dot Matrix Pattern Overlay for Engineering Tech Aesthetic */}
+                            <div
+                              className="absolute inset-0 pointer-events-none opacity-30"
+                              style={{
+                                backgroundImage: isQuantitative
+                                  ? "radial-gradient(#b45309 0.75px, transparent 0.75px)"
+                                  : "radial-gradient(#4338ca 0.75px, transparent 0.75px)",
+                                backgroundSize: "20px 20px",
+                              }}
+                            />
 
-                            <h3 className="text-lg font-black text-slate-900 mb-4">
-                              {section.category}
-                            </h3>
-
-                            <div className={filteredAptitudeSections.length === 1 ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "space-y-2.5"}>
-                              {section.topics.map((t) => (
+                            {/* ── UPPER HERO ROW (Matching Image 2 Layout) ── */}
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 lg:gap-6 relative z-10">
+                              {/* Left: Icon Squircle + Title + Description */}
+                              <div className="flex items-center gap-3.5 sm:gap-5 flex-1 min-w-0">
+                                {/* Squircle Badge Container */}
                                 <div
-                                  key={t.name}
-                                  onClick={() => startTopicQuiz(t.name)}
-                                  className={`p-3.5 rounded-2xl bg-white border ${section.itemBorder} transition-all flex items-center justify-between group cursor-pointer shadow-2xs hover:shadow-md`}
+                                  className={`w-13 h-13 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${
+                                    isQuantitative
+                                      ? "bg-amber-200/70 border border-amber-300/90"
+                                      : "bg-white/80 border border-slate-200/80"
+                                  }`}
                                 >
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-2 h-2 rounded-full bg-purple-500 group-hover:scale-125 transition-transform" />
-                                    <span className="text-xs font-extrabold text-slate-900 group-hover:text-purple-700">
-                                      {t.name}
-                                    </span>
-                                  </div>
-                                  <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${section.badgeColor}`}>
-                                    {t.count}
-                                  </span>
+                                  {isQuantitative ? (
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-slate-950 text-base sm:text-lg shadow-xs tracking-tight">
+                                      QA
+                                    </div>
+                                  ) : (
+                                    <div className={`p-2.5 rounded-lg ${section.iconBg}`}>
+                                      <Icon className="w-5 h-5 text-white" />
+                                    </div>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          </div>
 
-                          <div className={`mt-6 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs font-extrabold ${section.footerColor}`}>
-                            <span>Practice Module</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </div>
-                        </motion.div>
+                                <div className="flex-1 min-w-0">
+                                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                                    {section.category}
+                                  </h2>
+
+                                  <p className="text-xs sm:text-sm text-slate-700 font-medium max-w-lg mt-1 leading-relaxed">
+                                    {section.description || "A comprehensive test to evaluate technical skills and problem-solving abilities."}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Right: "Your Progress" Card (Black Background + White Circular Tracker + Dynamic Metrics) */}
+                              <div className="bg-[#0A0D14] text-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-neutral-800 shadow-xl min-w-[260px] sm:min-w-[280px] md:min-w-[300px] shrink-0 relative z-10">
+                                <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/10">
+                                  <h3 className="text-white font-extrabold text-xs sm:text-sm tracking-tight">
+                                    Your Progress
+                                  </h3>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3.5 sm:gap-5">
+                                  {/* Left: White Circular Progress Tracker */}
+                                  <div className="relative w-15 h-15 sm:w-17 sm:h-17 shrink-0 flex items-center justify-center">
+                                    <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 80 80">
+                                      {/* Track circle (translucent white) */}
+                                      <circle
+                                        cx="40"
+                                        cy="40"
+                                        r="32"
+                                        className="stroke-white/15"
+                                        strokeWidth="5.5"
+                                        fill="transparent"
+                                      />
+                                      {/* Tracker circle (White colour) */}
+                                      <circle
+                                        cx="40"
+                                        cy="40"
+                                        r="32"
+                                        stroke="#ffffff"
+                                        strokeWidth="5.5"
+                                        strokeDasharray={201.06}
+                                        strokeDashoffset={201.06 - (stats.progressPercent / 100) * 201.06}
+                                        strokeLinecap="round"
+                                        fill="transparent"
+                                        className="transition-all duration-700 ease-out"
+                                      />
+                                    </svg>
+
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                      <span className="text-sm sm:text-base font-black text-white leading-none">
+                                        {stats.progressPercent}%
+                                      </span>
+                                      <span className="text-[8px] sm:text-[9px] text-neutral-400 font-medium mt-0.5">
+                                        Complete
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Dynamic Metrics breakdown (Zero hardcoded values) */}
+                                  <div className="flex flex-col justify-between py-0 text-[11px] sm:text-xs space-y-1 flex-1 min-w-[115px]">
+                                    <div className="flex items-center justify-between gap-2.5">
+                                      <span className="text-neutral-400 font-medium">Solved</span>
+                                      <span className="font-black text-white">
+                                        {stats.solvedCount}/{stats.totalQuestions}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2.5">
+                                      <span className="text-neutral-400 font-medium">Started</span>
+                                      <span className="font-bold text-amber-400">
+                                        {stats.startedCount}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2.5">
+                                      <span className="text-neutral-400 font-medium">Total Attempts</span>
+                                      <span className="font-bold text-indigo-400">
+                                        {stats.totalAttempts}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2.5">
+                                      <span className="text-neutral-400 font-medium">Accuracy</span>
+                                      <span className="font-black text-emerald-400">
+                                        {stats.accuracy.toFixed(2)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+
+                          {/* ── TOPICS EXPLORER & LIST (Image 1 Reference with Topics) ── */}
+                          {isQuantitative && (
+                            <div className="space-y-4">
+                              {/* Search & Filter Toolbar Card */}
+                              <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs">
+                                {/* Search Input + Status + Sort + Pick Random */}
+                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                                  {/* Search Input */}
+                                  <div className="relative flex-1">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                      type="text"
+                                      value={searchQuery}
+                                      onChange={(e) => setSearchQuery(e.target.value)}
+                                      placeholder="Search for topics or keywords"
+                                      className="w-full pl-10 pr-8 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                                    />
+                                    {searchQuery && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Status Dropdown */}
+                                  <select
+                                    value={selectedStatusFilter}
+                                    onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer shrink-0"
+                                  >
+                                    <option value="all">Status</option>
+                                    <option value="solved">Solved</option>
+                                    <option value="attempted">Attempted</option>
+                                    <option value="unattempted">Unattempted</option>
+                                  </select>
+
+                                  {/* Sort By Dropdown */}
+                                  <select
+                                    value={selectedSort}
+                                    onChange={(e) => setSelectedSort(e.target.value)}
+                                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer shrink-0"
+                                  >
+                                    <option value="default">Sort By</option>
+                                    <option value="name">Topic A-Z</option>
+                                    <option value="questions">Most Questions</option>
+                                  </select>
+
+                                  {/* Pick Random Action Button */}
+                                  <button
+                                    type="button"
+                                    onClick={handlePickRandomTopic}
+                                    className="bg-[#00A8CD] hover:bg-[#0891B2] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                                  >
+                                    <RotateCw className="w-4 h-4" />
+                                    <span>Pick Random</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Topic Rows List Container */}
+                              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+                                {filteredTopicList.length === 0 ? (
+                                  <div className="p-8 text-center text-slate-500 text-sm">
+                                    No topics match your current filters. Try changing or clearing your search.
+                                  </div>
+                                ) : (
+                                  filteredTopicList.map((item) => (
+                                    <div
+                                      key={item.name}
+                                      className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
+                                    >
+                                      <div className="flex-1 min-w-0">
+                                        <h4
+                                          onClick={() => startTopicQuiz(item.name, 0)}
+                                          className="text-sm sm:text-base font-black text-slate-900 hover:text-indigo-600 cursor-pointer transition-colors leading-snug"
+                                        >
+                                          {item.name}
+                                        </h4>
+                                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                          <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
+                                            <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                            {item.questionCount} Questions
+                                          </span>
+                                          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-slate-400" />
+                                            — {item.attemptedCount} attempted
+                                          </span>
+                                          {item.isSolved ? (
+                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                              <Check className="w-2.5 h-2.5 stroke-[3]" /> Solved
+                                            </span>
+                                          ) : item.isAttempted ? (
+                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                              {item.solvedCount}/{item.questionCount} Solved
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2.5 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => toggleTopicBookmark(item.name, e)}
+                                          className={`p-2 rounded-xl transition-all cursor-pointer ${
+                                            item.isBookmarked
+                                              ? "bg-rose-50 text-rose-500 hover:bg-rose-100"
+                                              : "text-slate-300 hover:text-slate-500 hover:bg-slate-100"
+                                          }`}
+                                          title={item.isBookmarked ? "Remove Bookmark" : "Bookmark Topic"}
+                                        >
+                                          <Bookmark className={`w-4 h-4 ${item.isBookmarked ? "fill-rose-500 text-rose-500" : ""}`} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => startTopicQuiz(item.name, 0)}
+                                          className="bg-[#0F172A] hover:bg-[#1E293B] text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                                        >
+                                          Solve
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </div>
