@@ -31,23 +31,26 @@ export default function CareerCards({
     <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 w-full">
       {/* ── Section: Competitive ── */}
       <div className="flex flex-col gap-2 sm:gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm sm:text-lg md:text-xl font-black text-slate-900 tracking-tight">
             Competitive
           </h2>
+          <span className="text-[10px] text-slate-400 font-medium sm:hidden flex items-center gap-1">
+            Swipe for more →
+          </span>
         </div>
 
-        {/* ── TOP ROW: 3 Cards Side-by-Side (Mobile: grid-cols-3) ── */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-6 w-full items-stretch">
+        {/* ── TOP ROW: 3 Cards (Mobile: Side Scrolling Carousel with same card size as Resume Review, Desktop: 3-column Grid) ── */}
+        <div className="flex overflow-x-auto gap-1.5 sm:grid sm:grid-cols-3 sm:gap-4 md:gap-6 w-full items-stretch no-scrollbar scroll-smooth snap-x snap-mandatory pb-1 pt-0.5">
           {/* ── CARD 1: Quantitative Aptitude (Pale Yellow) ── */}
           <div
             onClick={() => onOpenPlacementPrep("Quantitative Aptitude")}
-            className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
+            className="w-[calc((100%-0.375rem)/2)] min-w-[calc((100%-0.375rem)/2)] sm:w-auto sm:min-w-0 shrink-0 sm:shrink snap-start bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow"
           >
             {/* Top Pale Yellow Gradient Header */}
             <div className="w-full bg-gradient-to-r from-[#FEF3C7] via-[#FFFBEB] to-[#FDE68A] p-1.5 sm:p-3.5 md:p-4.5 pt-1.5 sm:pt-3 pb-1.5 sm:pb-3 border-b border-[#FDE68A]/70">
-              <div className="h-3.5 sm:h-5 mb-0.5 sm:mb-1.5" />
-              <h3 className="text-[10px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-amber-700 transition-colors truncate sm:overflow-visible">
+              <div className="h-4 sm:h-5 mb-0.5 sm:mb-1.5" />
+              <h3 className="text-[10.5px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-amber-700 transition-colors truncate sm:overflow-visible">
                 Quantitative Aptitude
               </h3>
             </div>
@@ -78,12 +81,12 @@ export default function CareerCards({
           {/* ── CARD 2: Reasoning (Pale Purple) ── */}
           <div
             onClick={() => onOpenPlacementPrep("Logical Reasoning")}
-            className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
+            className="w-[calc((100%-0.375rem)/2)] min-w-[calc((100%-0.375rem)/2)] sm:w-auto sm:min-w-0 shrink-0 sm:shrink snap-start bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow"
           >
             {/* Top Pale Purple Gradient Header */}
             <div className="w-full bg-gradient-to-r from-[#EDE9FE] via-[#F5F3FF] to-[#E0E7FF] p-1.5 sm:p-3.5 md:p-4.5 pt-1.5 sm:pt-3 pb-1.5 sm:pb-3 border-b border-[#DDD6FE]/70">
-              <div className="h-3.5 sm:h-5 mb-0.5 sm:mb-1.5" />
-              <h3 className="text-[10px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-purple-700 transition-colors truncate sm:overflow-visible">
+              <div className="h-4 sm:h-5 mb-0.5 sm:mb-1.5" />
+              <h3 className="text-[10.5px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-purple-700 transition-colors truncate sm:overflow-visible">
                 Reasoning
               </h3>
             </div>
@@ -113,12 +116,12 @@ export default function CareerCards({
           {/* ── CARD 3: Verbal Ability (Green Grape) ── */}
           <div
             onClick={() => onOpenPlacementPrep("Verbal Ability")}
-            className="bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow min-w-0"
+            className="w-[calc((100%-0.375rem)/2)] min-w-[calc((100%-0.375rem)/2)] sm:w-auto sm:min-w-0 shrink-0 sm:shrink snap-start bg-white rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 shadow-xs flex flex-col overflow-hidden h-full cursor-pointer group hover:shadow-md transition-shadow"
           >
             {/* Top Green Grape Gradient Header */}
             <div className="w-full bg-gradient-to-r from-[#ECFCCB] via-[#F7FEE7] to-[#D9F99D] p-1.5 sm:p-3.5 md:p-4.5 pt-1.5 sm:pt-3 pb-1.5 sm:pb-3 border-b border-[#D9F99D]/70">
-              <div className="h-3.5 sm:h-5 mb-0.5 sm:mb-1.5" />
-              <h3 className="text-[10px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-lime-800 transition-colors truncate sm:overflow-visible">
+              <div className="h-4 sm:h-5 mb-0.5 sm:mb-1.5" />
+              <h3 className="text-[10.5px] sm:text-base md:text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-lime-800 transition-colors truncate sm:overflow-visible">
                 Verbal Ability
               </h3>
             </div>
