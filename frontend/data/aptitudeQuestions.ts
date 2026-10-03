@@ -514,14 +514,19 @@ export const PARTNERSHIP_QUESTIONS: PlacementQuestion[] = allAptMap["Partnership
 export const HEIGHT_DISTANCE_QUESTIONS: PlacementQuestion[] = allAptMap["Height & Distance"] || [];
 export const CALENDAR_QUESTIONS: PlacementQuestion[] = allAptMap["Calendar"] || [];
 
-export { LOGICAL_REASONING_MAP };
+import { VERBAL_ABILITY_MAP } from "./verbalAbilityQuestions";
+
+export { LOGICAL_REASONING_MAP, VERBAL_ABILITY_MAP };
 
 export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
   // All 35 Quantitative Aptitude topics from IndiaBix & SkillsCatalyst question bank
   ...allAptMap,
 
-  // Logical Reasoning from IndiaBix & SkillsCatalyst question bank
+  // Complete Logical Reasoning from IndiaBix & SkillsCatalyst question bank (1,197 Qs)
   ...LOGICAL_REASONING_MAP,
+
+  // Complete Verbal Ability from IndiaBix & SkillsCatalyst question bank (1,687 Qs)
+  ...VERBAL_ABILITY_MAP,
 
   // Fallbacks if ever needed
   "Percentages": allAptMap["Percentages"] || PERCENTAGES_QUESTIONS,
@@ -538,7 +543,7 @@ export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
   "Syllogisms": SYLLOGISMS_QUESTIONS,
   "Puzzles": PUZZLES_QUESTIONS,
 
-  // Verbal Ability
+  // Additional Verbal Ability
   "Grammar": GRAMMAR_QUESTIONS,
   "Reading Comprehension": READING_COMPREHENSION_QUESTIONS,
   "Vocabulary": VOCABULARY_QUESTIONS,
