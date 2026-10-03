@@ -35,6 +35,12 @@ import { supabase } from "@/lib/supabase";
 import { getAuthHeaders, apiFetch, API_BASE } from "@/lib/api";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PremiumLockCard } from "@/components/premium";
+import {
+  getUserTopicBookmarks,
+  toggleTopicBookmark as toggleDbTopicBookmark,
+  recordLegacyAttempt,
+  getLegacyTopicAttempts
+} from "@/lib/aptitude";
 
 const TOPIC_ID_MAP: Record<string, number> = {
   // Quantitative Aptitude
@@ -399,20 +405,26 @@ export default function PlacementPrepModal({
   const [bookmarkedTopicKeys, setBookmarkedTopicKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("skillscatalyst_bookmarked_topics");
-      if (saved) setBookmarkedTopicKeys(JSON.parse(saved));
-    } catch (_) {}
+    getUserTopicBookmarks()
+      .then((saved) => {
+        if (saved && Object.keys(saved).length > 0) {
+          setBookmarkedTopicKeys(saved);
+        }
+      })
+      .catch(() => {
+        try {
+          const saved = localStorage.getItem("skillscatalyst_bookmarked_topics");
+          if (saved) setBookmarkedTopicKeys(JSON.parse(saved));
+        } catch (_) {}
+      });
   }, []);
 
   const toggleTopicBookmark = (topicName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setBookmarkedTopicKeys((prev) => {
-      const updated = { ...prev, [topicName]: !prev[topicName] };
-      try {
-        localStorage.setItem("skillscatalyst_bookmarked_topics", JSON.stringify(updated));
-      } catch (_) {}
-      return updated;
+      const isBookmarked = !prev[topicName];
+      toggleDbTopicBookmark(topicName, topicName, !isBookmarked).catch(() => {});
+      return { ...prev, [topicName]: isBookmarked };
     });
   };
 
@@ -522,28 +534,13 @@ export default function PlacementPrepModal({
     }
 
     // 2. Sync from Supabase DB / Backend API
+    // 2. Sync from Supabase DB via clean data-access layer
     const syncDatabaseProgress = async () => {
       try {
-        const { data: authData } = await supabase.auth.getUser();
-        const userId = authData.user?.id;
-        if (!userId) return;
-
-        const topicId = TOPIC_ID_MAP[selectedTopic] || 1;
-        const { data, error } = await supabase
-          .from("user_aptitude_attempts")
-          .select("question_id, selected_option_index, time_taken_seconds")
-          .eq("user_id", userId)
-          .eq("topic_id", topicId);
-
-        if (data && data.length > 0) {
-          const dbAnswers: Record<number, number> = {};
-          const dbTimes: Record<number, number> = {};
-          data.forEach((row: any) => {
-            dbAnswers[row.question_id] = row.selected_option_index;
-            dbTimes[row.question_id] = row.time_taken_seconds || 0;
-          });
-          setUserAnswers((prev) => ({ ...dbAnswers, ...prev }));
-          setQuestionTimes((prev) => ({ ...dbTimes, ...prev }));
+        const { answers, times } = await getLegacyTopicAttempts(selectedTopic);
+        if (Object.keys(answers).length > 0) {
+          setUserAnswers((prev) => ({ ...answers, ...prev }));
+          setQuestionTimes((prev) => ({ ...times, ...prev }));
         }
       } catch (err) {
         console.warn("Failed to sync database attempts:", err);
@@ -592,8 +589,10 @@ export default function PlacementPrepModal({
       console.warn("Failed to update localStorage:", e);
     }
 
-    // 2. Backend API & Supabase DB Table
+    // 2. Data-Access Layer: Supabase question_attempts & user_topic_progress
     try {
+      recordLegacyAttempt(topicName, questionId, optionIdx, isCorrect, timeSpentSec).catch(() => {});
+
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id || "guest_user";
       const topicId = TOPIC_ID_MAP[topicName] || 1;
@@ -613,20 +612,6 @@ export default function PlacementPrepModal({
         }).catch(() => {});
       });
 
-      if (authData.user?.id) {
-        await supabase.from("user_aptitude_attempts").upsert(
-          {
-            user_id: authData.user.id,
-            topic_id: topicId,
-            question_id: questionId,
-            selected_option_index: optionIdx,
-            is_correct: isCorrect,
-            time_taken_seconds: timeSpentSec,
-            attempted_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,question_id" }
-        );
-      }
       refreshCategoryStats();
     } catch (err) {
       console.warn("Database persist warning:", err);
