@@ -40,10 +40,13 @@
   - Automatic extraction of technical skills, experience, and education.
   - Comprehensive ATS scoring with actionable recommendations for resume optimization.
 
-- 💻 **Placement & Coding Practice**
-  - Curated coding problems, aptitude tests, and interview readiness modules.
+- 💻 **Placement & Aptitude Question Bank (Supabase PostgreSQL)**
+  - Comprehensive question bank of **910+ questions** across **44 topics** in Quantitative Aptitude, Logical Reasoning, and Verbal Ability.
+  - Normalized relational database schema in Supabase (`categories`, `topics`, `questions`, `question_options`, `question_attempts`, `user_topic_progress`, `topic_bookmarks`).
+  - Answer keys securely protected on server; validation via PostgreSQL stored procedures.
+  - See full documentation in [`docs/question-bank-database-architecture.md`](docs/question-bank-database-architecture.md).
   - External platform sync with LeetCode, GitHub, Codeforces, CodeChef, and GeeksforGeeks.
-  - Practice trackers to monitor performance and consistency over time.
+
 
 - 📊 **Analytics & Personal Readiness Index (PRI)**
   - Visual metrics tracking current learning streaks, completed courses, and target skill completion.
