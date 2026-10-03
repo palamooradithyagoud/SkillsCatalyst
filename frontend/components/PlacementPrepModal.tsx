@@ -922,62 +922,66 @@ export default function PlacementPrepModal({
                           {isQuantitative && (
                             <div className="space-y-4">
                               {/* Search & Filter Toolbar Card */}
-                              <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs">
-                                {/* Search Input + Status + Sort + Pick Random */}
-                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                              <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/90 p-2.5 sm:p-4 shadow-xs">
+                                {/* Search on Row 1, and (Status + Sort + Pick Random) in ONE LINE on Row 2 on mobile (or all in one row on desktop) */}
+                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3">
                                   {/* Search Input */}
-                                  <div className="relative flex-1">
-                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                  <div className="relative flex-1 min-w-0">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
                                     <input
                                       type="text"
                                       value={searchQuery}
                                       onChange={(e) => setSearchQuery(e.target.value)}
                                       placeholder="Search for topics or keywords"
-                                      className="w-full pl-10 pr-8 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                                      className="w-full pl-8 sm:pl-10 pr-7 sm:pr-8 py-2 sm:py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
                                     />
                                     {searchQuery && (
                                       <button
                                         type="button"
                                         onClick={() => setSearchQuery("")}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                       </button>
                                     )}
                                   </div>
 
-                                  {/* Status Dropdown */}
-                                  <select
-                                    value={selectedStatusFilter}
-                                    onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer shrink-0"
-                                  >
-                                    <option value="all">Status</option>
-                                    <option value="solved">Solved</option>
-                                    <option value="attempted">Attempted</option>
-                                    <option value="unattempted">Unattempted</option>
-                                  </select>
+                                  {/* Status + Sort By + Pick Random (Guaranteed ONE SINGLE LINE on mobile) */}
+                                  <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                                    {/* Status Dropdown */}
+                                    <select
+                                      value={selectedStatusFilter}
+                                      onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                                      className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                    >
+                                      <option value="all">Status</option>
+                                      <option value="solved">Solved</option>
+                                      <option value="attempted">Attempted</option>
+                                      <option value="unattempted">Unattempted</option>
+                                    </select>
 
-                                  {/* Sort By Dropdown */}
-                                  <select
-                                    value={selectedSort}
-                                    onChange={(e) => setSelectedSort(e.target.value)}
-                                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer shrink-0"
-                                  >
-                                    <option value="default">Sort By</option>
-                                    <option value="name">Topic A-Z</option>
-                                    <option value="questions">Most Questions</option>
-                                  </select>
+                                    {/* Sort By Dropdown */}
+                                    <select
+                                      value={selectedSort}
+                                      onChange={(e) => setSelectedSort(e.target.value)}
+                                      className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                    >
+                                      <option value="default">Sort By</option>
+                                      <option value="name">Topic A-Z</option>
+                                      <option value="questions">Questions</option>
+                                    </select>
 
-                                  {/* Pick Random Action Button */}
-                                  <button
-                                    type="button"
-                                    onClick={handlePickRandomTopic}
-                                    className="bg-[#00A8CD] hover:bg-[#0891B2] text-white font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
-                                  >
-                                    <RotateCw className="w-4 h-4" />
-                                    <span>Pick Random</span>
-                                  </button>
+                                    {/* Pick Random Action Button */}
+                                    <button
+                                      type="button"
+                                      onClick={handlePickRandomTopic}
+                                      className="bg-[#00A8CD] hover:bg-[#0891B2] text-white font-black text-[11px] sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
+                                      title="Pick Random Topic"
+                                    >
+                                      <RotateCw className="w-3.5 h-3.5 shrink-0" />
+                                      <span>Pick Random</span>
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
 
