@@ -72,23 +72,23 @@ def run_tests():
     # Test 2: Topics counts
     def test_topics():
         res = admin_client.table("topics").select("*").execute()
-        assert len(res.data) == 52, f"Expected 52 topics, got {len(res.data)}"
+        assert len(res.data) == 63, f"Expected 63 topics, got {len(res.data)}"
 
-    test("Topics table structure (52 topics)", test_topics)
+    test("Topics table structure (63 topics)", test_topics)
 
     # Test 3: Questions count and uniqueness
     def test_questions():
         q_count = admin_client.table("questions").select("*", count="exact", head=True).execute().count
-        assert q_count == 1174, f"Expected 1174 questions, got {q_count}"
+        assert q_count == 2107, f"Expected 2,107 questions, got {q_count}"
 
-    test("Questions total volume (1,174 questions)", test_questions)
+    test("Questions total volume (2,107 questions)", test_questions)
 
     # Test 4: Options count
     def test_options():
         opt_count = admin_client.table("question_options").select("*", count="exact", head=True).execute().count
-        assert opt_count == 4979, f"Expected 4,979 options, got {opt_count}"
+        assert opt_count == 9508, f"Expected 9,508 options, got {opt_count}"
 
-    test("Options total volume (4,979 options)", test_options)
+    test("Options total volume (9,508 options)", test_options)
 
     # Test 5: Direct Answer-Key Leakage Protection
     def test_direct_answer_leakage():
