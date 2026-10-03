@@ -44,6 +44,35 @@ const TOPIC_ID_MAP: Record<string, number> = {
   "Time, Speed & Distance": 4,
   "Probability": 5,
   "Permutations & Combinations": 6,
+  "Problems on Trains": 16,
+  "Simple Interest": 17,
+  "Compound Interest": 18,
+  "Problems on Ages": 19,
+  "Partnership": 20,
+  "Height & Distance": 21,
+  "Calendar": 22,
+  "Clock": 23,
+  "Average": 24,
+  "Area": 25,
+  "Volume and Surface Area": 26,
+  "Numbers": 27,
+  "Problems on Numbers": 28,
+  "Problems on H.C.F and L.C.M": 29,
+  "Decimal Fraction": 30,
+  "Simplification": 31,
+  "Square Root and Cube Root": 32,
+  "Surds and Indices": 33,
+  "Ratio and Proportion": 34,
+  "Chain Rule": 35,
+  "Pipes and Cistern": 36,
+  "Boats and Streams": 37,
+  "Alligation or Mixture": 38,
+  "Logarithm": 39,
+  "Races and Games": 40,
+  "Stocks and Shares": 41,
+  "True Discount": 42,
+  "Banker's Discount": 43,
+  "Odd Man Out and Series": 44,
 
   // Logical Reasoning
   "Blood Relations": 7,
@@ -84,8 +113,37 @@ const PLACEMENT_PREP_DATA = {
         { name: "Profit & Loss", status: "Ready" },
         { name: "Time & Work", status: "Ready" },
         { name: "Time, Speed & Distance", status: "Ready" },
+        { name: "Problems on Trains", status: "Ready" },
+        { name: "Simple Interest", status: "Ready" },
+        { name: "Compound Interest", status: "Ready" },
+        { name: "Problems on Ages", status: "Ready" },
+        { name: "Partnership", status: "Ready" },
         { name: "Probability", status: "Ready" },
         { name: "Permutations & Combinations", status: "Ready" },
+        { name: "Height & Distance", status: "Ready" },
+        { name: "Calendar", status: "Ready" },
+        { name: "Clock", status: "Ready" },
+        { name: "Average", status: "Ready" },
+        { name: "Area", status: "Ready" },
+        { name: "Volume and Surface Area", status: "Ready" },
+        { name: "Numbers", status: "Ready" },
+        { name: "Problems on Numbers", status: "Ready" },
+        { name: "Problems on H.C.F and L.C.M", status: "Ready" },
+        { name: "Decimal Fraction", status: "Ready" },
+        { name: "Simplification", status: "Ready" },
+        { name: "Square Root and Cube Root", status: "Ready" },
+        { name: "Surds and Indices", status: "Ready" },
+        { name: "Ratio and Proportion", status: "Ready" },
+        { name: "Chain Rule", status: "Ready" },
+        { name: "Pipes and Cistern", status: "Ready" },
+        { name: "Boats and Streams", status: "Ready" },
+        { name: "Alligation or Mixture", status: "Ready" },
+        { name: "Logarithm", status: "Ready" },
+        { name: "Races and Games", status: "Ready" },
+        { name: "Stocks and Shares", status: "Ready" },
+        { name: "True Discount", status: "Ready" },
+        { name: "Banker's Discount", status: "Ready" },
+        { name: "Odd Man Out and Series", status: "Ready" },
       ],
     },
     {
@@ -360,14 +418,7 @@ export default function PlacementPrepModal({
 
   // Aggregate all Quantitative Aptitude topics with dynamic question counts, attempts & solve status (Zero hardcoding)
   const allQuantTopics = React.useMemo(() => {
-    const quantTopics = [
-      "Percentages",
-      "Profit & Loss",
-      "Time & Work",
-      "Time, Speed & Distance",
-      "Probability",
-      "Permutations & Combinations",
-    ];
+    const quantTopics = PLACEMENT_PREP_DATA.aptitude[0].topics.map((t) => t.name);
 
     return quantTopics.map((topicName) => {
       const qArray = QUANTITATIVE_APTITUDE_MAP[topicName] || [];
@@ -904,12 +955,6 @@ export default function PlacementPrepModal({
                                       <span className="text-neutral-400 font-medium">Total Attempts</span>
                                       <span className="font-bold text-indigo-400">
                                         {stats.totalAttempts}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-2.5">
-                                      <span className="text-neutral-400 font-medium">Accuracy</span>
-                                      <span className="font-black text-emerald-400">
-                                        {stats.accuracy.toFixed(2)}%
                                       </span>
                                     </div>
                                   </div>
