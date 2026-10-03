@@ -500,14 +500,30 @@ export const SENTENCE_CORRECTION_QUESTIONS: PlacementQuestion[] = [
   },
 ];
 
+import allAptitudeData from "./allAptitudeQuestions.json";
+
+const allAptMap = allAptitudeData as Record<string, PlacementQuestion[]>;
+
+export const PROBLEMS_ON_TRAINS_QUESTIONS: PlacementQuestion[] = allAptMap["Problems on Trains"] || [];
+export const SIMPLE_INTEREST_QUESTIONS: PlacementQuestion[] = allAptMap["Simple Interest"] || [];
+export const COMPOUND_INTEREST_QUESTIONS: PlacementQuestion[] = allAptMap["Compound Interest"] || [];
+export const PROBLEMS_ON_AGES_QUESTIONS: PlacementQuestion[] = allAptMap["Problems on Ages"] || [];
+export const PARTNERSHIP_QUESTIONS: PlacementQuestion[] = allAptMap["Partnership"] || [];
+export const HEIGHT_DISTANCE_QUESTIONS: PlacementQuestion[] = allAptMap["Height & Distance"] || [];
+export const CALENDAR_QUESTIONS: PlacementQuestion[] = allAptMap["Calendar"] || [];
+
+
 export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
-  // Quantitative Aptitude
-  "Percentages": PERCENTAGES_QUESTIONS,
-  "Profit & Loss": PROFIT_LOSS_QUESTIONS,
-  "Time & Work": TIME_WORK_QUESTIONS,
-  "Time, Speed & Distance": TIME_SPEED_DISTANCE_QUESTIONS,
-  "Probability": PROBABILITY_QUESTIONS,
-  "Permutations & Combinations": PERMUTATIONS_COMBINATIONS_QUESTIONS,
+  // All 35 Quantitative Aptitude topics from IndiaBix & SkillsCatalyst question bank
+  ...allAptMap,
+
+  // Fallbacks if ever needed
+  "Percentages": allAptMap["Percentages"] || PERCENTAGES_QUESTIONS,
+  "Profit & Loss": allAptMap["Profit & Loss"] || PROFIT_LOSS_QUESTIONS,
+  "Time & Work": allAptMap["Time & Work"] || TIME_WORK_QUESTIONS,
+  "Time, Speed & Distance": allAptMap["Time, Speed & Distance"] || TIME_SPEED_DISTANCE_QUESTIONS,
+  "Probability": allAptMap["Probability"] || PROBABILITY_QUESTIONS,
+  "Permutations & Combinations": allAptMap["Permutations & Combinations"] || PERMUTATIONS_COMBINATIONS_QUESTIONS,
 
   // Logical Reasoning
   "Blood Relations": BLOOD_RELATIONS_QUESTIONS,
@@ -522,4 +538,6 @@ export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
   "Vocabulary": VOCABULARY_QUESTIONS,
   "Sentence Correction": SENTENCE_CORRECTION_QUESTIONS,
 };
+
+
 
