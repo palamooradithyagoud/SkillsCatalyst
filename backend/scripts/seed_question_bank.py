@@ -10,17 +10,22 @@ import re
 import sys
 import uuid
 from pathlib import Path
+from dotenv import load_dotenv
 from supabase import create_client
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zzjxprhapptjoziwdcro.supabase.co")
-SUPABASE_SERVICE_KEY = os.environ.get(
-    "SUPABASE_SERVICE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6anhwcmhhcHB0am96aXdkY3JvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTMwODM4OCwiZXhwIjoyMTAwODg0Mzg4fQ.I6YrQzIapvjCUBf7MPwi8x55PyreIc_EL3-zs3PqVfw"
-)
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(ROOT_DIR / ".env")
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+if not SUPABASE_URL:
+    raise ValueError("SUPABASE_URL environment variable must be set.")
+
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+if not SUPABASE_SERVICE_KEY:
+    raise ValueError("SUPABASE_SERVICE_KEY environment variable must be set. Never hardcode credentials.")
 
 client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DATA = ROOT_DIR / "frontend" / "data"
 
 NS = uuid.NAMESPACE_DNS

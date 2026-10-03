@@ -63,13 +63,13 @@ export async function recordLegacyAttempt(
   topicName: string,
   legacyId: number,
   optionIdx: number,
-  isCorrect: boolean,
+  _isCorrect: boolean,
   timeSpentSec: number
-): Promise<void> {
+): Promise<QuestionAttemptResult | null> {
   try {
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
-    if (!userId) return;
+    if (!userId) return null;
 
     // Look up question by topic name and legacy_id
     const { data: qData } = await supabase
@@ -79,29 +79,16 @@ export async function recordLegacyAttempt(
       .eq("topics.name", topicName)
       .maybeSingle();
 
-    if (!qData) return;
+    if (!qData) return null;
 
     const opt = (qData.question_options as any[])?.find((o) => o.display_order === optionIdx);
+    if (!opt) return null;
 
-    await supabase.from("question_attempts").insert({
-      user_id: userId,
-      question_id: qData.id,
-      selected_option_id: opt?.id || null,
-      is_correct: isCorrect,
-      time_taken_seconds: timeSpentSec,
-    });
-
-    // Upsert user topic progress
-    await supabase.from("user_topic_progress").upsert({
-      user_id: userId,
-      topic_id: qData.topic_id,
-      attempted_count: 1,
-      solved_count: isCorrect ? 1 : 0,
-      total_time_seconds: timeSpentSec,
-      last_practiced_at: new Date().toISOString(),
-    }, { onConflict: "user_id,topic_id" });
+    // Securely invoke server RPC
+    return await submitQuestionAttempt(qData.id, opt.id, timeSpentSec);
   } catch (err) {
-    console.warn("Failed to record legacy attempt to Supabase:", err);
+    console.warn("Failed to record legacy attempt to Supabase via RPC:", err);
+    return null;
   }
 }
 

@@ -5,6 +5,7 @@ export interface PlacementQuestion {
   correctIndex: number;
   answerText: string;
   solution: string;
+  dbOptions?: any[];
 }
 
 import { PERCENTAGES_QUESTIONS } from "./percentagesQuestions";

@@ -98,4 +98,5 @@ export interface LegacyPlacementQuestion {
   correctIndex?: number;
   answerText?: string;
   solution?: string;
+  dbOptions?: QuestionOptionDTO[];
 }
