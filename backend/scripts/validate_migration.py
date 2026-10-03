@@ -6,13 +6,19 @@ Verifies data integrity, question counts, option correctness, and security in Su
 import os
 import json
 from pathlib import Path
+from dotenv import load_dotenv
 from supabase import create_client
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zzjxprhapptjoziwdcro.supabase.co")
-SUPABASE_SERVICE_KEY = os.environ.get(
-    "SUPABASE_SERVICE_KEY",
-    "REDACTED_SERVICE_ROLE_KEY"
-)
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(ROOT_DIR / ".env")
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+if not SUPABASE_URL:
+    raise ValueError("SUPABASE_URL environment variable must be set.")
+
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+if not SUPABASE_SERVICE_KEY:
+    raise ValueError("SUPABASE_SERVICE_KEY environment variable must be set. Never hardcode credentials.")
 
 client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 

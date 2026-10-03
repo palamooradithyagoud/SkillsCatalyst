@@ -52,6 +52,7 @@ export function toLegacyQuestions(questions: QuestionDTO[]): LegacyPlacementQues
       dbId: q.id,
       question: `${q.legacy_id}. ${q.question_text}`,
       options: formattedOptions,
+      dbOptions: q.options,
     };
   });
 }
