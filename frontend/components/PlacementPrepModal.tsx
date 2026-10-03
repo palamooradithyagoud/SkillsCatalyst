@@ -84,6 +84,14 @@ const TOPIC_ID_MAP: Record<string, number> = {
   "Odd Man Out and Series": 44,
 
   // Logical Reasoning
+  "Number Series": 45,
+  "Letter and Symbol Series": 46,
+  "Verbal Classification": 47,
+  "Essential Part": 48,
+  "Analogies": 49,
+  "Artificial Language": 50,
+  "Matching Definitions": 51,
+  "Making Judgments": 52,
   "Blood Relations": 7,
   "Seating Arrangement": 8,
   "Coding-Decoding": 9,
@@ -166,6 +174,14 @@ const PLACEMENT_PREP_DATA = {
       footerColor: "text-purple-600 hover:text-purple-800",
       description: "Analytical reasoning, pattern recognition, and critical deduction assessments.",
       topics: [
+        { name: "Number Series", status: "Ready" },
+        { name: "Letter and Symbol Series", status: "Ready" },
+        { name: "Verbal Classification", status: "Ready" },
+        { name: "Essential Part", status: "Ready" },
+        { name: "Analogies", status: "Ready" },
+        { name: "Artificial Language", status: "Ready" },
+        { name: "Matching Definitions", status: "Ready" },
+        { name: "Making Judgments", status: "Ready" },
         { name: "Blood Relations", status: "Ready" },
         { name: "Seating Arrangement", status: "Ready" },
         { name: "Coding-Decoding", status: "Ready" },
@@ -435,82 +451,74 @@ export default function PlacementPrepModal({
     });
   };
 
-  // Aggregate all Quantitative Aptitude topics with dynamic question counts, attempts & solve status (Zero hardcoding)
-  const allQuantTopics = React.useMemo(() => {
-    const quantTopics = PLACEMENT_PREP_DATA.aptitude[0].topics.map((t) => t.name);
+  // Dynamic topic aggregator per section with live question counts, attempts & solve status
+  const getFilteredTopicsForSection = React.useCallback(
+    (sectionTopics: { name: string; status: string }[]) => {
+      const topicItems = sectionTopics.map((t) => {
+        const topicName = t.name;
+        const qArray = dbQuestionsMap[topicName] || QUANTITATIVE_APTITUDE_MAP[topicName] || [];
+        const questionCount = qArray.length;
+        let savedAns: Record<number, number> = {};
+        try {
+          const saved = typeof window !== "undefined" ? localStorage.getItem(`skillscatalyst_aptitude_progress_${topicName}`) : null;
+          if (saved) {
+            savedAns = JSON.parse(saved).userAnswers || {};
+          }
+        } catch (_) {}
 
-    return quantTopics.map((topicName) => {
-      const qArray = dbQuestionsMap[topicName] || QUANTITATIVE_APTITUDE_MAP[topicName] || [];
-      const questionCount = qArray.length;
-      let savedAns: Record<number, number> = {};
-      try {
-        const saved = typeof window !== "undefined" ? localStorage.getItem(`skillscatalyst_aptitude_progress_${topicName}`) : null;
-        if (saved) {
-          savedAns = JSON.parse(saved).userAnswers || {};
-        }
-      } catch (_) {}
+        const answeredIds = Object.keys(savedAns);
+        const attemptedCount = answeredIds.length;
+        let correctCount = 0;
+        qArray.forEach((q) => {
+          if (savedAns[q.id] === q.correctIndex) {
+            correctCount++;
+          }
+        });
 
-      const answeredIds = Object.keys(savedAns);
-      const attemptedCount = answeredIds.length;
-      let correctCount = 0;
-      qArray.forEach((q) => {
-        if (savedAns[q.id] === q.correctIndex) {
-          correctCount++;
-        }
+        const isSolved = attemptedCount > 0 && correctCount === questionCount && questionCount > 0;
+        const isAttempted = attemptedCount > 0;
+
+        return {
+          name: topicName,
+          questionCount,
+          attemptedCount,
+          solvedCount: correctCount,
+          isSolved,
+          isAttempted,
+          isBookmarked: !!bookmarkedTopicKeys[topicName],
+          points: questionCount * 10,
+        };
       });
 
-      const isSolved = attemptedCount > 0 && correctCount === questionCount && questionCount > 0;
-      const isAttempted = attemptedCount > 0;
+      return topicItems
+        .filter((item) => {
+          // Quick filter tab
+          if (quickFilterTab === "bookmarks" && !item.isBookmarked) return false;
+          if (quickFilterTab === "attempted" && !item.isAttempted) return false;
+          if (quickFilterTab === "solved" && !item.isSolved) return false;
 
-      return {
-        name: topicName,
-        questionCount,
-        attemptedCount,
-        solvedCount: correctCount,
-        isSolved,
-        isAttempted,
-        isBookmarked: !!bookmarkedTopicKeys[topicName],
-        points: questionCount * 10,
-      };
-    });
-  }, [bookmarkedTopicKeys, categoryStats]);
+          // Search Query
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            const matchTopic = item.name.toLowerCase().includes(q);
+            if (!matchTopic) return false;
+          }
 
-  // Filtered Topics according to Search, Status, Sort, and Quick Filter Tabs
-  const filteredTopicList = React.useMemo(() => {
-    return allQuantTopics
-      .filter((item) => {
-        // Quick filter tab
-        if (quickFilterTab === "bookmarks" && !item.isBookmarked) return false;
-        if (quickFilterTab === "attempted" && !item.isAttempted) return false;
-        if (quickFilterTab === "solved" && !item.isSolved) return false;
+          // Status Dropdown
+          if (selectedStatusFilter === "solved" && !item.isSolved) return false;
+          if (selectedStatusFilter === "attempted" && !item.isAttempted) return false;
+          if (selectedStatusFilter === "unattempted" && item.isAttempted) return false;
 
-        // Search Query
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchTopic = item.name.toLowerCase().includes(q);
-          if (!matchTopic) return false;
-        }
-
-        // Status Dropdown
-        if (selectedStatusFilter === "solved" && !item.isSolved) return false;
-        if (selectedStatusFilter === "attempted" && !item.isAttempted) return false;
-        if (selectedStatusFilter === "unattempted" && item.isAttempted) return false;
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (selectedSort === "name") return a.name.localeCompare(b.name);
-        if (selectedSort === "questions") return b.questionCount - a.questionCount;
-        return 0; // default order
-      });
-  }, [allQuantTopics, quickFilterTab, searchQuery, selectedStatusFilter, selectedSort]);
-
-  const handlePickRandomTopic = () => {
-    if (filteredTopicList.length === 0) return;
-    const rand = Math.floor(Math.random() * filteredTopicList.length);
-    const target = filteredTopicList[rand];
-    startTopicQuiz(target.name, 0);
-  };
+          return true;
+        })
+        .sort((a, b) => {
+          if (selectedSort === "name") return a.name.localeCompare(b.name);
+          if (selectedSort === "questions") return b.questionCount - a.questionCount;
+          return 0; // default order
+        });
+    },
+    [dbQuestionsMap, bookmarkedTopicKeys, quickFilterTab, searchQuery, selectedStatusFilter, selectedSort]
+  );
 
   // Escape key handler
   useEffect(() => {
@@ -906,7 +914,9 @@ export default function PlacementPrepModal({
                               style={{
                                 backgroundImage: isQuantitative
                                   ? "radial-gradient(#b45309 0.75px, transparent 0.75px)"
-                                  : "radial-gradient(#4338ca 0.75px, transparent 0.75px)",
+                                  : section.category === "Logical Reasoning"
+                                  ? "radial-gradient(#7c3aed 0.75px, transparent 0.75px)"
+                                  : "radial-gradient(#059669 0.75px, transparent 0.75px)",
                                 backgroundSize: "20px 20px",
                               }}
                             />
@@ -920,16 +930,22 @@ export default function PlacementPrepModal({
                                   className={`w-13 h-13 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${
                                     isQuantitative
                                       ? "bg-amber-200/70 border border-amber-300/90"
-                                      : "bg-white/80 border border-slate-200/80"
+                                      : section.category === "Logical Reasoning"
+                                      ? "bg-purple-200/70 border border-purple-300/90"
+                                      : "bg-emerald-200/70 border border-emerald-300/90"
                                   }`}
                                 >
                                   {isQuantitative ? (
                                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-slate-950 text-base sm:text-lg shadow-xs tracking-tight">
                                       QA
                                     </div>
+                                  ) : section.category === "Logical Reasoning" ? (
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 border border-purple-500/40 flex items-center justify-center font-black text-white text-base sm:text-lg shadow-xs tracking-tight">
+                                      LR
+                                    </div>
                                   ) : (
-                                    <div className={`p-2.5 rounded-lg ${section.iconBg}`}>
-                                      <Icon className="w-5 h-5 text-white" />
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 border border-emerald-500/40 flex items-center justify-center font-black text-white text-base sm:text-lg shadow-xs tracking-tight">
+                                      VA
                                     </div>
                                   )}
                                 </div>
@@ -1017,140 +1033,146 @@ export default function PlacementPrepModal({
                             </div>
                           </motion.div>
 
-                          {/* ── TOPICS EXPLORER & LIST (Image 1 Reference with Topics) ── */}
-                          {isQuantitative && (
-                            <div className="space-y-4">
-                              {/* Search & Filter Toolbar Card */}
-                              <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/90 p-2.5 sm:p-4 shadow-xs">
-                                {/* Search on Row 1, and (Status + Sort + Pick Random) in ONE LINE on Row 2 on mobile (or all in one row on desktop) */}
-                                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3">
-                                  {/* Search Input */}
-                                  <div className="relative flex-1 min-w-0">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
-                                    <input
-                                      type="text"
-                                      value={searchQuery}
-                                      onChange={(e) => setSearchQuery(e.target.value)}
-                                      placeholder="Search for topics or keywords"
-                                      className="w-full pl-8 sm:pl-10 pr-7 sm:pr-8 py-2 sm:py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
-                                    />
-                                    {searchQuery && (
+                          {/* ── TOPICS EXPLORER & LIST FOR THIS SECTION ── */}
+                          {(() => {
+                            const sectionTopicList = getFilteredTopicsForSection(section.topics);
+                            return (
+                              <div className="space-y-4">
+                                {/* Search & Filter Toolbar Card */}
+                                <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/90 p-2.5 sm:p-4 shadow-xs">
+                                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3">
+                                    {/* Search Input */}
+                                    <div className="relative flex-1 min-w-0">
+                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+                                      <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={`Search in ${section.category}...`}
+                                        className="w-full pl-8 sm:pl-10 pr-7 sm:pr-8 py-2 sm:py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                                      />
+                                      {searchQuery && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setSearchQuery("")}
+                                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        >
+                                          <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* Status + Sort By + Pick Random */}
+                                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                                      {/* Status Dropdown */}
+                                      <select
+                                        value={selectedStatusFilter}
+                                        onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                      >
+                                        <option value="all">Status</option>
+                                        <option value="solved">Solved</option>
+                                        <option value="attempted">Attempted</option>
+                                        <option value="unattempted">Unattempted</option>
+                                      </select>
+
+                                      {/* Sort By Dropdown */}
+                                      <select
+                                        value={selectedSort}
+                                        onChange={(e) => setSelectedSort(e.target.value)}
+                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                      >
+                                        <option value="default">Sort By</option>
+                                        <option value="name">Topic A-Z</option>
+                                        <option value="questions">Questions</option>
+                                      </select>
+
+                                      {/* Pick Random Action Button */}
                                       <button
                                         type="button"
-                                        onClick={() => setSearchQuery("")}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        onClick={() => {
+                                          if (sectionTopicList.length === 0) return;
+                                          const rand = Math.floor(Math.random() * sectionTopicList.length);
+                                          startTopicQuiz(sectionTopicList[rand].name, 0);
+                                        }}
+                                        className="bg-[#00A8CD] hover:bg-[#0891B2] text-white font-black text-[11px] sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
+                                        title="Pick Random Topic"
                                       >
-                                        <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                        <RotateCw className="w-3.5 h-3.5 shrink-0" />
+                                        <span>Pick Random</span>
                                       </button>
-                                    )}
-                                  </div>
-
-                                  {/* Status + Sort By + Pick Random (Guaranteed ONE SINGLE LINE on mobile) */}
-                                  <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                                    {/* Status Dropdown */}
-                                    <select
-                                      value={selectedStatusFilter}
-                                      onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                      className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
-                                    >
-                                      <option value="all">Status</option>
-                                      <option value="solved">Solved</option>
-                                      <option value="attempted">Attempted</option>
-                                      <option value="unattempted">Unattempted</option>
-                                    </select>
-
-                                    {/* Sort By Dropdown */}
-                                    <select
-                                      value={selectedSort}
-                                      onChange={(e) => setSelectedSort(e.target.value)}
-                                      className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
-                                    >
-                                      <option value="default">Sort By</option>
-                                      <option value="name">Topic A-Z</option>
-                                      <option value="questions">Questions</option>
-                                    </select>
-
-                                    {/* Pick Random Action Button */}
-                                    <button
-                                      type="button"
-                                      onClick={handlePickRandomTopic}
-                                      className="bg-[#00A8CD] hover:bg-[#0891B2] text-white font-black text-[11px] sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
-                                      title="Pick Random Topic"
-                                    >
-                                      <RotateCw className="w-3.5 h-3.5 shrink-0" />
-                                      <span>Pick Random</span>
-                                    </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Topic Rows List Container */}
-                              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
-                                {filteredTopicList.length === 0 ? (
-                                  <div className="p-8 text-center text-slate-500 text-sm">
-                                    No topics match your current filters. Try changing or clearing your search.
-                                  </div>
-                                ) : (
-                                  filteredTopicList.map((item) => (
-                                    <div
-                                      key={item.name}
-                                      className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
-                                    >
-                                      <div className="flex-1 min-w-0">
-                                        <h4
-                                          onClick={() => startTopicQuiz(item.name, 0)}
-                                          className="text-sm sm:text-base font-black text-slate-900 hover:text-indigo-600 cursor-pointer transition-colors leading-snug"
-                                        >
-                                          {item.name}
-                                        </h4>
-                                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                          <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
-                                            <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                            {item.questionCount} Questions
-                                          </span>
-                                          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                            <Clock className="w-3 h-3 text-slate-400" />
-                                            — {item.attemptedCount} attempted
-                                          </span>
-                                          {item.isSolved ? (
-                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                                              <Check className="w-2.5 h-2.5 stroke-[3]" /> Solved
+                                {/* Topic Rows List Container */}
+                                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+                                  {sectionTopicList.length === 0 ? (
+                                    <div className="p-8 text-center text-slate-500 text-sm">
+                                      No topics match your current filters in {section.category}.
+                                    </div>
+                                  ) : (
+                                    sectionTopicList.map((item) => (
+                                      <div
+                                        key={item.name}
+                                        className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
+                                      >
+                                        <div className="flex-1 min-w-0">
+                                          <h4
+                                            onClick={() => startTopicQuiz(item.name, 0)}
+                                            className="text-sm sm:text-base font-black text-slate-900 hover:text-indigo-600 cursor-pointer transition-colors leading-snug"
+                                          >
+                                            {item.name}
+                                          </h4>
+                                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                            <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
+                                              <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                              {item.questionCount} Questions
                                             </span>
-                                          ) : item.isAttempted ? (
-                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
-                                              {item.solvedCount}/{item.questionCount} Solved
+                                            <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                                              <Clock className="w-3 h-3 text-slate-400" />
+                                              — {item.attemptedCount} attempted
                                             </span>
-                                          ) : null}
+                                            {item.isSolved ? (
+                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                                <Check className="w-2.5 h-2.5 stroke-[3]" /> Solved
+                                              </span>
+                                            ) : item.isAttempted ? (
+                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                                {item.solvedCount}/{item.questionCount} Solved
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2.5 shrink-0">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => toggleTopicBookmark(item.name, e)}
+                                            className={`p-2 rounded-xl transition-all cursor-pointer ${
+                                              item.isBookmarked
+                                                ? "bg-rose-50 text-rose-500 hover:bg-rose-100"
+                                                : "text-slate-300 hover:text-slate-500 hover:bg-slate-100"
+                                            }`}
+                                            title={item.isBookmarked ? "Remove Bookmark" : "Bookmark Topic"}
+                                          >
+                                            <Bookmark className={`w-4 h-4 ${item.isBookmarked ? "fill-rose-500 text-rose-500" : ""}`} />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => startTopicQuiz(item.name, 0)}
+                                            className="bg-[#0F172A] hover:bg-[#1E293B] text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                                          >
+                                            Solve
+                                          </button>
                                         </div>
                                       </div>
-
-                                      <div className="flex items-center gap-2.5 shrink-0">
-                                        <button
-                                          type="button"
-                                          onClick={(e) => toggleTopicBookmark(item.name, e)}
-                                          className={`p-2 rounded-xl transition-all cursor-pointer ${
-                                            item.isBookmarked
-                                              ? "bg-rose-50 text-rose-500 hover:bg-rose-100"
-                                              : "text-slate-300 hover:text-slate-500 hover:bg-slate-100"
-                                          }`}
-                                          title={item.isBookmarked ? "Remove Bookmark" : "Bookmark Topic"}
-                                        >
-                                          <Bookmark className={`w-4 h-4 ${item.isBookmarked ? "fill-rose-500 text-rose-500" : ""}`} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => startTopicQuiz(item.name, 0)}
-                                          className="bg-[#0F172A] hover:bg-[#1E293B] text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-                                        >
-                                          Solve
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
+                                    ))
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </React.Fragment>
                       );
                     })}

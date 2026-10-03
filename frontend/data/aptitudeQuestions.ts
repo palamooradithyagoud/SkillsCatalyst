@@ -502,6 +502,7 @@ export const SENTENCE_CORRECTION_QUESTIONS: PlacementQuestion[] = [
 ];
 
 import allAptitudeData from "./allAptitudeQuestions.json";
+import { LOGICAL_REASONING_MAP } from "./logicalReasoningQuestions";
 
 const allAptMap = allAptitudeData as Record<string, PlacementQuestion[]>;
 
@@ -513,10 +514,14 @@ export const PARTNERSHIP_QUESTIONS: PlacementQuestion[] = allAptMap["Partnership
 export const HEIGHT_DISTANCE_QUESTIONS: PlacementQuestion[] = allAptMap["Height & Distance"] || [];
 export const CALENDAR_QUESTIONS: PlacementQuestion[] = allAptMap["Calendar"] || [];
 
+export { LOGICAL_REASONING_MAP };
 
 export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
   // All 35 Quantitative Aptitude topics from IndiaBix & SkillsCatalyst question bank
   ...allAptMap,
+
+  // Logical Reasoning from IndiaBix & SkillsCatalyst question bank
+  ...LOGICAL_REASONING_MAP,
 
   // Fallbacks if ever needed
   "Percentages": allAptMap["Percentages"] || PERCENTAGES_QUESTIONS,
@@ -526,7 +531,7 @@ export const QUANTITATIVE_APTITUDE_MAP: Record<string, PlacementQuestion[]> = {
   "Probability": allAptMap["Probability"] || PROBABILITY_QUESTIONS,
   "Permutations & Combinations": allAptMap["Permutations & Combinations"] || PERMUTATIONS_COMBINATIONS_QUESTIONS,
 
-  // Logical Reasoning
+  // Additional Logical Reasoning
   "Blood Relations": BLOOD_RELATIONS_QUESTIONS,
   "Seating Arrangement": SEATING_ARRANGEMENT_QUESTIONS,
   "Coding-Decoding": CODING_DECODING_QUESTIONS,
