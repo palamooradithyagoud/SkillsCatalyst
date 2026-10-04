@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Bookmark,
   Loader2,
-  Sparkles,
   CheckCircle,
   X,
   ShieldAlert,
@@ -332,11 +331,12 @@ export default function LearningPage() {
             />
 
             {/* Search bar matching Image 2 */}
-            <div className="bg-white rounded-[28px] p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="relative flex-1">
+            <div className="bg-white rounded-[28px] p-4 sm:p-6 border border-slate-200/80 shadow-xs space-y-3 sm:space-y-4">
+              <div className="flex flex-col gap-3">
+                {/* 1. Full-width Search Bar */}
+                <div className="relative w-full">
                   <Search
-                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 pointer-events-none"
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#8b0b52] pointer-events-none"
                   />
                   <input
                     type="text"
@@ -347,31 +347,36 @@ export default function LearningPage() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 border border-slate-200/90 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none transition-all shadow-2xs ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 border border-slate-200/90 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#8b0b52] focus:ring-2 focus:ring-[#8b0b52]/20 focus:outline-none transition-all shadow-2xs ${
                       queryError ? "border-rose-500" : ""
                     }`}
                   />
                 </div>
-                <SelectDropdown value={language} options={LANGUAGES} onChange={setLanguage} />
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSearch()}
-                  disabled={searching || !query.trim()}
-                  className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 whitespace-nowrap bg-gradient-to-r from-[#5f13e7] to-[#7928ca] hover:from-[#530dd4] hover:to-[#6b20b8] shadow-md shadow-purple-600/25 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {searching ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-white" /> Searching...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-purple-200" />
-                      <span>Find Resources</span>
-                      <ArrowRight className="w-4 h-4 text-white" />
-                    </>
-                  )}
-                </motion.button>
+
+                {/* 2. Downside: Language Dropdown and Find Resources together in one place */}
+                <div className="flex flex-row items-center gap-2.5 sm:gap-3 w-full">
+                  <div className="shrink-0">
+                    <SelectDropdown value={language} options={LANGUAGES} onChange={setLanguage} />
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSearch()}
+                    disabled={searching || !query.trim()}
+                    className="flex-1 sm:flex-initial sm:px-8 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 whitespace-nowrap bg-[#8b0b52] hover:bg-[#730944] active:bg-[#5e0737] shadow-md shadow-[#8b0b52]/25 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {searching ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" /> Searching...
+                      </>
+                    ) : (
+                      <>
+                        <span>Find Resources</span>
+                        <ArrowRight className="w-4 h-4 text-white" />
+                      </>
+                    )}
+                  </motion.button>
+                </div>
               </div>
 
               {/* Popular Skill Pills with authentic logos & Browse all */}
