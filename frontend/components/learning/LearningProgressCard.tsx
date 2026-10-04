@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Flame,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   ArrowRight,
   Hourglass,
@@ -237,53 +237,53 @@ export function LearningProgressCard({
         <div className="flex-1 min-w-0">
           <div className="w-full grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/10 p-2 sm:p-3 lg:py-4 bg-black/15 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/15 shadow-inner">
             {/* Stat 1: Day Streak */}
-            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-amber-400/25 border border-amber-300/30 text-amber-300 flex items-center justify-center mb-1 shadow-2xs">
-                <Flame className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-300" />
+            <div className="group/stat flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 flex items-center justify-center mb-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 group-hover/stat:scale-105">
+                <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-300 fill-amber-400/35 drop-shadow-[0_2px_8px_rgba(251,191,36,0.4)]" strokeWidth={2.2} />
               </div>
               <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.streak}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-semibold text-pink-100/75 mt-0.5 tracking-wide">
                 Day Streak
               </span>
             </div>
 
             {/* Stat 2: Completed Videos */}
-            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-emerald-400/25 border border-emerald-300/30 text-emerald-300 flex items-center justify-center mb-1 shadow-2xs">
-                <CheckCircle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
+            <div className="group/stat flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 flex items-center justify-center mb-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 group-hover/stat:scale-105">
+                <CheckCircle2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-300 drop-shadow-[0_2px_8px_rgba(110,231,183,0.4)]" strokeWidth={2.2} />
               </div>
               <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight truncate max-w-full">
                 {metrics.completedVideos}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-semibold text-pink-100/75 mt-0.5 tracking-wide">
                 Completed
               </span>
             </div>
 
             {/* Stat 3: Remaining Videos */}
-            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-pink-300/25 border border-pink-200/30 text-pink-200 flex items-center justify-center mb-1 shadow-2xs">
-                <Hourglass className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
+            <div className="group/stat flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 flex items-center justify-center mb-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 group-hover/stat:scale-105">
+                <Hourglass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-pink-200 fill-pink-300/25 drop-shadow-[0_2px_8px_rgba(244,114,182,0.4)]" strokeWidth={2.2} />
               </div>
               <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.remainingVideos}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-semibold text-pink-100/75 mt-0.5 tracking-wide">
                 Remaining
               </span>
             </div>
 
             {/* Stat 4: Learning Watch Time */}
-            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-sky-400/25 border border-sky-300/30 text-sky-200 flex items-center justify-center mb-1 shadow-2xs">
-                <Clock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
+            <div className="group/stat flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 flex items-center justify-center mb-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 group-hover/stat:scale-105">
+                <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-sky-300 drop-shadow-[0_2px_8px_rgba(125,211,252,0.4)]" strokeWidth={2.2} />
               </div>
               <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.learningHours}h
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-semibold text-pink-100/75 mt-0.5 tracking-wide">
                 Learning Time
               </span>
             </div>
