@@ -145,31 +145,29 @@ export function LearningProgressCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="relative w-full rounded-2xl border border-slate-200/90 bg-white shadow-[0_2px_16px_rgba(99,102,241,0.04)] p-3.5 sm:p-4 overflow-hidden"
+      className="relative w-full rounded-2xl border border-[#b3126a]/40 bg-gradient-to-br from-[#8b0b52] via-[#7a0947] to-[#5e0535] shadow-[0_8px_30px_rgba(139,11,82,0.28)] p-3.5 sm:p-4 overflow-hidden text-white"
     >
       {/* Background ambient lighting glows */}
-      <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-indigo-400/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-20 -left-20 w-64 h-64 bg-rose-400/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* ── TOP HEADER ROW ── */}
-      <div className="relative flex flex-row items-center justify-between gap-2 pb-2 mb-2 sm:mb-2.5 border-b border-slate-100">
+      <div className="relative flex flex-row items-center justify-between gap-2 pb-2 mb-2 sm:mb-2.5 border-b border-white/15">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm sm:text-base md:text-xl font-black text-slate-900 tracking-tight leading-tight truncate">
+          <h2 className="text-sm sm:text-base md:text-xl font-black text-white tracking-tight leading-tight truncate">
             Your Learning{" "}
-            <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">
               Progress
             </span>
           </h2>
-          <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate">
-            Stay consistent. Small steps lead to big opportunities 🚀
-          </p>
         </div>
 
         <Link
           href="/analytics"
-          className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-purple-50/80 hover:bg-purple-100 text-purple-700 border border-purple-200/70 text-[10px] sm:text-[11px] font-bold transition-all shadow-2xs shrink-0 hover:shadow-xs group/btn"
+          className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white border border-white/25 text-[10px] sm:text-[11px] font-bold transition-all shadow-2xs shrink-0 hover:shadow-xs group/btn backdrop-blur-xs"
         >
           <span>View Details</span>
-          <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-pink-200 group-hover/btn:translate-x-0.5 transition-transform" />
         </Link>
       </div>
 
@@ -180,17 +178,11 @@ export function LearningProgressCard({
           {/* Circle SVG */}
           <div className="relative w-18 h-18 sm:w-24 sm:h-24 lg:w-28 lg:h-28 flex items-center justify-center">
             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-              <defs>
-                <linearGradient id="learningGaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8B5CF6" />
-                  <stop offset="100%" stopColor="#6366F1" />
-                </linearGradient>
-              </defs>
               <circle
                 cx="50"
                 cy="50"
                 r="40"
-                className="stroke-slate-100"
+                className="stroke-white/20"
                 strokeWidth="8"
                 fill="transparent"
               />
@@ -198,7 +190,7 @@ export function LearningProgressCard({
                 cx="50"
                 cy="50"
                 r="40"
-                stroke="url(#learningGaugeGradient)"
+                stroke="#ffffff"
                 strokeWidth="8"
                 strokeDasharray={2 * Math.PI * 40}
                 strokeDashoffset={
@@ -212,7 +204,7 @@ export function LearningProgressCard({
             </svg>
             {/* Center Percentage */}
             <div className="absolute inset-0 flex items-center justify-center text-center select-none">
-              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-none">
                 {metrics.progressPct}%
               </span>
             </div>
@@ -220,19 +212,19 @@ export function LearningProgressCard({
 
           {/* Downside text */}
           <div className="flex flex-col items-center text-center mt-1 sm:mt-1.5">
-            <span className="text-[8.5px] sm:text-[10px] lg:text-[11px] font-black text-purple-600 uppercase tracking-wider leading-tight">
+            <span className="text-[8.5px] sm:text-[10px] lg:text-[11px] font-black text-pink-200 uppercase tracking-wider leading-tight">
               Saved Progress
             </span>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className="text-[8px] sm:text-[9.5px] lg:text-[10.5px] font-bold text-slate-600 tabular-nums">
+              <span className="text-[8px] sm:text-[9.5px] lg:text-[10.5px] font-bold text-white/90 tabular-nums">
                 {metrics.totalVideos > 0
                   ? `${metrics.completedVideos}/${metrics.totalVideos} vids`
                   : "0 vids"}
               </span>
               {metrics.remainingVideos > 0 && (
                 <>
-                  <span className="text-slate-300 text-[9px]">•</span>
-                  <span className="text-[7.5px] sm:text-[9px] lg:text-[10px] font-bold text-amber-600">
+                  <span className="text-white/40 text-[9px]">•</span>
+                  <span className="text-[7.5px] sm:text-[9px] lg:text-[10px] font-bold text-amber-300">
                     {metrics.remainingVideos} to go
                   </span>
                 </>
@@ -243,68 +235,56 @@ export function LearningProgressCard({
 
         {/* 2. 4 Stats: 2x2 grid on mobile, 4 in a row on sm/lg */}
         <div className="flex-1 min-w-0">
-          <div className="w-full grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100/90 p-1.5 sm:p-2.5 lg:py-3.5 bg-slate-50/60 rounded-xl sm:rounded-2xl border border-slate-100/80 shadow-2xs">
+          <div className="w-full grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/10 p-2 sm:p-3 lg:py-4 bg-black/15 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/15 shadow-inner">
             {/* Stat 1: Day Streak */}
-            <div className="flex flex-col items-center text-center p-1 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-0.5 shadow-2xs">
-                <Flame className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-amber-500" />
+            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-amber-400/25 border border-amber-300/30 text-amber-300 flex items-center justify-center mb-1 shadow-2xs">
+                <Flame className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-300" />
               </div>
-              <span className="text-xs sm:text-base lg:text-lg font-black text-slate-900 leading-tight">
+              <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.streak}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-slate-500 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
                 Day Streak
-              </span>
-              <span className="text-[7.5px] sm:text-[8px] lg:text-[8.5px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.25 rounded-full mt-0.5 sm:mt-1 shadow-2xs">
-                {metrics.streak > 0 ? `+${metrics.streak}` : "Active"}
               </span>
             </div>
 
             {/* Stat 2: Completed Videos */}
-            <div className="flex flex-col items-center text-center p-1 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-0.5 shadow-2xs">
+            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-emerald-400/25 border border-emerald-300/30 text-emerald-300 flex items-center justify-center mb-1 shadow-2xs">
                 <CheckCircle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
               </div>
-              <span className="text-xs sm:text-base lg:text-lg font-black text-slate-900 leading-tight truncate max-w-full">
+              <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight truncate max-w-full">
                 {metrics.completedVideos}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-slate-500 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
                 Completed
-              </span>
-              <span className="text-[7.5px] sm:text-[8px] lg:text-[8.5px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.25 rounded-full mt-0.5 sm:mt-1 shadow-2xs">
-                {metrics.progressPct}% done
               </span>
             </div>
 
             {/* Stat 3: Remaining Videos */}
-            <div className="flex flex-col items-center text-center p-1 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-0.5 shadow-2xs">
+            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-pink-300/25 border border-pink-200/30 text-pink-200 flex items-center justify-center mb-1 shadow-2xs">
                 <Hourglass className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
               </div>
-              <span className="text-xs sm:text-base lg:text-lg font-black text-slate-900 leading-tight">
+              <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.remainingVideos}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-slate-500 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
                 Remaining
-              </span>
-              <span className="text-[7.5px] sm:text-[8px] lg:text-[8.5px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.25 rounded-full mt-0.5 sm:mt-1 shadow-2xs">
-                {metrics.remainingVideos > 0 ? `${metrics.remainingVideos} left` : "Done 🎉"}
               </span>
             </div>
 
             {/* Stat 4: Learning Watch Time */}
-            <div className="flex flex-col items-center text-center p-1 sm:px-2">
-              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center mb-0.5 shadow-2xs">
+            <div className="flex flex-col items-center text-center p-1.5 sm:px-2">
+              <div className="w-5 h-5 sm:w-6.5 sm:h-6.5 rounded-full bg-sky-400/25 border border-sky-300/30 text-sky-200 flex items-center justify-center mb-1 shadow-2xs">
                 <Clock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
               </div>
-              <span className="text-xs sm:text-base lg:text-lg font-black text-slate-900 leading-tight">
+              <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight">
                 {metrics.learningHours}h
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-slate-500 mt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-bold text-pink-100/80 mt-0.5">
                 Learning Time
-              </span>
-              <span className="text-[7.5px] sm:text-[8px] lg:text-[8.5px] font-extrabold text-sky-700 bg-sky-50 border border-sky-100 px-1.5 py-0.25 rounded-full mt-0.5 sm:mt-1 shadow-2xs">
-                {metrics.learningHours > 0 ? `+${metrics.learningHours}h` : "0h"}
               </span>
             </div>
           </div>
