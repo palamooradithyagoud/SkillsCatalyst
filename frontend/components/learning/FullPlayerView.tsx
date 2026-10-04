@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen, CheckCircle, ChevronLeft, ChevronRight,
+  BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -205,7 +205,7 @@ export function FullPlayerView({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white border border-emerald-400/40"
+            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-gradient-to-r from-[#8b0b52] via-[#7a0947] to-[#5e0535] text-white border border-[#b3126a]/40"
           >
             <motion.div
               initial={{ rotate: -20, scale: 0 }}
@@ -217,30 +217,30 @@ export function FullPlayerView({
             </motion.div>
             <div>
               <div className="font-bold text-white text-sm">Lesson Completed!</div>
-              <div className="text-emerald-100 text-xs">75% threshold reached ✓</div>
+              <div className="text-amber-300 text-xs font-medium">75% threshold reached ✓</div>
             </div>
-            <CheckCircle className="w-5 h-5 text-emerald-200" />
+            <CheckCircle2 className="w-5 h-5 text-amber-300" />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ── Course Header Banner (Matches Screenshot) */}
-      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] p-3.5 sm:p-8 text-white shadow-md">
-        <div className="absolute -right-12 -top-12 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-br from-[#8b0b52] via-[#7a0947] to-[#5e0535] p-3.5 sm:p-8 text-white shadow-xl border border-[#b3126a]/40">
+        <div className="absolute -right-12 -top-12 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
-          <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-pink-400 to-amber-300 blur-2xl" />
+          <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-amber-300 to-rose-400 blur-2xl" />
         </div>
 
         <div className="relative z-10 max-w-3xl space-y-3">
           {/* Breadcrumb + Back Button */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-200/80">
+          <div className="flex items-center gap-2 text-xs font-semibold text-pink-200/80">
             <button
               onClick={onBack}
-              className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+              className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <ChevronLeft className="w-3.5 h-3.5" /> My courses
+              <ChevronLeft className="w-3.5 h-3.5 text-amber-300" /> My courses
             </button>
-            <span>&gt;</span>
+            <span className="text-white/40">&gt;</span>
             <span className="text-white font-bold">{pl.title}</span>
           </div>
 
@@ -250,22 +250,22 @@ export function FullPlayerView({
           </h1>
 
           {/* Course description */}
-          <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-normal line-clamp-2">
+          <p className="text-xs sm:text-sm text-pink-100/90 leading-relaxed font-normal line-clamp-2">
             {pl.description || `This course will help you quickly get started with ${pl.skill_query || "this topic"}: setting up the environment, project structure, syntax, data types, functions, DOM, and basic debugging.`}
           </p>
 
           {/* Progress & Lessons Info */}
-          <div className="flex items-center gap-6 pt-2 flex-wrap text-xs sm:text-sm font-semibold text-emerald-100">
+          <div className="flex items-center gap-6 pt-2 flex-wrap text-xs sm:text-sm font-semibold text-pink-100">
             <div className="flex items-center gap-3">
-              <div className="w-40 h-2.5 rounded-full bg-black/40 overflow-hidden p-0.5 border border-white/10">
+              <div className="w-40 h-2.5 rounded-full bg-black/30 overflow-hidden p-0.5 border border-white/15">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all duration-500"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span>{pct}% complete</span>
+              <span className="text-amber-300 font-bold">{pct}% complete</span>
             </div>
-            <div className="flex items-center gap-1.5 text-emerald-200">
+            <div className="flex items-center gap-1.5 text-white">
               <BookOpen className="w-4 h-4 text-amber-300" />
               <span>{videos.length - watchedCount} videos left</span>
             </div>
@@ -318,7 +318,7 @@ export function FullPlayerView({
                 <button
                   onClick={goNext}
                   disabled={currentIdx >= videos.length - 1}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm shadow-emerald-600/20 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#8b0b52] hover:bg-[#730944] active:bg-[#5e0737] shadow-sm shadow-[#8b0b52]/25 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
                 >
                   Next <ChevronRight className="w-4 h-4" />
                 </button>
@@ -329,11 +329,11 @@ export function FullPlayerView({
                   onClick={() => markMut.mutate({ videoId: currentVideo.videoId, watched: !isCompleted(currentVideo.videoId) })}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                     isCompleted(currentVideo.videoId)
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                      : "bg-slate-100 text-slate-700 border-slate-200/80 hover:bg-emerald-50 hover:text-emerald-700"
+                      ? "bg-[#8b0b52] text-amber-300 border-[#8b0b52] shadow-xs"
+                      : "bg-slate-100 text-slate-700 border-slate-200/80 hover:bg-[#8b0b52]/10 hover:text-[#8b0b52]"
                   }`}
                 >
-                  <CheckCircle className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
                   {isCompleted(currentVideo.videoId) ? "Completed ✓" : "Mark Complete"}
                 </button>
               )}
@@ -349,7 +349,7 @@ export function FullPlayerView({
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     activeTab === tab
-                      ? "bg-amber-400 text-slate-900 shadow-sm"
+                      ? "bg-[#8b0b52] text-white shadow-sm border border-[#b3126a]/30"
                       : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
@@ -439,29 +439,35 @@ export function FullPlayerView({
                     onClick={() => changeLesson(i)}
                     className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       isCurrent
-                        ? "bg-amber-400 border-amber-400 text-slate-900 shadow-md font-bold"
+                        ? "bg-[#e9d5ff] border-purple-400 text-black font-bold shadow-xs ring-2 ring-purple-300/50"
                         : done
-                        ? "bg-slate-50 border-slate-200/80 text-slate-500 hover:bg-slate-100"
-                        : "bg-white border-slate-200/90 text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                        ? "bg-[#f3e8ff] border-purple-200 text-black font-semibold hover:bg-[#ebd5ff]"
+                        : "bg-white border-slate-200 text-black font-medium hover:border-purple-300 hover:bg-[#f3e8ff]"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
                       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                         isCurrent
-                          ? "border border-slate-900 text-slate-900 bg-amber-300"
+                          ? "bg-purple-300 text-purple-950 font-bold border border-purple-400"
                           : done
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-slate-100 text-slate-600"
+                          ? "bg-purple-200 border border-purple-300 text-purple-900 font-bold"
+                          : "bg-slate-100 text-slate-700 border border-slate-200"
                       }`}>
                         {done ? "✓" : i + 1}
                       </span>
-                      <span className="text-xs font-semibold line-clamp-2 leading-snug">
+                      <span className={`text-xs leading-snug line-clamp-2 transition-colors ${
+                        isCurrent
+                          ? "text-black font-bold"
+                          : done
+                          ? "line-through text-slate-400 font-normal decoration-slate-400"
+                          : "text-black font-medium"
+                      }`}>
                         {v.title}
                       </span>
                     </div>
 
                     {done && !isCurrent && (
-                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
                     )}
                   </button>
                 );

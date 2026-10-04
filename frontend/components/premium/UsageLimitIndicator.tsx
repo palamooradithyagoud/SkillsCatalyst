@@ -11,6 +11,7 @@ export interface UsageLimitIndicatorProps {
   isPremium?: boolean;
   showUpgradePrompt?: boolean;
   compact?: boolean;
+  theme?: "default" | "boysenberry";
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function UsageLimitIndicator({
   isPremium = false,
   showUpgradePrompt = true,
   compact = false,
+  theme = "default",
   className = "",
 }: UsageLimitIndicatorProps) {
   const { openPricingModal } = usePricingModal();
@@ -28,6 +30,21 @@ export function UsageLimitIndicator({
   // If user is premium or limit is null, unlimited usage
   if (isPremium || limit === null) {
     if (compact) {
+      if (theme === "boysenberry") {
+        return (
+          <span
+            data-testid="usage-indicator-unlimited"
+            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-[#8b0b52] to-[#7a0947] text-white border border-[#b3126a]/40 shadow-2xs ${className}`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <span>
+              <strong className="text-amber-300 font-bold">Unlimited</strong>{" "}
+              <span className="text-white">{unitName}</span>
+            </span>
+          </span>
+        );
+      }
+
       return (
         <span
           data-testid="usage-indicator-unlimited"
@@ -36,6 +53,23 @@ export function UsageLimitIndicator({
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           <span>Unlimited {unitName}</span>
         </span>
+      );
+    }
+
+    if (theme === "boysenberry") {
+      return (
+        <div
+          data-testid="usage-indicator-unlimited-full"
+          className={`flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#8b0b52] via-[#7a0947] to-[#5e0535] border border-[#b3126a]/40 shadow-[0_4px_20px_rgba(139,11,82,0.2)] ${className}`}
+        >
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+            <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0 drop-shadow-[0_1px_4px_rgba(251,191,36,0.35)]" />
+            <span>
+              <span className="text-amber-300 font-bold tracking-wide">Premium Plan:</span>{" "}
+              <span className="text-white font-medium">Unlimited {unitName}</span>
+            </span>
+          </div>
+        </div>
       );
     }
 

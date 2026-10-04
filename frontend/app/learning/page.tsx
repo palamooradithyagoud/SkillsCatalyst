@@ -430,17 +430,17 @@ export default function LearningPage() {
             className="space-y-4"
           >
             {/* ── Stats header matching user screenshot ── */}
-            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-purple-200/80 shadow-xs p-4 sm:p-7 md:p-8 bg-gradient-to-r from-white via-[#faf5ff] to-[#d8b4fe]/60 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
-              {/* Background ambient orbs & luminous purple aura */}
-              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-purple-500/25 blur-3xl pointer-events-none" />
-              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-indigo-400/20 blur-2xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-[#b3126a]/40 shadow-[0_8px_30px_rgba(139,11,82,0.28)] p-4 sm:p-7 md:p-8 bg-gradient-to-br from-[#8b0b52] via-[#7a0947] to-[#5e0535] text-white flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
+              {/* Background ambient orbs & luminous berry aura */}
+              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-pink-400/20 blur-3xl pointer-events-none" />
+              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-rose-500/20 blur-2xl pointer-events-none" />
 
               {/* Left Content */}
               <div className="space-y-2 max-w-lg z-10">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-purple-100/90 border border-purple-200/70 text-purple-700 text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-2xs">
+                  <span className="px-3 py-1 rounded-full bg-white/15 border border-white/25 text-pink-100 text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-2xs backdrop-blur-xs">
                     <svg
-                      className="w-3.5 h-3.5 text-purple-600"
+                      className="w-3.5 h-3.5 text-pink-200"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -452,14 +452,17 @@ export default function LearningPage() {
                     </svg>
                     <span>LEARNING TRACKS</span>
                   </span>
-                  {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />}
+                  {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-pink-200" />}
                 </div>
 
-                <h2 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-                  Saved Playlists &amp; <span className="text-purple-600">Progress</span>
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+                  Saved Playlists &amp;{" "}
+                  <span className="bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">
+                    Progress
+                  </span>
                 </h2>
 
-                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                <p className="text-xs sm:text-sm text-pink-100/85 font-medium leading-relaxed">
                   Watch your saved video playlists, track real video completion progress, and resume learning anytime.
                 </p>
               </div>
@@ -467,11 +470,11 @@ export default function LearningPage() {
               {/* Center Floating 3D Player Card Graphic */}
               <div className="hidden md:flex items-center justify-center relative z-10 shrink-0 mx-auto lg:mx-0">
                 {/* Ambient Sparkles */}
-                <span className="absolute -top-3 left-4 text-purple-200/90 text-xl font-bold select-none animate-pulse">
+                <span className="absolute -top-3 left-4 text-pink-200/90 text-xl font-bold select-none animate-pulse">
                   ✦
                 </span>
                 <span
-                  className="absolute top-8 -right-4 text-purple-200/90 text-2xl font-bold select-none animate-pulse"
+                  className="absolute top-8 -right-4 text-pink-200/90 text-2xl font-bold select-none animate-pulse"
                   style={{ animationDelay: "1s" }}
                 >
                   ✦
@@ -479,42 +482,42 @@ export default function LearningPage() {
 
                 {/* Floating Tilted 3D Glass Card */}
                 <div
-                  className="relative w-36 h-28 sm:w-44 sm:h-34 rounded-2xl bg-white/75 backdrop-blur-md border border-white/90 shadow-xl shadow-purple-900/10 flex flex-col items-center justify-center p-3 transition-transform duration-500 hover:scale-105"
+                  className="relative w-36 h-28 sm:w-44 sm:h-34 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-2xl shadow-black/25 flex flex-col items-center justify-center p-3 transition-transform duration-500 hover:scale-105"
                   style={{
                     transform: "perspective(700px) rotateY(-10deg) rotateX(6deg) rotate(-14deg)",
                   }}
                 >
                   {/* Subtle inner glass reflection */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/30 to-white/60 pointer-events-none" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-white/40 pointer-events-none" />
 
                   {/* Play triangle */}
                   <div className="w-10 h-10 rounded-full flex items-center justify-center">
-                    <svg className="w-9 h-9 drop-shadow-sm" viewBox="0 0 24 24" fill="#7c3aed">
+                    <svg className="w-9 h-9 drop-shadow-sm" viewBox="0 0 24 24" fill="#ffffff">
                       <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
                     </svg>
                   </div>
 
                   {/* Bottom progress bar line */}
                   <div className="w-full mt-4 px-2">
-                    <div className="w-full h-1.5 rounded-full bg-purple-100/80 overflow-hidden">
-                      <div className="h-full w-2/5 rounded-full bg-purple-600" />
+                    <div className="w-full h-1.5 rounded-full bg-white/25 overflow-hidden">
+                      <div className="h-full w-2/5 rounded-full bg-white" />
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Right Stats Card with Dynamic Real User Data - Balanced for Mobile and Desktop */}
-              <div className="relative z-10 w-full lg:w-auto grid grid-cols-2 divide-x divide-slate-200/80 bg-white/90 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/90 shadow-xs shadow-purple-900/5 p-3 sm:px-6 sm:py-4 shrink-0">
+              <div className="relative z-10 w-full lg:w-auto grid grid-cols-2 divide-x divide-white/10 bg-black/20 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/15 shadow-inner p-3 sm:px-6 sm:py-4 shrink-0">
                 {/* Column 1: Saved Tracks */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pr-2 sm:pr-6 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                    <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-pink-200 shrink-0 shadow-2xs">
+                    <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-pink-200" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap">
+                    <div className="text-[11px] sm:text-xs font-semibold text-pink-100/80 whitespace-nowrap">
                       Saved Tracks
                     </div>
-                    <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                    <div className="text-xl sm:text-2xl font-black text-white leading-tight">
                       {savedList.length}
                     </div>
                   </div>
@@ -522,14 +525,14 @@ export default function LearningPage() {
 
                 {/* Column 2: Videos Watched */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pl-3 sm:pl-6 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 shadow-2xs">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap">
+                    <div className="text-[11px] sm:text-xs font-semibold text-pink-100/80 whitespace-nowrap">
                       Videos Watched
                     </div>
-                    <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                    <div className="text-xl sm:text-2xl font-black text-white leading-tight">
                       {completedSavedVideosCount}
                     </div>
                   </div>
@@ -543,6 +546,7 @@ export default function LearningPage() {
               limit={savedLimit}
               unitName="Saved Playlists"
               isPremium={isPremium}
+              theme="boysenberry"
             />
 
             {/* ── Playlist rows */}

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { Playlist, fetchPlaylistVideos, markVideoWatched } from "@/lib/api";
@@ -77,9 +77,9 @@ export function SavedPlaylistRow({
   const statusStyle = !hasLoaded
     ? "text-slate-500 bg-slate-100 border-slate-200"
     : pct === 100
-    ? "text-purple-700 bg-purple-50 border-purple-200/90 font-bold"
+    ? "text-white bg-black border-black font-bold shadow-xs"
     : pct > 0
-    ? "text-indigo-700 bg-indigo-50 border-indigo-200/90 font-bold"
+    ? "text-black bg-slate-100 border-slate-300 font-bold"
     : "text-slate-600 bg-slate-100 border-slate-200 font-semibold";
 
   return (
@@ -87,13 +87,13 @@ export function SavedPlaylistRow({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35 }}
-      className="course-card card-morph bg-white rounded-[24px] border border-slate-100 shadow-xs hover:shadow-md overflow-hidden"
+      className="course-card card-morph bg-white rounded-[24px] border border-slate-200/90 shadow-xs hover:shadow-md overflow-hidden"
     >
       {/* ── Row Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 pt-5 pb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-slate-900 truncate">{pl.title}</h3>
-          <p className="text-xs font-semibold text-slate-400 mt-0.5">
+          <h3 className="text-base font-bold text-black truncate">{pl.title}</h3>
+          <p className="text-xs font-semibold text-slate-500 mt-0.5">
             {[pl.channel, pl.language, pl.skill_query, pl.level].filter(Boolean).join(" • ")}
           </p>
         </div>
@@ -112,7 +112,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onWatch(pl)}
-            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#5f13e7] to-[#7928ca] hover:from-[#530dd4] hover:to-[#6b20b8] shadow-md shadow-purple-600/25 cursor-pointer"
+            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-black hover:bg-neutral-800 active:bg-neutral-900 shadow-sm cursor-pointer transition-all"
           >
             Watch Track
           </motion.button>
@@ -120,7 +120,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onDelete(pl.id)}
-            className="px-3.5 py-2 rounded-full text-xs font-semibold text-slate-600 hover:text-purple-700 bg-slate-100/90 hover:bg-purple-50 border border-slate-200/80 hover:border-purple-200 transition-all cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold text-white bg-black hover:bg-neutral-800 active:bg-neutral-900 border border-black shadow-sm transition-all cursor-pointer"
           >
             Delete
           </motion.button>
@@ -130,18 +130,18 @@ export function SavedPlaylistRow({
       {/* ── Progress line */}
       <div className="flex items-center justify-between px-6 pb-3 mt-1">
         {!hasLoaded ? (
-          <span className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
+          <span className="flex items-center gap-2 text-xs font-semibold text-black">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
             <span>Syncing video progress...</span>
           </span>
         ) : (
-          <span className="text-xs font-semibold text-slate-600">
-            {watchedCount} of {displayCount} videos completed ({pct}%)
+          <span className="text-xs font-semibold text-black">
+            <strong className="text-black font-bold">{watchedCount}</strong> of {displayCount} videos completed ({pct}%)
           </span>
         )}
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors cursor-pointer"
+          className="text-xs font-bold text-black hover:text-neutral-600 transition-colors cursor-pointer"
         >
           {expanded
             ? "Hide Lessons ▲"
@@ -153,12 +153,12 @@ export function SavedPlaylistRow({
 
       {/* ── Progress bar */}
       {pct > 0 && (
-        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-purple-50/70 p-0.5 border border-purple-100/80">
+        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-slate-100 p-0.5 border border-slate-200">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-600 to-[#7928ca]"
+            className="h-full rounded-full bg-black"
           />
         </div>
       )}
@@ -174,16 +174,16 @@ export function SavedPlaylistRow({
             className="overflow-hidden border-t border-slate-100"
           >
             {loadingVideos ? (
-              <div className="flex items-center justify-center gap-3 py-8 text-slate-500">
-                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+              <div className="flex items-center justify-center gap-3 py-8 text-slate-500 bg-white">
+                <Loader2 className="w-5 h-5 animate-spin text-black" />
                 <span className="text-xs font-semibold">Loading course lessons...</span>
               </div>
             ) : videos.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-500">
+              <div className="py-8 text-center text-xs text-slate-500 bg-white">
                 No videos found for this track.
               </div>
             ) : (
-              <div className="p-4 space-y-2.5 bg-slate-50/70">
+              <div className="bg-white divide-y divide-slate-100 border-t border-slate-100">
                 {videos.map((v, i) => {
                   const done = v.watched;
 
@@ -191,36 +191,53 @@ export function SavedPlaylistRow({
                     <div
                       key={v.videoId}
                       onClick={() => onWatchVideo(pl, i)}
-                      className={`w-full flex items-center justify-between p-4 rounded-[20px] border text-left transition-all cursor-pointer ${
-                        done
-                          ? "bg-purple-100 border-purple-300 text-purple-950 shadow-xs font-extrabold"
-                          : "bg-white border-slate-200/90 text-slate-900 font-bold hover:border-purple-300 hover:shadow-xs"
+                      className={`w-full flex items-center justify-between px-6 py-3.5 text-left transition-colors duration-150 cursor-pointer group ${
+                        done ? "bg-[#f3e8ff]/60 hover:bg-[#ebd5ff]" : "bg-white hover:bg-[#f3e8ff]"
                       }`}
                     >
-                      <div className="flex items-center gap-3.5 min-w-0 pr-2 flex-1">
-                        {/* Circular badge icon */}
+                      <div className="flex items-center gap-3.5 min-w-0 pr-4 flex-1">
+                        {/* Checkbox matching Image 2 reference */}
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             markMut.mutate({ videoId: v.videoId, watched: !v.watched });
                           }}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs shrink-0 transition-transform active:scale-95 ${
+                          className={`w-4.5 h-4.5 rounded-[4px] border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                             done
-                              ? "bg-purple-600 text-white"
-                              : "bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-800"
+                              ? "bg-purple-600 border-purple-600 text-white shadow-xs"
+                              : "bg-white border-slate-300 group-hover:border-purple-400 hover:border-slate-500"
                           }`}
+                          aria-label={done ? "Mark as unwatched" : "Mark as watched"}
                         >
-                          {done ? (
-                            <CheckCircle className="w-4 h-4 text-white" />
-                          ) : (
-                            <span>{i + 1}</span>
-                          )}
+                          {done && <Check className="w-3 h-3 stroke-[3] text-white" />}
                         </button>
 
-                        {/* Lesson title matching Image 2 */}
-                        <span className="text-xs sm:text-sm font-bold leading-snug line-clamp-2">
+                        {/* Lesson title with gray strike-off when completed */}
+                        <span
+                          className={`text-xs sm:text-sm leading-normal line-clamp-1 transition-colors ${
+                            done
+                              ? "line-through text-slate-400 font-normal decoration-slate-400"
+                              : "text-black font-medium"
+                          }`}
+                        >
                           {v.title}
                         </span>
+                      </div>
+
+                      {/* Official YouTube red icon on the right matching Image 2 */}
+                      <div className="flex items-center shrink-0 ml-3">
+                        <svg
+                          className="w-5 h-3.5 transition-transform duration-150 group-hover:scale-110"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fill="#FF0000"
+                            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"
+                          />
+                          <path fill="#FFFFFF" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                        </svg>
                       </div>
                     </div>
                   );
