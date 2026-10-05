@@ -49,11 +49,11 @@ def test_metrics_endpoint():
 
 
 def test_redact_sensitive_strings():
-    sample_log = "User Bearer eyJhbGciOi... connected to rediss://default:secretpass123@db.upstash.io:6379 with api_key=AIzaSy..."
+    sample_log = "User Bearer mock_jwt_token_sample connected to rediss://mockuser:mockpass123@mockredis.internal:6379 with api_key=mock_api_key_sample"
     cleaned = redact_sensitive_str(sample_log)
-    assert "secretpass123" not in cleaned
-    assert "eyJhbGciOi" not in cleaned
-    assert "AIzaSy" not in cleaned
+    assert "mockpass123" not in cleaned
+    assert "mock_jwt_token_sample" not in cleaned
+    assert "mock_api_key_sample" not in cleaned
 
 
 def test_correlation_id_lifecycle():

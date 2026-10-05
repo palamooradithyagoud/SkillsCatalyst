@@ -67,10 +67,10 @@ def test_youtube_observability_recording():
 def test_redact_sensitive_strings_comprehensive():
     """Verify redacting of JWT, Redis connection strings, API keys, and passwords."""
     samples = [
-        ("Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.doNotLeakThis", "[REDACTED]"),
-        ("Connecting to redis://user:super_secret_redis_pass@localhost:6379/0", "[REDACTED]"),
-        ("Error with api_key=gsk_9999999999999999999999999999", "[REDACTED]"),
-        ("password=MySuperSecretPassword!123", "[REDACTED]"),
+        ("Authorization: Bearer mock_token_header.mock_payload_data.mock_signature_key", "[REDACTED]"),
+        ("Connecting to redis://user:mock_super_secret_pass@localhost:6379/0", "[REDACTED]"),
+        ("Error with api_key=mock_gsk_key_1234567890", "[REDACTED]"),
+        ("password=MockSuperSecretPassword!123", "[REDACTED]"),
     ]
 
     for text, expected_marker in samples:

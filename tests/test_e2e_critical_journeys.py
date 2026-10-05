@@ -87,7 +87,7 @@ def test_auth_03_invalid_or_forged_jwt_rejected():
 
     with patch("backend.services.auth_service.get_supabase", return_value=mock_sb):
         with pytest.raises(HTTPException) as exc_info:
-            get_current_user_id(authorization="Bearer eyJhbGciOiJIUzI1NiJ9.forged.sig")
+            get_current_user_id(authorization="Bearer mock_tampered_forged_token")
         assert exc_info.value.status_code == 401
         assert exc_info.value.headers.get("WWW-Authenticate") == "Bearer"
 

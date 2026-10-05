@@ -42,8 +42,8 @@ class TestWebPushSecurityAndModels(unittest.TestCase):
         payload = PushSubscriptionPayload(
             endpoint="https://fcm.googleapis.com/fcm/send/sample-token-123",
             keys=PushSubscriptionKeys(
-                p256dh="BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9AcDnVwTJaWwBaMOuOvqzLocoNpSB5",
-                auth="tBHItJI5svbpez7KI4CCXg",
+                p256dh="mock_test_p256dh_client_key_sample",
+                auth="mock_test_auth_secret",
             ),
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         )
@@ -55,8 +55,8 @@ class TestWebPushSecurityAndModels(unittest.TestCase):
             PushSubscriptionPayload(
                 endpoint="http://insecure-push-service.com/send",
                 keys=PushSubscriptionKeys(
-                    p256dh="BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9AcDnVwTJaWwBaMOuOvqzLocoNpSB5",
-                    auth="tBHItJI5svbpez7KI4CCXg",
+                    p256dh="mock_test_p256dh_client_key_sample",
+                    auth="mock_test_auth_secret",
                 ),
             )
 
