@@ -76,7 +76,7 @@ def test_redact_sensitive_strings_comprehensive():
     for text, expected_marker in samples:
         scrubbed = redact_sensitive_str(text)
         assert expected_marker in scrubbed
-        assert "super_secret_redis_pass" not in scrubbed
-        assert "gsk_999999" not in scrubbed
-        assert "MySuperSecretPassword!123" not in scrubbed
-        assert "doNotLeakThis" not in scrubbed
+        assert "mock_super_secret_pass" not in scrubbed
+        assert "mock_gsk_key_1234567890" not in scrubbed
+        assert "MockSuperSecretPassword" not in scrubbed
+        assert "mock_signature_key" not in scrubbed
