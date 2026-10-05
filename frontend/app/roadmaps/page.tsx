@@ -53,7 +53,7 @@ import PenguinRoadmapMountainExpedition, { CheckpointItem } from "@/components/P
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import BorderGlow from "@/components/BorderGlow";
-import LogoLoop, { LogoItem } from "@/components/LogoLoop";
+import LogoLoop from "@/components/LogoLoop";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
 import { UsageLimitIndicator } from "@/components/premium";
@@ -2838,34 +2838,120 @@ export default function RoadmapsPage() {
         </div>
       </div>
 
-      {/* ── Partner & Technology Logo Loop (Downside Main Banner) */}
+      {/* ── Technology Ecosystem & Tools Bar (Side Scrolling Logo Loop) ── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="py-3 px-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm"
+        className="py-3 px-4 sm:px-6 rounded-2xl bg-white border border-slate-200/90 shadow-xs"
       >
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4 sm:gap-6">
           <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 shrink-0 hidden md:inline-block">
             ECOSYSTEM &amp; TOOLS
           </span>
           <div className="flex-1 overflow-hidden">
             <LogoLoop
               logos={[
-                { node: <span className="font-extrabold text-xs tracking-wider text-slate-800 bg-slate-100 border border-slate-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚡ Python 3.12</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-[#00599C] bg-blue-50 border border-blue-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚙️ Modern C++20</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-[#087ea4] bg-cyan-50 border border-cyan-200/90 px-3 py-1.5 rounded-xl shadow-2xs">⚛️ React 19</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-slate-900 bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl shadow-2xs">▲ Next.js 15</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-3 py-1.5 rounded-xl shadow-2xs">💚 Node.js</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-orange-600 bg-amber-50 border border-amber-200/90 px-3 py-1.5 rounded-xl shadow-2xs">☕ Java Spring Boot</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-sky-600 bg-sky-50 border border-sky-200/90 px-3 py-1.5 rounded-xl shadow-2xs">💻 Systems C</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🚀 LeetCode Verified</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-purple-700 bg-purple-50 border border-purple-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🧠 AI Career Assistant</span> },
-                { node: <span className="font-extrabold text-xs tracking-wider text-teal-700 bg-teal-50 border border-teal-200/90 px-3 py-1.5 rounded-xl shadow-2xs">🛠️ Hands-on Sandbox</span> },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Python">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/python.svg" alt="Python" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="JavaScript">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/javascript.svg" alt="JavaScript" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="TypeScript">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/typescript.svg" alt="TypeScript" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="React">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/react.svg" alt="React" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Next.js">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/nextjs.svg" alt="Next.js" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Node.js">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/nodejs.svg" alt="Node.js" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Java">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/java.svg" alt="Java" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="C++">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/cplusplus.svg" alt="C++" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Docker">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/docker.svg" alt="Docker" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Git">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/git.svg" alt="Git" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="PostgreSQL">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/postgresql.svg" alt="PostgreSQL" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
+                {
+                  node: (
+                    <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="MongoDB">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/tech-logos/mongodb.svg" alt="MongoDB" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                    </div>
+                  ),
+                },
               ]}
-              speed={75}
-              logoHeight={32}
-              gap={24}
+              speed={60}
+              logoHeight={34}
+              gap={32}
               pauseOnHover
               scaleOnHover
               fadeOut
