@@ -19,6 +19,7 @@ import {
   Inbox,
   Users,
 } from "lucide-react";
+import InteractivePracticeAccordionCard from "./InteractivePracticeAccordionCard";
 
 export interface CheckpointItem {
   id: string;
@@ -134,7 +135,7 @@ export default function RoadmapCurriculumView({
   const isPython = roadmapId === "python-mastery" || roadmapId.includes("python");
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+    <div className="max-w-7xl w-full mx-auto space-y-8 pb-20">
       {/* ── Top Back Navigation & Breadcrumb ── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <button
@@ -158,8 +159,9 @@ export default function RoadmapCurriculumView({
       </div>
 
       {/* ── Header Card ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#7d26cd] border border-[#6b1eb5] p-8 sm:p-10 lg:p-12 shadow-xl space-y-8">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-3xl bg-[#7d26cd] border border-[#6b1eb5] shadow-xl flex flex-col lg:flex-row items-stretch">
+        {/* Left Section (Purple): Title, Stats, and Cards 1, 2, 3 */}
+        <div className="flex-1 min-w-0 p-5 sm:p-6 lg:p-7 xl:p-8 flex flex-col justify-between space-y-6 sm:space-y-8">
           <div className="flex items-center gap-4 sm:gap-5">
             {/* Logo container */}
             {isPython ? (
@@ -177,145 +179,154 @@ export default function RoadmapCurriculumView({
               </div>
             )}
 
-            <div>
+            <div className="space-y-2 sm:space-y-2.5">
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
                 {roadmapTitle}
               </h1>
-            </div>
-          </div>
 
-          {/* Right side stats bar matching image */}
-          <div className="flex items-center gap-4 sm:gap-6 flex-wrap text-white text-xs sm:text-sm font-bold shrink-0">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-white/80 shrink-0" />
-              <span>32 Hours</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-white/80 shrink-0" />
-              <span>0 Videos</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-white/80 shrink-0" />
-              <span>0 Assessments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Inbox className="w-4 h-4 text-white/80 shrink-0" />
-              <span>6 Projects</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-white/80 shrink-0" />
-              <span>102 Participants</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Details Section: Small Cards ── */}
-        <div className="pt-4 sm:pt-5 border-t border-black/15 flex items-stretch gap-4 flex-wrap">
-          {/* Card 1: IN ROADMAP (Black background, White text) */}
-          <div className="w-52 sm:w-56 rounded-2xl bg-black p-3.5 sm:p-4 text-white shadow-md border border-white/10 shrink-0">
-            <div className="flex items-center gap-1.5 text-amber-400 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
-              <span>🔥</span>
-              <span>IN ROADMAP</span>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-white">
-                  <span className="text-amber-400 text-sm leading-none">•</span> Core Syntax & DSA
-                </span>
-                <span className="text-slate-400 text-xs font-semibold">5 Stns</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-white">
-                  <span className="text-amber-400 text-sm leading-none">•</span> OOP & Decorators
-                </span>
-                <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-white">
-                  <span className="text-amber-400 text-sm leading-none">•</span> Web Frameworks
-                </span>
-                <span className="text-slate-400 text-xs font-semibold">4 Stns</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-bold text-white">
-                  <span className="text-amber-400 text-sm leading-none">•</span> Async & Testing
-                </span>
-                <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
+              {/* Small stats icons directly downside the title text */}
+              <div className="flex items-center gap-3.5 sm:gap-5 flex-wrap text-white text-xs sm:text-sm font-bold">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Clock className="w-4 h-4 text-white/80 shrink-0" />
+                  <span>32 Hours</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Lightbulb className="w-4 h-4 text-white/80 shrink-0" />
+                  <span>0 Videos</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Target className="w-4 h-4 text-white/80 shrink-0" />
+                  <span>0 Assessments</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Inbox className="w-4 h-4 text-white/80 shrink-0" />
+                  <span>6 Projects</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Users className="w-4 h-4 text-white/80 shrink-0" />
+                  <span>102 Participants</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: YOU GET (White background, Black text) */}
-          <div className="w-52 sm:w-56 rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0">
-            <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
-              YOU GET
-            </div>
+          {/* ── Details Section: Cards 1, 2, 3 (Preserved exactly as they are) ── */}
+          <div className="pt-4 sm:pt-5 border-t border-black/15 flex items-stretch gap-2.5 sm:gap-3 lg:gap-3.5 flex-nowrap overflow-x-auto lg:overflow-x-visible no-scrollbar pb-1">
+            {/* Card 1: IN ROADMAP (Black background, White text) */}
+            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-black p-3.5 sm:p-4 text-white shadow-md border border-white/10 shrink-0 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-1.5 text-amber-400 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
+                  <span>🔥</span>
+                  <span>IN ROADMAP</span>
+                </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-black">
-                  <span className="text-black text-sm leading-none">•</span> 21 Stations
-                </span>
-              </div>
-              <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-black">
-                  <span className="text-black text-sm leading-none">•</span> Subtopic Checklist
-                </span>
-              </div>
-              <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                <span className="flex items-center gap-1.5 font-bold text-black">
-                  <span className="text-black text-sm leading-none">•</span> Official Docs
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span className="flex items-center gap-1.5 font-bold text-black">
-                  <span className="text-black text-sm leading-none">•</span> Real Projects
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Round Percentage (Beside the white card, same size) */}
-          <div className="w-52 sm:w-56 rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0 flex flex-col justify-between">
-            <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
-              PROGRESS
-            </div>
-
-            <div className="my-auto flex flex-col items-center justify-center py-1">
-              <div className="relative flex items-center justify-center w-18 h-18 sm:w-20 sm:h-20">
-                <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    className="text-slate-100"
-                    strokeWidth="3.5"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="text-[#7d26cd] transition-all duration-500"
-                    strokeDasharray={`${progressPct}, 100`}
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-base sm:text-lg font-black text-black leading-none">
-                    {progressPct}%
-                  </span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-white">
+                      <span className="text-amber-400 text-sm leading-none">•</span> Core Syntax & DSA
+                    </span>
+                    <span className="text-slate-400 text-xs font-semibold">5 Stns</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-white">
+                      <span className="text-amber-400 text-sm leading-none">•</span> OOP & Decorators
+                    </span>
+                    <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-white">
+                      <span className="text-amber-400 text-sm leading-none">•</span> Web Frameworks
+                    </span>
+                    <span className="text-slate-400 text-xs font-semibold">4 Stns</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 font-bold text-white">
+                      <span className="text-amber-400 text-sm leading-none">•</span> Async & Testing
+                    </span>
+                    <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="pt-1.5 border-t border-dashed border-slate-200 text-center">
-              <span className="text-xs font-bold text-slate-600">
-                {doneCount} / {totalCount} Stations Done
-              </span>
+            {/* Card 2: YOU GET (White background, Black text) */}
+            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0 flex flex-col justify-between">
+              <div>
+                <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
+                  YOU GET
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-black">
+                      <span className="text-black text-sm leading-none">•</span> 21 Stations
+                    </span>
+                  </div>
+                  <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-black">
+                      <span className="text-black text-sm leading-none">•</span> Subtopic Checklist
+                    </span>
+                  </div>
+                  <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-bold text-black">
+                      <span className="text-black text-sm leading-none">•</span> Official Docs
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="flex items-center gap-1.5 font-bold text-black">
+                      <span className="text-black text-sm leading-none">•</span> Real Projects
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Round Percentage (Beside the white card, same size) */}
+            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0 flex flex-col justify-between">
+              <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
+                PROGRESS
+              </div>
+
+              <div className="my-auto flex flex-col items-center justify-center py-1">
+                <div className="relative flex items-center justify-center w-18 h-18 sm:w-20 sm:h-20">
+                  <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-100"
+                      strokeWidth="3.5"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-[#7d26cd] transition-all duration-500"
+                      strokeDasharray={`${progressPct}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center text-center">
+                    <span className="text-base sm:text-lg font-black text-black leading-none">
+                      {progressPct}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-1.5 border-t border-dashed border-slate-200 text-center">
+                <span className="text-xs font-bold text-slate-600">
+                  {doneCount} / {totalCount} Stations Done
+                </span>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Right Section: Fully fits the overall right side of the purple card container - ZERO PURPLE VISIBLE on the right side */}
+        <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch flex flex-col">
+          <InteractivePracticeAccordionCard className="w-full h-full rounded-none border-0 lg:border-l border-white/10" />
         </div>
       </div>
 
