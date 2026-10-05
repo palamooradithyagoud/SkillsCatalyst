@@ -49,7 +49,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import BrandReactIcon from "@/components/icons/BrandReactIcon";
 import PythonIcon from "@/components/icons/PythonIcon";
 import BrandNextjsIcon from "@/components/icons/BrandNextjsIcon";
-import PenguinRoadmapMountainExpedition, { CheckpointItem } from "@/components/PenguinRoadmapMountainExpedition";
+import RoadmapCurriculumView, { CheckpointItem } from "@/components/RoadmapCurriculumView";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import BorderGlow from "@/components/BorderGlow";
@@ -2513,14 +2513,18 @@ function RoadmapDetailView({
       animate={{ opacity: 1, y: 0 }}
       className="max-w-7xl mx-auto pb-16"
     >
-      <PenguinRoadmapMountainExpedition
+      <RoadmapCurriculumView
         roadmapTitle={selectedRoadmap.displayTitle || selectedRoadmap.title}
         roadmapId={selectedRoadmap.id}
         category={selectedRoadmap.category}
         ratings={selectedRoadmap.ratings}
         salary={selectedRoadmap.salary}
+        growth={selectedRoadmap.growth}
+        color={selectedRoadmap.color}
         checkpoints={checkpoints}
         progressPct={progressPct}
+        doneCount={doneCount}
+        totalCount={allNodes.length}
         isEnrolled={isEnrolled}
         onEnroll={handleEnrollClick}
         onBack={onBack}
