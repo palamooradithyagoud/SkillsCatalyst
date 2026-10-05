@@ -2757,73 +2757,83 @@ export default function RoadmapsPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-10 pb-16"
+      className="max-w-7xl mx-auto space-y-6 sm:space-y-10 pb-16"
     >
       {/* ── Roadmaps Header Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#a1ccff] border border-[#8ec2fc] p-8 sm:p-10 shadow-sm">
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-          <div className="max-w-2xl space-y-4">
-            <span className="inline-block px-3 py-1 rounded-full bg-white/60 border border-white/70 text-slate-800 text-xs font-semibold uppercase tracking-wider">
+      <div className="-mx-3.5 -mt-3.5 sm:mx-0 sm:mt-0 w-[calc(100%+1.75rem)] sm:w-auto relative overflow-hidden rounded-none sm:rounded-3xl bg-[#a1ccff] border-b sm:border border-[#8ec2fc] p-5 sm:p-8 lg:p-10 shadow-none sm:shadow-sm">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-8">
+          {/* Left Text & Info */}
+          <div className="max-w-2xl space-y-2.5 sm:space-y-4">
+            <span className="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/70 border border-white/80 text-slate-800 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
               Curated Learning Pathways
             </span>
 
-            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
               Developer Roadmaps
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
+            <p className="text-xs sm:text-base text-slate-700 leading-relaxed font-medium">
               Step-by-step guides and milestones to help you master languages, frameworks, and job-ready engineering roles.
             </p>
 
-            <div className="flex items-center gap-3 pt-2 flex-wrap">
+            {/* Laptop / Desktop View: Start Button */}
+            <div className="hidden lg:block pt-1 sm:pt-2">
               <button
                 type="button"
                 onClick={() => {
                   const el = document.getElementById("skill-roadmaps-section");
                   if (el) el.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all shadow-sm cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all shadow-xs cursor-pointer"
               >
-                Explore Skill Roadmaps
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById("career-roadmaps-section");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="px-5 py-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-900 font-semibold text-xs sm:text-sm border border-white transition-all shadow-xs cursor-pointer"
-              >
-                Career Tracks
+                Start
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 shrink-0 sm:w-auto w-full">
-            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-2xl p-5 shadow-xs flex flex-col justify-center min-w-[150px]">
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                Skill Tracks
-              </span>
-              <span className="text-3xl sm:text-4xl font-black text-slate-900 mt-1">
+          {/* 7, 7 Tracks Cards (Size preserved exactly) */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 shrink-0 sm:w-auto w-full pt-1 sm:pt-0">
+            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-center min-w-0 sm:min-w-[150px]">
+              <div>
+                <span className="block text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wide">
+                  Skill Tracks
+                </span>
+                <span className="hidden sm:block text-[11px] text-slate-500 font-medium mt-0.5">
+                  Languages &amp; Core
+                </span>
+              </div>
+              <span className="text-xl sm:text-4xl font-black text-slate-900">
                 {SKILL_ROADMAPS.length}
-              </span>
-              <span className="text-[11px] text-slate-500 font-medium mt-0.5">
-                Languages &amp; Core
               </span>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-2xl p-5 shadow-xs flex flex-col justify-center min-w-[150px]">
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                Career Paths
-              </span>
-              <span className="text-3xl sm:text-4xl font-black text-slate-900 mt-1">
+            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-center min-w-0 sm:min-w-[150px]">
+              <div>
+                <span className="block text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wide">
+                  Career Paths
+                </span>
+                <span className="hidden sm:block text-[11px] text-slate-500 font-medium mt-0.5">
+                  Job Ready Roles
+                </span>
+              </div>
+              <span className="text-xl sm:text-4xl font-black text-slate-900">
                 {CAREER_ROADMAPS.length}
               </span>
-              <span className="text-[11px] text-slate-500 font-medium mt-0.5">
-                Job Ready Roles
-              </span>
             </div>
+          </div>
+
+          {/* Mobile / Tablet View: Start Button (moved below the 7, 7 cards) */}
+          <div className="block lg:hidden w-full pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("skill-roadmaps-section");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all shadow-xs cursor-pointer text-center"
+            >
+              Start
+            </button>
           </div>
         </div>
       </div>
