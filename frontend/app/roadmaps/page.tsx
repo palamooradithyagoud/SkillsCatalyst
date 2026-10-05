@@ -3068,31 +3068,57 @@ export default function RoadmapsPage() {
                   glowIntensity={1.2}
                   coneSpread={25}
                   animated={false}
-                  colors={[itemColor, '#10b981', '#6366f1']}
+                  colors={[itemColor, item.id === "python-mastery" ? '#3776AB' : '#10b981', '#6366f1']}
                   className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90"
                 >
                   <div className="flex flex-col justify-between h-full space-y-5">
                     <div>
                       {/* Top Bar Badges */}
                       <div className="flex items-center justify-between mb-4">
-                        <div
-                          className="w-14 h-14 rounded-2xl text-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md"
-                          style={{
-                            background: `linear-gradient(135deg, ${itemColor}, ${itemColor}cc)`,
-                            boxShadow: `0 6px 18px ${itemColor}40`,
-                          }}
-                        >
-                          <Icon size={26} className="w-6 h-6 text-white" />
-                        </div>
+                        {item.id === "python-mastery" ? (
+                          <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src="/images/tech-logos/python.svg"
+                              alt="Python"
+                              className="w-8 h-8 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-14 h-14 rounded-2xl text-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md"
+                            style={{
+                              background: `linear-gradient(135deg, ${itemColor}, ${itemColor}cc)`,
+                              boxShadow: `0 6px 18px ${itemColor}40`,
+                            }}
+                          >
+                            <Icon size={26} className="w-6 h-6 text-white" />
+                          </div>
+                        )}
 
                         {enrolledIds.has(item.id) ? (
-                          <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-xs">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Enrolled
+                          <span
+                            className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs ${
+                              item.id === "python-mastery"
+                                ? "bg-blue-50 border border-blue-200/90 text-blue-700"
+                                : "bg-emerald-50 border border-emerald-200/90 text-emerald-700"
+                            }`}
+                          >
+                            <CheckCircle2
+                              className={`w-3.5 h-3.5 ${
+                                item.id === "python-mastery" ? "text-blue-600" : "text-emerald-600"
+                              }`}
+                            />{" "}
+                            Enrolled
                           </span>
                         ) : (
                           <button
                             onClick={(e) => handleEnrollRoadmap(item, e)}
-                            className="flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/20 hover:scale-105 transition-all z-10 cursor-pointer"
+                            className={`flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full text-white shadow-md hover:scale-105 transition-all z-10 cursor-pointer ${
+                              item.id === "python-mastery"
+                                ? "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-blue-600/20"
+                                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/20"
+                            }`}
                           >
                             <GraduationCap className="w-3.5 h-3.5 text-white" /> Enroll
                           </button>
@@ -3100,7 +3126,13 @@ export default function RoadmapsPage() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-extrabold text-slate-900 mb-1.5 group-hover:text-emerald-700 transition-colors leading-snug">
+                      <h3
+                        className={`text-lg font-extrabold text-slate-900 mb-1.5 transition-colors leading-snug ${
+                          item.id === "python-mastery"
+                            ? "group-hover:text-blue-600"
+                            : "group-hover:text-emerald-700"
+                        }`}
+                      >
                         {item.title}
                       </h3>
 
@@ -3128,7 +3160,13 @@ export default function RoadmapsPage() {
                           </span>
                         )}
                         {item.growth && (
-                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-2xs">
+                          <span
+                            className={`font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs ${
+                              item.id === "python-mastery"
+                                ? "bg-blue-50 border border-blue-200/90 text-blue-700"
+                                : "bg-emerald-50 border border-emerald-200/90 text-emerald-700"
+                            }`}
+                          >
                             📈 {item.growth}
                           </span>
                         )}
