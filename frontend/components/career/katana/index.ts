@@ -1,3 +1,4 @@
+export { default as CareerPathKatanaSequence, preloadKatanaFrames, KATANA_FRAMES } from "./CareerPathKatanaSequence";
 export { default as CareerPathTransition } from "./CareerPathTransition";
 export { default as AnimeSwordsman } from "./AnimeSwordsman";
 export { default as KatanaMechanism } from "./KatanaMechanism";
@@ -6,5 +7,6 @@ export { default as ParticleField } from "./ParticleField";
 export { default as SlashEffect } from "./SlashEffect";
 export { default as CinematicOverlay } from "./CinematicOverlay";
 export { soundEngine } from "./SoundEngine";
+export type { CareerPathKatanaSequenceProps } from "./CareerPathKatanaSequence";
 export type { DrawState } from "./KatanaMechanism";
 export type { CinematicSequenceState } from "./CinematicOverlay";

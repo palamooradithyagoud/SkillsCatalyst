@@ -1,23 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
-import { CareerPathTransition } from "@/components/career/katana";
+import { CareerPathKatanaSequence, preloadKatanaFrames } from "@/components/career/katana";
 
 export default function QuickHubNav() {
   const router = useRouter();
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
   const [isCareerTransitionActive, setIsCareerTransitionActive] = useState(false);
 
+  // Katana anime sequence feature toggle (turned off for now, preserved for later)
+  const ENABLE_KATANA_ANIMATION = false;
+
+  useEffect(() => {
+    if (ENABLE_KATANA_ANIMATION) {
+      preloadKatanaFrames();
+    }
+  }, []);
+
   const handleCareerPathClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isCareerTransitionActive) return;
-    setIsCareerTransitionActive(true);
+    if (ENABLE_KATANA_ANIMATION) {
+      if (isCareerTransitionActive) return;
+      setIsCareerTransitionActive(true);
+    } else {
+      router.push("/roadmaps");
+    }
   };
 
   return (
@@ -313,15 +326,17 @@ export default function QuickHubNav() {
         onClose={() => setIsPlacementPrepOpen(false)}
       />
 
-      {/* ── Cinematic Katana Sword Drawing CareerPath Transition ── */}
-      <CareerPathTransition
-        isActive={isCareerTransitionActive}
-        onComplete={() => {
-          router.push("/roadmaps");
-          setTimeout(() => setIsCareerTransitionActive(false), 500);
-        }}
-        onCancel={() => setIsCareerTransitionActive(false)}
-      />
+      {/* ── 5-Frame Cinematic Anime Katana Unsheathing CareerPath Transition (Turned off via flag) ── */}
+      {ENABLE_KATANA_ANIMATION && (
+        <CareerPathKatanaSequence
+          isActive={isCareerTransitionActive}
+          onComplete={() => {
+            router.push("/roadmaps");
+            setTimeout(() => setIsCareerTransitionActive(false), 500);
+          }}
+          onCancel={() => setIsCareerTransitionActive(false)}
+        />
+      )}
     </div>
   );
 }
