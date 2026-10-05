@@ -13,6 +13,11 @@ import {
   Sparkles,
   Layers,
   Search,
+  Clock,
+  Lightbulb,
+  Target,
+  Inbox,
+  Users,
 } from "lucide-react";
 
 export interface CheckpointItem {
@@ -154,27 +159,53 @@ export default function RoadmapCurriculumView({
 
       {/* ── Header Card ── */}
       <div className="relative overflow-hidden rounded-3xl bg-[#7d26cd] border border-[#6b1eb5] p-8 sm:p-10 lg:p-12 shadow-xl space-y-8">
-        <div className="flex items-center gap-5">
-          {/* Logo container */}
-          {isPython ? (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black flex items-center justify-center p-3 shadow-md shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/tech-logos/python.svg"
-                alt="Python"
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
-              />
-            </div>
-          ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black flex items-center justify-center shadow-md text-white shrink-0">
-              <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-            </div>
-          )}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+          <div className="flex items-center gap-4 sm:gap-5">
+            {/* Logo container */}
+            {isPython ? (
+              <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-2xl bg-black flex items-center justify-center p-2.5 sm:p-3 shadow-md shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/tech-logos/python.svg"
+                  alt="Python"
+                  className="w-9 h-9 sm:w-11 sm:h-11 object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-2xl bg-black flex items-center justify-center shadow-md text-white shrink-0">
+                <BookOpen className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
+              </div>
+            )}
 
-          <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              {roadmapTitle}
-            </h1>
+            <div>
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                {roadmapTitle}
+              </h1>
+            </div>
+          </div>
+
+          {/* Right side stats bar matching image */}
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap text-white text-xs sm:text-sm font-bold shrink-0">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-white/80 shrink-0" />
+              <span>32 Hours</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-white/80 shrink-0" />
+              <span>0 Videos</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-white/80 shrink-0" />
+              <span>0 Assessments</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Inbox className="w-4 h-4 text-white/80 shrink-0" />
+              <span>6 Projects</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-white/80 shrink-0" />
+              <span>102 Participants</span>
+            </div>
           </div>
         </div>
 
