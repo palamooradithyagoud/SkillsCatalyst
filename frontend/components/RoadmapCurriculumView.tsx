@@ -324,8 +324,8 @@ export default function RoadmapCurriculumView({
           </div>
         </div>
 
-        {/* Right Section: Fully fits the overall right side of the purple card container - ZERO PURPLE VISIBLE on the right side */}
-        <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch flex flex-col">
+        {/* Right Section: Completely empty and solid #101523 with no content inside - ZERO PURPLE VISIBLE on the right side */}
+        <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch min-h-[160px] lg:min-h-0 flex flex-col bg-[#101523]">
           <InteractivePracticeAccordionCard className="w-full h-full rounded-none border-0 lg:border-l border-white/10" />
         </div>
       </div>
