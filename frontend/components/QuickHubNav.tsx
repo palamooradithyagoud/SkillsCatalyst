@@ -3,24 +3,52 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import PlacementPrepModal from "@/components/PlacementPrepModal";
+import { CareerPathTransition } from "@/components/career/katana";
 
 export default function QuickHubNav() {
+  const router = useRouter();
   const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
+  const [isCareerTransitionActive, setIsCareerTransitionActive] = useState(false);
+
+  const handleCareerPathClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isCareerTransitionActive) return;
+    setIsCareerTransitionActive(true);
+  };
+
   return (
     <div className="w-full select-none space-y-2.5 sm:space-y-3">
       {/* ── Top Tier: Hero Careerpath Card (Square on Mobile) + Beside it Stacked Courses & Projects ── */}
       <div className="grid grid-cols-2 md:grid-cols-12 gap-2 sm:gap-3 items-stretch">
         {/* 1. Hero Card: Careerpath (PLAN) - Square proportion on mobile, full width hero on desktop */}
         <motion.div
-          whileHover={{ y: -3, scale: 1.012 }}
+          whileHover={isCareerTransitionActive ? {} : { y: -3, scale: 1.012 }}
+          animate={
+            isCareerTransitionActive
+              ? {
+                  scale: 0.965,
+                  filter: "brightness(1.15) contrast(1.1)",
+                  boxShadow: "0 0 35px rgba(245,158,11,0.45)",
+                }
+              : {}
+          }
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="col-span-1 md:col-span-7 flex"
         >
-          <Link
-            href="/roadmaps"
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleCareerPathClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleCareerPathClick(e as unknown as React.MouseEvent);
+              }
+            }}
             className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-[#171527] dark:via-[#1A172E] dark:to-[#221B3C] rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-indigo-900/40 shadow-[0_4px_24px_rgba(99,102,241,0.05)] hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
@@ -61,7 +89,7 @@ export default function QuickHubNav() {
                 />
               </div>
             </div>
-          </Link>
+          </div>
         </motion.div>
 
         {/* 2. Right Stack: Courses (LEARN) & Projects (BUILD) - Beside Careerpath on mobile */}
@@ -283,6 +311,16 @@ export default function QuickHubNav() {
       <PlacementPrepModal
         isOpen={isPlacementPrepOpen}
         onClose={() => setIsPlacementPrepOpen(false)}
+      />
+
+      {/* ── Cinematic Katana Sword Drawing CareerPath Transition ── */}
+      <CareerPathTransition
+        isActive={isCareerTransitionActive}
+        onComplete={() => {
+          router.push("/roadmaps");
+          setTimeout(() => setIsCareerTransitionActive(false), 500);
+        }}
+        onCancel={() => setIsCareerTransitionActive(false)}
       />
     </div>
   );
