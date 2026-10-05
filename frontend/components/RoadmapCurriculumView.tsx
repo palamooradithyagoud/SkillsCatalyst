@@ -15,10 +15,9 @@ import {
   Layers,
   Search,
   Clock,
-  Lightbulb,
-  Target,
+  Play,
+  HelpCircle,
   Inbox,
-  Users,
   Zap,
   Swords,
 } from "lucide-react";
@@ -236,23 +235,19 @@ export default function RoadmapCurriculumView({
               <div className="flex items-center gap-x-2.5 gap-y-1 sm:gap-x-3.5 sm:gap-y-1.5 lg:gap-x-5 lg:gap-y-2 flex-wrap text-white text-[11px] sm:text-xs lg:text-sm font-semibold sm:font-bold">
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
-                  <span>32 Hours</span>
+                  <span>40 Hours</span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <Lightbulb className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
-                  <span>0 Videos</span>
+                  <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0 fill-white/80" />
+                  <span>100 Videos</span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
-                  <span>0 Assessments</span>
+                  <HelpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
+                  <span>25 Quizzes</span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   <Inbox className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
-                  <span>6 Projects</span>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
-                  <span>102 Participants</span>
+                  <span>3 Projects</span>
                 </div>
               </div>
             </div>
@@ -472,41 +467,35 @@ export default function RoadmapCurriculumView({
                 </div>
               </div>
 
-              {/* Right Column: Beside Progress -> Quiz & Gamification Cards (irrelevant text removed) */}
+              {/* Right Column: Beside Progress -> Quiz & Gamification Cards (Black background) */}
               <div className="flex flex-col justify-between gap-1.5 sm:gap-2 h-[138px]">
-                {/* Quiz Mini Card */}
+                {/* Quiz Mini Card: Black */}
                 <div
                   onClick={() => router.push("/practice")}
-                  className="flex-1 bg-white rounded-xl p-2 flex items-center gap-2 shadow-sm border border-slate-100/90 active:scale-95 transition-all cursor-pointer overflow-hidden"
+                  className="flex-1 bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-100 relative">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
                     <QuizBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-black text-black leading-tight truncate">
+                    <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
                       Topic Quiz
                     </div>
-                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-slate-100 text-black text-[8px] font-black tracking-wider uppercase mt-0.5">
-                      Practice
-                    </span>
                   </div>
                 </div>
 
-                {/* Gamification Mini Card */}
+                {/* Gamification Mini Card: Black */}
                 <div
                   onClick={() => router.push("/practice")}
-                  className="flex-1 bg-white rounded-xl p-2 flex items-center gap-2 shadow-sm border border-slate-100/90 active:scale-95 transition-all cursor-pointer overflow-hidden"
+                  className="flex-1 bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-100 relative">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
                     <GamificationBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-black text-black leading-tight truncate">
+                    <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
                       Gamification
                     </div>
-                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-[#FAF5FF] border border-[#E9D5FF] text-[#9333EA] text-[8px] font-black tracking-wider uppercase mt-0.5">
-                      Quests
-                    </span>
                   </div>
                 </div>
               </div>
