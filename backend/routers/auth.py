@@ -14,7 +14,7 @@ Guarantees:
 
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 
@@ -101,7 +101,7 @@ def _process_welcome_email_job(user_id: str, email: str, full_name: Optional[str
 def trigger_welcome_email(
     payload: WelcomeEmailRequest,
     background_tasks: BackgroundTasks,
-    authorization: Optional[str] = Header(None),
+    current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
     """
     Idempotent Welcome Email Endpoint.
@@ -115,55 +115,18 @@ def trigger_welcome_email(
     - Concurrent requests are guarded by Redis distributed locking + database processing leases.
     - Failed deliveries remain retryable.
     """
-    # 1. Strict Authentication Validation
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Valid Supabase Bearer token required.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = authorization.split(" ", 1)[1].strip()
-    sb = get_supabase()
-    if not sb:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database service temporarily unavailable.",
-        )
-
-    try:
-        auth_res = sb.auth.get_user(jwt=token)
-        if not auth_res or not auth_res.user or not auth_res.user.id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired authentication token.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        supa_user = auth_res.user
-    except HTTPException:
-        raise
-    except Exception as auth_err:
-        logger.warning(f"Supabase auth token verification error: {auth_err}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token verification failed.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_id = str(supa_user.id).strip()
-    user_email = (supa_user.email or "").strip().lower()
+    user_id = str(current_user["user_id"]).strip()
+    user_email = str(current_user.get("email") or "").strip().lower()
     if not user_email or "@" not in user_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account has no valid email address.",
         )
 
-    # Derive name gracefully from user metadata
-    user_meta = supa_user.user_metadata or {}
+    # Derive name gracefully
     derived_name = (
-        user_meta.get("full_name")
-        or user_meta.get("name")
-        or payload.full_name
+        payload.full_name
+        or current_user.get("name")
         or user_email.split("@")[0]
         or "Learner"
     )

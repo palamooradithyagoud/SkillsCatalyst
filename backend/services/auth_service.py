@@ -4,10 +4,11 @@ import secrets
 import re
 import uuid
 import logging
+import jwt
 from typing import Optional, Tuple, Any, Dict
 from fastapi import Header, HTTPException, status, Depends
 from backend.services.supabase_service import get_supabase
-from backend.config import SECRET_KEY, OWNER_EMAIL
+from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,10 @@ def get_user_role(user_id: str, supa_user: Any = None) -> str:
     """
     # 1. Authoritative check: app_metadata.role in Supabase Auth JWT
     if supa_user:
-        app_meta = getattr(supa_user, "app_metadata", None) or {}
+        if isinstance(supa_user, dict):
+            app_meta = supa_user.get("app_metadata") or {}
+        else:
+            app_meta = getattr(supa_user, "app_metadata", None) or {}
         if isinstance(app_meta, dict) and app_meta.get("role"):
             return str(app_meta["role"]).strip().lower()
 
@@ -58,9 +62,10 @@ def get_user_role(user_id: str, supa_user: Any = None) -> str:
         except Exception as e:
             logger.debug(f"profiles role query notice: {e}")
 
-    # Fallback check against configured OWNER_EMAIL on supa_user object
-    if supa_user and getattr(supa_user, "email", None):
-        if str(supa_user.email).strip().lower() == OWNER_EMAIL:
+    # Fallback check against configured OWNER_EMAIL on supa_user object or dict
+    if supa_user:
+        u_email = (supa_user.get("email") if isinstance(supa_user, dict) else getattr(supa_user, "email", None)) or ""
+        if u_email and str(u_email).strip().lower() == OWNER_EMAIL:
             return "owner"
 
     return "student"
@@ -71,28 +76,34 @@ def require_authenticated_user(
 ) -> Dict[str, Any]:
     """
     Strict Production Authentication Dependency.
-    Extracts & validates Supabase JWT Bearer token.
+    Extracts & validates Supabase JWT Bearer token:
+    1. Attempts ultra-fast local cryptographic JWT verification using SUPABASE_JWT_SECRET (HS256).
+    2. Falls back to remote Supabase Auth API verification with automatic reconnection retry on network drops.
     Resolves authoritative user identity and role.
     Returns user dict: {user_id, email, name, role, is_owner} or raises HTTP 401 Unauthorized.
     """
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1].strip()
         if token and token not in ("undefined", "null", ""):
-            sb = get_supabase()
-            if sb:
+            # 1. Fast local JWT verification (instant, zero network latency, immune to ConnectionTerminated)
+            if SUPABASE_JWT_SECRET:
                 try:
-                    res = sb.auth.get_user(jwt=token)
-                    if res and res.user and res.user.id:
-                        u = res.user
-                        u_id = str(u.id)
-                        u_email = str(u.email or "").strip().lower()
-                        user_meta = getattr(u, "user_metadata", {}) or {}
+                    decoded = jwt.decode(
+                        token,
+                        SUPABASE_JWT_SECRET,
+                        algorithms=["HS256"],
+                        options={"verify_aud": False},
+                    )
+                    u_id = str(decoded.get("sub") or "").strip()
+                    if u_id:
+                        u_email = str(decoded.get("email") or "").strip().lower()
+                        user_meta = decoded.get("user_metadata") or {}
                         u_name = (
                             user_meta.get("full_name")
                             or user_meta.get("name")
                             or (u_email.split("@")[0] if u_email else "Learner")
                         )
-                        role = get_user_role(u_id, u)
+                        role = get_user_role(u_id, decoded)
                         return {
                             "user_id": u_id,
                             "email": u_email,
@@ -100,8 +111,47 @@ def require_authenticated_user(
                             "role": role,
                             "is_owner": (role == "owner"),
                         }
-                except Exception as e:
-                    logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
+                except jwt.ExpiredSignatureError:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Authentication token has expired.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                except Exception as jwt_err:
+                    logger.debug(f"Local JWT decode notice: {jwt_err}. Falling back to remote verification.")
+
+            # 2. Remote Supabase Auth API fallback with connection retry resilience
+            sb = get_supabase()
+            if sb:
+                for attempt in range(2):
+                    try:
+                        res = sb.auth.get_user(jwt=token)
+                        if res and res.user and res.user.id:
+                            u = res.user
+                            u_id = str(u.id)
+                            u_email = str(u.email or "").strip().lower()
+                            user_meta = getattr(u, "user_metadata", {}) or {}
+                            u_name = (
+                                user_meta.get("full_name")
+                                or user_meta.get("name")
+                                or (u_email.split("@")[0] if u_email else "Learner")
+                            )
+                            role = get_user_role(u_id, u)
+                            return {
+                                "user_id": u_id,
+                                "email": u_email,
+                                "name": u_name,
+                                "role": role,
+                                "is_owner": (role == "owner"),
+                            }
+                    except Exception as e:
+                        err_msg = str(e)
+                        if attempt == 0 and any(kw in err_msg for kw in ("ConnectionTerminated", "ConnectError", "RemoteProtocolError", "getaddrinfo")):
+                            logger.warning(f"Supabase connection dropped during token validation, retrying with fresh client: {e}")
+                            sb = get_supabase(force_refresh=True)
+                            continue
+                        logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
+                        break
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
