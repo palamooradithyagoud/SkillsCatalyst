@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -18,8 +19,54 @@ import {
   Target,
   Inbox,
   Users,
+  Zap,
+  Swords,
 } from "lucide-react";
 import InteractivePracticeAccordionCard from "./InteractivePracticeAccordionCard";
+
+function QuizBadgeIcon({ className = "w-4.5 h-4.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 36 36" fill="none" className={className}>
+      <rect x="5" y="4" width="26" height="28" rx="5" fill="white" />
+      <path d="M10 10H17" stroke="#C4B5FD" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M10 15H19" stroke="#E2E8F0" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="21" cy="21" r="8.5" fill="url(#quizGradMobile)" />
+      <path
+        d="M21 16.8C19.9 16.8 19 17.5 19 18.6H20.3C20.3 18.1 20.6 17.8 21 17.8C21.4 17.8 21.8 18.1 21.8 18.6C21.8 19.3 20.8 19.6 20.8 20.8H21.7C21.7 20 22.8 19.8 22.8 18.6C22.8 17.5 22 16.8 21 16.8Z"
+        fill="white"
+      />
+      <circle cx="21.2" cy="23.2" r="0.8" fill="white" />
+      <path d="M28 5L28.7 7L31 7.7L28.7 8.4L28 10.5L27.3 8.4L25 7.7L27.3 7L28 5Z" fill="#FBBF24" />
+      <defs>
+        <linearGradient id="quizGradMobile" x1="12" y1="12" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#F59E0B" />
+          <stop offset="1" stopColor="#D97706" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function GamificationBadgeIcon({ className = "w-4.5 h-4.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 36 36" fill="none" className={className}>
+      <rect x="4" y="10" width="28" height="17" rx="8" fill="url(#gamepadGradMobile)" />
+      <rect x="9.5" y="15.5" width="6" height="2" rx="1" fill="#FFFFFF" />
+      <rect x="11.5" y="13.5" width="2" height="6" rx="1" fill="#FFFFFF" />
+      <circle cx="23" cy="15" r="1.5" fill="#E879F9" />
+      <circle cx="26" cy="18" r="1.5" fill="#C084FC" />
+      <circle cx="20" cy="18" r="1.5" fill="#818CF8" />
+      <circle cx="23" cy="21" r="1.5" fill="#F472B6" />
+      <path d="M18 4.5L19.3 7.8L22.5 9L19.3 10.2L18 13.5L16.7 10.2L13.5 9L16.7 7.8L18 4.5Z" fill="#FDE047" />
+      <defs>
+        <linearGradient id="gamepadGradMobile" x1="4" y1="10" x2="32" y2="27" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#A855F7" />
+          <stop offset="1" stopColor="#6D28D9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
 
 export interface CheckpointItem {
   id: string;
@@ -93,6 +140,7 @@ export default function RoadmapCurriculumView({
   completedSubtopics = {},
   getSubtopicsForNode,
 }: RoadmapCurriculumViewProps) {
+  const router = useRouter();
   const [searchFilter, setSearchFilter] = useState("");
   const [filterMode, setFilterMode] = useState<"all" | "completed" | "remaining">("all");
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
@@ -161,59 +209,59 @@ export default function RoadmapCurriculumView({
       {/* ── Header Card ── */}
       <div className="relative overflow-hidden rounded-3xl bg-[#7d26cd] border border-[#6b1eb5] shadow-xl flex flex-col lg:flex-row items-stretch">
         {/* Left Section (Purple): Title, Stats, and Cards 1, 2, 3 */}
-        <div className="flex-1 min-w-0 p-5 sm:p-6 lg:p-7 xl:p-8 flex flex-col justify-between space-y-6 sm:space-y-8">
-          <div className="flex items-center gap-4 sm:gap-5">
+        <div className="flex-1 min-w-0 p-3.5 sm:p-5 lg:p-7 xl:p-8 flex flex-col justify-between space-y-3.5 sm:space-y-6 lg:space-y-8">
+          <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-5">
             {/* Logo container */}
             {isPython ? (
-              <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-2xl bg-black flex items-center justify-center p-2.5 sm:p-3 shadow-md shrink-0">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-black flex items-center justify-center p-1.5 sm:p-2.5 lg:p-3 shadow-md shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/images/tech-logos/python.svg"
                   alt="Python"
-                  className="w-9 h-9 sm:w-11 sm:h-11 object-contain"
+                  className="w-6 h-6 sm:w-9 sm:h-9 lg:w-10 lg:h-10 object-contain"
                 />
               </div>
             ) : (
-              <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-2xl bg-black flex items-center justify-center shadow-md text-white shrink-0">
-                <BookOpen className="w-7 h-7 sm:w-9 sm:h-9 text-white" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-black flex items-center justify-center shadow-md text-white shrink-0">
+                <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
               </div>
             )}
 
-            <div className="space-y-2 sm:space-y-2.5">
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+            <div className="space-y-1 sm:space-y-1.5 lg:space-y-2">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-white tracking-tight leading-snug">
                 {roadmapTitle}
               </h1>
 
-              {/* Small stats icons directly downside the title text */}
-              <div className="flex items-center gap-3.5 sm:gap-5 flex-wrap text-white text-xs sm:text-sm font-bold">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Clock className="w-4 h-4 text-white/80 shrink-0" />
+              {/* Small stats icons directly downside the title text - compact on mobile */}
+              <div className="flex items-center gap-x-2.5 gap-y-1 sm:gap-x-3.5 sm:gap-y-1.5 lg:gap-x-5 lg:gap-y-2 flex-wrap text-white text-[11px] sm:text-xs lg:text-sm font-semibold sm:font-bold">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
                   <span>32 Hours</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Lightbulb className="w-4 h-4 text-white/80 shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Lightbulb className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
                   <span>0 Videos</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Target className="w-4 h-4 text-white/80 shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
                   <span>0 Assessments</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Inbox className="w-4 h-4 text-white/80 shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Inbox className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
                   <span>6 Projects</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Users className="w-4 h-4 text-white/80 shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white/80 shrink-0" />
                   <span>102 Participants</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Details Section: Cards 1, 2, 3 (Preserved exactly as they are) ── */}
-          <div className="pt-4 sm:pt-5 border-t border-black/15 flex items-stretch gap-2.5 sm:gap-3 lg:gap-3.5 flex-nowrap overflow-x-auto lg:overflow-x-visible no-scrollbar pb-1">
+          {/* ── DESKTOP ONLY: Cards 1, 2, 3 in a row ── */}
+          <div className="pt-3 sm:pt-4 lg:pt-5 border-t border-black/15 hidden lg:flex items-stretch gap-3 lg:gap-3.5">
             {/* Card 1: IN ROADMAP (Black background, White text) */}
-            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-black p-3.5 sm:p-4 text-white shadow-md border border-white/10 shrink-0 flex flex-col justify-between">
+            <div className="shrink lg:flex-1 lg:max-w-[220px] rounded-2xl bg-black p-3.5 lg:p-4 text-white shadow-md border border-white/10 flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-1.5 text-amber-400 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
                   <span>🔥</span>
@@ -222,35 +270,35 @@ export default function RoadmapCurriculumView({
 
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-white">
+                    <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
                       <span className="text-amber-400 text-sm leading-none">•</span> Core Syntax & DSA
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold">5 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">5 Stns</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-white">
+                    <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
                       <span className="text-amber-400 text-sm leading-none">•</span> OOP & Decorators
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">6 Stns</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-white">
+                    <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
                       <span className="text-amber-400 text-sm leading-none">•</span> Web Frameworks
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold">4 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">4 Stns</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-bold text-white">
+                    <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
                       <span className="text-amber-400 text-sm leading-none">•</span> Async & Testing
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold">6 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">6 Stns</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Card 2: YOU GET (White background, Black text) */}
-            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0 flex flex-col justify-between">
+            <div className="shrink lg:flex-1 lg:max-w-[220px] rounded-2xl bg-white p-3.5 lg:p-4 text-black shadow-md border border-slate-100 flex flex-col justify-between">
               <div>
                 <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
                   YOU GET
@@ -258,22 +306,22 @@ export default function RoadmapCurriculumView({
 
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-black">
+                    <span className="flex items-center gap-1.5 font-bold text-black truncate">
                       <span className="text-black text-sm leading-none">•</span> 21 Stations
                     </span>
                   </div>
                   <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-black">
-                      <span className="text-black text-sm leading-none">•</span> Subtopic Checklist
+                    <span className="flex items-center gap-1.5 font-bold text-black truncate">
+                      <span className="text-black text-sm leading-none">•</span> Subtopics
                     </span>
                   </div>
                   <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-bold text-black">
+                    <span className="flex items-center gap-1.5 font-bold text-black truncate">
                       <span className="text-black text-sm leading-none">•</span> Official Docs
                     </span>
                   </div>
                   <div className="flex items-center">
-                    <span className="flex items-center gap-1.5 font-bold text-black">
+                    <span className="flex items-center gap-1.5 font-bold text-black truncate">
                       <span className="text-black text-sm leading-none">•</span> Real Projects
                     </span>
                   </div>
@@ -281,15 +329,15 @@ export default function RoadmapCurriculumView({
               </div>
             </div>
 
-            {/* Card 3: Round Percentage (Beside the white card, same size) */}
-            <div className="w-[170px] sm:w-[185px] lg:w-[175px] xl:w-[200px] flex-1 max-w-[220px] rounded-2xl bg-white p-3.5 sm:p-4 text-black shadow-md border border-slate-100 shrink-0 flex flex-col justify-between">
+            {/* Card 3: Round Percentage */}
+            <div className="shrink lg:flex-1 lg:max-w-[220px] rounded-2xl bg-white p-3.5 lg:p-4 text-black shadow-md border border-slate-100 flex flex-col justify-between">
               <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
                 PROGRESS
               </div>
 
               <div className="my-auto flex flex-col items-center justify-center py-1">
-                <div className="relative flex items-center justify-center w-18 h-18 sm:w-20 sm:h-20">
-                  <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 36 36">
+                <div className="relative flex items-center justify-center w-18 h-18 lg:w-20 lg:h-20">
+                  <svg className="w-18 h-18 lg:w-20 lg:h-20 -rotate-90" viewBox="0 0 36 36">
                     <path
                       className="text-slate-100"
                       strokeWidth="3.5"
@@ -308,7 +356,7 @@ export default function RoadmapCurriculumView({
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center text-center">
-                    <span className="text-base sm:text-lg font-black text-black leading-none">
+                    <span className="text-base lg:text-lg font-black text-black leading-none">
                       {progressPct}%
                     </span>
                   </div>
@@ -316,18 +364,190 @@ export default function RoadmapCurriculumView({
               </div>
 
               <div className="pt-1.5 border-t border-dashed border-slate-200 text-center">
-                <span className="text-xs font-bold text-slate-600">
-                  {doneCount} / {totalCount} Stations Done
+                <span className="text-xs font-bold text-slate-600 block truncate">
+                  {doneCount} / {totalCount} Done
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── MOBILE ONLY: Row 1 (Black + White side-by-side) & Row 2 (Progress + Quiz/Gamification side-by-side) ── */}
+          <div className="pt-2.5 border-t border-black/15 flex flex-col gap-2 sm:gap-2.5 lg:hidden">
+            {/* Mobile Row 1: Black Card (IN ROADMAP) & White Card (YOU GET) Side-by-Side */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              {/* Black Card: IN ROADMAP */}
+              <div className="rounded-xl bg-black p-2.5 sm:p-3 text-white shadow-md border border-white/10 flex flex-col justify-between h-[138px]">
+                <div>
+                  <div className="flex items-center gap-1 text-amber-400 font-extrabold text-[10px] uppercase tracking-wider mb-1.5">
+                    <span>🔥</span>
+                    <span>IN ROADMAP</span>
+                  </div>
+
+                  <div className="space-y-1 text-[10.5px]">
+                    <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
+                      <span className="font-bold text-white truncate mr-1">• Core Syntax</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">5 Stns</span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
+                      <span className="font-bold text-white truncate mr-1">• OOP & Dec</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">6 Stns</span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
+                      <span className="font-bold text-white truncate mr-1">• Web Fmwk</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">4 Stns</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white truncate mr-1">• Async & Test</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">6 Stns</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* White Card: YOU GET */}
+              <div className="rounded-xl bg-white p-2.5 sm:p-3 text-black shadow-md border border-slate-100 flex flex-col justify-between h-[138px]">
+                <div>
+                  <div className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider mb-1.5">
+                    YOU GET
+                  </div>
+
+                  <div className="space-y-1 text-[10.5px]">
+                    <div className="flex items-center border-b border-dashed border-slate-200 pb-0.5">
+                      <span className="font-bold text-black truncate">• 21 Stations</span>
+                    </div>
+                    <div className="flex items-center border-b border-dashed border-slate-200 pb-0.5">
+                      <span className="font-bold text-black truncate">• Subtopics</span>
+                    </div>
+                    <div className="flex items-center border-b border-dashed border-slate-200 pb-0.5">
+                      <span className="font-bold text-black truncate">• Official Docs</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="font-bold text-black truncate">• Real Projects</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Row 2: Progress Card & Beside that Quiz + Gamification Cards */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              {/* Left Column: Progress Card (Moved to downside) */}
+              <div className="rounded-xl bg-white p-2.5 sm:p-3 text-black shadow-md border border-slate-100 flex flex-col justify-between h-[138px]">
+                <div className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">
+                  PROGRESS
+                </div>
+
+                <div className="my-auto flex flex-col items-center justify-center py-0.5">
+                  <div className="relative flex items-center justify-center w-13 h-13 sm:w-15 sm:h-15">
+                    <svg className="w-13 h-13 sm:w-15 sm:h-15 -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        className="text-slate-100"
+                        strokeWidth="3.5"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="text-[#7d26cd] transition-all duration-500"
+                        strokeDasharray={`${progressPct}, 100`}
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center text-center">
+                      <span className="text-sm sm:text-base font-black text-black leading-none">
+                        {progressPct}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-1 border-t border-dashed border-slate-200 text-center">
+                  <span className="text-[9.5px] font-bold text-slate-600 block truncate">
+                    {doneCount} / {totalCount} Done
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Beside Progress -> Quiz & Gamification Cards (irrelevant text removed) */}
+              <div className="flex flex-col justify-between gap-1.5 sm:gap-2 h-[138px]">
+                {/* Quiz Mini Card */}
+                <div
+                  onClick={() => router.push("/practice")}
+                  className="flex-1 bg-white rounded-xl p-2 flex items-center gap-2 shadow-sm border border-slate-100/90 active:scale-95 transition-all cursor-pointer overflow-hidden"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-100 relative">
+                    <QuizBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-black text-black leading-tight truncate">
+                      Topic Quiz
+                    </div>
+                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-slate-100 text-black text-[8px] font-black tracking-wider uppercase mt-0.5">
+                      Practice
+                    </span>
+                  </div>
+                </div>
+
+                {/* Gamification Mini Card */}
+                <div
+                  onClick={() => router.push("/practice")}
+                  className="flex-1 bg-white rounded-xl p-2 flex items-center gap-2 shadow-sm border border-slate-100/90 active:scale-95 transition-all cursor-pointer overflow-hidden"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-100 relative">
+                    <GamificationBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-black text-black leading-tight truncate">
+                      Gamification
+                    </div>
+                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-[#FAF5FF] border border-[#E9D5FF] text-[#9333EA] text-[8px] font-black tracking-wider uppercase mt-0.5">
+                      Quests
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Section: Interactive practice card with quiz & gamification + downside Enroll & Enter Arena buttons */}
-        <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch min-h-[160px] lg:min-h-0 flex flex-col bg-[#101523]">
+        {/* ── MOBILE ONLY: Action Buttons Bar downside ── */}
+        <div className="p-3 bg-[#101523] border-t border-white/10 lg:hidden flex items-center gap-2.5 w-full">
+          <button
+            type="button"
+            onClick={onEnroll}
+            className="flex-1 py-2.5 px-3 rounded-xl bg-[#FACC15] hover:bg-[#FDE047] active:bg-[#EAB308] text-slate-950 font-black text-xs tracking-tight flex items-center justify-center gap-1.5 shadow-md shadow-amber-400/20 active:scale-95 transition-all cursor-pointer truncate"
+          >
+            {isEnrolled ? (
+              <>
+                <Check className="w-3.5 h-3.5 stroke-[3] shrink-0" />
+                <span className="truncate">Enrolled</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5 fill-slate-950 stroke-slate-950 shrink-0" />
+                <span className="truncate">Enroll</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push("/practice")}
+            className="flex-1 py-2.5 px-3 rounded-xl bg-[#EC4899] hover:bg-[#F472B6] active:bg-[#DB2777] text-white font-black text-xs tracking-tight flex items-center justify-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition-all cursor-pointer truncate"
+          >
+            <Swords className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
+            <span className="truncate">Enter the Arena</span>
+          </button>
+        </div>
+
+        {/* ── DESKTOP ONLY: Right Section with full interactive practice card & downside buttons ── */}
+        <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch hidden lg:flex flex-col bg-[#101523] border-l border-white/10">
           <InteractivePracticeAccordionCard
-            className="w-full h-full rounded-none border-0 lg:border-l border-white/10"
+            className="w-full h-full"
             isEnrolled={isEnrolled}
             onEnroll={onEnroll}
           />
