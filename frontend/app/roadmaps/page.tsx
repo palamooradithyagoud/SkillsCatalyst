@@ -50,7 +50,6 @@ import BrandReactIcon from "@/components/icons/BrandReactIcon";
 import PythonIcon from "@/components/icons/PythonIcon";
 import BrandNextjsIcon from "@/components/icons/BrandNextjsIcon";
 import PenguinRoadmapMountainExpedition, { CheckpointItem } from "@/components/PenguinRoadmapMountainExpedition";
-import PenguinRoadmapHeroBanner from "@/components/PenguinRoadmapHeroBanner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import BorderGlow from "@/components/BorderGlow";
@@ -2760,19 +2759,74 @@ export default function RoadmapsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-10 pb-16"
     >
-      {/* ── Roadmaps Hero Header Banner with Mountain & Penguin Expedition ── */}
-      <PenguinRoadmapHeroBanner
-        skillCount={SKILL_ROADMAPS.length}
-        careerCount={CAREER_ROADMAPS.length}
-        onExploreSkills={() => {
-          const el = document.getElementById("skill-roadmaps-section");
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }}
-        onExploreCareers={() => {
-          const el = document.getElementById("career-roadmaps-section");
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }}
-      />
+      {/* ── Roadmaps Header Banner ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#a1ccff] border border-[#8ec2fc] p-8 sm:p-10 shadow-sm">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+          <div className="max-w-2xl space-y-4">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/60 border border-white/70 text-slate-800 text-xs font-semibold uppercase tracking-wider">
+              Curated Learning Pathways
+            </span>
+
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              Developer Roadmaps
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
+              Step-by-step guides and milestones to help you master languages, frameworks, and job-ready engineering roles.
+            </p>
+
+            <div className="flex items-center gap-3 pt-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("skill-roadmaps-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all shadow-sm cursor-pointer"
+              >
+                Explore Skill Roadmaps
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("career-roadmaps-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-900 font-semibold text-xs sm:text-sm border border-white transition-all shadow-xs cursor-pointer"
+              >
+                Career Tracks
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 shrink-0 sm:w-auto w-full">
+            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-2xl p-5 shadow-xs flex flex-col justify-center min-w-[150px]">
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                Skill Tracks
+              </span>
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 mt-1">
+                {SKILL_ROADMAPS.length}
+              </span>
+              <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                Languages &amp; Core
+              </span>
+            </div>
+
+            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-2xl p-5 shadow-xs flex flex-col justify-center min-w-[150px]">
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                Career Paths
+              </span>
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 mt-1">
+                {CAREER_ROADMAPS.length}
+              </span>
+              <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                Job Ready Roles
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Partner & Technology Logo Loop (Downside Main Banner) */}
       <motion.div
