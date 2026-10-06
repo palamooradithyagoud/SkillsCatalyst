@@ -1252,3 +1252,139 @@ input:-webkit-autofill:active {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* ── Roadmap Hierarchical Tree View (Pure CSS Collapsible Tree) ── */
+.tree-container {
+  width: 320px;
+  max-width: 100%;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tree-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tree-container ul ul {
+  margin-left: 11px;
+  padding-left: 11px;
+  border-left: 1px solid #e4e4e7;
+}
+
+.tree-item {
+  position: relative;
+  margin-top: 4px;
+}
+
+.tree-container ul ul .tree-item::before {
+  content: "";
+  position: absolute;
+  left: -11px;
+  top: 14px;
+  width: 11px;
+  height: 1px;
+  background-color: #e4e4e7;
+}
+
+.tree-label,
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #09090b;
+  transition: background-color 0.2s;
+  user-select: none;
+  text-decoration: none;
+  height: 28px;
+}
+
+.tree-label:hover,
+.file-item:hover {
+  background-color: #f4f4f5;
+}
+
+.is-selected {
+  background-color: #f4f4f5;
+  color: #09090b;
+  font-weight: 500;
+}
+
+.tree-container .icon {
+  width: 16px;
+  height: 16px;
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.folder-open-icon {
+  display: none;
+}
+.folder-closed-icon {
+  display: block;
+}
+
+.tree-toggle:checked ~ .tree-label .folder-open-icon {
+  display: block;
+  color: #09090b;
+}
+.tree-toggle:checked ~ .tree-label .folder-closed-icon {
+  display: none;
+}
+
+.tree-toggle {
+  display: none;
+}
+
+.tree-children-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-in-out;
+}
+
+.tree-children {
+  overflow: hidden;
+}
+
+/* State: Open */
+.tree-toggle:checked ~ .tree-children-wrapper {
+  grid-template-rows: 1fr;
+}
+
+/* Dark mode theme compatibility */
+.dark .tree-container {
+  background: #18181b;
+  border-color: #27272a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.dark .tree-container ul ul {
+  border-left-color: #27272a;
+}
+.dark .tree-container ul ul .tree-item::before {
+  background-color: #27272a;
+}
+.dark .tree-label,
+.dark .file-item {
+  color: #f4f4f5;
+}
+.dark .tree-label:hover,
+.dark .file-item:hover,
+.dark .is-selected {
+  background-color: #27272a;
+  color: #ffffff;
+}
+.dark .tree-container .icon {
+  color: #a1a1aa;
+}
+.dark .tree-toggle:checked ~ .tree-label .folder-open-icon {
+  color: #ffffff;
+}
+
+
