@@ -50,10 +50,14 @@ export function resolveLearnMoreDestination(
   }
 
   if (Array.isArray(bit.courses) && bit.courses.length > 0) {
-    return {
-      label: "Learn More in Learning Hub →",
-      href: "/learning",
-    };
+    const course = bit.courses[0] as Record<string, unknown>;
+    const id = course?.id || course?.slug;
+    if (id) {
+      return {
+        label: "Learn More in Course →",
+        href: `/courses?id=${encodeURIComponent(String(id))}`,
+      };
+    }
   }
 
   if (Array.isArray(bit.roadmaps) && bit.roadmaps.length > 0) {
@@ -279,11 +283,12 @@ export default function SkillBitReelItem({
   const getDifficultyBadge = (diff: string) => {
     switch (diff?.toLowerCase()) {
       case "advanced":
-        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
+        return "bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-400/40";
       case "intermediate":
-        return "bg-sky-500/20 text-sky-300 border-sky-500/30";
+        return "bg-indigo-500/20 text-indigo-200 border-indigo-400/40";
+      case "beginner":
       default:
-        return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+        return "bg-violet-500/25 text-violet-200 border-violet-400/40";
     }
   };
 
@@ -311,6 +316,7 @@ export default function SkillBitReelItem({
               loop={false}
               thumbnailTime={0}
               className="w-full h-full object-cover"
+              primaryColor="#C084FC"
               style={{
                 width: "100%",
                 height: "100%",
@@ -419,51 +425,57 @@ export default function SkillBitReelItem({
         </div>
 
         {/* BOTTOM LEARNING OVERLAY */}
-        <div className="absolute bottom-0 inset-x-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-2 z-20 text-left pointer-events-auto">
-          {/* Metadata Badges: Topic, Difficulty, Duration */}
-          <div className="flex flex-wrap items-center gap-2">
-            {skillbit.topic && (
-              <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
+        <div className="absolute bottom-0 inset-x-0 p-4 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4.5rem))] space-y-2 z-20 text-left pointer-events-auto">
+          {/* Topic Badge Only */}
+          {skillbit.topic && (
+            <div>
+              <span className="inline-block px-2.5 py-1 text-[11px] font-bold rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-sm shadow-xs">
                 #{skillbit.topic}
               </span>
-            )}
-            <span
-              className={`px-2 py-0.5 text-[11px] font-semibold rounded-md border capitalize ${getDifficultyBadge(
-                skillbit.difficulty
-              )}`}
-            >
-              {skillbit.difficulty}
-            </span>
-            {skillbit.duration_seconds && (
-              <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-white/10 text-slate-200 backdrop-blur-sm border border-white/10">
-                <Clock className="w-3 h-3" />
-                {skillbit.duration_seconds}s
-              </span>
-            )}
-            {isCompleted && (
-              <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-sm">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                Completed
-              </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Title */}
-          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug drop-shadow-md">
+          <h2 className="text-base sm:text-lg font-black text-white tracking-tight leading-snug drop-shadow-md">
             {skillbit.title}
           </h2>
 
-          {/* Description (expandable) */}
-          {skillbit.description && (
-            <p
-              onClick={() => setExpandedDesc(!expandedDesc)}
-              className={`text-xs text-slate-300/90 leading-relaxed cursor-pointer drop-shadow ${
-                expandedDesc ? "" : "line-clamp-2"
-              }`}
-            >
-              {skillbit.description}
-            </p>
-          )}
+          {/* Description Section with Micro-details */}
+          <div className="space-y-1.5">
+            {skillbit.description && (
+              <p
+                onClick={() => setExpandedDesc(!expandedDesc)}
+                className={`text-xs text-slate-300/90 leading-relaxed cursor-pointer drop-shadow ${
+                  expandedDesc ? "" : "line-clamp-2"
+                }`}
+              >
+                {skillbit.description}
+              </p>
+            )}
+
+            {/* Micro Details in Description: Difficulty, Duration, Completed */}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <span
+                className={`px-2 py-0.5 text-[10.5px] font-semibold rounded-md border backdrop-blur-sm shadow-xs capitalize ${getDifficultyBadge(
+                  skillbit.difficulty
+                )}`}
+              >
+                {skillbit.difficulty}
+              </span>
+              {skillbit.duration_seconds && (
+                <span className="flex items-center gap-1 px-2 py-0.5 text-[10.5px] font-medium rounded-md bg-white/10 text-slate-200 backdrop-blur-sm border border-white/15 shadow-xs">
+                  <Clock className="w-3 h-3 text-purple-300" />
+                  {skillbit.duration_seconds}s
+                </span>
+              )}
+              {isCompleted && (
+                <span className="flex items-center gap-1 px-2 py-0.5 text-[10.5px] font-semibold rounded-md bg-purple-600/30 text-purple-200 border border-purple-400/40 backdrop-blur-sm shadow-xs">
+                  <CheckCircle2 className="w-3 h-3 text-purple-300" />
+                  Completed
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Skills tags if available */}
           {Array.isArray(skillbit.skills) && skillbit.skills.length > 0 && (
