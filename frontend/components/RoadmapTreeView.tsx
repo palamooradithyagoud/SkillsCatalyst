@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Search,
   Sparkles,
-  Swords,
   ChevronRight,
   BookOpen,
   Layers,
@@ -113,6 +112,9 @@ export default function RoadmapTreeView({
   // Track whether the video is actively open & playing for the selected topic
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
+  // Track active mobile tab ('tree' | 'details')
+  const [mobileTab, setMobileTab] = useState<"tree" | "details">("tree");
+
   // Automatically reset video player to closed state when topic selection changes
   useEffect(() => {
     setIsVideoOpen(false);
@@ -181,6 +183,7 @@ export default function RoadmapTreeView({
             checkpoint: m.checkpoint,
             description: m.description,
           });
+          setMobileTab("details");
           setOpenFolders((prev) => ({ ...prev, [m.checkpoint.id]: true }));
           return;
         }
@@ -196,40 +199,23 @@ export default function RoadmapTreeView({
     return modulesWithTopics.reduce((sum, m) => sum + m.topics.length, 0);
   }, [modulesWithTopics]);
 
-  const completedTopicsCount = useMemo(() => {
-    return modulesWithTopics.reduce((sum, m) => {
-      return (
-        sum +
-        m.topics.filter((t) => !!completedSubtopics[t.id]).length
-      );
-    }, 0);
-  }, [modulesWithTopics, completedSubtopics]);
-
   return (
     <div className="w-full space-y-5">
       {/* ── Top Bar: Explorer Title, Stats, and Controls ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 p-4 rounded-2xl shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 p-3.5 sm:p-4 rounded-2xl shadow-xs">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black shrink-0">
             <Layers className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
-                Python Learning Tree
-              </h2>
-              <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 text-[11px] font-bold">
-                {checkpoints.length} Stations
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Interactive folder-tree curriculum • {completedTopicsCount} of {totalTopicsCount} topics completed
-            </p>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight truncate">
+              Python Learning Tree
+            </h2>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-56">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -241,28 +227,59 @@ export default function RoadmapTreeView({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={expandAll}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-xs font-semibold text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer"
-          >
-            Expand All
-          </button>
-          <button
-            type="button"
-            onClick={collapseAll}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-xs font-semibold text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer"
-          >
-            Collapse
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={expandAll}
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer"
+            >
+              Expand
+            </button>
+            <button
+              type="button"
+              onClick={collapseAll}
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer"
+            >
+              Collapse
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* ── Mobile View Switcher (Tree vs Topic Lesson) ── */}
+      <div className="flex lg:hidden items-center p-1 bg-slate-100 dark:bg-zinc-800/80 rounded-xl w-full text-xs font-bold gap-1">
+        <button
+          type="button"
+          onClick={() => setMobileTab("tree")}
+          className={`flex-1 py-2 rounded-lg transition-all text-center cursor-pointer ${
+            mobileTab === "tree"
+              ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-2xs font-extrabold"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          }`}
+        >
+          Curriculum Tree ({totalTopicsCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("details")}
+          className={`flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileTab === "details"
+              ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-2xs font-extrabold"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          }`}
+        >
+          <span>Lesson Inspector</span>
+          {selectedState.topic.youtubeId && (
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          )}
+        </button>
       </div>
 
       {/* ── Main Two-Column Layout: Tree Container (Left) + Learning Inspector (Right) ── */}
       <div className="flex flex-col lg:flex-row items-start gap-6 w-full">
         {/* Left Column: The Hierarchical Tree View */}
-        <div className="shrink-0 w-full sm:w-[320px] max-w-full">
-          <div className="tree-container w-full sm:w-[320px] max-h-[680px] overflow-y-auto">
+        <div className={`shrink-0 w-full lg:w-[340px] ${mobileTab === "tree" ? "block" : "hidden lg:block"}`}>
+          <div className="tree-container w-full lg:w-[340px] max-h-[580px] lg:max-h-[680px] overflow-y-auto">
             <ul>
               {filteredModules.map(({ checkpoint: cp, topics }) => {
                 const folderId = `tree-folder-${cp.id}`;
@@ -314,13 +331,14 @@ export default function RoadmapTreeView({
                                   className={`file-item ${
                                     isSelected ? "is-selected" : ""
                                   }`}
-                                  onClick={() =>
+                                  onClick={() => {
                                     setSelectedState({
                                       topic,
                                       checkpoint: cp,
                                       description: cp.subtitle,
-                                    })
-                                  }
+                                    });
+                                    setMobileTab("details");
+                                  }}
                                   title={topic.name}
                                 >
                                   {isTopicDone ? (
@@ -349,82 +367,33 @@ export default function RoadmapTreeView({
         </div>
 
         {/* Right Column: Topic Inspector & Interactive Learning Workbench */}
-        <div className="flex-1 w-full min-w-0 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6">
+        <div
+          id="topic-inspector"
+          className={`flex-1 w-full min-w-0 bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-2xl p-4 sm:p-7 shadow-sm space-y-5 sm:space-y-6 ${
+            mobileTab === "details" ? "block" : "hidden lg:block"
+          }`}
+        >
           {/* Header of Inspector */}
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-100 dark:border-zinc-800">
-            <div className="space-y-1.5 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 dark:text-zinc-400 font-semibold">
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[11px]">
-                  {selectedState.checkpoint.title}
-                </span>
-                <span>/</span>
-                <span className="text-blue-600 dark:text-blue-400 font-mono">
-                  {selectedState.topic.name.toLowerCase().replace(/\s+/g, "_")}.py
-                </span>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tight leading-tight">
-                {selectedState.topic.name}
-              </h3>
-
-              {selectedState.topic.desc && (
-                <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed font-normal">
-                  {selectedState.topic.desc}
-                </p>
-              )}
+          <div className="space-y-1.5 pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs text-slate-500 dark:text-zinc-400 font-semibold">
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-mono text-[10px] sm:text-[11px] truncate max-w-full">
+                {selectedState.checkpoint.title}
+              </span>
+              <span>/</span>
+              <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate">
+                {selectedState.topic.name.toLowerCase().replace(/\s+/g, "_")}.py
+              </span>
             </div>
 
-            {/* Header Right Actions */}
-            <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              {/* Quick Watch Video Button in Header */}
-              {selectedState.topic.youtubeId && (
-                <button
-                  type="button"
-                  onClick={() => setIsVideoOpen((prev) => !prev)}
-                  className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 ${
-                    isVideoOpen
-                      ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
-                      : "bg-red-600 hover:bg-red-700 text-white shadow-sm shadow-red-600/30"
-                  }`}
-                  title={isVideoOpen ? "Close video player" : "Watch video walkthrough"}
-                >
-                  {isVideoOpen ? (
-                    <>
-                      <X className="w-3.5 h-3.5" />
-                      <span>Close Video</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3.5 h-3.5 fill-white" />
-                      <span>Watch Video</span>
-                    </>
-                  )}
-                </button>
-              )}
+            <h3 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tight leading-tight">
+              {selectedState.topic.name}
+            </h3>
 
-              {/* Completion Toggle Button */}
-              <button
-                type="button"
-                onClick={handleToggleCurrentTopic}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 ${
-                  currentTopicDone
-                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                    : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
-                }`}
-              >
-                {currentTopicDone ? (
-                  <>
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Topic Completed</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Mark as Completed</span>
-                  </>
-                )}
-              </button>
-            </div>
+            {selectedState.topic.desc && (
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed font-normal">
+                {selectedState.topic.desc}
+              </p>
+            )}
           </div>
 
           {/* Video Tutorial Section: Interactive button when closed, Player when opened */}
@@ -433,7 +402,7 @@ export default function RoadmapTreeView({
               {!isVideoOpen ? (
                 <div
                   onClick={() => setIsVideoOpen(true)}
-                  className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl border border-red-500/20 dark:border-red-500/30 bg-gradient-to-r from-red-50/80 via-white to-red-50/30 dark:from-red-950/30 dark:via-zinc-900 dark:to-zinc-900 hover:border-red-500/40 hover:shadow-md transition-all cursor-pointer"
+                  className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-2xl border border-red-500/20 dark:border-red-500/30 bg-gradient-to-r from-red-50/80 via-white to-red-50/30 dark:from-red-950/30 dark:via-zinc-900 dark:to-zinc-900 hover:border-red-500/40 hover:shadow-md transition-all cursor-pointer"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -443,50 +412,38 @@ export default function RoadmapTreeView({
                     }
                   }}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/30 group-hover:scale-105 group-hover:bg-red-700 transition-all shrink-0">
-                      <Play className="w-6 h-6 fill-white ml-0.5" />
+                  <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/30 group-hover:scale-105 group-hover:bg-red-700 transition-all shrink-0">
+                      <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-white ml-0.5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[11px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
                           Video Tutorial Available
                         </span>
                       </div>
-                      <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors truncate">
+                      <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors truncate">
                         {selectedState.topic.name}
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 truncate sm:whitespace-normal">
                         Click to watch the full video walkthrough and start learning
                       </p>
                     </div>
                   </div>
 
                   <div
-                    className="flex items-center gap-2 shrink-0 sm:self-center"
+                    className="flex items-center shrink-0 w-full sm:w-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
                       onClick={() => setIsVideoOpen(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm shadow-red-600/30 cursor-pointer"
+                      className="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold transition-all shadow-sm shadow-red-600/30 cursor-pointer"
                     >
                       <Play className="w-3.5 h-3.5 fill-white" />
                       <span>Watch Video</span>
                     </button>
-                    {selectedState.topic.youtubeUrl && (
-                      <a
-                        href={selectedState.topic.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
-                        title="Open directly in YouTube"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">YouTube</span>
-                      </a>
-                    )}
                   </div>
                 </div>
               ) : (
@@ -494,23 +451,12 @@ export default function RoadmapTreeView({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      <span className="flex items-center gap-1.5 text-slate-900 dark:text-zinc-100 font-extrabold">
-                        <Play className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                        Playing: {selectedState.topic.name}
+                      <span className="flex items-center gap-1.5 text-slate-900 dark:text-zinc-100 font-extrabold truncate">
+                        <Play className="w-3.5 h-3.5 text-red-500 fill-red-500 shrink-0" />
+                        <span className="truncate">Playing: {selectedState.topic.name}</span>
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {selectedState.topic.youtubeUrl && (
-                        <a
-                          href={selectedState.topic.youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-slate-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 inline-flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800"
-                        >
-                          <span>Open in YouTube</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => setIsVideoOpen(false)}
@@ -539,7 +485,7 @@ export default function RoadmapTreeView({
           )}
 
           {/* Station Overview & Context */}
-          <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-4 space-y-2 border border-slate-200/60 dark:border-zinc-800">
+          <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-3.5 sm:p-4 space-y-2 border border-slate-200/60 dark:border-zinc-800">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               <BookOpen className="w-3.5 h-3.5 text-blue-500" />
               <span>Milestone Context</span>
@@ -551,7 +497,7 @@ export default function RoadmapTreeView({
           </div>
 
           {/* Quick Learning & Action Links */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="pt-2">
             {/* Documentation Link */}
             <a
               href={
@@ -579,43 +525,58 @@ export default function RoadmapTreeView({
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0" />
             </a>
-
-            {/* Practice in Arena Link */}
-            <div
-              onClick={() => router.push("/practice")}
-              className="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-all flex items-center justify-between group cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                  <Swords className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate">
-                    Practice Arena & Quizzes
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    Solve code problems & test skill
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 shrink-0" />
-            </div>
           </div>
 
-          {/* Footer Next Button */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800">
-            <span className="text-xs text-slate-500 dark:text-zinc-400">
-              Click any file in the tree to inspect topics
-            </span>
+          {/* Footer Actions & Navigation */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800 gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileTab("tree")}
+                className="lg:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs transition-colors cursor-pointer"
+              >
+                ← Curriculum Tree
+              </button>
 
-            <button
-              type="button"
-              onClick={handleNextTopic}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold text-xs transition-colors cursor-pointer"
-            >
-              <span>Next Topic</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+              <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
+                Click any file in the tree to inspect topics
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              {/* Mark as Completed Button (downside) */}
+              <button
+                type="button"
+                onClick={handleToggleCurrentTopic}
+                className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 ${
+                  currentTopicDone
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
+                }`}
+              >
+                {currentTopicDone ? (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Topic Completed</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Mark as Completed</span>
+                  </>
+                )}
+              </button>
+
+              {/* Next Topic Button */}
+              <button
+                type="button"
+                onClick={handleNextTopic}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-bold text-xs transition-colors cursor-pointer"
+              >
+                <span>Next Topic</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
