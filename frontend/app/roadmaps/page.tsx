@@ -1110,11 +1110,11 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-intro", name: "Python Introduction", desc: "Overview of Python, ecosystem, philosophy, and language capabilities", isRecommended: true },
-          { id: "py-first-code", name: "First Code in Python", desc: "Writing and executing your very first Python program with print statements", isRecommended: true },
-          { id: "py-setup", name: "Python Setup", desc: "Downloading, installing Python runtime, and configuring PATH variables", isRecommended: true },
-          { id: "py-ides-installation", name: "IDEs Installation in Python", desc: "Installing and configuring VS Code, PyCharm, and development environments", isRecommended: true },
-          { id: "py-idle-numbers", name: "Python IDLE and Exploring Number Operations", desc: "Using interactive Python IDLE, REPL, and arithmetic number operations", isRecommended: true },
+          { id: "py-intro", name: "Python Introduction", desc: "Overview of Python, ecosystem, philosophy, and language capabilities", isRecommended: true, youtubeUrl: "https://youtu.be/YZkyL-f-YXY", youtubeId: "YZkyL-f-YXY" },
+          { id: "py-first-code", name: "First Code in Python", desc: "Writing and executing your very first Python program with print statements", isRecommended: true, youtubeUrl: "https://youtu.be/koL06y7HpKo", youtubeId: "koL06y7HpKo" },
+          { id: "py-setup", name: "Python Setup", desc: "Downloading, installing Python runtime, and configuring PATH variables", isRecommended: true, youtubeUrl: "https://youtu.be/KcBd4fyHJvg", youtubeId: "KcBd4fyHJvg" },
+          { id: "py-ides-installation", name: "IDEs Installation in Python", desc: "Installing and configuring VS Code, PyCharm, and development environments", isRecommended: true, youtubeUrl: "https://youtu.be/kBjlr-JHttY", youtubeId: "kBjlr-JHttY" },
+          { id: "py-idle-numbers", name: "Python IDLE and Exploring Number Operations", desc: "Using interactive Python IDLE, REPL, and arithmetic number operations", isRecommended: true, youtubeUrl: "https://youtu.be/ji56CpaOFf4", youtubeId: "ji56CpaOFf4" },
         ],
       },
     ],
@@ -1124,8 +1124,8 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-working-with-string", name: "Working With String in Python", desc: "String declaration, indexing, slicing, concatenation, and basic operations", isRecommended: true },
-          { id: "py-more-on-string", name: "More on String in Python", desc: "String methods, formatting with f-strings, escape characters, and immutability", isRecommended: true },
+          { id: "py-working-with-string", name: "Working With String in Python", desc: "String declaration, indexing, slicing, concatenation, and basic operations", isRecommended: true, youtubeUrl: "https://youtu.be/C6EHlfn6kv0", youtubeId: "C6EHlfn6kv0" },
+          { id: "py-more-on-string", name: "More on String in Python", desc: "String methods, formatting with f-strings, escape characters, and immutability", isRecommended: true, youtubeUrl: "https://youtu.be/z-RbovDmtW8", youtubeId: "z-RbovDmtW8" },
         ],
       },
     ],
@@ -1135,10 +1135,10 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-list", name: "List in Python", desc: "Mutable sequences, indexing, list methods, append, insert, remove, and list comprehension", isRecommended: true },
-          { id: "py-tuple", name: "Tuple in Python", desc: "Immutable ordered collections, tuple packing and unpacking, and immutability benefits", isRecommended: true },
-          { id: "py-set", name: "Set in Python", desc: "Unordered collections of unique elements, union, intersection, and set methods", isRecommended: true },
-          { id: "py-dictionary", name: "Dictionary in Python", desc: "Key-value hash pairs, dict keys, values, items, get, and dictionary operations", isRecommended: true },
+          { id: "py-list", name: "List in Python", desc: "Mutable sequences, indexing, list methods, append, insert, remove, and list comprehension", isRecommended: true, youtubeUrl: "https://youtu.be/DeriNSJ7Ev0", youtubeId: "DeriNSJ7Ev0" },
+          { id: "py-tuple", name: "Tuple in Python", desc: "Immutable ordered collections, tuple packing and unpacking, and immutability benefits", isRecommended: true, youtubeUrl: "https://youtu.be/TQqDBeHq7IU", youtubeId: "TQqDBeHq7IU" },
+          { id: "py-set", name: "Set in Python", desc: "Unordered collections of unique elements, union, intersection, and set methods", isRecommended: true, youtubeUrl: "https://youtu.be/_-j9Q2PQvfM", youtubeId: "_-j9Q2PQvfM" },
+          { id: "py-dictionary", name: "Dictionary in Python", desc: "Key-value hash pairs, dict keys, values, items, get, and dictionary operations", isRecommended: true, youtubeUrl: "https://youtu.be/_vl4dNCS5bY", youtubeId: "_vl4dNCS5bY" },
         ],
       },
     ],
@@ -1148,11 +1148,11 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-variable-storage", name: "Variable Storage in Python", desc: "Memory allocation, id(), reference counting, and variable naming conventions", isRecommended: true },
-          { id: "py-data-types", name: "Data Types in Python", desc: "Numeric types (int, float, complex), bool, NoneType, and type casting with int(), str()", isRecommended: true },
-          { id: "py-operators", name: "Operators in Python", desc: "Arithmetic, relational, logical, bitwise, assignment, and identity operators", isRecommended: true },
-          { id: "py-swapping-variables", name: "Swapping of Variables in Python", desc: "Pythonic variable swapping syntax a, b = b, a and memory mechanics", isRecommended: true },
-          { id: "py-user-input", name: "User Input in Python", desc: "Capturing console user inputs using input() and parsing typed responses", isRecommended: true },
+          { id: "py-variable-storage", name: "Variable Storage in Python", desc: "Memory allocation, id(), reference counting, and variable naming conventions", isRecommended: true, youtubeUrl: "https://youtu.be/nEfoSZKp3S8", youtubeId: "nEfoSZKp3S8" },
+          { id: "py-data-types", name: "Data Types in Python", desc: "Numeric types (int, float, complex), bool, NoneType, and type casting with int(), str()", isRecommended: true, youtubeUrl: "https://youtu.be/pvJfQ1KiVpQ", youtubeId: "pvJfQ1KiVpQ" },
+          { id: "py-operators", name: "Operators in Python", desc: "Arithmetic, relational, logical, bitwise, assignment, and identity operators", isRecommended: true, youtubeUrl: "https://youtu.be/Q9VBfj_LzUI", youtubeId: "Q9VBfj_LzUI" },
+          { id: "py-swapping-variables", name: "Swapping of Variables in Python", desc: "Pythonic variable swapping syntax a, b = b, a and memory mechanics", isRecommended: true, youtubeUrl: "https://youtu.be/sioSarg0-nU", youtubeId: "sioSarg0-nU" },
+          { id: "py-user-input", name: "User Input in Python", desc: "Capturing console user inputs using input() and parsing typed responses", isRecommended: true, youtubeUrl: "https://youtu.be/Ye3vV4QQ_js", youtubeId: "Ye3vV4QQ_js" },
         ],
       },
     ],
@@ -1162,11 +1162,11 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-if-statement", name: "if in Python", desc: "if condition syntax, boolean expressions, and code block indentation", isRecommended: true },
-          { id: "py-else-debugging", name: "else and Debugging in Python", desc: "else branches and debugging logical branches with print/debugger tools", isRecommended: true },
-          { id: "py-nested-if", name: "Nested if in Python", desc: "Multi-level conditional statements and nested decision branching", isRecommended: true },
-          { id: "py-elif-statement", name: "elif in Python", desc: "Multi-way conditional branching using elif ladder constructs", isRecommended: true },
-          { id: "py-match-case", name: "Match in Python", desc: "Structural pattern matching with match-case introduced in Python 3.10+", isRecommended: true },
+          { id: "py-if-statement", name: "if in Python", desc: "if condition syntax, boolean expressions, and code block indentation", isRecommended: true, youtubeUrl: "https://youtu.be/kcD_gClL95Q", youtubeId: "kcD_gClL95Q" },
+          { id: "py-else-debugging", name: "else and Debugging in Python", desc: "else branches and debugging logical branches with print/debugger tools", isRecommended: true, youtubeUrl: "https://youtu.be/iYC12nN6DVc", youtubeId: "iYC12nN6DVc" },
+          { id: "py-nested-if", name: "Nested if in Python", desc: "Multi-level conditional statements and nested decision branching", isRecommended: true, youtubeUrl: "https://youtu.be/gBwNFjZkJN0", youtubeId: "gBwNFjZkJN0" },
+          { id: "py-elif-statement", name: "elif in Python", desc: "Multi-way conditional branching using elif ladder constructs", isRecommended: true, youtubeUrl: "https://youtu.be/jY0MMsMxyX0", youtubeId: "jY0MMsMxyX0" },
+          { id: "py-match-case", name: "Match in Python", desc: "Structural pattern matching with match-case introduced in Python 3.10+", isRecommended: true, youtubeUrl: "https://youtu.be/02FucbYPpP0", youtubeId: "02FucbYPpP0" },
         ],
       },
     ],
@@ -1176,9 +1176,9 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-while-loop", name: "While Loop in Python", desc: "Conditional iterative execution with while loops and loop termination", isRecommended: true },
-          { id: "py-for-loop", name: "For Loop in Python", desc: "Sequence iteration using for in loop and range() generator function", isRecommended: true },
-          { id: "py-break-continue", name: "Break Continue in Python", desc: "Loop interruption with break, skipping iterations with continue, and pass", isRecommended: true },
+          { id: "py-while-loop", name: "While Loop in Python", desc: "Conditional iterative execution with while loops and loop termination", isRecommended: true, youtubeUrl: "https://youtu.be/3xpPyxwiGTs", youtubeId: "3xpPyxwiGTs" },
+          { id: "py-for-loop", name: "For Loop in Python", desc: "Sequence iteration using for in loop and range() generator function", isRecommended: true, youtubeUrl: "https://youtu.be/b3w7GQ01HkY", youtubeId: "b3w7GQ01HkY" },
+          { id: "py-break-continue", name: "Break Continue in Python", desc: "Loop interruption with break, skipping iterations with continue, and pass", isRecommended: true, youtubeUrl: "https://youtu.be/EkdB7IHY7cs", youtubeId: "EkdB7IHY7cs" },
         ],
       },
     ],
@@ -1188,8 +1188,8 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-array", name: "Array in Python", desc: "Creating and managing contiguous memory arrays using the built-in array module", isRecommended: true },
-          { id: "py-array-functions", name: "Array functions in Python", desc: "Array methods, append, insert, pop, reverse, and element operations", isRecommended: true },
+          { id: "py-array", name: "Array in Python", desc: "Creating and managing contiguous memory arrays using the built-in array module", isRecommended: true, youtubeUrl: "https://youtu.be/cdFZsos-v04", youtubeId: "cdFZsos-v04" },
+          { id: "py-array-functions", name: "Array functions in Python", desc: "Array methods, append, insert, pop, reverse, and element operations", isRecommended: true, youtubeUrl: "https://youtu.be/SQAMEB-kRGM", youtubeId: "SQAMEB-kRGM" },
         ],
       },
     ],
@@ -1199,17 +1199,17 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-intro-functions", name: "Introduction to function in Python", desc: "Defining functions with def, calling conventions, and code reusability", isRecommended: true },
-          { id: "py-function-arguments", name: "Arguments in Function Python", desc: "Positional, keyword, default arguments, and *args, **kwargs", isRecommended: true },
-          { id: "py-global-local-vars", name: "Global vs Local Variables in Python", desc: "Variable scope hierarchy, local namespace, and the global keyword", isRecommended: true },
-          { id: "py-factorial", name: "Factorial in Python", desc: "Computing factorial iteratively and understanding computational flow", isRecommended: true },
-          { id: "py-recursion", name: "Recursion in Python", desc: "Recursive call stack, base conditions, recursion limit, and call flow", isRecommended: true },
-          { id: "py-factorial-recursion", name: "Factorial Using Recursion in Python", desc: "Recursive implementation of factorial and stack frame analysis", isRecommended: true },
-          { id: "py-higher-order-functions", name: "Higher Order Function in Python", desc: "Functions accepting or returning other functions as first-class citizens", isRecommended: true },
-          { id: "py-lambda-functions", name: "Anonymous Function using Lambda in Python", desc: "Writing concise single-expression anonymous functions with lambda", isRecommended: true },
-          { id: "py-filter-function", name: "Filter Function in Python", desc: "Filtering iterable elements using filter() and predicate functions", isRecommended: true },
-          { id: "py-map-reduce-function", name: "Map Reduce Function in Python", desc: "Element transformations using map() and aggregations using functools.reduce()", isRecommended: true },
-          { id: "py-inner-functions", name: "Inner Function in Python", desc: "Nested functions, variable enclosing scope, and closures", isRecommended: true },
+          { id: "py-intro-functions", name: "Introduction to function in Python", desc: "Defining functions with def, calling conventions, and code reusability", isRecommended: true, youtubeUrl: "https://youtu.be/T3j-YeVplE0", youtubeId: "T3j-YeVplE0" },
+          { id: "py-function-arguments", name: "Arguments in Function Python", desc: "Positional, keyword, default arguments, and *args, **kwargs", isRecommended: true, youtubeUrl: "https://youtu.be/BuAp27fbLVg", youtubeId: "BuAp27fbLVg" },
+          { id: "py-global-local-vars", name: "Global vs Local Variables in Python", desc: "Variable scope hierarchy, local namespace, and the global keyword", isRecommended: true, youtubeUrl: "https://youtu.be/OxSdUxvWb9o", youtubeId: "OxSdUxvWb9o" },
+          { id: "py-factorial", name: "Factorial in Python", desc: "Computing factorial iteratively and understanding computational flow", isRecommended: true, youtubeUrl: "https://youtu.be/OZI7KqxsxjQ", youtubeId: "OZI7KqxsxjQ" },
+          { id: "py-recursion", name: "Recursion in Python", desc: "Recursive call stack, base conditions, recursion limit, and call flow", isRecommended: true, youtubeUrl: "https://youtu.be/vGqt9j18_kY", youtubeId: "vGqt9j18_kY" },
+          { id: "py-factorial-recursion", name: "Factorial Using Recursion in Python", desc: "Recursive implementation of factorial and stack frame analysis", isRecommended: true, youtubeUrl: "https://youtu.be/3DhXqquSaSM", youtubeId: "3DhXqquSaSM" },
+          { id: "py-higher-order-functions", name: "Higher Order Function in Python", desc: "Functions accepting or returning other functions as first-class citizens", isRecommended: true, youtubeUrl: "https://youtu.be/lkbgOf1jD8k", youtubeId: "lkbgOf1jD8k" },
+          { id: "py-lambda-functions", name: "Anonymous Function using Lambda in Python", desc: "Writing concise single-expression anonymous functions with lambda", isRecommended: true, youtubeUrl: "https://youtu.be/ElMx0m0nMgg", youtubeId: "ElMx0m0nMgg" },
+          { id: "py-filter-function", name: "Filter Function in Python", desc: "Filtering iterable elements using filter() and predicate functions", isRecommended: true, youtubeUrl: "https://youtu.be/VIC99LKNopg", youtubeId: "VIC99LKNopg" },
+          { id: "py-map-reduce-function", name: "Map Reduce Function in Python", desc: "Element transformations using map() and aggregations using functools.reduce()", isRecommended: true, youtubeUrl: "https://youtu.be/5IbXBarcOjw", youtubeId: "5IbXBarcOjw" },
+          { id: "py-inner-functions", name: "Inner Function in Python", desc: "Nested functions, variable enclosing scope, and closures", isRecommended: true, youtubeUrl: "https://youtu.be/BFSoFngd0UQ", youtubeId: "BFSoFngd0UQ" },
         ],
       },
     ],
@@ -1219,7 +1219,7 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-decorators", name: "Decorators in Python", desc: "Function decorators, @decorator syntax, wrappers, and functools.wraps", isRecommended: true },
+          { id: "py-decorators", name: "Decorators in Python", desc: "Function decorators, @decorator syntax, wrappers, and functools.wraps", isRecommended: true, youtubeUrl: "https://youtu.be/vAFl6tvrxOo", youtubeId: "vAFl6tvrxOo" },
         ],
       },
     ],
@@ -1229,9 +1229,9 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-math-module", name: "Working with Module with Math in Python", desc: "Importing standard modules, using math module functions and constants", isRecommended: true },
-          { id: "py-modules-packages", name: "Modules and Packages in Python", desc: "Creating custom modules, directory packages, __init__.py, and import syntax", isRecommended: true },
-          { id: "py-special-name-var", name: "Special Variable Name in Python", desc: "Understanding the __name__ == '__main__' idiom for modular script execution", isRecommended: true },
+          { id: "py-math-module", name: "Working with Module with Math in Python", desc: "Importing standard modules, using math module functions and constants", isRecommended: true, youtubeUrl: "https://youtu.be/vPLaFFNGe7A", youtubeId: "vPLaFFNGe7A" },
+          { id: "py-modules-packages", name: "Modules and Packages in Python", desc: "Creating custom modules, directory packages, __init__.py, and import syntax", isRecommended: true, youtubeUrl: "https://youtu.be/4ubEUFgnbLI", youtubeId: "4ubEUFgnbLI" },
+          { id: "py-special-name-var", name: "Special Variable Name in Python", desc: "Understanding the __name__ == '__main__' idiom for modular script execution", isRecommended: true, youtubeUrl: "https://youtu.be/QjI-g_HRmMw", youtubeId: "QjI-g_HRmMw" },
         ],
       },
     ],
@@ -1241,17 +1241,17 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-oop-intro", name: "OOP in Python Introduction", desc: "Object-oriented design paradigm, classes, blueprints, and objects", isRecommended: true },
-          { id: "py-class-and-object", name: "Class and Object in Python", desc: "Defining classes, instantiating objects, instance variables, and methods", isRecommended: true },
-          { id: "py-init-method", name: "init Method in Python", desc: "The __init__ constructor method and self instance reference", isRecommended: true },
-          { id: "py-new-method-constructor", name: "Constructor Using New Method in Python", desc: "The __new__ object creation method and custom instance allocation", isRecommended: true },
-          { id: "py-types-of-methods", name: "Types of Methods in Python", desc: "Instance methods, class methods with @classmethod, and static methods with @staticmethod", isRecommended: true },
-          { id: "py-inheritance-mro", name: "Inheritance and MRO in Python", desc: "Single/multiple inheritance and Method Resolution Order (MRO) with C3 linearization", isRecommended: true },
-          { id: "py-init-super-inheritance", name: "init and super Method with Inheritance in Python", desc: "Calling parent constructors using super().__init__() in derived classes", isRecommended: true },
-          { id: "py-polymorphism-duck-typing", name: "Polymorphism and Duck Typing in Python", desc: "Dynamic polymorphism, interfaces, and Python's duck typing philosophy", isRecommended: true },
-          { id: "py-operator-overloading", name: "Operator Overloading in Python", desc: "Overloading operators with dunder methods (__add__, __sub__, __str__, __repr__)", isRecommended: true },
-          { id: "py-method-overriding", name: "Method Overriding in Python", desc: "Overriding superclass methods in subclasses for specialized behavior", isRecommended: true },
-          { id: "py-abstract-classes", name: "Abstract Class and Abstract Method in Python", desc: "Defining abstract base classes and enforcing methods using the abc module and @abstractmethod", isRecommended: true },
+          { id: "py-oop-intro", name: "OOP in Python Introduction", desc: "Object-oriented design paradigm, classes, blueprints, and objects", isRecommended: true, youtubeUrl: "https://youtu.be/TvnweVJhSpM", youtubeId: "TvnweVJhSpM" },
+          { id: "py-class-and-object", name: "Class and Object in Python", desc: "Defining classes, instantiating objects, instance variables, and methods", isRecommended: true, youtubeUrl: "https://youtu.be/8AScQuqLp9U", youtubeId: "8AScQuqLp9U" },
+          { id: "py-init-method", name: "init Method in Python", desc: "The __init__ constructor method and self instance reference", isRecommended: true, youtubeUrl: "https://youtu.be/cx8Wjsbq9j8", youtubeId: "cx8Wjsbq9j8" },
+          { id: "py-new-method-constructor", name: "Constructor Using New Method in Python", desc: "The __new__ object creation method and custom instance allocation", isRecommended: true, youtubeUrl: "https://youtu.be/fnDt3bAh5AY", youtubeId: "fnDt3bAh5AY" },
+          { id: "py-types-of-methods", name: "Types of Methods in Python", desc: "Instance methods, class methods with @classmethod, and static methods with @staticmethod", isRecommended: true, youtubeUrl: "https://youtu.be/mZd_XCxW0cw", youtubeId: "mZd_XCxW0cw" },
+          { id: "py-inheritance-mro", name: "Inheritance and MRO in Python", desc: "Single/multiple inheritance and Method Resolution Order (MRO) with C3 linearization", isRecommended: true, youtubeUrl: "https://youtu.be/fAkjyuNEVxs", youtubeId: "fAkjyuNEVxs" },
+          { id: "py-init-super-inheritance", name: "init and super Method with Inheritance in Python", desc: "Calling parent constructors using super().__init__() in derived classes", isRecommended: true, youtubeUrl: "https://youtu.be/AyD2VfCDX2o", youtubeId: "AyD2VfCDX2o" },
+          { id: "py-polymorphism-duck-typing", name: "Polymorphism and Duck Typing in Python", desc: "Dynamic polymorphism, interfaces, and Python's duck typing philosophy", isRecommended: true, youtubeUrl: "https://youtu.be/hysoJfB-f_Y", youtubeId: "hysoJfB-f_Y" },
+          { id: "py-operator-overloading", name: "Operator Overloading in Python", desc: "Overloading operators with dunder methods (__add__, __sub__, __str__, __repr__)", isRecommended: true, youtubeUrl: "https://youtu.be/2YLoX7FSwYQ", youtubeId: "2YLoX7FSwYQ" },
+          { id: "py-method-overriding", name: "Method Overriding in Python", desc: "Overriding superclass methods in subclasses for specialized behavior", isRecommended: true, youtubeUrl: "https://youtu.be/Z5kiIP1Yq5w", youtubeId: "Z5kiIP1Yq5w" },
+          { id: "py-abstract-classes", name: "Abstract Class and Abstract Method in Python", desc: "Defining abstract base classes and enforcing methods using the abc module and @abstractmethod", isRecommended: true, youtubeUrl: "https://youtu.be/TUpwQ6zT1cI", youtubeId: "TUpwQ6zT1cI" },
         ],
       },
     ],
@@ -1261,7 +1261,7 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-exception-handling", name: "Exception Handling in Python", desc: "Handling runtime errors using try, except, else, finally blocks and raising custom exceptions", isRecommended: true },
+          { id: "py-exception-handling", name: "Exception Handling in Python", desc: "Handling runtime errors using try, except, else, finally blocks and raising custom exceptions", isRecommended: true, youtubeUrl: "https://youtu.be/K1n0YQlcPT0", youtubeId: "K1n0YQlcPT0" },
         ],
       },
     ],
@@ -1271,7 +1271,7 @@ const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
     groups: [
       {
         topics: [
-          { id: "py-multithreading", name: "Multithreading in Python", desc: "Concurrent execution using the threading module, threads, GIL implications, and synchronization locks", isRecommended: true },
+          { id: "py-multithreading", name: "Multithreading in Python", desc: "Concurrent execution using the threading module, threads, GIL implications, and synchronization locks", isRecommended: true, youtubeUrl: "https://youtu.be/LxQBJdyOvfc", youtubeId: "LxQBJdyOvfc" },
         ],
       },
     ],

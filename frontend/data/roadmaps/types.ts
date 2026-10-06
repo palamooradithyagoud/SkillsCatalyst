@@ -47,6 +47,8 @@ export interface RightBranchTopic {
   isOrderNotStrict?: boolean;
   docUrl?: string;
   desc?: string;
+  youtubeUrl?: string;
+  youtubeId?: string;
 }
 
 export interface RightBranchGroup {

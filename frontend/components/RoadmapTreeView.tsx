@@ -15,6 +15,7 @@ import {
   ChevronRight,
   BookOpen,
   Layers,
+  Play,
 } from "lucide-react";
 import { CheckpointItem } from "./RoadmapCurriculumView";
 
@@ -25,6 +26,8 @@ export interface TopicItem {
   isRecommended?: boolean;
   isAlternative?: boolean;
   docUrl?: string;
+  youtubeUrl?: string;
+  youtubeId?: string;
 }
 
 export interface RoadmapTreeViewProps {
@@ -96,6 +99,8 @@ export default function RoadmapTreeView({
       id: "py-intro",
       name: "Python Introduction",
       desc: "Overview of Python, ecosystem, philosophy, and language capabilities",
+      youtubeUrl: "https://youtu.be/YZkyL-f-YXY",
+      youtubeId: "YZkyL-f-YXY",
     };
     return {
       topic: firstTopic,
@@ -383,6 +388,43 @@ export default function RoadmapTreeView({
               )}
             </button>
           </div>
+
+          {/* Embedded YouTube Video Tutorial */}
+          {selectedState.topic.youtubeId && (
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-slate-900 dark:text-zinc-100 font-extrabold">
+                    <Play className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                    Video Tutorial
+                  </span>
+                </div>
+                {selectedState.topic.youtubeUrl && (
+                  <a
+                    href={selectedState.topic.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-slate-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>Open in YouTube</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+
+              <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-lg border border-slate-200 dark:border-zinc-800">
+                <iframe
+                  key={selectedState.topic.youtubeId}
+                  src={`https://www.youtube.com/embed/${selectedState.topic.youtubeId}?rel=0&modestbranding=1`}
+                  title={selectedState.topic.name}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full border-0"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Station Overview & Context */}
           <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-4 space-y-2 border border-slate-200/60 dark:border-zinc-800">

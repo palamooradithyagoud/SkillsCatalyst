@@ -87,6 +87,8 @@ export interface SubtopicTopic {
   isOrderNotStrict?: boolean;
   docUrl?: string;
   desc?: string;
+  youtubeUrl?: string;
+  youtubeId?: string;
 }
 
 export interface SubtopicGroup {
@@ -830,6 +832,19 @@ export default function RoadmapCurriculumView({
                                                 >
                                                   <ExternalLink className="w-2.5 h-2.5" />
                                                   <span>Docs</span>
+                                                </a>
+                                              )}
+
+                                              {topic.youtubeUrl && (
+                                                <a
+                                                  href={topic.youtubeUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="inline-flex items-center gap-1 text-[10px] text-red-600 hover:text-red-800 font-semibold hover:underline"
+                                                  title="Watch Video Tutorial"
+                                                >
+                                                  <Play className="w-2.5 h-2.5 fill-red-600 text-red-600" />
+                                                  <span>Video</span>
                                                 </a>
                                               )}
                                             </div>
