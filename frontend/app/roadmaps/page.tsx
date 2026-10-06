@@ -3039,36 +3039,7 @@ export default function RoadmapsPage() {
                       </p>
                     </div>
 
-                    {/* Rich Metadata Section */}
-                    <div className="space-y-3 pt-3 border-t border-slate-100">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-amber-600 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-                          ★ {item.ratings || "4.9 Rating"}
-                        </span>
-                        <span className="font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
-                          ⚡ {item.sections ? `${item.sections.length} Modules` : "20+ Modules"}
-                        </span>
-                      </div>
 
-                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                        {item.salary && (
-                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 text-slate-800 shadow-2xs">
-                            💼 {item.salary}
-                          </span>
-                        )}
-                        {item.growth && (
-                          <span
-                            className={`font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs ${
-                              item.id === "python-mastery"
-                                ? "bg-blue-50 border border-blue-200/90 text-blue-700"
-                                : "bg-emerald-50 border border-emerald-200/90 text-emerald-700"
-                            }`}
-                          >
-                            📈 {item.growth}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </BorderGlow>
               </motion.div>
@@ -3156,30 +3127,7 @@ export default function RoadmapsPage() {
                       </p>
                     </div>
 
-                    {/* Rich Metadata Section */}
-                    <div className="space-y-3 pt-3 border-t border-slate-100">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-amber-600 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-                          ★ {item.ratings || "4.9 Rating"}
-                        </span>
-                        <span className="font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
-                          ⚡ {item.sections ? `${item.sections.length} Modules` : "18+ Modules"}
-                        </span>
-                      </div>
 
-                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                        {item.salary && (
-                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/80 text-slate-800 shadow-2xs">
-                            💼 {item.salary}
-                          </span>
-                        )}
-                        {item.growth && (
-                          <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200/90 text-sky-700 shadow-2xs">
-                            📈 {item.growth}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </BorderGlow>
               </motion.div>
