@@ -4,11 +4,16 @@ from collections import defaultdict
 from typing import Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
-from backend.services.auth_service import get_current_user_id, get_session_or_user_id
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
 from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
 from backend.dependencies.subscription import require_entitlement
+from backend.services.ai_mentor import (
+    MentorContext,
+    build_student_mentor_context,
+    get_formatted_student_context_for_mentor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +189,17 @@ _SKILLS_SYSTEM_PROMPT = (
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@router.get("/context", response_model=MentorContext)
+async def get_mentor_context_endpoint(
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Returns the structured, sanitized AI Mentor context for the authenticated user.
+    Strictly isolated to the authenticated user ID (JWT sub).
+    """
+    return await build_student_mentor_context(current_user_id)
+
+
 @router.post("/chat", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def chat_mentor(
     req: PromptRequest,
@@ -193,6 +209,7 @@ async def chat_mentor(
     """
     Skills-only AI mentor chat endpoint.
     Guards against quota exhaustion and off-topic queries before hitting the LLM.
+    Enriches system prompt with aggregated student background when authenticated.
     """
     if entitlement.limit is not None:
         usage = get_ai_mentor_usage(current_user_id)
@@ -213,7 +230,17 @@ async def chat_mentor(
         logger.info(f"Off-topic prompt detected, returning redirect message. Prompt: '{req.prompt[:80]}'")
         return {"reply": _OFFTOPIC_REPLY}
 
-    response = chat_with_groq(req.prompt, system_prompt=_SKILLS_SYSTEM_PROMPT)
+    # Enrich system prompt with authenticated student context (fail-safe)
+    effective_system_prompt = _SKILLS_SYSTEM_PROMPT
+    if is_valid_uuid(current_user_id):
+        try:
+            formatted_context = await get_formatted_student_context_for_mentor(current_user_id)
+            if formatted_context:
+                effective_system_prompt = f"{_SKILLS_SYSTEM_PROMPT}\n\n{formatted_context}"
+        except Exception as ctx_err:
+            logger.warning(f"Error fetching student context for mentor chat: {ctx_err}")
+
+    response = chat_with_groq(req.prompt, system_prompt=effective_system_prompt)
 
     if entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
