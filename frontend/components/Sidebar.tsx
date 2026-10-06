@@ -1,44 +1,34 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Search,
   LayoutDashboard,
+  Film,
   BookOpen,
   Map,
   Target,
+  Compass,
   Briefcase,
-  Globe,
-  Activity,
-  Bot,
-  Settings,
-  LifeBuoy,
+  Sparkles,
+  BarChart3,
+  User,
+  Headset,
   LogOut,
-  ChevronDown,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Search,
   Command,
   X,
-  Hash,
-  Sparkles,
-  Film,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useSubscription } from "@/hooks/useSubscription";
-import { SubscriptionStatus } from "@/components/premium";
-import ThemeSwitch from "@/components/ThemeSwitch";
 
 export type NavItemData = {
   id: string;
   title: string;
-  href?: string;
+  href: string;
   icon: React.ElementType;
-  badge?: number | string;
-  shortcut?: string;
-  children?: NavItemData[];
+  badge?: string;
+  onClick?: () => void;
 };
 
 export type NavGroupData = {
@@ -50,13 +40,9 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading, logout } = useAuth();
-  const { isPremium } = useSubscription();
 
-  const [isOpen, setIsOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState("SkillsCatalyst");
 
   // Keyboard shortcut listener for Command + K (Search) and Escape
   useEffect(() => {
@@ -66,485 +52,297 @@ export default function Sidebar() {
         setIsSearchOpen((prev) => !prev);
       } else if (e.key === "Escape") {
         setIsSearchOpen(false);
-        setIsWorkspaceOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Determine active item id based on current pathname
-  const activeId = useMemo(() => {
-    if (pathname.startsWith("/dashboard")) return "dashboard";
-    if (pathname.startsWith("/skillbits")) return "skillbits";
-    if (pathname.startsWith("/learning")) return "learning";
-    if (pathname.startsWith("/roadmaps")) return "roadmaps";
-    if (pathname.startsWith("/practice")) return "practice";
-    if (pathname.startsWith("/career")) return "career";
-    if (pathname.startsWith("/explore")) return "explore";
-    if (pathname.startsWith("/analytics")) return "analytics";
-    if (pathname.startsWith("/ai-mentor")) return "ai-mentor";
-    if (pathname.startsWith("/settings")) return "settings";
-    if (pathname.startsWith("/support")) return "support";
-    return "dashboard";
-  }, [pathname]);
-
-  const navGroups: NavGroupData[] = [
-    {
-      items: [
-        {
-          id: "search",
-          title: "Search",
-          icon: Search,
-          shortcut: "⌘K",
-        },
-        {
-          id: "dashboard",
-          title: "Dashboard",
-          href: "/dashboard",
-          icon: LayoutDashboard,
-        },
-        {
-          id: "skillbits",
-          title: "SkillBits",
-          href: "/skillbits",
-          icon: Film,
-          badge: "New",
-        },
-        {
-          id: "learning",
-          title: "Learning",
-          href: "/learning",
-          icon: BookOpen,
-          badge: "AI",
-          children: [
-            { id: "learning-active", title: "Curated Playlists", href: "/learning", icon: Hash },
-            { id: "roadmaps", title: "Career Roadmaps", href: "/roadmaps", icon: Map },
-          ],
-        },
-        {
-          id: "practice",
-          title: "Practice",
-          href: "/practice",
-          icon: Target,
-          badge: 12,
-          children: [
-            { id: "practice-dsa", title: "Coding Sheets", href: "/practice", icon: Hash },
-            { id: "practice-interview", title: "Interview Prep", href: "/practice", icon: Hash },
-          ],
-        },
-      ],
-    },
-    {
-      heading: "Career & Intelligence",
-      items: [
-        {
-          id: "career",
-          title: "Career Goals",
-          href: "/career",
-          icon: Briefcase,
-        },
-        {
-          id: "explore",
-          title: "Explore Hub",
-          href: "/explore",
-          icon: Globe,
-        },
-        {
-          id: "analytics",
-          title: "Analytics",
-          href: "/analytics",
-          icon: Activity,
-        },
-        {
-          id: "ai-mentor",
-          title: "AI Mentor",
-          href: "/ai-mentor",
-          icon: Bot,
-          badge: "Live",
-        },
-      ],
-    },
-  ];
-
-  const bottomItems: NavItemData[] = [
-    {
-      id: "settings",
-      title: "Settings",
-      href: "/settings",
-      icon: Settings,
-      shortcut: "⌘,",
-    },
-    {
-      id: "support",
-      title: "Support & Help",
-      href: "/support",
-      icon: LifeBuoy,
-    },
-    {
-      id: "logout",
-      title: "Log out",
-      icon: LogOut,
-    },
-  ];
-
-  // Quick search items list
-  const searchableRoutes = [
-    { title: "Dashboard Overview", href: "/dashboard", category: "Navigation", icon: LayoutDashboard },
-    { title: "SkillBits Reels", href: "/skillbits", category: "Learning", icon: Film },
-    { title: "Learning Hub", href: "/learning", category: "Learning", icon: BookOpen },
-    { title: "Career Roadmaps", href: "/roadmaps", category: "Learning", icon: Map },
-    { title: "Placement Practice", href: "/practice", category: "Practice", icon: Target },
-    { title: "Career Goals & ATS", href: "/career", category: "Career", icon: Briefcase },
-    { title: "Explore Skills Hub", href: "/explore", category: "Explore", icon: Globe },
-    { title: "Performance Analytics", href: "/analytics", category: "Analytics", icon: Activity },
-    { title: "AI Mentor Career Assistant", href: "/ai-mentor", category: "AI", icon: Bot },
-    { title: "Account & Profile Settings", href: "/settings", category: "Settings", icon: Settings },
-    { title: "Help & Grievance Desk", href: "/support", category: "Support", icon: LifeBuoy },
-  ];
-
-  const filteredSearch = searchQuery.trim() === "" 
-    ? searchableRoutes 
-    : searchableRoutes.filter((r) => r.title.toLowerCase().includes(searchQuery.toLowerCase()) || r.category.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const handleNavClick = (item: NavItemData) => {
-    if (item.id === "search") {
-      setIsSearchOpen(true);
-      return;
-    }
-    if (item.id === "logout") {
-      logout();
-      router.push("/login");
-      return;
-    }
-    if (item.href) {
-      router.push(item.href);
-    }
-  };
-
   if (pathname === "/login" || isLoading) {
     return null;
   }
 
-  const userDisplayName = session?.name || session?.email?.split("@")[0] || "Learner";
-  const userInitials = (userDisplayName.charAt(0) || "S").toUpperCase();
+  // ── Core Everyday SkillsCatalyst Features ─────────────────────────────────
+  const mainItems: NavItemData[] = [
+    {
+      id: "dashboard",
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      id: "skillbits",
+      title: "SkillBits",
+      href: "/skillbits",
+      icon: Film,
+      badge: "New",
+    },
+    {
+      id: "learning",
+      title: "Learning",
+      href: "/learning",
+      icon: BookOpen,
+    },
+    {
+      id: "roadmaps",
+      title: "Roadmaps",
+      href: "/roadmaps",
+      icon: Map,
+    },
+    {
+      id: "practice",
+      title: "Practice",
+      href: "/practice",
+      icon: Target,
+    },
+    {
+      id: "explore",
+      title: "Explore",
+      href: "/explore",
+      icon: Compass,
+    },
+  ];
+
+  // ── Career, Intelligence & Assessment Features ───────────────────────────
+  const careerItems: NavItemData[] = [
+    {
+      id: "career",
+      title: "Career Goals",
+      href: "/career",
+      icon: Briefcase,
+    },
+    {
+      id: "ai-mentor",
+      title: "AI Mentor",
+      href: "/ai-mentor",
+      icon: Sparkles,
+      badge: "AI",
+    },
+    {
+      id: "analytics",
+      title: "Analytics",
+      href: "/analytics",
+      icon: BarChart3,
+    },
+  ];
+
+  // ── Account & Support Features ───────────────────────────────────────────
+  const accountItems: NavItemData[] = [
+    {
+      id: "profile",
+      title: "My Profile",
+      href: "/settings",
+      icon: User,
+    },
+    {
+      id: "support",
+      title: "Support Desk",
+      href: "/support",
+      icon: Headset,
+    },
+    {
+      id: "sign-out",
+      title: "Sign Out",
+      href: "#",
+      icon: LogOut,
+      onClick: () => {
+        logout();
+        router.push("/login");
+      },
+    },
+  ];
+
+  // ── Active item detection logic for actual SkillsCatalyst routes ───────────
+  const isItemActive = (item: NavItemData) => {
+    if (item.id === "dashboard") {
+      return pathname === "/dashboard" || pathname === "/";
+    }
+    if (item.id === "skillbits") {
+      return pathname.startsWith("/skillbits");
+    }
+    if (item.id === "learning") {
+      return pathname.startsWith("/learning");
+    }
+    if (item.id === "roadmaps") {
+      return pathname.startsWith("/roadmaps");
+    }
+    if (item.id === "practice") {
+      return pathname.startsWith("/practice");
+    }
+    if (item.id === "explore") {
+      return pathname.startsWith("/explore");
+    }
+    if (item.id === "career") {
+      return pathname.startsWith("/career");
+    }
+    if (item.id === "ai-mentor") {
+      return pathname.startsWith("/ai-mentor");
+    }
+    if (item.id === "analytics") {
+      return pathname.startsWith("/analytics");
+    }
+    if (item.id === "profile") {
+      return pathname.startsWith("/settings") || pathname.startsWith("/profile");
+    }
+    if (item.id === "support") {
+      return pathname.startsWith("/support");
+    }
+    return pathname === item.href;
+  };
+
+  const renderNavItem = (item: NavItemData) => {
+    const isActive = isItemActive(item);
+    const IconComponent = item.icon;
+
+    return (
+      <Link
+        key={item.id}
+        href={item.href}
+        onClick={(e) => {
+          if (item.onClick) {
+            e.preventDefault();
+            item.onClick();
+          }
+        }}
+        className={`group relative flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors select-none ${
+          isActive
+            ? "bg-[#ECEEF2] dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
+            : "text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
+        }`}
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* PURPLE active stripe indicator on left edge (no pink) */}
+          {isActive && (
+            <span className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-[#7E22CE] dark:bg-purple-500" />
+          )}
+
+          <IconComponent
+            className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+              isActive
+                ? "text-slate-900 dark:text-white"
+                : "text-slate-800 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"
+            }`}
+            strokeWidth={isActive ? 2 : 1.8}
+          />
+
+          <span className="truncate tracking-[-0.01em]">{item.title}</span>
+        </div>
+
+        {item.badge && (
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider ${
+              item.badge === "AI"
+                ? "bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300"
+                : "bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <>
-      {/* ── Laptop / Desktop Sidebar: Primary Color = White (#FFFFFF), Secondary Color = Purple (#5227FF) ── */}
       <aside
-        className={`hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 bg-white border-r border-slate-200/80 shadow-[1px_0_12px_rgba(0,0,0,0.02)] transition-all duration-300 ease-in-out select-none ${
-          isOpen ? "w-[260px]" : "w-[68px]"
-        }`}
+        className="hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 w-[240px] bg-white dark:bg-slate-900 border-r border-slate-200/90 dark:border-slate-800 select-none"
       >
-        {/* Top Header: Learner Profile + Collapse Toggle */}
-        <div className="p-3 pb-2.5 border-b border-slate-100">
-          <div className="flex items-center justify-between gap-1.5">
-            {isOpen ? (
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5227FF] to-[#401bcc] text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-[#5227FF]/25 shrink-0">
-                    {userInitials}
-                  </div>
-                  <div className="flex flex-col overflow-hidden min-w-0 text-left">
-                    <span className="text-[13px] font-semibold leading-tight text-slate-900 truncate">
-                      {userDisplayName}
-                    </span>
-                    <span className="text-[11px] text-slate-500 leading-tight flex items-center gap-1 mt-0.5">
-                      {isPremium ? (
-                        <>
-                          <Sparkles className="w-2.5 h-2.5 text-[#5227FF]" />
-                          <span className="text-[#5227FF] font-semibold">Pro Learner</span>
-                        </>
-                      ) : (
-                        <span>Free Learner</span>
-                      )}
-                    </span>
-                  </div>
-                </div>
 
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  title="Collapse Sidebar"
-                  className="p-1.5 rounded-lg text-slate-400 hover:bg-[#5227FF]/10 hover:text-[#5227FF] transition-colors shrink-0"
-                >
-                  <PanelLeftClose className="w-4 h-4" strokeWidth={1.75} />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsOpen(true)}
-                title="Expand Sidebar"
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5227FF] to-[#401bcc] text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-[#5227FF]/30 cursor-pointer hover:scale-105 transition-transform mx-auto"
-              >
-                <PanelLeftOpen className="w-4 h-4 text-white" strokeWidth={1.75} />
-              </button>
-            )}
+        {/* ── Scrollable Navigation Items List (no scrollbars visible) ── */}
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-1 flex flex-col">
+          {/* Main Top Items: Dashboard, SkillBits, Learning, Roadmaps, Practice, Explore */}
+          <div className="flex flex-col">
+            {mainItems.map((item) => renderNavItem(item))}
           </div>
-        </div>
 
-        {/* Middle Navigation Items List */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-4">
-          {navGroups.map((group, idx) => (
-            <div key={idx} className="flex flex-col gap-0.5">
-              {isOpen && group.heading && (
-                <span className="px-2 mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                  {group.heading}
-                </span>
-              )}
-              {group.items.map((item) => (
-                <SidebarItem
-                  key={item.id}
-                  item={item}
-                  activeId={activeId}
-                  isCollapsed={!isOpen}
-                  onSelect={handleNavClick}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+          {/* Divider Line */}
+          <div className="my-2 mx-4 border-b border-slate-200 dark:border-slate-800" />
 
-        {/* Bottom Section: Plan Status, Theme Mode, Settings, Support, Logout */}
-        <div className="mt-auto p-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1.5">
-          {isOpen ? (
-            <>
-              <div className="mb-0.5">
-                <SubscriptionStatus compact />
-              </div>
-              <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 my-0.5">
-                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                  Theme Mode
-                </span>
-                <div style={{ transform: "scale(0.68)", transformOrigin: "right center" }}>
-                  <ThemeSwitch />
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-center mb-0.5">
-                <SubscriptionStatus collapsedIconOnly />
-              </div>
-              <div className="flex justify-center my-0.5" title="Toggle Dark / Light Mode">
-                <div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
-                  <ThemeSwitch />
-                </div>
-              </div>
-            </>
-          )}
-          {bottomItems.map((item) => (
-            <SidebarItem
-              key={item.id}
-              item={item}
-              activeId={activeId}
-              isCollapsed={!isOpen}
-              onSelect={handleNavClick}
-            />
-          ))}
+          {/* CAREER & TOOLS Section Header */}
+          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-slate-200 uppercase">
+            CAREER & INTELLIGENCE
+          </div>
+
+          {/* Career Items: Career Goals, AI Mentor, Analytics */}
+          <div className="flex flex-col">
+            {careerItems.map((item) => renderNavItem(item))}
+          </div>
+
+          {/* Divider Line */}
+          <div className="my-2 mx-4 border-b border-slate-200 dark:border-slate-800" />
+
+          {/* ACCOUNT Section Header */}
+          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-slate-200 uppercase">
+            ACCOUNT
+          </div>
+
+          {/* Account Items: My Profile, Support Desk, Sign Out */}
+          <div className="flex flex-col pb-3">
+            {accountItems.map((item) => renderNavItem(item))}
+          </div>
         </div>
       </aside>
 
-      {/* ── Command Search Modal (⌘K) — Styled with White & #5227FF Purple ── */}
+      {/* ── Quick Search Modal (Command + K) ── */}
       {isSearchOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh] bg-slate-900/35 backdrop-blur-xs px-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh] bg-slate-900/40 backdrop-blur-xs px-4">
           <div className="fixed inset-0" onClick={() => setIsSearchOpen(false)} />
-          <div className="relative w-full max-w-xl bg-white border border-slate-200/90 rounded-2xl shadow-2xl shadow-slate-900/15 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Search Input Bar */}
-            <div className="flex items-center px-4 py-3.5 border-b border-slate-100 bg-white">
-              <Search className="w-5 h-5 text-[#5227FF] mr-3 shrink-0" strokeWidth={2} />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 gap-3">
+              <Search className="w-5 h-5 text-slate-400" />
               <input
-                autoFocus
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm text-slate-900 placeholder:text-slate-400"
-                placeholder="Search learning, roadmaps, problems, tools..."
+                placeholder="Search SkillsCatalyst roadmaps, practice, resume builder..."
+                autoFocus
+                className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
               />
-              <kbd
-                onClick={() => setIsSearchOpen(false)}
-                className="inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded cursor-pointer hover:text-[#5227FF] hover:border-[#5227FF]/40 transition-colors"
-              >
-                ESC
-              </kbd>
               <button
                 onClick={() => setIsSearchOpen(false)}
-                className="ml-2 p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Search Results List */}
-            <div className="max-h-[340px] overflow-y-auto p-2 bg-white">
-              {filteredSearch.length === 0 ? (
-                <div className="py-10 text-center text-sm text-slate-400">
-                  No matching destinations found.
-                </div>
-              ) : (
-                filteredSearch.map((res) => {
-                  const Icon = res.icon;
+            <div className="max-h-72 overflow-y-auto p-2 space-y-1">
+              {[...mainItems, ...careerItems, ...accountItems]
+                .filter((item) =>
+                  item.title.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((item) => {
+                  const Icon = item.icon;
                   return (
-                    <div
-                      key={res.title}
+                    <button
+                      key={item.id}
                       onClick={() => {
                         setIsSearchOpen(false);
-                        router.push(res.href);
+                        if (item.onClick) {
+                          item.onClick();
+                        } else {
+                          router.push(item.href);
+                        }
                       }}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#5227FF]/6 transition-colors group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-700 dark:hover:text-purple-300 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-[#5227FF]/10 text-[#5227FF] group-hover:bg-[#5227FF] group-hover:text-white transition-colors">
-                          <Icon className="w-4 h-4" strokeWidth={1.8} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[13px] font-semibold text-slate-800 group-hover:text-[#5227FF] transition-colors">
-                            {res.title}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            {res.category}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[11px] font-semibold text-slate-400 group-hover:text-[#5227FF] transition-colors">
-                        Jump →
-                      </span>
-                    </div>
+                      <Icon className="w-4 h-4 text-slate-500" />
+                      <span>{item.title}</span>
+                    </button>
                   );
-                })
-              )}
+                })}
             </div>
 
-            {/* Modal Footer */}
-            <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-              <span className="flex items-center gap-1.5 text-slate-600">
-                <Command className="w-3 h-3 text-[#5227FF]" /> Quick Navigator
-              </span>
+            <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
               <span>Use ESC or click outside to dismiss</span>
+              <span className="flex items-center gap-1 font-mono">
+                <Command className="w-3 h-3" /> K Navigator
+              </span>
             </div>
           </div>
         </div>
       )}
     </>
-  );
-}
-
-function SidebarItem({
-  item,
-  activeId,
-  isCollapsed,
-  onSelect,
-  level = 0,
-}: {
-  item: NavItemData;
-  activeId: string;
-  isCollapsed: boolean;
-  onSelect: (item: NavItemData) => void;
-  level?: number;
-}) {
-  const isActive = activeId === item.id;
-  const hasChildren = !!item.children && item.children.length > 0;
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleClick = () => {
-    if (hasChildren && !isCollapsed) {
-      setIsOpen(!isOpen);
-    } else {
-      onSelect(item);
-    }
-  };
-
-  const IconComponent = item.icon;
-
-  if (isCollapsed) {
-    return (
-      <div
-        title={item.title}
-        onClick={() => onSelect(item)}
-        className={`relative flex items-center justify-center w-10 h-10 mx-auto rounded-xl cursor-pointer transition-all duration-150 ${
-          isActive
-            ? "bg-[#5227FF]/12 text-[#5227FF] font-semibold shadow-xs"
-            : "text-slate-500 hover:bg-[#5227FF]/6 hover:text-[#5227FF]"
-        }`}
-      >
-        <IconComponent className="w-4 h-4" strokeWidth={isActive ? 2 : 1.75} />
-        {item.badge && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#5227FF]" />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col w-full">
-      <div
-        onClick={handleClick}
-        style={{ paddingLeft: `${level * 14 + 10}px` }}
-        className={`group flex items-center justify-between pr-2.5 py-2 rounded-xl cursor-pointer transition-all duration-150 select-none ${
-          isActive
-            ? "bg-[#5227FF]/10 text-[#5227FF] font-semibold"
-            : "text-slate-600 hover:bg-[#5227FF]/5 hover:text-[#5227FF]"
-        }`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <IconComponent
-            className={`w-4 h-4 shrink-0 transition-colors ${
-              isActive
-                ? "text-[#5227FF]"
-                : "text-slate-400 group-hover:text-[#5227FF]"
-            }`}
-            strokeWidth={isActive ? 2 : 1.75}
-          />
-          <span className={`text-[13px] tracking-normal truncate ${isActive ? "text-[#5227FF]" : "text-slate-700 group-hover:text-[#5227FF]"}`}>
-            {item.title}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          {item.shortcut && (
-            <kbd className="hidden group-hover:inline-flex items-center justify-center h-4.5 px-1.5 text-[10px] font-mono text-slate-400 bg-slate-100 border border-slate-200 rounded">
-              {item.shortcut}
-            </kbd>
-          )}
-          {item.badge && (
-            <span className="flex items-center justify-center min-w-[18px] h-4.5 px-1.5 text-[10px] font-semibold rounded-full bg-[#5227FF]/12 text-[#5227FF]">
-              {item.badge}
-            </span>
-          )}
-          {hasChildren && (
-            <ChevronRight
-              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 group-hover:text-[#5227FF] ${
-                isOpen ? "rotate-90 text-[#5227FF]" : ""
-              }`}
-              strokeWidth={2}
-            />
-          )}
-        </div>
-      </div>
-
-      {hasChildren && (
-        <div
-          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${
-            isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <div className="overflow-hidden min-h-0 relative flex flex-col gap-0.5 mt-0.5">
-            <div
-              className="absolute top-0 bottom-0 border-l border-slate-200/70"
-              style={{ left: `${level * 14 + 17}px` }}
-            />
-            {item.children!.map((child) => (
-              <SidebarItem
-                key={child.id}
-                item={child}
-                activeId={activeId}
-                isCollapsed={isCollapsed}
-                onSelect={onSelect}
-                level={level + 1}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
