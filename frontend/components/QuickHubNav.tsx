@@ -145,7 +145,7 @@ export default function QuickHubNav() {
             </Link>
           </motion.div>
 
-          {/* Card B: Projects (BUILD) */}
+          {/* Card B: Practice */}
           <motion.div
             whileHover={{ y: -2, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 350, damping: 24 }}
@@ -157,10 +157,10 @@ export default function QuickHubNav() {
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-[#e11d48] transition-colors truncate">
-                  Projects
+                  Practice
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
-                  Build &amp; ship.
+                  Code &amp; interview prep.
                 </p>
               </div>
 
@@ -169,7 +169,7 @@ export default function QuickHubNav() {
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/projects.png"
-                      alt="Projects 3D Code"
+                      alt="Practice 3D Code"
                       fill
                       className="object-contain"
                     />
@@ -185,7 +185,7 @@ export default function QuickHubNav() {
         </div>
       </div>
 
-      {/* ── Bottom Tier: 4 Clean Feature Tiles (Scholarships, Competitions, Mock, Assignments) ── */}
+      {/* ── Bottom Tier: 4 Clean Feature Tiles (Scholarships, Competitions, DSA Sheets, Career) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
         {/* Card 1: Scholarships */}
         <motion.div
@@ -253,13 +253,13 @@ export default function QuickHubNav() {
           </Link>
         </motion.div>
 
-        {/* Card 3: Mock -> Opens Placement Prep */}
+        {/* Card 3: DSA Sheets */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
         >
-          <div
-            onClick={() => setIsPlacementPrepOpen(true)}
+          <Link
+            href="/practice?section=dsa-sheets#dsa-sheets"
             className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
@@ -267,7 +267,7 @@ export default function QuickHubNav() {
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/mock.png"
-                  alt="Mock 3D Checklist"
+                  alt="DSA Sheets 3D Checklist"
                   fill
                   className="object-contain"
                 />
@@ -277,30 +277,30 @@ export default function QuickHubNav() {
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
-                Mock
+                DSA Sheets
               </span>
               <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
-          </div>
+          </Link>
         </motion.div>
 
-        {/* Card 4: Assignments */}
+        {/* Card 4: Career -> Redirects to Career Goals */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
         >
           <Link
-            href="/practice?tab=assessment"
+            href="/career"
             className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
             <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f5fb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
-                  src="/images/hub/assessment.png"
-                  alt="Assignments 3D Clipboard"
+                  src="/images/hub/interview.png"
+                  alt="Career Goals 3D"
                   fill
                   className="object-contain"
                 />
@@ -310,7 +310,7 @@ export default function QuickHubNav() {
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
-                Assignments
+                Career
               </span>
               <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />

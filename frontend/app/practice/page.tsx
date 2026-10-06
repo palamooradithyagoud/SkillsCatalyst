@@ -82,29 +82,62 @@ function PracticeContent() {
     };
   }, [selectedMode]);
 
-  // Ensure view resets to top whenever user opens any card or switches mode
+  // Dedicated scroll controller: DSA sheets section vs Practice top
   useEffect(() => {
-    const resetScroll = () => {
-      if (typeof window !== "undefined") {
-        window.scrollTo(0, 0);
+    if (typeof window === "undefined") return;
+
+    const isDsaTarget =
+      searchParams?.get("section") === "dsa-sheets" ||
+      searchParams?.get("mode") === "dsa-sheets" ||
+      window.location.hash === "#dsa-sheets";
+
+    if (isDsaTarget) {
+      setSelectedMode("index");
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        const el = document.getElementById("dsa-sheets");
+        const mainElem = document.querySelector("main");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (mainElem) {
+            const mainRect = mainElem.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const relativeTop = elRect.top - mainRect.top + mainElem.scrollTop - 24;
+            mainElem.scrollTo({ top: Math.max(0, relativeTop), behavior: "smooth" });
+          }
+          if (attempts > 6) {
+            clearInterval(interval);
+          }
+        }
+        if (attempts > 20) {
+          clearInterval(interval);
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    } else {
+      // Standard practice navigation -> ensure page opens at the very top
+      const scrollToTop = () => {
         const mainElem = document.querySelector("main");
         if (mainElem) {
           mainElem.scrollTop = 0;
         }
+        window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
-      }
-    };
+      };
 
-    resetScroll();
-    const frameId = requestAnimationFrame(resetScroll);
-    const timerId = setTimeout(resetScroll, 60);
+      scrollToTop();
+      const rAF = requestAnimationFrame(scrollToTop);
+      const timer = setTimeout(scrollToTop, 100);
 
-    return () => {
-      cancelAnimationFrame(frameId);
-      clearTimeout(timerId);
-    };
-  }, [selectedMode]);
+      return () => {
+        cancelAnimationFrame(rAF);
+        clearTimeout(timer);
+      };
+    }
+  }, [searchParams, selectedMode]);
 
   const [companiesList, setCompaniesList] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(() => {
@@ -276,7 +309,7 @@ function PracticeContent() {
           />
 
           {/* ── DSA SHEETS Heading with Horizontal Scroll Controls ── */}
-          <div className="max-w-5xl mx-auto w-full flex items-center justify-between pt-2 sm:pt-4">
+          <div id="dsa-sheets" className="max-w-5xl mx-auto w-full flex items-center justify-between pt-2 sm:pt-4 scroll-mt-20">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 DSA SHEETS
