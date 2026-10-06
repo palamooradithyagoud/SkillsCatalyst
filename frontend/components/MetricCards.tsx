@@ -374,7 +374,7 @@ export default function MetricCards({
                     No Learning Progress Yet
                   </h4>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Save YouTube playlists on the Learning page to track your real video completion progress here!
+                    Save playlists on the Learning page to track your real video completion progress here!
                   </p>
                 </div>
                 <div className="pt-0.5">
@@ -410,15 +410,11 @@ export default function MetricCards({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[8px] sm:text-[8.5px] font-extrabold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-600 border border-rose-100 inline-flex items-center gap-0.5">
-                      <Video className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                      <span>YouTube Track</span>
-                    </span>
-                    {course.progressPct === 100 && (
+                  {course.progressPct === 100 && (
+                    <div className="flex items-center justify-end mb-1">
                       <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0" />
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#234B3B] transition-colors line-clamp-1 leading-snug">
                     {course.title}

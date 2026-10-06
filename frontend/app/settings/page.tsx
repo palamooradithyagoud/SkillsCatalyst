@@ -14,7 +14,7 @@ import {
   Sparkles,
   Award,
   Globe,
-  LifeBuoy,
+  Headset,
   Phone,
   Mail,
   ShieldCheck,
@@ -45,8 +45,6 @@ import {
   Layers,
   Cpu,
   GitBranch,
-  ChevronLeft,
-  ChevronRight,
   User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -216,8 +214,6 @@ export default function SettingsPage() {
   const [newLangTabInput, setNewLangTabInput] = useState("");
 
   // ── Interactive UI States ─────────────────────────────────────────────────
-  const [showVerifyBanner, setShowVerifyBanner] = useState(true);
-  const [weekOffset, setWeekOffset] = useState(0);
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [newLangInput, setNewLangInput] = useState("");
   const [showAddLang, setShowAddLang] = useState(false);
@@ -592,39 +588,6 @@ export default function SettingsPage() {
     return (words[0][0] + (words[1] ? words[1][0] : "")).toUpperCase();
   };
 
-  const getWeekDays = (offset = 0) => {
-    const now = new Date();
-    const base = new Date(now.getTime() + offset * 7 * 24 * 60 * 60 * 1000);
-    const dayOfWeek = base.getDay(); // 0 is Sunday
-    const sunday = new Date(base);
-    sunday.setDate(base.getDate() - dayOfWeek);
-
-    const days = [];
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(sunday);
-      d.setDate(sunday.getDate() + i);
-      const isToday = offset === 0 && d.toDateString() === now.toDateString();
-      const isActive = isToday || (offset === 0 && i === 1);
-      days.push({
-        dateNum: d.getDate(),
-        dayName: dayNames[i],
-        monthName: monthNames[d.getMonth()],
-        isToday,
-        active: isActive,
-        duration: isToday ? "25m" : i === 1 ? "10m" : "",
-      });
-    }
-
-    const startStr = `${days[0].dateNum} ${days[0].monthName}`;
-    const endStr = `${days[6].dateNum} ${days[6].monthName}`;
-
-    return { days, rangeLabel: `${startStr} – ${endStr}` };
-  };
-
-  const weekData = getWeekDays(weekOffset);
   const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Palamoor Adithya Goud");
   const userHandle = session?.email ? session.email.split("@")[0] : "aadhi00";
 
@@ -810,14 +773,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Right Card: Vibrant Deep Purple/Violet Monogram Profile */}
-        <div className="col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-7 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[210px] sm:min-h-[290px] group">
+        <div className="col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-6 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[240px] sm:min-h-[320px] lg:min-h-[350px] group">
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-16 -right-16 w-56 h-56 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Center Monogram Initials */}
+          {/* Center Monogram Initials / Big Profile Picture */}
           <div
-            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-5 relative z-10 cursor-pointer"
+            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-3 relative z-10 cursor-pointer"
             onClick={() => setActiveModal("avatar")}
             title="Change photo or avatar"
           >
@@ -825,7 +788,7 @@ export default function SettingsPage() {
               <img
                 src={personalForm.avatar_url}
                 alt={displayName}
-                className="w-16 h-16 sm:w-28 sm:h-28 lg:w-32 lg:h-32 object-cover rounded-2xl sm:rounded-3xl border-2 border-purple-300/40 shadow-lg"
+                className="w-28 h-28 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-56 lg:h-56 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/30 shadow-2xl group-hover:scale-[1.03] transition-all duration-300"
               />
             ) : (
               <span className="text-5xl sm:text-8xl lg:text-9xl font-black text-white/95 tracking-tight select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
@@ -835,7 +798,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Bottom Profile Details */}
-          <div className="relative z-10 space-y-0.5">
+          <div className="relative z-10 space-y-0.5 mt-2">
             <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-purple-200/90 truncate">
               @{userHandle}
             </p>
@@ -873,114 +836,7 @@ export default function SettingsPage() {
         </Link>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 3. VERIFICATION BANNER (PURPLE/VIOLET GRADIENT)                     */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showVerifyBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-gradient-to-r from-[#8B5CF6] via-[#9333EA] to-[#A855F7] rounded-3xl p-5 sm:p-6 text-white shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          >
-            <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0 mt-0.5 sm:mt-0">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-base font-black text-white">Get Verified on SkillsCatalyst</h4>
-                <p className="text-xs text-purple-100/90 font-normal leading-relaxed max-w-xl">
-                  Upload your student ID or certificate to earn your verified badge and unlock perks.
-                </p>
-                <div className="pt-1">
-                  <button
-                    onClick={() => {
-                      setEditingItem(null);
-                      setActiveModal("cert");
-                    }}
-                    className="px-4 py-1.5 bg-white hover:bg-purple-50 text-purple-700 rounded-full font-black text-xs transition-all inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  >
-                    <span>Verify Now</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            <button
-              onClick={() => setShowVerifyBanner(false)}
-              className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
-              title="Dismiss"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 4. "YOUR WEEKLY VIBE" ACTIVITY CARD                                 */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-6">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Your weekly vibe</h3>
-            <p className="text-xs font-semibold text-slate-400 mt-0.5">{weekData.rangeLabel}</p>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60 px-3 py-1.5 rounded-full shadow-2xs">
-              <span>🔥 {progressStats.streakDays}d Streak</span>
-              <span>•</span>
-              <span>Lvl {progressStats.level}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setWeekOffset((prev) => prev - 1)}
-                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
-                title="Previous week"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setWeekOffset((prev) => prev + 1)}
-                className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:border-slate-300 transition-colors cursor-pointer"
-                title="Next week"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 7 Vertical Pill Bars */}
-        <div className="flex items-end justify-between gap-2 sm:gap-4 pt-4 px-2 sm:px-6">
-          {weekData.days.map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-1">
-              <div className="relative w-full flex flex-col items-center">
-                {d.duration && (
-                  <span className="absolute -top-6 text-[11px] font-bold text-slate-700 whitespace-nowrap">
-                    {d.duration}
-                  </span>
-                )}
-                <div className="h-28 sm:h-32 w-7 sm:w-10 rounded-full bg-slate-100 flex flex-col justify-end p-1">
-                  {d.active && (
-                    <div className="w-full h-3/4 rounded-full bg-gradient-to-t from-[#FB923C] to-[#F97316] shadow-sm" />
-                  )}
-                </div>
-              </div>
-              <div className="text-center">
-                <span className={`block text-xs font-bold ${d.active ? "text-slate-900" : "text-slate-400"}`}>
-                  {d.dateNum}
-                </span>
-                <span className={`block text-[10px] font-semibold uppercase ${d.active ? "text-slate-900" : "text-slate-400"}`}>
-                  {d.dayName}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 5. EXPERIENCE CARD                                                  */}
@@ -1431,8 +1287,8 @@ export default function SettingsPage() {
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700">
-              <LifeBuoy className="w-5 h-5" />
+            <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200/60 shadow-2xs">
+              <Headset className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900">Customer Service & Founder Support</h3>
