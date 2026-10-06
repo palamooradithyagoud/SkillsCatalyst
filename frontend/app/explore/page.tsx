@@ -120,11 +120,11 @@ const PROGRAMMING_LANGUAGES = [
 ];
 
 const TRENDING_SKILLS = [
-  { name: "AI & Generative AI", icon: Sparkles, count: "62 Courses", tag: "AI/ML", query: "Generative AI" },
-  { name: "Full-Stack Development", icon: Code2, count: "48 Courses", tag: "FullStack", query: "Full Stack Development" },
-  { name: "Cloud & DevOps", icon: Zap, count: "42 Courses", tag: "DevOps", query: "DevOps" },
-  { name: "Data Engineering & Analytics", icon: Terminal, count: "35 Courses", tag: "Data", query: "Data Engineering" },
-  { name: "Cybersecurity", icon: Globe, count: "29 Courses", tag: "Security", query: "Cybersecurity" },
+  { name: "AI & Generative AI", icon: Sparkles, count: "62 Playlists", tag: "AI/ML", query: "Generative AI" },
+  { name: "Full-Stack Development", icon: Code2, count: "48 Playlists", tag: "FullStack", query: "Full Stack Development" },
+  { name: "Cloud & DevOps", icon: Zap, count: "42 Playlists", tag: "DevOps", query: "DevOps" },
+  { name: "Data Engineering & Analytics", icon: Terminal, count: "35 Playlists", tag: "Data", query: "Data Engineering" },
+  { name: "Cybersecurity", icon: Globe, count: "29 Playlists", tag: "Security", query: "Cybersecurity" },
 ];
 
 const CAREER_TRACKS = [
@@ -165,7 +165,7 @@ const CAREER_TRACKS = [
   },
 ];
 
-const POPULAR_COURSES = [
+const POPULAR_TRACKS = [
   { title: "Complete Python Mastery 2026", instructor: "Telusko", rating: "4.9", videos: "54 Videos", level: "Beginner - Advanced", color: "border-cyan-500/30", query: "Python Telusko" },
   { title: "Aptitude & Logical Reasoning Sprint", instructor: "SkillsCatalyst Team", rating: "4.8", videos: "41 Practice Sets", level: "Placement", color: "border-purple-500/30", query: "Aptitude and Reasoning" },
   { title: "Data Structures & Algorithms in C++", instructor: "Striver", rating: "5.0", videos: "120 Videos", level: "Intermediate", color: "border-blue-500/30", query: "Data Structures in C++ Striver" },
@@ -509,17 +509,17 @@ function ExplorePageContent() {
         </div>
       </div>
 
-      {/* ── 4. Popular Courses & Practice Sets (2-Column Mobile Grid) ── */}
+      {/* ── 4. Popular Video Tracks & Practice Sets (2-Column Mobile Grid) ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
             <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
-            <span>Popular Courses &amp; Sets</span>
+            <span>Popular Tracks &amp; Sets</span>
           </h2>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
-          {POPULAR_COURSES.map((c) => (
+          {POPULAR_TRACKS.map((c) => (
             <Link
               key={c.title}
               href={`/learning?query=${encodeURIComponent(c.query || c.title)}`}

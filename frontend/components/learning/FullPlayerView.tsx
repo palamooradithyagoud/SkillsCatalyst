@@ -238,7 +238,7 @@ export function FullPlayerView({
               onClick={onBack}
               className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <ChevronLeft className="w-3.5 h-3.5 text-amber-300" /> My courses
+              <ChevronLeft className="w-3.5 h-3.5 text-amber-300" /> My playlists
             </button>
             <span className="text-white/40">&gt;</span>
             <span className="text-white font-bold">{pl.title}</span>

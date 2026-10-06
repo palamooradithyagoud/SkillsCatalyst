@@ -2688,15 +2688,15 @@ export default function RoadmapsPage() {
             </div>
           </div>
 
-          {/* 7, 7 Tracks Cards (Size preserved exactly) */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 shrink-0 sm:w-auto w-full pt-1 sm:pt-0">
+          {/* Track Cards */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0 sm:w-auto w-full pt-1 sm:pt-0">
             <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-center min-w-0 sm:min-w-[150px]">
               <div>
                 <span className="block text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wide">
-                  Skill Tracks
+                  Active Tracks
                 </span>
                 <span className="hidden sm:block text-[11px] text-slate-500 font-medium mt-0.5">
-                  Languages &amp; Core
+                  Python Programming
                 </span>
               </div>
               <span className="text-xl sm:text-4xl font-black text-slate-900">
@@ -2704,19 +2704,21 @@ export default function RoadmapsPage() {
               </span>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-center min-w-0 sm:min-w-[150px]">
-              <div>
-                <span className="block text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wide">
-                  Career Paths
-                </span>
-                <span className="hidden sm:block text-[11px] text-slate-500 font-medium mt-0.5">
-                  Job Ready Roles
+            {CAREER_ROADMAPS.length > 0 && (
+              <div className="bg-white/70 backdrop-blur-xs border border-white/80 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-2xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-center min-w-0 sm:min-w-[150px]">
+                <div>
+                  <span className="block text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wide">
+                    Career Paths
+                  </span>
+                  <span className="hidden sm:block text-[11px] text-slate-500 font-medium mt-0.5">
+                    Job Ready Roles
+                  </span>
+                </div>
+                <span className="text-xl sm:text-4xl font-black text-slate-900">
+                  {CAREER_ROADMAPS.length}
                 </span>
               </div>
-              <span className="text-xl sm:text-4xl font-black text-slate-900">
-                {CAREER_ROADMAPS.length}
-              </span>
-            </div>
+            )}
           </div>
 
           {/* Mobile / Tablet View: Start Button (moved below the 7, 7 cards) */}
@@ -3049,6 +3051,7 @@ export default function RoadmapsPage() {
       </section>
 
       {/* ── SECTION 2: CAREER ROADMAPS */}
+      {CAREER_ROADMAPS.length > 0 && (
       <section id="career-roadmaps-section" className="space-y-6">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
@@ -3135,6 +3138,7 @@ export default function RoadmapsPage() {
           })}
         </div>
       </section>
+      )}
     </motion.div>
   );
 }

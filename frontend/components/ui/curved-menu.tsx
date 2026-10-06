@@ -46,7 +46,7 @@ export const defaultNavItems: iNavItem[] = [
   {
     heading: "Learning",
     href: "/learning",
-    subheading: "Courses & Playlists",
+    subheading: "Curated Playlists & Tracks",
   },
   {
     heading: "Roadmaps",

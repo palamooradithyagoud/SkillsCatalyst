@@ -266,7 +266,7 @@ app.include_router(subscriptions.router)
 app.include_router(payments.router)
 app.include_router(skillbits.router)
 app.include_router(notifications.router)
-app.include_router(courses.router)
+# app.include_router(courses.router)  # Courses disabled
 app.include_router(certificates.router)
 
 

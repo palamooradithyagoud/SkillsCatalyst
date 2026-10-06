@@ -145,7 +145,7 @@ ROADMAP_SPECS = {
 
 def _normalize_rid(rid: str) -> str:
     if not rid:
-        return "c-programming"
+        return "python-mastery"
     clean = str(rid).lower().strip()
     if "cpp" in clean or "c++" in clean or "2. c++" in clean:
         return "cpp-programming"

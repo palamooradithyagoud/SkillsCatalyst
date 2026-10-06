@@ -107,7 +107,7 @@ export default function QuickHubNav() {
 
         {/* 2. Right Stack: Courses (LEARN) & Projects (BUILD) - Beside Careerpath on mobile */}
         <div className="col-span-1 md:col-span-5 flex flex-col gap-2 sm:gap-3 justify-between">
-          {/* Card A: Courses (LEARN) */}
+          {/* Card A: Learn */}
           <motion.div
             whileHover={{ y: -2, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 350, damping: 24 }}
@@ -122,7 +122,7 @@ export default function QuickHubNav() {
                   Learn
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
-                  Curated courses.
+                  Curated playlists.
                 </p>
               </div>
 
@@ -131,7 +131,7 @@ export default function QuickHubNav() {
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/courses.png"
-                      alt="Courses 3D Cap"
+                      alt="Learning 3D Cap"
                       fill
                       className="object-contain"
                     />
@@ -152,15 +152,15 @@ export default function QuickHubNav() {
             className="flex-1 flex"
           >
             <Link
-              href="/courses"
+              href="/practice"
               className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-[#e11d48] transition-colors truncate">
-                  Courses
+                  Projects
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
-                  Soon revealing.
+                  Build &amp; ship.
                 </p>
               </div>
 
@@ -169,7 +169,7 @@ export default function QuickHubNav() {
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/projects.png"
-                      alt="Course 3D Code"
+                      alt="Projects 3D Code"
                       fill
                       className="object-contain"
                     />

@@ -44,7 +44,7 @@ import NotificationPanel from "@/components/notifications/NotificationPanel";
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
   { name: "SkillBits", href: "/skillbits", icon: Film, desc: "Bite-sized video reels" },
-  { name: "Learning", href: "/learning", icon: BookIcon, desc: "Courses & YouTube playlists" },
+  { name: "Learning", href: "/learning", icon: BookIcon, desc: "Playlists & learning tracks" },
   { name: "Roadmaps", href: "/roadmaps", icon: Map, desc: "Interactive career tracks" },
   { name: "Practice", href: "/practice", icon: Target, desc: "Aptitude & company questions" },
   { name: "Career", href: "/career", icon: Briefcase, desc: "AI resume analysis" },

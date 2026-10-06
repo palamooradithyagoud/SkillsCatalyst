@@ -26,9 +26,8 @@ import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 import AdminSkillBitsCMS from "@/components/admin/AdminSkillBitsCMS";
-import AdminCoursesCMS from "@/components/admin/AdminCoursesCMS";
 
-type AdminTab = "overview" | "courses" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits";
+type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits";
 
 interface AdminOverviewData {
   stats: {
@@ -175,7 +174,6 @@ export default function AdminPage() {
 
   const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: Activity },
-    { id: "courses", label: "Courses", icon: BookOpen },
     { id: "hackathons", label: "Events & Hackathons", icon: Trophy, badge: overviewData?.stats.cms_modules.hackathons },
     { id: "scholarships", label: "Scholarships", icon: Award, badge: overviewData?.stats.cms_modules.scholarships },
     { id: "news", label: "Curated News", icon: Newspaper, badge: overviewData?.stats.cms_modules.news_updates },
@@ -393,18 +391,18 @@ export default function AdminPage() {
               {/* Quick CMS Management Actions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div
-                  onClick={() => setActiveTab("courses")}
+                  onClick={() => setActiveTab("scholarships")}
                   className="bg-slate-900/90 hover:bg-slate-800/80 border border-slate-800 hover:border-purple-500/40 rounded-2xl p-5 cursor-pointer transition-all group shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
-                      <BookOpen className="w-5 h-5" />
+                      <Award className="w-5 h-5" />
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">Manage Courses &amp; Modules</h4>
+                  <h4 className="text-sm font-bold text-white mb-1">Manage Scholarships &amp; Grants</h4>
                   <p className="text-xs text-slate-400">
-                    Create courses, modules, lessons metadata, and module quizzes with single-select questions.
+                    Curate scholarship listings, eligibility requirements, funding deadlines, and application links.
                   </p>
                 </div>
 
@@ -440,13 +438,6 @@ export default function AdminPage() {
                   </p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* TAB: COURSES CMS (PHASE 1) */}
-          {activeTab === "courses" && (
-            <div className="animate-in fade-in duration-150">
-              <AdminCoursesCMS />
             </div>
           )}
 

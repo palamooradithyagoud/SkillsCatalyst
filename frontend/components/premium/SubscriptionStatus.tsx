@@ -187,7 +187,7 @@ export function SubscriptionStatus({
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-slate-600 leading-relaxed">
-            You are on the Free Plan with daily limits on saved courses, roadmaps, and AI reviews.
+            You are on the Free Plan with daily limits on saved playlists, roadmaps, and AI reviews.
           </p>
           {showUpgradeCTA && (
             <UpgradeCTA

@@ -177,7 +177,7 @@ export default function LearningPage() {
 
       if (isLimit) {
         showNotif(
-          "Free plan limit reached (1 saved course). Upgrade to Premium for unlimited saved courses!",
+          "Free plan limit reached (1 saved playlist). Upgrade to Premium for unlimited saved playlists!",
           "error",
           "Upgrade →",
           () => openPricingModal()

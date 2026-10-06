@@ -538,7 +538,7 @@ export default function AnalyticsPage() {
         events.push({
           icon: Bookmark,
           color: C.purple,
-          text: `Saved course playlist: "${pl.title.slice(0, 35)}..."`,
+          text: `Saved playlist: "${pl.title.slice(0, 35)}..."`,
           time: "Saved",
           tag: "Learning",
         });
@@ -663,7 +663,7 @@ export default function AnalyticsPage() {
             </div>
             <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Saved Playlists</div>
             <div className="flex items-center gap-1 text-[11px] font-extrabold text-purple-700 bg-purple-100/90 px-2 py-0.5 rounded-full w-max">
-              Courses Library
+              Video Library
             </div>
           </div>
         </motion.div>

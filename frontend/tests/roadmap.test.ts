@@ -3,24 +3,17 @@ import assert from 'node:assert';
 import { SKILL_ROADMAPS, CAREER_ROADMAPS } from '@/data/roadmaps';
 
 describe('Roadmap Data Integrity', () => {
-  it('loads 7 skill roadmaps with required fields', () => {
-    assert.strictEqual(SKILL_ROADMAPS.length, 7);
-    for (const r of SKILL_ROADMAPS) {
-      assert.ok(r.id, 'id is required');
-      assert.ok(r.title, 'title is required');
-      assert.strictEqual(r.category, 'skill');
-      assert.ok(r.sections.length > 0, 'sections should not be empty');
-    }
+  it('loads only the Python skill roadmap with required fields', () => {
+    assert.strictEqual(SKILL_ROADMAPS.length, 1);
+    const python = SKILL_ROADMAPS[0];
+    assert.strictEqual(python.id, 'python-mastery');
+    assert.ok(python.title, 'title is required');
+    assert.strictEqual(python.category, 'skill');
+    assert.ok(python.sections.length > 0, 'sections should not be empty');
   });
 
-  it('loads 7 career roadmaps with required fields', () => {
-    assert.strictEqual(CAREER_ROADMAPS.length, 7);
-    for (const r of CAREER_ROADMAPS) {
-      assert.ok(r.id, 'id is required');
-      assert.ok(r.title, 'title is required');
-      assert.strictEqual(r.category, 'career');
-      assert.ok(r.sections.length > 0, 'sections should not be empty');
-    }
+  it('verifies all other roadmaps are cleared/inactive for now', () => {
+    assert.strictEqual(CAREER_ROADMAPS.length, 0);
   });
 
   it('strictly preserves the 13 Python roadmap stations and modules', () => {

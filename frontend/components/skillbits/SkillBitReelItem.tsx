@@ -50,14 +50,10 @@ export function resolveLearnMoreDestination(
   }
 
   if (Array.isArray(bit.courses) && bit.courses.length > 0) {
-    const course = bit.courses[0] as Record<string, unknown>;
-    const id = course?.id || course?.slug;
-    if (id) {
-      return {
-        label: "Learn More in Course →",
-        href: `/courses?id=${encodeURIComponent(String(id))}`,
-      };
-    }
+    return {
+      label: "Learn More in Learning Hub →",
+      href: "/learning",
+    };
   }
 
   if (Array.isArray(bit.roadmaps) && bit.roadmaps.length > 0) {

@@ -74,19 +74,19 @@ export default function StudentCertificatesListPage() {
               <span>Official Credentials</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
-              My Course Certificates
+              My Verified Certificates
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Verified certifications earned upon completing course curricula and assessments.
+              Verified certifications earned upon completing skill roadmap assessments.
             </p>
           </div>
 
           <Link
-            href="/courses"
+            href="/roadmaps"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all self-start sm:self-auto"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Explore More Courses</span>
+            <span>Explore Roadmaps</span>
           </Link>
         </header>
 
@@ -104,11 +104,11 @@ export default function StudentCertificatesListPage() {
             </div>
             <h2 className="text-lg font-bold text-white">No Certificates Earned Yet</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-              Complete all lessons and pass the module quizzes in any certificate-eligible course to earn your verified credential.
+              Complete and pass the module assessments in any eligible roadmap to earn your verified credential.
             </p>
             <div className="pt-2">
               <Link
-                href="/courses"
+                href="/roadmaps"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all"
               >
                 Start Learning Now
@@ -151,7 +151,7 @@ export default function StudentCertificatesListPage() {
 
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between gap-3">
                   <Link
-                    href={`/courses/${cert.course_id}/certificate`}
+                    href={cert.verification_url || `/verify/certificate/${cert.verification_id}`}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
                   >
                     <span>View Official Certificate</span>

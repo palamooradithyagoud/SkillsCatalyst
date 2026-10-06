@@ -66,7 +66,7 @@ const defaultFeatures: NavFeatureItem[] = [
     id: "learning",
     shapeIndex: 3,
     title: "Learning",
-    subtitle: "Courses & Curated Playlists",
+    subtitle: "Curated Playlists & Tracks",
     href: "/learning",
     icon: BookOpen,
     accentColor: "rgba(168, 85, 247, 0.2)",

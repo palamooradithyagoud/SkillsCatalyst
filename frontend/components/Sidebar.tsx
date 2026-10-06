@@ -118,7 +118,7 @@ export default function Sidebar() {
           icon: BookOpen,
           badge: "AI",
           children: [
-            { id: "learning-active", title: "Active Courses", href: "/learning", icon: Hash },
+            { id: "learning-active", title: "Curated Playlists", href: "/learning", icon: Hash },
             { id: "roadmaps", title: "Career Roadmaps", href: "/roadmaps", icon: Map },
           ],
         },
@@ -192,7 +192,7 @@ export default function Sidebar() {
   const searchableRoutes = [
     { title: "Dashboard Overview", href: "/dashboard", category: "Navigation", icon: LayoutDashboard },
     { title: "SkillBits Reels", href: "/skillbits", category: "Learning", icon: Film },
-    { title: "Learning & Courses", href: "/learning", category: "Learning", icon: BookOpen },
+    { title: "Learning Hub", href: "/learning", category: "Learning", icon: BookOpen },
     { title: "Career Roadmaps", href: "/roadmaps", category: "Learning", icon: Map },
     { title: "Placement Practice", href: "/practice", category: "Practice", icon: Target },
     { title: "Career Goals & ATS", href: "/career", category: "Career", icon: Briefcase },

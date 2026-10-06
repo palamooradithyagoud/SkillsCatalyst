@@ -26,6 +26,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/courses",
+        destination: "/roadmaps",
+        permanent: false,
+      },
+      {
+        source: "/courses/:path*",
+        destination: "/roadmaps",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -774,18 +774,18 @@ export default function SettingsPage() {
             />
           </div>
 
-          {/* Card 2: Courses */}
+          {/* Card 2: Roadmaps */}
           <Link
             href="/roadmaps"
             className="flex-1 bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 hover:border-purple-300 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 group"
           >
             <div className="min-w-0 flex-1">
-              <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Courses</h3>
+              <h3 className="text-xs sm:text-base font-black text-slate-900 truncate">Roadmaps</h3>
               <p className="text-[9px] sm:text-xs font-semibold text-slate-400 mt-0.5 truncate">Explore paths</p>
             </div>
             <img
               src="/images/profile/courses_3d.jpg"
-              alt="Courses"
+              alt="Roadmaps"
               className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
             />
           </Link>
@@ -1179,7 +1179,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Official Certificates</h3>
-              <p className="text-xs text-slate-500 font-medium">Verified credentials issued for completed courses</p>
+              <p className="text-xs text-slate-500 font-medium">Verified credentials issued for skill assessments</p>
             </div>
           </div>
           <Link

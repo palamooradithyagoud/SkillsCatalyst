@@ -58,7 +58,7 @@ export default function MobileQuickDock() {
       name: "Learning",
       href: "/learning",
       icon: BookIcon,
-      desc: "Courses",
+      desc: "Playlists",
     },
     {
       id: "roadmaps",

@@ -15,9 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthPage = pathname === "/login";
   const isLandingPage = pathname === "/";
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
-  const isCourseDetailPage = /^\/courses\/[^\/]+/.test(pathname);
-
-  if (isAuthPage || isLandingPage || isAdminPage || isCourseDetailPage) {
+  if (isAuthPage || isLandingPage || isAdminPage) {
     return (
       <PricingModalProvider>
         <NotificationProvider>
@@ -27,8 +25,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ? "bg-[#06070d] text-white"
                 : isAdminPage
                 ? "bg-[#0B0D17] text-white"
-                : isCourseDetailPage
-                ? "bg-[#F8FAFC] text-slate-900"
                 : "bg-white text-[#18191F]"
             }`}
           >

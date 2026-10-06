@@ -65,11 +65,11 @@ export default function PublicCertificateVerificationPage() {
         </Link>
 
         <Link
-          href="/courses"
+          href="/roadmaps"
           className="text-xs text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Explore Courses</span>
+          <span>Explore Roadmaps</span>
         </Link>
       </header>
 
@@ -96,7 +96,7 @@ export default function PublicCertificateVerificationPage() {
                     Authentic & Valid Credential
                   </div>
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 mt-1">
-                    Verified Course Completion Certificate
+                    Verified Skill Completion Certificate
                   </h1>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function PublicCertificateVerificationPage() {
 
             <div className="pt-4">
               <Link
-                href="/courses"
+                href="/"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all border border-slate-200/90 shadow-xs"
               >
                 Return to SkillsCatalyst

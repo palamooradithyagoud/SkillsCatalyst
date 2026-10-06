@@ -163,7 +163,7 @@ export async function removeEnrolledRoadmap(roadmapId: string) {
 }
 
 export function normalizeRoadmapId(rawId: string): string {
-  if (!rawId) return "c-programming";
+  if (!rawId) return "python-mastery";
   const clean = rawId.toLowerCase().trim();
   if (clean.includes("cpp") || clean.includes("c++") || clean.includes("2. c++")) {
     return "cpp-programming";
