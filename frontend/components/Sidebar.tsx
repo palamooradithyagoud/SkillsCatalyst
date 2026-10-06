@@ -11,7 +11,7 @@ import {
   Target,
   Compass,
   Briefcase,
-  Sparkles,
+  Bot,
   BarChart3,
   User,
   Headset,
@@ -115,8 +115,7 @@ export default function Sidebar() {
       id: "ai-mentor",
       title: "AI Mentor",
       href: "/ai-mentor",
-      icon: Sparkles,
-      badge: "AI",
+      icon: Bot,
     },
     {
       id: "analytics",

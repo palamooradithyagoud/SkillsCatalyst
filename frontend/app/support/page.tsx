@@ -4,15 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Phone,
-  Mail,
-  MessageCircle,
-  Clock,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
-  Copy,
-  Check,
   Send,
   HelpCircle,
   ChevronDown,
@@ -20,12 +14,9 @@ import {
   Scale,
   RefreshCw,
   Sparkles,
-  LifeBuoy,
-  UserCheck,
-  ArrowRight,
-  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { Skiper31 } from "@/components/ui/text-scroll-animation";
 
 type PolicyTab = "privacy" | "terms" | "refund" | "grievance" | "fairuse";
 
@@ -69,28 +60,11 @@ export default function SupportPage() {
   } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Copy states
-  const [copiedPhone, setCopiedPhone] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
-
   // Active Policy Tab
   const [activeTab, setActiveTab] = useState<PolicyTab>("privacy");
 
   // Expanded FAQ items
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
-
-  const handleCopy = (text: string, type: "phone" | "email") => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      if (type === "phone") {
-        setCopiedPhone(true);
-        setTimeout(() => setCopiedPhone(false), 2000);
-      } else {
-        setCopiedEmail(true);
-        setTimeout(() => setCopiedEmail(false), 2000);
-      }
-    }
-  };
 
   const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,188 +120,25 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen text-slate-900 max-w-6xl mx-auto space-y-8 pb-20 select-none">
-      {/* ── Top Hero Banner (Rich Forest Green & Mint) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-[#173a2d] via-[#234B3B] to-[#1a382c] p-7 sm:p-10 text-white shadow-xl"
-      >
-        {/* Subtle decorative glow ring */}
-        <div className="absolute top-[-50%] right-[-10%] w-[350px] h-[350px] rounded-full bg-emerald-400/10 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-[-40%] left-[20%] w-[250px] h-[250px] rounded-full bg-teal-400/10 blur-[60px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-3xl space-y-3.5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-bold uppercase tracking-wider">
-            <LifeBuoy className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Customer Support & Grievance Desk</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-            How can we help you today?
-          </h1>
-          <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed max-w-2xl font-medium">
-            Direct access to our founding team, transparent educational policies, and 24-hour query turnaround. We are here to support every step of your career preparation.
-          </p>
-        </div>
-
-        <div className="absolute right-6 bottom-6 sm:right-12 sm:bottom-8 opacity-15 pointer-events-none hidden sm:block">
-          <ShieldCheck className="w-40 h-40 text-emerald-300" />
-        </div>
-      </motion.div>
-
-      {/* ── 3 Direct Founder Contact Cards (Crisp White & Emerald/Teal Accents) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Card 1: Founder Identity & Grievance Officer */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(35,75,59,0.04)] flex flex-col justify-between hover:border-emerald-300/80 transition-all"
-        >
-          <div className="space-y-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#234B3B] to-[#10b981] flex items-center justify-center text-white font-black text-xl shadow-md">
-                PA
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-black text-base text-slate-900 tracking-tight">
-                    Palamoor Adithya Goud
-                  </h3>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Founder Active" />
-                </div>
-                <p className="text-xs font-bold text-[#234B3B]">
-                  Founder & Chief Grievance Officer
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Every message, support ticket, and curriculum request is reviewed directly by our founding team. We guarantee personal accountability and student-first resolution.
-            </p>
-
-            <div className="space-y-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-[#234B3B] shrink-0" />
-                <span>Mon – Sat: 9:00 AM – 8:00 PM IST</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#234B3B] shrink-0" />
-                <span>Response SLA: Within 24 hours</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Card 2: Phone & WhatsApp Direct Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(35,75,59,0.04)] flex flex-col justify-between hover:border-emerald-300/80 transition-all"
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-[#234B3B] flex items-center justify-center">
-                <Phone className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 tracking-wider">
-                Direct Line
-              </span>
-            </div>
-
-            <div>
-              <h3 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">
-                Telephone & WhatsApp
-              </h3>
-              <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
-                +91 7330602101
-              </p>
-              <p className="text-xs text-slate-500 mt-1.5 font-medium">
-                Instant calling or chat assistance with our founder for urgent queries.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5 mt-6 pt-4 border-t border-slate-100">
-            <a
-              href="tel:+917330602101"
-              className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#234B3B] hover:bg-[#1b3b2e] text-white font-extrabold text-xs shadow-xs active:scale-95 transition-all"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Call Now</span>
-            </a>
-            <a
-              href="https://wa.me/917330602101?text=Hi%20Adithya,%20I%20am%20using%20SkillsCatalyst%20and%20have%20a%20question"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs shadow-xs active:scale-95 transition-all"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </a>
-          </div>
-        </motion.div>
-
-        {/* Card 3: Support Email */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(35,75,59,0.04)] flex flex-col justify-between hover:border-emerald-300/80 transition-all"
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="w-11 h-11 rounded-2xl bg-teal-50 text-[#234B3B] flex items-center justify-center">
-                <Mail className="w-5 h-5" />
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy("palamooradithyagoud@gmail.com", "email")}
-                className="text-[11px] font-bold text-slate-500 hover:text-[#234B3B] transition-colors flex items-center gap-1 cursor-pointer bg-slate-100 hover:bg-emerald-50 px-2.5 py-1 rounded-lg"
-              >
-                {copiedEmail ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedEmail ? "Copied" : "Copy"}</span>
-              </button>
-            </div>
-
-            <div>
-              <h3 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">
-                Founder Support Email
-              </h3>
-              <p className="text-sm font-extrabold text-slate-900 mt-1 break-all">
-                palamooradithyagoud@gmail.com
-              </p>
-              <p className="text-xs text-slate-500 mt-1.5 font-medium">
-                For detailed requests, enterprise partnerships, or formal grievance filings.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <a
-              href="mailto:palamooradithyagoud@gmail.com?subject=SkillsCatalyst%20Customer%20Support%20Inquiry"
-              className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs active:scale-95 transition-all"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Send Email</span>
-            </a>
-          </div>
-        </motion.div>
-      </div>
+      
+      {/* ── Interactive 3D Kinetic Text & Support Channel Scroll Animation ── */}
+      <Skiper31
+        text="DIRECT FOUNDER SUPPORT"
+        subtitle="direct student care & multi-channel assistance"
+      />
 
       {/* ── Main 2-Column: Ticket Form + Frequently Asked Questions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left: Support Ticket Submission Form (Clean White Surface) */}
+        {/* Left: Support Ticket Submission Form (Clean White Surface with Purple/Pink Accents) */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="lg:col-span-7 bg-white border border-slate-200/90 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_24px_rgba(35,75,59,0.04)] space-y-6"
+          className="lg:col-span-7 bg-white border border-slate-200/90 rounded-[28px] p-6 sm:p-8 shadow-[0_4px_24px_rgba(107,33,168,0.04)] space-y-6"
         >
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-black text-[#234B3B] uppercase tracking-wider mb-1">
-              <Send className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 uppercase tracking-wider mb-1">
+              <Send className="w-3.5 h-3.5 text-pink-600" />
               <span>Submit A Support Ticket</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -350,7 +161,7 @@ export default function SupportPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your Name"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium"
                 />
               </div>
 
@@ -364,7 +175,7 @@ export default function SupportPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium"
                 />
               </div>
             </div>
@@ -379,7 +190,7 @@ export default function SupportPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+91 9876543210"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium"
                 />
               </div>
 
@@ -390,7 +201,7 @@ export default function SupportPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium cursor-pointer"
                 >
                   <option value="Technical Issue">Technical / Bug Report</option>
                   <option value="Billing & Subscriptions">Billing & Pro Pass Inquiries</option>
@@ -413,7 +224,7 @@ export default function SupportPage() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Brief summary of your question or issue"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium"
               />
             </div>
 
@@ -427,7 +238,7 @@ export default function SupportPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Please describe in detail what happened or how we can assist you..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-[#f8faf9] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-[#234B3B] focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all font-medium resize-y"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-[#FAF9FD] text-slate-900 text-xs sm:text-sm focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all font-medium resize-y"
               />
             </div>
 
@@ -439,20 +250,20 @@ export default function SupportPage() {
             )}
 
             {ticketResult && (
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 font-extrabold text-sm text-emerald-800">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-950 text-xs space-y-1.5">
+                <div className="flex items-center gap-1.5 font-extrabold text-sm text-purple-900">
+                  <CheckCircle2 className="w-4 h-4 text-pink-600" />
                   <span>Support Ticket Submitted!</span>
                 </div>
-                <p>Reference Ticket ID: <strong className="font-mono text-emerald-950">{ticketResult.ticketId}</strong></p>
-                <p className="font-medium text-emerald-800">{ticketResult.message}</p>
+                <p>Reference Ticket ID: <strong className="font-mono text-purple-950">{ticketResult.ticketId}</strong></p>
+                <p className="font-medium text-purple-800">{ticketResult.message}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 px-6 rounded-xl bg-[#234B3B] hover:bg-[#1b3b2e] text-white font-extrabold text-sm shadow-md active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#6B21A8] via-[#7E22CE] to-[#EC4899] hover:opacity-95 text-white font-extrabold text-sm shadow-md shadow-purple-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {submitting ? (
                 <span>Submitting Ticket...</span>
@@ -466,10 +277,10 @@ export default function SupportPage() {
           </form>
         </motion.div>
 
-        {/* Right: Frequently Asked Questions (Accordion) */}
+        {/* Right: Frequently Asked Questions (Accordion with Purple/Pink Accents) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-[#234B3B]" />
+            <HelpCircle className="w-4 h-4 text-purple-700" />
             <h3 className="font-black text-xs uppercase tracking-wider text-slate-700">
               Frequently Asked Questions
             </h3>
@@ -483,18 +294,18 @@ export default function SupportPage() {
                   key={idx}
                   className={`rounded-2xl border transition-all overflow-hidden ${
                     isOpen
-                      ? "bg-white border-[#234B3B] shadow-sm"
-                      : "bg-white border-slate-200/90 hover:border-slate-300"
+                      ? "bg-white border-purple-300 shadow-sm shadow-purple-500/5 ring-1 ring-purple-100"
+                      : "bg-white border-slate-200/90 hover:border-purple-200"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => setExpandedFaq(isOpen ? null : idx)}
-                    className="w-full p-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 cursor-pointer hover:text-[#234B3B] transition-colors"
+                    className="w-full p-4 text-left flex items-center justify-between gap-3 text-xs sm:text-sm font-bold text-slate-900 cursor-pointer hover:text-purple-700 transition-colors"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown
-                      className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180 text-[#234B3B]" : "text-slate-400"}`}
+                      className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? "rotate-180 text-pink-600" : "text-slate-400"}`}
                     />
                   </button>
 
@@ -506,7 +317,7 @@ export default function SupportPage() {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className="px-4 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-100 font-medium">
+                        <div className="px-4 pb-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-purple-50 font-medium">
                           {faq.a}
                         </div>
                       </motion.div>
@@ -519,11 +330,11 @@ export default function SupportPage() {
         </div>
       </div>
 
-      {/* ── Applicable Platform Policies Hub (Warm Clean White Surface) ── */}
-      <div className="bg-white border border-slate-200/90 rounded-[28px] p-6 sm:p-10 shadow-[0_4px_24px_rgba(35,75,59,0.04)] space-y-6">
+      {/* ── Applicable Platform Policies Hub (Crisp White Surface with Purple/Pink Accents) ── */}
+      <div className="bg-white border border-slate-200/90 rounded-[28px] p-6 sm:p-10 shadow-[0_4px_24px_rgba(107,33,168,0.04)] space-y-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-black text-[#234B3B] uppercase tracking-wider mb-1">
-            <Scale className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 uppercase tracking-wider mb-1">
+            <Scale className="w-3.5 h-3.5 text-pink-600" />
             <span>Legal Compliance & Learner Protections</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -552,8 +363,8 @@ export default function SupportPage() {
                 onClick={() => setActiveTab(tab.id as PolicyTab)}
                 className={`inline-flex items-center gap-2 py-2 px-3.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                   isActive
-                    ? "bg-[#234B3B] text-white shadow-xs"
-                    : "bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-[#234B3B]"
+                    ? "bg-gradient-to-r from-[#7E22CE] to-[#EC4899] text-white shadow-xs shadow-purple-500/20"
+                    : "bg-slate-100 text-slate-700 hover:bg-purple-50 hover:text-purple-700"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -571,7 +382,7 @@ export default function SupportPage() {
                 SkillsCatalyst Privacy Policy (DPDP Act 2023 & GDPR Compliant)
               </h3>
               <p>
-                At SkillsCatalyst, accessible from <Link href="/" className="text-[#234B3B] font-bold underline">skillscatalyst.in</Link>, your privacy is our foundational commitment. This Privacy Policy document describes the types of information collected and recorded by SkillsCatalyst and how we use it.
+                At SkillsCatalyst, accessible from <Link href="/" className="text-purple-700 font-bold underline hover:text-pink-600">skillscatalyst.in</Link>, your privacy is our foundational commitment. This Privacy Policy document describes the types of information collected and recorded by SkillsCatalyst and how we use it.
               </p>
               <h4 className="font-extrabold text-slate-900 pt-2">1. Data We Collect</h4>
               <ul className="list-disc pl-5 space-y-1">
@@ -627,7 +438,7 @@ export default function SupportPage() {
               </p>
               <h4 className="font-extrabold text-slate-900 pt-2">2. Refund Request Procedure</h4>
               <p>
-                To claim your refund, send a quick message to our founder via WhatsApp (<a href="https://wa.me/917330602101" className="text-[#234B3B] font-bold">+91 7330602101</a>) or email <a href="mailto:palamooradithyagoud@gmail.com" className="text-[#234B3B] font-bold">palamooradithyagoud@gmail.com</a> with your registered account email and payment reference ID.
+                To claim your refund, send a quick message to our founder via WhatsApp (<a href="https://wa.me/917330602101" className="text-purple-700 font-bold hover:text-pink-600">+91 7330602101</a>) or email <a href="mailto:palamooradithyagoud@gmail.com" className="text-purple-700 font-bold hover:text-pink-600">palamooradithyagoud@gmail.com</a> with your registered account email and payment reference ID.
               </p>
               <h4 className="font-extrabold text-slate-900 pt-2">3. Processing Timeline</h4>
               <p>
@@ -644,12 +455,12 @@ export default function SupportPage() {
               <p>
                 In compliance with the Information Technology Act 2000 and Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, the details of the designated Grievance Officer are set forth below:
               </p>
-              <div className="bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200/80 space-y-2 text-emerald-950 font-medium">
+              <div className="bg-purple-50/70 p-5 rounded-2xl border border-purple-200/80 space-y-2 text-purple-950 font-medium">
                 <div><strong>Grievance Officer:</strong> Palamoor Adithya Goud</div>
                 <div><strong>Designation:</strong> Founder & Chief Grievance Officer</div>
-                <div><strong>Platform:</strong> SkillsCatalyst (<a href="https://www.skillscatalyst.in" className="text-[#234B3B] underline font-bold">www.skillscatalyst.in</a>)</div>
-                <div><strong>Direct Phone:</strong> <a href="tel:+917330602101" className="text-[#234B3B] font-bold">+91 7330602101</a></div>
-                <div><strong>Direct Email:</strong> <a href="mailto:palamooradithyagoud@gmail.com" className="text-[#234B3B] font-bold">palamooradithyagoud@gmail.com</a></div>
+                <div><strong>Platform:</strong> SkillsCatalyst (<a href="https://www.skillscatalyst.in" className="text-purple-700 underline font-bold hover:text-pink-600">www.skillscatalyst.in</a>)</div>
+                <div><strong>Direct Phone:</strong> <a href="tel:+917330602101" className="text-purple-700 font-bold hover:text-pink-600">+91 7330602101</a></div>
+                <div><strong>Direct Email:</strong> <a href="mailto:palamooradithyagoud@gmail.com" className="text-purple-700 font-bold hover:text-pink-600">palamooradithyagoud@gmail.com</a></div>
                 <div><strong>Office Location:</strong> Hyderabad, Telangana, India</div>
               </div>
               <h4 className="font-extrabold text-slate-900 pt-2">Grievance Redressal Timeline</h4>
