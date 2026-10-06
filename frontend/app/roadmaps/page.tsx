@@ -1105,286 +1105,179 @@ const CPP_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
 };
 
 const PYTHON_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
-  "1. Learn the Basics": {
-    description: "Fundamental Python syntax, variables, data types, control flow, functions, and built-in data structures.",
+  "1. Introduction": {
+    description: "Welcome to Python! Understand the 2026 ecosystem, run your first code, configure development environments, and explore IDLE.",
     groups: [
       {
         topics: [
-          { id: "py-syntax", name: "Basic Syntax", desc: "Python indentation, statements, and print output" },
-          { id: "py-vars", name: "Variables and Data Types", desc: "Dynamic typing, int, float, str, bool, and None" },
-          { id: "py-cond", name: "Conditionals", desc: "if, elif, and else branching logic" },
-          { id: "py-loops", name: "Loops", desc: "for and while loops with break/continue/else" },
-          { id: "py-casting", name: "Type Casting", desc: "int(), str(), float(), list(), dict() type conversions" },
-          { id: "py-exceptions", name: "Exceptions", desc: "try, except, else, finally, and custom exceptions" },
-          { id: "py-fns", name: "Functions, Builtin Functions", desc: "def, return, len(), range(), enumerate(), zip()" },
-          { id: "py-lists", name: "Lists", desc: "Mutable ordered sequences, indexing, and slicing" },
-          { id: "py-tuples", name: "Tuples", desc: "Immutable ordered sequences and tuple unpacking" },
-          { id: "py-sets", name: "Sets", desc: "Unordered collections of unique elements & set operations" },
-          { id: "py-dicts", name: "Dictionaries", desc: "Key-value hash maps, dict methods, and comprehensions" },
+          { id: "py-intro", name: "Python Introduction", desc: "Overview of Python, ecosystem, philosophy, and language capabilities", isRecommended: true },
+          { id: "py-first-code", name: "First Code in Python", desc: "Writing and executing your very first Python program with print statements", isRecommended: true },
+          { id: "py-setup", name: "Python Setup", desc: "Downloading, installing Python runtime, and configuring PATH variables", isRecommended: true },
+          { id: "py-ides-installation", name: "IDEs Installation in Python", desc: "Installing and configuring VS Code, PyCharm, and development environments", isRecommended: true },
+          { id: "py-idle-numbers", name: "Python IDLE and Exploring Number Operations", desc: "Using interactive Python IDLE, REPL, and arithmetic number operations", isRecommended: true },
         ],
       },
     ],
   },
-  "2. Data Structures & Algorithms": {
-    description: "Computer science algorithms, data structures, recursion, and search routines implemented in Python.",
+  "2. Strings": {
+    description: "Master string manipulation, indexing, slicing, and advanced string methods in Python.",
     groups: [
       {
         topics: [
-          { id: "py-dsa-arr-ll", name: "Arrays and Linked Lists", desc: "Dynamic array lists and linked list node traversal" },
-          { id: "py-dsa-hashtab", name: "Hash Tables", desc: "Python dict hashing, key collisions, and lookup cost" },
-          { id: "py-dsa-heaps", name: "Heaps, Stacks and Queues", desc: "heapq module, list stacks, and collections.deque" },
-          { id: "py-dsa-bst", name: "Binary Search Tree", desc: "BST nodes, insertion, deletion, and tree traversals" },
-          { id: "py-dsa-recur", name: "Recursion", desc: "Base cases, call stack, and tail recursion memoization" },
-          { id: "py-dsa-sort", name: "Sorting Algorithms", desc: "Timsort (sorted()), QuickSort, MergeSort implementation" },
+          { id: "py-working-with-string", name: "Working With String in Python", desc: "String declaration, indexing, slicing, concatenation, and basic operations", isRecommended: true },
+          { id: "py-more-on-string", name: "More on String in Python", desc: "String methods, formatting with f-strings, escape characters, and immutability", isRecommended: true },
         ],
       },
     ],
   },
-  "3. Modules": {
-    description: "Importing built-in standard library modules and creating custom modular packages.",
+  "3. Data Structures": {
+    description: "Master Python's built-in collection data structures: lists, tuples, sets, and dictionaries.",
     groups: [
       {
         topics: [
-          { id: "py-mod-builtin", name: "Builtin Modules", desc: "sys, os, math, random, datetime, json" },
-          { id: "py-mod-custom", name: "Custom Modules", desc: "Creating __init__.py, relative imports, and module namespaces" },
+          { id: "py-list", name: "List in Python", desc: "Mutable sequences, indexing, list methods, append, insert, remove, and list comprehension", isRecommended: true },
+          { id: "py-tuple", name: "Tuple in Python", desc: "Immutable ordered collections, tuple packing and unpacking, and immutability benefits", isRecommended: true },
+          { id: "py-set", name: "Set in Python", desc: "Unordered collections of unique elements, union, intersection, and set methods", isRecommended: true },
+          { id: "py-dictionary", name: "Dictionary in Python", desc: "Key-value hash pairs, dict keys, values, items, get, and dictionary operations", isRecommended: true },
         ],
       },
     ],
   },
-  "4. Lambdas": {
-    description: "Anonymous single-expression inline lambda functions and functional programming primitives.",
+  "4. Variables & Data Types": {
+    description: "Understand variable storage, dynamic typing, operators, variable swapping, and console user input.",
     groups: [
       {
         topics: [
-          { id: "py-lambda-basic", name: "Anonymous Lambda Functions", desc: "lambda arguments: expression syntax" },
-          { id: "py-lambda-functional", name: "Map, Filter & Reduce with Lambdas", desc: "Functional map(), filter(), and functools.reduce()" },
+          { id: "py-variable-storage", name: "Variable Storage in Python", desc: "Memory allocation, id(), reference counting, and variable naming conventions", isRecommended: true },
+          { id: "py-data-types", name: "Data Types in Python", desc: "Numeric types (int, float, complex), bool, NoneType, and type casting with int(), str()", isRecommended: true },
+          { id: "py-operators", name: "Operators in Python", desc: "Arithmetic, relational, logical, bitwise, assignment, and identity operators", isRecommended: true },
+          { id: "py-swapping-variables", name: "Swapping of Variables in Python", desc: "Pythonic variable swapping syntax a, b = b, a and memory mechanics", isRecommended: true },
+          { id: "py-user-input", name: "User Input in Python", desc: "Capturing console user inputs using input() and parsing typed responses", isRecommended: true },
         ],
       },
     ],
   },
-  "5. Decorators": {
-    description: "Function decorators, class decorators, arguments in decorators, and meta-programming wrappers.",
+  "5. Conditional Statements": {
+    description: "Control code execution using if, else, debugging, nested conditionals, elif ladders, and match-case.",
     groups: [
       {
         topics: [
-          { id: "py-dec-fn", name: "Function Decorators", desc: "@decorator syntax wrapping function execution" },
-          { id: "py-dec-cls", name: "Class Decorators", desc: "Class-level decorators modifying class behavior" },
-          { id: "py-dec-wraps", name: "functools.wraps", desc: "Preserving docstrings and function metadata" },
+          { id: "py-if-statement", name: "if in Python", desc: "if condition syntax, boolean expressions, and code block indentation", isRecommended: true },
+          { id: "py-else-debugging", name: "else and Debugging in Python", desc: "else branches and debugging logical branches with print/debugger tools", isRecommended: true },
+          { id: "py-nested-if", name: "Nested if in Python", desc: "Multi-level conditional statements and nested decision branching", isRecommended: true },
+          { id: "py-elif-statement", name: "elif in Python", desc: "Multi-way conditional branching using elif ladder constructs", isRecommended: true },
+          { id: "py-match-case", name: "Match in Python", desc: "Structural pattern matching with match-case introduced in Python 3.10+", isRecommended: true },
         ],
       },
     ],
   },
-  "6. Iterators": {
-    description: "Custom iteration protocols, iterables, and manual state progression.",
+  "6. Loops": {
+    description: "Iterate across sequences with while loops, for loops, and control jumps with break and continue.",
     groups: [
       {
         topics: [
-          { id: "py-iter-proto", name: "__iter__ and __next__ protocols", desc: "Implementing custom iterator classes with StopIteration" },
-          { id: "py-iter-builtins", name: "iter() and next() builtins", desc: "Manual traversal of iterable sequences" },
+          { id: "py-while-loop", name: "While Loop in Python", desc: "Conditional iterative execution with while loops and loop termination", isRecommended: true },
+          { id: "py-for-loop", name: "For Loop in Python", desc: "Sequence iteration using for in loop and range() generator function", isRecommended: true },
+          { id: "py-break-continue", name: "Break Continue in Python", desc: "Loop interruption with break, skipping iterations with continue, and pass", isRecommended: true },
         ],
       },
     ],
   },
-  "7. Regular Expressions": {
-    description: "Pattern matching, character classes, string substitution, and capture groups with the re module.",
+  "7. Arrays": {
+    description: "Work with homogeneous memory buffers and array functions using the Python array module.",
     groups: [
       {
         topics: [
-          { id: "py-re-mod", name: "re module", desc: "Python standard library regular expression module" },
-          { id: "py-re-pats", name: "Regex Patterns & Captures", desc: "Wildcards, quantifiers, anchors, and named groups" },
-          { id: "py-re-search", name: "re.search, re.match & re.findall", desc: "Searching, matching, and extracting regex matches" },
+          { id: "py-array", name: "Array in Python", desc: "Creating and managing contiguous memory arrays using the built-in array module", isRecommended: true },
+          { id: "py-array-functions", name: "Array functions in Python", desc: "Array methods, append, insert, pop, reverse, and element operations", isRecommended: true },
         ],
       },
     ],
   },
-  "8. Object Oriented Programming": {
-    description: "Classes, objects, inheritance, polymorphism, and dunder (double underscore) magic methods.",
+  "8. Functions": {
+    description: "Modularize code with functions, parameters, scope, recursion, lambdas, map/filter/reduce, and inner functions.",
     groups: [
       {
         topics: [
-          { id: "py-oop-classes", name: "Classes", desc: "class definitions, __init__ constructors, and self reference" },
-          { id: "py-oop-inherit", name: "Inheritance", desc: "Single, multiple inheritance, and super() calls" },
-          { id: "py-oop-dunder", name: "Methods, Dunder", desc: "__str__, __repr__, __len__, __getitem__, __call__ magic methods" },
+          { id: "py-intro-functions", name: "Introduction to function in Python", desc: "Defining functions with def, calling conventions, and code reusability", isRecommended: true },
+          { id: "py-function-arguments", name: "Arguments in Function Python", desc: "Positional, keyword, default arguments, and *args, **kwargs", isRecommended: true },
+          { id: "py-global-local-vars", name: "Global vs Local Variables in Python", desc: "Variable scope hierarchy, local namespace, and the global keyword", isRecommended: true },
+          { id: "py-factorial", name: "Factorial in Python", desc: "Computing factorial iteratively and understanding computational flow", isRecommended: true },
+          { id: "py-recursion", name: "Recursion in Python", desc: "Recursive call stack, base conditions, recursion limit, and call flow", isRecommended: true },
+          { id: "py-factorial-recursion", name: "Factorial Using Recursion in Python", desc: "Recursive implementation of factorial and stack frame analysis", isRecommended: true },
+          { id: "py-higher-order-functions", name: "Higher Order Function in Python", desc: "Functions accepting or returning other functions as first-class citizens", isRecommended: true },
+          { id: "py-lambda-functions", name: "Anonymous Function using Lambda in Python", desc: "Writing concise single-expression anonymous functions with lambda", isRecommended: true },
+          { id: "py-filter-function", name: "Filter Function in Python", desc: "Filtering iterable elements using filter() and predicate functions", isRecommended: true },
+          { id: "py-map-reduce-function", name: "Map Reduce Function in Python", desc: "Element transformations using map() and aggregations using functools.reduce()", isRecommended: true },
+          { id: "py-inner-functions", name: "Inner Function in Python", desc: "Nested functions, variable enclosing scope, and closures", isRecommended: true },
         ],
       },
     ],
   },
-  "9. Package Managers": {
-    description: "Python Package Index (PyPI) and modern dependency management tools.",
+  "9. Decorators": {
+    description: "Extend and enhance function behaviors cleanly with Python decorators.",
     groups: [
       {
         topics: [
-          { id: "py-pkg-pypi", name: "PyPI", desc: "Python Package Index global library repository" },
-          { id: "py-pkg-pip", name: "Pip", desc: "Standard package installer for Python" },
-          { id: "py-pkg-conda", name: "Conda", desc: "Cross-platform data science package manager" },
-          { id: "py-pkg-uv", name: "uv", desc: "Extremely fast Rust-based Python package manager" },
-          { id: "py-pkg-poetry", name: "Poetry", desc: "Dependency management and packaging tool" },
+          { id: "py-decorators", name: "Decorators in Python", desc: "Function decorators, @decorator syntax, wrappers, and functools.wraps", isRecommended: true },
         ],
       },
     ],
   },
-  "10. Common Packages": {
-    description: "Standard project configuration files and build specifications.",
+  "10. Modules & Packages": {
+    description: "Organize applications with standard math modules, custom modules, packages, and the special __name__ variable.",
     groups: [
       {
         topics: [
-          { id: "py-cfg-pyproject", name: "pyproject.toml", desc: "PEP 518 unified Python project configuration specification" },
-          { id: "py-cfg-config", name: "Configuration", desc: "setup.cfg, requirements.txt, and environment config management" },
+          { id: "py-math-module", name: "Working with Module with Math in Python", desc: "Importing standard modules, using math module functions and constants", isRecommended: true },
+          { id: "py-modules-packages", name: "Modules and Packages in Python", desc: "Creating custom modules, directory packages, __init__.py, and import syntax", isRecommended: true },
+          { id: "py-special-name-var", name: "Special Variable Name in Python", desc: "Understanding the __name__ == '__main__' idiom for modular script execution", isRecommended: true },
         ],
       },
     ],
   },
-  "11. List Comprehensions": {
-    description: "Concise syntax for creating lists from existing iterables with conditional filtering.",
+  "11. Object-Oriented Programming": {
+    description: "Build robust object-oriented software with classes, objects, constructors, inheritance, polymorphism, and abstract classes.",
     groups: [
       {
         topics: [
-          { id: "py-lc-syntax", name: "List Comprehension Syntax", desc: "[expression for item in iterable] inline syntax" },
-          { id: "py-lc-filter", name: "Filtering & Nested List Comprehensions", desc: "Adding if conditions and multi-level nested loops" },
+          { id: "py-oop-intro", name: "OOP in Python Introduction", desc: "Object-oriented design paradigm, classes, blueprints, and objects", isRecommended: true },
+          { id: "py-class-and-object", name: "Class and Object in Python", desc: "Defining classes, instantiating objects, instance variables, and methods", isRecommended: true },
+          { id: "py-init-method", name: "init Method in Python", desc: "The __init__ constructor method and self instance reference", isRecommended: true },
+          { id: "py-new-method-constructor", name: "Constructor Using New Method in Python", desc: "The __new__ object creation method and custom instance allocation", isRecommended: true },
+          { id: "py-types-of-methods", name: "Types of Methods in Python", desc: "Instance methods, class methods with @classmethod, and static methods with @staticmethod", isRecommended: true },
+          { id: "py-inheritance-mro", name: "Inheritance and MRO in Python", desc: "Single/multiple inheritance and Method Resolution Order (MRO) with C3 linearization", isRecommended: true },
+          { id: "py-init-super-inheritance", name: "init and super Method with Inheritance in Python", desc: "Calling parent constructors using super().__init__() in derived classes", isRecommended: true },
+          { id: "py-polymorphism-duck-typing", name: "Polymorphism and Duck Typing in Python", desc: "Dynamic polymorphism, interfaces, and Python's duck typing philosophy", isRecommended: true },
+          { id: "py-operator-overloading", name: "Operator Overloading in Python", desc: "Overloading operators with dunder methods (__add__, __sub__, __str__, __repr__)", isRecommended: true },
+          { id: "py-method-overriding", name: "Method Overriding in Python", desc: "Overriding superclass methods in subclasses for specialized behavior", isRecommended: true },
+          { id: "py-abstract-classes", name: "Abstract Class and Abstract Method in Python", desc: "Defining abstract base classes and enforcing methods using the abc module and @abstractmethod", isRecommended: true },
         ],
       },
     ],
   },
-  "12. Generator Expressions": {
-    description: "Memory-efficient lazy evaluation streaming with generator functions and expressions.",
+  "12. Exception Handling": {
+    description: "Write fault-tolerant code with comprehensive exception handling mechanisms in Python.",
     groups: [
       {
         topics: [
-          { id: "py-gen-yield", name: "yield Statement", desc: "Creating generator functions that yield values on demand" },
-          { id: "py-gen-expr", name: "Generator Expressions & Lazy Evaluation", desc: "(expression for item in iterable) generator syntax" },
+          { id: "py-exception-handling", name: "Exception Handling in Python", desc: "Handling runtime errors using try, except, else, finally blocks and raising custom exceptions", isRecommended: true },
         ],
       },
     ],
   },
-  "13. Paradigms": {
-    description: "Python multi-paradigm support across procedural, object-oriented, and functional styles.",
+  "13. Multithreading": {
+    description: "Accelerate I/O bound tasks and manage concurrent execution with multithreading in Python.",
     groups: [
       {
         topics: [
-          { id: "py-par-proc", name: "Imperative & Procedural", desc: "Sequential code execution with statements and functions" },
-          { id: "py-par-oop", name: "Object-Oriented", desc: "Encapsulating state and behavior within classes" },
-          { id: "py-par-func", name: "Functional Programming", desc: "Pure functions, immutability, and higher-order functions" },
-        ],
-      },
-    ],
-  },
-  "14. Context Manager": {
-    description: "Deterministic resource setup and teardown management using with statements.",
-    groups: [
-      {
-        topics: [
-          { id: "py-ctx-with", name: "with Statement", desc: "Automated file closing and lock acquisition" },
-          { id: "py-ctx-dunder", name: "__enter__ and __exit__", desc: "Implementing custom context manager class protocols" },
-          { id: "py-ctx-lib", name: "contextlib.contextmanager", desc: "Creating generator-based context managers with @contextmanager" },
-        ],
-      },
-    ],
-  },
-  "15. Learn a Framework": {
-    description: "Web development frameworks in Python across synchronous, asynchronous, and hybrid models.",
-    groups: [
-      {
-        groupName: "Synchronous",
-        topics: [
-          { id: "py-fw-dash", name: "Plotly Dash", desc: "Analytical web application framework for data science" },
-          { id: "py-fw-pyramid", name: "Pyramid", desc: "Flexible web framework for large applications" },
-        ],
-      },
-      {
-        groupName: "Asynchronous",
-        topics: [
-          { id: "py-fw-gevent", name: "gevent", desc: "Coroutine-based Python networking library using greenlets" },
-          { id: "py-fw-aiohttp", name: "aiohttp", desc: "Asynchronous HTTP client/server for asyncio" },
-          { id: "py-fw-tornado", name: "Tornado", desc: "Non-blocking web server and web framework" },
-          { id: "py-fw-sanic", name: "Sanic", desc: "Async Python 3.8+ web server built for speed" },
-        ],
-      },
-      {
-        groupName: "Synchronous + Asynchronous",
-        topics: [
-          { id: "py-fw-fastapi", name: "Fast API", isRecommended: true, desc: "High performance async web framework with automatic OpenAPI docs" },
-          { id: "py-fw-django", name: "Django", isRecommended: true, desc: "Batteries-included web framework with ORM, Auth & Admin" },
-          { id: "py-fw-flask", name: "Flask", isRecommended: true, desc: "Lightweight WSGI microframework" },
-        ],
-      },
-    ],
-  },
-  "16. Concurrency": {
-    description: "Multiprocessing, thread management, asynchronous IO, and the Global Interpreter Lock (GIL).",
-    groups: [
-      {
-        topics: [
-          { id: "py-conc-mp", name: "Multiprocessing", desc: "Process-based parallelism bypassing GIL with separate memory" },
-          { id: "py-conc-async", name: "Asynchrony", desc: "Single-threaded event loops with asyncio, async & await" },
-          { id: "py-conc-gil", name: "GIL", desc: "Global Interpreter Lock mechanics in CPython" },
-          { id: "py-conc-threading", name: "Threading", desc: "Thread-based parallelism for I/O bound tasks" },
-        ],
-      },
-    ],
-  },
-  "17. Environments": {
-    description: "Virtual environment creation and Python version management tools.",
-    groups: [
-      {
-        topics: [
-          { id: "py-env-pipenv", name: "Pipenv", desc: "Harnessing Pipfile and Pipfile.lock for dependencies" },
-          { id: "py-env-venv", name: "virtualenv", desc: "Creating isolated Python environment folders" },
-          { id: "py-env-pyenv", name: "pyenv", desc: "Switching between multiple installed Python interpreter versions" },
-        ],
-      },
-    ],
-  },
-  "18. Static Typing": {
-    description: "Type hint annotations, static type checkers, and Pydantic data validation.",
-    groups: [
-      {
-        topics: [
-          { id: "py-type-typing", name: "typing", desc: "Standard library type hint annotations (List, Dict, Union, Optional)" },
-          { id: "py-type-mypy", name: "mypy", desc: "Static type checker for Python" },
-          { id: "py-type-pyright", name: "pyright", desc: "Fast static type checker by Microsoft" },
-          { id: "py-type-pyre", name: "pyre", desc: "Performant type checker by Meta" },
-          { id: "py-type-pydantic", name: "Pydantic", desc: "Data validation and settings management using type annotations" },
-        ],
-      },
-    ],
-  },
-  "19. Code Formatting": {
-    description: "Automated code formatting, style enforcement, and fast linting.",
-    groups: [
-      {
-        topics: [
-          { id: "py-fmt-yapf", name: "yapf", desc: "Yet Another Python Formatter by Google" },
-          { id: "py-fmt-black", name: "black", desc: "The uncompromising Python code formatter" },
-          { id: "py-fmt-ruff", name: "ruff", desc: "Extremely fast Rust-based Python linter and formatter" },
-        ],
-      },
-    ],
-  },
-  "20. Documentation": {
-    description: "Documentation generators, Sphinx, docstrings, and autodoc integration.",
-    groups: [
-      {
-        topics: [
-          { id: "py-doc-sphinx", name: "Sphinx", desc: "Python documentation generator producing HTML and PDF docs" },
-        ],
-      },
-    ],
-  },
-  "21. Testing": {
-    description: "Unit testing, integration testing, doctests, and test matrix automation.",
-    groups: [
-      {
-        topics: [
-          { id: "py-test-tox", name: "tox", desc: "Automated test environment matrix runner" },
-          { id: "py-test-nose", name: "nose", desc: "Test runner extending unittest" },
-          { id: "py-test-unittest", name: "unittest / pyUnit", desc: "Python standard library unit testing framework" },
-          { id: "py-test-doctest", name: "doctest", desc: "Testing code snippets embedded inside docstrings" },
-          { id: "py-test-pytest", name: "pytest", desc: "Feature-rich test framework with fixture support" },
+          { id: "py-multithreading", name: "Multithreading in Python", desc: "Concurrent execution using the threading module, threads, GIL implications, and synchronization locks", isRecommended: true },
         ],
       },
     ],
   },
 };
+
 
 const JAVA_NODE_TREE_BRANCHES: Record<string, NodeTreeBranches> = {
   "1. Learn the Basics": {

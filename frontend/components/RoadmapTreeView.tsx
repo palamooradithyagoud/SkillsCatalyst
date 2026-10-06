@@ -93,9 +93,9 @@ export default function RoadmapTreeView({
   }>(() => {
     const firstModule = modulesWithTopics[0];
     const firstTopic = firstModule?.topics[0] || {
-      id: "py-syntax",
-      name: "Basic Syntax",
-      desc: "Python indentation, statements, and print output",
+      id: "py-intro",
+      name: "Python Introduction",
+      desc: "Overview of Python, ecosystem, philosophy, and language capabilities",
     };
     return {
       topic: firstTopic,

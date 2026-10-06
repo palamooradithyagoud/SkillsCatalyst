@@ -268,27 +268,27 @@ export default function RoadmapCurriculumView({
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
                     <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
-                      <span className="text-amber-400 text-sm leading-none">•</span> Core Syntax & DSA
+                      <span className="text-amber-400 text-sm leading-none">•</span> Intro & Fundamentals
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold shrink-0">5 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">2 Stns</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
                     <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
-                      <span className="text-amber-400 text-sm leading-none">•</span> OOP & Decorators
+                      <span className="text-amber-400 text-sm leading-none">•</span> Control & Functions
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold shrink-0">6 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">2 Stns</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-1.5">
                     <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
-                      <span className="text-amber-400 text-sm leading-none">•</span> Web Frameworks
+                      <span className="text-amber-400 text-sm leading-none">•</span> DSA & OOP
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold shrink-0">4 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">2 Stns</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-bold text-white truncate mr-2">
-                      <span className="text-amber-400 text-sm leading-none">•</span> Async & Testing
+                      <span className="text-amber-400 text-sm leading-none">•</span> Files, Testing & Adv
                     </span>
-                    <span className="text-slate-400 text-xs font-semibold shrink-0">6 Stns</span>
+                    <span className="text-slate-400 text-xs font-semibold shrink-0">4 Stns</span>
                   </div>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export default function RoadmapCurriculumView({
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
                     <span className="flex items-center gap-1.5 font-bold text-black truncate">
-                      <span className="text-black text-sm leading-none">•</span> 21 Stations
+                      <span className="text-black text-sm leading-none">•</span> {checkpoints.length} Stations
                     </span>
                   </div>
                   <div className="flex items-center border-b border-dashed border-slate-200 pb-1.5">
@@ -382,20 +382,20 @@ export default function RoadmapCurriculumView({
 
                   <div className="space-y-1 text-[10.5px]">
                     <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
-                      <span className="font-bold text-white truncate mr-1">• Core Syntax</span>
-                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">5 Stns</span>
+                      <span className="font-bold text-white truncate mr-1">• Intro & Fund</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">2 Stns</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
-                      <span className="font-bold text-white truncate mr-1">• OOP & Dec</span>
-                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">6 Stns</span>
+                      <span className="font-bold text-white truncate mr-1">• Control & Func</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">2 Stns</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-dashed border-white/20 pb-0.5">
-                      <span className="font-bold text-white truncate mr-1">• Web Fmwk</span>
-                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">4 Stns</span>
+                      <span className="font-bold text-white truncate mr-1">• DSA & OOP</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">2 Stns</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white truncate mr-1">• Async & Test</span>
-                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">6 Stns</span>
+                      <span className="font-bold text-white truncate mr-1">• Files & Adv</span>
+                      <span className="text-slate-400 text-[9.5px] font-semibold shrink-0">4 Stns</span>
                     </div>
                   </div>
                 </div>
@@ -410,7 +410,7 @@ export default function RoadmapCurriculumView({
 
                   <div className="space-y-1 text-[10.5px]">
                     <div className="flex items-center border-b border-dashed border-slate-200 pb-0.5">
-                      <span className="font-bold text-black truncate">• 21 Stations</span>
+                      <span className="font-bold text-black truncate">• {checkpoints.length} Stations</span>
                     </div>
                     <div className="flex items-center border-b border-dashed border-slate-200 pb-0.5">
                       <span className="font-bold text-black truncate">• Subtopics</span>

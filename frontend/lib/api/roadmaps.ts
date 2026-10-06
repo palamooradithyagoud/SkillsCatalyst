@@ -377,9 +377,21 @@ export function getRoadmapMeta(rawTitleOrId: string, userCompletedNodes: string[
       ]
     },
     "python-mastery": {
-      name: "Python Mastery",
+      name: "Python Programming",
       nodes: [
-        "1. Learn the Basics", "2. Data Structures & Algorithms", "3. Modules", "4. Lambdas", "5. Decorators", "6. Iterators", "7. Regular Expressions", "8. Object Oriented Programming", "9. Package Managers", "10. Common Packages", "11. List Comprehensions", "12. Generator Expressions", "13. Paradigms", "14. Context Manager", "15. Learn a Framework", "16. Concurrency", "17. Environments", "18. Static Typing", "19. Code Formatting", "20. Documentation", "21. Testing"
+        "1. Introduction",
+        "2. Strings",
+        "3. Data Structures",
+        "4. Variables & Data Types",
+        "5. Conditional Statements",
+        "6. Loops",
+        "7. Arrays",
+        "8. Functions",
+        "9. Decorators",
+        "10. Modules & Packages",
+        "11. Object-Oriented Programming",
+        "12. Exception Handling",
+        "13. Multithreading"
       ]
     },
     "java-spring-boot": {
