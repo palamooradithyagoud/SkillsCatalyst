@@ -1,13 +1,101 @@
 import { supabase } from "@/lib/supabase";
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
 
-export async function sendMentorMessage(prompt: string) {
+export interface MentorConversation {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+}
+
+export interface MentorMessage {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export async function fetchMentorConversations(
+  limit: number = 20,
+  offset: number = 0,
+): Promise<{ conversations: MentorConversation[]; total: number }> {
   try {
     const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/conversations?limit=${limit}&offset=${offset}`, {
+      headers: { ...authHeaders },
+    });
+    if (!res.ok) throw new Error("Failed to load conversations");
+    return await res.json();
+  } catch (err) {
+    console.warn("fetchMentorConversations error:", err);
+    return { conversations: [], total: 0 };
+  }
+}
+
+export async function createMentorConversation(title?: string): Promise<MentorConversation | null> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/conversations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify(title ? { title } : {}),
+    });
+    if (!res.ok) throw new Error("Failed to create conversation");
+    return await res.json();
+  } catch (err) {
+    console.error("createMentorConversation error:", err);
+    return null;
+  }
+}
+
+export async function fetchMentorConversationDetail(
+  conversationId: string,
+): Promise<{ conversation: MentorConversation; messages: MentorMessage[] } | null> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/conversations/${conversationId}`, {
+      headers: { ...authHeaders },
+    });
+    if (!res.ok) throw new Error("Failed to load conversation");
+    return await res.json();
+  } catch (err) {
+    console.error("fetchMentorConversationDetail error:", err);
+    return null;
+  }
+}
+
+export async function deleteMentorConversation(conversationId: string): Promise<boolean> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    const res = await apiFetch(`${API_BASE}/api/ai-mentor/conversations/${conversationId}`, {
+      method: "DELETE",
+      headers: { ...authHeaders },
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("deleteMentorConversation error:", err);
+    return false;
+  }
+}
+
+export async function sendMentorMessage(
+  prompt: string,
+  conversationId?: string,
+): Promise<{ reply: string; conversation_id?: string; message_id?: string }> {
+  try {
+    const authHeaders = await getAuthHeaders();
+    const body: Record<string, any> = { message: prompt, prompt };
+    if (conversationId) {
+      body.conversation_id = conversationId;
+    }
     const res = await apiFetch(`${API_BASE}/api/ai-mentor/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error("Failed to reach AI mentor");
     return await res.json();

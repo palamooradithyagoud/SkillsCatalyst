@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+from typing import Optional
 from groq import (
     Groq,
     Timeout,
@@ -60,11 +61,12 @@ FALLBACK_MODELS = [m for m in FALLBACK_MODELS if m]
 
 
 def chat_with_groq(
-    prompt: str,
+    prompt: Optional[str] = None,
     system_prompt: str = "You are SkillsCatalyst AI Mentor, an expert career coach and tech interviewer.",
+    messages: Optional[list] = None,
 ) -> str:
     """
-    Sends a prompt to the Groq LLM and returns the text response.
+    Sends a prompt or structured message list to the Groq LLM and returns the text response.
     Attempts candidate models in order until one succeeds.
 
     Failure behaviour:
@@ -99,15 +101,20 @@ def chat_with_groq(
 
         model_start = time.monotonic()
         try:
+            if messages is not None:
+                completion_messages = messages
+            else:
+                completion_messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": prompt or ""},
+                ]
+            prompt_len = sum(len(m.get("content", "")) for m in completion_messages)
             logger.debug(
                 f"Sending prompt to Groq model '{model_name}' "
-                f"(prompt_length={len(prompt)} chars)."
+                f"(prompt_length={prompt_len} chars, turns={len(completion_messages)})."
             )
             response = groq_client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user",   "content": prompt},
-                ],
+                messages=completion_messages,
                 model=model_name,
                 temperature=0.6,
                 max_tokens=8192,

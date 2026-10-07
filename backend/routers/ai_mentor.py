@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 from typing import Optional, Dict
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
 from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG
@@ -13,6 +13,20 @@ from backend.services.ai_mentor import (
     MentorContext,
     build_student_mentor_context,
     get_formatted_student_context_for_mentor,
+    ConversationResponse,
+    ConversationListResponse,
+    ConversationDetailResponse,
+    ConversationCreateRequest,
+    MentorChatRequest,
+    MentorChatResponse,
+    create_conversation,
+    get_conversation,
+    list_conversations,
+    delete_conversation,
+    save_message,
+    get_recent_messages,
+    derive_conversation_title,
+    build_mentor_llm_messages,
 )
 
 logger = logging.getLogger(__name__)
@@ -200,16 +214,104 @@ async def get_mentor_context_endpoint(
     return await build_student_mentor_context(current_user_id)
 
 
-@router.post("/chat", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
+# ---------------------------------------------------------------------------
+# Phase 2: Persistent Conversation Management Endpoints
+# ---------------------------------------------------------------------------
+
+@router.get("/conversations", response_model=ConversationListResponse)
+async def list_user_conversations(
+    limit: int = Query(20, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Lists conversations owned by the authenticated student.
+    Strictly isolated by authenticated JWT identity with pagination.
+    """
+    items, total = list_conversations(current_user_id, limit=limit, offset=offset)
+    return {
+        "conversations": items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
+async def create_new_conversation(
+    req: ConversationCreateRequest = ConversationCreateRequest(),
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Creates a new conversation record owned by the authenticated student.
+    """
+    conv = create_conversation(current_user_id, title=req.title)
+    if not conv:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create conversation.",
+        )
+    return conv
+
+
+@router.get("/conversations/{conversation_id}", response_model=ConversationDetailResponse)
+async def get_conversation_detail(
+    conversation_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Retrieves a conversation and its recent messages.
+    Strictly enforces ownership; returns 404 if not found or unauthorized (IDOR defense).
+    """
+    if not is_valid_uuid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
+
+    conv = get_conversation(current_user_id, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
+
+    messages = get_recent_messages(current_user_id, conversation_id, limit=50)
+    return {
+        "conversation": conv,
+        "messages": messages,
+    }
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation_endpoint(
+    conversation_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Deletes a conversation and cascades all messages.
+    Strictly enforces ownership; returns 404 if not found or unauthorized.
+    """
+    if not is_valid_uuid(conversation_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
+
+    deleted = delete_conversation(current_user_id, conversation_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found or access denied.")
+
+    return {"success": True, "message": "Conversation deleted successfully."}
+
+
+# ---------------------------------------------------------------------------
+# AI Mentor Chat Endpoint (Phase 1 + Phase 2 Persistent Memory)
+# ---------------------------------------------------------------------------
+
+@router.post("/chat", response_model=MentorChatResponse, dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
 async def chat_mentor(
-    req: PromptRequest,
+    req: MentorChatRequest,
     current_user_id: str = Depends(get_session_or_user_id),
     entitlement: EntitlementDetailDTO = Depends(require_entitlement(FeatureKey.AI_MENTOR.value)),
 ):
     """
-    Skills-only AI mentor chat endpoint.
-    Guards against quota exhaustion and off-topic queries before hitting the LLM.
-    Enriches system prompt with aggregated student background when authenticated.
+    Skills-only AI mentor chat endpoint with persistent conversation memory.
+    - Authenticated users: persist user & assistant messages in Supabase, load bounded multi-turn context.
+    - Unauthenticated guests: fall back to stateless chat without database persistence.
+    - Guards against quota exhaustion and off-topic queries before hitting the LLM.
+    - Enriches system prompt with aggregated student background when authenticated.
     """
     if entitlement.limit is not None:
         usage = get_ai_mentor_usage(current_user_id)
@@ -223,16 +325,41 @@ async def chat_mentor(
                 },
             )
 
-    logger.info(f"AI mentor chat request (prompt length={len(req.prompt)}).")
+    prompt_text = req.get_text()
+    logger.info(f"AI mentor chat request (prompt length={len(prompt_text)}, conv={req.conversation_id}).")
 
     # Off-topic guard: fast-path check before calling the LLM (saves API cost)
-    if _is_offtopic(req.prompt):
-        logger.info(f"Off-topic prompt detected, returning redirect message. Prompt: '{req.prompt[:80]}'")
-        return {"reply": _OFFTOPIC_REPLY}
+    if _is_offtopic(prompt_text):
+        logger.info(f"Off-topic prompt detected, returning redirect message. Prompt: '{prompt_text[:80]}'")
+        return MentorChatResponse(reply=_OFFTOPIC_REPLY, conversation_id=req.conversation_id, message_id=None)
 
-    # Enrich system prompt with authenticated student context (fail-safe)
-    effective_system_prompt = _SKILLS_SYSTEM_PROMPT
+    # -----------------------------------------------------------------------
+    # Authenticated Student Path: Persistent Conversation Memory & Multi-Turn
+    # -----------------------------------------------------------------------
     if is_valid_uuid(current_user_id):
+        conv_id = req.conversation_id
+        if conv_id:
+            if not is_valid_uuid(conv_id):
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
+            existing_conv = get_conversation(current_user_id, conv_id)
+            if not existing_conv:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
+        else:
+            # Auto-create conversation with clean deterministic title from first message
+            auto_title = derive_conversation_title(prompt_text)
+            new_conv = create_conversation(current_user_id, title=auto_title)
+            conv_id = new_conv["id"] if new_conv else None
+
+        # 1. Persist user message to database (safeguard against LLM failure)
+        user_msg = None
+        prior_messages = []
+        if conv_id:
+            user_msg = save_message(current_user_id, conv_id, "user", prompt_text)
+            # Retrieve bounded recent history (excluding the current user message just inserted)
+            prior_messages = get_recent_messages(current_user_id, conv_id, limit=15)
+
+        # 2. Enrich system prompt with Phase 1 authenticated student context
+        effective_system_prompt = _SKILLS_SYSTEM_PROMPT
         try:
             formatted_context = await get_formatted_student_context_for_mentor(current_user_id)
             if formatted_context:
@@ -240,18 +367,59 @@ async def chat_mentor(
         except Exception as ctx_err:
             logger.warning(f"Error fetching student context for mentor chat: {ctx_err}")
 
-    response = chat_with_groq(req.prompt, system_prompt=effective_system_prompt)
+        # 3. Assemble bounded multi-turn LLM message structure
+        current_msg_id = user_msg.get("id") if user_msg else None
+        llm_messages = build_mentor_llm_messages(
+            system_prompt=effective_system_prompt,
+            history_messages=prior_messages,
+            current_user_message=prompt_text,
+            current_message_id=current_msg_id,
+        )
+
+        # 4. Invoke LLM provider
+        try:
+            response = chat_with_groq(
+                prompt=prompt_text,
+                system_prompt=effective_system_prompt,
+                messages=llm_messages,
+            )
+        except TypeError:
+            response = chat_with_groq(prompt_text, system_prompt=effective_system_prompt)
+
+        # 5. Handle LLM failure: User message preserved, NO fake assistant message written
+        if not response or response == _AI_UNAVAILABLE_MSG:
+            logger.warning("Groq call failed or returned unavailable message; user message preserved, no assistant response saved.")
+            return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=conv_id, message_id=None)
+
+        if entitlement.limit is not None:
+            increment_ai_mentor_usage(current_user_id)
+
+        # 6. Secondary guard: check LLM reply
+        if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
+            logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
+            response = _OFFTOPIC_REPLY
+
+        # 7. Persist assistant response to database
+        asst_msg_id = None
+        if conv_id and response != _OFFTOPIC_REPLY:
+            asst_msg = save_message(current_user_id, conv_id, "assistant", response)
+            asst_msg_id = asst_msg.get("id") if asst_msg else None
+
+        return MentorChatResponse(reply=response, conversation_id=conv_id, message_id=asst_msg_id)
+
+    # -----------------------------------------------------------------------
+    # Guest Path: Stateless fallback without persistence
+    # -----------------------------------------------------------------------
+    response = chat_with_groq(prompt=prompt_text, system_prompt=_SKILLS_SYSTEM_PROMPT)
 
     if entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
 
-    # Secondary guard: if LLM somehow wandered off-topic, check its reply
-    # (very rare with a strict system prompt, but good defence-in-depth)
     if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
         logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
-        return {"reply": _OFFTOPIC_REPLY}
+        return MentorChatResponse(reply=_OFFTOPIC_REPLY, conversation_id=None, message_id=None)
 
-    return {"reply": response}
+    return MentorChatResponse(reply=response, conversation_id=None, message_id=None)
 
 
 @router.post("/review-resume", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
