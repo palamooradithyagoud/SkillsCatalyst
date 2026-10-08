@@ -34,30 +34,338 @@ import { PromptInput } from "@/components/ui/ai-chat-input";
 // ----------------------------------------------------------------------
 const PLATFORM_PROMPTS = [
   {
-    icon: "⚡",
-    label: "System Architecture & Distributed Patterns",
+    icon: "✨",
+    label: "Explore SkillsCatalyst",
     prompt:
-      "How do high-scale production systems implement distributed idempotency and transactional outbox patterns?",
+      "Can you give me an overview of SkillsCatalyst? What roadmaps, SkillBits, practice tests, and career tools are available to help me grow?",
   },
   {
-    icon: "🎯",
-    label: "Senior Engineer (L5) Promotion & Career Roadmap",
+    icon: "🧭",
+    label: "Know where you are",
     prompt:
-      "What tangible technical scope, system ownership, and evidence distinguish a Mid-level engineer from a Senior (L5) candidate?",
+      "Help me evaluate where I currently stand in my tech journey: assess my current skill set, strengths, and areas to improve.",
   },
   {
-    icon: "🧠",
-    label: "Technical Interview & Dynamic Programming Mental Models",
+    icon: "🚀",
+    label: "What to next",
     prompt:
-      "What mental models make graph traversals and dynamic programming state transitions intuitive under interview pressure?",
-  },
-  {
-    icon: "🎬",
-    label: "SkillBits Insights: Microservices Migration Traps",
-    prompt:
-      "What are the most critical architectural pitfalls and data-consistency traps engineers face when breaking monoliths into microservices?",
+      "Based on where I am right now, what concrete steps and topics should I focus on next to progress faster?",
   },
 ];
+
+// ----------------------------------------------------------------------
+// Markdown Block & Inline Formatters
+// ----------------------------------------------------------------------
+function renderInlineMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+
+  // Tokenize regex matching inline code, bold, italic, and links
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, i) => {
+    if (!part) return null;
+    if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
+      return (
+        <code
+          key={i}
+          className="px-1.5 py-0.5 mx-0.5 rounded-md bg-purple-100/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-mono text-[12px] border border-purple-200/50 dark:border-purple-800/40"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      return (
+        <strong key={i} className="font-semibold text-neutral-900 dark:text-neutral-100">
+          {renderInlineMarkdown(part.slice(2, -2))}
+        </strong>
+      );
+    }
+    if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
+      return (
+        <em key={i} className="italic text-neutral-800 dark:text-neutral-200">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={i}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-purple-600 dark:text-purple-400 hover:underline underline-offset-2 font-medium"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
+function renderMarkdownBlocks(content: string): React.ReactNode {
+  const lines = content.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+
+  const isUnordered = (str: string) => /^[*-]\s+/.test(str);
+  const isOrdered = (str: string) => /^\d+\.\s+/.test(str);
+
+  while (i < lines.length) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    // 1. Empty lines
+    if (!trimmed) {
+      nodes.push(<div key={`empty-${i}`} className="h-1.5" />);
+      i++;
+      continue;
+    }
+
+    // 2. Horizontal divider
+    if (trimmed === "---" || trimmed === "***" || trimmed === "___") {
+      nodes.push(
+        <hr
+          key={`hr-${i}`}
+          className="my-3.5 border-t border-neutral-200 dark:border-neutral-800"
+        />
+      );
+      i++;
+      continue;
+    }
+
+    // 3. Headings
+    if (trimmed.startsWith("# ")) {
+      nodes.push(
+        <h1
+          key={`h1-${i}`}
+          className="text-lg md:text-xl font-bold text-neutral-950 dark:text-white mt-4 mb-2"
+        >
+          {renderInlineMarkdown(trimmed.slice(2).trim())}
+        </h1>
+      );
+      i++;
+      continue;
+    }
+    if (trimmed.startsWith("## ")) {
+      nodes.push(
+        <h2
+          key={`h2-${i}`}
+          className="text-base md:text-lg font-bold text-neutral-950 dark:text-white mt-4.5 mb-2 pb-1.5 border-b border-neutral-200 dark:border-neutral-800"
+        >
+          {renderInlineMarkdown(trimmed.slice(3).trim())}
+        </h2>
+      );
+      i++;
+      continue;
+    }
+    if (trimmed.startsWith("### ")) {
+      nodes.push(
+        <h3
+          key={`h3-${i}`}
+          className="text-sm md:text-base font-semibold text-neutral-950 dark:text-white mt-3.5 mb-1.5"
+        >
+          {renderInlineMarkdown(trimmed.slice(4).trim())}
+        </h3>
+      );
+      i++;
+      continue;
+    }
+    if (trimmed.startsWith("#### ")) {
+      nodes.push(
+        <h4
+          key={`h4-${i}`}
+          className="text-xs md:text-sm font-semibold text-neutral-900 dark:text-neutral-100 mt-2.5 mb-1"
+        >
+          {renderInlineMarkdown(trimmed.slice(5).trim())}
+        </h4>
+      );
+      i++;
+      continue;
+    }
+
+    // 4. Tables (consecutive lines starting with '|')
+    if (trimmed.startsWith("|")) {
+      const tableLines: string[] = [];
+      const tableStartIndex = i;
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+
+      const rows = tableLines.map((tl) =>
+        tl
+          .split("|")
+          .map((c) => c.trim())
+          .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+      );
+
+      const isDelimiter = (row: string[]) =>
+        row.length > 0 && row.every((cell) => /^:?-+:?$/.test(cell.replace(/\s+/g, "")));
+
+      let headerRow: string[] | null = null;
+      let bodyRows: string[][] = [];
+
+      if (rows.length >= 2 && isDelimiter(rows[1])) {
+        headerRow = rows[0];
+        bodyRows = rows.slice(2);
+      } else {
+        bodyRows = rows;
+      }
+
+      nodes.push(
+        <div
+          key={`table-${tableStartIndex}`}
+          className="my-3.5 overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/60 shadow-2xs"
+        >
+          <table className="w-full text-left text-xs border-collapse">
+            {headerRow && (
+              <thead>
+                <tr className="bg-neutral-100/90 dark:bg-neutral-800/80 text-neutral-900 dark:text-neutral-100 border-b border-neutral-200 dark:border-neutral-800 font-semibold">
+                  {headerRow.map((cell, ci) => (
+                    <th key={ci} className="px-3.5 py-2.5 whitespace-nowrap">
+                      {renderInlineMarkdown(cell)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody className="divide-y divide-neutral-200/70 dark:divide-neutral-800/70">
+              {bodyRows.map((row, ri) => (
+                <tr
+                  key={ri}
+                  className="hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors"
+                >
+                  {row.map((cell, ci) => (
+                    <td
+                      key={ci}
+                      className="px-3.5 py-2.5 text-neutral-800 dark:text-neutral-200 align-top leading-relaxed"
+                    >
+                      {renderInlineMarkdown(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // 5. Blockquotes (lines starting with '>')
+    if (trimmed.startsWith(">")) {
+      const quoteLines: string[] = [];
+      const quoteStartIndex = i;
+      while (i < lines.length && lines[i].trim().startsWith(">")) {
+        quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+        i++;
+      }
+      nodes.push(
+        <blockquote
+          key={`quote-${quoteStartIndex}`}
+          className="my-2.5 pl-3.5 border-l-2 border-purple-500 bg-purple-50/40 dark:bg-purple-950/20 py-2 rounded-r-lg text-neutral-700 dark:text-neutral-300 italic text-xs leading-relaxed"
+        >
+          {quoteLines.map((ql, qIdx) => (
+            <p key={qIdx}>{renderInlineMarkdown(ql)}</p>
+          ))}
+        </blockquote>
+      );
+      continue;
+    }
+
+    // 6. Unordered Lists (lines starting with '- ' or '* ')
+    if (isUnordered(trimmed)) {
+      const listItems: string[] = [];
+      const listStartIndex = i;
+      while (i < lines.length && isUnordered(lines[i].trim())) {
+        listItems.push(lines[i].trim().replace(/^[*-]\s+/, ""));
+        i++;
+      }
+      nodes.push(
+        <ul key={`ul-${listStartIndex}`} className="my-2 space-y-1.5 pl-0.5">
+          {listItems.map((item, liIdx) => (
+            <li
+              key={liIdx}
+              className="flex items-start gap-2 text-neutral-800 dark:text-neutral-200 text-xs md:text-[13px] leading-relaxed"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0" />
+              <span className="flex-1 min-w-0">{renderInlineMarkdown(item)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // 7. Ordered Lists (lines starting with '1. ', '2. ', etc.)
+    if (isOrdered(trimmed)) {
+      const listItems: string[] = [];
+      const listStartIndex = i;
+      while (i < lines.length && isOrdered(lines[i].trim())) {
+        listItems.push(lines[i].trim().replace(/^\d+\.\s+/, ""));
+        i++;
+      }
+      nodes.push(
+        <ol key={`ol-${listStartIndex}`} className="my-2 space-y-1.5 pl-0.5">
+          {listItems.map((item, liIdx) => (
+            <li
+              key={liIdx}
+              className="flex items-start gap-2 text-neutral-800 dark:text-neutral-200 text-xs md:text-[13px] leading-relaxed"
+            >
+              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 mt-0.5 shrink-0 min-w-4 select-none">
+                {liIdx + 1}.
+              </span>
+              <span className="flex-1 min-w-0">{renderInlineMarkdown(item)}</span>
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // 8. Regular Paragraphs
+    const pLines: string[] = [];
+    const pStartIndex = i;
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !lines[i].trim().startsWith("#") &&
+      !lines[i].trim().startsWith("|") &&
+      !lines[i].trim().startsWith(">") &&
+      !isUnordered(lines[i].trim()) &&
+      !isOrdered(lines[i].trim()) &&
+      lines[i].trim() !== "---" &&
+      lines[i].trim() !== "***" &&
+      lines[i].trim() !== "___"
+    ) {
+      pLines.push(lines[i].trim());
+      i++;
+    }
+
+    if (pLines.length > 0) {
+      nodes.push(
+        <p
+          key={`p-${pStartIndex}`}
+          className="text-neutral-800 dark:text-neutral-200 leading-relaxed text-xs md:text-[13.5px] my-1.5"
+        >
+          {pLines.map((pl, pIdx) => (
+            <React.Fragment key={pIdx}>
+              {renderInlineMarkdown(pl)}
+              {pIdx < pLines.length - 1 ? <br /> : null}
+            </React.Fragment>
+          ))}
+        </p>
+      );
+    }
+  }
+
+  return <>{nodes}</>;
+}
 
 // ----------------------------------------------------------------------
 // Markdown Code Block & Message Renderer
@@ -74,7 +382,7 @@ function MessageContent({ content }: { content: string }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
 
   return (
-    <div className="space-y-3 leading-relaxed text-[13.5px]">
+    <div className="space-y-2 leading-relaxed text-[13.5px]">
       {parts.map((part, index) => {
         if (part.startsWith("```") && part.endsWith("```")) {
           const lines = part.slice(3, -3).trim().split("\n");
@@ -116,11 +424,7 @@ function MessageContent({ content }: { content: string }) {
           );
         }
 
-        return (
-          <div key={index} className="whitespace-pre-wrap break-words">
-            {part}
-          </div>
-        );
+        return <div key={index}>{renderMarkdownBlocks(part)}</div>;
       })}
     </div>
   );
@@ -207,10 +511,20 @@ export default function AIMentorPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Auto-detect mobile screen width on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
+
   const handleStartNewConversation = () => {
     setActiveConversationId(null);
     setMessages([]);
     setErrorMsg(null);
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
@@ -289,17 +603,26 @@ export default function AIMentorPage() {
   const previousConversations = conversations.filter((c) => !isToday(c.updated_at || c.created_at));
 
   return (
-    <div className="flex h-screen w-screen bg-[#fafafa] dark:bg-[#0c0d10] text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans select-text">
-      {/* ── Left Sidebar: AI Catalyst ── */}
+    <div className="flex h-screen w-screen bg-[#fafafa] dark:bg-[#0c0d10] text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans select-text relative">
+      {/* Mobile Backdrop Overlay when sidebar is open */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Left Sidebar: AI Catalyst (Overlaps main page on mobile, in-flow on desktop) ── */}
       <aside
-        className={`border-r border-neutral-200/80 dark:border-neutral-800/80 bg-white dark:bg-[#101115] flex flex-col shrink-0 transition-all duration-300 ease-in-out relative z-20 overflow-x-hidden ${
+        className={`border-r border-neutral-200/80 dark:border-neutral-800/80 bg-white dark:bg-[#101115] flex flex-col shrink-0 transition-all duration-300 ease-in-out z-50 md:z-20 overflow-x-hidden ${
           isSidebarOpen
-            ? "w-64 md:w-68 opacity-100"
-            : "w-0 opacity-0 -translate-x-full border-r-0 pointer-events-none overflow-hidden"
+            ? "fixed md:relative inset-y-0 left-0 w-[280px] max-w-[80vw] md:w-64 md:max-w-none opacity-100 translate-x-0 shadow-2xl md:shadow-none"
+            : "fixed md:relative inset-y-0 left-0 -translate-x-full md:w-0 md:translate-x-0 opacity-0 pointer-events-none border-r-0 overflow-hidden"
         }`}
       >
         {/* Header: Back Button + AI Catalyst Name in Solid PURPLE + Collapse Toggle */}
-        <div className="h-16 px-4 border-b border-neutral-100 dark:border-neutral-850 flex items-center justify-between gap-2 min-w-[256px]">
+        <div className="h-14 sm:h-16 px-4 border-b border-neutral-100 dark:border-neutral-850 flex items-center justify-between gap-2 min-w-[240px]">
           <div className="flex items-center gap-2.5 min-w-0">
             {/* Back to Dashboard */}
             <Link
@@ -335,7 +658,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* Start New Chat Action Button */}
-        <div className="p-3.5 pb-2 min-w-[256px]">
+        <div className="p-3.5 pb-2 min-w-[240px]">
           <button
             type="button"
             onClick={handleStartNewConversation}
@@ -347,7 +670,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* Chat History Accordion Sections */}
-        <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-4 min-w-[256px] text-xs">
+        <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-4 min-w-[240px] text-xs">
           {/* Section: PINNED */}
           <div>
             <button
@@ -387,7 +710,12 @@ export default function AIMentorPage() {
                     return (
                       <div
                         key={conv.id}
-                        onClick={() => setActiveConversationId(conv.id)}
+                        onClick={() => {
+                          setActiveConversationId(conv.id);
+                          if (typeof window !== "undefined" && window.innerWidth < 768) {
+                            setIsSidebarOpen(false);
+                          }
+                        }}
                         className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-xs ${
                           isActive
                             ? "bg-purple-600 text-white font-medium shadow-xs"
@@ -436,7 +764,12 @@ export default function AIMentorPage() {
                     return (
                       <div
                         key={conv.id}
-                        onClick={() => setActiveConversationId(conv.id)}
+                        onClick={() => {
+                          setActiveConversationId(conv.id);
+                          if (typeof window !== "undefined" && window.innerWidth < 768) {
+                            setIsSidebarOpen(false);
+                          }
+                        }}
                         className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-xs ${
                           isActive
                             ? "bg-purple-600 text-white font-medium shadow-xs"
@@ -465,7 +798,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-neutral-100 dark:border-neutral-850 min-w-[256px]">
+        <div className="p-3 border-t border-neutral-100 dark:border-neutral-850 min-w-[240px]">
           {userId ? (
             <div className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
               <span className="truncate font-medium">{session?.email}</span>
@@ -483,44 +816,46 @@ export default function AIMentorPage() {
       </aside>
 
       {/* ── Main Chat Area ── */}
-      <main className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#0c0d10] relative">
-        {/* Top Header when sidebar is closed */}
-        {!isSidebarOpen && (
-          <header className="h-14 px-4 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-850 shrink-0">
-            <div className="flex items-center gap-2.5">
-              <Link
-                href="/dashboard"
-                className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
-                title="Back to Dashboard"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors cursor-pointer mr-1"
-                title="Open sidebar"
-              >
-                <PanelLeft className="h-4 w-4" />
-              </button>
-              <span className="font-bold text-base tracking-tight text-purple-600 dark:text-purple-400 select-none">
-                AI Catalyst
-              </span>
-            </div>
-            {activeConversationId && (
-              <button
-                type="button"
-                onClick={handleStartNewConversation}
-                className="text-xs font-medium px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
-              >
-                New Chat
-              </button>
-            )}
-          </header>
-        )}
+      <main className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#0c0d10] relative w-full">
+        {/* Top Header */}
+        <header
+          className={`h-14 px-4 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-850 shrink-0 ${
+            isSidebarOpen ? "hidden md:hidden" : "flex"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/dashboard"
+              className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors cursor-pointer mr-1"
+              title="Open sidebar"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+            <span className="font-bold text-base tracking-tight text-purple-600 dark:text-purple-400 select-none">
+              AI Catalyst
+            </span>
+          </div>
+          {activeConversationId && (
+            <button
+              type="button"
+              onClick={handleStartNewConversation}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+            >
+              New Chat
+            </button>
+          )}
+        </header>
 
         {/* Content Body: Empty State Hero (TOP-LEFT ALIGNED) OR Message History */}
-        <div className="flex-1 overflow-y-auto px-6 md:px-12 lg:px-16 py-8 flex flex-col">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-12 lg:px-16 py-4 md:py-8 flex flex-col">
           {isLoadingHistory ? (
             <div className="flex items-center justify-center my-auto text-neutral-400 dark:text-neutral-500 text-xs gap-2">
               <RotateCw className="h-4 w-4 animate-spin text-purple-600" />
@@ -528,31 +863,31 @@ export default function AIMentorPage() {
             </div>
           ) : messages.length === 0 ? (
             /* TOP-LEFT ALIGNED GREETING + AUTHENTIC SKILLSCATALYST PROMPTS */
-            <div className="w-full max-w-3xl flex flex-col items-start text-left pt-2 md:pt-6">
+            <div className="w-full max-w-3xl flex flex-col items-start text-left pt-1 md:pt-4">
               {/* Luminous Glowing Orb at Top Left */}
-              <div className="size-12 rounded-full overflow-hidden mb-5 bg-purple-500/10 ring-1 ring-purple-500/25 shadow-sm">
+              <div className="size-9 rounded-full overflow-hidden mb-3 bg-purple-500/10 ring-1 ring-purple-500/25 shadow-xs">
                 <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
               </div>
 
               {/* Greeting Headline - Aligned to Top Left */}
-              <p className="text-xl md:text-2xl text-neutral-500 dark:text-neutral-400 font-normal leading-tight text-left">
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-normal leading-tight text-left">
                 Hi {displayName}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-950 dark:text-white mt-1.5 mb-7 leading-snug text-left">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-950 dark:text-white mt-1 mb-4 leading-snug text-left">
                 What can AI Catalyst help you with?
               </h1>
 
               {/* High-Value SkillsCatalyst Context Prompt Pills (Top-Left Stack) */}
-              <div className="flex flex-col items-start gap-2.5 w-full">
+              <div className="flex flex-col items-start gap-2 w-full">
                 {PLATFORM_PROMPTS.map((item, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSendMessage(item.prompt)}
-                    className="flex items-center gap-3 px-4.5 py-2.5 rounded-full bg-neutral-100/90 hover:bg-purple-50 dark:bg-neutral-850 dark:hover:bg-purple-950/40 text-xs md:text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-purple-700 dark:hover:text-purple-300 transition-all cursor-pointer border border-transparent hover:border-purple-300 dark:hover:border-purple-800 shadow-2xs hover:scale-[1.008] active:scale-[0.99] text-left"
+                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-neutral-100/90 hover:bg-purple-50 dark:bg-neutral-850 dark:hover:bg-purple-950/40 text-xs font-medium text-neutral-800 dark:text-neutral-200 hover:text-purple-700 dark:hover:text-purple-300 transition-all cursor-pointer border border-transparent hover:border-purple-300 dark:hover:border-purple-800 shadow-2xs hover:scale-[1.008] active:scale-[0.99] text-left max-w-full"
                   >
-                    <span className="text-base select-none">{item.icon}</span>
-                    <span>{item.label}</span>
+                    <span className="text-sm select-none shrink-0">{item.icon}</span>
+                    <span className="truncate">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -565,8 +900,8 @@ export default function AIMentorPage() {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3.5 max-w-2xl ${
-                      isUser ? "ml-auto justify-end" : "mr-auto justify-start"
+                    className={`flex gap-3.5 ${
+                      isUser ? "max-w-xl ml-auto justify-end" : "w-full max-w-3xl mr-auto justify-start"
                     }`}
                   >
                     {/* Assistant Avatar in Purple Ring */}
@@ -578,13 +913,19 @@ export default function AIMentorPage() {
 
                     {/* Bubble */}
                     <div
-                      className={`rounded-2xl px-4 py-3 leading-relaxed break-words ${
+                      className={`px-4.5 py-3 leading-relaxed break-words shadow-2xs ${
                         isUser
-                          ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-normal shadow-2xs"
-                          : "bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-2xs"
+                          ? "rounded-2xl rounded-tr-none bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-normal"
+                          : "flex-1 min-w-0 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100"
                       }`}
                     >
-                      <MessageContent content={msg.content} />
+                      {isUser ? (
+                        <div className="whitespace-pre-wrap break-words text-white dark:text-neutral-950 text-[13.5px] leading-relaxed">
+                          {msg.content}
+                        </div>
+                      ) : (
+                        <MessageContent content={msg.content} />
+                      )}
                     </div>
 
                     {/* User Avatar */}
