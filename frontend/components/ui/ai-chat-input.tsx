@@ -918,9 +918,9 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
             }}
             className={cn(
               "relative w-full border bg-white dark:bg-[#111113] shadow-xs dark:shadow-md transition-colors z-10",
-              "border-neutral-300 dark:border-neutral-800",
-              "focus-within:border-neutral-900 dark:focus-within:border-neutral-500",
-              "focus-within:ring-2 focus-within:ring-neutral-900/10 dark:focus-within:ring-white/10",
+              "border-neutral-200 dark:border-neutral-800",
+              "focus-within:border-purple-500 dark:focus-within:border-purple-500",
+              "focus-within:ring-2 focus-within:ring-purple-500/10",
               expanded ? "cursor-text" : "cursor-default"
             )}
           >
@@ -999,7 +999,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
                   : "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
               }}
               className={cn(
-                "absolute inset-x-0 top-0 z-[1] cursor-text pl-4 pr-12 py-[15px] text-left text-sm font-normal leading-[17px]",
+                "absolute inset-x-0 top-0 z-[1] cursor-text pl-4 pr-12 py-[15px] text-left text-sm font-normal leading-[17px] truncate whitespace-nowrap",
                 "text-neutral-500 dark:text-neutral-400 outline-none",
                 !expanded
                   ? "opacity-100 scale-100 translate-y-0"
@@ -1165,8 +1165,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
               style={{ borderRadius: 9999 }}
               className={cn(
                 "absolute right-2 bottom-2 z-[10] flex h-8 w-8 items-center justify-center outline-none cursor-pointer transition-all duration-300",
-                "bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105 active:scale-95",
-                "dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                "bg-purple-600 text-white hover:bg-purple-700 hover:scale-105 active:scale-95 shadow-xs"
               )}
             >
               <span className="relative flex h-full w-full items-center justify-center">

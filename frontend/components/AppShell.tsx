@@ -15,7 +15,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthPage = pathname === "/login";
   const isLandingPage = pathname === "/";
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
-  if (isAuthPage || isLandingPage || isAdminPage) {
+  const isAIMentorPage = pathname === "/ai-mentor" || pathname.startsWith("/ai-mentor");
+  if (isAuthPage || isLandingPage || isAdminPage || isAIMentorPage) {
     return (
       <PricingModalProvider>
         <NotificationProvider>
@@ -25,6 +26,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ? "bg-[#06070d] text-white"
                 : isAdminPage
                 ? "bg-[#0B0D17] text-white"
+                : isAIMentorPage
+                ? "bg-white dark:bg-[#0a0a0c] text-neutral-900 dark:text-neutral-100"
                 : "bg-white text-[#18191F]"
             }`}
           >
