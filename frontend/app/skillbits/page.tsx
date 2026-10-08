@@ -242,7 +242,7 @@ export default function SkillBitsPage() {
   // ── LOADING STATE ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white space-y-4">
+      <div className="h-[100dvh] w-full bg-white dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-white space-y-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center">
@@ -258,7 +258,7 @@ export default function SkillBitsPage() {
             </div>
           </div>
         </div>
-        <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
           Loading SkillBits...
         </p>
       </div>
@@ -268,13 +268,13 @@ export default function SkillBitsPage() {
   // ── ERROR STATE ───────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white p-6 space-y-4 text-center">
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-full text-rose-400">
+      <div className="h-[100dvh] w-full bg-white dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-white p-6 space-y-4 text-center">
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-full text-rose-500 dark:text-rose-400">
           <AlertCircle className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-base font-bold text-white">Unable to Load SkillBits</h2>
-          <p className="text-xs text-slate-400 max-w-sm">{error}</p>
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">Unable to Load SkillBits</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm">{error}</p>
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button
@@ -285,7 +285,7 @@ export default function SkillBitsPage() {
           </button>
           <button
             onClick={handleBack}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-all"
           >
             Go Back
           </button>
@@ -297,15 +297,15 @@ export default function SkillBitsPage() {
   // ── EMPTY STATE ───────────────────────────────────────────────────────────
   if (skillbits.length === 0) {
     return (
-      <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white p-6 space-y-4 text-center">
-        <div className="p-4 bg-slate-900 border border-slate-800 rounded-full text-purple-400">
+      <div className="h-[100dvh] w-full bg-white dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-white p-6 space-y-4 text-center">
+        <div className="p-4 bg-purple-50 dark:bg-slate-900 border border-purple-100 dark:border-slate-800 rounded-full text-purple-600 dark:text-purple-400">
           {hasActiveFilters ? <SlidersHorizontal className="w-8 h-8" /> : <Film className="w-8 h-8" />}
         </div>
         <div className="space-y-1">
-          <h2 className="text-base font-bold text-white">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
             {hasActiveFilters ? "No SkillBits Match Filters" : "No SkillBits Available Yet"}
           </h2>
-          <p className="text-xs text-slate-400 max-w-sm">
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm">
             {hasActiveFilters
               ? "We couldn't find any short-form lessons matching your current difficulty or topic filter."
               : "Our educators are transcoding fresh micro-learning reels. Check back soon for quick skill breakdowns!"}
@@ -322,7 +322,7 @@ export default function SkillBitsPage() {
           )}
           <button
             onClick={handleBack}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-all"
           >
             Return to Explore
           </button>
@@ -333,25 +333,31 @@ export default function SkillBitsPage() {
 
   // ── VERTICAL FEED ─────────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-white dark:bg-black overflow-hidden flex items-center justify-center">
       {/* DESKTOP SIDE NAVIGATION HINTS */}
       <div className="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-3 z-30">
         <button
-          onClick={() => scrollToIndex(activeIndex - 1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            scrollToIndex(activeIndex - 1);
+          }}
           disabled={activeIndex === 0}
           aria-label="Previous SkillBit"
-          className="p-3 bg-slate-900/80 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 rounded-full text-white backdrop-blur-md transition-all hover:scale-105"
+          className="p-3 bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/10 rounded-full text-slate-800 dark:text-white backdrop-blur-md shadow-md transition-all hover:scale-105"
         >
           <ChevronUp className="w-5 h-5" />
         </button>
-        <span className="text-[11px] font-mono font-medium text-slate-400">
+        <span className="text-[11px] font-mono font-medium text-slate-600 dark:text-slate-400">
           {activeIndex + 1} / {skillbits.length}
         </span>
         <button
-          onClick={() => scrollToIndex(activeIndex + 1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            scrollToIndex(activeIndex + 1);
+          }}
           disabled={activeIndex === skillbits.length - 1}
           aria-label="Next SkillBit"
-          className="p-3 bg-slate-900/80 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 rounded-full text-white backdrop-blur-md transition-all hover:scale-105"
+          className="p-3 bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/10 rounded-full text-slate-800 dark:text-white backdrop-blur-md shadow-md transition-all hover:scale-105"
         >
           <ChevronDown className="w-5 h-5" />
         </button>

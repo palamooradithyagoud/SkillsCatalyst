@@ -260,7 +260,27 @@ export default function SkillBitReelItem({
     setTimeout(() => {
       setShowPlayFeedback(null);
     }, 600);
-  }, [skillbit.duration_seconds, persistProgress]);
+  }, [skillbit.duration_seconds, persistProgress, isMuted]);
+
+  // Desktop Keyboard Shortcut (Space / K) to toggle play/pause when this slide is active
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.code === "Space" || e.key === " " || e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        handleTogglePlay();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isActive, handleTogglePlay]);
 
   const handleEnded = useCallback(() => {
     setIsEnded(true);
@@ -294,16 +314,22 @@ export default function SkillBitReelItem({
 
   return (
     <div
-      className="relative w-full h-full flex items-center justify-center bg-black snap-start select-none overflow-hidden"
+      className="relative w-full h-full flex items-center justify-center bg-white dark:bg-black snap-start select-none overflow-hidden cursor-pointer"
       data-skillbit-id={skillbit.id}
+      onClick={handleTogglePlay}
     >
       {/* 9:16 Video Container */}
-      <div className="relative w-full h-full max-w-[440px] aspect-[9/16] bg-slate-950 flex items-center justify-center overflow-hidden shadow-2xl">
+      <div
+        className="relative w-full h-full max-w-[440px] aspect-[9/16] bg-slate-950 flex items-center justify-center overflow-hidden shadow-2xl rounded-2xl md:border md:border-slate-200/80 md:dark:border-white/10"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleTogglePlay();
+        }}
+      >
         {/* MUX VIDEO PLAYER */}
         {skillbit.playback_id && !videoError ? (
           <div
             className="w-full h-full cursor-pointer relative"
-            onClick={handleTogglePlay}
           >
             <MuxPlayer
               ref={playerRef}
@@ -315,13 +341,14 @@ export default function SkillBitReelItem({
               playsInline
               loop={false}
               thumbnailTime={0}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none"
               primaryColor="#C084FC"
               style={{
                 width: "100%",
                 height: "100%",
                 aspectRatio: "9/16",
                 objectFit: "cover",
+                pointerEvents: "none",
               }}
               onPlay={() => {
                 if (playerRef.current && !isMuted && playerRef.current.muted) {
@@ -444,7 +471,10 @@ export default function SkillBitReelItem({
           <div className="space-y-1.5">
             {skillbit.description && (
               <p
-                onClick={() => setExpandedDesc(!expandedDesc)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedDesc(!expandedDesc);
+                }}
                 className={`text-xs text-slate-300/90 leading-relaxed cursor-pointer drop-shadow ${
                   expandedDesc ? "" : "line-clamp-2"
                 }`}
@@ -496,6 +526,9 @@ export default function SkillBitReelItem({
             <div className="pt-2">
               <a
                 href={learnMore.href}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-purple-950/50 transition-all active:scale-95"
               >
                 <span>{learnMore.label}</span>

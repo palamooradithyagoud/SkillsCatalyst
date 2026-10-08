@@ -45,7 +45,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PricingModalProvider>
       <NotificationProvider>
-        <div className={`flex flex-col min-h-screen w-full relative ${isSkillBits ? "bg-black text-white" : "bg-white text-[#18191F]"}`}>
+        <div className={`flex flex-col min-h-screen w-full relative ${isSkillBits ? "bg-white dark:bg-black text-[#18191F] dark:text-white" : "bg-white text-[#18191F]"}`}>
         {/* Subtle ambient orbs in background (disabled on full-screen SkillBits) */}
         {!isSkillBits && (
           <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -66,7 +66,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <main
             className={`relative z-10 flex-1 ${
               isSkillBits
-                ? "p-0 overflow-hidden h-[100dvh] md:h-[calc(100dvh-3.5rem)] bg-black"
+                ? "p-0 overflow-hidden h-[100dvh] md:h-[calc(100dvh-3.5rem)] bg-white dark:bg-black"
                 : `${isEditProfile ? "pb-28 sm:pb-32 md:pb-28" : isCareer ? "pb-8" : "pb-28 md:pb-8"} p-3.5 sm:p-6 md:p-8 lg:p-10 overflow-y-auto`
             } max-w-full overflow-x-hidden min-w-0`}
           >
