@@ -49,6 +49,7 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isPublicRoute =
     pathname === "/" ||
+    pathname.startsWith("/ai-mentor") ||
     pathname.startsWith("/support") ||
     pathname.startsWith("/verify") ||
     pathname.startsWith("/certificate-preview") ||

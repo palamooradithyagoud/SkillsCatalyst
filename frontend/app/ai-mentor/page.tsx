@@ -6,52 +6,130 @@ import {
   MessageSquare,
   Plus,
   Trash2,
-  Send,
-  Sparkles,
-  Bot,
+  Terminal,
   User,
   AlertCircle,
-  RefreshCw,
   ArrowRight,
   Code2,
   Briefcase,
-  Compass,
-  FileText,
+  Layers,
+  Copy,
+  Check,
+  RotateCw,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   MentorConversation,
   MentorMessage,
   fetchMentorConversations,
-  createMentorConversation,
   fetchMentorConversationDetail,
   deleteMentorConversation,
   sendMentorMessage,
 } from "@/lib/api/career";
+import { PromptInput } from "@/components/ui/ai-chat-input";
 
+// ----------------------------------------------------------------------
+// Curated Starter Prompts (Concrete, high-value technical topics)
+// ----------------------------------------------------------------------
 const STARTER_PROMPTS = [
   {
+    icon: Layers,
+    title: "System Architecture",
+    prompt:
+      "How do high-scale payment platforms implement distributed idempotency and transactional outbox patterns?",
+  },
+  {
     icon: Code2,
-    title: "DSA & Algorithms",
-    prompt: "I want to master Dynamic Programming and Graphs for product company interviews. Where should I begin?",
+    title: "Algorithms & Patterns",
+    prompt:
+      "What mental models make graph traversals and dynamic programming state transitions intuitive under interview pressure?",
   },
   {
-    icon: Compass,
-    title: "System Design",
-    prompt: "How should I structure my preparation for High-Level System Design (HLD) interviews?",
-  },
-  {
-    icon: FileText,
-    title: "Resume & Projects",
-    prompt: "What full-stack projects stand out most to top tech recruiters in 2026?",
+    icon: Terminal,
+    title: "Production Engineering",
+    prompt:
+      "What are the most critical architectural traps engineers face when breaking monoliths into microservices?",
   },
   {
     icon: Briefcase,
-    title: "Career Roadmap",
-    prompt: "Help me create a 6-month timeline to transition into a High-Growth Backend Software Engineer role.",
+    title: "Career Advancement",
+    prompt:
+      "What tangible technical scope and cross-functional evidence distinguish an L4 engineer from a Senior (L5) candidate?",
   },
 ];
 
+// ----------------------------------------------------------------------
+// Lightweight Markdown / Code Formatter (No external library dependency)
+// ----------------------------------------------------------------------
+function MessageContent({ content }: { content: string }) {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const handleCopy = (code: string, idx: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  // Split by markdown fenced code blocks: ```lang ... ```
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="space-y-3 leading-relaxed text-[13px]">
+      {parts.map((part, index) => {
+        if (part.startsWith("```") && part.endsWith("```")) {
+          const lines = part.slice(3, -3).trim().split("\n");
+          const firstLine = lines[0].trim();
+          const hasLang = /^[a-zA-Z0-9_-]+$/.test(firstLine);
+          const language = hasLang ? firstLine : "code";
+          const codeBody = hasLang ? lines.slice(1).join("\n") : lines.join("\n");
+
+          return (
+            <div
+              key={index}
+              className="my-3 overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xs"
+            >
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-neutral-800 bg-neutral-900/90 text-[11px] text-neutral-400 font-mono">
+                <span>{language}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(codeBody, index)}
+                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                  title="Copy code"
+                >
+                  {copiedIndex === index ? (
+                    <>
+                      <Check className="h-3 w-3 text-neutral-300" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <pre className="p-3.5 overflow-x-auto text-xs font-mono text-neutral-200 leading-normal selection:bg-neutral-800">
+                <code>{codeBody}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        // Standard text paragraph formatting
+        return (
+          <div key={index} className="whitespace-pre-wrap break-words">
+            {part}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// Main AI Mentor Page
+// ----------------------------------------------------------------------
 export default function AIMentorPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
@@ -59,13 +137,11 @@ export default function AIMentorPage() {
   const [conversations, setConversations] = useState<MentorConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MentorMessage[]>([]);
-  const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,7 +157,7 @@ export default function AIMentorPage() {
       const res = await fetchMentorConversations(30, 0);
       setConversations(res.conversations || []);
     } catch {
-      // Non-blocking
+      // Graceful fallback
     }
   }, [userId]);
 
@@ -125,19 +201,15 @@ export default function AIMentorPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const handleStartNewConversation = async () => {
+  const handleStartNewConversation = () => {
     setActiveConversationId(null);
     setMessages([]);
-    setInputText("");
     setErrorMsg(null);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
   };
 
   const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this conversation?")) return;
+    if (!confirm("Are you sure you want to delete this session?")) return;
 
     const ok = await deleteMentorConversation(convId);
     if (ok) {
@@ -148,12 +220,22 @@ export default function AIMentorPage() {
     }
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend || inputText).trim();
+  const handleSendMessage = async (
+    textToSend: string,
+    meta?: { model?: string; effort?: string; attachments?: File[] }
+  ) => {
+    const text = textToSend.trim();
     if (!text || isLoading) return;
 
     setErrorMsg(null);
     setIsLoading(true);
+
+    // If attachments were added, summarize in prompt context
+    let formattedText = text;
+    if (meta?.attachments && meta.attachments.length > 0) {
+      const fileNames = meta.attachments.map((f) => f.name).join(", ");
+      formattedText = `${text}\n\n[Attached: ${fileNames}]`;
+    }
 
     // Optimistic user message in UI
     const tempUserMsg: MentorMessage = {
@@ -161,15 +243,14 @@ export default function AIMentorPage() {
       conversation_id: activeConversationId || "temp",
       user_id: userId || "guest",
       role: "user",
-      content: text,
+      content: formattedText,
       created_at: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, tempUserMsg]);
-    setInputText("");
 
     try {
-      const res = await sendMentorMessage(text, activeConversationId || undefined);
+      const res = await sendMentorMessage(formattedText, activeConversationId || undefined);
 
       if (res.conversation_id && !activeConversationId) {
         setActiveConversationId(res.conversation_id);
@@ -187,39 +268,37 @@ export default function AIMentorPage() {
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Failed to receive mentor reply. Please try again.");
+      setErrorMsg(err?.message || "Unable to reach mentor server. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
     }
   };
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-zinc-950 text-zinc-100 overflow-hidden">
-      {/* ── Left Sidebar: Conversations List ── */}
-      <aside className="w-80 border-r border-zinc-800/80 bg-zinc-900/50 flex flex-col shrink-0">
-        <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+    <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-[#0a0a0c] text-neutral-900 dark:text-neutral-100 overflow-hidden transition-colors">
+      {/* ── Left Sidebar: Conversations ── */}
+      <aside className="w-72 lg:w-80 border-r border-neutral-200 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-[#0d0d10] flex flex-col shrink-0 transition-colors">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-neutral-200 dark:border-neutral-800/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Sparkles className="h-4 w-4" />
+            <div className="size-8 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center font-bold text-xs select-none shadow-xs">
+              <Terminal className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 leading-none">AI Mentor</h2>
-              <span className="text-[11px] text-zinc-400">Context Memory Active</span>
+              <h2 className="text-sm font-semibold text-neutral-950 dark:text-white leading-none">
+                AI Mentor
+              </h2>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                Technical Guidance
+              </span>
             </div>
           </div>
           <button
             onClick={handleStartNewConversation}
-            className="p-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors"
-            title="Start New Conversation"
+            className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors shadow-xs cursor-pointer"
+            title="Start new conversation"
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -228,8 +307,8 @@ export default function AIMentorPage() {
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {conversations.length === 0 ? (
-            <div className="p-4 text-center text-xs text-zinc-500">
-              {userId ? "No conversations yet. Start a session!" : "Log in to view saved conversations."}
+            <div className="p-6 text-center text-xs text-neutral-400 dark:text-neutral-500">
+              {userId ? "No conversation history yet." : "Sign in to access saved conversations."}
             </div>
           ) : (
             conversations.map((conv) => {
@@ -240,18 +319,18 @@ export default function AIMentorPage() {
                   onClick={() => setActiveConversationId(conv.id)}
                   className={`group relative flex items-center justify-between p-2.5 rounded-lg text-xs cursor-pointer transition-colors ${
                     isActive
-                      ? "bg-zinc-800 text-zinc-100 font-medium"
-                      : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                      ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-medium shadow-xs"
+                      : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800/60 hover:text-neutral-950 dark:hover:text-neutral-100"
                   }`}
                 >
-                  <div className="flex items-center gap-2 overflow-hidden pr-6">
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  <div className="flex items-center gap-2.5 overflow-hidden pr-6">
+                    <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
                     <span className="truncate">{conv.title || "Untitled Session"}</span>
                   </div>
                   <button
                     onClick={(e) => handleDeleteConversation(e, conv.id)}
-                    className="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-1 rounded transition-opacity shrink-0"
-                    title="Delete Conversation"
+                    className="opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-sm transition-opacity shrink-0"
+                    title="Delete session"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -261,37 +340,38 @@ export default function AIMentorPage() {
           )}
         </div>
 
-        {/* Guest prompt footer */}
+        {/* Guest Footer */}
         {!userId && (
-          <div className="p-3 border-t border-zinc-800 bg-zinc-950/60 text-xs text-zinc-400">
-            <p className="mb-2">Log in to save multiple persistent conversations across devices.</p>
+          <div className="p-3.5 border-t border-neutral-200 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-950/60 text-xs text-neutral-500 dark:text-neutral-400">
+            <p className="mb-2">Sign in to save your conversation history across devices.</p>
             <Link
-              href="/auth"
-              className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-950 dark:text-white font-medium hover:underline underline-offset-4"
             >
-              Log in / Sign up <ArrowRight className="h-3 w-3" />
+              Sign in <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
         )}
       </aside>
 
       {/* ── Main Chat Area ── */}
-      <main className="flex-1 flex flex-col bg-zinc-950 min-w-0">
+      <main className="flex-1 flex flex-col bg-white dark:bg-[#0a0a0c] min-w-0 transition-colors">
         {/* Chat Header */}
-        <header className="h-14 border-b border-zinc-800/80 px-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-sm font-semibold text-zinc-100 truncate max-w-md">
-              {activeConversation?.title || "New Mentorship Session"}
+        <header className="h-14 border-b border-neutral-200 dark:border-neutral-800/80 px-6 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#0a0a0c]/80 backdrop-blur-md">
+          <div className="flex items-center gap-3 min-w-0">
+            <h1 className="text-sm font-semibold text-neutral-900 dark:text-white truncate max-w-md">
+              {activeConversation?.title || "New Session"}
             </h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Online
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 select-none">
+              <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 dark:bg-neutral-400" />
+              Live
             </span>
           </div>
+
           {activeConversationId && (
             <button
               onClick={handleStartNewConversation}
-              className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 transition-colors"
+              className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors shadow-xs cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" /> New Session
             </button>
@@ -299,24 +379,24 @@ export default function AIMentorPage() {
         </header>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
           {isLoadingHistory ? (
-            <div className="flex items-center justify-center h-48 text-zinc-500 text-xs gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin text-emerald-400" />
-              Loading persistent conversation memory...
+            <div className="flex items-center justify-center h-48 text-neutral-400 dark:text-neutral-500 text-xs gap-2">
+              <RotateCw className="h-4 w-4 animate-spin text-neutral-500" />
+              Loading session history...
             </div>
           ) : messages.length === 0 ? (
-            /* Starter Prompts Empty State */
-            <div className="max-w-2xl mx-auto py-8">
+            /* Starter Prompts Empty State (Strictly Clean & Human Copy) */
+            <div className="max-w-2xl mx-auto py-10">
               <div className="text-center mb-8">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-3 text-emerald-400 shadow-lg shadow-emerald-950/20">
-                  <Bot className="h-6 w-6" />
+                <div className="size-11 rounded-xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                  <Terminal className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-100 mb-1">
-                  SkillsCatalyst AI Career & Tech Mentor
+                <h3 className="text-xl font-semibold tracking-tight text-neutral-950 dark:text-white mb-1.5">
+                  Technical & Career Mentorship
                 </h3>
-                <p className="text-xs text-zinc-400 max-w-md mx-auto">
-                  Powered by multi-turn persistent conversation memory and aggregated academic & coding background.
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+                  Direct guidance on system design, data structures, code architecture, and hiring expectations.
                 </p>
               </div>
 
@@ -327,13 +407,13 @@ export default function AIMentorPage() {
                     <button
                       key={idx}
                       onClick={() => handleSendMessage(item.prompt)}
-                      className="p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 text-left transition-all group"
+                      className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 hover:border-neutral-900 dark:hover:border-neutral-400 hover:shadow-xs transition-all text-left group cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5 mb-1.5 text-zinc-300 group-hover:text-emerald-400">
-                        <Icon className="h-4 w-4 text-emerald-500/80" />
+                      <div className="flex items-center gap-2 mb-1.5 text-neutral-900 dark:text-neutral-100">
+                        <Icon className="h-4 w-4 text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-950 dark:group-hover:text-white transition-colors" />
                         <span className="text-xs font-semibold">{item.title}</span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2">
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2">
                         {item.prompt}
                       </p>
                     </button>
@@ -348,27 +428,32 @@ export default function AIMentorPage() {
               return (
                 <div
                   key={msg.id}
-                  className={`flex gap-3 max-w-3xl ${isUser ? "ml-auto justify-end" : "mr-auto justify-start"}`}
+                  className={`flex gap-3 max-w-3xl ${
+                    isUser ? "ml-auto justify-end" : "mr-auto justify-start"
+                  }`}
                 >
+                  {/* Assistant Avatar */}
                   {!isUser && (
-                    <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-                      <Bot className="h-4 w-4" />
+                    <div className="size-7 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0 text-neutral-900 dark:text-neutral-100 mt-0.5 shadow-xs">
+                      <Terminal className="h-3.5 w-3.5" />
                     </div>
                   )}
 
+                  {/* Message Bubble: Monochrome Black/White */}
                   <div
-                    className={`rounded-2xl px-4 py-3 text-xs leading-relaxed max-w-xl break-words ${
+                    className={`rounded-2xl px-4.5 py-3 text-[13px] leading-relaxed max-w-2xl break-words ${
                       isUser
-                        ? "bg-emerald-600/90 text-white shadow-md shadow-emerald-950/20 rounded-br-sm"
-                        : "bg-zinc-900/90 border border-zinc-800/80 text-zinc-200 shadow-sm rounded-bl-sm"
+                        ? "bg-neutral-950 text-white rounded-tr-xs shadow-xs dark:bg-white dark:text-neutral-950 font-normal"
+                        : "bg-white border border-neutral-200 dark:bg-neutral-900/80 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-tl-xs shadow-xs"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <MessageContent content={msg.content} />
                   </div>
 
+                  {/* User Avatar */}
                   {isUser && (
-                    <div className="h-7 w-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 text-zinc-300 mt-0.5">
-                      <User className="h-4 w-4" />
+                    <div className="size-7 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="h-3.5 w-3.5" />
                     </div>
                   )}
                 </div>
@@ -376,29 +461,34 @@ export default function AIMentorPage() {
             })
           )}
 
-          {/* Typing Loading Indicator */}
+          {/* Thinking / Streaming Indicator */}
           {isLoading && (
             <div className="flex gap-3 max-w-3xl mr-auto justify-start">
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-                <Bot className="h-4 w-4" />
+              <div className="size-7 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0 text-neutral-900 dark:text-neutral-100 mt-0.5 shadow-xs">
+                <Terminal className="h-3.5 w-3.5" />
               </div>
-              <div className="rounded-2xl px-4 py-3 text-xs bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce" />
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.2s]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.4s]" />
-                <span className="text-[11px] text-zinc-500 ml-1">Analyzing student context...</span>
+              <div className="rounded-2xl px-4 py-3 text-xs bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 flex items-center gap-2.5 shadow-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 dark:bg-neutral-400 animate-bounce" />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 dark:bg-neutral-400 animate-bounce [animation-delay:0.18s]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 dark:bg-neutral-400 animate-bounce [animation-delay:0.36s]" />
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400 ml-1">
+                  Thinking...
+                </span>
               </div>
             </div>
           )}
 
           {/* Error Banner */}
           {errorMsg && (
-            <div className="max-w-md mx-auto p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2.5">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+            <div className="max-w-md mx-auto p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs flex items-center gap-2.5 shadow-xs">
+              <AlertCircle className="h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400" />
               <span className="flex-1">{errorMsg}</span>
               <button
-                onClick={() => handleSendMessage()}
-                className="text-xs font-semibold underline hover:text-rose-200"
+                onClick={() => {
+                  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+                  if (lastUserMsg) handleSendMessage(lastUserMsg.content);
+                }}
+                className="text-xs font-semibold underline hover:text-black dark:hover:text-white cursor-pointer"
               >
                 Retry
               </button>
@@ -408,35 +498,19 @@ export default function AIMentorPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-4 border-t border-zinc-800/80 bg-zinc-950 shrink-0">
-          <div className="max-w-3xl mx-auto relative rounded-2xl border border-zinc-800 bg-zinc-900/60 focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/30 transition-all">
-            <textarea
-              ref={textareaRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about DSA, system design, resume review, career roadmaps... (Enter to send, Shift+Enter for newline)"
-              rows={2}
-              maxLength={3000}
-              disabled={isLoading}
-              className="w-full resize-none bg-transparent px-4 py-3 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none"
+        {/* ── Bottom Prompt Input Section ── */}
+        <div className="p-4 md:p-6 border-t border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-[#0a0a0c] shrink-0 transition-colors">
+          <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+            <PromptInput
+              placeholder="Ask anything about system design, code, or interview preparation..."
+              onSubmit={(value, meta) => handleSendMessage(value, meta)}
+              maxWidthCollapsed={420}
+              maxWidthExpanded="100%"
             />
-            <div className="flex items-center justify-between px-3 pb-2 text-[10px] text-zinc-500">
-              <span>{inputText.length} / 3000</span>
-              <button
-                onClick={() => handleSendMessage()}
-                disabled={isLoading || inputText.trim().length < 3}
-                className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white transition-all shadow-sm"
-                title="Send Message"
-              >
-                <Send className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500 text-center mt-2 select-none">
+              Enter to send · Shift + Enter for new line
+            </p>
           </div>
-          <p className="text-[10px] text-zinc-500 text-center mt-2">
-            SkillsCatalyst AI Mentor utilizes persistent multi-turn memory & student background context. Strictly focused on tech skills & careers.
-          </p>
         </div>
       </main>
     </div>
