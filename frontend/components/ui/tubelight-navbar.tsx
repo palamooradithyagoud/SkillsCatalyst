@@ -65,7 +65,7 @@ export function NavBar({ items, className }: NavBarProps) {
               href={item.url}
               onClick={() => setActiveTab(item.name)}
               className={cn(
-                "relative cursor-pointer flex flex-col items-center justify-center px-3 sm:px-4 py-1.5 transition-all min-w-[54px] sm:min-w-[62px]",
+                "relative cursor-pointer flex flex-col items-center justify-center px-2 sm:px-4 py-1.5 transition-all min-w-[48px] sm:min-w-[62px]",
                 "text-black/50 hover:text-black",
                 isActive && "text-black font-black",
               )}

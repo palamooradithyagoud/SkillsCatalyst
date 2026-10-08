@@ -27,6 +27,7 @@ import {
   BookOpen,
   Compass,
   Film,
+  Bot,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,18 +59,18 @@ const mobileNavItems: NavItem[] = [
   { name: "Home", url: "/dashboard", icon: LayoutGrid },
   { name: "SkillBits", url: "/skillbits", icon: Film },
   { name: "Learn", url: "/learning", icon: BookOpen },
-  { name: "Explore", url: "/explore", icon: Compass },
+  { name: "AI Mentor", url: "/ai-mentor", icon: Bot },
   { name: "Practice", url: "/practice", icon: Target },
-  { name: "Profile", url: "/settings", icon: User },
+  { name: "Explore", url: "/explore", icon: Compass },
 ];
 
 const bottomBarItems = [
   { name: "Home", href: "/dashboard", icon: LayoutGrid },
   { name: "SkillBits", href: "/skillbits", icon: Film },
   { name: "Learn", href: "/learning", icon: BookIcon },
-  { name: "Explore", href: "/explore", icon: ExploreIcon },
+  { name: "AI Mentor", href: "/ai-mentor", icon: Bot },
   { name: "Practice", href: "/practice", icon: Target },
-  { name: "Profile", href: "/settings", icon: UserIcon },
+  { name: "Explore", href: "/explore", icon: ExploreIcon },
 ];
 
 const exploreBottomBarItems = [
