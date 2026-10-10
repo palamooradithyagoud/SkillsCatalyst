@@ -18,11 +18,12 @@ logger = logging.getLogger("skillscatalyst.cache")
 _redis_pool = None
 _redis_client = None
 _redis_initialized = False
+_cached_redis_status = "unconfigured" if not (REDIS_URL or os.getenv("REDIS_URL", "").strip()) else "unknown"
 
 
 def _init_redis_pool():
     """Initializes a shared connection pool with timeouts and retry safety."""
-    global _redis_pool, _redis_client, _redis_initialized
+    global _redis_pool, _redis_client, _redis_initialized, _cached_redis_status
     if _redis_initialized:
         return _redis_client
 
@@ -30,6 +31,7 @@ def _init_redis_pool():
     if not _redis_url:
         _redis_initialized = True
         _redis_client = None
+        _cached_redis_status = "unconfigured"
         return None
 
     try:
@@ -47,6 +49,7 @@ def _init_redis_pool():
         client.ping()
         _redis_client = client
         _redis_initialized = True
+        _cached_redis_status = "connected"
         logger.info("Connected to Upstash Redis Cache using pooled connections.")
         return _redis_client
     except Exception as e:
@@ -54,6 +57,7 @@ def _init_redis_pool():
         logger.warning(f"Could not connect to Redis ({type(e).__name__}) — running with in-memory fallback.")
         _redis_initialized = True
         _redis_client = None
+        _cached_redis_status = "degraded/fallback"
         return None
 
 
@@ -65,18 +69,38 @@ def get_redis_client():
     return _redis_client
 
 
-def get_redis_health_status() -> str:
-    """Returns sanitized health status string without exposing credentials."""
+def refresh_cached_redis_status() -> str:
+    """Actively probes Redis connection and updates cached health status."""
+    global _cached_redis_status
     _redis_url = REDIS_URL or os.getenv("REDIS_URL", "").strip()
     if not _redis_url:
+        _cached_redis_status = "unconfigured"
         return "unconfigured"
     try:
         r = get_redis_client()
         if r and r.ping():
+            _cached_redis_status = "connected"
             return "connected"
     except Exception:
         pass
+    _cached_redis_status = "degraded/fallback"
     return "degraded/fallback"
+
+
+def get_cached_redis_status() -> str:
+    """Returns cached Redis health status with ZERO network I/O."""
+    global _cached_redis_status
+    _redis_url = REDIS_URL or os.getenv("REDIS_URL", "").strip()
+    if not _redis_url:
+        return "unconfigured"
+    return _cached_redis_status
+
+
+def get_redis_health_status(force_ping: bool = True) -> str:
+    """Returns sanitized health status string without exposing credentials."""
+    if force_ping:
+        return refresh_cached_redis_status()
+    return get_cached_redis_status()
 
 
 # ── Thread-Safe In-Memory Cache with TTL & Size Limit ─────────────────────────
