@@ -1,0 +1,56 @@
+[
+  {
+    "file": "backend/services/learning/playlist_service.py",
+    "function": "unsave_playlist",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/playlist_service.py",
+    "function": "get_saved_playlists",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/playlist_service.py",
+    "function": "sync_saved_playlists",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/playlist_service.py",
+    "function": "get_saved_playlists_jsonb",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/progress_service.py",
+    "function": "resume_progress",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/progress_service.py",
+    "function": "update_video_progress",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/progress_service.py",
+    "function": "save_video_progress",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/learning/progress_service.py",
+    "function": "complete_video",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P0-1b: offload sync Supabase queries to threadpool or convert to def"
+  },
+  {
+    "file": "backend/services/skillbits_service.py",
+    "function": "process_mux_webhook",
+    "blocking_call": ".execute()",
+    "comment": "Follow-up item P1-4: convert webhook handler to def or threadpool offload"
+  }
+]

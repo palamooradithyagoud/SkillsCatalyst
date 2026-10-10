@@ -101,8 +101,8 @@ Respond ONLY with valid JSON in this exact structure:
     sys_prompt = "You are SkillsCatalyst AI, an expert tech curriculum generator. Output JSON ONLY, no markdown ticks or extra text."
 
     try:
-        from backend.services.groq_service import chat_with_groq
-        raw_reply = chat_with_groq(prompt, system_prompt=sys_prompt)
+        from backend.services.groq_service import chat_with_groq, run_bounded_ai_call
+        raw_reply = await run_bounded_ai_call(chat_with_groq, prompt, system_prompt=sys_prompt)
 
         clean_json = raw_reply.strip()
         if clean_json.startswith("```"):

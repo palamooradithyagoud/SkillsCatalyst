@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 from collections import defaultdict
@@ -5,7 +6,13 @@ from typing import Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
-from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG
+from backend.services.groq_service import (
+    chat_with_groq,
+    _AI_UNAVAILABLE_MSG,
+    get_ai_semaphore,
+    acquire_ai_slot,
+    run_bounded_ai_call,
+)
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
 from backend.dependencies.subscription import require_entitlement
@@ -341,22 +348,22 @@ async def chat_mentor(
         if conv_id:
             if not is_valid_uuid(conv_id):
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
-            existing_conv = get_conversation(current_user_id, conv_id)
+            existing_conv = await asyncio.to_thread(get_conversation, current_user_id, conv_id)
             if not existing_conv:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
         else:
             # Auto-create conversation with clean deterministic title from first message
             auto_title = derive_conversation_title(prompt_text)
-            new_conv = create_conversation(current_user_id, title=auto_title)
+            new_conv = await asyncio.to_thread(create_conversation, current_user_id, title=auto_title)
             conv_id = new_conv["id"] if new_conv else None
 
         # 1. Persist user message to database (safeguard against LLM failure)
         user_msg = None
         prior_messages = []
         if conv_id:
-            user_msg = save_message(current_user_id, conv_id, "user", prompt_text)
+            user_msg = await asyncio.to_thread(save_message, current_user_id, conv_id, "user", prompt_text)
             # Retrieve bounded recent history (excluding the current user message just inserted)
-            prior_messages = get_recent_messages(current_user_id, conv_id, limit=15)
+            prior_messages = await asyncio.to_thread(get_recent_messages, current_user_id, conv_id, limit=15)
 
         # 2. Enrich system prompt with Phase 1 authenticated student context
         effective_system_prompt = _SKILLS_SYSTEM_PROMPT
@@ -376,15 +383,20 @@ async def chat_mentor(
             current_message_id=current_msg_id,
         )
 
-        # 4. Invoke LLM provider
+        # 4. Invoke LLM provider with bounded deadline watchdog and slot retention
         try:
-            response = chat_with_groq(
+            response = await run_bounded_ai_call(
+                chat_with_groq,
                 prompt=prompt_text,
                 system_prompt=effective_system_prompt,
                 messages=llm_messages,
             )
         except TypeError:
-            response = chat_with_groq(prompt_text, system_prompt=effective_system_prompt)
+            response = await run_bounded_ai_call(
+                chat_with_groq,
+                prompt_text,
+                system_prompt=effective_system_prompt,
+            )
 
         # 5. Handle LLM failure: User message preserved, NO fake assistant message written
         if not response or response == _AI_UNAVAILABLE_MSG:
@@ -402,7 +414,7 @@ async def chat_mentor(
         # 7. Persist assistant response to database
         asst_msg_id = None
         if conv_id and response != _OFFTOPIC_REPLY:
-            asst_msg = save_message(current_user_id, conv_id, "assistant", response)
+            asst_msg = await asyncio.to_thread(save_message, current_user_id, conv_id, "assistant", response)
             asst_msg_id = asst_msg.get("id") if asst_msg else None
 
         return MentorChatResponse(reply=response, conversation_id=conv_id, message_id=asst_msg_id)
@@ -410,7 +422,11 @@ async def chat_mentor(
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
     # -----------------------------------------------------------------------
-    response = chat_with_groq(prompt=prompt_text, system_prompt=_SKILLS_SYSTEM_PROMPT)
+    response = await run_bounded_ai_call(
+        chat_with_groq,
+        prompt=prompt_text,
+        system_prompt=_SKILLS_SYSTEM_PROMPT,
+    )
 
     if entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
@@ -544,7 +560,7 @@ STRICT RULES:
 - Focus on impact, metrics, and role relevance
 - Assume this resume is competing at a top 10% level"""
 
-    review_text = chat_with_groq(user_prompt, system_prompt=system_prompt)
+    review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")
@@ -585,17 +601,18 @@ STRICT RULES:
                 "experience_score": overall_score,
                 "full_review_json": {"review": review_text},
             }
-            sb.table("resume_scores").insert(score_record).execute()
+            def _persist_resume_score():
+                sb.table("resume_scores").insert(score_record).execute()
+                sb.table("user_progress").upsert(
+                    {
+                        "user_id": user_id,
+                        "resume_readiness_score": overall_score,
+                        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    },
+                    on_conflict="user_id"
+                ).execute()
 
-            # Update overall user progress resume readiness score
-            sb.table("user_progress").upsert(
-                {
-                    "user_id": user_id,
-                    "resume_readiness_score": overall_score,
-                    "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                },
-                on_conflict="user_id"
-            ).execute()
+            await asyncio.to_thread(_persist_resume_score)
     except Exception as save_err:
         logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
 

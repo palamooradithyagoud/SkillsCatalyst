@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import time
@@ -34,6 +35,40 @@ logging.basicConfig(
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
 logger = logging.getLogger("skillscatalyst.api")
 
+# ── Background Monitors ───────────────────────────────────────────────────────
+async def _event_loop_lag_monitor(interval_sec: float = 0.1, threshold_sec: float = 0.25):
+    """
+    Background monitor that measures asyncio event loop delay/lag.
+    Wakes up every `interval_sec` (100ms). If the loop was blocked,
+    actual slept time will exceed interval_sec + threshold_sec (250ms lag).
+    Emits a structured warning log.
+    """
+    try:
+        while True:
+            t0 = time.monotonic()
+            await asyncio.sleep(interval_sec)
+            elapsed = time.monotonic() - t0
+            lag = elapsed - interval_sec
+            if lag > threshold_sec:
+                logger.warning(
+                    f"[EVENT_LOOP_LAG] Detected event loop stall: {round(lag * 1000, 1)}ms lag "
+                    f"(slept {round(elapsed * 1000, 1)}ms, expected {round(interval_sec * 1000, 1)}ms)"
+                )
+    except asyncio.CancelledError:
+        pass
+
+
+async def _redis_health_refresher_task(interval_sec: float = 30.0):
+    """Periodically refreshes cached Redis health status in threadpool without blocking event loop."""
+    from backend.services.cache_service import refresh_cached_redis_status
+    try:
+        while True:
+            await asyncio.to_thread(refresh_cached_redis_status)
+            await asyncio.sleep(interval_sec)
+    except asyncio.CancelledError:
+        pass
+
+
 # ── Lifespan Handler ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,8 +78,27 @@ async def lifespan(app: FastAPI):
     """
     logger.info(f"Initializing SkillsCatalyst API Backend (Environment: {ENVIRONMENT})...")
     validate_startup_config()
-    yield
-    logger.info("Gracefully shutting down SkillsCatalyst API Backend...")
+
+    # Initialize AI concurrency semaphore in lifespan startup
+    from backend.services.groq_service import init_ai_semaphore
+    from backend.config import MAX_CONCURRENT_AI_REQUESTS
+    init_ai_semaphore(max_concurrent=MAX_CONCURRENT_AI_REQUESTS)
+
+    # Initial passive refresh of Redis status (in threadpool, non-blocking)
+    from backend.services.cache_service import refresh_cached_redis_status
+    await asyncio.to_thread(refresh_cached_redis_status)
+
+    # Start background event loop lag monitor and periodic Redis health refresher
+    lag_task = asyncio.create_task(_event_loop_lag_monitor())
+    redis_task = asyncio.create_task(_redis_health_refresher_task())
+
+    try:
+        yield
+    finally:
+        logger.info("Gracefully shutting down SkillsCatalyst API Backend...")
+        lag_task.cancel()
+        redis_task.cancel()
+        await asyncio.gather(lag_task, redis_task, return_exceptions=True)
 
 # ── FastAPI App Instance ──────────────────────────────────────────────────────
 app = FastAPI(
@@ -145,7 +199,8 @@ async def production_hardening_middleware(request: Request, call_next):
     # Auto-issue signed guest session token for non-authenticated guest requests
     auth_hdr = request.headers.get("authorization")
     from backend.services.auth_service import get_optional_user_id, sanitize_or_generate_guest_id
-    user_id = get_optional_user_id(authorization=auth_hdr)
+    # Interim threadpool wrap for P0-1 to prevent blocking event loop; replaced by local JWT in P1-3
+    user_id = await asyncio.to_thread(get_optional_user_id, auth_hdr)
     if not user_id:
         raw_sid = request.headers.get("x-session-id")
         _, signed_token = sanitize_or_generate_guest_id(raw_sid)
@@ -294,9 +349,10 @@ def health_check():
     except Exception:
         db_status = "error"
 
-    from backend.services.cache_service import get_redis_health_status
+    from backend.services.cache_service import get_cached_redis_status
     from backend.services.observability import get_system_metrics
-    redis_status = get_redis_health_status()
+    # Pure in-memory status check; ZERO network I/O so /health cannot block event loop
+    redis_status = get_cached_redis_status()
     yt_status = "configured" if os.getenv("YOUTUBE_API_KEY") else "unconfigured"
     ai_status = "configured" if os.getenv("GROQ_API_KEY") else "unconfigured"
     email_status = "configured" if os.getenv("RESEND_API_KEY") else "unconfigured"

@@ -38,6 +38,7 @@ else:
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 OWNER_EMAIL = os.getenv("OWNER_EMAIL", "palamooradithyagoud@gmail.com").strip().lower()
+MAX_CONCURRENT_AI_REQUESTS = int(os.getenv("MAX_CONCURRENT_AI_REQUESTS", "6"))
 
 # ── PhonePe Payment Gateway Configuration (Phase 2) ───────────────────────────
 PHONEPE_ENV = os.getenv("PHONEPE_ENV", "SANDBOX").strip().upper()
