@@ -49,6 +49,38 @@ def get_ai_semaphore() -> asyncio.Semaphore:
         _ai_semaphore = asyncio.Semaphore(max_concurrent)
     return _ai_semaphore
 
+
+from contextlib import asynccontextmanager
+from fastapi import HTTPException
+
+
+@asynccontextmanager
+async def acquire_ai_slot(timeout: float = 5.0):
+    """
+    Acquires a concurrency slot on the AI semaphore with a strict timeout.
+    If a slot cannot be acquired within `timeout` seconds, raises an HTTP 503
+    in the standard SkillsCatalyst error schema.
+    """
+    sem = get_ai_semaphore()
+    try:
+        await asyncio.wait_for(sem.acquire(), timeout=timeout)
+    except asyncio.TimeoutError:
+        logger.warning(
+            f"AI request concurrency capacity saturated (exceeded {timeout}s acquire wait). Returning HTTP 503."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "success": False,
+                "message": "AI Mentor service is currently experiencing high load. Please try again in a moment.",
+                "detail": f"AI concurrency limit reached (acquire timeout {timeout}s)"
+            }
+        )
+    try:
+        yield
+    finally:
+        sem.release()
+
 # Safe user-facing message when all models fail (NO internal exceptions or stack traces).
 _AI_UNAVAILABLE_MSG = (
     "AI Mentor is temporarily unavailable. Please try again in a moment."
@@ -118,10 +150,10 @@ def chat_with_groq(
         # Check hard ceiling and compute remaining budget before making next attempt
         elapsed_so_far = time.monotonic() - t_start
         remaining_budget = _GROQ_HARD_CEILING - elapsed_so_far
-        if remaining_budget <= 0.5:
+        if remaining_budget < 2.0:
             logger.warning(
-                f"Groq hard ceiling reached ({elapsed_so_far:.1f}s >= {_GROQ_HARD_CEILING}s). "
-                f"Aborting further fallbacks to prevent worker hang."
+                f"Groq remaining budget insufficient for attempt ({remaining_budget:.1f}s < 2.0s). "
+                f"Skipping further model fallbacks to maintain hard ceiling of {_GROQ_HARD_CEILING}s."
             )
             last_error_category = "hard_ceiling_timeout"
             break

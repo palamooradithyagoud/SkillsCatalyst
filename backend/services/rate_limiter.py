@@ -69,11 +69,15 @@ class BaseRateLimiter(ABC):
         pass
 
 
+import threading
+
+
 class InMemoryRateLimiter(BaseRateLimiter):
-    """Thread-safe in-memory sliding window rate limiter with auto-eviction."""
+    """Thread-safe in-memory sliding window rate limiter with auto-eviction and lock protection."""
 
     def __init__(self):
         self._requests: Dict[str, List[float]] = defaultdict(list)
+        self._lock = threading.Lock()
 
     def check_rate_limit(self, request: Request, max_requests: int, window_seconds: int = 60) -> Tuple[bool, int]:
         now = time.time()
@@ -81,23 +85,24 @@ class InMemoryRateLimiter(BaseRateLimiter):
         key = f"{client_key}:{request.url.path}"
         window_start = now - window_seconds
 
-        timestamps = [ts for ts in self._requests.get(key, []) if ts > window_start]
+        with self._lock:
+            timestamps = [ts for ts in self._requests.get(key, []) if ts > window_start]
 
-        if not timestamps:
-            self._requests.pop(key, None)
-        else:
-            self._requests[key] = timestamps
+            if not timestamps:
+                self._requests.pop(key, None)
+            else:
+                self._requests[key] = timestamps
 
-        if len(timestamps) >= max_requests:
-            oldest_ts = timestamps[0]
-            retry_after = max(1, int(oldest_ts + window_seconds - now))
-            return False, retry_after
+            if len(timestamps) >= max_requests:
+                oldest_ts = timestamps[0]
+                retry_after = max(1, int(oldest_ts + window_seconds - now))
+                return False, retry_after
 
-        if key not in self._requests:
-            self._requests[key] = []
-        self._requests[key].append(now)
+            if key not in self._requests:
+                self._requests[key] = []
+            self._requests[key].append(now)
 
-        return True, 0
+            return True, 0
 
 
 class RedisRateLimiter(BaseRateLimiter):

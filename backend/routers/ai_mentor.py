@@ -5,9 +5,12 @@ from collections import defaultdict
 from typing import Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, field_validator
-from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
-from backend.services.groq_service import chat_with_groq, _AI_UNAVAILABLE_MSG, get_ai_semaphore
-from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
+from backend.services.groq_service import (
+    chat_with_groq,
+    _AI_UNAVAILABLE_MSG,
+    get_ai_semaphore,
+    acquire_ai_slot,
+)
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
 from backend.dependencies.subscription import require_entitlement
 from backend.services.ai_mentor import (
@@ -378,9 +381,8 @@ async def chat_mentor(
         )
 
         # 4. Invoke LLM provider
-        ai_sem = get_ai_semaphore()
         try:
-            async with ai_sem:
+            async with acquire_ai_slot(timeout=5.0):
                 response = await asyncio.to_thread(
                     chat_with_groq,
                     prompt=prompt_text,
@@ -388,7 +390,7 @@ async def chat_mentor(
                     messages=llm_messages,
                 )
         except TypeError:
-            async with ai_sem:
+            async with acquire_ai_slot(timeout=5.0):
                 response = await asyncio.to_thread(
                     chat_with_groq,
                     prompt_text,
@@ -419,8 +421,7 @@ async def chat_mentor(
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
     # -----------------------------------------------------------------------
-    ai_sem = get_ai_semaphore()
-    async with ai_sem:
+    async with acquire_ai_slot(timeout=5.0):
         response = await asyncio.to_thread(chat_with_groq, prompt=prompt_text, system_prompt=_SKILLS_SYSTEM_PROMPT)
 
     if entitlement.limit is not None:
@@ -555,8 +556,7 @@ STRICT RULES:
 - Focus on impact, metrics, and role relevance
 - Assume this resume is competing at a top 10% level"""
 
-    ai_sem = get_ai_semaphore()
-    async with ai_sem:
+    async with acquire_ai_slot(timeout=5.0):
         review_text = await asyncio.to_thread(chat_with_groq, user_prompt, system_prompt=system_prompt)
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
