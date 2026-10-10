@@ -5,12 +5,14 @@ from collections import defaultdict
 from typing import Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, field_validator
+from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
 from backend.services.groq_service import (
     chat_with_groq,
     _AI_UNAVAILABLE_MSG,
     get_ai_semaphore,
     acquire_ai_slot,
 )
+from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
 from backend.dependencies.subscription import require_entitlement
 from backend.services.ai_mentor import (

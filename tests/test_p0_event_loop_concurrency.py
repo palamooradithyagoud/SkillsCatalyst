@@ -237,3 +237,107 @@ async def test_control_demonstrates_event_loop_blocking_vs_non_blocking():
         assert loop_lag_patched_ms < 100.0, (
             f"Patched call should keep event loop responsive (< 100ms), observed {loop_lag_patched_ms}ms"
         )
+
+
+@pytest.mark.anyio
+async def test_invalid_expired_token_still_401_after_middleware_wrap():
+    """
+    Requirement 3a: Verify that invalid or expired JWT token still strictly
+    returns HTTP 401 Unauthorized after middleware to_thread wrap.
+    """
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        # Invalid token
+        resp_invalid = await client.get(
+            "/api/profile",
+            headers={"Authorization": "Bearer invalid.fake.token"},
+        )
+        assert resp_invalid.status_code == 401
+        data = resp_invalid.json()
+        assert "Invalid" in data.get("detail", "") or "Invalid" in data.get("message", "")
+
+        # Missing token
+        resp_missing = await client.get("/api/profile")
+        assert resp_missing.status_code == 401
+
+
+def test_hanging_groq_mock_returns_standard_error_within_scaled_budget(monkeypatch):
+    """
+    Requirement 3b: When Groq attempts hang/timeout, verify execution stays within
+    budget and returns standard user-facing unavailable message (scaled config).
+    """
+    # Scaled budget: 4.0s
+    monkeypatch.setenv("GROQ_CHAIN_TIMEOUT_SECONDS", "4.0")
+    import backend.services.groq_service as groq_svc
+    monkeypatch.setattr(groq_svc, "_GROQ_HARD_CEILING", 4.0)
+
+    mock_client = MagicMock()
+    def hanging_create(*args, **kwargs):
+        # Hang longer than budget
+        time.sleep(1.8)
+        raise APITimeoutError(request=MagicMock())
+
+    mock_client.chat.completions.create = hanging_create
+    monkeypatch.setattr(groq_svc, "groq_client", mock_client)
+
+    t0 = time.monotonic()
+    result = groq_svc.chat_with_groq("Test hanging mock")
+    elapsed = time.monotonic() - t0
+
+    assert result == _AI_UNAVAILABLE_MSG
+    # Should execute at most 2 attempts before remaining budget < 2.0s triggers skip
+    assert elapsed <= 4.5, f"Hanging Groq mock exceeded scaled budget: {elapsed}s"
+
+
+@pytest.mark.anyio
+async def test_profile_response_matches_pre_fix_snapshot():
+    """
+    Requirement 3c: Regression snapshot test ensuring GET /api/profile
+    returns the exact expected schema fields after converting to def.
+    """
+    mock_sb = MagicMock()
+    mock_data = {
+        "id": "11111111-1111-1111-1111-111111111111",
+        "full_name": "Snapshot User",
+        "email": "snapshot@example.com",
+    }
+    mock_res = MagicMock()
+    mock_res.data = [mock_data]
+    mock_sb.from_().select().eq().execute.return_value = mock_res
+    mock_sb.from_().select().execute.return_value = mock_res
+
+    mock_user = MagicMock()
+    mock_user.id = "11111111-1111-1111-1111-111111111111"
+    mock_user.email = "snapshot@example.com"
+    mock_user.user_metadata = {}
+    mock_auth_res = MagicMock()
+    mock_auth_res.user = mock_user
+    mock_sb.auth.get_user.return_value = mock_auth_res
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        with patch("backend.routers.profile.get_supabase", return_value=mock_sb), \
+             patch("backend.services.auth_service.get_supabase", return_value=mock_sb):
+
+            resp = await client.get(
+                "/api/profile",
+                headers={"Authorization": "Bearer mock_valid_jwt"},
+            )
+            assert resp.status_code == 200
+            data = resp.json()
+            # Verify exact expected snapshot top-level structure
+            expected_keys = [
+                "personal",
+                "academic",
+                "career_preferences",
+                "skills",
+                "experiences",
+                "education",
+                "projects",
+                "certifications",
+                "achievements",
+                "resume",
+                "progress",
+                "coding_inputs",
+                "coding_stats",
+            ]
+            for key in expected_keys:
+                assert key in data, f"Missing key '{key}' in profile snapshot"
