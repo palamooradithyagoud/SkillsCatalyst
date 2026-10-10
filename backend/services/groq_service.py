@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 import logging
@@ -18,12 +19,35 @@ from backend.services.observability import record_ai_call
 logger = logging.getLogger(__name__)
 
 # Groq timeout specifications:
-# Protects Uvicorn workers from hanging indefinitely on a stalled provider.
-# Per-call timeout: connect 5s, read 25s, total 30s.
-_GROQ_CONNECT_TIMEOUT = 5.0   # seconds to establish TCP connection
-_GROQ_READ_TIMEOUT    = 25.0  # seconds to wait for first response bytes
-_GROQ_TOTAL_TIMEOUT   = 30.0  # per-model attempt timeout ceiling
-_GROQ_HARD_CEILING    = 55.0  # total wall-clock ceiling across all model fallbacks
+# Enforces strict request-level timeouts to prevent threadpool starvation.
+# Per-call timeout: connect 3s, read 12s, write 5s, pool 3s.
+# Total fallback chain hard ceiling: 25.0s.
+_GROQ_CONNECT_TIMEOUT = 3.0   # seconds to establish TCP connection
+_GROQ_READ_TIMEOUT    = 12.0  # seconds to wait for first response bytes
+_GROQ_WRITE_TIMEOUT   = 5.0   # seconds to send request payload
+_GROQ_POOL_TIMEOUT    = 3.0   # seconds to acquire connection from pool
+_GROQ_TOTAL_TIMEOUT   = 15.0  # default model attempt timeout ceiling
+_GROQ_HARD_CEILING    = float(os.getenv("GROQ_CHAIN_TIMEOUT_SECONDS", "25.0"))  # total wall-clock ceiling across all model fallbacks
+
+# Global AI request concurrency limiter (initialized in FastAPI lifespan)
+_ai_semaphore: Optional[asyncio.Semaphore] = None
+
+
+def init_ai_semaphore(max_concurrent: int = 6) -> asyncio.Semaphore:
+    """Initializes the AI request concurrency semaphore in lifespan context."""
+    global _ai_semaphore
+    _ai_semaphore = asyncio.Semaphore(max_concurrent)
+    logger.info(f"Initialized AI concurrency semaphore with capacity {max_concurrent}.")
+    return _ai_semaphore
+
+
+def get_ai_semaphore() -> asyncio.Semaphore:
+    """Retrieves the active AI semaphore, falling back to lazy initialization if called outside lifespan."""
+    global _ai_semaphore
+    if _ai_semaphore is None:
+        max_concurrent = int(os.getenv("MAX_CONCURRENT_AI_REQUESTS", "6"))
+        _ai_semaphore = asyncio.Semaphore(max_concurrent)
+    return _ai_semaphore
 
 # Safe user-facing message when all models fail (NO internal exceptions or stack traces).
 _AI_UNAVAILABLE_MSG = (
@@ -40,8 +64,10 @@ if GROQ_API_KEY:
                 timeout=_GROQ_TOTAL_TIMEOUT,
                 connect=_GROQ_CONNECT_TIMEOUT,
                 read=_GROQ_READ_TIMEOUT,
+                write=_GROQ_WRITE_TIMEOUT,
+                pool=_GROQ_POOL_TIMEOUT,
             ),
-            max_retries=0,  # We handle retries ourselves via model fallback chain
+            max_retries=0,  # Deliberate: we handle retries via model fallback cascade
         )
         logger.info("Groq client initialized successfully with robust timeouts.")
     except Exception as e:
@@ -67,13 +93,13 @@ def chat_with_groq(
 ) -> str:
     """
     Sends a prompt or structured message list to the Groq LLM and returns the text response.
-    Attempts candidate models in order until one succeeds.
+    Attempts candidate models in order until one succeeds within the 25.0s total chain ceiling.
 
     Failure behaviour:
-      - Connection timeout (5s): moves to next model, logs warning.
-      - Read timeout (25s): moves to next model, logs warning.
+      - Connection timeout (3s): moves to next model, logs warning.
+      - Read timeout (min(12s, remaining budget)): moves to next model, logs warning.
       - Rate-limit (429): moves to next model, logs warning.
-      - Hard ceiling (55s): halts fallback loop before reverse proxy timeout.
+      - Hard ceiling (25s): halts fallback loop before reverse proxy timeout.
       - All models fail: returns safe user-facing _AI_UNAVAILABLE_MSG.
 
     Observability:
@@ -89,15 +115,19 @@ def chat_with_groq(
     t_start = time.monotonic()
 
     for model_name in FALLBACK_MODELS:
-        # Check hard ceiling before making next attempt
+        # Check hard ceiling and compute remaining budget before making next attempt
         elapsed_so_far = time.monotonic() - t_start
-        if elapsed_so_far >= _GROQ_HARD_CEILING:
+        remaining_budget = _GROQ_HARD_CEILING - elapsed_so_far
+        if remaining_budget <= 0.5:
             logger.warning(
                 f"Groq hard ceiling reached ({elapsed_so_far:.1f}s >= {_GROQ_HARD_CEILING}s). "
                 f"Aborting further fallbacks to prevent worker hang."
             )
             last_error_category = "hard_ceiling_timeout"
             break
+
+        per_attempt_timeout = min(_GROQ_READ_TIMEOUT, remaining_budget)
+        per_attempt_connect = min(_GROQ_CONNECT_TIMEOUT, per_attempt_timeout)
 
         model_start = time.monotonic()
         try:
@@ -111,7 +141,7 @@ def chat_with_groq(
             prompt_len = sum(len(m.get("content", "")) for m in completion_messages)
             logger.debug(
                 f"Sending prompt to Groq model '{model_name}' "
-                f"(prompt_length={prompt_len} chars, turns={len(completion_messages)})."
+                f"(prompt_length={prompt_len} chars, budget={per_attempt_timeout:.1f}s, turns={len(completion_messages)})."
             )
             response = groq_client.chat.completions.create(
                 messages=completion_messages,
@@ -119,16 +149,18 @@ def chat_with_groq(
                 temperature=0.6,
                 max_tokens=8192,
                 timeout=Timeout(
-                    timeout=_GROQ_TOTAL_TIMEOUT,
-                    connect=_GROQ_CONNECT_TIMEOUT,
-                    read=_GROQ_READ_TIMEOUT,
+                    timeout=per_attempt_timeout,
+                    connect=per_attempt_connect,
+                    read=per_attempt_timeout,
+                    write=_GROQ_WRITE_TIMEOUT,
+                    pool=_GROQ_POOL_TIMEOUT,
                 ),
             )
             reply = response.choices[0].message.content or "No response from AI."
             latency_ms = round((time.monotonic() - model_start) * 1000, 1)
+            total_chain_ms = round((time.monotonic() - t_start) * 1000, 1)
             logger.info(
-                f"Groq model '{model_name}' succeeded in {latency_ms}ms "
-                f"({len(reply)} chars returned)."
+                f"Groq model '{model_name}' succeeded in {latency_ms}ms (total fallback chain: {total_chain_ms}ms, {len(reply)} chars returned)."
             )
             record_ai_call(
                 success=True,

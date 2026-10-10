@@ -101,8 +101,9 @@ Respond ONLY with valid JSON in this exact structure:
     sys_prompt = "You are SkillsCatalyst AI, an expert tech curriculum generator. Output JSON ONLY, no markdown ticks or extra text."
 
     try:
+        import asyncio
         from backend.services.groq_service import chat_with_groq
-        raw_reply = chat_with_groq(prompt, system_prompt=sys_prompt)
+        raw_reply = await asyncio.to_thread(chat_with_groq, prompt, system_prompt=sys_prompt)
 
         clean_json = raw_reply.strip()
         if clean_json.startswith("```"):
