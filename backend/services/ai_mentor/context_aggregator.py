@@ -4,6 +4,7 @@ Production-Grade Student Context Aggregator for SkillsCatalyst AI Mentor.
 Batches, normalizes, sanitizes, and caches authenticated student data across all platform modules.
 """
 
+import asyncio
 import datetime
 import hashlib
 import logging
@@ -73,16 +74,13 @@ def _normalize_str_list(val: Any) -> List[str]:
     return []
 
 
-async def build_student_mentor_context(
+def _build_student_mentor_context_sync(
     user_id: str,
     force_refresh: bool = False,
 ) -> MentorContext:
     """
-    Builds the strongly-typed, sanitized MentorContext for the specified user.
-    - Validates user identity (returns anonymous/empty context if non-UUID).
-    - Checks Redis cache (TTL 60s) unless force_refresh is True.
-    - Batches queries across all student data tables with defensive try/except isolation.
-    - Caches and returns normalized MentorContext.
+    Internal synchronous context builder. Pure function with zero shared mutable state,
+    safe for threadpool execution via asyncio.to_thread.
     """
     start_time = time.perf_counter()
 
@@ -575,6 +573,17 @@ async def build_student_mentor_context(
         logger.warning(f"Failed to cache mentor context for {user_hash}: {c_err}")
 
     return context
+
+
+async def build_student_mentor_context(
+    user_id: str,
+    force_refresh: bool = False,
+) -> MentorContext:
+    """
+    Builds the strongly-typed, sanitized MentorContext for the specified user.
+    Offloaded to AnyIO threadpool via asyncio.to_thread to prevent event loop blocking.
+    """
+    return await asyncio.to_thread(_build_student_mentor_context_sync, user_id, force_refresh)
 
 
 async def get_formatted_student_context_for_mentor(
