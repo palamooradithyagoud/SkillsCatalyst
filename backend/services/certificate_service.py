@@ -285,6 +285,20 @@ async def upload_certificate_background(file: UploadFile, user_id: str) -> str:
 
 def get_course_certificate_config(course_id: str) -> Dict[str, Any]:
     """Retrieves certificate configuration for a course."""
+    if not _is_uuid(course_id):
+        # Default unconfigured state for non-UUID course identifiers
+        return {
+            "course_id": course_id,
+            "enabled": False,
+            "certificate_template_id": None,
+            "template_name": None,
+            "design_theme": None,
+            "issue_trigger": "manual",
+            "custom_title": None,
+            "created_at": None,
+            "updated_at": None,
+        }
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
@@ -396,7 +410,11 @@ def is_user_identity_locked(user_id: str) -> bool:
     Authoritative Server-Side Rule:
     IF ANY issued certificate exists for this user across any course,
     THEN user's certificate identity (name + college) is permanently locked.
+    Guards against PostgreSQL 22P02 error if user_id is not a valid UUID.
     """
+    if not _is_uuid(user_id):
+        return False
+
     sb = get_supabase()
     if not sb:
         return False
@@ -413,6 +431,14 @@ def is_user_identity_locked(user_id: str) -> bool:
 
 def get_authoritative_user_identity(user_id: str) -> Dict[str, Any]:
     """Retrieves full_name and college from authoritative profile records."""
+    if not _is_uuid(user_id):
+        return {
+            "user_id": user_id,
+            "full_name": "",
+            "college": "",
+            "is_identity_locked": False,
+        }
+
     sb = get_supabase()
     full_name = ""
     college = ""
@@ -454,6 +480,9 @@ def update_student_certificate_identity(user_id: str, full_name: Optional[str] =
     Updates student's authoritative full name and college before their first certificate.
     College is optional. If any certificate has already been issued, this is strictly rejected with HTTP 403.
     """
+    if not _is_uuid(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID format.")
+
     clean_name = (full_name or "").strip()
     clean_college = (college or "").strip()
 
@@ -503,6 +532,9 @@ def check_course_completion_and_eligibility(user_id: str, course_id_or_slug: str
     Authoritative backend check determining if student has completed all requirements
     and is eligible for certificate issuance.
     """
+    if not _is_uuid(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID format.")
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
@@ -684,6 +716,9 @@ def issue_course_certificate(user_id: str, course_id_or_slug: str) -> Dict[str, 
     Validates completion, course status, certificate configuration, student identity.
     Enforces idempotency and race condition safety.
     """
+    if not _is_uuid(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID format.")
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
@@ -819,6 +854,9 @@ def _format_certificate_response(cert_row: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_student_certificates(user_id: str) -> List[Dict[str, Any]]:
     """Retrieves all certificates earned by the authenticated student."""
+    if not _is_uuid(user_id):
+        return []
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
@@ -836,6 +874,9 @@ def get_student_certificates(user_id: str) -> List[Dict[str, Any]]:
 
 def get_student_certificate_by_course(user_id: str, course_id_or_slug: str) -> Dict[str, Any]:
     """Retrieves the authenticated student's certificate for a specific course."""
+    if not _is_uuid(user_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certificate not found for this course.")
+
     sb = get_supabase()
     if not sb:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database unavailable")
@@ -858,7 +899,7 @@ def get_student_certificate_by_course(user_id: str, course_id_or_slug: str) -> D
 
 def get_student_certificate_by_id(user_id: str, certificate_id: str) -> Dict[str, Any]:
     """Retrieves a specific certificate owned by the authenticated student."""
-    if not _is_uuid(certificate_id):
+    if not _is_uuid(user_id) or not _is_uuid(certificate_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certificate not found.")
 
     sb = get_supabase()
