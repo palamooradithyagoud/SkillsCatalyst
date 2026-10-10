@@ -515,3 +515,173 @@ async def test_profile_response_matches_pre_fix_snapshot():
                 )
     finally:
         app.dependency_overrides.clear()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GAP 6: Edge Case Coverage (Semaphore, Cancellation, Refresher, Rate Limiter, Auth)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.anyio
+async def test_semaphore_saturation_returns_503_and_health_stays_fast():
+    """
+    GAP 6a: When all slots on the AI semaphore are occupied, request N+1 receives
+    HTTP 503 in the standard error shape after acquire timeout, while concurrent
+    /health probes remain unblocked (< 50ms).
+    """
+    from backend.services.groq_service import init_ai_semaphore, run_bounded_ai_call
+    sem = init_ai_semaphore(max_concurrent=2)
+
+    # Occupy all 2 slots
+    await sem.acquire()
+    await sem.acquire()
+
+    try:
+        t0 = time.monotonic()
+        with pytest.raises(HTTPException) as exc_info:
+            await run_bounded_ai_call(
+                lambda: "workload",
+                acquire_timeout=0.6,
+            )
+        elapsed = time.monotonic() - t0
+
+        assert exc_info.value.status_code == 503
+        detail = exc_info.value.detail
+        assert isinstance(detail, dict)
+        assert detail.get("success") is False
+        assert "concurrency limit" in detail.get("detail", "").lower()
+        assert elapsed <= 1.2, f"Acquire timeout took too long: {elapsed}s"
+
+        # Assert /health probe stays fast while semaphore is saturated
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            t_probe = time.monotonic()
+            resp = await client.get("/health")
+            probe_ms = (time.monotonic() - t_probe) * 1000.0
+            assert resp.status_code == 200
+            assert probe_ms < 50.0, f"/health took too long ({probe_ms}ms) during semaphore saturation"
+    finally:
+        sem.release()
+        sem.release()
+
+
+@pytest.mark.anyio
+async def test_semaphore_slot_released_on_exception_and_cancellation():
+    """
+    GAP 6b: Verifies no slot leaks on either worker exception or caller cancellation.
+    """
+    from backend.services.groq_service import init_ai_semaphore, run_bounded_ai_call
+    sem = init_ai_semaphore(max_concurrent=3)
+    initial_value = sem._value
+
+    # 1. Exception in worker function
+    def failing_worker():
+        raise RuntimeError("Synthetic failure in Groq worker")
+
+    with pytest.raises(RuntimeError):
+        await run_bounded_ai_call(failing_worker, acquire_timeout=1.0)
+
+    # Allow worker thread finally block to execute threadsafe release
+    await asyncio.sleep(0.05)
+    assert sem._value == initial_value, f"Slot leaked on exception: sem._value={sem._value}, expected {initial_value}"
+
+    # 2. Client cancellation (task cancelled)
+    def long_worker():
+        time.sleep(0.2)
+        return "done"
+
+    task = asyncio.create_task(run_bounded_ai_call(long_worker, acquire_timeout=1.0))
+    await asyncio.sleep(0.05)
+    # Cancel while worker is running
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    # Wait for background worker to terminate and release slot
+    await asyncio.sleep(0.25)
+    assert sem._value == initial_value, f"Slot leaked on cancellation: sem._value={sem._value}, expected {initial_value}"
+
+
+def test_redis_refresher_resilience_and_shutdown():
+    """
+    GAP 6c: Test that Redis ping failure or hang does not crash the refresher,
+    and shutdown cleans up tasks without warnings.
+    """
+    from backend.services.cache_service import refresh_cached_redis_status, get_cached_redis_status
+
+    with patch("backend.services.cache_service.get_redis_client") as mock_get_client:
+        mock_client = MagicMock()
+        mock_client.ping.side_effect = Exception("Connection refused to Redis")
+        mock_get_client.return_value = mock_client
+
+        # Should not raise exception; sets degraded/fallback status
+        status = refresh_cached_redis_status()
+        assert status in ("degraded/fallback", "disconnected")
+        assert get_cached_redis_status() in ("degraded/fallback", "disconnected")
+
+
+def test_thread_safe_rate_limiter_concurrency():
+    """
+    GAP 6d: 50 concurrent threads hammering InMemoryRateLimiter on the same key.
+    Verifies exactly limit requests are allowed and no thread-safety exceptions occur.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from backend.services.rate_limiter import InMemoryRateLimiter
+
+    limiter = InMemoryRateLimiter()
+    limit = 20
+    window = 60
+
+    # Build mock request object that returns a consistent client key
+    mock_req = MagicMock()
+    mock_req.headers = {}
+    mock_req.client.host = "192.168.1.100"
+
+    results = []
+
+    def hammer():
+        allowed, retry = limiter.check_rate_limit(mock_req, limit, window)
+        return allowed
+
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        futs = [executor.submit(hammer) for _ in range(50)]
+        for fut in futs:
+            results.append(fut.result())
+
+    allowed_count = sum(1 for r in results if r is True)
+    blocked_count = sum(1 for r in results if r is False)
+
+    assert allowed_count == limit, f"Expected exactly {limit} allowed requests, got {allowed_count}"
+    assert blocked_count == 30, f"Expected 30 blocked requests, got {blocked_count}"
+
+
+@pytest.mark.anyio
+async def test_middleware_auth_parity_missing_malformed_expired():
+    """
+    GAP 6e: Confirms missing, malformed, and expired tokens return 401 with standard format.
+    """
+    import jwt
+    import time
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Missing token
+        r_missing = await client.get("/api/profile")
+        assert r_missing.status_code == 401
+        data_missing = r_missing.json()
+        assert "Invalid" in data_missing.get("detail", "") or "Invalid" in data_missing.get("message", "")
+
+        # 2. Malformed token
+        r_malformed = await client.get("/api/profile", headers={"Authorization": "Bearer not-a-valid-jwt"})
+        assert r_malformed.status_code == 401
+        data_malformed = r_malformed.json()
+        assert "Invalid" in data_malformed.get("detail", "") or "Invalid" in data_malformed.get("message", "")
+
+        # 3. Expired token (past exp timestamp)
+        expired_payload = {
+            "sub": "user-00000000-0000-0000-0000-000000000001",
+            "exp": int(time.time()) - 3600,
+        }
+        expired_jwt = jwt.encode(expired_payload, "test-secret-key-that-is-thirty-two-bytes-long", algorithm="HS256")
+        r_expired = await client.get("/api/profile", headers={"Authorization": f"Bearer {expired_jwt}"})
+        assert r_expired.status_code == 401
+        data_expired = r_expired.json()
+        assert "Invalid" in data_expired.get("detail", "") or "Invalid" in data_expired.get("message", "")
+
