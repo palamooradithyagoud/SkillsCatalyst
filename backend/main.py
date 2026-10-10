@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import time
@@ -145,7 +146,8 @@ async def production_hardening_middleware(request: Request, call_next):
     # Auto-issue signed guest session token for non-authenticated guest requests
     auth_hdr = request.headers.get("authorization")
     from backend.services.auth_service import get_optional_user_id, sanitize_or_generate_guest_id
-    user_id = get_optional_user_id(authorization=auth_hdr)
+    # Interim threadpool wrap for P0-1 to prevent blocking event loop; replaced by local JWT in P1-3
+    user_id = await asyncio.to_thread(get_optional_user_id, auth_hdr)
     if not user_id:
         raw_sid = request.headers.get("x-session-id")
         _, signed_token = sanitize_or_generate_guest_id(raw_sid)

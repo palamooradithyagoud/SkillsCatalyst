@@ -156,7 +156,10 @@ rate_limiter: BaseRateLimiter = RedisRateLimiter()
 def enforce_rate_limit(max_requests: int, window_seconds: int = 60):
     """FastAPI dependency for enforcing rate limits on specific routes."""
     async def dependency(request: Request):
-        allowed, retry_after = rate_limiter.check_rate_limit(
+        import asyncio
+        # Interim threadpool wrap for P0-1 to prevent blocking event loop; replaced by local JWT in P1-3
+        allowed, retry_after = await asyncio.to_thread(
+            rate_limiter.check_rate_limit,
             request=request,
             max_requests=max_requests,
             window_seconds=window_seconds
