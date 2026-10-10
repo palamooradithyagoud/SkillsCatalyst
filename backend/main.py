@@ -377,13 +377,8 @@ def health_check():
 
 @app.get("/ready", status_code=status.HTTP_200_OK, tags=["System"])
 def readiness_check():
-    """Railway Readiness Probe Endpoint (performs deep dependency validation)."""
-    from backend.services.cache_service import get_redis_health_status
-    redis_status = get_redis_health_status(force_ping=True)
-    return {
-        "status": "ready",
-        "redis": redis_status,
-    }
+    """Railway Readiness Probe Endpoint."""
+    return {"status": "ready"}
 
 @app.get("/api/metrics", status_code=status.HTTP_200_OK, tags=["System"])
 def system_metrics():
