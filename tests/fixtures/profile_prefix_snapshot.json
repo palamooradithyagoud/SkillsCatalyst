@@ -1,0 +1,119 @@
+{
+  "personal": {
+    "id": "user-00000000-0000-0000-0000-000000000001",
+    "full_name": "Ada Lovelace",
+    "headline": "Software Engineer",
+    "avatar_url": "https://example.com/avatar.png",
+    "country": "US",
+    "state": "CA",
+    "city": "SF",
+    "phone": "+1234567890",
+    "gender": "Female",
+    "about": "Lover of code"
+  },
+  "academic": {
+    "user_id": "user-00000000-0000-0000-0000-000000000001",
+    "full_name": "Ada Lovelace",
+    "college": "MIT",
+    "department": "Computer Science",
+    "academic_year": "2025",
+    "target_role": "Backend Engineer"
+  },
+  "career_preferences": {
+    "user_id": "user-00000000-0000-0000-0000-000000000001",
+    "target_roles": [
+      "Backend Engineer"
+    ],
+    "preferred_industries": [
+      "Tech"
+    ],
+    "target_companies": [
+      "Google"
+    ],
+    "preferred_locations": [
+      "Remote"
+    ],
+    "work_arrangements": [
+      "Full-time"
+    ]
+  },
+  "skills": [
+    {
+      "id": "sk-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "skill_name": "Python",
+      "category": "Backend",
+      "proficiency": "Expert"
+    }
+  ],
+  "experiences": [
+    {
+      "id": "exp-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "company": "Tech Corp",
+      "role": "Senior Engineer",
+      "start_date": "2022-01-01"
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "institution": "MIT",
+      "degree": "B.S. CS",
+      "start_year": 2018
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "title": "Compiler",
+      "description": "A compiler in Python"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "name": "AWS Certified Architect",
+      "issuer": "Amazon",
+      "issue_date": "2023-05-01"
+    }
+  ],
+  "achievements": [
+    {
+      "id": "ach-1",
+      "user_id": "user-00000000-0000-0000-0000-000000000001",
+      "title": "Hackathon Winner",
+      "achievement_date": "2024-02-15"
+    }
+  ],
+  "resume": {
+    "id": "res-1",
+    "user_id": "user-00000000-0000-0000-0000-000000000001",
+    "score": 88,
+    "created_at": "2026-01-01T00:00:00Z"
+  },
+  "progress": {
+    "user_id": "user-00000000-0000-0000-0000-000000000001",
+    "total_points": 500,
+    "level": 5
+  },
+  "coding_inputs": {
+    "leetcode": "https://leetcode.com/ada",
+    "github": "https://github.com/ada",
+    "hackerrank": "",
+    "codechef": "",
+    "geeksforgeeks": "",
+    "codeforces": ""
+  },
+  "coding_stats": {
+    "leetcode": {
+      "solved": 150
+    },
+    "github": {
+      "repos": 42
+    }
+  }
+}

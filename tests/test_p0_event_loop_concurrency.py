@@ -345,53 +345,173 @@ async def test_trickling_groq_mock_returns_standard_503_within_scaled_ceiling(mo
 @pytest.mark.anyio
 async def test_profile_response_matches_pre_fix_snapshot():
     """
-    Requirement 3c: Regression snapshot test ensuring GET /api/profile
-    returns the exact expected schema fields after converting to def.
+    GAP 3: Strict equality regression test ensuring GET /api/profile on the branch
+    matches the exact pre-fix JSON snapshot recorded from base 1d15718.
     """
-    mock_sb = MagicMock()
-    mock_data = {
-        "id": "11111111-1111-1111-1111-111111111111",
-        "full_name": "Snapshot User",
-        "email": "snapshot@example.com",
+    import json
+    from pathlib import Path
+
+    fixture_path = Path(__file__).parent / "fixtures" / "profile_prefix_snapshot.json"
+    assert fixture_path.exists(), f"Fixture missing at {fixture_path}"
+    with open(fixture_path, "r", encoding="utf-8") as f:
+        expected_snapshot = json.load(f)
+
+    user_id = "user-00000000-0000-0000-0000-000000000001"
+
+    # Deterministic mock identical to the generator executed on base 1d15718
+    mock_tables = {
+        "user_academic_profile": [{
+            "user_id": user_id,
+            "full_name": "Ada Lovelace",
+            "college": "MIT",
+            "department": "Computer Science",
+            "academic_year": "2025",
+            "target_role": "Backend Engineer",
+        }],
+        "profiles": [{
+            "id": user_id,
+            "full_name": "Ada Lovelace",
+            "headline": "Software Engineer",
+            "avatar_url": "https://example.com/avatar.png",
+            "country": "US",
+            "state": "CA",
+            "city": "SF",
+            "phone": "+1234567890",
+            "gender": "Female",
+            "about": "Lover of code",
+        }],
+        "user_coding_profiles": [{
+            "user_id": user_id,
+            "leetcode_url": "https://leetcode.com/ada",
+            "github_url": "https://github.com/ada",
+            "hackerrank_url": "",
+            "codechef_url": "",
+            "geeksforgeeks_url": "",
+            "codeforces_url": "",
+            "stats_json": {
+                "leetcode": {"solved": 150},
+                "github": {"repos": 42},
+            },
+        }],
+        "user_skills": [{
+            "id": "sk-1",
+            "user_id": user_id,
+            "skill_name": "Python",
+            "category": "Backend",
+            "proficiency": "Expert",
+        }],
+        "experiences": [{
+            "id": "exp-1",
+            "user_id": user_id,
+            "company": "Tech Corp",
+            "role": "Senior Engineer",
+            "start_date": "2022-01-01",
+        }],
+        "education": [{
+            "id": "edu-1",
+            "user_id": user_id,
+            "institution": "MIT",
+            "degree": "B.S. CS",
+            "start_year": 2018,
+        }],
+        "projects": [{
+            "id": "proj-1",
+            "user_id": user_id,
+            "title": "Compiler",
+            "description": "A compiler in Python",
+        }],
+        "certifications": [{
+            "id": "cert-1",
+            "user_id": user_id,
+            "name": "AWS Certified Architect",
+            "issuer": "Amazon",
+            "issue_date": "2023-05-01",
+        }],
+        "achievements": [{
+            "id": "ach-1",
+            "user_id": user_id,
+            "title": "Hackathon Winner",
+            "achievement_date": "2024-02-15",
+        }],
+        "career_preferences": [{
+            "user_id": user_id,
+            "target_roles": ["Backend Engineer"],
+            "preferred_industries": ["Tech"],
+            "target_companies": ["Google"],
+            "preferred_locations": ["Remote"],
+            "work_arrangements": ["Full-time"],
+        }],
+        "resume_scores": [{
+            "id": "res-1",
+            "user_id": user_id,
+            "score": 88,
+            "created_at": "2026-01-01T00:00:00Z",
+        }],
+        "user_progress": [{
+            "user_id": user_id,
+            "total_points": 500,
+            "level": 5,
+        }],
     }
-    mock_res = MagicMock()
-    mock_res.data = [mock_data]
-    mock_sb.from_().select().eq().execute.return_value = mock_res
-    mock_sb.from_().select().execute.return_value = mock_res
+
+    class MockQuery:
+        def __init__(self, table_name):
+            self.table_name = table_name
+        def select(self, *args, **kwargs): return self
+        def eq(self, *args, **kwargs): return self
+        def order(self, *args, **kwargs): return self
+        def limit(self, *args, **kwargs): return self
+        def execute(self):
+            res = MagicMock()
+            res.data = mock_tables.get(self.table_name, [])
+            return res
 
     mock_user = MagicMock()
-    mock_user.id = "11111111-1111-1111-1111-111111111111"
-    mock_user.email = "snapshot@example.com"
-    mock_user.user_metadata = {}
+    mock_user.id = user_id
+    mock_user.email = "ada@example.com"
     mock_auth_res = MagicMock()
     mock_auth_res.user = mock_user
-    mock_sb.auth.get_user.return_value = mock_auth_res
 
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
-        with patch("backend.routers.profile.get_supabase", return_value=mock_sb), \
-             patch("backend.services.auth_service.get_supabase", return_value=mock_sb):
+    class MockAuth:
+        def get_user(self, *args, **kwargs):
+            return mock_auth_res
 
-            resp = await client.get(
-                "/api/profile",
-                headers={"Authorization": "Bearer mock_valid_jwt"},
-            )
-            assert resp.status_code == 200
-            data = resp.json()
-            # Verify exact expected snapshot top-level structure
-            expected_keys = [
-                "personal",
-                "academic",
-                "career_preferences",
-                "skills",
-                "experiences",
-                "education",
-                "projects",
-                "certifications",
-                "achievements",
-                "resume",
-                "progress",
-                "coding_inputs",
-                "coding_stats",
-            ]
-            for key in expected_keys:
-                assert key in data, f"Missing key '{key}' in profile snapshot"
+    class MockSupabase:
+        def __init__(self):
+            self.auth = MockAuth()
+        def from_(self, table_name):
+            return MockQuery(table_name)
+
+    mock_sb = MockSupabase()
+
+    from backend.services.auth_service import get_current_user_id
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+
+    # Explicit list of volatile fields to ignore (none in deterministic GET /api/profile schema)
+    IGNORED_VOLATILE_FIELDS = []
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            with patch("backend.routers.profile.get_supabase", return_value=mock_sb), \
+                 patch("backend.services.auth_service.get_supabase", return_value=mock_sb), \
+                 patch("backend.services.auth_service.get_current_user_id", return_value=user_id):
+
+                resp = await client.get(
+                    "/api/profile",
+                    headers={"Authorization": "Bearer mock_valid_jwt"},
+                )
+                assert resp.status_code == 200
+                actual_data = resp.json()
+
+                def strip_volatile(d):
+                    if isinstance(d, dict):
+                        return {k: strip_volatile(v) for k, v in d.items() if k not in IGNORED_VOLATILE_FIELDS}
+                    elif isinstance(d, list):
+                        return [strip_volatile(x) for x in d]
+                    return d
+
+                assert strip_volatile(actual_data) == strip_volatile(expected_snapshot), (
+                    f"Branch profile output diverged from base 1d15718 snapshot!"
+                )
+    finally:
+        app.dependency_overrides.clear()
