@@ -2,6 +2,7 @@ import asyncio
 import os
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 from groq import (
     Groq,
