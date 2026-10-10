@@ -11,6 +11,7 @@ from backend.services.groq_service import (
     _AI_UNAVAILABLE_MSG,
     get_ai_semaphore,
     acquire_ai_slot,
+    run_bounded_ai_call,
 )
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
@@ -382,22 +383,20 @@ async def chat_mentor(
             current_message_id=current_msg_id,
         )
 
-        # 4. Invoke LLM provider
+        # 4. Invoke LLM provider with bounded deadline watchdog and slot retention
         try:
-            async with acquire_ai_slot(timeout=5.0):
-                response = await asyncio.to_thread(
-                    chat_with_groq,
-                    prompt=prompt_text,
-                    system_prompt=effective_system_prompt,
-                    messages=llm_messages,
-                )
+            response = await run_bounded_ai_call(
+                chat_with_groq,
+                prompt=prompt_text,
+                system_prompt=effective_system_prompt,
+                messages=llm_messages,
+            )
         except TypeError:
-            async with acquire_ai_slot(timeout=5.0):
-                response = await asyncio.to_thread(
-                    chat_with_groq,
-                    prompt_text,
-                    system_prompt=effective_system_prompt,
-                )
+            response = await run_bounded_ai_call(
+                chat_with_groq,
+                prompt_text,
+                system_prompt=effective_system_prompt,
+            )
 
         # 5. Handle LLM failure: User message preserved, NO fake assistant message written
         if not response or response == _AI_UNAVAILABLE_MSG:
@@ -423,8 +422,11 @@ async def chat_mentor(
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
     # -----------------------------------------------------------------------
-    async with acquire_ai_slot(timeout=5.0):
-        response = await asyncio.to_thread(chat_with_groq, prompt=prompt_text, system_prompt=_SKILLS_SYSTEM_PROMPT)
+    response = await run_bounded_ai_call(
+        chat_with_groq,
+        prompt=prompt_text,
+        system_prompt=_SKILLS_SYSTEM_PROMPT,
+    )
 
     if entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
@@ -558,8 +560,7 @@ STRICT RULES:
 - Focus on impact, metrics, and role relevance
 - Assume this resume is competing at a top 10% level"""
 
-    async with acquire_ai_slot(timeout=5.0):
-        review_text = await asyncio.to_thread(chat_with_groq, user_prompt, system_prompt=system_prompt)
+    review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")

@@ -31,6 +31,19 @@ _GROQ_HARD_CEILING    = float(os.getenv("GROQ_CHAIN_TIMEOUT_SECONDS", "25.0"))  
 
 # Global AI request concurrency limiter (initialized in FastAPI lifespan)
 _ai_semaphore: Optional[asyncio.Semaphore] = None
+_ai_executor: Optional[ThreadPoolExecutor] = None
+
+
+def get_ai_executor() -> ThreadPoolExecutor:
+    """Returns dedicated AI threadpool executor sized to MAX_CONCURRENT_AI_REQUESTS."""
+    global _ai_executor
+    if _ai_executor is None:
+        max_workers = int(os.getenv("MAX_CONCURRENT_AI_REQUESTS", "6"))
+        _ai_executor = ThreadPoolExecutor(
+            max_workers=max_workers,
+            thread_name_prefix="groq_ai_worker"
+        )
+    return _ai_executor
 
 
 def init_ai_semaphore(max_concurrent: int = 6) -> asyncio.Semaphore:
@@ -51,6 +64,7 @@ def get_ai_semaphore() -> asyncio.Semaphore:
 
 
 from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException
 
 
@@ -80,6 +94,95 @@ async def acquire_ai_slot(timeout: float = 5.0):
         yield
     finally:
         sem.release()
+
+
+async def run_bounded_ai_call(
+    func,
+    *args,
+    acquire_timeout: float = 5.0,
+    ceiling_timeout: Optional[float] = None,
+    **kwargs,
+) -> str:
+    """
+    Executes an AI call with strict concurrency gating and a true wall-clock deadline watchdog.
+
+    Mechanisms:
+      1. Concurrency limit: Acquires a slot from _ai_semaphore. If not acquired
+         within `acquire_timeout` (default 5s), raises HTTP 503.
+      2. True Deadline Enforcement:
+         HTTPX timeouts are per-phase, not overall request deadlines. A remote server
+         that trickles bytes slowly can keep an HTTP read alive past individual socket limits.
+         To enforce a true hard deadline, we run the blocking call in a dedicated AI
+         worker threadpool and wrap the caller awaiting it in `asyncio.wait_for`.
+      3. Thread Lifetime & Slot Accounting:
+         Python threads cannot be forcefully killed once started. If `wait_for`
+         times out or a client disconnects, the abandoned thread continues in the background
+         until its socket read terminates or hits OS limits.
+         To prevent resource exhaustion:
+         a) We hold the semaphore slot until the worker thread actually finishes (via
+            a done callback), preventing abandoned trickling threads from exceeding
+            the max concurrency ceiling.
+         b) We isolate AI calls in a dedicated ThreadPoolExecutor sized to
+            MAX_CONCURRENT_AI_REQUESTS so abandoned AI threads never starve general
+            AnyIO threadpool operations (DB queries, auth, cache).
+      4. Standard Error Shape:
+         If the hard ceiling expires, returns standard HTTP 503 error payload.
+    """
+    sem = get_ai_semaphore()
+    try:
+        await asyncio.wait_for(sem.acquire(), timeout=acquire_timeout)
+    except asyncio.TimeoutError:
+        logger.warning(
+            f"AI request concurrency capacity saturated (exceeded {acquire_timeout}s acquire wait). Returning HTTP 503."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "success": False,
+                "message": "AI Mentor service is currently experiencing high load. Please try again in a moment.",
+                "detail": f"AI concurrency limit reached (acquire timeout {acquire_timeout}s)",
+            },
+        )
+
+    loop = asyncio.get_running_loop()
+    executor = get_ai_executor()
+    slot_released = False
+
+    def _release_slot():
+        nonlocal slot_released
+        if not slot_released:
+            slot_released = True
+            sem.release()
+
+    def _worker():
+        try:
+            return func(*args, **kwargs)
+        finally:
+            loop.call_soon_threadsafe(_release_slot)
+
+    try:
+        fut = loop.run_in_executor(executor, _worker)
+    except Exception:
+        _release_slot()
+        raise
+
+    ceiling = ceiling_timeout if ceiling_timeout is not None else _GROQ_HARD_CEILING
+    grace = 0.5
+    try:
+        return await asyncio.wait_for(asyncio.shield(fut), timeout=ceiling + grace)
+    except asyncio.TimeoutError:
+        logger.warning(
+            f"AI request exceeded hard ceiling deadline ({ceiling}s + {grace}s grace). "
+            f"Worker thread will release its slot when underlying socket closes. Returning HTTP 503."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "success": False,
+                "message": "AI Mentor service is currently experiencing high load. Please try again in a moment.",
+                "detail": f"AI request exceeded hard deadline ({ceiling}s)",
+            },
+        )
 
 # Safe user-facing message when all models fail (NO internal exceptions or stack traces).
 _AI_UNAVAILABLE_MSG = (

@@ -3,6 +3,7 @@ import time
 from unittest.mock import MagicMock, patch
 import pytest
 import httpx
+from fastapi import HTTPException
 from groq import Timeout, APITimeoutError
 from backend.main import app
 import backend.services.groq_service as groq_module
@@ -304,6 +305,41 @@ def test_hanging_groq_mock_returns_standard_error_within_scaled_budget(monkeypat
     assert result == _AI_UNAVAILABLE_MSG
     # Should execute at most 2 attempts before remaining budget < 2.0s triggers skip
     assert elapsed <= 4.5, f"Hanging Groq mock exceeded scaled budget: {elapsed}s"
+
+
+@pytest.mark.anyio
+async def test_trickling_groq_mock_returns_standard_503_within_scaled_ceiling(monkeypatch):
+    """
+    GAP 2: When a remote Groq server trickles bytes slowly without hitting
+    per-phase socket timeouts, verify that run_bounded_ai_call watchdog halts
+    the execution and returns standard HTTP 503 error payload within ceiling + tolerance.
+    """
+    scaled_ceiling = 2.0  # seconds
+    monkeypatch.setenv("GROQ_CHAIN_TIMEOUT_SECONDS", str(scaled_ceiling))
+    import backend.services.groq_service as groq_svc
+    monkeypatch.setattr(groq_svc, "_GROQ_HARD_CEILING", scaled_ceiling)
+
+    # Mock a trickling Groq call that sleeps in a loop, simulating slow bytes
+    # that would bypass per-phase HTTPX socket timeouts.
+    def trickling_groq_call(*args, **kwargs):
+        for _ in range(20):
+            time.sleep(0.5)
+        return "slow trickled response"
+
+    t0 = time.monotonic()
+    with pytest.raises(HTTPException) as exc_info:
+        await groq_svc.run_bounded_ai_call(
+            trickling_groq_call,
+            ceiling_timeout=scaled_ceiling,
+        )
+    elapsed = time.monotonic() - t0
+
+    assert exc_info.value.status_code == 503
+    detail = exc_info.value.detail
+    assert isinstance(detail, dict)
+    assert detail.get("success") is False
+    assert "hard deadline" in detail.get("detail", "")
+    assert elapsed <= 3.5, f"Watchdog failed to bound trickling call in time: took {elapsed:.2f}s"
 
 
 @pytest.mark.anyio
