@@ -386,7 +386,7 @@ async def _extract_hackerrank(input_val: str) -> Dict[str, Any]:
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("")
-async def get_profile(user_id: str = Depends(get_current_user_id)):
+def get_profile(user_id: str = Depends(get_current_user_id)):
     """
     Fetch current user's complete Unified Profile across all normalized entities,
     with extracted coding platform stats and backward-compatible fallbacks.
@@ -585,7 +585,7 @@ async def get_profile(user_id: str = Depends(get_current_user_id)):
 
 
 @router.post("/personal")
-async def save_personal_profile(
+def save_personal_profile(
     body: PersonalProfileModel,
     current_user_id: str = Depends(get_current_user_id)
 ):
@@ -647,7 +647,7 @@ async def save_personal_profile(
 
 
 @router.post("/career-preferences")
-async def save_career_preferences(
+def save_career_preferences(
     body: CareerPreferencesModel,
     current_user_id: str = Depends(get_current_user_id)
 ):
@@ -683,7 +683,7 @@ async def save_career_preferences(
 
 
 @router.post("/academic")
-async def save_academic_profile(
+def save_academic_profile(
     body: AcademicProfileModel,
     current_user_id: str = Depends(get_current_user_id)
 ):
@@ -824,7 +824,9 @@ async def save_coding_profiles(
     if sb:
         try:
             logger.info(f"Saving coding profiles for user_id={user_id}")
-            result = sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
+            result = await asyncio.to_thread(
+                lambda: sb.from_("user_coding_profiles").upsert(db_data, on_conflict="user_id").execute()
+            )
             logger.info(f"Coding profiles saved to Supabase: {len(result.data)} rows")
         except Exception as e:
             logger.error(f"Failed to save coding profiles: {e}")
