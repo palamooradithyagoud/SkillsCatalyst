@@ -3,168 +3,203 @@ import time
 import statistics
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 _root = Path(__file__).resolve().parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 
 async def run_load_check():
-    print("=" * 75)
+    print("=" * 80)
     print("SKILLSCATALYST P0-1: 1-WORKER CONCURRENCY LOAD CHECK")
-    print("Workload: 20 Concurrent AI Requests (Mocked Groq 3s, Mocked Supabase 0.12s)")
+    print("Workload: 20 Concurrent AI Requests (Mocked Groq 3.0s, Mocked Supabase 0.12s)")
     print("Concurrent Health Polling: Poll /health every 100ms")
-    print("=" * 75)
+    print("=" * 80)
 
     groq_delay = 3.0
     db_delay = 0.12
 
     # ─────────────────────────────────────────────────────────────────────────
-    # 1. BEFORE FIX: Synchronous Execution on Single Event Loop
+    # 1. BEFORE (Base 1d15718): Synchronous Execution on Single Event Loop
     # ─────────────────────────────────────────────────────────────────────────
-    unpatched_app = FastAPI()
+    base_app = FastAPI()
 
-    @unpatched_app.get("/health")
-    async def unpatched_health():
-        # Active network I/O simulation (8ms Redis ping)
+    @base_app.get("/health")
+    def base_health():
+        # Live Redis ping simulation on event loop (blocking I/O)
         time.sleep(0.008)
         return {"status": "healthy"}
 
-    @unpatched_app.post("/api/ai-mentor/chat")
-    async def unpatched_ai_chat():
-        # Sync DB call on event loop
+    @base_app.post("/api/ai-mentor/chat")
+    async def base_ai_chat():
+        # Synchronous DB query on single event loop
         time.sleep(db_delay)
-        # Sync Groq call on event loop
+        # Synchronous Groq call on single event loop
         time.sleep(groq_delay)
         return {"reply": "AI response"}
 
-    before_health_latencies = []
-    before_health_timeouts = 0
+    b_probes_attempted = 0
+    b_probes_completed = 0
+    b_probes_stalled = 0
+    b_longest_stall_ms = 0.0
 
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=unpatched_app), base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=base_app), base_url="http://test") as client:
         stop_polling = asyncio.Event()
 
         async def poll_health_before():
-            nonlocal before_health_timeouts
+            nonlocal b_probes_attempted, b_probes_completed, b_probes_stalled, b_longest_stall_ms
             while not stop_polling.is_set():
+                b_probes_attempted += 1
                 t0 = time.perf_counter()
                 try:
                     resp = await client.get("/health")
-                    latency_ms = (time.perf_counter() - t0) * 1000
-                    before_health_latencies.append(latency_ms)
+                    latency_ms = (time.perf_counter() - t0) * 1000.0
+                    b_probes_completed += 1
+                    if latency_ms > b_longest_stall_ms:
+                        b_longest_stall_ms = latency_ms
                     if latency_ms > 250.0:
-                        before_health_timeouts += 1
+                        b_probes_stalled += 1
                 except Exception:
-                    before_health_timeouts += 1
+                    b_probes_stalled += 1
                 await asyncio.sleep(0.1)
 
         poll_task = asyncio.create_task(poll_health_before())
 
         # Fire 20 concurrent AI requests
-        async def send_ai_request():
-            return await client.post("/api/ai-mentor/chat")
-
-        ai_tasks = [asyncio.create_task(send_ai_request()) for _ in range(20)]
+        t_ai_start = time.perf_counter()
+        ai_tasks = [asyncio.create_task(client.post("/api/ai-mentor/chat")) for _ in range(20)]
         await asyncio.gather(*ai_tasks)
+        b_ai_total_time = (time.perf_counter() - t_ai_start) * 1000.0
+
         stop_polling.set()
         await poll_task
 
     # ─────────────────────────────────────────────────────────────────────────
-    # 2. AFTER FIX: Patched with AnyIO Threadpool + In-Memory /health
+    # 2. AFTER (Branch): Threadpool Offloaded + Semaphore (Capacity 6, 5s timeout)
     # ─────────────────────────────────────────────────────────────────────────
-    patched_app = FastAPI()
-    # Concurrency limiter: capacity 6, acquire timeout 5s
-    ai_sem = asyncio.Semaphore(6)
+    branch_app = FastAPI()
+    from backend.services.groq_service import init_ai_semaphore, run_bounded_ai_call
 
-    @patched_app.get("/health")
-    async def patched_health():
-        # In-memory cached status with ZERO network I/O
+    # Initialize semaphore to capacity 6
+    ai_sem = init_ai_semaphore(max_concurrent=6)
+
+    @branch_app.get("/health")
+    def branch_health():
+        # Zero network I/O: pure memory read
         return {"status": "healthy"}
 
-    @patched_app.post("/api/ai-mentor/chat")
-    async def patched_ai_chat():
-        # Semaphore bound + threadpool offloaded
-        try:
-            await asyncio.wait_for(ai_sem.acquire(), timeout=5.0)
-        except asyncio.TimeoutError:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=503, detail="AI concurrency limit reached")
+    def _sync_groq_workload():
+        time.sleep(db_delay)
+        time.sleep(groq_delay)
+        return "AI response"
 
-        try:
-            # Sync DB call in threadpool
-            await asyncio.to_thread(time.sleep, db_delay)
-            # Sync Groq call in threadpool
-            await asyncio.to_thread(time.sleep, groq_delay)
-            return {"reply": "AI response"}
-        finally:
-            ai_sem.release()
+    @branch_app.post("/api/ai-mentor/chat")
+    async def branch_ai_chat():
+        reply = await run_bounded_ai_call(
+            _sync_groq_workload,
+            acquire_timeout=5.0,
+            ceiling_timeout=25.0,
+        )
+        return {"reply": reply}
 
-    after_health_latencies = []
-    after_health_timeouts = 0
+    a_probes_attempted = 0
+    a_probes_completed = 0
+    a_probes_stalled = 0
+    a_health_latencies = []
 
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=patched_app), base_url="http://test") as client:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=branch_app), base_url="http://test") as client:
         stop_polling = asyncio.Event()
 
         async def poll_health_after():
-            nonlocal after_health_timeouts
+            nonlocal a_probes_attempted, a_probes_completed, a_probes_stalled
             while not stop_polling.is_set():
+                a_probes_attempted += 1
                 t0 = time.perf_counter()
                 try:
                     resp = await client.get("/health")
-                    latency_ms = (time.perf_counter() - t0) * 1000
-                    after_health_latencies.append(latency_ms)
+                    latency_ms = (time.perf_counter() - t0) * 1000.0
+                    a_health_latencies.append(latency_ms)
+                    a_probes_completed += 1
                     if latency_ms > 250.0:
-                        after_health_timeouts += 1
+                        a_probes_stalled += 1
                 except Exception:
-                    after_health_timeouts += 1
+                    a_probes_stalled += 1
                 await asyncio.sleep(0.1)
 
         poll_task = asyncio.create_task(poll_health_after())
 
-        ai_tasks = [asyncio.create_task(client.post("/api/ai-mentor/chat")) for _ in range(20)]
+        ai_durations = []
+        ai_503_count = 0
+        ai_200_count = 0
+
+        async def send_branch_ai():
+            nonlocal ai_503_count, ai_200_count
+            t0 = time.perf_counter()
+            try:
+                resp = await client.post("/api/ai-mentor/chat")
+                elapsed = (time.perf_counter() - t0) * 1000.0
+                ai_durations.append(elapsed)
+                if resp.status_code == 200:
+                    ai_200_count += 1
+                elif resp.status_code == 503:
+                    ai_503_count += 1
+                return resp
+            except Exception as e:
+                elapsed = (time.perf_counter() - t0) * 1000.0
+                ai_durations.append(elapsed)
+                raise
+
+        t_ai_start = time.perf_counter()
+        ai_tasks = [asyncio.create_task(send_branch_ai()) for _ in range(20)]
         await asyncio.gather(*ai_tasks)
+        a_ai_total_time = (time.perf_counter() - t_ai_start) * 1000.0
+
         stop_polling.set()
         await poll_task
 
-    def compute_percentiles(latencies):
-        if not latencies:
-            return {"p50": 0, "p95": 0, "p99": 0, "max": 0, "count": 0}
-        s = sorted(latencies)
-        n = len(s)
-        return {
-            "p50": statistics.median(s),
-            "p95": s[min(int(0.95 * n), n - 1)],
-            "p99": s[min(int(0.99 * n), n - 1)],
-            "max": max(s),
-            "count": n,
-        }
+    # Compute percentiles for after (which has sufficient sample size)
+    s = sorted(a_health_latencies)
+    n = len(s)
+    a_p50 = statistics.median(s) if n else 0.0
+    a_p95 = s[min(int(0.95 * n), n - 1)] if n else 0.0
+    a_p99 = s[min(int(0.99 * n), n - 1)] if n else 0.0
+    a_max = max(s) if n else 0.0
 
-    b_stats = compute_percentiles(before_health_latencies)
-    a_stats = compute_percentiles(after_health_latencies)
+    ai_s = sorted(ai_durations)
+    ai_min = min(ai_s) if ai_s else 0.0
+    ai_median = statistics.median(ai_s) if ai_s else 0.0
+    ai_max = max(ai_s) if ai_s else 0.0
 
-    print("\n" + "-" * 75)
-    print("RESULTS SUMMARY:")
-    print("-" * 75)
-    print(f"BEFORE (Unpatched: Sync Blocking on Event Loop, Redis Ping I/O):")
-    print(f"  Total Health Probes Collected : {b_stats['count']}")
-    print(f"  Health Probes Exceeding 250ms : {before_health_timeouts} ({round(before_health_timeouts/max(1, b_stats['count'])*100, 1)}%) [RAILWAY PROBE FAILURES]")
-    print(f"  /health p50 Latency           : {b_stats['p50']:.2f} ms")
-    print(f"  /health p95 Latency           : {b_stats['p95']:.2f} ms")
-    print(f"  /health p99 Latency           : {b_stats['p99']:.2f} ms")
-    print(f"  /health max Latency           : {b_stats['max']:.2f} ms")
+    print("\n" + "-" * 80)
+    print("LOAD CHECK RESULTS:")
+    print("-" * 80)
+    print("BEFORE (Base 1d15718):")
+    print(f"  Health Probes Attempted : {b_probes_attempted}")
+    print(f"  Health Probes Completed : {b_probes_completed}")
+    print(f"  Health Probes Stalled   : {b_probes_stalled} (> 250ms threshold)")
+    print(f"  Longest Observed Stall  : {b_longest_stall_ms:.2f} ms ({b_longest_stall_ms/1000.0:.2f}s)")
+    print(f"  Total AI Batch Time     : {b_ai_total_time:.2f} ms ({b_ai_total_time/1000.0:.2f}s)")
+    print(f"  Note: With only {b_probes_completed} probe completed during the 62s block, percentiles are omitted.")
 
-    print(f"\nAFTER (Patched: Threadpool Offload + Semaphore Capacity 6 + In-Memory /health):")
-    print(f"  Total Health Probes Collected : {a_stats['count']}")
-    print(f"  Health Probes Exceeding 250ms : {after_health_timeouts} (0.0%) [ZERO TIMEOUTS]")
-    print(f"  /health p50 Latency           : {a_stats['p50']:.2f} ms")
-    print(f"  /health p95 Latency           : {a_stats['p95']:.2f} ms")
-    print(f"  /health p99 Latency           : {a_stats['p99']:.2f} ms")
-    print(f"  /health max Latency           : {a_stats['max']:.2f} ms")
-    print("-" * 75)
+    print("\nAFTER (Branch fix/p0-1-event-loop-blocking):")
+    print(f"  Health Probes Attempted : {a_probes_attempted}")
+    print(f"  Health Probes Completed : {a_probes_completed}")
+    print(f"  Health Probes Stalled   : {a_probes_stalled} (> 250ms threshold)")
+    print(f"  /health p50 Latency     : {a_p50:.2f} ms")
+    print(f"  /health p95 Latency     : {a_p95:.2f} ms")
+    print(f"  /health p99 Latency     : {a_p99:.2f} ms")
+    print(f"  /health max Latency     : {a_max:.2f} ms")
+    print(f"  AI Requests Completed   : {len(ai_durations)} total (200 OK: {ai_200_count}, 503 Capacity Bound: {ai_503_count})")
+    print(f"  AI Durations (min/med/max): {ai_min:.2f} ms / {ai_median:.2f} ms / {ai_max:.2f} ms")
+    print("-" * 80)
+
+    # Acceptance verification
+    assert a_p95 < 100.0, f"AFTER /health p95 ({a_p95}ms) did not meet < 100ms acceptance threshold"
+    assert a_probes_stalled == 0, f"AFTER /health had {a_probes_stalled} stalls exceeding 250ms"
+    print("ACCEPTANCE CRITERIA SATISFIED: AFTER /health p95 < 100ms and zero probe timeouts.")
 
 
 if __name__ == "__main__":
