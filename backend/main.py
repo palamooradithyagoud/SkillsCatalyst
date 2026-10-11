@@ -15,7 +15,7 @@ if str(_root_dir) not in sys.path:
 if str(_backend_dir) not in sys.path:
     sys.path.insert(0, str(_backend_dir))
 
-from fastapi import FastAPI, Request, Response, status, HTTPException
+from fastapi import FastAPI, Request, Response, status, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -25,6 +25,7 @@ from backend.config import (
     ENVIRONMENT,
     validate_startup_config,
 )
+from backend.services.auth_service import require_metrics_access
 
 # ── Structured Production Logger Configuration ────────────────────────────────
 logging.basicConfig(
@@ -381,9 +382,19 @@ def readiness_check():
     """Railway Readiness Probe Endpoint."""
     return {"status": "ready"}
 
-@app.get("/api/metrics", status_code=status.HTTP_200_OK, tags=["System"])
-def system_metrics():
-    """Returns safe, aggregated observability telemetry."""
+@app.get(
+    "/api/metrics",
+    status_code=status.HTTP_200_OK,
+    tags=["System"],
+)
+def system_metrics(
+    auth: dict = Depends(require_metrics_access),
+):
+    """
+    Returns safe, aggregated observability telemetry.
+    Protected by require_metrics_access (SEC-C-7): requires valid METRICS_SECRET_KEY
+    or authenticated Admin / Owner identity.
+    """
     from backend.services.observability import get_system_metrics
     return get_system_metrics()
 

@@ -9,7 +9,7 @@ from jwt import PyJWKClient
 from typing import Optional, Tuple, Any, Dict
 from fastapi import Header, HTTPException, status, Depends
 from backend.services.supabase_service import get_supabase
-from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET, SUPABASE_URL
+from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET, SUPABASE_URL, METRICS_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +321,76 @@ def require_admin(
         )
     return current_user
 
+
+def require_metrics_access(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    x_monitoring_key: Optional[str] = Header(None, alias="X-Monitoring-Key"),
+) -> Dict[str, Any]:
+    """
+    Authoritative Metrics Access Authorization Dependency (SEC-C-7).
+    Protects /api/metrics from unauthenticated exposure.
+
+    Permitted callers:
+      1. Server-side monitoring identities presenting a valid METRICS_SECRET_KEY
+         (via 'X-Monitoring-Key' header or 'Authorization: Bearer <METRICS_SECRET_KEY>').
+      2. Authenticated Platform Owners or Administrators presenting a verified Supabase JWT
+         ('owner' or 'admin' role).
+
+    Rejection policy:
+      - Missing or empty credentials -> HTTP 401 Unauthorized.
+      - Invalid or malformed credentials -> HTTP 401 Unauthorized.
+      - Authenticated students or unprivileged accounts -> HTTP 403 Forbidden.
+    """
+    # 1. Check dedicated X-Monitoring-Key header
+    if x_monitoring_key is not None:
+        clean_key = str(x_monitoring_key).strip()
+        if clean_key and METRICS_SECRET_KEY and hmac.compare_digest(clean_key, METRICS_SECRET_KEY):
+            return {"auth_type": "monitoring_key", "role": "monitor"}
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid monitoring credential.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 2. Check Authorization header
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        if not token or token in ("undefined", "null", ""):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing authentication token.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # 2a. Check if Bearer token matches configured monitoring secret key
+        if METRICS_SECRET_KEY and hmac.compare_digest(token, METRICS_SECRET_KEY):
+            return {"auth_type": "monitoring_key", "role": "monitor"}
+
+        # 2b. Authoritative Supabase JWT verification
+        decoded = verify_jwt_token(token)
+        u_id = str(decoded["sub"])
+        role = get_user_role(u_id, decoded)
+
+        if role in ("owner", "admin"):
+            return {
+                "user_id": u_id,
+                "email": str(decoded.get("email") or ""),
+                "role": role,
+                "auth_type": "jwt",
+            }
+
+        # Authenticated student or unprivileged caller
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Administrative or monitoring privileges required.",
+        )
+
+    # 3. No valid credentials provided
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required to access metrics.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 def get_current_user_id(

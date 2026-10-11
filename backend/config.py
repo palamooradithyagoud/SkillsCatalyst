@@ -39,6 +39,7 @@ REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 OWNER_EMAIL = os.getenv("OWNER_EMAIL", "palamooradithyagoud@gmail.com").strip().lower()
 MAX_CONCURRENT_AI_REQUESTS = int(os.getenv("MAX_CONCURRENT_AI_REQUESTS", "6"))
+METRICS_SECRET_KEY = os.getenv("METRICS_SECRET_KEY", "").strip()
 
 # ── PhonePe Payment Gateway Configuration (Phase 2) ───────────────────────────
 PHONEPE_ENV = os.getenv("PHONEPE_ENV", "SANDBOX").strip().upper()
@@ -134,6 +135,8 @@ def validate_startup_config() -> None:
         "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
         "GROQ_API_KEY": GROQ_API_KEY,
     }
+    if METRICS_SECRET_KEY:
+        critical_secrets["METRICS_SECRET_KEY"] = METRICS_SECRET_KEY
 
     insecure_found = []
     for sec_name, sec_val in critical_secrets.items():

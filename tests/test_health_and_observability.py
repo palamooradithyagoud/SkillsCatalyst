@@ -39,13 +39,25 @@ def test_readiness_endpoint():
     assert resp.json()["status"] == "ready"
 
 
-def test_metrics_endpoint():
+def test_metrics_endpoint_unauthenticated_rejected():
+    """Verify metrics endpoint rejects unauthenticated callers (SEC-C-7)."""
     resp = client.get("/api/metrics")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "uptime_seconds" in data
-    assert "requests" in data
-    assert "redis_cache" in data
+    assert resp.status_code == 401
+
+
+def test_metrics_endpoint_authorized_access():
+    """Verify metrics endpoint returns telemetry for authorized monitoring key."""
+    from unittest.mock import patch
+    with patch("backend.services.auth_service.METRICS_SECRET_KEY", "test-monitoring-secret-key-32chars"):
+        resp = client.get(
+            "/api/metrics",
+            headers={"X-Monitoring-Key": "test-monitoring-secret-key-32chars"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "uptime_seconds" in data
+        assert "requests" in data
+        assert "redis_cache" in data
 
 
 def test_redact_sensitive_strings():
