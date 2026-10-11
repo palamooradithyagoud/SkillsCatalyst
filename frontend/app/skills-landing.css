@@ -310,7 +310,7 @@
   line-height: 1.3;
 }
 
-/* Right Actions (Login & Register on White Area) */
+/* Right Actions (Login on White Area) */
 .scNavRightActions {
   display: flex;
   align-items: center;
@@ -318,23 +318,27 @@
   gap: 0.65rem;
   width: 200px;
   flex-shrink: 0;
+  padding-right: 3rem;
 }
 
 .scNavLoginBtn {
-  padding: 0.55rem 1.35rem;
+  padding: 0.55rem 1.65rem;
   font-size: 0.88rem;
-  font-weight: 600;
-  color: #000000;
-  background: #e5e7eb;
+  font-weight: 700;
+  color: #ffffff;
+  background: #683594;
   border: none;
   border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(104, 53, 148, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
 .scNavLoginBtn:hover {
-  background: #d1d5db;
+  background: #54287a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(104, 53, 148, 0.55);
 }
 
 .scNavStartBtn {

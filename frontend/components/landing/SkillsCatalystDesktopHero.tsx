@@ -272,7 +272,7 @@ export default function SkillsCatalystDesktopHero() {
               })}
             </div>
 
-            {/* Right: Login & Register Buttons */}
+            {/* Right: Login Button */}
             <div className="scNavRightActions">
               <button
                 id="desktop-nav-login"
@@ -281,14 +281,6 @@ export default function SkillsCatalystDesktopHero() {
                 className="scNavLoginBtn"
               >
                 Login
-              </button>
-              <button
-                id="desktop-nav-start"
-                type="button"
-                onClick={handleNavigateToLogin}
-                className="scNavStartBtn"
-              >
-                Register
               </button>
             </div>
           </div>
