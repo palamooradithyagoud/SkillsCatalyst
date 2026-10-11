@@ -220,7 +220,7 @@ async def get_mentor_context_endpoint(
 # ---------------------------------------------------------------------------
 
 @router.get("/conversations", response_model=ConversationListResponse)
-async def list_user_conversations(
+def list_user_conversations(
     limit: int = Query(20, ge=1, le=50),
     offset: int = Query(0, ge=0),
     current_user_id: str = Depends(get_current_user_id),
@@ -239,7 +239,7 @@ async def list_user_conversations(
 
 
 @router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
-async def create_new_conversation(
+def create_new_conversation(
     req: ConversationCreateRequest = ConversationCreateRequest(),
     current_user_id: str = Depends(get_current_user_id),
 ):
@@ -256,7 +256,7 @@ async def create_new_conversation(
 
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationDetailResponse)
-async def get_conversation_detail(
+def get_conversation_detail(
     conversation_id: str,
     current_user_id: str = Depends(get_current_user_id),
 ):
@@ -279,7 +279,7 @@ async def get_conversation_detail(
 
 
 @router.delete("/conversations/{conversation_id}")
-async def delete_conversation_endpoint(
+def delete_conversation_endpoint(
     conversation_id: str,
     current_user_id: str = Depends(get_current_user_id),
 ):

@@ -92,9 +92,11 @@ class TestWebPushSecurityAndModels(unittest.TestCase):
             )
 
     def test_format_push_url(self):
+        from backend.config import FRONTEND_URL
+        base = (FRONTEND_URL or "https://www.skillscatalyst.in").rstrip("/")
         self.assertEqual(
             format_push_url("/events/101"),
-            "https://www.skillscatalyst.in/events/101",
+            f"{base}/events/101",
         )
         self.assertEqual(
             format_push_url("https://custom.skillscatalyst.in/path"),
