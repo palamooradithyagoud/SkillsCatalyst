@@ -41,9 +41,13 @@ curl -i -s https://<backend-host>/health
 - If `redis: "error"`: Redis cache unreachable (backend continues operating using in-memory fallbacks).
 
 ### Step 2: System Telemetry & Metrics Probe
-Query the real-time in-memory observability endpoint:
+Query the real-time in-memory observability endpoint (requires METRICS_SECRET_KEY or Admin JWT per SEC-C-7):
 ```bash
-curl -s https://<backend-host>/api/metrics | jq .
+# Using dedicated monitoring key header:
+curl -s -H "X-Monitoring-Key: $METRICS_SECRET_KEY" https://<backend-host>/api/metrics | jq .
+
+# Or using Bearer token format:
+curl -s -H "Authorization: Bearer $METRICS_SECRET_KEY" https://<backend-host>/api/metrics | jq .
 ```
 Examine key health signals:
 - `http.error_rate_pct`: If > 1%, investigate 5xx endpoints.
@@ -152,8 +156,8 @@ curl -f -s "https://<backend-host>/api/learning/search?query=python&language=eng
 # 3. Practice Verification
 curl -f -s "https://<backend-host>/api/practice/questions/amazon" | jq '.company'
 
-# 4. Metrics Check
-curl -f -s "https://<backend-host>/api/metrics" | jq '.uptime_seconds'
+# 4. Metrics Check (requires monitoring key or admin Bearer token per SEC-C-7)
+curl -f -s -H "X-Monitoring-Key: $METRICS_SECRET_KEY" "https://<backend-host>/api/metrics" | jq '.uptime_seconds'
 ```
 
 ### Emergency Rollback Procedure (Target Time: < 60 seconds)

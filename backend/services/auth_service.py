@@ -367,9 +367,19 @@ def require_metrics_access(
             return {"auth_type": "monitoring_key", "role": "monitor"}
 
         # 2b. Authoritative Supabase JWT verification
-        decoded = verify_jwt_token(token)
-        u_id = str(decoded["sub"])
-        role = get_user_role(u_id, decoded)
+        try:
+            decoded = verify_jwt_token(token)
+            u_id = str(decoded["sub"])
+            role = get_user_role(u_id, decoded)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Unexpected token verification exception [AUTH_ERROR]: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication failed.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         if role in ("owner", "admin"):
             return {
