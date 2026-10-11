@@ -583,12 +583,15 @@ STRICT RULES:
 
             # Extract numerical score (0-10 or 0-100)
             overall_score = 80.0
-            match = re.search(r"Final Score:\s*(\d+(?:\.\d+)?)\s*/\s*10", review_text, re.IGNORECASE)
+            match = re.search(r"(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*/\s*(100|10)", review_text, re.IGNORECASE)
             if not match:
-                match = re.search(r"(\d+(?:\.\d+)?)\s*/\s*10", review_text)
+                match = re.search(r"(\d+(?:\.\d+)?)\s*/\s*(100|10)", review_text)
             if match:
                 val = float(match.group(1))
-                overall_score = val * 10.0 if val <= 10.0 else val
+                denom = match.group(2)
+                if denom == "10" or val <= 10.0:
+                    val = val * 10.0
+                overall_score = round(val, 2)
 
             score_record = {
                 "user_id": user_id,
