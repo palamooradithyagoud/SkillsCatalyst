@@ -186,20 +186,23 @@ async def save_playlist(
     try:
         video_count = req.video_count
         yt_pid = _extract_playlist_id(req.playlist_url, req.playlist_id)
-        if YOUTUBE_API_KEY and yt_pid:
-            try:
-                async with httpx.AsyncClient(timeout=5) as client:
-                    resp = await client.get(
-                        "https://www.googleapis.com/youtube/v3/playlistItems",
-                        params={"part": "id", "playlistId": yt_pid, "maxResults": 1, "key": YOUTUBE_API_KEY}
-                    )
-                    if resp.is_success:
-                        data_json = resp.json()
-                        total_res = data_json.get("pageInfo", {}).get("totalResults")
-                        if total_res and total_res > 0:
-                            video_count = str(total_res)
-            except Exception as yt_err:
-                logger.warning(f"Error fetching exact video count on save: {type(yt_err).__name__}")
+        if yt_pid:
+            if not yt_pid.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) and re.match(r"^[a-zA-Z0-9_-]{11}$", yt_pid):
+                video_count = "1"
+            elif YOUTUBE_API_KEY and yt_pid.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
+                try:
+                    async with httpx.AsyncClient(timeout=5, headers=YT_REQUEST_HEADERS) as client:
+                        resp = await client.get(
+                            "https://www.googleapis.com/youtube/v3/playlistItems",
+                            params={"part": "id", "playlistId": yt_pid, "maxResults": 1, "key": YOUTUBE_API_KEY}
+                        )
+                        if resp.is_success:
+                            data_json = resp.json()
+                            total_res = data_json.get("pageInfo", {}).get("totalResults")
+                            if total_res and total_res > 0:
+                                video_count = str(total_res)
+                except Exception as yt_err:
+                    logger.warning(f"Error fetching exact video count on save: {type(yt_err).__name__}")
 
         # Phase 3 Entitlement Enforcement for saved_videos
         from backend.services.subscription_service import SubscriptionService
@@ -210,13 +213,19 @@ async def save_playlist(
             if sb:
                 try:
                     if _is_uuid(user_id):
-                        existing_check = sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", req.playlist_id).execute()
+                        existing_check = await asyncio.to_thread(
+                            lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", req.playlist_id).execute()
+                        )
                         if existing_check.data and len(existing_check.data) > 0:
                             is_already_saved = True
-                        count_res = sb.table("saved_playlists").select("id").eq("user_id", user_id).execute()
+                        count_res = await asyncio.to_thread(
+                            lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).execute()
+                        )
                         saved_count = len(count_res.data or [])
                     else:
-                        res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                        res_lp = await asyncio.to_thread(
+                            lambda: sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                        )
                         if res_lp.data and len(res_lp.data) > 0:
                             existing_lp = res_lp.data[0].get("completed_steps", [])
                             if any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
@@ -254,22 +263,33 @@ async def save_playlist(
                 "user_id":      user_id,
             }
             try:
-                result = sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
+                result = await asyncio.to_thread(
+                    lambda: sb.table("saved_playlists").upsert(data, on_conflict="playlist_id,user_id").execute()
+                )
                 res_data = result.data
             except Exception as upsert_err:
                 logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
-                existing = sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                existing = await asyncio.to_thread(
+                    lambda: sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                )
                 if existing.data and len(existing.data) > 0:
-                    res_upd = sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                    res_upd = await asyncio.to_thread(
+                        lambda: sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                    )
                     res_data = res_upd.data
                 else:
-                    res_ins = sb.table("saved_playlists").insert(data).execute()
+                    res_ins = await asyncio.to_thread(
+                        lambda: sb.table("saved_playlists").insert(data).execute()
+                    )
                     res_data = res_ins.data
 
         # Also sync to learning_progress JSONB column (supports both guest sessions & auth UUIDs)
         try:
-            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
-            existing_lp = res_lp.data[0].get("completed_steps", []) if (res_lp.data and len(res_lp.data) > 0) else []
+            res_lp = await asyncio.to_thread(
+                lambda: sb.table("learning_progress").select("id, completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            )
+            has_existing = bool(res_lp.data and len(res_lp.data) > 0)
+            existing_lp = res_lp.data[0].get("completed_steps", []) if has_existing else []
             pl_entry = {
                 "id": req.playlist_id,
                 "title": req.title,
@@ -294,18 +314,27 @@ async def save_playlist(
                 }
                 if _is_uuid(user_id):
                     lp_row["user_id"] = user_id
-                sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
+                if has_existing:
+                    await asyncio.to_thread(
+                        lambda: sb.table("learning_progress").update(lp_row).eq("session_id", user_id).eq("skill_name", "saved_playlists").execute()
+                    )
+                else:
+                    await asyncio.to_thread(
+                        lambda: sb.table("learning_progress").insert(lp_row).execute()
+                    )
         except Exception as jsonb_sync_err:
             logger.warning(f"Error syncing saved playlist to learning_progress: {jsonb_sync_err}")
 
         # Log event to user_feedback analytics
         try:
-            sb.table("user_feedback").insert({
-                "user_id": user_id,
-                "action": "save",
-                "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={req.playlist_id}",
-                "metadata": {"playlist_id": req.playlist_id, "title": req.title}
-            }).execute()
+            await asyncio.to_thread(
+                lambda: sb.table("user_feedback").insert({
+                    "user_id": user_id,
+                    "action": "save",
+                    "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={req.playlist_id}",
+                    "metadata": {"playlist_id": req.playlist_id, "title": req.title}
+                }).execute()
+            )
         except Exception:
             pass
 
@@ -328,11 +357,15 @@ async def unsave_playlist(
     try:
         clean_pid = _extract_playlist_id(playlist_id, playlist_id)
         if _is_uuid(user_id):
-            sb.table("saved_playlists").delete().eq("user_id", user_id).in_("playlist_id", [playlist_id, clean_pid]).execute()
+            await asyncio.to_thread(
+                lambda: sb.table("saved_playlists").delete().eq("user_id", user_id).in_("playlist_id", [playlist_id, clean_pid]).execute()
+            )
 
         # Also remove from learning_progress JSONB
         try:
-            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            res_lp = await asyncio.to_thread(
+                lambda: sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            )
             if res_lp.data and len(res_lp.data) > 0:
                 existing_lp = res_lp.data[0].get("completed_steps", [])
                 filtered = [p for p in existing_lp if p.get("id") != playlist_id and p.get("id") != clean_pid and p.get("playlist_id") != playlist_id and p.get("playlist_id") != clean_pid]
@@ -343,7 +376,9 @@ async def unsave_playlist(
                 }
                 if _is_uuid(user_id):
                     lp_row["user_id"] = user_id
-                sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
+                await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").update(lp_row).eq("session_id", user_id).eq("skill_name", "saved_playlists").execute()
+                )
         except Exception as jsonb_err:
             logger.warning(f"Error removing playlist from learning_progress: {jsonb_err}")
 
@@ -461,15 +496,28 @@ async def sync_saved_playlists(
             }
             if _is_uuid(current_user_id):
                 lp_row["user_id"] = current_user_id
-            sb.table("learning_progress").upsert(lp_row, on_conflict="session_id, skill_name").execute()
+
+            existing_lp = await asyncio.to_thread(
+                lambda: sb.table("learning_progress").select("id").eq("session_id", current_user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            )
+            if existing_lp.data and len(existing_lp.data) > 0:
+                await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").update(lp_row).eq("session_id", current_user_id).eq("skill_name", "saved_playlists").execute()
+                )
+            else:
+                await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").insert(lp_row).execute()
+                )
 
             # Record event in user_feedback analytics table
             try:
-                sb.table("user_feedback").insert({
-                    "user_id": current_user_id,
-                    "action": "save",
-                    "metadata": {"count": len(playlists_list), "completion_pct": pct}
-                }).execute()
+                await asyncio.to_thread(
+                    lambda: sb.table("user_feedback").insert({
+                        "user_id": current_user_id,
+                        "action": "save",
+                        "metadata": {"count": len(playlists_list), "completion_pct": pct}
+                    }).execute()
+                )
             except Exception:
                 pass
         except Exception as e:
@@ -485,13 +533,15 @@ async def get_saved_playlists_jsonb(current_user_id: str, sb=None) -> dict:
     if not sb:
         return {"success": True, "playlists": [], "completion_pct": 0.0}
     try:
-        res = (
-            sb.table("learning_progress")
-            .select("completed_steps, completion_pct")
-            .eq("session_id", current_user_id)
-            .eq("skill_name", "saved_playlists")
-            .limit(1)
-            .execute()
+        res = await asyncio.to_thread(
+            lambda: (
+                sb.table("learning_progress")
+                .select("completed_steps, completion_pct")
+                .eq("session_id", current_user_id)
+                .eq("skill_name", "saved_playlists")
+                .limit(1)
+                .execute()
+            )
         )
         if res.data and len(res.data) > 0:
             playlists = res.data[0].get("completed_steps", [])

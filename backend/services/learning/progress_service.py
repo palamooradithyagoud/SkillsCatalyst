@@ -4,6 +4,7 @@ Playback progress tracking, verification, resume, and dual persistence.
 Phase 2.1 Modular Architecture
 """
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
@@ -78,13 +79,15 @@ async def resume_progress(
     if not sb or not _is_uuid(current_user_id):
         return {"last_position": 0.0, "completed": False}
     try:
-        res = (
-            sb.table("video_progress")
-            .select("last_position, watched")
-            .eq("user_id", current_user_id)
-            .eq("video_id", video_id)
-            .limit(1)
-            .execute()
+        res = await asyncio.to_thread(
+            lambda: (
+                sb.table("video_progress")
+                .select("last_position, watched")
+                .eq("user_id", current_user_id)
+                .eq("video_id", video_id)
+                .limit(1)
+                .execute()
+            )
         )
         if res.data and len(res.data) > 0:
             return {
@@ -128,9 +131,13 @@ async def update_video_progress(
             if req.watch_time is not None:
                 data["watch_time"] = int(round(req.watch_time))
 
-            sb.table("video_progress").upsert(
-                data, on_conflict="user_id,playlist_id,video_id"
-            ).execute()
+            await asyncio.to_thread(
+                lambda: (
+                    sb.table("video_progress").upsert(
+                        data, on_conflict="user_id,playlist_id,video_id"
+                    ).execute()
+                )
+            )
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -166,29 +173,35 @@ async def save_video_progress(
 
     try:
         if _is_uuid(user_id):
-            res = (
-                sb.table("video_progress")
-                .update({"last_position": int_pos, "watch_time": int_watch, "updated_at": now_iso})
-                .eq("user_id", user_id)
-                .eq("playlist_id", clean_playlist_id)
-                .eq("video_id", req.video_id)
-                .execute()
+            res = await asyncio.to_thread(
+                lambda: (
+                    sb.table("video_progress")
+                    .update({"last_position": int_pos, "watch_time": int_watch, "updated_at": now_iso})
+                    .eq("user_id", user_id)
+                    .eq("playlist_id", clean_playlist_id)
+                    .eq("video_id", req.video_id)
+                    .execute()
+                )
             )
             if not res.data:
-                sb.table("video_progress").insert({
-                    "user_id":       user_id,
-                    "playlist_id":   clean_playlist_id,
-                    "video_id":      req.video_id,
-                    "watched":       False,
-                    "last_position": int_pos,
-                    "watch_time":    int_watch,
-                    "updated_at":    now_iso,
-                }).execute()
+                await asyncio.to_thread(
+                    lambda: sb.table("video_progress").insert({
+                        "user_id":       user_id,
+                        "playlist_id":   clean_playlist_id,
+                        "video_id":      req.video_id,
+                        "watched":       False,
+                        "last_position": int_pos,
+                        "watch_time":    int_watch,
+                        "updated_at":    now_iso,
+                    }).execute()
+                )
             return {"success": True, "updated_at": now_iso}
         else:
             # Guest session: persist to learning_progress JSONB
             try:
-                res_lp = sb.table("learning_progress").select("id, completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                res_lp = await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").select("id, completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                )
                 if res_lp.data and len(res_lp.data) > 0:
                     row_id = res_lp.data[0]["id"]
                     playlists = res_lp.data[0].get("completed_steps") or []
@@ -211,10 +224,12 @@ async def save_video_progress(
                             vid_entry["watched"] = False
                             videos.append(vid_entry)
                         playlists[pl_idx]["videos"] = videos
-                        sb.table("learning_progress").update({
-                            "completed_steps": playlists,
-                            "updated_at": now_iso,
-                        }).eq("id", row_id).execute()
+                        await asyncio.to_thread(
+                            lambda: sb.table("learning_progress").update({
+                                "completed_steps": playlists,
+                                "updated_at": now_iso,
+                            }).eq("id", row_id).execute()
+                        )
                     else:
                         playlists.append({
                             "id": clean_playlist_id,
@@ -230,30 +245,34 @@ async def save_video_progress(
                                 "updated_at": now_iso,
                             }]
                         })
-                        sb.table("learning_progress").update({
-                            "completed_steps": playlists,
-                            "updated_at": now_iso,
-                        }).eq("id", row_id).execute()
-                else:
-                    sb.table("learning_progress").insert({
-                        "session_id": user_id,
-                        "skill_name": "saved_playlists",
-                        "completed_steps": [{
-                            "id": clean_playlist_id,
-                            "playlist_id": clean_playlist_id,
-                            "videos": [{
-                                "videoId": req.video_id,
-                                "id": req.video_id,
-                                "last_position": int_pos,
-                                "lastPosition": int_pos,
-                                "watch_time": int_watch,
-                                "watchTime": int_watch,
-                                "watched": False,
+                        await asyncio.to_thread(
+                            lambda: sb.table("learning_progress").update({
+                                "completed_steps": playlists,
                                 "updated_at": now_iso,
-                            }]
-                        }],
-                        "updated_at": now_iso,
-                    }).execute()
+                            }).eq("id", row_id).execute()
+                        )
+                else:
+                    await asyncio.to_thread(
+                        lambda: sb.table("learning_progress").insert({
+                            "session_id": user_id,
+                            "skill_name": "saved_playlists",
+                            "completed_steps": [{
+                                "id": clean_playlist_id,
+                                "playlist_id": clean_playlist_id,
+                                "videos": [{
+                                    "videoId": req.video_id,
+                                    "id": req.video_id,
+                                    "last_position": int_pos,
+                                    "lastPosition": int_pos,
+                                    "watch_time": int_watch,
+                                    "watchTime": int_watch,
+                                    "watched": False,
+                                    "updated_at": now_iso,
+                                }]
+                            }],
+                            "updated_at": now_iso,
+                        }).execute()
+                    )
                 return {"success": True, "updated_at": now_iso}
             except Exception as lp_err:
                 logger.warning(f"Guest save-progress learning_progress error: {lp_err}")
@@ -304,21 +323,27 @@ async def complete_video(
             }
 
             try:
-                sb.table("video_progress").upsert(
-                    complete_data, on_conflict="user_id,playlist_id,video_id"
-                ).execute()
+                await asyncio.to_thread(
+                    lambda: (
+                        sb.table("video_progress").upsert(
+                            complete_data, on_conflict="user_id,playlist_id,video_id"
+                        ).execute()
+                    )
+                )
             except Exception as err:
                 logger.warning(f"Error upserting video_progress: {err}")
 
         # 2. Sync JSONB completed_steps in learning_progress
         try:
-            lp_res = (
-                sb.table("learning_progress")
-                .select("completed_steps")
-                .eq("session_id", user_id)
-                .eq("skill_name", "saved_playlists")
-                .limit(1)
-                .execute()
+            lp_res = await asyncio.to_thread(
+                lambda: (
+                    sb.table("learning_progress")
+                    .select("completed_steps")
+                    .eq("session_id", user_id)
+                    .eq("skill_name", "saved_playlists")
+                    .limit(1)
+                    .execute()
+                )
             )
             if lp_res.data and len(lp_res.data) > 0:
                 playlists = lp_res.data[0].get("completed_steps", [])
@@ -346,18 +371,22 @@ async def complete_video(
                     }
                     if _is_uuid(user_id):
                         lp_upd["user_id"] = user_id
-                    sb.table("learning_progress").upsert(lp_upd, on_conflict="session_id, skill_name").execute()
+                    await asyncio.to_thread(
+                        lambda: sb.table("learning_progress").update(lp_upd).eq("session_id", user_id).eq("skill_name", "saved_playlists").execute()
+                    )
         except Exception as jsonb_err:
             logger.warning(f"Error updating learning_progress JSONB: {jsonb_err}")
 
         # 3. Log event into user_feedback
         try:
-            sb.table("user_feedback").insert({
-                "user_id": user_id,
-                "action": "complete" if req.completed else "uncomplete",
-                "resource_url": f"https://www.youtube.com/watch?v={req.video_id}",
-                "metadata": {"playlist_id": clean_playlist_id, "video_id": req.video_id}
-            }).execute()
+            await asyncio.to_thread(
+                lambda: sb.table("user_feedback").insert({
+                    "user_id": user_id,
+                    "action": "complete" if req.completed else "uncomplete",
+                    "resource_url": f"https://www.youtube.com/watch?v={req.video_id}",
+                    "metadata": {"playlist_id": clean_playlist_id, "video_id": req.video_id}
+                }).execute()
+            )
         except Exception:
             pass
 
@@ -422,9 +451,13 @@ async def mark_all_watched(
         })
 
     try:
-        sb.table("video_progress").upsert(
-            rows, on_conflict="user_id,playlist_id,video_id"
-        ).execute()
+        await asyncio.to_thread(
+            lambda: (
+                sb.table("video_progress").upsert(
+                    rows, on_conflict="user_id,playlist_id,video_id"
+                ).execute()
+            )
+        )
         return {"success": True, "count": len(rows)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
