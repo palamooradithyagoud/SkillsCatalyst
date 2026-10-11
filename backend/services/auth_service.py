@@ -5,10 +5,11 @@ import re
 import uuid
 import logging
 import jwt
+from jwt import PyJWKClient
 from typing import Optional, Tuple, Any, Dict
 from fastapi import Header, HTTPException, status, Depends
 from backend.services.supabase_service import get_supabase
-from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET
+from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET, SUPABASE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,184 @@ def get_user_role(user_id: str, supa_user: Any = None) -> str:
     return "student"
 
 
+_jwks_client: Optional[PyJWKClient] = None
+
+
+def _get_jwks_client() -> Optional[PyJWKClient]:
+    """Returns singleton PyJWKClient with key caching for Supabase Auth asymmetric public keys."""
+    global _jwks_client
+    if _jwks_client is None and SUPABASE_URL:
+        try:
+            jwks_url = f"{SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+            _jwks_client = PyJWKClient(jwks_url, cache_keys=True, max_cached_keys=16, lifespan=3600, timeout=10)
+        except Exception as e:
+            logger.debug(f"Failed to initialize Supabase JWKS client: {e}")
+    return _jwks_client
+
+
+def verify_jwt_token(token: str) -> Dict[str, Any]:
+    """
+    Authoritative Cryptographic Token Verification.
+    1. Inspects token header to determine signing algorithm (HS256, ES256, RS256).
+    2. Validates signatures locally:
+       - HS256: verified against SUPABASE_JWT_SECRET.
+       - ES256 / RS256: verified against Supabase JWKS public keys (supporting key rotation).
+    3. Enforces expiration (exp), audience (aud), issuer (iss), and valid UUID subject (sub).
+    4. Falls back to remote Supabase Auth API if verification keys are not available locally.
+    5. Raises HTTPException 401 Unauthorized immediately if token is expired, tampered, or invalid.
+    """
+    if not token or not isinstance(token, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    clean_token = token.strip()
+    if clean_token in ("undefined", "null", ""):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    decoded = None
+    header = None
+    try:
+        header = jwt.get_unverified_header(clean_token)
+    except Exception:
+        # Not a standard JWT format or unparseable local header.
+        # Fall through to remote Supabase Auth verification fallback (supports test mocks & edge tokens).
+        header = None
+
+    if header:
+        alg = header.get("alg")
+        if alg and str(alg).lower() == "none":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unsupported token algorithm.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if alg in ("HS256", "ES256", "RS256"):
+            key = None
+            if alg == "HS256":
+                key = SUPABASE_JWT_SECRET
+            elif alg in ("ES256", "RS256"):
+                jwks = _get_jwks_client()
+                if jwks:
+                    try:
+                        signing_key = jwks.get_signing_key_from_jwt(clean_token)
+                        key = signing_key.key
+                    except Exception as jwks_err:
+                        logger.debug(f"Local JWKS key resolution notice: {jwks_err}")
+
+            if key:
+                try:
+                    decoded = jwt.decode(
+                        clean_token,
+                        key,
+                        algorithms=[alg],
+                        options={
+                            "verify_signature": True,
+                            "verify_exp": True,
+                            "verify_aud": False,
+                        },
+                    )
+                except jwt.ExpiredSignatureError:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Authentication token has expired.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                except jwt.InvalidSignatureError:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid authentication token signature.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                except jwt.DecodeError:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Malformed authentication token.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                except jwt.InvalidTokenError as ite:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail=f"Invalid authentication token: {ite}",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+
+    # Fallback to remote Supabase Auth verification if local key could not be resolved
+    if decoded is None:
+        sb = get_supabase()
+        if sb:
+            for attempt in range(2):
+                try:
+                    res = sb.auth.get_user(jwt=clean_token)
+                    if res and res.user and res.user.id:
+                        u = res.user
+                        decoded = {
+                            "sub": str(u.id),
+                            "email": str(u.email or "").strip().lower(),
+                            "user_metadata": getattr(u, "user_metadata", {}) or {},
+                            "app_metadata": getattr(u, "app_metadata", {}) or {},
+                        }
+                        break
+                except Exception as e:
+                    err_msg = str(e)
+                    if attempt == 0 and any(kw in err_msg for kw in ("ConnectionTerminated", "ConnectError", "RemoteProtocolError", "getaddrinfo")):
+                        logger.warning(f"Supabase connection dropped during token validation, retrying: {e}")
+                        sb = get_supabase(force_refresh=True)
+                        continue
+                    logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
+                    break
+
+    if not decoded:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Validate audience if claim exists in token
+    if "aud" in decoded:
+        aud = decoded["aud"]
+        if isinstance(aud, str) and aud not in ("authenticated", "anon"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token audience.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        elif isinstance(aud, list) and not any(a in ("authenticated", "anon") for a in aud):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token audience.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    # Validate issuer if claim exists in token and SUPABASE_URL configured
+    if "iss" in decoded and SUPABASE_URL:
+        expected_iss = f"{SUPABASE_URL.rstrip('/')}/auth/v1"
+        if str(decoded["iss"]).rstrip("/") != expected_iss:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token issuer.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    u_id = str(decoded.get("sub") or "").strip()
+    if not u_id or not is_valid_uuid(u_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user identity in token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return decoded
+
+
 def require_authenticated_user(
     authorization: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
@@ -85,73 +264,23 @@ def require_authenticated_user(
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1].strip()
         if token and token not in ("undefined", "null", ""):
-            # 1. Fast local JWT verification (instant, zero network latency, immune to ConnectionTerminated)
-            if SUPABASE_JWT_SECRET:
-                try:
-                    decoded = jwt.decode(
-                        token,
-                        SUPABASE_JWT_SECRET,
-                        algorithms=["HS256"],
-                        options={"verify_aud": False},
-                    )
-                    u_id = str(decoded.get("sub") or "").strip()
-                    if u_id:
-                        u_email = str(decoded.get("email") or "").strip().lower()
-                        user_meta = decoded.get("user_metadata") or {}
-                        u_name = (
-                            user_meta.get("full_name")
-                            or user_meta.get("name")
-                            or (u_email.split("@")[0] if u_email else "Learner")
-                        )
-                        role = get_user_role(u_id, decoded)
-                        return {
-                            "user_id": u_id,
-                            "email": u_email,
-                            "name": u_name,
-                            "role": role,
-                            "is_owner": (role == "owner"),
-                        }
-                except jwt.ExpiredSignatureError:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Authentication token has expired.",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                except Exception as jwt_err:
-                    logger.debug(f"Local JWT decode notice: {jwt_err}. Falling back to remote verification.")
-
-            # 2. Remote Supabase Auth API fallback with connection retry resilience
-            sb = get_supabase()
-            if sb:
-                for attempt in range(2):
-                    try:
-                        res = sb.auth.get_user(jwt=token)
-                        if res and res.user and res.user.id:
-                            u = res.user
-                            u_id = str(u.id)
-                            u_email = str(u.email or "").strip().lower()
-                            user_meta = getattr(u, "user_metadata", {}) or {}
-                            u_name = (
-                                user_meta.get("full_name")
-                                or user_meta.get("name")
-                                or (u_email.split("@")[0] if u_email else "Learner")
-                            )
-                            role = get_user_role(u_id, u)
-                            return {
-                                "user_id": u_id,
-                                "email": u_email,
-                                "name": u_name,
-                                "role": role,
-                                "is_owner": (role == "owner"),
-                            }
-                    except Exception as e:
-                        err_msg = str(e)
-                        if attempt == 0 and any(kw in err_msg for kw in ("ConnectionTerminated", "ConnectError", "RemoteProtocolError", "getaddrinfo")):
-                            logger.warning(f"Supabase connection dropped during token validation, retrying with fresh client: {e}")
-                            sb = get_supabase(force_refresh=True)
-                            continue
-                        logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
-                        break
+            decoded = verify_jwt_token(token)
+            u_id = str(decoded["sub"])
+            u_email = str(decoded.get("email") or "").strip().lower()
+            user_meta = decoded.get("user_metadata") or {}
+            u_name = (
+                user_meta.get("full_name")
+                or user_meta.get("name")
+                or (u_email.split("@")[0] if u_email else "Learner")
+            )
+            role = get_user_role(u_id, decoded)
+            return {
+                "user_id": u_id,
+                "email": u_email,
+                "name": u_name,
+                "role": role,
+                "is_owner": (role == "owner"),
+            }
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -199,11 +328,20 @@ def get_current_user_id(
 ) -> str:
     """
     Strict Production Authentication Dependency.
-    Extracts & validates Supabase JWT Bearer token.
+    Extracts & validates Supabase JWT Bearer token cryptographically.
     Returns authenticated user's UUID or raises HTTP 401 Unauthorized.
     """
-    user_info = require_authenticated_user(authorization=authorization)
-    return user_info["user_id"]
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        if token and token not in ("undefined", "null", ""):
+            decoded = verify_jwt_token(token)
+            return str(decoded["sub"])
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or missing authentication token.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 def _sign_guest_id(guest_hex: str) -> str:
@@ -239,7 +377,7 @@ def sanitize_or_generate_guest_id(raw_session_id: Optional[str]) -> Tuple[str, s
     - Prevents raw UUID impersonation without Bearer JWT (maps raw unauthenticated UUIDs to guest namespace).
     - Generates isolated HMAC-signed guest token if missing, invalid, or generic placeholder string.
     """
-    if raw_session_id:
+    if raw_session_id and isinstance(raw_session_id, str):
         cleaned = raw_session_id.strip()
         if cleaned not in ("undefined", "null", "", "guest_session_default"):
             # 1. Verify signed HMAC guest token
@@ -272,23 +410,24 @@ def get_session_or_user_id(
 ) -> str:
     """
     Secure Session Identity Resolver.
-    - If valid Bearer JWT provided: returns authenticated user's Supabase UUID.
+    - If valid Bearer JWT provided: returns authenticated user's Supabase UUID via local cryptographic verification.
     - Else: resolves client x-session-id to verified guest token or namespaced guest session ID.
     Guarantees backward compatibility while preventing unauthenticated UUID spoofing.
     """
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1].strip()
         if token and token not in ("undefined", "null", ""):
-            sb = get_supabase()
-            if sb:
-                try:
-                    res = sb.auth.get_user(jwt=token)
-                    if res and res.user and res.user.id:
-                        return str(res.user.id)
-                except Exception as e:
-                    logger.warning(f"Supabase token validation failed [AUTH_ERROR]: {e}")
+            try:
+                decoded = verify_jwt_token(token)
+                if decoded and decoded.get("sub"):
+                    return str(decoded["sub"])
+            except HTTPException:
+                pass
+            except Exception as e:
+                logger.debug(f"Token verification fallback in get_session_or_user_id: {e}")
 
-    raw_db_id, _ = sanitize_or_generate_guest_id(x_session_id)
+    raw_session = x_session_id if isinstance(x_session_id, str) else None
+    raw_db_id, _ = sanitize_or_generate_guest_id(raw_session)
     return raw_db_id
 
 
@@ -301,13 +440,11 @@ def get_optional_user_id(
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1].strip()
         if token and token not in ("undefined", "null", ""):
-            sb = get_supabase()
-            if sb:
-                try:
-                    res = sb.auth.get_user(jwt=token)
-                    if res and res.user and res.user.id:
-                        return str(res.user.id)
-                except Exception:
-                    pass
+            try:
+                decoded = verify_jwt_token(token)
+                if decoded and decoded.get("sub"):
+                    return str(decoded["sub"])
+            except Exception:
+                pass
     return None
 
