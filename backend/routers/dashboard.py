@@ -1,5 +1,7 @@
 import re
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional, Tuple, Dict, Any
 from fastapi import APIRouter, Depends
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id, is_valid_uuid
@@ -8,6 +10,7 @@ from backend.routers.profile import _clean_handle
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+_DASHBOARD_EXECUTOR = ThreadPoolExecutor(max_workers=10, thread_name_prefix="dashboard_db")
 
 ROADMAP_SPECS = {
     "c-programming": {
@@ -320,6 +323,168 @@ def delete_active_roadmap_endpoint(roadmap_id: str, user_id: str = Depends(get_c
         return {"success": False, "message": str(e)}
 
 
+def _fetch_learning_metrics(sb, user_id: str) -> Tuple[int, int, int]:
+    """Fetches saved playlists and calculates total and completed video counts."""
+    saved_playlists_count = 0
+    total_videos = 0
+    completed_count = 0
+    try:
+        res_saved = (
+            sb.table("saved_playlists")
+            .select("playlist_id, video_count")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        saved_pids = []
+        if res_saved.data:
+            saved_playlists_count = len(res_saved.data)
+            for row in res_saved.data:
+                pid = row.get("playlist_id")
+                if pid:
+                    saved_pids.append(pid)
+                vc_str = str(row.get("video_count", "0"))
+                match = re.search(r'\d+', vc_str)
+                if match:
+                    total_videos += int(match.group())
+
+        if saved_pids:
+            res_completed = (
+                sb.table("video_progress")
+                .select("video_id", count="exact")
+                .eq("user_id", user_id)
+                .in_("playlist_id", saved_pids)
+                .eq("watched", True)
+                .execute()
+            )
+            completed_count = res_completed.count or (len(res_completed.data) if res_completed.data else 0)
+    except Exception as e:
+        logger.error(f"Dashboard learning metrics query error: {type(e).__name__}")
+
+    return saved_playlists_count, total_videos, completed_count
+
+
+def _fetch_coding_profiles(sb, user_id: str) -> Dict[str, Any]:
+    """Fetches and parses external coding profile stats (LeetCode, GFG, Codeforces, etc.)."""
+    extracted_solved = 0
+    leetcode_solved = 0
+    leetcode_easy = 0
+    leetcode_med = 0
+    leetcode_hard = 0
+    leetcode_user = ""
+    leetcode_ranking = 0
+    leetcode_configured = False
+    try:
+        res_code = (
+            sb.table("user_coding_profiles")
+            .select("leetcode_url, stats_json")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if res_code.data and len(res_code.data) > 0:
+            code_row = res_code.data[0]
+            stats_json = code_row.get("stats_json") or {}
+            raw_lc_url = code_row.get("leetcode_url") or ""
+
+            lc = stats_json.get("leetcode", {})
+            if isinstance(lc, dict) and (lc.get("configured") or "total_solved" in lc):
+                leetcode_configured = True
+                leetcode_solved = lc.get("total_solved") or lc.get("solved") or 0
+                leetcode_easy = lc.get("easy_solved", 0)
+                leetcode_med = lc.get("medium_solved", 0)
+                leetcode_hard = lc.get("hard_solved", 0)
+                leetcode_user = lc.get("username", "") or _clean_handle(raw_lc_url)
+                leetcode_ranking = lc.get("ranking", 0)
+            elif raw_lc_url:
+                leetcode_user = _clean_handle(raw_lc_url)
+                leetcode_configured = bool(leetcode_user)
+
+            for platform, pdata in stats_json.items():
+                if isinstance(pdata, dict):
+                    ts = pdata.get("total_solved") or pdata.get("solved") or 0
+                    if isinstance(ts, (int, float)):
+                        extracted_solved += int(ts)
+    except Exception as e:
+        logger.error(f"Dashboard coding profiles query error: {type(e).__name__}")
+
+    problems_solved = extracted_solved if extracted_solved > 0 else leetcode_solved
+    return {
+        "problems_solved": problems_solved,
+        "leetcode_solved": leetcode_solved,
+        "leetcode_easy": leetcode_easy,
+        "leetcode_med": leetcode_med,
+        "leetcode_hard": leetcode_hard,
+        "leetcode_user": leetcode_user,
+        "leetcode_ranking": leetcode_ranking,
+        "leetcode_configured": leetcode_configured,
+    }
+
+
+def _fetch_academic_profile(sb, user_id: str) -> Optional[str]:
+    """Fetches user's full name from academic profile if populated."""
+    try:
+        res_profile = (
+            sb.table("user_academic_profile")
+            .select("full_name")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if res_profile.data and res_profile.data[0].get("full_name"):
+            name_val = res_profile.data[0].get("full_name")
+            if name_val:
+                return name_val
+    except Exception as e:
+        logger.error(f"Dashboard academic profile query error: {type(e).__name__}")
+    return None
+
+
+def _fetch_user_progress(sb, user_id: str) -> Tuple[float, int, int, int, int]:
+    """Fetches user gamification progress stats (success rate, streak, level, XP, readiness)."""
+    user_success_rate = 0.0
+    user_streak = 0
+    user_level = 0
+    user_total_xp = 0
+    prog_resume_score = 0
+    try:
+        res_user_prog = (
+            sb.table("user_progress")
+            .select("success_rate, resume_readiness_score, streak_days, level, total_xp")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if res_user_prog.data and len(res_user_prog.data) > 0:
+            prog_row = res_user_prog.data[0]
+            user_success_rate = float(prog_row.get("success_rate") or 0.0)
+            user_streak = int(prog_row.get("streak_days") or 0)
+            user_level = int(prog_row.get("level") or 0)
+            user_total_xp = int(prog_row.get("total_xp") or 0)
+            if prog_row.get("resume_readiness_score"):
+                prog_resume_score = round(float(prog_row.get("resume_readiness_score")))
+    except Exception as e:
+        logger.error(f"Dashboard user progress query error: {type(e).__name__}")
+
+    return user_success_rate, user_streak, user_level, user_total_xp, prog_resume_score
+
+
+def _fetch_resume_score(sb, user_id: str) -> Optional[int]:
+    """Fetches latest resume review score from resume_scores table."""
+    try:
+        res_resume = (
+            sb.table("resume_scores")
+            .select("overall_score, ats_compatibility_score")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        if res_resume.data and len(res_resume.data) > 0:
+            sc = res_resume.data[0].get("overall_score") or res_resume.data[0].get("ats_compatibility_score")
+            if sc is not None:
+                return round(float(sc))
+    except Exception as e:
+        logger.error(f"Dashboard resume score query error: {type(e).__name__}")
+    return None
+
+
 @router.get("")
 def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     # user_id is now guaranteed to be a valid authenticated Supabase UUID (auth raises 401 otherwise)
@@ -343,143 +508,61 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
     leetcode_configured = False
 
     if sb:
+        # Submit all independent database queries concurrently to eliminate sequential network round trips
+        f_learn = _DASHBOARD_EXECUTOR.submit(_fetch_learning_metrics, sb, user_id)
+        f_coding = _DASHBOARD_EXECUTOR.submit(_fetch_coding_profiles, sb, user_id)
+        f_academic = _DASHBOARD_EXECUTOR.submit(_fetch_academic_profile, sb, user_id)
+        f_prog = _DASHBOARD_EXECUTOR.submit(_fetch_user_progress, sb, user_id)
+        f_resume = _DASHBOARD_EXECUTOR.submit(_fetch_resume_score, sb, user_id)
+        f_roadmap = _DASHBOARD_EXECUTOR.submit(get_active_roadmap_data, user_id)
+
         try:
-            # 1. Get total videos and count from saved playlists
-            res_saved = (
-                sb.table("saved_playlists")
-                .select("playlist_id, video_count")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            saved_pids = []
-            if res_saved.data:
-                saved_playlists_count = len(res_saved.data)
-                for row in res_saved.data:
-                    pid = row.get("playlist_id")
-                    if pid:
-                        saved_pids.append(pid)
-                    vc_str = str(row.get("video_count", "0"))
-                    match = re.search(r'\d+', vc_str)
-                    if match:
-                        total_videos += int(match.group())
-
-            # 2. Count completed videos for this user belonging to saved playlists
-            if saved_pids:
-                res_completed = (
-                    sb.table("video_progress")
-                    .select("video_id", count="exact")
-                    .eq("user_id", user_id)
-                    .in_("playlist_id", saved_pids)
-                    .eq("watched", True)
-                    .execute()
-                )
-                completed_count = res_completed.count or (len(res_completed.data) if res_completed.data else 0)
-            else:
-                completed_count = 0
-
-            # 3. Get problems solved count from leetcode_progress table
-            res_problems = (
-                sb.table("leetcode_progress")
-                .select("question_id", count="exact")
-                .eq("user_id", user_id)
-                .eq("status", "solved")
-                .execute()
-            )
-            db_leetcode_solved = res_problems.count or (len(res_problems.data) if res_problems.data else 0)
-
-            # 4. Fetch extracted coding profiles stats (LeetCode, GFG, Codeforces, CodeChef, HackerRank)
-            extracted_solved = 0
-            leetcode_solved = 0
-            leetcode_easy = 0
-            leetcode_med = 0
-            leetcode_hard = 0
-            leetcode_user = ""
-            leetcode_ranking = 0
-            leetcode_configured = False
-
-            res_code = (
-                sb.table("user_coding_profiles")
-                .select("leetcode_url, stats_json")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if res_code.data and len(res_code.data) > 0:
-                code_row = res_code.data[0]
-                stats_json = code_row.get("stats_json") or {}
-                raw_lc_url = code_row.get("leetcode_url") or ""
-
-                lc = stats_json.get("leetcode", {})
-                if isinstance(lc, dict) and (lc.get("configured") or "total_solved" in lc):
-                    leetcode_configured = True
-                    leetcode_solved = lc.get("total_solved") or lc.get("solved") or 0
-                    leetcode_easy = lc.get("easy_solved", 0)
-                    leetcode_med = lc.get("medium_solved", 0)
-                    leetcode_hard = lc.get("hard_solved", 0)
-                    leetcode_user = lc.get("username", "") or _clean_handle(raw_lc_url)
-                    leetcode_ranking = lc.get("ranking", 0)
-                elif raw_lc_url:
-                    leetcode_user = _clean_handle(raw_lc_url)
-                    leetcode_configured = bool(leetcode_user)
-
-                for platform, pdata in stats_json.items():
-                    if isinstance(pdata, dict):
-                        ts = pdata.get("total_solved") or pdata.get("solved") or 0
-                        if isinstance(ts, (int, float)):
-                            extracted_solved += int(ts)
-
-            # Problems solved strictly reflects connected external coding platform stats
-            problems_solved = extracted_solved if extracted_solved > 0 else leetcode_solved
-
-            # 5. Fetch user name from academic profile if exists
-            res_profile = (
-                sb.table("user_academic_profile")
-                .select("full_name")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if res_profile.data and res_profile.data[0].get("full_name"):
-                name_val = res_profile.data[0].get("full_name")
-                if name_val:
-                    display_name = name_val
-
-            # 6. Fetch user_progress stats if present
-            user_streak = 0
-            user_level = 0
-            user_total_xp = 0
-            res_user_prog = (
-                sb.table("user_progress")
-                .select("success_rate, resume_readiness_score, streak_days, level, total_xp")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if res_user_prog.data and len(res_user_prog.data) > 0:
-                prog_row = res_user_prog.data[0]
-                user_success_rate = float(prog_row.get("success_rate") or 0.0)
-                user_streak = int(prog_row.get("streak_days") or 0)
-                user_level = int(prog_row.get("level") or 0)
-                user_total_xp = int(prog_row.get("total_xp") or 0)
-
-            # 7. Fetch latest resume score from resume_scores table
-            resume_score = 0
-            res_resume = (
-                sb.table("resume_scores")
-                .select("overall_score, ats_compatibility_score")
-                .eq("user_id", user_id)
-                .order("created_at", desc=True)
-                .limit(1)
-                .execute()
-            )
-            if res_resume.data and len(res_resume.data) > 0:
-                sc = res_resume.data[0].get("overall_score") or res_resume.data[0].get("ats_compatibility_score")
-                if sc is not None:
-                    resume_score = round(float(sc))
-            elif res_user_prog.data and res_user_prog.data[0].get("resume_readiness_score"):
-                resume_score = round(float(res_user_prog.data[0].get("resume_readiness_score")))
-
+            saved_playlists_count, total_videos, completed_count = f_learn.result()
         except Exception as e:
-            logger.error(f"Dashboard metrics query error: {type(e).__name__}")
+            logger.error(f"Dashboard learning metrics retrieval error: {type(e).__name__}")
 
-    active_rm = get_active_roadmap_data(user_id)
+        try:
+            coding_data = f_coding.result()
+            problems_solved = coding_data["problems_solved"]
+            leetcode_solved = coding_data["leetcode_solved"]
+            leetcode_easy = coding_data["leetcode_easy"]
+            leetcode_med = coding_data["leetcode_med"]
+            leetcode_hard = coding_data["leetcode_hard"]
+            leetcode_user = coding_data["leetcode_user"]
+            leetcode_ranking = coding_data["leetcode_ranking"]
+            leetcode_configured = coding_data["leetcode_configured"]
+        except Exception as e:
+            logger.error(f"Dashboard coding profiles retrieval error: {type(e).__name__}")
+
+        try:
+            name_val = f_academic.result()
+            if name_val:
+                display_name = name_val
+        except Exception as e:
+            logger.error(f"Dashboard academic profile retrieval error: {type(e).__name__}")
+
+        prog_resume_score = 0
+        try:
+            user_success_rate, user_streak, user_level, user_total_xp, prog_resume_score = f_prog.result()
+        except Exception as e:
+            logger.error(f"Dashboard user progress retrieval error: {type(e).__name__}")
+
+        try:
+            res_score = f_resume.result()
+            if res_score is not None:
+                resume_score = res_score
+            elif prog_resume_score:
+                resume_score = prog_resume_score
+        except Exception as e:
+            logger.error(f"Dashboard resume score retrieval error: {type(e).__name__}")
+
+        try:
+            active_rm = f_roadmap.result()
+        except Exception as e:
+            logger.error(f"Dashboard roadmap progress retrieval error: {type(e).__name__}")
+            active_rm = {"has_active_roadmap": False}
+    else:
+        active_rm = get_active_roadmap_data(user_id)
     if active_rm.get("has_active_roadmap"):
         roadmap_completed_count = active_rm.get("completed_milestones", 0)
         roadmap_pct = active_rm.get("progress_percent", 0)
