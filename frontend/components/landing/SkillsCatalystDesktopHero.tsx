@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
+import { EcosystemOrbitingSection } from "@/components/ui/orbiting-circles";
 
 interface NavDropdownItem {
   title: string;
@@ -396,7 +397,10 @@ export default function SkillsCatalystDesktopHero() {
         </section>
       </div>
 
-      {/* ── Section 2: Animated Structured Career Path ── */}
+      {/* ── Section 2: Ecosystem Orbiting Circles ── */}
+      <EcosystemOrbitingSection />
+
+      {/* ── Section 3: Animated Structured Career Path ── */}
       <StructuredCareerPathSection />
 
       {/* ── SkillsCatalyst Landing Pricing Modal ── */}
