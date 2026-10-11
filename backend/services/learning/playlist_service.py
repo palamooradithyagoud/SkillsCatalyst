@@ -22,6 +22,7 @@ from backend.config import YOUTUBE_API_KEY
 from backend.services.supabase_service import get_supabase
 from backend.services.learning.content_guard import (
     _STRICT_PROHIBITED_TERMS,
+    _LEARNING_SKILL,
     _is_uuid,
     _extract_youtube_ids,
     _extract_playlist_id,
@@ -109,24 +110,30 @@ def _generate_fallback_playlist_videos(clean_pid: str) -> list[dict]:
     return videos
 
 
-def _resolve_playlist_info(clean_id: str, sb=None) -> dict:
-    info = {"title": "", "channel": "", "playlist_url": "", "real_yt_id": "", "video_id": ""}
+def _resolve_playlist_info(clean_id: str, sb=None, user_id: str = "") -> dict:
+    info = {"title": "", "channel": "", "playlist_url": "", "video_count": "", "real_yt_id": "", "video_id": ""}
     if not clean_id:
         return info
 
-    # 1. Direct check: is clean_id already a YouTube playlist ID (starts with PL, UU, FL, RD, OLAK5uy_)?
+    # 1. Direct check: is clean_id already a YouTube playlist ID?
     if clean_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
         info["real_yt_id"] = clean_id
-        return info
 
     if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_id):
         info["video_id"] = clean_id
 
-    # 2. Check Supabase saved_playlists table
+    # 2. Check Supabase saved_playlists table for existing metadata & video_count
     sb = sb if sb is not None else _get_sb()
     if sb:
         try:
-            res = sb.table("saved_playlists").select("title,channel,playlist_url,video_count").eq("playlist_id", clean_id).execute()
+            query = sb.table("saved_playlists").select("title,channel,playlist_url,video_count").eq("playlist_id", clean_id)
+            if user_id and _is_uuid(user_id):
+                res = query.eq("user_id", user_id).execute()
+                if not res.data:
+                    res = sb.table("saved_playlists").select("title,channel,playlist_url,video_count").eq("playlist_id", clean_id).execute()
+            else:
+                res = query.execute()
+
             if res.data and len(res.data) > 0:
                 row = res.data[0]
                 info["title"] = row.get("title", "")
@@ -333,7 +340,8 @@ async def save_playlist(
                     "user_id": user_id,
                     "action": "save",
                     "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={req.playlist_id}",
-                    "metadata": {"playlist_id": req.playlist_id, "title": req.title}
+                    "resource_title": req.title or "",
+                    "skill_name": req.skill_query or "playlist",
                 }).execute()
             )
         except Exception:
@@ -515,8 +523,9 @@ async def sync_saved_playlists(
                 await asyncio.to_thread(
                     lambda: sb.table("user_feedback").insert({
                         "user_id": current_user_id,
-                        "action": "save",
-                        "metadata": {"count": len(playlists_list), "completion_pct": pct}
+                        "action": "unsave",
+                        "resource_title": f"{len(playlists_list)} playlists ({pct}% complete)",
+                        "skill_name": "saved_playlists",
                     }).execute()
                 )
             except Exception:
@@ -557,7 +566,7 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     sb = sb if sb is not None else _get_sb()
     clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
-    info = await asyncio.to_thread(_resolve_playlist_info, clean_playlist_id, sb)
+    info = await asyncio.to_thread(_resolve_playlist_info, clean_playlist_id, sb, user_id)
     target_yt_id = info.get("real_yt_id") or (clean_playlist_id if clean_playlist_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) else "")
     target_vid_id = info.get("video_id") or (clean_playlist_id if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_playlist_id) else "")
 
@@ -602,13 +611,16 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
                     # Filter private / deleted videos
                     if v_title in ("Private video", "Deleted video"):
                         continue
-                    # Fast-path: check short title first, only scan truncated description if title passes
-                    is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_title))
-                    if not is_prohibited and v_desc:
-                        is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_desc[:400]))
-                    if is_prohibited:
-                        logger.info(f"Filtered out non-educational video in playlist: '{v_title}'")
-                        continue
+
+                    # Allowlist check: If video title clearly indicates technical/educational skill content, never filter
+                    is_educational = bool(_LEARNING_SKILL.search(v_title))
+                    if not is_educational:
+                        is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_title))
+                        if not is_prohibited and v_desc:
+                            is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_desc[:400]))
+                        if is_prohibited:
+                            logger.info(f"Filtered out non-educational video in playlist: '{v_title}'")
+                            continue
 
                     thumbnail = (
                         snippet.get("thumbnails", {}).get("medium", {}).get("url")
@@ -715,8 +727,9 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
         if _is_uuid(user_id):
             existing_vc = str(info.get("video_count") or "").strip()
             current_vc = str(len(videos))
-            # Idempotency guard: Only write to DB if video_count is missing, placeholder, or changed
-            if existing_vc in ("", "0", "?") or (existing_vc != current_vc and existing_vc.isdigit()):
+            # Idempotency guard: Only write to DB if video_count is missing or placeholder ("?", "0", "")
+            # Never overwrite an existing positive count during a read request!
+            if existing_vc in ("", "0", "?", "None"):
                 try:
                     await asyncio.to_thread(
                         lambda: sb.table("saved_playlists").update({"video_count": current_vc}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()

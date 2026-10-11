@@ -26,11 +26,11 @@ _STRICT_PROHIBITED_TERMS = re.compile(
     # Romance / Dating / Sensual / Kiss
     r"romance|romantic|hot.?romance|hot.?love|love.?story|kiss|kissing|lip.?lock|bed.?scene|"
     r"romance.?scene|dating|hookup|couple.?goals|crush|flirt|breakup|affair|girlfriend|boyfriend|"
-    # Music / Songs / Tracks / Audio
-    r"song|songs|music|album|albums|audio|track|tracks|lyrics|singer|singers|band|dj|remix|"
-    r"lofi|lo-fi|mashup|gaana|mp3|soundtrack|official.?song|melody|pop|rap|hiphop|rock|bgm|"
-    r"ringtone|tune|karaoke|dance|choreography|party.?song|item.?song|sad.?song|"
-    r"official.?music.?video|lyric.?video|full.?song|audio.?song|"
+    # Music / Songs / Tracks / Audio (targeted phrases; avoids naked terms like 'audio', 'track', 'pop', 'rock', 'band')
+    r"song|songs|music|album|albums|audio.?track|audio.?song|lyrics|singer|singers|dj.?remix|remix|"
+    r"lofi|lo-fi|mashup|gaana|mp3|soundtrack|official.?song|melody|rap|hiphop|bgm|"
+    r"ringtone|karaoke|choreography|party.?song|item.?song|sad.?song|"
+    r"official.?music.?video|lyric.?video|full.?song|music.?video|music.?track|"
     # Junk Entertainment / Pranks / Roasts
     r"prank|pranks|roast|roasting|comedy.?video|funny.?video|meme.?video|tiktok|reels|"
     r"shorts.?dance|reaction.?video|mukbang"
@@ -76,6 +76,7 @@ _LEARNING_SKILL = re.compile(
     r"c\+\+|cpp|golang|rust|kotlin|swift|flutter|dart|php|ruby|"
     r"c.?programming|c.?language|"
     r"cybersecurity|networking|os|operating.?system|computer.?science|"
+    r"architecture|pattern|design.?pattern|concept|cqrs|envelope|calculation|"
     r"project|portfolio|startup|tech|software|engineer|developer|programmer|coding|programming"
     r")\b",
     re.IGNORECASE,

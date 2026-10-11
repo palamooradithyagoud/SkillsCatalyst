@@ -52,32 +52,50 @@ export async function getVapidPublicKey(): Promise<string> {
   return "";
 }
 
+// In-flight concurrency deduplication to prevent duplicate concurrent network requests
+const _inFlightNotificationsMap = new Map<string, Promise<NotificationListResponse>>();
+let _inFlightPrefsPromise: Promise<NotificationPreferences> | null = null;
+
 export async function fetchNotifications(
   limit: number = 30,
   offset: number = 0,
   unreadOnly: boolean = false
 ): Promise<NotificationListResponse> {
-  const authHeaders = await getAuthHeaders();
-  if (!authHeaders.Authorization) {
-    return { total: 0, unread_count: 0, notifications: [] };
+  const cacheKey = `${limit}_${offset}_${unreadOnly}`;
+  if (_inFlightNotificationsMap.has(cacheKey)) {
+    return _inFlightNotificationsMap.get(cacheKey)!;
   }
 
-  const query = new URLSearchParams({
-    limit: limit.toString(),
-    offset: offset.toString(),
-    unread_only: unreadOnly ? "true" : "false",
+  const promise = (async () => {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders.Authorization) {
+      return { total: 0, unread_count: 0, notifications: [] };
+    }
+
+    const query = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+      unread_only: unreadOnly ? "true" : "false",
+    });
+
+    const res = await apiFetch(`${API_BASE}/api/notifications?${query.toString()}`, {
+      headers: { ...authHeaders },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch notifications: HTTP ${res.status}`);
+    }
+
+    return await res.json();
+  })().finally(() => {
+    setTimeout(() => {
+      _inFlightNotificationsMap.delete(cacheKey);
+    }, 2000);
   });
 
-  const res = await apiFetch(`${API_BASE}/api/notifications?${query.toString()}`, {
-    headers: { ...authHeaders },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch notifications: HTTP ${res.status}`);
-  }
-
-  return await res.json();
+  _inFlightNotificationsMap.set(cacheKey, promise);
+  return promise;
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<boolean> {
@@ -121,28 +139,40 @@ export async function deleteNotification(notificationId: string): Promise<boolea
 }
 
 export async function fetchNotificationPreferences(): Promise<NotificationPreferences> {
-  const authHeaders = await getAuthHeaders();
-  const defaultPrefs: NotificationPreferences = {
-    streak_enabled: true,
-    events_enabled: true,
-    scholarships_enabled: true,
-  };
-
-  if (!authHeaders.Authorization) return defaultPrefs;
-
-  try {
-    const res = await apiFetch(`${API_BASE}/api/notifications/preferences`, {
-      headers: { ...authHeaders },
-      cache: "no-store",
-    });
-
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn("Could not fetch notification preferences:", err);
+  if (_inFlightPrefsPromise) {
+    return _inFlightPrefsPromise;
   }
-  return defaultPrefs;
+
+  _inFlightPrefsPromise = (async () => {
+    const authHeaders = await getAuthHeaders();
+    const defaultPrefs: NotificationPreferences = {
+      streak_enabled: true,
+      events_enabled: true,
+      scholarships_enabled: true,
+    };
+
+    if (!authHeaders.Authorization) return defaultPrefs;
+
+    try {
+      const res = await apiFetch(`${API_BASE}/api/notifications/preferences`, {
+        headers: { ...authHeaders },
+        cache: "no-store",
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn("Could not fetch notification preferences:", err);
+    }
+    return defaultPrefs;
+  })().finally(() => {
+    setTimeout(() => {
+      _inFlightPrefsPromise = null;
+    }, 2000);
+  });
+
+  return _inFlightPrefsPromise;
 }
 
 export async function updateNotificationPreferences(

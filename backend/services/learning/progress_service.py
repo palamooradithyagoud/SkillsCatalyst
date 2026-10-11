@@ -184,17 +184,36 @@ async def save_video_progress(
                 )
             )
             if not res.data:
-                await asyncio.to_thread(
-                    lambda: sb.table("video_progress").insert({
-                        "user_id":       user_id,
-                        "playlist_id":   clean_playlist_id,
-                        "video_id":      req.video_id,
-                        "watched":       False,
-                        "last_position": int_pos,
-                        "watch_time":    int_watch,
-                        "updated_at":    now_iso,
-                    }).execute()
-                )
+                try:
+                    await asyncio.to_thread(
+                        lambda: sb.table("video_progress").insert({
+                            "user_id":       user_id,
+                            "playlist_id":   clean_playlist_id,
+                            "video_id":      req.video_id,
+                            "watched":       False,
+                            "last_position": int_pos,
+                            "watch_time":    int_watch,
+                            "updated_at":    now_iso,
+                        }).execute()
+                    )
+                except Exception as insert_err:
+                    # Concurrency / Race Condition Guard:
+                    # If a concurrent request inserted the record a millisecond earlier (HTTP 409 / unique constraint),
+                    # retry the update cleanly on the newly created record.
+                    logger.debug(f"Concurrent video_progress insert detected for {req.video_id}, retrying update: {insert_err}")
+                    try:
+                        await asyncio.to_thread(
+                            lambda: (
+                                sb.table("video_progress")
+                                .update({"last_position": int_pos, "watch_time": int_watch, "updated_at": now_iso})
+                                .eq("user_id", user_id)
+                                .eq("playlist_id", clean_playlist_id)
+                                .eq("video_id", req.video_id)
+                                .execute()
+                            )
+                        )
+                    except Exception:
+                        pass
             return {"success": True, "updated_at": now_iso}
         else:
             # Guest session: persist to learning_progress JSONB
@@ -384,7 +403,8 @@ async def complete_video(
                     "user_id": user_id,
                     "action": "complete" if req.completed else "uncomplete",
                     "resource_url": f"https://www.youtube.com/watch?v={req.video_id}",
-                    "metadata": {"playlist_id": clean_playlist_id, "video_id": req.video_id}
+                    "resource_title": f"Video {req.video_id} in {clean_playlist_id}",
+                    "skill_name": clean_playlist_id,
                 }).execute()
             )
         except Exception:

@@ -176,10 +176,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Monitor Supabase auth state
   useEffect(() => {
+    let isInitialFetchDone = false;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUserId(session.user.id);
-        loadUserData();
+        if (!isInitialFetchDone) {
+          isInitialFetchDone = true;
+          loadUserData();
+        }
       } else {
         setUserId(null);
         setNotifications([]);
@@ -191,7 +196,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       (_event, session) => {
         if (session?.user) {
           setUserId(session.user.id);
-          loadUserData();
+          if (!isInitialFetchDone) {
+            isInitialFetchDone = true;
+            loadUserData();
+          } else if (_event === "SIGNED_IN") {
+            loadUserData();
+          }
         } else {
           setUserId(null);
           setNotifications([]);
