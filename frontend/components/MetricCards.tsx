@@ -123,6 +123,26 @@ export default function MetricCards({
 
   // Silent Background Revalidation (SWR Pattern)
   useEffect(() => {
+    // When mounted as top-level metrics strip, dashboard data already contains aggregated metrics
+    if (showOnly === "metrics") {
+      setLoading(false);
+      return;
+    }
+
+    // Rate-limit revalidation if local cache is fresh (< 2 minutes old)
+    try {
+      const lastFetch = Number(localStorage.getItem(`${CACHE_KEY}_ts`) || 0);
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (Date.now() - lastFetch < 120_000 && cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedPlaylists(parsed);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch { }
+
     async function loadRealSavedYTPlaylists() {
       try {
         // 1. Fetch saved playlists via API & Supabase DB
@@ -178,11 +198,13 @@ export default function MetricCards({
           setSavedPlaylists(playlistItems);
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(playlistItems));
+            localStorage.setItem(`${CACHE_KEY}_ts`, String(Date.now()));
           } catch { }
         } else {
           setSavedPlaylists([]);
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify([]));
+            localStorage.setItem(`${CACHE_KEY}_ts`, String(Date.now()));
           } catch { }
         }
       } catch (err) {
@@ -195,13 +217,23 @@ export default function MetricCards({
     loadRealSavedYTPlaylists();
   }, []);
 
-  // Compute total watched video stats across all saved playlists
-  const totalSavedVideos = savedPlaylists.reduce((acc, p) => acc + p.totalVideos, 0);
-  const totalCompletedVideos = savedPlaylists.reduce((acc, p) => acc + p.completedVideos, 0);
+  // Compute total watched video stats across all saved playlists (falling back to server-computed metrics)
+  const totalSavedVideos =
+    savedPlaylists.reduce((acc, p) => acc + p.totalVideos, 0) ||
+    metrics?.learningProgress?.totalVideos ||
+    0;
+  const totalCompletedVideos =
+    savedPlaylists.reduce((acc, p) => acc + p.completedVideos, 0) ||
+    metrics?.learningProgress?.completedVideos ||
+    0;
   const overallProgressPct =
     totalSavedVideos > 0
       ? Math.round((totalCompletedVideos / totalSavedVideos) * 100)
       : metrics?.learningProgress?.percentage ?? 0;
+  const displayPlaylistsCount =
+    savedPlaylists.length ||
+    (metrics?.learningProgress as any)?.savedPlaylistsCount ||
+    (metrics?.learningProgress?.totalVideos ? 1 : 0);
 
   // Resolve live webscraped LeetCode statistics
   const leetcodeData = metrics?.leetcodeProgress || metrics?.codingProgress;
@@ -251,7 +283,7 @@ export default function MetricCards({
 
           <div className="flex items-baseline gap-1 my-0.5">
             <span className="text-lg sm:text-2xl font-black tracking-tight" suppressHydrationWarning>
-              {savedPlaylists.length}
+              {displayPlaylistsCount}
             </span>
             <span className="text-[7.5px] sm:text-[8.5px] font-bold px-1.5 py-0.2 rounded-full bg-white/25 text-white backdrop-blur-sm">
               Tracked
@@ -259,7 +291,7 @@ export default function MetricCards({
           </div>
 
           <span className="text-[8.5px] sm:text-[9.5px] text-amber-100 font-medium truncate" suppressHydrationWarning>
-            {savedPlaylists.length === 1 ? "1 saved" : `${savedPlaylists.length} saved`}
+            {displayPlaylistsCount === 1 ? "1 saved" : `${displayPlaylistsCount} saved`}
           </span>
         </motion.div>
 

@@ -201,7 +201,16 @@ export async function unsavePlaylist(playlistId: string) {
   return { success: true };
 }
 
+// In-flight concurrency deduplication to prevent thunder-herd stampedes across components
+let _inFlightSavedPlaylistsPromise: Promise<{ saved: Playlist[]; count: number }> | null = null;
+const _inFlightVideosMap = new Map<string, Promise<{ videos: PlaylistVideo[]; count: number }>>();
+
 export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count: number }> {
+  if (_inFlightSavedPlaylistsPromise) {
+    return _inFlightSavedPlaylistsPromise;
+  }
+
+  _inFlightSavedPlaylistsPromise = (async () => {
   let backendSaved: Playlist[] = [];
   const sessionId = getRawGuestSessionId();
 
@@ -291,21 +300,33 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
     console.warn("Fetch saved playlists from learning_progress failed:", e);
   }
 
-  return { saved: backendSaved, count: backendSaved.length };
+    return { saved: backendSaved, count: backendSaved.length };
+  })().finally(() => {
+    setTimeout(() => {
+      _inFlightSavedPlaylistsPromise = null;
+    }, 2000);
+  });
+
+  return _inFlightSavedPlaylistsPromise;
 }
 
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {
   const cleanId = cleanPlaylistId(playlistId);
-  const sessionId = getRawGuestSessionId();
-  let resultVideos: PlaylistVideo[] = [];
+  if (_inFlightVideosMap.has(cleanId)) {
+    return _inFlightVideosMap.get(cleanId)!;
+  }
 
-  // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
-  try {
-    const authHeaders = await getAuthHeaders();
-    const res = await apiFetch(
-      `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
+  const promise = (async () => {
+    const sessionId = getRawGuestSessionId();
+    let resultVideos: PlaylistVideo[] = [];
+
+    // 1. Primary: Fetch full YouTube playlist items + merged progress from Supabase via FastAPI backend API
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await apiFetch(
+        `${API_BASE}/api/learning/playlist-videos?playlist_id=${encodeURIComponent(cleanId)}`,
       { headers: { ...authHeaders }, cache: "no-store" }
     );
     if (res.ok) {
@@ -428,7 +449,14 @@ export async function fetchPlaylistVideos(
         return v;
       });
     } catch (_) {}
-  }
+    }
+    return { videos: resultVideos, count: resultVideos.length };
+  })().finally(() => {
+    setTimeout(() => {
+      _inFlightVideosMap.delete(cleanId);
+    }, 2500);
+  });
 
-  return { videos: resultVideos, count: resultVideos.length };
+  _inFlightVideosMap.set(cleanId, promise);
+  return promise;
 }

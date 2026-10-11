@@ -6,6 +6,7 @@ Phase: Payments Phase 1 — Subscription + Entitlement Foundation
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List, Tuple
 
@@ -49,6 +50,11 @@ def _parse_timestamp(val: Any) -> Optional[datetime]:
     except Exception as e:
         logger.warning(f"Error parsing timestamp {val}: {e}")
         return None
+
+
+# In-memory thread-safe cache for static plan tier entitlements (keyed by plan_code, TTL: 300s)
+_PLAN_ENTITLEMENTS_CACHE: Dict[str, Tuple[float, Dict[str, EntitlementDetailDTO]]] = {}
+_PLAN_ENTITLEMENTS_CACHE_TTL = 300.0  # 5 minutes
 
 
 class SubscriptionService:
@@ -316,6 +322,15 @@ class SubscriptionService:
         return resolved["plan"], resolved["is_premium"]
 
     @staticmethod
+    def invalidate_plan_entitlements_cache(plan_code: Optional[str] = None) -> None:
+        """Clears cached plan entitlements to force fresh DB retrieval on next access."""
+        global _PLAN_ENTITLEMENTS_CACHE
+        if plan_code:
+            _PLAN_ENTITLEMENTS_CACHE.pop(plan_code, None)
+        else:
+            _PLAN_ENTITLEMENTS_CACHE.clear()
+
+    @staticmethod
     def get_user_entitlements(user_id: str) -> Dict[str, EntitlementDetailDTO]:
         """
         Returns full 7-feature entitlement dictionary based on user's effective plan.
@@ -327,6 +342,13 @@ class SubscriptionService:
 
         plan_code, is_premium = SubscriptionService.get_effective_plan(user_id)
 
+        # 1. Check in-memory cache first (eliminates 300-800ms DB roundtrip on every request)
+        now_mono = time.monotonic()
+        cached = _PLAN_ENTITLEMENTS_CACHE.get(plan_code.value)
+        if cached and cached[0] > now_mono:
+            return {k: v.model_copy() for k, v in cached[1].items()}
+
+        # 2. Query dynamic Supabase plan_entitlements table
         sb = get_supabase()
         if sb:
             try:
@@ -346,14 +368,15 @@ class SubscriptionService:
                     # Verify all 7 feature keys present
                     all_present = all(k.value in entitlements for k in FeatureKey)
                     if all_present:
-                        return entitlements
+                        _PLAN_ENTITLEMENTS_CACHE[plan_code.value] = (now_mono + _PLAN_ENTITLEMENTS_CACHE_TTL, entitlements)
+                        return {k: v.model_copy() for k, v in entitlements.items()}
             except Exception as e:
                 logger.warning(f"Failed to query plan_entitlements for {plan_code.value}: {e}")
 
         # Fallback to canonical in-memory dictionary
-        if is_premium:
-            return {k: v.model_copy() for k, v in DEFAULT_PREMIUM_ENTITLEMENTS.items()}
-        return {k: v.model_copy() for k, v in DEFAULT_FREE_ENTITLEMENTS.items()}
+        fallback = {k: v.model_copy() for k, v in (DEFAULT_PREMIUM_ENTITLEMENTS if is_premium else DEFAULT_FREE_ENTITLEMENTS).items()}
+        _PLAN_ENTITLEMENTS_CACHE[plan_code.value] = (now_mono + 60.0, fallback)
+        return fallback
 
     @staticmethod
     def has_feature_access(user_id: str, feature_key: str) -> bool:

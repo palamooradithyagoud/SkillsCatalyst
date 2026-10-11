@@ -126,12 +126,13 @@ def _resolve_playlist_info(clean_id: str, sb=None) -> dict:
     sb = sb if sb is not None else _get_sb()
     if sb:
         try:
-            res = sb.table("saved_playlists").select("title,channel,playlist_url").eq("playlist_id", clean_id).execute()
+            res = sb.table("saved_playlists").select("title,channel,playlist_url,video_count").eq("playlist_id", clean_id).execute()
             if res.data and len(res.data) > 0:
                 row = res.data[0]
                 info["title"] = row.get("title", "")
                 info["channel"] = row.get("channel", "")
                 info["playlist_url"] = row.get("playlist_url", "")
+                info["video_count"] = row.get("video_count", "")
                 extracted = _extract_youtube_ids(info["playlist_url"], "")
                 if extracted.get("playlist_id") and extracted["playlist_id"].startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
                     info["real_yt_id"] = extracted["playlist_id"]
@@ -601,8 +602,11 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
                     # Filter private / deleted videos
                     if v_title in ("Private video", "Deleted video"):
                         continue
-                    # Filter any adult, romance, song, or prohibited videos inside playlists
-                    if _STRICT_PROHIBITED_TERMS.search(f"{v_title} {v_desc}"):
+                    # Fast-path: check short title first, only scan truncated description if title passes
+                    is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_title))
+                    if not is_prohibited and v_desc:
+                        is_prohibited = bool(_STRICT_PROHIBITED_TERMS.search(v_desc[:400]))
+                    if is_prohibited:
                         logger.info(f"Filtered out non-educational video in playlist: '{v_title}'")
                         continue
 
@@ -709,12 +713,16 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
     # Merge progress data from Supabase & sync accurate video_count
     if sb and videos and user_id:
         if _is_uuid(user_id):
-            try:
-                await asyncio.to_thread(
-                    lambda: sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
-                )
-            except Exception:
-                pass
+            existing_vc = str(info.get("video_count") or "").strip()
+            current_vc = str(len(videos))
+            # Idempotency guard: Only write to DB if video_count is missing, placeholder, or changed
+            if existing_vc in ("", "0", "?") or (existing_vc != current_vc and existing_vc.isdigit()):
+                try:
+                    await asyncio.to_thread(
+                        lambda: sb.table("saved_playlists").update({"video_count": current_vc}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
+                    )
+                except Exception:
+                    pass
 
             try:
                 res = await asyncio.to_thread(
