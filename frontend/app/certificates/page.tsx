@@ -77,16 +77,16 @@ export default function StudentCertificatesListPage() {
               My Verified Certificates
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Verified certifications earned upon completing skill roadmap assessments.
+              Verified certifications earned upon completing certified curricula.
             </p>
           </div>
 
           <Link
-            href="/roadmaps"
+            href="/learning"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all self-start sm:self-auto"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Explore Roadmaps</span>
+            <span>Learning Hub</span>
           </Link>
         </header>
 
@@ -104,14 +104,14 @@ export default function StudentCertificatesListPage() {
             </div>
             <h2 className="text-lg font-bold text-white">No Certificates Earned Yet</h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-              Complete and pass the module assessments in any eligible roadmap to earn your verified credential.
+              Verified certifications are issued upon completing certified curricula. Credential programs will appear here once earned.
             </p>
             <div className="pt-2">
               <Link
-                href="/roadmaps"
+                href="/learning"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all"
               >
-                Start Learning Now
+                Explore Learning Hub
               </Link>
             </div>
           </div>

@@ -291,7 +291,7 @@ try:
     from backend.routers import (
         dashboard, ai_mentor, learning, resume, practice, profile,
         auth, support, admin, events, scholarships, tech_news,
-        subscriptions, payments, skillbits, notifications, courses,
+        subscriptions, payments, skillbits, notifications,
         certificates
     )
 except ModuleNotFoundError as e:
@@ -299,7 +299,7 @@ except ModuleNotFoundError as e:
         from routers import (
             dashboard, ai_mentor, learning, resume, practice, profile,
             auth, support, admin, events, scholarships, tech_news,
-            subscriptions, payments, skillbits, notifications, courses,
+            subscriptions, payments, skillbits, notifications,
             certificates
         )
     else:
@@ -321,7 +321,8 @@ app.include_router(subscriptions.router)
 app.include_router(payments.router)
 app.include_router(skillbits.router)
 app.include_router(notifications.router)
-# app.include_router(courses.router)  # Courses disabled
+# app.include_router(courses.router)        # Student courses disabled
+# app.include_router(admin_courses.router)  # Admin courses disabled
 app.include_router(certificates.router)
 
 
