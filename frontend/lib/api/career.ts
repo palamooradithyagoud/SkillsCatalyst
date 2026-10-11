@@ -1,4 +1,3 @@
-import { supabase } from "@/lib/supabase";
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
 
 export interface MentorConversation {
@@ -177,31 +176,6 @@ export async function reviewResume(resumeText: string, targetRole: string, years
         const scoreVal = Math.round(val);
         if (typeof window !== "undefined") {
           localStorage.setItem("skillscatalyst_latest_resume_score", String(scoreVal));
-        }
-
-        // Direct Supabase DB insert for guaranteed persistence across sessions
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user?.id) {
-            await supabase.from("resume_scores").insert({
-              user_id: session.user.id,
-              filename: "resume.pdf",
-              target_role: targetRole,
-              company_type: companyType,
-              overall_score: scoreVal,
-              ats_compatibility_score: scoreVal,
-              skills_match_score: scoreVal,
-              experience_score: scoreVal,
-              full_review_json: { review: data.review },
-            });
-            await supabase.from("user_progress").upsert({
-              user_id: session.user.id,
-              resume_readiness_score: scoreVal,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: "user_id" });
-          }
-        } catch (dbErr) {
-          console.warn("Direct Supabase resume_scores insert warning:", dbErr);
         }
       }
     }

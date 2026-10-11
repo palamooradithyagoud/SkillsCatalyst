@@ -40,24 +40,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai-mentor", tags=["ai-mentor"])
 
-# Thread-safe in-memory quota tracking for AI mentor usage
-_ai_mentor_usage_counts: Dict[str, int] = defaultdict(int)
-
-
-def get_ai_mentor_usage(user_id: str) -> int:
-    return _ai_mentor_usage_counts[user_id]
-
-
-def increment_ai_mentor_usage(user_id: str) -> int:
-    _ai_mentor_usage_counts[user_id] += 1
-    return _ai_mentor_usage_counts[user_id]
-
-
-def reset_ai_mentor_usage(user_id: Optional[str] = None) -> None:
-    if user_id:
-        _ai_mentor_usage_counts.pop(user_id, None)
-    else:
-        _ai_mentor_usage_counts.clear()
+# Persistent, thread-safe, and distributed quota tracking for AI mentor usage (BUG-E-1)
+from backend.services.ai_mentor_quota_service import (
+    get_ai_mentor_usage,
+    reserve_ai_mentor_slot,
+    release_ai_mentor_slot,
+    increment_ai_mentor_usage,
+    decrement_ai_mentor_usage,
+    reset_ai_mentor_usage,
+)
 
 
 
@@ -340,6 +331,21 @@ async def chat_mentor(
         logger.info(f"Off-topic prompt detected, returning redirect message. Prompt: '{prompt_text[:80]}'")
         return MentorChatResponse(reply=_OFFTOPIC_REPLY, conversation_id=req.conversation_id, message_id=None)
 
+    # Atomic quota reservation before invoking LLM provider under concurrency
+    reserved = False
+    if entitlement.limit is not None:
+        allowed, _ = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "LIMIT_REACHED",
+                    "feature": "ai_mentor",
+                    "limit": entitlement.limit,
+                },
+            )
+        reserved = True
+
     # -----------------------------------------------------------------------
     # Authenticated Student Path: Persistent Conversation Memory & Multi-Turn
     # -----------------------------------------------------------------------
@@ -347,9 +353,13 @@ async def chat_mentor(
         conv_id = req.conversation_id
         if conv_id:
             if not is_valid_uuid(conv_id):
+                if reserved:
+                    release_ai_mentor_slot(current_user_id)
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
             existing_conv = await asyncio.to_thread(get_conversation, current_user_id, conv_id)
             if not existing_conv:
+                if reserved:
+                    release_ai_mentor_slot(current_user_id)
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
         else:
             # Auto-create conversation with clean deterministic title from first message
@@ -385,25 +395,32 @@ async def chat_mentor(
 
         # 4. Invoke LLM provider with bounded deadline watchdog and slot retention
         try:
-            response = await run_bounded_ai_call(
-                chat_with_groq,
-                prompt=prompt_text,
-                system_prompt=effective_system_prompt,
-                messages=llm_messages,
-            )
-        except TypeError:
-            response = await run_bounded_ai_call(
-                chat_with_groq,
-                prompt_text,
-                system_prompt=effective_system_prompt,
-            )
+            try:
+                response = await run_bounded_ai_call(
+                    chat_with_groq,
+                    prompt=prompt_text,
+                    system_prompt=effective_system_prompt,
+                    messages=llm_messages,
+                )
+            except TypeError:
+                response = await run_bounded_ai_call(
+                    chat_with_groq,
+                    prompt_text,
+                    system_prompt=effective_system_prompt,
+                )
+        except Exception:
+            if reserved:
+                release_ai_mentor_slot(current_user_id)
+            raise
 
         # 5. Handle LLM failure: User message preserved, NO fake assistant message written
         if not response or response == _AI_UNAVAILABLE_MSG:
             logger.warning("Groq call failed or returned unavailable message; user message preserved, no assistant response saved.")
+            if reserved:
+                release_ai_mentor_slot(current_user_id)
             return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=conv_id, message_id=None)
 
-        if entitlement.limit is not None:
+        if not reserved and entitlement.limit is not None:
             increment_ai_mentor_usage(current_user_id)
 
         # 6. Secondary guard: check LLM reply
@@ -422,13 +439,24 @@ async def chat_mentor(
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
     # -----------------------------------------------------------------------
-    response = await run_bounded_ai_call(
-        chat_with_groq,
-        prompt=prompt_text,
-        system_prompt=_SKILLS_SYSTEM_PROMPT,
-    )
+    try:
+        response = await run_bounded_ai_call(
+            chat_with_groq,
+            prompt=prompt_text,
+            system_prompt=_SKILLS_SYSTEM_PROMPT,
+        )
+    except Exception:
+        if reserved:
+            release_ai_mentor_slot(current_user_id)
+        raise
 
-    if entitlement.limit is not None:
+    if not response or response == _AI_UNAVAILABLE_MSG:
+        logger.warning("Groq call failed or returned unavailable message; guest path.")
+        if reserved:
+            release_ai_mentor_slot(current_user_id)
+        return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=None, message_id=None)
+
+    if not reserved and entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
 
     if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
@@ -458,6 +486,21 @@ async def review_resume(
                     "limit": entitlement.limit,
                 },
             )
+
+    # Atomic quota reservation before invoking LLM provider under concurrency
+    reserved = False
+    if entitlement.limit is not None:
+        allowed, _ = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "LIMIT_REACHED",
+                    "feature": "ai_mentor",
+                    "limit": entitlement.limit,
+                },
+            )
+        reserved = True
     target_role = req.target_role
     years_exp = req.years_experience or "1-3 years"
     company_type = req.company_type or "Product-Based"
@@ -560,10 +603,17 @@ STRICT RULES:
 - Focus on impact, metrics, and role relevance
 - Assume this resume is competing at a top 10% level"""
 
-    review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
+    try:
+        review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
+    except Exception:
+        if reserved:
+            release_ai_mentor_slot(current_user_id)
+        raise
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")
+        if reserved:
+            release_ai_mentor_slot(current_user_id)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={
@@ -620,6 +670,6 @@ STRICT RULES:
         logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
 
     logger.info(f"Resume review completed ({len(review_text)} chars returned).")
-    if entitlement.limit is not None:
+    if not reserved and entitlement.limit is not None:
         increment_ai_mentor_usage(current_user_id)
     return {"review": review_text}
