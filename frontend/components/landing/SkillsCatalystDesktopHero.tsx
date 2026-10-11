@@ -11,7 +11,6 @@ import {
   Users,
   Trophy,
   ArrowRight,
-  Sparkles,
   ChevronDown,
 } from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
@@ -323,7 +322,6 @@ export default function SkillsCatalystDesktopHero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Sparkles size={14} />
               <span>Accelerate Your Career · AI-Powered Learning</span>
             </motion.div>
 
