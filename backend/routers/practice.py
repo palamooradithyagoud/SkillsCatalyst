@@ -1,23 +1,32 @@
 import csv
 import logging
 import os
+import sys
 from pathlib import Path
-from typing import Literal, Optional
+
+# Ensure root and backend directories are in sys.path for standalone execution
+_BACKEND_DIR = Path(__file__).resolve().parent.parent          # backend/
+_PROJECT_ROOT = _BACKEND_DIR.parent                             # project root
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+if str(_BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_DIR))
+
+from typing import Literal, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, status, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from backend.services.auth_service import get_session_or_user_id
+from backend.services.auth_service import get_session_or_user_id, require_authenticated_user
 from backend.models.subscription import FeatureKey
 from backend.dependencies.subscription import require_entitlement
+from backend.services.supabase_service import get_supabase
+from backend.services.rate_limiter import enforce_rate_limit
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/practice", tags=["practice"])
 
 # ── Data directory ────────────────────────────────────────────────────────────
-# Resolve relative to this file: backend/routers/practice.py → project root → data/
-_BACKEND_DIR = Path(__file__).resolve().parent.parent          # backend/
-_PROJECT_ROOT = _BACKEND_DIR.parent                             # project root
 DATA_DIR = _PROJECT_ROOT / "data" / "leetcode-companywise-interview-questions-master"
 
 TimePeriod = Literal["all", "six-months", "three-months", "thirty-days", "more-than-six-months"]
@@ -229,37 +238,140 @@ def get_aptitude_questions(topic_slug: str):
 
 
 class AptitudeAttemptRequest(BaseModel):
-    user_id: Optional[str] = None
-    topic_id: int
-    question_id: int
-    selected_option_index: int
-    is_correct: bool
-    time_taken_seconds: int = Field(ge=0, description="Time spent in seconds on this question (correct or wrong)")
+    user_id: Optional[str] = Field(None, description="Optional client user ID (must match authenticated identity)")
+    topic_id: int = Field(..., ge=1, description="Aptitude topic ID")
+    question_id: int = Field(..., ge=1, description="Aptitude question ID")
+    selected_option_index: int = Field(..., ge=0, description="Selected option index (0-based)")
+    is_correct: Optional[bool] = Field(None, description="Ignored by server; correctness is evaluated server-side")
+    time_taken_seconds: int = Field(0, ge=0, description="Time spent in seconds on this question")
 
 
 @router.post(
     "/aptitude/attempt",
-    dependencies=[Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value))],
+    dependencies=[
+        Depends(enforce_rate_limit(max_requests=120, window_seconds=60)),
+        Depends(require_authenticated_user),
+        Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value)),
+    ],
 )
 def record_aptitude_attempt(
     attempt: AptitudeAttemptRequest,
-    current_user_id: str = Depends(get_session_or_user_id)
+    current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
     """
-    Store user practice attempt with correctness (true/false) and time taken in seconds for both correct and wrong answers.
-    Binds attempt user_id strictly to verified JWT identity or session resolver to prevent IDOR / client identity spoofing.
+    Store user practice attempt with server-verified correctness and time taken.
+    - Validates question existence against authoritative `aptitude_questions` table.
+    - Determines correctness server-side by comparing selected_option_index to correct_index.
+    - Enforces ownership: attempt is strictly bound to authenticated user's ID.
+    - Persists attempt metadata into `user_aptitude_attempts`.
+    - Protected by rate limiting, authentication, and premium entitlement.
     """
-    attempt_dict = attempt.model_dump()
-    attempt_dict["user_id"] = current_user_id
+    authenticated_user_id = str(current_user.get("user_id") or "").strip()
+    if not authenticated_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authentication token."
+        )
 
-    logger.info(
-        f"Recorded attempt: user={attempt_dict['user_id']}, topic_id={attempt.topic_id}, question_id={attempt.question_id}, "
-        f"is_correct={attempt.is_correct}, time_taken_seconds={attempt.time_taken_seconds}s"
-    )
+    # Enforce attempt ownership: reject attempt if client tries to forge another user's attempt
+    if attempt.user_id and str(attempt.user_id).strip() != authenticated_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Cannot record attempt for another user."
+        )
+
+    # Validate question identifier
+    if attempt.question_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Question ID {attempt.question_id} is invalid."
+        )
+
+    sb = get_supabase()
+    if not sb:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service unavailable."
+        )
+
+    # 1. Fetch authoritative question details from database
+    try:
+        q_res = (
+            sb.table("aptitude_questions")
+            .select("id, topic_id, correct_index, options")
+            .eq("id", attempt.question_id)
+            .execute()
+        )
+    except Exception as fetch_err:
+        logger.error(f"Error querying aptitude_questions for ID {attempt.question_id}: {fetch_err}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to query question from database."
+        )
+
+    if not q_res or not q_res.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Question with ID {attempt.question_id} not found."
+        )
+
+    question_row = q_res.data[0]
+    authoritative_correct_index = int(question_row["correct_index"])
+    topic_id = question_row.get("topic_id") or attempt.topic_id
+
+    # Validate option index bounds if options list is present
+    options = question_row.get("options")
+    if isinstance(options, list) and len(options) > 0:
+        if attempt.selected_option_index >= len(options):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Selected option index {attempt.selected_option_index} out of range (total options: {len(options)})."
+            )
+
+    # 2. Authoritative server-side evaluation (NEVER trust client's is_correct)
+    server_computed_is_correct = (attempt.selected_option_index == authoritative_correct_index)
+
+    # 3. Persist attempt to user_aptitude_attempts table
+    attempt_record = {
+        "user_id": authenticated_user_id,
+        "topic_id": topic_id,
+        "question_id": attempt.question_id,
+        "selected_option_index": attempt.selected_option_index,
+        "is_correct": server_computed_is_correct,
+        "time_taken_seconds": attempt.time_taken_seconds,
+    }
+
+    try:
+        sb.table("user_aptitude_attempts").upsert(
+            attempt_record,
+            on_conflict="user_id,question_id"
+        ).execute()
+        logger.info(
+            f"Persisted aptitude attempt: user={authenticated_user_id}, question_id={attempt.question_id}, "
+            f"is_correct={server_computed_is_correct}, time={attempt.time_taken_seconds}s"
+        )
+    except Exception as db_err:
+        logger.warning(f"Could not persist attempt to user_aptitude_attempts: {db_err}")
+
+    # 4. Construct response adhering to existing API contract without leaking solution details
+    attempt_response_data = {
+        "user_id": authenticated_user_id,
+        "topic_id": topic_id,
+        "question_id": attempt.question_id,
+        "selected_option_index": attempt.selected_option_index,
+        "is_correct": server_computed_is_correct,
+        "time_taken_seconds": attempt.time_taken_seconds,
+    }
+
     return {
         "status": "success",
         "message": "User question attempt and time taken successfully recorded in SQL schema",
-        "attempt": attempt_dict,
+        "attempt": attempt_response_data,
     }
+
+
+if __name__ == "__main__":
+    print(f"SkillsCatalyst Practice router initialized successfully. DATA_DIR={DATA_DIR}")
+
 
 
