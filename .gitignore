@@ -49,3 +49,6 @@ Thumbs.db
 # Supabase CLI temp files
 supabase/.temp/
 .temp/
+
+# Scratch & local benchmark scripts
+scratch/

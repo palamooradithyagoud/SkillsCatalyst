@@ -9,7 +9,9 @@ logger = logging.getLogger("skillscatalyst.observability")
 # In-memory metric stores
 _request_latencies = []  # rolling last 1000 request latencies in ms
 _ai_latencies = []       # rolling last 500 AI invocation latencies in ms
+_db_latencies = []       # rolling last 1000 database query latencies in ms
 _counters: Dict[str, int] = defaultdict(int)
+_db_counters: Dict[str, int] = defaultdict(int)
 _search_sources: Dict[str, int] = defaultdict(int)
 _start_timestamp = time.time()
 
@@ -108,6 +110,40 @@ def record_learning_search(source: str, language: str, cache_hit: bool, latency_
         _counters["learning_cache_misses"] += 1
 
 
+def record_db_operation(
+    operation: str,
+    method: str,
+    table: str,
+    duration_ms: float,
+    success: bool = True,
+    status_code: Optional[int] = None,
+    row_count: Optional[int] = None,
+    error_category: Optional[str] = None,
+):
+    """
+    Record privacy-safe database operation telemetry.
+    Never stores request bodies, query parameters, auth tokens, or student data.
+    """
+    _db_counters["total_operations"] += 1
+    clean_method = (method or "UNKNOWN").upper()
+    _db_counters[f"op_{clean_method.lower()}"] += 1
+
+    clean_table = (table or "unknown").lower()
+    _db_counters[f"table_{clean_table}"] += 1
+
+    if duration_ms is not None and duration_ms >= 0:
+        _db_latencies.append(duration_ms)
+        if len(_db_latencies) > 1000:
+            _db_latencies.pop(0)
+
+    if not success or (status_code is not None and status_code >= 400):
+        _db_counters["error_operations"] += 1
+        if status_code:
+            _db_counters[f"status_{status_code}"] += 1
+        if error_category:
+            _db_counters[f"err_{error_category.lower()}"] += 1
+
+
 def get_system_metrics() -> Dict[str, Any]:
     """Calculate and return system observability metrics."""
     uptime_sec = round(time.time() - _start_timestamp, 1)
@@ -129,6 +165,18 @@ def get_system_metrics() -> Dict[str, Any]:
         ai_p50 = round(sorted_ai_lats[int(n_ai * 0.50)], 2)
         ai_p95 = round(sorted_ai_lats[min(int(n_ai * 0.95), n_ai - 1)], 2)
 
+    # Calculate Database latency percentiles
+    p50_db, p95_db, p99_db = 0.0, 0.0, 0.0
+    if _db_latencies:
+        sorted_db = sorted(_db_latencies)
+        n_db = len(sorted_db)
+        p50_db = round(sorted_db[int(n_db * 0.50)], 2)
+        p95_db = round(sorted_db[min(int(n_db * 0.95), n_db - 1)], 2)
+        p99_db = round(sorted_db[min(int(n_db * 0.99), n_db - 1)], 2)
+
+    total_db_ops = _db_counters.get("total_operations", 0)
+    db_errors = _db_counters.get("error_operations", 0)
+
     redis_hits = _counters.get("redis_hits", 0)
     redis_misses = _counters.get("redis_misses", 0)
     total_cache_ops = redis_hits + redis_misses
@@ -145,6 +193,21 @@ def get_system_metrics() -> Dict[str, Any]:
                 "p95": p95,
                 "p99": p99,
             }
+        },
+        "database": {
+            "total_operations": total_db_ops,
+            "errors": db_errors,
+            "latency_ms": {
+                "p50": p50_db,
+                "p95": p95_db,
+                "p99": p99_db,
+            },
+            "operations_by_method": {
+                "get": _db_counters.get("op_get", 0),
+                "post": _db_counters.get("op_post", 0),
+                "patch": _db_counters.get("op_patch", 0),
+                "delete": _db_counters.get("op_delete", 0),
+            },
         },
         "redis_cache": {
             "hits": redis_hits,

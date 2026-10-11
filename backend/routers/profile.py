@@ -1,5 +1,6 @@
 import logging
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import re
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, status, Depends
@@ -11,6 +12,7 @@ from backend.services.auth_service import get_current_user_id
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
+_PROFILE_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="profile_db")
 
 # ── Models ────────────────────────────────────────────────--------------------
 
@@ -383,6 +385,193 @@ async def _extract_hackerrank(input_val: str) -> Dict[str, Any]:
     }
 
 
+# ── Profile Fetch Helpers (Bounded Concurrency & RPC) ─────────────────────────
+
+def _fetch_academic_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"Failed to fetch user_academic_profile: {e}")
+        return None
+
+
+def _fetch_personal_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("profiles").select("*").eq("id", user_id).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"Profiles table query notice: {e}")
+        return None
+
+
+def _fetch_coding_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("user_coding_profiles").select("*").eq("user_id", user_id).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"Failed to fetch user_coding_profiles: {e}")
+        return None
+
+
+def _fetch_skills_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("user_skills").select("*").eq("user_id", user_id).order("created_at").execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"User skills query notice: {e}")
+        return []
+
+
+def _fetch_experiences_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("experiences").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"Experiences query notice: {e}")
+        return []
+
+
+def _fetch_education_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("education").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"Education query notice: {e}")
+        return []
+
+
+def _fetch_projects_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("projects").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"Projects query notice: {e}")
+        return []
+
+
+def _fetch_certifications_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("certifications").select("*").eq("user_id", user_id).order("issue_date", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"Certifications query notice: {e}")
+        return []
+
+
+def _fetch_achievements_data(sb, user_id: str) -> list:
+    try:
+        res = sb.from_("achievements").select("*").eq("user_id", user_id).order("achievement_date", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        logger.debug(f"Achievements query notice: {e}")
+        return []
+
+
+def _fetch_career_preferences_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("career_preferences").select("*").eq("user_id", user_id).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"Career preferences query notice: {e}")
+        return None
+
+
+def _fetch_resume_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("resume_scores").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"Resume scores query notice: {e}")
+        return None
+
+
+def _fetch_progress_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        res = sb.from_("user_progress").select("*").eq("user_id", user_id).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        logger.debug(f"User progress query notice: {e}")
+        return None
+
+
+def _format_unified_profile_from_rpc(raw: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    """Unpacks and standardizes RPC response into identical unified profile structure."""
+    personal = raw.get("personal") or {}
+    academic = raw.get("academic") or {}
+    coding = raw.get("coding") or {}
+    career = raw.get("career_preferences") or {}
+
+    personal_data = {
+        "id": user_id,
+        "full_name": personal.get("full_name") or academic.get("full_name", ""),
+        "headline": personal.get("headline", ""),
+        "avatar_url": personal.get("avatar_url", ""),
+        "country": personal.get("country", ""),
+        "state": personal.get("state", ""),
+        "city": personal.get("city", ""),
+        "phone": personal.get("phone", ""),
+        "gender": personal.get("gender", ""),
+        "about": personal.get("about", ""),
+    }
+
+    academic_data = {
+        "user_id": user_id,
+        "full_name": academic.get("full_name", ""),
+        "college": academic.get("college", ""),
+        "department": academic.get("department", ""),
+        "academic_year": academic.get("academic_year", ""),
+        "target_role": academic.get("target_role", ""),
+    }
+
+    t_roles = career.get("target_roles") or ([career.get("target_role")] if career.get("target_role") else [])
+    if not t_roles and academic_data.get("target_role"):
+        t_roles = [academic_data["target_role"]]
+
+    career_prefs_data = {
+        "user_id": user_id,
+        "target_roles": t_roles,
+        "preferred_industries": career.get("preferred_industries") or ([career.get("target_industry")] if career.get("target_industry") else []),
+        "target_companies": career.get("target_companies") or [],
+        "preferred_locations": career.get("preferred_locations") or ([career.get("preferred_work_location")] if career.get("preferred_work_location") else []),
+        "work_arrangements": career.get("work_arrangements") or ([career.get("preferred_work_type")] if career.get("preferred_work_type") else []),
+    }
+
+    education_data = raw.get("education") or []
+    if not education_data and academic_data.get("college"):
+        education_data = [{
+            "id": f"legacy_edu_{user_id}",
+            "user_id": user_id,
+            "college": academic_data.get("college", ""),
+            "field_of_study": academic_data.get("department", ""),
+            "degree_type": academic_data.get("academic_year", ""),
+            "currently_studying": True,
+        }]
+
+    return {
+        "personal": personal_data,
+        "academic": academic_data,
+        "career_preferences": career_prefs_data,
+        "skills": raw.get("skills") or [],
+        "experiences": raw.get("experiences") or [],
+        "education": education_data,
+        "projects": raw.get("projects") or [],
+        "certifications": raw.get("certifications") or [],
+        "achievements": raw.get("achievements") or [],
+        "resume": raw.get("resume"),
+        "progress": raw.get("progress") or {},
+        "coding_inputs": {
+            "leetcode": coding.get("leetcode_url", ""),
+            "github": coding.get("github_url", ""),
+            "hackerrank": coding.get("hackerrank_url", ""),
+            "codechef": coding.get("codechef_url", ""),
+            "geeksforgeeks": coding.get("geeksforgeeks_url", ""),
+            "codeforces": coding.get("codeforces_url", ""),
+        },
+        "coding_stats": coding.get("stats_json") or {},
+    }
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("")
@@ -390,6 +579,7 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
     """
     Fetch current user's complete Unified Profile across all normalized entities,
     with extracted coding platform stats and backward-compatible fallbacks.
+    Optimized with RPC single-roundtrip fast path and bounded parallel fallback.
     """
     sb = get_supabase()
     academic_data = {
@@ -439,69 +629,80 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
     progress_data = {}
 
     if sb:
-        # 1. Academic profile (backward compatibility)
+        # 1. Attempt single-roundtrip RPC if deployed
+        if hasattr(sb, "rpc"):
+            try:
+                rpc_res = sb.rpc("get_user_unified_profile", {"p_user_id": user_id}).execute()
+                if rpc_res and getattr(rpc_res, "data", None) and isinstance(rpc_res.data, dict):
+                    return _format_unified_profile_from_rpc(rpc_res.data, user_id)
+            except Exception as rpc_err:
+                logger.debug(f"RPC get_user_unified_profile notice (falling back to bounded parallel execution): {rpc_err}")
+
+        # 2. Bounded parallel execution: submit all 12 independent entity reads concurrently
+        f_acad = _PROFILE_EXECUTOR.submit(_fetch_academic_data, sb, user_id)
+        f_prof = _PROFILE_EXECUTOR.submit(_fetch_personal_data, sb, user_id)
+        f_code = _PROFILE_EXECUTOR.submit(_fetch_coding_data, sb, user_id)
+        f_skills = _PROFILE_EXECUTOR.submit(_fetch_skills_data, sb, user_id)
+        f_exp = _PROFILE_EXECUTOR.submit(_fetch_experiences_data, sb, user_id)
+        f_edu = _PROFILE_EXECUTOR.submit(_fetch_education_data, sb, user_id)
+        f_proj = _PROFILE_EXECUTOR.submit(_fetch_projects_data, sb, user_id)
+        f_certs = _PROFILE_EXECUTOR.submit(_fetch_certifications_data, sb, user_id)
+        f_ach = _PROFILE_EXECUTOR.submit(_fetch_achievements_data, sb, user_id)
+        f_cp = _PROFILE_EXECUTOR.submit(_fetch_career_preferences_data, sb, user_id)
+        f_resume = _PROFILE_EXECUTOR.submit(_fetch_resume_data, sb, user_id)
+        f_prog = _PROFILE_EXECUTOR.submit(_fetch_progress_data, sb, user_id)
+
+        # Retrieve and merge academic profile
         try:
-            res_acad = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
-            if res_acad.data:
-                academic_data.update(res_acad.data[0])
+            acad_row = f_acad.result()
+            if acad_row:
+                academic_data.update(acad_row)
                 if academic_data.get("full_name"):
                     personal_data["full_name"] = academic_data["full_name"]
-                if academic_data.get("target_role") and not career_prefs_data["target_roles"]:
-                    career_prefs_data["target_roles"] = [academic_data["target_role"]]
         except Exception as e:
-            logger.warning(f"Failed to fetch user_academic_profile: {e}")
+            logger.warning(f"Failed to resolve academic profile: {e}")
 
-
-        # 2. Personal profile
+        # Retrieve and merge personal profile
         try:
-            res_prof = sb.from_("profiles").select("*").eq("id", user_id).execute()
-            if res_prof.data and len(res_prof.data) > 0:
-                p_row = res_prof.data[0]
+            prof_row = f_prof.result()
+            if prof_row:
                 personal_data.update({
-                    k: v for k, v in p_row.items() 
+                    k: v for k, v in prof_row.items()
                     if k in personal_data and v is not None
                 })
         except Exception as e:
-            logger.debug(f"Profiles table query notice: {e}")
+            logger.debug(f"Profiles table resolution notice: {e}")
 
-        # 3. Coding profiles & extracted stats
+        # Retrieve and merge coding profile
         try:
-            res_code = sb.from_("user_coding_profiles").select("*").eq("user_id", user_id).execute()
-            if res_code.data:
-                c_row = res_code.data[0]
-                coding_inputs["leetcode"] = c_row.get("leetcode_url", "")
-                coding_inputs["github"] = c_row.get("github_url", "")
-                coding_inputs["hackerrank"] = c_row.get("hackerrank_url", "")
-                coding_inputs["codechef"] = c_row.get("codechef_url", "")
-                coding_inputs["geeksforgeeks"] = c_row.get("geeksforgeeks_url", "")
-                coding_inputs["codeforces"] = c_row.get("codeforces_url", "")
-                coding_stats = c_row.get("stats_json", {})
+            code_row = f_code.result()
+            if code_row:
+                coding_inputs["leetcode"] = code_row.get("leetcode_url", "")
+                coding_inputs["github"] = code_row.get("github_url", "")
+                coding_inputs["hackerrank"] = code_row.get("hackerrank_url", "")
+                coding_inputs["codechef"] = code_row.get("codechef_url", "")
+                coding_inputs["geeksforgeeks"] = code_row.get("geeksforgeeks_url", "")
+                coding_inputs["codeforces"] = code_row.get("codeforces_url", "")
+                coding_stats = code_row.get("stats_json", {})
         except Exception as e:
-            logger.warning(f"Failed to fetch user_coding_profiles: {e}")
+            logger.warning(f"Failed to resolve coding profiles: {e}")
 
-        # 4. Normalized skills
+        # Retrieve relational lists
         try:
-            res_skills = sb.from_("user_skills").select("*").eq("user_id", user_id).order("created_at").execute()
-            if res_skills.data:
-                skills_data = res_skills.data
+            skills_data = f_skills.result()
         except Exception as e:
-            logger.debug(f"User skills query notice: {e}")
+            logger.debug(f"Skills resolution notice: {e}")
 
-        # 5. Normalized experiences
         try:
-            res_exp = sb.from_("experiences").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
-            if res_exp.data:
-                experiences_data = res_exp.data
+            experiences_data = f_exp.result()
         except Exception as e:
-            logger.debug(f"Experiences query notice: {e}")
+            logger.debug(f"Experiences resolution notice: {e}")
 
-        # 6. Normalized education
         try:
-            res_edu = sb.from_("education").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
-            if res_edu.data:
-                education_data = res_edu.data
+            edu_rows = f_edu.result()
+            if edu_rows:
+                education_data = edu_rows
             elif academic_data.get("college"):
-                # Fallback synthesized education record from academic profile if table empty
                 education_data = [{
                     "id": f"legacy_edu_{user_id}",
                     "user_id": user_id,
@@ -511,61 +712,46 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
                     "currently_studying": True,
                 }]
         except Exception as e:
-            logger.debug(f"Education query notice: {e}")
+            logger.debug(f"Education resolution notice: {e}")
 
-        # 7. Normalized projects
         try:
-            res_proj = sb.from_("projects").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-            if res_proj.data:
-                projects_data = res_proj.data
+            projects_data = f_proj.result()
         except Exception as e:
-            logger.debug(f"Projects query notice: {e}")
+            logger.debug(f"Projects resolution notice: {e}")
 
-        # 8. Normalized certifications
         try:
-            res_certs = sb.from_("certifications").select("*").eq("user_id", user_id).order("issue_date", desc=True).execute()
-            if res_certs.data:
-                certifications_data = res_certs.data
+            certifications_data = f_certs.result()
         except Exception as e:
-            logger.debug(f"Certifications query notice: {e}")
+            logger.debug(f"Certifications resolution notice: {e}")
 
-        # 9. Normalized achievements
         try:
-            res_ach = sb.from_("achievements").select("*").eq("user_id", user_id).order("achievement_date", desc=True).execute()
-            if res_ach.data:
-                achievements_data = res_ach.data
+            achievements_data = f_ach.result()
         except Exception as e:
-            logger.debug(f"Achievements query notice: {e}")
+            logger.debug(f"Achievements resolution notice: {e}")
 
-        # 10. Career preferences
+        # Career preferences
         try:
-            res_cp = sb.from_("career_preferences").select("*").eq("user_id", user_id).execute()
-            if res_cp.data and len(res_cp.data) > 0:
-                cp_row = res_cp.data[0]
+            cp_row = f_cp.result()
+            if cp_row:
                 career_prefs_data["target_roles"] = cp_row.get("target_roles") or ([cp_row.get("target_role")] if cp_row.get("target_role") else [])
                 career_prefs_data["preferred_industries"] = cp_row.get("preferred_industries") or ([cp_row.get("target_industry")] if cp_row.get("target_industry") else [])
                 career_prefs_data["target_companies"] = cp_row.get("target_companies") or []
                 career_prefs_data["preferred_locations"] = cp_row.get("preferred_locations") or ([cp_row.get("preferred_work_location")] if cp_row.get("preferred_work_location") else [])
                 career_prefs_data["work_arrangements"] = cp_row.get("work_arrangements") or ([cp_row.get("preferred_work_type")] if cp_row.get("preferred_work_type") else [])
+            if academic_data.get("target_role") and not career_prefs_data["target_roles"]:
+                career_prefs_data["target_roles"] = [academic_data["target_role"]]
         except Exception as e:
-            logger.debug(f"Career preferences query notice: {e}")
+            logger.debug(f"Career preferences resolution notice: {e}")
 
-
-        # 11. Latest resume review
         try:
-            res_res = sb.from_("resume_scores").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
-            if res_res.data and len(res_res.data) > 0:
-                resume_data = res_res.data[0]
+            resume_data = f_resume.result()
         except Exception as e:
-            logger.debug(f"Resume scores query notice: {e}")
+            logger.debug(f"Resume scores resolution notice: {e}")
 
-        # 12. User progress summary
         try:
-            res_prog = sb.from_("user_progress").select("*").eq("user_id", user_id).execute()
-            if res_prog.data and len(res_prog.data) > 0:
-                progress_data = res_prog.data[0]
+            progress_data = f_prog.result() or {}
         except Exception as e:
-            logger.debug(f"User progress query notice: {e}")
+            logger.debug(f"User progress resolution notice: {e}")
 
     return {
         "personal": personal_data,

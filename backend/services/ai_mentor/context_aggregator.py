@@ -10,6 +10,7 @@ import hashlib
 import logging
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Any, List
 
 from backend.services.auth_service import is_valid_uuid
@@ -74,64 +75,10 @@ def _normalize_str_list(val: Any) -> List[str]:
     return []
 
 
-def _build_student_mentor_context_sync(
-    user_id: str,
-    force_refresh: bool = False,
-) -> MentorContext:
-    """
-    Internal synchronous context builder. Pure function with zero shared mutable state,
-    safe for threadpool execution via asyncio.to_thread.
-    """
-    start_time = time.perf_counter()
+_CONTEXT_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="mentor_ctx_db")
 
-    # 1. Identity Validation (fail-closed for invalid UUIDs or guests)
-    if not user_id or not is_valid_uuid(user_id):
-        logger.debug(f"Non-UUID or guest session ID passed to context aggregator: '{user_id}'")
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        return MentorContext(
-            metadata=ContextMetadata(
-                generated_at=now_iso,
-                user_id_hash="anonymous",
-                duration_ms=0.0,
-                cached=False,
-            )
-        )
 
-    cache_key = f"{CACHE_KEY_PREFIX}{user_id}"
-
-    # 2. Cache Lookup
-    if not force_refresh:
-        try:
-            cached_payload = get_json(cache_key)
-            if cached_payload and isinstance(cached_payload, dict):
-                ctx = (
-                    MentorContext.model_validate(cached_payload)
-                    if hasattr(MentorContext, "model_validate")
-                    else MentorContext(**cached_payload)
-                )
-                ctx.metadata.cached = True
-                logger.debug(f"Mentor context cache hit for user {user_id[:8]}...")
-                return ctx
-        except Exception as cache_err:
-            logger.warning(f"Error reading mentor context cache for {user_id[:8]}...: {cache_err}")
-
-    # 3. Supabase Connection Check
-    sb = get_supabase()
-    user_hash = hashlib.sha256(str(user_id).encode("utf-8")).hexdigest()[:12]
-
-    if not sb:
-        logger.warning(f"Supabase client unavailable when aggregating context for user hash {user_hash}")
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        return MentorContext(
-            metadata=ContextMetadata(
-                generated_at=now_iso,
-                user_id_hash=user_hash,
-                duration_ms=round((time.perf_counter() - start_time) * 1000, 2),
-                cached=False,
-            )
-        )
-
-    # 4. Fetch Student Profile & Academic Details
+def _fetch_student_profile(sb, user_id: str) -> tuple[StudentProfileContext, Optional[str]]:
     display_name = "Learner"
     college_val = None
     dept_val = None
@@ -182,8 +129,10 @@ def _build_student_mentor_context_sync(
         academic_year=acad_year_val,
         headline=headline_val,
     )
+    return student_ctx, acad_target_role
 
-    # 5. Fetch Career Preferences
+
+def _fetch_career_context(sb, user_id: str) -> CareerContext:
     career_ctx = CareerContext()
     try:
         res_cp = (
@@ -195,22 +144,19 @@ def _build_student_mentor_context_sync(
         )
         if res_cp.data and len(res_cp.data) > 0:
             cp_row = res_cp.data[0]
-            t_roles = _normalize_str_list(cp_row.get("target_roles"))
-            if not t_roles and acad_target_role:
-                t_roles = [str(acad_target_role).strip()]
             career_ctx = CareerContext(
-                target_roles=t_roles,
+                target_roles=_normalize_str_list(cp_row.get("target_roles")),
                 preferred_industries=_normalize_str_list(cp_row.get("preferred_industries")),
                 target_companies=_normalize_str_list(cp_row.get("target_companies")),
                 preferred_locations=_normalize_str_list(cp_row.get("preferred_locations")),
                 work_arrangements=_normalize_str_list(cp_row.get("work_arrangements")),
             )
-        elif acad_target_role:
-            career_ctx = CareerContext(target_roles=[str(acad_target_role).strip()])
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch career_preferences: {e}")
+    return career_ctx
 
-    # 6. Fetch Technical Skills (limit 20)
+
+def _fetch_skills_context(sb, user_id: str) -> SkillsContext:
     skills_ctx = SkillsContext()
     try:
         res_skills = (
@@ -235,8 +181,10 @@ def _build_student_mentor_context_sync(
             skills_ctx = SkillsContext(technical_skills=skill_items)
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch user_skills: {e}")
+    return skills_ctx
 
-    # 7. Fetch Top Projects (limit 3, latest first)
+
+def _fetch_projects_context(sb, user_id: str) -> ProjectsContext:
     projects_ctx = ProjectsContext()
     try:
         res_proj = (
@@ -263,8 +211,10 @@ def _build_student_mentor_context_sync(
             projects_ctx = ProjectsContext(top_projects=proj_items)
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch projects: {e}")
+    return projects_ctx
 
-    # 8. Fetch Experiences (limit 3, latest first)
+
+def _fetch_experiences_context(sb, user_id: str) -> ExperienceContext:
     experiences_ctx = ExperienceContext()
     try:
         res_exp = (
@@ -293,8 +243,10 @@ def _build_student_mentor_context_sync(
             experiences_ctx = ExperienceContext(experiences=exp_items)
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch experiences: {e}")
+    return experiences_ctx
 
-    # 9. Fetch Active Roadmap Progress (reusing dashboard roadmaps helper)
+
+def _fetch_roadmap_context(user_id: str) -> tuple[RoadmapContext, int]:
     roadmap_ctx = RoadmapContext()
     roadmap_pct = 0
     try:
@@ -319,8 +271,10 @@ def _build_student_mentor_context_sync(
             )
     except Exception as e:
         logger.debug(f"Context aggregator: failed to get active roadmap data: {e}")
+    return roadmap_ctx, roadmap_pct
 
-    # 10. Fetch Video & Learning Progress
+
+def _fetch_learning_context(sb, user_id: str) -> tuple[LearningContext, int]:
     learning_ctx = LearningContext()
     video_pct = 0
     try:
@@ -371,8 +325,10 @@ def _build_student_mentor_context_sync(
         )
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch video learning progress: {e}")
+    return learning_ctx, video_pct
 
-    # 11. Fetch Coding & DSA Platform Stats
+
+def _fetch_dsa_context(sb, user_id: str) -> tuple[CodingDSAContext, int]:
     dsa_ctx = CodingDSAContext()
     problems_solved = 0
     try:
@@ -443,8 +399,10 @@ def _build_student_mentor_context_sync(
         )
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch coding DSA stats: {e}")
+    return dsa_ctx, problems_solved
 
-    # 12. Fetch Gamification & User Progress
+
+def _fetch_gamification_context(sb, user_id: str) -> tuple[GamificationContext, Optional[float]]:
     gamification_ctx = GamificationContext()
     user_prog_resume_score = None
     try:
@@ -467,8 +425,10 @@ def _build_student_mentor_context_sync(
                 user_prog_resume_score = float(up_row.get("resume_readiness_score"))
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch user_progress: {e}")
+    return gamification_ctx, user_prog_resume_score
 
-    # 13. Fetch Resume Review Summary
+
+def _fetch_resume_context(sb, user_id: str) -> tuple[ResumeContext, float]:
     resume_ctx = ResumeContext()
     effective_resume_score = 0.0
     try:
@@ -511,17 +471,105 @@ def _build_student_mentor_context_sync(
                 target_role=r_row.get("target_role"),
                 top_improvements=top_imps,
             )
-        elif user_prog_resume_score is not None and user_prog_resume_score > 0:
-            effective_resume_score = user_prog_resume_score
-            resume_ctx = ResumeContext(
-                has_resume_review=True,
-                overall_score=user_prog_resume_score,
-                ats_compatibility_score=user_prog_resume_score,
-            )
     except Exception as e:
         logger.debug(f"Context aggregator: failed to fetch resume_scores: {e}")
+    return resume_ctx, effective_resume_score
 
-    # 14. Personal Readiness Index (PRI) Computation
+
+def _build_student_mentor_context_sync(
+    user_id: str,
+    force_refresh: bool = False,
+) -> MentorContext:
+    """
+    Internal synchronous context builder. Pure function with zero shared mutable state,
+    safe for threadpool execution via asyncio.to_thread.
+    """
+    start_time = time.perf_counter()
+
+    # 1. Identity Validation (fail-closed for invalid UUIDs or guests)
+    if not user_id or not is_valid_uuid(user_id):
+        logger.debug(f"Non-UUID or guest session ID passed to context aggregator: '{user_id}'")
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return MentorContext(
+            metadata=ContextMetadata(
+                generated_at=now_iso,
+                user_id_hash="anonymous",
+                duration_ms=0.0,
+                cached=False,
+            )
+        )
+
+    cache_key = f"{CACHE_KEY_PREFIX}{user_id}"
+
+    # 2. Cache Lookup
+    if not force_refresh:
+        try:
+            cached_payload = get_json(cache_key)
+            if cached_payload and isinstance(cached_payload, dict):
+                ctx = (
+                    MentorContext.model_validate(cached_payload)
+                    if hasattr(MentorContext, "model_validate")
+                    else MentorContext(**cached_payload)
+                )
+                ctx.metadata.cached = True
+                logger.debug(f"Mentor context cache hit for user {user_id[:8]}...")
+                return ctx
+        except Exception as cache_err:
+            logger.warning(f"Error reading mentor context cache for {user_id[:8]}...: {cache_err}")
+
+    # 3. Supabase Connection Check
+    sb = get_supabase()
+    user_hash = hashlib.sha256(str(user_id).encode("utf-8")).hexdigest()[:12]
+
+    if not sb:
+        logger.warning(f"Supabase client unavailable when aggregating context for user hash {user_hash}")
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return MentorContext(
+            metadata=ContextMetadata(
+                generated_at=now_iso,
+                user_id_hash=user_hash,
+                duration_ms=round((time.perf_counter() - start_time) * 1000, 2),
+                cached=False,
+            )
+        )
+
+    # 4. Fetch All Modules Concurrently (Bounded Thread Pool)
+    future_student = _CONTEXT_EXECUTOR.submit(_fetch_student_profile, sb, user_id)
+    future_career = _CONTEXT_EXECUTOR.submit(_fetch_career_context, sb, user_id)
+    future_skills = _CONTEXT_EXECUTOR.submit(_fetch_skills_context, sb, user_id)
+    future_projects = _CONTEXT_EXECUTOR.submit(_fetch_projects_context, sb, user_id)
+    future_experiences = _CONTEXT_EXECUTOR.submit(_fetch_experiences_context, sb, user_id)
+    future_roadmap = _CONTEXT_EXECUTOR.submit(_fetch_roadmap_context, user_id)
+    future_learning = _CONTEXT_EXECUTOR.submit(_fetch_learning_context, sb, user_id)
+    future_dsa = _CONTEXT_EXECUTOR.submit(_fetch_dsa_context, sb, user_id)
+    future_gamification = _CONTEXT_EXECUTOR.submit(_fetch_gamification_context, sb, user_id)
+    future_resume = _CONTEXT_EXECUTOR.submit(_fetch_resume_context, sb, user_id)
+
+    student_ctx, acad_target_role = future_student.result()
+    career_ctx = future_career.result()
+    skills_ctx = future_skills.result()
+    projects_ctx = future_projects.result()
+    experiences_ctx = future_experiences.result()
+    roadmap_ctx, roadmap_pct = future_roadmap.result()
+    learning_ctx, video_pct = future_learning.result()
+    dsa_ctx, problems_solved = future_dsa.result()
+    gamification_ctx, user_prog_resume_score = future_gamification.result()
+    resume_ctx, effective_resume_score = future_resume.result()
+
+    # Reconcile target roles if career preferences did not specify but academic profile did
+    if (not career_ctx.target_roles or len(career_ctx.target_roles) == 0) and acad_target_role:
+        career_ctx.target_roles = [str(acad_target_role).strip()]
+
+    # Reconcile resume review fallback from user_progress if resume_scores had no entry
+    if not resume_ctx.has_resume_review and user_prog_resume_score is not None and user_prog_resume_score > 0:
+        effective_resume_score = user_prog_resume_score
+        resume_ctx = ResumeContext(
+            has_resume_review=True,
+            overall_score=user_prog_resume_score,
+            ats_compatibility_score=user_prog_resume_score,
+        )
+
+    # 5. Personal Readiness Index (PRI) Computation
     coding_score = min(100.0, (problems_solved / 50.0) * 100.0)
     pri_score = round(
         (effective_resume_score * 0.35)

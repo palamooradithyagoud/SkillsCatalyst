@@ -63,8 +63,8 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
     """
 
     def setUp(self):
-        self.user_id = "test-user-e1-1111-2222-333344445555"
-        self.premium_user_id = "test-prem-e1-9999-8888-777766665555"
+        self.user_id = "e1111111-1111-4111-a111-111111111111"
+        self.premium_user_id = "e2222222-2222-4222-a222-222222222222"
         self.period = "2026-10"
         reset_ai_mentor_usage(self.user_id, self.period)
         reset_ai_mentor_usage(self.premium_user_id, self.period)

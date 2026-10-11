@@ -461,7 +461,7 @@ async def chat_mentor(
             commit_ai_mentor_reservation(current_user_id, reservation_id)
 
         # 6. Secondary guard: check LLM reply
-        if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
+        if response and isinstance(response, str) and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
             logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
             response = _OFFTOPIC_REPLY
 
@@ -505,7 +505,7 @@ async def chat_mentor(
     if reservation_id:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
 
-    if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
+    if response and isinstance(response, str) and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
         logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
         return MentorChatResponse(reply=_OFFTOPIC_REPLY, conversation_id=None, message_id=None)
 
