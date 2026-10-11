@@ -199,3 +199,37 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+-- ── ROLE ESCALATION HARDENING ─────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.prevent_profile_role_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF current_user IN ('service_role', 'postgres', 'supabase_admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF COALESCE((auth.jwt() -> 'app_metadata' ->> 'role'), '') = 'owner' THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.role IS NOT NULL AND NEW.role <> '' AND NEW.role <> 'student' THEN
+            RAISE EXCEPTION 'Unauthorized: Account roles cannot be set to non-student by standard users';
+        END IF;
+        IF NEW.role IS NULL OR NEW.role = '' THEN
+            NEW.role := 'student';
+        END IF;
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF NEW.role IS DISTINCT FROM OLD.role THEN
+            RAISE EXCEPTION 'Unauthorized: Account roles cannot be modified by standard users';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_prevent_profile_role_escalation ON public.profiles;
+CREATE TRIGGER trg_prevent_profile_role_escalation
+    BEFORE INSERT OR UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.prevent_profile_role_escalation();

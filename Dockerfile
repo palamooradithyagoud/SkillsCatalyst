@@ -2,16 +2,30 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Create dedicated unprivileged system group and user (UID/GID 1001)
+RUN groupadd --system --gid 1001 appgroup && \
+    useradd --system --uid 1001 --gid appgroup --create-home --home-dir /home/appuser --shell /bin/bash appuser
+
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/ ./backend/
-COPY data/ ./data/
+# Copy application source and data with non-root ownership
+COPY --chown=appuser:appgroup backend/ ./backend/
+COPY --chown=appuser:appgroup data/ ./data/
+
+# Ensure application working directory is owned by appuser
+RUN chown -R appuser:appgroup /app
+
+# Switch to unprivileged runtime user
+USER appuser
 
 EXPOSE 8080
 

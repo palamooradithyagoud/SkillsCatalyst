@@ -107,10 +107,21 @@ DO $$
 DECLARE
     tbl text;
 BEGIN
-    FOR tbl IN SELECT unnest(ARRAY['student_course_progress', 'student_lesson_progress', 'student_module_progress', 'student_quiz_attempts'])
+    FOR tbl IN SELECT unnest(ARRAY['student_course_progress', 'student_lesson_progress'])
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Users manage own %I" ON public.%I;', tbl, tbl);
         EXECUTE format('CREATE POLICY "Users manage own %I" ON public.%I FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);', tbl, tbl);
+        
+        EXECUTE format('DROP POLICY IF EXISTS "Service role %I" ON public.%I;', tbl, tbl);
+        EXECUTE format('CREATE POLICY "Service role %I" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);', tbl, tbl);
+    END LOOP;
+
+    -- Quiz Attempts and Module Progress: Read-only for authenticated students, mutations strictly via backend service_role
+    FOR tbl IN SELECT unnest(ARRAY['student_module_progress', 'student_quiz_attempts'])
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS "Users manage own %I" ON public.%I;', tbl, tbl);
+        EXECUTE format('DROP POLICY IF EXISTS "Users can read own %I" ON public.%I;', tbl, tbl);
+        EXECUTE format('CREATE POLICY "Users can read own %I" ON public.%I FOR SELECT TO authenticated USING (auth.uid() = user_id);', tbl, tbl);
         
         EXECUTE format('DROP POLICY IF EXISTS "Service role %I" ON public.%I;', tbl, tbl);
         EXECUTE format('CREATE POLICY "Service role %I" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);', tbl, tbl);

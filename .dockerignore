@@ -1,0 +1,37 @@
+# ====================================================================
+# SKILLSCATALYST - DOCKER BUILD IGNORE (.dockerignore)
+# Prevents host artifacts, virtualenvs, local caches, and secrets
+# from leaking into Docker images or bloating build contexts.
+# ====================================================================
+
+# Version control & IDE
+.git
+.gitignore
+.agents
+.vscode
+
+# Python environments and caches
+venv/
+venv*/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Node / Frontend artifacts
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Environment and sensitive configuration files
+.env
+.env*
+!.env.example
+
+# Temporary and local scratch files
+*.log
+*.tmp
+scratch/

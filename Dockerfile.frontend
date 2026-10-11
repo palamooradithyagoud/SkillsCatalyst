@@ -28,10 +28,21 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV HOSTNAME="0.0.0.0"
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Create dedicated unprivileged system group and user (UID/GID 1001)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S -u 1001 -G nodejs nextjs
+
+# Set correct permissions for Next.js prerender cache
+RUN mkdir -p .next && chown nextjs:nodejs .next
+
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to unprivileged runtime user
+USER nextjs
 
 EXPOSE 8080
 

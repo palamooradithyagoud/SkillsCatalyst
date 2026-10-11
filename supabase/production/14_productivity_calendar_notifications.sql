@@ -108,7 +108,7 @@ DO $$
 DECLARE
     tbl text;
 BEGIN
-    FOR tbl IN SELECT unnest(ARRAY['user_todos', 'user_schedule_notes', 'notification_preferences', 'push_subscriptions', 'notifications', 'welcome_email_events'])
+    FOR tbl IN SELECT unnest(ARRAY['user_todos', 'user_schedule_notes', 'notification_preferences', 'push_subscriptions', 'notifications'])
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Users manage own %I" ON public.%I;', tbl, tbl);
         EXECUTE format('CREATE POLICY "Users manage own %I" ON public.%I FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);', tbl, tbl);
@@ -116,5 +116,14 @@ BEGIN
         EXECUTE format('DROP POLICY IF EXISTS "Service role full %I" ON public.%I;', tbl, tbl);
         EXECUTE format('CREATE POLICY "Service role full %I" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);', tbl, tbl);
     END LOOP;
+
+    -- Welcome Email Events: Read-only for authenticated students, queue managed strictly by service_role
+    DROP POLICY IF EXISTS "Users manage own welcome_email_events" ON public.welcome_email_events;
+    DROP POLICY IF EXISTS "Users can view their own welcome_email_events" ON public.welcome_email_events;
+    CREATE POLICY "Users can view their own welcome_email_events" ON public.welcome_email_events FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+    DROP POLICY IF EXISTS "Service role full welcome_email_events" ON public.welcome_email_events;
+    DROP POLICY IF EXISTS "Service role full access on welcome_email_events" ON public.welcome_email_events;
+    CREATE POLICY "Service role full access on welcome_email_events" ON public.welcome_email_events FOR ALL TO service_role USING (true) WITH CHECK (true);
 END;
 $$;

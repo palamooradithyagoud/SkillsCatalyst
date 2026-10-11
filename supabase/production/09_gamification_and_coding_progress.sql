@@ -134,3 +134,36 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+-- Protect privileged scores on user_progress from client-side tampering
+CREATE OR REPLACE FUNCTION public.protect_user_progress_privileged_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF current_user IN ('service_role', 'postgres', 'supabase_admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF COALESCE((auth.jwt() -> 'app_metadata' ->> 'role'), '') = 'owner' THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        NEW.resume_readiness_score := 0.00;
+        NEW.ai_career_health_score := 0.00;
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF NEW.resume_readiness_score IS DISTINCT FROM OLD.resume_readiness_score THEN
+            NEW.resume_readiness_score := OLD.resume_readiness_score;
+        END IF;
+        IF NEW.ai_career_health_score IS DISTINCT FROM OLD.ai_career_health_score THEN
+            NEW.ai_career_health_score := OLD.ai_career_health_score;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_protect_user_progress_privileged_fields ON public.user_progress;
+CREATE TRIGGER trg_protect_user_progress_privileged_fields
+    BEFORE INSERT OR UPDATE ON public.user_progress
+    FOR EACH ROW EXECUTE FUNCTION public.protect_user_progress_privileged_fields();

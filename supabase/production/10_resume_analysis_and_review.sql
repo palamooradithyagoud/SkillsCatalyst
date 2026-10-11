@@ -38,16 +38,18 @@ CREATE INDEX IF NOT EXISTS idx_resume_analysis_user ON public.resume_analysis(us
 ALTER TABLE public.resume_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resume_analysis ENABLE ROW LEVEL SECURITY;
 
--- resume_scores policies
+-- resume_scores policies (Students read own scores; writes strictly via service_role AI evaluator)
 DROP POLICY IF EXISTS "Users manage own resume_scores" ON public.resume_scores;
-CREATE POLICY "Users manage own resume_scores" ON public.resume_scores FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can read own resume scores" ON public.resume_scores;
+CREATE POLICY "Users can read own resume scores" ON public.resume_scores FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Service role access on resume_scores" ON public.resume_scores;
 CREATE POLICY "Service role access on resume_scores" ON public.resume_scores FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- resume_analysis policies
+-- resume_analysis policies (Students read own analysis; writes strictly via service_role AI evaluator)
 DROP POLICY IF EXISTS "Users manage own resume_analysis" ON public.resume_analysis;
-CREATE POLICY "Users manage own resume_analysis" ON public.resume_analysis FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can read own resume analysis" ON public.resume_analysis;
+CREATE POLICY "Users can read own resume analysis" ON public.resume_analysis FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Service role access on resume_analysis" ON public.resume_analysis;
 CREATE POLICY "Service role access on resume_analysis" ON public.resume_analysis FOR ALL TO service_role USING (true) WITH CHECK (true);
