@@ -9,6 +9,7 @@ Handles:
 - Playlist CRUD: save, unsave, get saved, sync, and playlist items resolution
 """
 
+import asyncio
 import os
 import re
 import logging
@@ -28,6 +29,11 @@ from backend.services.learning.content_guard import (
 from backend.services.learning.search_service import _parse_csv
 
 logger = logging.getLogger(__name__)
+
+YT_REQUEST_HEADERS = {
+    "Referer": "https://www.skillscatalyst.in",
+    "User-Agent": "SkillsCatalyst-Backend/1.0",
+}
 
 
 def _get_sb():
@@ -359,12 +365,14 @@ async def get_saved_playlists(user_id: str, sb=None) -> dict:
         # 1. Query relational saved_playlists table
         try:
             if _is_uuid(user_id):
-                result = (
-                    sb.table("saved_playlists")
-                    .select("*")
-                    .eq("user_id", user_id)
-                    .order("created_at", desc=True)
-                    .execute()
+                result = await asyncio.to_thread(
+                    lambda: (
+                        sb.table("saved_playlists")
+                        .select("*")
+                        .eq("user_id", user_id)
+                        .order("created_at", desc=True)
+                        .execute()
+                    )
                 )
                 for row in (result.data or []):
                     pid = row.get("playlist_id", row.get("id", ""))
@@ -389,13 +397,15 @@ async def get_saved_playlists(user_id: str, sb=None) -> dict:
 
         # 2. Query JSONB learning_progress table (supports session_id & guest users)
         try:
-            res_lp = (
-                sb.table("learning_progress")
-                .select("completed_steps")
-                .eq("session_id", user_id)
-                .eq("skill_name", "saved_playlists")
-                .limit(1)
-                .execute()
+            res_lp = await asyncio.to_thread(
+                lambda: (
+                    sb.table("learning_progress")
+                    .select("completed_steps")
+                    .eq("session_id", user_id)
+                    .eq("skill_name", "saved_playlists")
+                    .limit(1)
+                    .execute()
+                )
             )
             if res_lp.data and len(res_lp.data) > 0:
                 jsonb_items = res_lp.data[0].get("completed_steps", [])
@@ -496,7 +506,7 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     sb = sb if sb is not None else _get_sb()
     clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
-    info = _resolve_playlist_info(clean_playlist_id, sb=sb)
+    info = await asyncio.to_thread(_resolve_playlist_info, clean_playlist_id, sb)
     target_yt_id = info.get("real_yt_id") or (clean_playlist_id if clean_playlist_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) else "")
     target_vid_id = info.get("video_id") or (clean_playlist_id if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_playlist_id) else "")
 
@@ -505,7 +515,7 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
 
     # Case A: YouTube Playlist Items
     if YOUTUBE_API_KEY and target_yt_id and target_yt_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")):
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=20, headers=YT_REQUEST_HEADERS) as client:
             max_pages = 20
             page_count = 0
             while page_count < max_pages:
@@ -571,7 +581,7 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
         thumb = f"https://img.youtube.com/vi/{target_vid_id}/mqdefault.jpg"
         if YOUTUBE_API_KEY:
             try:
-                async with httpx.AsyncClient(timeout=10) as client:
+                async with httpx.AsyncClient(timeout=10, headers=YT_REQUEST_HEADERS) as client:
                     v_res = await client.get(
                         "https://www.googleapis.com/youtube/v3/videos",
                         params={"part": "snippet", "id": target_vid_id, "key": YOUTUBE_API_KEY}
@@ -607,7 +617,7 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
             else:
                 search_q = clean_playlist_id.replace("csv_", "").replace("_", " ").strip()
 
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=10, headers=YT_REQUEST_HEADERS) as client:
                 s_res = await client.get(
                     "https://www.googleapis.com/youtube/v3/search",
                     params={
@@ -650,17 +660,21 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
     if sb and videos and user_id:
         if _is_uuid(user_id):
             try:
-                sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
+                await asyncio.to_thread(
+                    lambda: sb.table("saved_playlists").update({"video_count": str(len(videos))}).eq("playlist_id", clean_playlist_id).eq("user_id", user_id).execute()
+                )
             except Exception:
                 pass
 
             try:
-                res = (
-                    sb.table("video_progress")
-                    .select("video_id,watched,last_position,watch_time,completed_at,updated_at")
-                    .eq("user_id", user_id)
-                    .eq("playlist_id", clean_playlist_id)
-                    .execute()
+                res = await asyncio.to_thread(
+                    lambda: (
+                        sb.table("video_progress")
+                        .select("video_id,watched,last_position,watch_time,completed_at,updated_at")
+                        .eq("user_id", user_id)
+                        .eq("playlist_id", clean_playlist_id)
+                        .execute()
+                    )
                 )
                 prog_map = {r["video_id"]: r for r in (res.data or [])}
                 for v in videos:
@@ -676,7 +690,9 @@ async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
 
         # Also merge video watch status from learning_progress JSONB table (session_id & guests)
         try:
-            res_lp = sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            res_lp = await asyncio.to_thread(
+                lambda: sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+            )
             if res_lp.data and len(res_lp.data) > 0:
                 steps = res_lp.data[0].get("completed_steps", [])
                 match_pl = next((p for p in steps if (p.get("id") == clean_playlist_id or p.get("playlist_id") == clean_playlist_id or p.get("id") == playlist_id)), None)

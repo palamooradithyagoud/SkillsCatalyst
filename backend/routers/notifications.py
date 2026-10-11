@@ -53,7 +53,7 @@ async def get_vapid_key():
 # ── 2. WEB PUSH SUBSCRIPTIONS ────────────────────────────────────────
 
 @router.post("/subscribe", status_code=status.HTTP_201_CREATED)
-async def subscribe_push(
+def subscribe_push(
     payload: PushSubscriptionPayload,
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
@@ -80,7 +80,7 @@ async def subscribe_push(
 
 
 @router.delete("/subscribe", status_code=status.HTTP_200_OK)
-async def unsubscribe_push(
+def unsubscribe_push(
     payload: PushSubscriptionDeleteRequest,
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
@@ -93,7 +93,7 @@ async def unsubscribe_push(
 # ── 3. IN-APP NOTIFICATIONS ──────────────────────────────────────────
 
 @router.get("", response_model=NotificationListResponse)
-async def list_notifications(
+def list_notifications(
     limit: int = Query(default=30, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     unread_only: bool = Query(default=False),
@@ -113,7 +113,7 @@ async def list_notifications(
 
 
 @router.patch("/{notification_id}/read")
-async def mark_read(
+def mark_read(
     notification_id: str,
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
@@ -129,7 +129,7 @@ async def mark_read(
 
 
 @router.patch("/read-all")
-async def mark_all_read(
+def mark_all_read(
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
     """Marks all notifications as read for current user."""
@@ -139,7 +139,7 @@ async def mark_all_read(
 
 
 @router.delete("/{notification_id}")
-async def remove_notification(
+def remove_notification(
     notification_id: str,
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
@@ -152,7 +152,7 @@ async def remove_notification(
 # ── 4. NOTIFICATION PREFERENCES ──────────────────────────────────────
 
 @router.get("/preferences", response_model=NotificationPreferencesResponse)
-async def fetch_preferences(
+def fetch_preferences(
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
     """Returns notification delivery preferences for the current user."""
@@ -166,7 +166,7 @@ async def fetch_preferences(
 
 
 @router.patch("/preferences", response_model=NotificationPreferencesResponse)
-async def update_preferences(
+def update_preferences(
     payload: NotificationPreferencesUpdate,
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
@@ -188,7 +188,7 @@ async def update_preferences(
 # ── 5. SELF TEST & SCHEDULER ENDPOINTS ───────────────────────────────
 
 @router.post("/test-push")
-async def send_self_test_push(
+def send_self_test_push(
     current_user: Dict[str, Any] = Depends(require_authenticated_user),
 ):
     """
@@ -209,7 +209,7 @@ async def send_self_test_push(
 
 
 @router.post("/admin/streak-check")
-async def trigger_streak_scheduler(
+def trigger_streak_scheduler(
     background_tasks: BackgroundTasks,
     current_user: Dict[str, Any] = Depends(require_admin),
 ):
