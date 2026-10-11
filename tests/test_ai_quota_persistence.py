@@ -1,7 +1,9 @@
 """
 tests/test_ai_quota_persistence.py
-Test suite for BUG-E-1: AI Mentor Usage Quota Persistence across
+Comprehensive test suite for BUG-E-1: AI Mentor Usage Quota Persistence across
 backend restarts, multi-worker deployments, concurrency, and billing periods.
+Verifies fail-closed storage safety, idempotent reservation/refund lifecycles,
+and non-blind timeout refunds.
 """
 
 import sys
@@ -10,11 +12,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+import redis
 
 root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.models.subscription import (
@@ -28,11 +32,14 @@ from backend.services.subscription_service import SubscriptionService
 from backend.services.ai_mentor_quota_service import (
     get_ai_mentor_usage,
     reserve_ai_mentor_slot,
+    commit_ai_mentor_reservation,
     release_ai_mentor_slot,
     increment_ai_mentor_usage,
     reset_ai_mentor_usage,
     make_quota_key,
     get_ai_mentor_billing_period,
+    QuotaStorageUnavailableError,
+    QuotaReservationResult,
     InMemoryQuotaStore,
 )
 from backend.services.groq_service import _AI_UNAVAILABLE_MSG
@@ -51,8 +58,8 @@ class MockAuthUser:
 class TestAIMentorQuotaPersistence(unittest.TestCase):
     """
     Validates persistent, atomic, shared AI Mentor quota tracking.
-    Exercises live Redis (with fallback tests), simulated restarts,
-    multi-worker environments, and high-concurrency race conditions.
+    Exercises live Redis, fail-closed safety, simulated restarts,
+    multi-worker environments, idempotency, and high-concurrency race conditions.
     """
 
     def setUp(self):
@@ -72,26 +79,27 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
     def test_01_normal_free_tier_quota_consumption(self):
         """Valid requests increment persistent quota count until limit is reached."""
         limit = 3
-        entitlement = EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=limit)
 
-        with patch("backend.routers.ai_mentor.chat_with_groq", return_value="Here is python explanation."):
-            # 1st request
-            ok1, c1 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-            self.assertTrue(ok1)
-            self.assertEqual(c1, 1)
-            self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 1)
+        # 1st request
+        res1 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res1.allowed)
+        self.assertEqual(res1.count, 1)
+        self.assertIsNotNone(res1.reservation_id)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 1)
 
-            # 2nd request
-            ok2, c2 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-            self.assertTrue(ok2)
-            self.assertEqual(c2, 2)
-            self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 2)
+        # 2nd request
+        res2 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res2.allowed)
+        self.assertEqual(res2.count, 2)
+        self.assertIsNotNone(res2.reservation_id)
+        self.assertNotEqual(res1.reservation_id, res2.reservation_id)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 2)
 
-            # 3rd request
-            ok3, c3 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-            self.assertTrue(ok3)
-            self.assertEqual(c3, 3)
-            self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 3)
+        # 3rd request
+        res3 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res3.allowed)
+        self.assertEqual(res3.count, 3)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 3)
 
     # =========================================================================
     # 2. Requests Blocked After Quota Exhausted
@@ -105,9 +113,10 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
         self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 2)
 
         # 3rd reservation attempt is blocked
-        ok, count = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertFalse(ok)
-        self.assertEqual(count, 2)
+        res3 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertFalse(res3.allowed)
+        self.assertEqual(res3.count, 2)
+        self.assertIsNone(res3.reservation_id)
 
         # Test through chat endpoint with limit=2
         mock_user = MockAuthUser(self.user_id, "user@test.com")
@@ -158,28 +167,28 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
         reserve_ai_mentor_slot(self.user_id, limit, self.period)
         self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 3)
 
-        # Simulate backend restart:
-        # Wipe in-memory fallback store entirely
+        # Simulate backend restart: Wipe in-memory fallback store entirely
         from backend.services.ai_mentor_quota_service import _fallback_quota_store
         _fallback_quota_store._counts.clear()
+        _fallback_quota_store._reservations.clear()
 
         # New worker starts up after reboot: reads usage from persistent storage
         restarted_usage = get_ai_mentor_usage(self.user_id, self.period)
         self.assertEqual(restarted_usage, 3, "Usage must persist across backend restarts!")
 
         # New worker consumes 4th slot
-        ok, c = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertTrue(ok)
-        self.assertEqual(c, 4)
+        res4 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res4.allowed)
+        self.assertEqual(res4.count, 4)
 
         # 5th slot
-        ok, c = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertTrue(ok)
-        self.assertEqual(c, 5)
+        res5 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res5.allowed)
+        self.assertEqual(res5.count, 5)
 
         # 6th slot blocked
-        ok, c = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertFalse(ok)
+        res6 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertFalse(res6.allowed)
         self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 5)
 
     # =========================================================================
@@ -190,28 +199,28 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
         limit = 3
 
         # Worker 1 reserves slot 1
-        ok1, c1 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertTrue(ok1)
-        self.assertEqual(c1, 1)
+        res1 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res1.allowed)
+        self.assertEqual(res1.count, 1)
 
         # Worker 2 queries usage: immediately sees 1
         w2_usage = get_ai_mentor_usage(self.user_id, self.period)
         self.assertEqual(w2_usage, 1)
 
         # Worker 2 reserves slot 2
-        ok2, c2 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertTrue(ok2)
-        self.assertEqual(c2, 2)
+        res2 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res2.allowed)
+        self.assertEqual(res2.count, 2)
 
         # Worker 3 reserves slot 3
-        ok3, c3 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertTrue(ok3)
-        self.assertEqual(c3, 3)
+        res3 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res3.allowed)
+        self.assertEqual(res3.count, 3)
 
         # Worker 1 attempts slot 4: rejected!
-        ok4, c4 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
-        self.assertFalse(ok4)
-        self.assertEqual(c4, 3)
+        res4 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertFalse(res4.allowed)
+        self.assertEqual(res4.count, 3)
 
     # =========================================================================
     # 5. Concurrent Requests Near Quota Limit
@@ -235,8 +244,8 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
                 results.append(f.result())
 
         # Exactly 1 request should have succeeded, exactly 9 should have failed
-        allowed_count = sum(1 for ok, _ in results if ok)
-        rejected_count = sum(1 for ok, _ in results if not ok)
+        allowed_count = sum(1 for res in results if res.allowed)
+        rejected_count = sum(1 for res in results if not res.allowed)
 
         self.assertEqual(allowed_count, 1, "Exactly one concurrent request must win the last slot")
         self.assertEqual(rejected_count, 9, "Remaining 9 concurrent requests must be rejected")
@@ -257,16 +266,16 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
         self.assertEqual(get_ai_mentor_usage(self.user_id, period_current), 3)
 
         # Verify blocked in 2026-10
-        ok_oct, _ = reserve_ai_mentor_slot(self.user_id, limit, period_current)
-        self.assertFalse(ok_oct)
+        res_oct = reserve_ai_mentor_slot(self.user_id, limit, period_current)
+        self.assertFalse(res_oct.allowed)
 
         # In 2026-11, usage starts clean at 0
         self.assertEqual(get_ai_mentor_usage(self.user_id, period_next), 0)
 
         # User can consume quota in 2026-11
-        ok_nov, count_nov = reserve_ai_mentor_slot(self.user_id, limit, period_next)
-        self.assertTrue(ok_nov)
-        self.assertEqual(count_nov, 1)
+        res_nov = reserve_ai_mentor_slot(self.user_id, limit, period_next)
+        self.assertTrue(res_nov.allowed)
+        self.assertEqual(res_nov.count, 1)
         self.assertEqual(get_ai_mentor_usage(self.user_id, period_next), 1)
 
         # 2026-10 count remains preserved at 3
@@ -308,49 +317,136 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
                 self.assertEqual(resp.json()["reply"], "Premium answer")
 
             self.assertEqual(mock_groq.call_count, 10)
-            # Premium users do not consume limited quota keys
             self.assertEqual(get_ai_mentor_usage(self.premium_user_id, self.period), 0)
 
     # =========================================================================
-    # 8. Unavailable Quota Storage Graceful Fallback
+    # 8. Storage Failure Safety — Production Mode (Fail Closed)
     # =========================================================================
-    def test_08_unavailable_quota_storage_graceful_fallback(self):
-        """When Redis is unreachable, system falls back to in-memory store without 500 error."""
-        with patch("backend.services.ai_mentor_quota_service.get_redis_client", return_value=None):
-            fb_user = "fallback-user-isolated"
-            reset_ai_mentor_usage(fb_user, self.period)
+    def test_08_redis_unconfigured_in_production_mode_fails_closed(self):
+        """In production mode, Redis outages raise controlled 503 QUOTA_UNAVAILABLE, never granting silent quota."""
+        mock_user = MockAuthUser(self.user_id, "user@test.com")
 
-            self.assertEqual(get_ai_mentor_usage(fb_user, self.period), 0)
+        with patch("backend.services.ai_mentor_quota_service.ALLOW_IN_MEMORY_QUOTA_FALLBACK", False), \
+             patch("backend.services.ai_mentor_quota_service.get_redis_client", return_value=None), \
+             patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
+             patch.object(SubscriptionService, "get_user_entitlements", return_value={
+                 FeatureKey.AI_MENTOR.value: EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=3)
+             }):
 
-            # Slot 1 succeeds
-            ok1, c1 = reserve_ai_mentor_slot(fb_user, 2, self.period)
-            self.assertTrue(ok1)
-            self.assertEqual(c1, 1)
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=mock_user)
+            mock_auth_sb.return_value = mock_auth_client
 
-            # Slot 2 succeeds
-            ok2, c2 = reserve_ai_mentor_slot(fb_user, 2, self.period)
-            self.assertTrue(ok2)
-            self.assertEqual(c2, 2)
+            # Direct call raises QuotaStorageUnavailableError
+            with self.assertRaises(QuotaStorageUnavailableError):
+                reserve_ai_mentor_slot(self.user_id, limit=3, period=self.period)
 
-            # Slot 3 blocked (enforces limit safely in fallback mode)
-            ok3, c3 = reserve_ai_mentor_slot(fb_user, 2, self.period)
-            self.assertFalse(ok3)
-            self.assertEqual(c3, 2)
+            # API endpoint returns controlled HTTP 503
+            resp = client.post(
+                "/api/ai-mentor/chat",
+                json={"prompt": "Explain binary search"},
+                headers={"Authorization": "Bearer valid-token"},
+            )
+            self.assertEqual(resp.status_code, 503)
+            data = resp.json()["detail"]
+            self.assertEqual(data["code"], "QUOTA_UNAVAILABLE")
+            self.assertEqual(data["feature"], "ai_mentor")
 
-            # Release slot
-            rel = release_ai_mentor_slot(fb_user, self.period)
-            self.assertEqual(rel, 1)
-            self.assertEqual(get_ai_mentor_usage(fb_user, self.period), 1)
+    def test_08b_redis_unavailable_during_reservation_fails_closed(self):
+        """Redis network exceptions during reservation return controlled 503."""
+        mock_user = MockAuthUser(self.user_id, "user@test.com")
+        mock_redis = MagicMock()
+        mock_redis.eval.side_effect = redis.ConnectionError("Redis connection refused")
+
+        with patch("backend.services.ai_mentor_quota_service.ALLOW_IN_MEMORY_QUOTA_FALLBACK", False), \
+             patch("backend.services.ai_mentor_quota_service.get_redis_client", return_value=mock_redis), \
+             patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
+             patch.object(SubscriptionService, "get_user_entitlements", return_value={
+                 FeatureKey.AI_MENTOR.value: EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=3)
+             }):
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=mock_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            resp = client.post(
+                "/api/ai-mentor/chat",
+                json={"prompt": "Explain binary search"},
+                headers={"Authorization": "Bearer valid-token"},
+            )
+            self.assertEqual(resp.status_code, 503)
+            self.assertEqual(resp.json()["detail"]["code"], "QUOTA_UNAVAILABLE")
+
+    def test_08c_redis_unavailable_during_refund_handled_safely(self):
+        """Redis network failure during quota refund logs safely and returns False without crashing."""
+        mock_redis = MagicMock()
+        mock_redis.eval.side_effect = redis.TimeoutError("Redis socket read timeout")
+
+        with patch("backend.services.ai_mentor_quota_service.get_redis_client", return_value=mock_redis):
+            result = release_ai_mentor_slot(self.user_id, "res_fake_id", self.period)
+            self.assertFalse(result)
 
     # =========================================================================
-    # 9. AI Provider Errors and Retries (Failure Compensation)
+    # 9. Idempotent Reservation State Machine & Duplicate Refund Prevention
     # =========================================================================
-    def test_09_ai_provider_error_does_not_consume_quota(self):
-        """When LLM provider fails, reserved quota slot is refunded and not charged."""
+    def test_09_duplicate_refund_attempts_idempotent(self):
+        """A reservation can be released at-most-once. Duplicate release attempts are rejected."""
+        limit = 3
+        res1 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res1.allowed)
+        self.assertEqual(res1.count, 1)
+        r_id1 = res1.reservation_id
+
+        # 1st release attempt: succeeds and decrements count to 0
+        ok1 = release_ai_mentor_slot(self.user_id, r_id1, self.period)
+        self.assertTrue(ok1)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
+
+        # 2nd release attempt with same reservation_id: rejected! Count does NOT decrement!
+        ok2 = release_ai_mentor_slot(self.user_id, r_id1, self.period)
+        self.assertFalse(ok2, "Duplicate refund must be rejected")
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
+
+        # Now make a new reservation (res2)
+        res2 = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res2.allowed)
+        self.assertEqual(res2.count, 1)
+        r_id2 = res2.reservation_id
+
+        # Attempt to refund using the old r_id1 again: MUST NOT affect res2!
+        ok_stale = release_ai_mentor_slot(self.user_id, r_id1, self.period)
+        self.assertFalse(ok_stale)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 1, "Stale reservation refund must not decrement res2")
+
+        # Cleanup res2
+        release_ai_mentor_slot(self.user_id, r_id2, self.period)
+
+    def test_09b_committed_reservation_cannot_be_refunded(self):
+        """Once committed after successful AI generation, reservation cannot be refunded."""
+        limit = 3
+        res = reserve_ai_mentor_slot(self.user_id, limit, self.period)
+        self.assertTrue(res.allowed)
+        self.assertEqual(res.count, 1)
+
+        # Commit reservation upon success
+        committed = commit_ai_mentor_reservation(self.user_id, res.reservation_id, self.period)
+        self.assertTrue(committed)
+
+        # Late refund attempt: rejected!
+        refunded = release_ai_mentor_slot(self.user_id, res.reservation_id, self.period)
+        self.assertFalse(refunded)
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 1, "Committed reservation count must remain 1")
+
+    # =========================================================================
+    # 10. AI Provider Failures vs Uncertain Timeouts
+    # =========================================================================
+    def test_10_ai_provider_error_refunds_reservation(self):
+        """When LLM provider explicitly returns error message, reservation is refunded."""
         mock_user = MockAuthUser(self.user_id, "user@test.com")
         self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
 
-        # 1. Chat provider returns _AI_UNAVAILABLE_MSG
         with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
              patch("backend.routers.ai_mentor.chat_with_groq", return_value=_AI_UNAVAILABLE_MSG), \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
@@ -369,13 +465,24 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
             )
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp.json()["reply"], _AI_UNAVAILABLE_MSG)
-
-            # Usage must be refunded: count remains 0!
             self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
 
-        # 2. Resume review provider returns 502 Bad Gateway
+    def test_10b_provider_hard_deadline_timeout_does_not_blindly_refund(self):
+        """Hard ceiling provider timeouts have uncertain completion and must NOT be refunded."""
+        mock_user = MockAuthUser(self.user_id, "user@test.com")
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
+
+        timeout_exc = HTTPException(
+            status_code=503,
+            detail={
+                "success": False,
+                "message": "AI Mentor service is currently experiencing high load.",
+                "detail": "AI request exceeded hard deadline (25.0s)",
+            },
+        )
+
         with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
-             patch("backend.routers.ai_mentor.chat_with_groq", return_value=_AI_UNAVAILABLE_MSG), \
+             patch("backend.routers.ai_mentor.run_bounded_ai_call", side_effect=timeout_exc), \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
              patch.object(SubscriptionService, "get_user_entitlements", return_value={
                  FeatureKey.AI_MENTOR.value: EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=3)
@@ -386,23 +493,55 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
             mock_auth_sb.return_value = mock_auth_client
 
             resp = client.post(
-                "/api/ai-mentor/review-resume",
-                json={
-                    "resume_text": "Experienced Python Engineer with over five years building distributed scalable backend systems.",
-                    "target_role": "SWE",
-                },
+                "/api/ai-mentor/chat",
+                json={"prompt": "Heavy prompt that timed out at 25s"},
                 headers={"Authorization": "Bearer valid-token"},
             )
-            self.assertEqual(resp.status_code, 502)
+            self.assertEqual(resp.status_code, 503)
 
-            # Usage must be refunded: count remains 0!
+            # Quota is retained to prevent abuse on ambiguous provider completions
+            self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 1)
+
+    def test_10c_concurrency_acquire_timeout_does_refund(self):
+        """When local concurrency semaphore acquire times out, provider was never touched -> safe to refund."""
+        mock_user = MockAuthUser(self.user_id, "user@test.com")
+        self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
+
+        acquire_exc = HTTPException(
+            status_code=503,
+            detail={
+                "success": False,
+                "message": "AI Mentor service is currently experiencing high load.",
+                "detail": "AI concurrency limit reached (acquire timeout 5.0s)",
+            },
+        )
+
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.routers.ai_mentor.run_bounded_ai_call", side_effect=acquire_exc), \
+             patch.object(SubscriptionService, "get_user_subscription_record", return_value=None), \
+             patch.object(SubscriptionService, "get_user_entitlements", return_value={
+                 FeatureKey.AI_MENTOR.value: EntitlementDetailDTO(access=AccessLevel.LIMITED, limit=3)
+             }):
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=mock_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            resp = client.post(
+                "/api/ai-mentor/chat",
+                json={"prompt": "Explain binary search"},
+                headers={"Authorization": "Bearer valid-token"},
+            )
+            self.assertEqual(resp.status_code, 503)
+
+            # Safe refund: usage remains 0 because request never reached Groq
             self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
 
     # =========================================================================
-    # 10. Off-Topic Prompts Do Not Consume Quota
+    # 11. Off-Topic Prompts Do Not Consume Quota
     # =========================================================================
-    def test_10_offtopic_prompt_does_not_consume_quota(self):
-        """Off-topic prompt redirect must return early without charging user quota."""
+    def test_11_offtopic_prompt_does_not_consume_quota(self):
+        """Off-topic prompt redirect returns early without charging user quota."""
         mock_user = MockAuthUser(self.user_id, "user@test.com")
         self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
 
@@ -425,9 +564,34 @@ class TestAIMentorQuotaPersistence(unittest.TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("SkillsCatalyst", resp.json()["reply"])
             mock_groq.assert_not_called()
-
-            # Quota was NOT charged
             self.assertEqual(get_ai_mentor_usage(self.user_id, self.period), 0)
+
+    # =========================================================================
+    # 12. Permitted Offline Fallback Mode
+    # =========================================================================
+    def test_12_explicit_offline_fallback_mode_with_stateful_reservations(self):
+        """When in-memory fallback is explicitly allowed, reservation state machine works thread-safely."""
+        with patch("backend.services.ai_mentor_quota_service.ALLOW_IN_MEMORY_QUOTA_FALLBACK", True), \
+             patch("backend.services.ai_mentor_quota_service.get_redis_client", return_value=None):
+
+            fb_user = "offline-fallback-user-1"
+            reset_ai_mentor_usage(fb_user, self.period)
+
+            # Reserve slot 1
+            res1 = reserve_ai_mentor_slot(fb_user, 2, self.period)
+            self.assertTrue(res1.allowed)
+            self.assertEqual(res1.count, 1)
+
+            # Duplicate release rejected
+            self.assertTrue(release_ai_mentor_slot(fb_user, res1.reservation_id, self.period))
+            self.assertFalse(release_ai_mentor_slot(fb_user, res1.reservation_id, self.period))
+            self.assertEqual(get_ai_mentor_usage(fb_user, self.period), 0)
+
+            # Commit lifecycle in fallback
+            res2 = reserve_ai_mentor_slot(fb_user, 2, self.period)
+            self.assertTrue(commit_ai_mentor_reservation(fb_user, res2.reservation_id, self.period))
+            self.assertFalse(release_ai_mentor_slot(fb_user, res2.reservation_id, self.period))
+            self.assertEqual(get_ai_mentor_usage(fb_user, self.period), 1)
 
 
 if __name__ == "__main__":

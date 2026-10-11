@@ -44,10 +44,13 @@ router = APIRouter(prefix="/api/ai-mentor", tags=["ai-mentor"])
 from backend.services.ai_mentor_quota_service import (
     get_ai_mentor_usage,
     reserve_ai_mentor_slot,
+    commit_ai_mentor_reservation,
     release_ai_mentor_slot,
     increment_ai_mentor_usage,
     decrement_ai_mentor_usage,
     reset_ai_mentor_usage,
+    QuotaStorageUnavailableError,
+    QuotaReservationResult,
 )
 
 
@@ -312,39 +315,61 @@ async def chat_mentor(
     - Enriches system prompt with aggregated student background when authenticated.
     """
     if entitlement.limit is not None:
-        usage = get_ai_mentor_usage(current_user_id)
-        if usage >= entitlement.limit:
+        try:
+            usage = get_ai_mentor_usage(current_user_id)
+            if usage >= entitlement.limit:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": "LIMIT_REACHED",
+                        "feature": "ai_mentor",
+                        "limit": entitlement.limit,
+                    },
+                )
+        except QuotaStorageUnavailableError:
+            logger.error(f"Quota storage unavailable during pre-check for user {current_user_id}.")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail={
-                    "code": "LIMIT_REACHED",
+                    "code": "QUOTA_UNAVAILABLE",
+                    "message": "Usage limit verification is temporarily unavailable. Please try again shortly.",
                     "feature": "ai_mentor",
-                    "limit": entitlement.limit,
                 },
             )
 
     prompt_text = req.get_text()
     logger.info(f"AI mentor chat request (prompt length={len(prompt_text)}, conv={req.conversation_id}).")
 
-    # Off-topic guard: fast-path check before calling the LLM (saves API cost)
+    # Off-topic guard: fast-path check before calling the LLM (saves API cost and zero quota consumed)
     if _is_offtopic(prompt_text):
         logger.info(f"Off-topic prompt detected, returning redirect message. Prompt: '{prompt_text[:80]}'")
         return MentorChatResponse(reply=_OFFTOPIC_REPLY, conversation_id=req.conversation_id, message_id=None)
 
     # Atomic quota reservation before invoking LLM provider under concurrency
-    reserved = False
+    reservation_id = None
     if entitlement.limit is not None:
-        allowed, _ = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
-        if not allowed:
+        try:
+            res = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
+            if not res.allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": "LIMIT_REACHED",
+                        "feature": "ai_mentor",
+                        "limit": entitlement.limit,
+                    },
+                )
+            reservation_id = res.reservation_id
+        except QuotaStorageUnavailableError:
+            logger.error(f"Quota storage unavailable during reservation for user {current_user_id}.")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail={
-                    "code": "LIMIT_REACHED",
+                    "code": "QUOTA_UNAVAILABLE",
+                    "message": "Usage limit verification is temporarily unavailable. Please try again shortly.",
                     "feature": "ai_mentor",
-                    "limit": entitlement.limit,
                 },
             )
-        reserved = True
 
     # -----------------------------------------------------------------------
     # Authenticated Student Path: Persistent Conversation Memory & Multi-Turn
@@ -353,13 +378,13 @@ async def chat_mentor(
         conv_id = req.conversation_id
         if conv_id:
             if not is_valid_uuid(conv_id):
-                if reserved:
-                    release_ai_mentor_slot(current_user_id)
+                if reservation_id:
+                    release_ai_mentor_slot(current_user_id, reservation_id)
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
             existing_conv = await asyncio.to_thread(get_conversation, current_user_id, conv_id)
             if not existing_conv:
-                if reserved:
-                    release_ai_mentor_slot(current_user_id)
+                if reservation_id:
+                    release_ai_mentor_slot(current_user_id, reservation_id)
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found.")
         else:
             # Auto-create conversation with clean deterministic title from first message
@@ -394,6 +419,7 @@ async def chat_mentor(
         )
 
         # 4. Invoke LLM provider with bounded deadline watchdog and slot retention
+        response = None
         try:
             try:
                 response = await run_bounded_ai_call(
@@ -408,20 +434,31 @@ async def chat_mentor(
                     prompt_text,
                     system_prompt=effective_system_prompt,
                 )
+        except HTTPException as http_exc:
+            detail_str = str(http_exc.detail)
+            # If acquire timeout: semaphore was full, prompt never reached Groq -> safe to refund
+            # If hard deadline timeout: prompt was in flight with Groq -> uncertain outcome, do not blindly refund!
+            if "hard deadline" in detail_str.lower():
+                logger.warning(f"AI provider hard deadline exceeded (uncertain outcome). User={current_user_id}, res={reservation_id}.")
+            else:
+                if reservation_id:
+                    release_ai_mentor_slot(current_user_id, reservation_id)
+            raise
         except Exception:
-            if reserved:
-                release_ai_mentor_slot(current_user_id)
+            if reservation_id:
+                release_ai_mentor_slot(current_user_id, reservation_id)
             raise
 
         # 5. Handle LLM failure: User message preserved, NO fake assistant message written
         if not response or response == _AI_UNAVAILABLE_MSG:
             logger.warning("Groq call failed or returned unavailable message; user message preserved, no assistant response saved.")
-            if reserved:
-                release_ai_mentor_slot(current_user_id)
+            if reservation_id:
+                release_ai_mentor_slot(current_user_id, reservation_id)
             return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=conv_id, message_id=None)
 
-        if not reserved and entitlement.limit is not None:
-            increment_ai_mentor_usage(current_user_id)
+        # Provider succeeded: commit reservation so it can never be refunded
+        if reservation_id:
+            commit_ai_mentor_reservation(current_user_id, reservation_id)
 
         # 6. Secondary guard: check LLM reply
         if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
@@ -439,25 +476,34 @@ async def chat_mentor(
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
     # -----------------------------------------------------------------------
+    response = None
     try:
         response = await run_bounded_ai_call(
             chat_with_groq,
             prompt=prompt_text,
             system_prompt=_SKILLS_SYSTEM_PROMPT,
         )
+    except HTTPException as http_exc:
+        detail_str = str(http_exc.detail)
+        if "hard deadline" in detail_str.lower():
+            logger.warning(f"AI provider hard deadline exceeded in guest path. User={current_user_id}, res={reservation_id}.")
+        else:
+            if reservation_id:
+                release_ai_mentor_slot(current_user_id, reservation_id)
+        raise
     except Exception:
-        if reserved:
-            release_ai_mentor_slot(current_user_id)
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
         raise
 
     if not response or response == _AI_UNAVAILABLE_MSG:
         logger.warning("Groq call failed or returned unavailable message; guest path.")
-        if reserved:
-            release_ai_mentor_slot(current_user_id)
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
         return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=None, message_id=None)
 
-    if not reserved and entitlement.limit is not None:
-        increment_ai_mentor_usage(current_user_id)
+    if reservation_id:
+        commit_ai_mentor_reservation(current_user_id, reservation_id)
 
     if response and _is_offtopic(response) and not _SKILL_PATTERNS.search(response):
         logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
@@ -476,31 +522,53 @@ async def review_resume(
     Performs a full AI-powered resume review using Groq LLM and persists score into Supabase.
     """
     if entitlement.limit is not None:
-        usage = get_ai_mentor_usage(current_user_id)
-        if usage >= entitlement.limit:
+        try:
+            usage = get_ai_mentor_usage(current_user_id)
+            if usage >= entitlement.limit:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": "LIMIT_REACHED",
+                        "feature": "ai_mentor",
+                        "limit": entitlement.limit,
+                    },
+                )
+        except QuotaStorageUnavailableError:
+            logger.error(f"Quota storage unavailable during pre-check for user {current_user_id}.")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail={
-                    "code": "LIMIT_REACHED",
+                    "code": "QUOTA_UNAVAILABLE",
+                    "message": "Usage limit verification is temporarily unavailable. Please try again shortly.",
                     "feature": "ai_mentor",
-                    "limit": entitlement.limit,
                 },
             )
 
     # Atomic quota reservation before invoking LLM provider under concurrency
-    reserved = False
+    reservation_id = None
     if entitlement.limit is not None:
-        allowed, _ = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
-        if not allowed:
+        try:
+            res = reserve_ai_mentor_slot(current_user_id, limit=entitlement.limit)
+            if not res.allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": "LIMIT_REACHED",
+                        "feature": "ai_mentor",
+                        "limit": entitlement.limit,
+                    },
+                )
+            reservation_id = res.reservation_id
+        except QuotaStorageUnavailableError:
+            logger.error(f"Quota storage unavailable during reservation for user {current_user_id}.")
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail={
-                    "code": "LIMIT_REACHED",
+                    "code": "QUOTA_UNAVAILABLE",
+                    "message": "Usage limit verification is temporarily unavailable. Please try again shortly.",
                     "feature": "ai_mentor",
-                    "limit": entitlement.limit,
                 },
             )
-        reserved = True
     target_role = req.target_role
     years_exp = req.years_experience or "1-3 years"
     company_type = req.company_type or "Product-Based"
@@ -605,15 +673,23 @@ STRICT RULES:
 
     try:
         review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
+    except HTTPException as http_exc:
+        detail_str = str(http_exc.detail)
+        if "hard deadline" in detail_str.lower():
+            logger.warning(f"AI provider hard deadline exceeded in review_resume. User={current_user_id}, res={reservation_id}.")
+        else:
+            if reservation_id:
+                release_ai_mentor_slot(current_user_id, reservation_id)
+        raise
     except Exception:
-        if reserved:
-            release_ai_mentor_slot(current_user_id)
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
         raise
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")
-        if reserved:
-            release_ai_mentor_slot(current_user_id)
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={
@@ -621,6 +697,10 @@ STRICT RULES:
                 "message": "AI evaluator is temporarily unavailable. Please try again.",
             },
         )
+
+    # Provider succeeded: commit reservation so it can never be refunded
+    if reservation_id:
+        commit_ai_mentor_reservation(current_user_id, reservation_id)
 
     # Persist resume score and review into Supabase
     try:
@@ -670,6 +750,4 @@ STRICT RULES:
         logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
 
     logger.info(f"Resume review completed ({len(review_text)} chars returned).")
-    if not reserved and entitlement.limit is not None:
-        increment_ai_mentor_usage(current_user_id)
     return {"review": review_text}
