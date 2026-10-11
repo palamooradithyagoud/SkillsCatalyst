@@ -151,34 +151,37 @@ def get_student_quiz(
         .execute()
     )
     raw_questions = qq_res.data or []
+    question_ids = [str(q["id"]) for q in raw_questions]
 
-    questions = []
-    for q in raw_questions:
-        q_id = str(q["id"])
-        # Fetch options — STRICTLY OMIT is_correct
+    # Batch fetch all options across all questions in a single query — STRICTLY OMIT is_correct
+    options_by_question: Dict[str, list] = {qid: [] for qid in question_ids}
+    if question_ids:
         opt_res = (
             sb.from_("quiz_options")
-            .select("id, option_text, position")   # <── is_correct intentionally excluded
-            .eq("question_id", q_id)
+            .select("id, question_id, option_text, position")   # <── is_correct intentionally excluded
+            .in_("question_id", question_ids)
             .order("position", desc=False)
             .execute()
         )
-        options = [
-            {
-                "id": str(o["id"]),
-                "option_text": o.get("option_text"),
-                "position": o.get("position"),
-            }
-            for o in (opt_res.data or [])
-        ]
+        for o in (opt_res.data or []):
+            qid = str(o["question_id"])
+            if qid in options_by_question:
+                options_by_question[qid].append({
+                    "id": str(o["id"]),
+                    "option_text": o.get("option_text"),
+                    "position": o.get("position"),
+                })
 
-        questions.append({
-            "id": q_id,
+    questions = [
+        {
+            "id": str(q["id"]),
             "question_text": q.get("question_text"),
             "question_type": q.get("question_type"),
             "position": q.get("position"),
-            "options": options,
-        })
+            "options": options_by_question.get(str(q["id"]), []),
+        }
+        for q in raw_questions
+    ]
 
     return {
         "quiz_id": quiz_id,
@@ -291,7 +294,7 @@ def submit_quiz_attempt(
             detail="Please answer all questions before submitting."
         )
 
-    # ── 7. Validate each option belongs to its question ───────────────────────
+    # ── 7. Validate answer format & identifiers ──────────────────────────────
     answer_map: Dict[str, str] = {}  # question_id → selected_option_id
     for a in answers:
         qid = a["question_id"]
@@ -301,37 +304,43 @@ def submit_quiz_attempt(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Invalid question or option identifier."
             )
-
-        opt_res = (
-            sb.from_("quiz_options")
-            .select("id, question_id, is_correct")
-            .eq("id", oid)
-            .eq("question_id", qid)    # <── tamper-proof: option must belong to question
-            .limit(1)
-            .execute()
-        )
-        if not opt_res.data:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Option '{oid}' does not belong to question '{qid}'."
-            )
         answer_map[qid] = oid
 
-    # ── 16. Server-side scoring ───────────────────────────────────────────────
-    # Load all correct options for every question in this quiz
+    # ── 8. Batch load all options for quiz questions in a single query ───────
+    # Eliminates the N+1 per-question query loop while providing authoritative
+    # ownership validation and server-side scoring keys in a single database round trip.
     all_opts_res = (
         sb.from_("quiz_options")
         .select("id, question_id, is_correct")
         .in_("question_id", list(authoritative_question_ids))
         .execute()
     )
-    # Build map: question_id → set of correct option IDs
-    correct_map: Dict[str, set] = {}
-    for o in (all_opts_res.data or []):
-        q_id = str(o["question_id"])
-        if o.get("is_correct"):
-            correct_map.setdefault(q_id, set()).add(str(o["id"]))
+    raw_options = all_opts_res.data or []
 
+    # Map option_id → question_id for tamper-proof hierarchy validation
+    option_question_map: Dict[str, str] = {}
+    # Map question_id → set of correct option IDs for server-side scoring
+    correct_map: Dict[str, set] = {}
+
+    for o in raw_options:
+        opt_id = str(o["id"])
+        q_id = str(o["question_id"])
+        option_question_map[opt_id] = q_id
+        if o.get("is_correct"):
+            correct_map.setdefault(q_id, set()).add(opt_id)
+
+    # ── 9. Validate option ownership against authoritative hierarchy ─────────
+    for a in answers:
+        qid = a["question_id"]
+        oid = a["selected_option_id"]
+        # Tamper-proof: option must belong to the submitted question and this quiz
+        if option_question_map.get(oid) != qid:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Option '{oid}' does not belong to question '{qid}'."
+            )
+
+    # ── 10. Server-side scoring ───────────────────────────────────────────────
     correct_count = 0
     answer_results = []
     for q_id in authoritative_question_ids:
