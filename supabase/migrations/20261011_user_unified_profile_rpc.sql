@@ -7,8 +7,8 @@
 CREATE OR REPLACE FUNCTION public.get_user_unified_profile(p_user_id UUID)
 RETURNS JSONB
 LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
+SECURITY INVOKER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_result JSONB;
@@ -122,6 +122,7 @@ BEGIN
 END;
 $$;
 
--- Grant execution to authenticated users
+-- Revoke default public execution and grant strictly to authenticated and service_role
+REVOKE EXECUTE ON FUNCTION public.get_user_unified_profile(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_user_unified_profile(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_user_unified_profile(UUID) TO service_role;
