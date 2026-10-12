@@ -5,11 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  GraduationCap,
-  Play,
-  Briefcase,
-  Users,
-  Trophy,
   ArrowRight,
   ChevronDown,
 } from "lucide-react";
@@ -77,39 +72,6 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Catalyst Pro", description: "Unlimited AI mentorship, mock rounds & certificates" },
       { title: "University Campus", description: "Enterprise dashboards & institutional curriculum" },
     ],
-  },
-];
-
-const FEATURES = [
-  {
-    id: "structured",
-    title: "Structured Learning",
-    description: "Step-by-step career tracks tailored to modern tech hiring bars.",
-    Icon: GraduationCap,
-  },
-  {
-    id: "resources",
-    title: "Curated Resources",
-    description: "Zero fluff. High-impact video lessons, repositories & cheat sheets.",
-    Icon: Play,
-  },
-  {
-    id: "interview",
-    title: "Interview Preparation",
-    description: "Live mock interviews, technical challenge suites & resume feedback.",
-    Icon: Briefcase,
-  },
-  {
-    id: "community",
-    title: "Community & Events",
-    description: "Collaborate with ambitious peers, join hackathons & weekly sessions.",
-    Icon: Users,
-  },
-  {
-    id: "mentorship",
-    title: "Mentorship from Experts",
-    description: "1-on-1 strategy sessions with verified senior tech engineers.",
-    Icon: Trophy,
   },
 ];
 
@@ -316,16 +278,6 @@ export default function SkillsCatalystDesktopHero() {
 
           {/* Hero Central Typography & Actions */}
           <div className="scDesktopHeroContent">
-            {/* Subtle Top Pill Badge */}
-            <motion.div
-              className="scPillBadge"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <span>Accelerate Your Career · AI-Powered Learning</span>
-            </motion.div>
-
             {/* Giant Bold Headline */}
             <motion.h1
               className="scHeadline"
@@ -336,16 +288,6 @@ export default function SkillsCatalystDesktopHero() {
               <span className="scHeadlineWhite">Learn Anything,</span>
               <span className="scHeadlineGradient">Go Further</span>
             </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              className="scSubtitle"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Your all-in-one platform for learning, practice, mentorship and real opportunities.
-            </motion.p>
 
             {/* CTA Row */}
             <motion.div
@@ -372,28 +314,6 @@ export default function SkillsCatalystDesktopHero() {
               </button>
             </motion.div>
           </div>
-
-          {/* ── 5 Feature Showcase Cards Along the Bottom ── */}
-          <motion.div
-            className="scFeaturesGrid"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            {FEATURES.map((feature) => (
-              <div
-                key={feature.id}
-                className="scFeatureCard"
-                onClick={handleNavigateToLogin}
-              >
-                <div className="scFeatureIconWrap">
-                  <feature.Icon size={22} strokeWidth={2.2} />
-                </div>
-                <h4 className="scFeatureTitle">{feature.title}</h4>
-                <p className="scFeatureDesc">{feature.description}</p>
-              </div>
-            ))}
-          </motion.div>
         </section>
       </div>
 
