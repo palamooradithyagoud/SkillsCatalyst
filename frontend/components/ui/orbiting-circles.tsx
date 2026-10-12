@@ -2,9 +2,7 @@
 
 import React from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 export interface OrbitingCirclesProps {
   className?: string
@@ -153,122 +151,313 @@ export const EcosystemIcons = {
   ),
 }
 
-/**
- * Ecosystem Orbiting Section:
- * Pure clean white background, black dashed orbit rings,
- * with content on the left and the Orbiting Circles effect on the RIGHT side!
- */
-export function EcosystemOrbitingSection() {
-  const router = useRouter()
+import { LazyMotion, domAnimation, m } from "framer-motion"
+
+// ── Pinned Cards Effect ("What student is going through?") ──
+export interface Step {
+  title: string
+  description: string
+  colorTheme?: "orange" | "blue" | "purple"
+  colors?: {
+    bg: string
+    text: string
+    border: string
+  }
+}
+
+export interface StepPosition {
+  className?: string
+  rotate?: string
+}
+
+export interface HowItWorksProps {
+  features?: Step[]
+  className?: string
+  stepPositions?: StepPosition[]
+}
+
+const Pin = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M16 3a1 1 0 0 1 .117 1.993l-.117 .007v4.764l1.894 3.789a1 1 0 0 1 .1 .331l.006 .116v2a1 1 0 0 1 -.883 .993l-.117 .007h-4v4a1 1 0 0 1 -1.993 .117l-.007 -.117v-4h-4a1 1 0 0 1 -.993 -.883l-.007 -.117v-2a1 1 0 0 1 .06 -.34l.046 -.107l1.894 -3.791v-4.762a1 1 0 0 1 -.117 -1.993l.117 -.007h8z" />
+  </svg>
+)
+
+const Card = ({
+  number,
+  title,
+  description,
+  colorTheme = "blue",
+  className = "",
+  rotate = "",
+  colors: customColors,
+}: {
+  number: string
+  title: string
+  description: string
+  colorTheme?: "orange" | "blue" | "purple"
+  className?: string
+  rotate?: string
+  colors?: {
+    bg: string
+    text: string
+    border: string
+  }
+}) => {
+  const defaultBgColors = {
+    orange: "bg-orange-50/95 dark:bg-orange-500/10",
+    blue: "bg-blue-50/95 dark:bg-blue-500/10",
+    purple: "bg-purple-50/95 dark:bg-purple-500/10",
+  }
+  const defaultTextColors = {
+    orange: "text-orange-500 dark:text-orange-400",
+    blue: "text-blue-600 dark:text-blue-400",
+    purple: "text-purple-600 dark:text-purple-400",
+  }
+  const defaultBorderColors = {
+    orange: "border-orange-200 dark:border-orange-500/20",
+    blue: "border-blue-200 dark:border-blue-500/20",
+    purple: "border-purple-200 dark:border-purple-500/20",
+  }
+
+  const bgColor = customColors?.bg || defaultBgColors[colorTheme]
+  const textColor = customColors?.text || defaultTextColors[colorTheme]
+  const borderColor = customColors?.border || defaultBorderColors[colorTheme]
 
   return (
-    <section className="relative w-full bg-white text-slate-900 py-16 sm:py-24 px-6 sm:px-12 lg:px-16 overflow-hidden">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-        {/* ── LEFT SIDE: Compelling Story & Feature Highlights ── */}
-        <div className="flex flex-col items-start text-left max-w-xl">
-          <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-800 text-xs font-bold uppercase tracking-wider mb-5">
-            <span>Connected Career Orbit</span>
-          </div>
+    <div
+      className={cn(
+        "relative w-full md:w-[215px] transition-transform duration-300 hover:z-30 hover:scale-105",
+        rotate,
+        className
+      )}
+    >
+      <div className="bg-white dark:bg-neutral-900 p-2 rounded-[18px] shadow-[0px_6px_18px_0px_rgba(0,0,0,0.06)] border border-neutral-100 dark:border-neutral-800">
+        <Pin className={cn("w-5 h-5 z-20 mb-1.5 mx-auto", textColor)} />
+        <div
+          className={cn(
+            bgColor,
+            "border",
+            borderColor,
+            "rounded-[12px] p-2.5 h-full flex flex-col relative overflow-hidden"
+          )}
+        >
+          <span
+            className={cn(textColor, "text-2xl font-bold mb-1")}
+            style={{
+              fontFamily: '"Comic Sans MS", "Chalkboard SE", cursive, sans-serif',
+            }}
+          >
+            {number}
+          </span>
+          <h3 className="text-xs sm:text-sm font-bold text-neutral-800 dark:text-neutral-100 leading-snug mb-1">
+            {title}
+          </h3>
+          <p className="text-neutral-600 dark:text-neutral-400 text-[11px] leading-snug">
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-[1.15]">
-            Everything you need for your career,{" "}
-            <span className="text-[#683594]">in one orbit.</span>
+const DEFAULT_CARD_POSITIONS: StepPosition[] = [
+  { className: "md:absolute md:top-0 md:left-1", rotate: "rotate-3" },
+  { className: "md:absolute md:top-[75px] md:right-1", rotate: "-rotate-3" },
+  { className: "md:absolute md:top-[170px] md:left-3", rotate: "rotate-3" },
+  { className: "md:absolute md:top-[265px] md:right-2", rotate: "-rotate-3" },
+  { className: "md:absolute md:top-[360px] md:left-1", rotate: "rotate-2" },
+]
+
+export function HowItWorks({
+  features,
+  className = "",
+  stepPositions,
+}: HowItWorksProps) {
+  const defaultFeatures: Step[] = [
+    {
+      title: "Tutorial Hell & Overwhelm",
+      description:
+        "Drowning in endless YouTube playlists without knowing what builds hiring-grade skills.",
+      colorTheme: "orange",
+    },
+    {
+      title: "Scattered Tools & Chaos",
+      description:
+        "Switching between ChatGPT, LeetCode, GitHub, and notes with zero structured roadmap.",
+      colorTheme: "blue",
+    },
+    {
+      title: "Missed Opportunities",
+      description:
+        "Missing verified national scholarships, hackathons, and high-value internships.",
+      colorTheme: "purple",
+    },
+    {
+      title: "Interview & Placement Fear",
+      description:
+        "Freezing in live coding simulators, system design, and placement aptitude rounds.",
+      colorTheme: "orange",
+    },
+    {
+      title: "Resume Black Hole",
+      description:
+        "Sending 100+ applications without replies, mentorship, or actionable feedback.",
+      colorTheme: "blue",
+    },
+  ]
+
+  const data = features && features.length > 0 ? features : defaultFeatures
+  const positions = stepPositions || DEFAULT_CARD_POSITIONS
+  const height = 490
+
+  return (
+    <LazyMotion features={domAnimation}>
+      <div className={cn("w-full max-w-[500px] relative py-2", className)}>
+        {/* Subtle notebook grid lines background */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.05]"
+          style={{
+            backgroundImage: "linear-gradient(#000 1px, transparent 1px)",
+            backgroundSize: "100% 28px",
+            marginTop: "4px",
+          }}
+        />
+
+        <div className="relative w-full mx-auto flex flex-col space-y-4 md:space-y-0 md:block h-auto md:h-[var(--md-height)] z-10"
+          style={{ "--md-height": `${height}px` } as React.CSSProperties}
+        >
+          {data.length > 1 && (
+            <svg
+              className="absolute top-0 left-0 w-full h-full pointer-events-none hidden md:block z-0"
+              viewBox="0 0 500 490"
+              preserveAspectRatio="none"
+            >
+              <m.path
+                d="M 108 55 C 260 55, 260 130, 408 130 C 408 180, 260 180, 120 225 C 120 270, 260 270, 402 320 C 402 370, 260 370, 108 415"
+                stroke="currentColor"
+                className="text-neutral-300 dark:text-neutral-700"
+                strokeWidth="2"
+                strokeDasharray="6 5"
+                fill="none"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                initial={{ strokeDashoffset: 0 }}
+                animate={{ strokeDashoffset: -110 }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+            </svg>
+          )}
+
+          {data.map((step, index) => {
+            const position = positions[index % positions.length]
+
+            return (
+              <Card
+                key={step.title}
+                number={`0${index + 1}`}
+                title={step.title}
+                description={step.description}
+                colorTheme={step.colorTheme || "blue"}
+                colors={step.colors}
+                rotate={position.rotate}
+                className={position.className}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </LazyMotion>
+  )
+}
+
+/**
+ * Ecosystem Orbiting Section:
+ * Left column:
+ *   - Top: "What student is going through?" in dark lilac (#683594)
+ *   - Directly downside the text: Compact 5 Pinned Process Cards with animated dashed path
+ * Right column:
+ *   - Revolving orbit with confused student sitting with laptop in the center
+ */
+export function EcosystemOrbitingSection() {
+  return (
+    <section className="relative w-full bg-white text-slate-900 pt-6 sm:pt-10 pb-14 sm:pb-20 px-4 sm:px-8 lg:px-12 overflow-hidden">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        {/* ── LEFT COLUMN: Text at Top-Left & Compact HowItWorks Cards downside it ── */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left w-full">
+          {/* Top-Left Heading */}
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#683594] tracking-tight leading-tight mb-5">
+            What student is going through?
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            SkillsCatalyst unifies interactive AI mentoring, YouTube video roadmaps, mock interview engines, 
-            verified scholarships, and live hackathons into a single cohesive ecosystem.
-          </p>
-
-          <div className="mt-8 space-y-3.5 w-full">
-            <div className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-              <span>Real-time AI Mentorship & code debugging with Groq & Gemini</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-              <span>Verified national & international scholarships matched to your profile</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-              <span>Placement question bank with 910+ questions & mock interview simulators</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-              <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-              <span>Active tech community events, workshops, and peer networks</span>
-            </div>
-          </div>
-
-          <div className="mt-9 flex items-center gap-4 flex-wrap">
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#683594] hover:bg-[#54287a] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
-            >
-              <span>Explore The Platform</span>
-              <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold transition-all cursor-pointer"
-            >
-              <span>Join Community</span>
-            </button>
-          </div>
+          {/* Compact Pinned Cards directly downside the text */}
+          <HowItWorks />
         </div>
 
-        {/* ── RIGHT SIDE: The Orbiting Circles Effect with Black Rings ── */}
-        <div className="relative flex h-[480px] sm:h-[540px] w-full items-center justify-center lg:justify-end">
-          <div className="relative flex size-[440px] sm:size-[480px] items-center justify-center lg:translate-x-10 xl:translate-x-16">
-            {/* Central Brand Hub Emblem */}
-            <div className="relative z-20 flex flex-col items-center justify-center size-24 rounded-full bg-black text-white shadow-xl ring-8 ring-black/5 text-center p-2">
-              <Image
-                src="/logo_white.png"
-                alt="SkillsCatalyst Emblem"
-                width={34}
-                height={34}
-                priority
-                className="object-contain mb-0.5"
-              />
-              <span className="text-[9px] font-black tracking-wider uppercase">Catalyst</span>
+        {/* ── RIGHT COLUMN: The Orbiting Circles Effect with Confused Student ── */}
+        <div className="lg:col-span-5 flex items-center justify-center lg:justify-end w-full lg:sticky lg:top-24 pt-4">
+          <div className="relative flex size-[380px] sm:size-[430px] items-center justify-center">
+            {/* Central Figure: Confused human sitting with laptop */}
+            <div className="relative z-20 flex flex-col items-center justify-center select-none pointer-events-none">
+              <div className="relative size-[150px] sm:size-[170px] flex items-center justify-center">
+                <Image
+                  src="/confused_student.png"
+                  alt="Confused student navigating career choices"
+                  width={170}
+                  height={170}
+                  priority
+                  className="object-contain drop-shadow-md"
+                />
+              </div>
             </div>
 
-            {/* Inner Circle (Black dashed ring, radius: 105px) */}
+            {/* Inner Circle (radius: 108px) */}
             <OrbitingCircles
-              className="size-[44px] sm:size-[48px] p-2.5"
+              className="size-[40px] sm:size-[44px] p-2"
               duration={20}
               delay={0}
-              radius={105}
+              radius={108}
               path={true}
             >
               <EcosystemIcons.chatgpt />
             </OrbitingCircles>
 
             <OrbitingCircles
-              className="size-[44px] sm:size-[48px] p-2.5"
+              className="size-[40px] sm:size-[44px] p-2"
               duration={20}
               delay={6.666}
-              radius={105}
+              radius={108}
               path={false}
             >
               <EcosystemIcons.scholarships />
             </OrbitingCircles>
 
             <OrbitingCircles
-              className="size-[44px] sm:size-[48px] p-2.5"
+              className="size-[40px] sm:size-[44px] p-2"
               duration={20}
               delay={13.333}
-              radius={105}
+              radius={108}
               path={false}
             >
               <EcosystemIcons.interview />
             </OrbitingCircles>
 
-            {/* Outer Circle (Black dashed ring, reverse direction, radius: 200px) */}
+            {/* Outer Circle (reverse direction, radius: 172px) */}
             <OrbitingCircles
-              className="size-[50px] sm:size-[54px] p-2.5"
-              radius={200}
+              className="size-[46px] sm:size-[50px] p-2"
+              radius={172}
               duration={24}
               delay={0}
               reverse
@@ -278,8 +467,8 @@ export function EcosystemOrbitingSection() {
             </OrbitingCircles>
 
             <OrbitingCircles
-              className="size-[50px] sm:size-[54px] p-2.5"
-              radius={200}
+              className="size-[46px] sm:size-[50px] p-2"
+              radius={172}
               duration={24}
               delay={8}
               reverse
@@ -289,8 +478,8 @@ export function EcosystemOrbitingSection() {
             </OrbitingCircles>
 
             <OrbitingCircles
-              className="size-[50px] sm:size-[54px] p-2.5"
-              radius={200}
+              className="size-[46px] sm:size-[50px] p-2"
+              radius={172}
               duration={24}
               delay={16}
               reverse
