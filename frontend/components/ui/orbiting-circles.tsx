@@ -284,13 +284,6 @@ const Card = ({
           "rounded-[12px] p-2.5 h-full flex flex-col relative overflow-hidden transition-colors"
         )}
       >
-        {/* Active indicator badge */}
-        {isHighlighted && (
-          <span className="absolute top-1.5 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-bold bg-white/95 dark:bg-neutral-900/95 text-neutral-800 dark:text-neutral-100 shadow-sm border border-black/5">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
-            <span>In Focus</span>
-          </span>
-        )}
 
         <span
           className={cn(textColor, "text-2xl font-bold mb-1")}
@@ -437,14 +430,6 @@ export function HowItWorks({
   )
 }
 
-const STEP_LABELS = [
-  "Tutorial Hell",
-  "Scattered Chaos",
-  "Missed Ops",
-  "Interview Fear",
-  "Resume Black Hole",
-]
-
 const STUDENT_THOUGHTS = [
   "Which YouTube tutorial is actually worth it? 😵‍💫",
   "Lost between ChatGPT, LeetCode & 50 tabs... 🤯",
@@ -581,37 +566,9 @@ export function EcosystemOrbitingSection() {
         {/* ── LEFT COLUMN: Text at Top-Left & 5 Pinned Stack Cards downside it ── */}
         <div className="lg:col-span-7 flex flex-col items-start text-left w-full">
           {/* Top-Left Heading */}
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#683594] tracking-tight leading-tight mb-3">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#683594] tracking-tight leading-tight mb-5">
             What student is going through?
           </h2>
-
-          {/* 5-Step Scroll Progress Bar & Clickable Stage Pills */}
-          <div className="flex flex-wrap items-center gap-2 mb-3 bg-neutral-50 dark:bg-neutral-900/60 py-1.5 px-3 rounded-full border border-neutral-200/80 dark:border-neutral-800 select-none shadow-xs">
-            <span className="text-[11px] font-bold text-[#683594]">
-              Stage 0{activeStep + 1}/05:
-            </span>
-            <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-200">
-              {STEP_LABELS[activeStep]}
-            </span>
-            <div className="flex items-center gap-1.5 ml-2">
-              {[0, 1, 2, 3, 4].map((stepIdx) => (
-                <button
-                  key={stepIdx}
-                  onClick={() => scrollToStep(stepIdx)}
-                  title={`Go to Stage 0${stepIdx + 1}: ${STEP_LABELS[stepIdx]}`}
-                  className={cn(
-                    "h-2 rounded-full transition-all duration-300 cursor-pointer",
-                    activeStep === stepIdx
-                      ? "w-7 bg-[#683594] shadow-xs"
-                      : "w-2 bg-neutral-300 dark:bg-neutral-700 hover:bg-neutral-400"
-                  )}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] text-neutral-600 dark:text-neutral-400 font-medium hidden sm:inline ml-1">
-              (Scroll to step through)
-            </span>
-          </div>
 
           {/* 5 Stacking Cards directly downside the text */}
           <HowItWorks
