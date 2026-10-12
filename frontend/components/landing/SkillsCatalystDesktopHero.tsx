@@ -11,6 +11,7 @@ import {
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
 import { EcosystemOrbitingSection } from "@/components/ui/orbiting-circles";
+import FeaturesWithPanel from "@/components/ui/features-with-panel";
 
 interface NavDropdownItem {
   title: string;
@@ -317,10 +318,13 @@ export default function SkillsCatalystDesktopHero() {
         </section>
       </div>
 
-      {/* ── Section 2: Ecosystem Orbiting Circles ── */}
+      {/* ── Section 2: Ecosystem Orbiting Circles (5 cards and round orbit effect) ── */}
       <EcosystemOrbitingSection />
 
-      {/* ── Section 3: Animated Structured Career Path ── */}
+      {/* ── Section 3: Features with Side Panel (SkillBits, Scholarships/Events, Learning & Roadmaps) ── */}
+      <FeaturesWithPanel />
+
+      {/* ── Section 4: Animated Structured Career Path ── */}
       <StructuredCareerPathSection />
 
       {/* ── SkillsCatalyst Landing Pricing Modal ── */}
