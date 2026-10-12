@@ -50,6 +50,9 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/ai-mentor") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/cookie") ||
     pathname.startsWith("/support") ||
     pathname.startsWith("/verify") ||
     pathname.startsWith("/certificate-preview") ||

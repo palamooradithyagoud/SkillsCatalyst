@@ -16,7 +16,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isLandingPage = pathname === "/";
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAIMentorPage = pathname === "/ai-mentor" || pathname.startsWith("/ai-mentor");
-  if (isAuthPage || isLandingPage || isAdminPage || isAIMentorPage) {
+  const isLegalPage =
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/cookie");
+
+  if (isAuthPage || isLandingPage || isAdminPage || isAIMentorPage || isLegalPage) {
     return (
       <PricingModalProvider>
         <NotificationProvider>
@@ -28,6 +33,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ? "bg-[#0B0D17] text-white"
                 : isAIMentorPage
                 ? "bg-white dark:bg-[#0a0a0c] text-neutral-900 dark:text-neutral-100"
+                : isLegalPage
+                ? "bg-[#faf8fc] text-[#121217]"
                 : "bg-white text-[#18191F]"
             }`}
           >

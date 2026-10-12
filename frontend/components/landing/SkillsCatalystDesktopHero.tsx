@@ -12,6 +12,7 @@ import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
 import { EcosystemOrbitingSection } from "@/components/ui/orbiting-circles";
 import FeaturesWithPanel from "@/components/ui/features-with-panel";
+import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
 
 interface NavDropdownItem {
   title: string;
@@ -326,6 +327,9 @@ export default function SkillsCatalystDesktopHero() {
 
       {/* ── Section 4: Animated Structured Career Path ── */}
       <StructuredCareerPathSection />
+
+      {/* ── Section 5: Community CTA & Multi-Column Directory (Lilac Theme, matching Image 2 & 3) ── */}
+      <SkillsCatalystFooterSection />
 
       {/* ── SkillsCatalyst Landing Pricing Modal ── */}
       <LandingPricingModal

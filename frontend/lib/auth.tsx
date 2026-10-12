@@ -331,7 +331,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isVerifyPage = pathname.startsWith("/verify");
     const isPreviewPage = pathname.startsWith("/certificate-preview");
     const isResumeBuilderPage = pathname.startsWith("/career/resume-builder");
-    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage;
+    const isLegalPage =
+      pathname.startsWith("/privacy") ||
+      pathname.startsWith("/terms") ||
+      pathname.startsWith("/cookie") ||
+      pathname.startsWith("/support");
+    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage || isLegalPage;
 
     if (!session && !isPublicPage) {
       router.replace("/login");
@@ -409,8 +414,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmail,
   };
 
-  // On /login, / landing page, and /career/resume-builder: ALWAYS render children immediately
-  if (pathname === "/login" || pathname === "/" || pathname.startsWith("/career/resume-builder")) {
+  // On /login, / landing page, /career/resume-builder, and legal pages: ALWAYS render children immediately
+  if (
+    pathname === "/login" ||
+    pathname === "/" ||
+    pathname.startsWith("/career/resume-builder") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/cookie") ||
+    pathname.startsWith("/support") ||
+    pathname.startsWith("/verify")
+  ) {
     return (
       <AuthContext.Provider value={contextValue}>
         {children}
