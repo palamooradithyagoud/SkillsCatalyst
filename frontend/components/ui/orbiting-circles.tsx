@@ -321,33 +321,33 @@ export function HowItWorks({
 }: HowItWorksProps) {
   const defaultFeatures: Step[] = [
     {
-      title: "Tutorial Hell & Overwhelm",
+      title: "Resource Overload",
       description:
-        "Drowning in endless YouTube playlists without knowing what builds hiring-grade skills.",
+        "Struggling to find the right learning path among endless tutorials, courses, and playlists.",
       colorTheme: "orange",
     },
     {
-      title: "Scattered Tools & Chaos",
+      title: "Lack of Personalized Guidance",
       description:
-        "Switching between ChatGPT, LeetCode, GitHub, and notes with zero structured roadmap.",
+        "Unsure what to learn next, which skills to prioritize, or how to align with career goals.",
       colorTheme: "blue",
+    },
+    {
+      title: "Unclear Career Direction",
+      description:
+        "Confused about industry expectations and which career paths truly match personal strengths.",
+      colorTheme: "purple",
+    },
+    {
+      title: "Skill Gap & Industry Readiness",
+      description:
+        "Finding it difficult to identify missing skills and build practical, job-ready expertise.",
+      colorTheme: "orange",
     },
     {
       title: "Missed Opportunities",
       description:
-        "Missing verified national scholarships, hackathons, and high-value internships.",
-      colorTheme: "purple",
-    },
-    {
-      title: "Interview & Placement Fear",
-      description:
-        "Freezing in live coding simulators, system design, and placement aptitude rounds.",
-      colorTheme: "orange",
-    },
-    {
-      title: "Resume Black Hole",
-      description:
-        "Sending 100+ applications without replies, mentorship, or actionable feedback.",
+        "Overwhelmed by scattered sources—missing key hackathons, internships, and deadlines.",
       colorTheme: "blue",
     },
   ]
@@ -431,11 +431,11 @@ export function HowItWorks({
 }
 
 const STUDENT_THOUGHTS = [
-  "Which YouTube tutorial is actually worth it? 😵‍💫",
-  "Lost between ChatGPT, LeetCode & 50 tabs... 🤯",
-  "Missed another verified scholarship deadline! 😔",
-  "Blanking out in live technical interviews... 😰",
-  "100+ job applications sent, zero human replies 🕳️",
+  "Too many tutorials... which one actually works? 😵‍💫",
+  "What do I learn next? I need a clear roadmap! 🧭",
+  "Which tech career path actually matches my skills? 🤔",
+  "Do I have the practical skills companies want? 💻",
+  "Missed another hackathon and internship deadline! 🤦‍♂️",
 ]
 
 /**
