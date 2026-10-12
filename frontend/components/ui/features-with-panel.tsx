@@ -27,8 +27,6 @@ import {
   MapPin,
   Clock,
   ArrowRight,
-  ChevronRight,
-  ChevronLeft,
   Sparkles,
 } from "lucide-react";
 
@@ -163,23 +161,6 @@ function RoadmapScrollShowcase({
     onStepChange?.(next);
   };
 
-  const goToStep = (index: number) => {
-    if (index === step) return;
-    onStepChange?.(index);
-  };
-
-  const goNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const next = step < roadmapSteps.length - 1 ? step + 1 : 0;
-    onStepChange?.(next);
-  };
-
-  const goPrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const prev = step > 0 ? step - 1 : roadmapSteps.length - 1;
-    onStepChange?.(prev);
-  };
-
   // Wheel Scroll Cycling with Cooldown
   const lastWheelTime = React.useRef(0);
   const handleWheel = (e: React.WheelEvent) => {
@@ -295,57 +276,6 @@ function RoadmapScrollShowcase({
           </div>
         </div>
       </motion.div>
-
-      {/* Interactive Step Controllers & Progress Dots */}
-      <div className="relative z-20 mt-4 flex flex-col items-center gap-2.5 w-full max-w-sm">
-        {/* 5 Segmented Step Indicator Pills */}
-        <div className="flex items-center gap-1 p-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 shadow-lg">
-          {roadmapSteps.map((s, idx) => (
-            <button
-              key={s.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                goToStep(idx);
-              }}
-              type="button"
-              className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 flex items-center gap-1",
-                step === idx
-                  ? "bg-[#C8B6FF] text-black shadow-md shadow-[#C8B6FF]/40 scale-105"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              )}
-            >
-              <span>{idx + 1}</span>
-              <span className="hidden sm:inline text-[10px]">{s.title.split(" ")[0]}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Prev / Hint / Next Action Row */}
-        <div className="flex items-center justify-between w-full px-2 text-xs">
-          <button
-            type="button"
-            onClick={goPrev}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 transition-colors"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Prev</span>
-          </button>
-
-          <span className="text-[11px] font-mono text-zinc-400 text-center truncate max-w-[170px]">
-            🖱️ Scroll or tap to browse
-          </span>
-
-          <button
-            type="button"
-            onClick={goNext}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#C8B6FF]/40 bg-[#C8B6FF]/15 text-[#C8B6FF] hover:bg-[#C8B6FF]/25 transition-colors font-medium shadow-sm shadow-[#C8B6FF]/20"
-          >
-            <span>{step === 4 ? "Restart ↻" : "Next →"}</span>
-            {step !== 4 && <ChevronRight className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
