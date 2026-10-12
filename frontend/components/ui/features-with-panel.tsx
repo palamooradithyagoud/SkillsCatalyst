@@ -666,43 +666,7 @@ export default function FeaturesWithPanel() {
                     </div>
                   </div>
 
-                  {/* Progressive Roadmap Milestones inside Step 1 (same as Orbit cards) */}
-                  {active === 0 && index === 0 && (
-                    <div className="mt-3.5 pt-3 border-t border-white/10 flex flex-col gap-1.5 w-full">
-                      {roadmapSteps.map((s, sIdx) => (
-                        <div
-                          key={s.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            scrollToRoadmapStep(sIdx);
-                          }}
-                          className={cn(
-                            "flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-200 text-xs border",
-                            roadmapStep === sIdx
-                              ? "bg-white/10 border-[#C8B6FF]/50 text-white shadow-sm"
-                              : "bg-black/20 border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "size-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors",
-                              roadmapStep === sIdx
-                                ? "bg-[#C8B6FF] text-black"
-                                : "bg-white/10 text-zinc-500"
-                            )}
-                          >
-                            {sIdx + 1}
-                          </span>
-                          <span className="font-semibold truncate text-[11px]">{s.title}</span>
-                          {roadmapStep === sIdx && (
-                            <span className="ml-auto text-[9px] uppercase tracking-wider text-[#C8B6FF] font-bold">
-                              Live
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+
 
                   {/* Mobile Preview Accordion Dropdown */}
                   <AnimatePresence initial={false}>
