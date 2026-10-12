@@ -2,7 +2,15 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
@@ -10,7 +18,6 @@ import {
   Film,
   Calendar,
   GraduationCap,
-  Sparkles,
   Award,
   Flame,
   CheckCircle2,
@@ -20,6 +27,9 @@ import {
   MapPin,
   Clock,
   ArrowRight,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
 } from "lucide-react";
 
 interface FeatureItem {
@@ -71,68 +81,313 @@ function FeatureMedia({
   );
 }
 
+// ── 0. 5-Step 3D Mobile Roadmap Interactive Journey ────────────────────────────
+const roadmapSteps = [
+  {
+    id: 1,
+    title: "Main Dashboard",
+    tag: "Student Hub",
+    description: "Personalized student hub with 48h drops, Tech Stories, active tracks, and quick navigation.",
+    image: "/images/roadmap_step1_dashboard.png",
+    actionHint: "Tap phone or scroll to visit Career Path",
+  },
+  {
+    id: 2,
+    title: "Career Path & Roadmaps",
+    tag: "Curated Pathways",
+    description: "Browse comprehensive career roadmaps across modern engineering domains like Python, Full-Stack and AI.",
+    image: "/images/roadmap_step2_careerpath.png",
+    actionHint: "Tap Python to inspect roadmap",
+  },
+  {
+    id: 3,
+    title: "Python Roadmap Overview",
+    tag: "13 Stations & Milestones",
+    description: "Structured 40 hours of content, 100 curated videos, 25 interactive quizzes, and 3 production projects.",
+    image: "/images/roadmap_step3_overview.png",
+    actionHint: "Scroll down to curriculum tree",
+  },
+  {
+    id: 4,
+    title: "Python Learning Tree",
+    tag: "54 Lessons & Stations",
+    description: "Modular curriculum tree breaking down Introduction, Strings, Data Structures, OOP, and advanced concepts.",
+    image: "/images/roadmap_step4_tree.png",
+    actionHint: "Tap Topic 1 to launch video lesson",
+  },
+  {
+    id: 5,
+    title: "Curated 4K Video Lessons",
+    tag: "Telusko Video & Docs",
+    description: "Zero-fluff YouTube video lessons from top instructors, syntax guides & official documentation.",
+    image: "/images/roadmap_step5_video.png",
+    actionHint: "Lesson complete! Quizzes ready",
+  },
+];
+
+function RoadmapScrollShowcase({
+  step = 0,
+  direction = 1,
+  onStepChange,
+}: {
+  step?: number;
+  direction?: number;
+  onStepChange?: (index: number) => void;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // 3D Mouse Parallax Tilt
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x, { stiffness: 120, damping: 18 });
+  const mouseYSpring = useSpring(y, { stiffness: 120, damping: 18 });
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [7, -7]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [-9, 9]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    x.set(mouseX / rect.width - 0.5);
+    y.set(mouseY / rect.height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  // Click on phone advances to next screen
+  const handlePhoneClick = () => {
+    const next = (step + 1) % roadmapSteps.length;
+    onStepChange?.(next);
+  };
+
+  const goToStep = (index: number) => {
+    if (index === step) return;
+    onStepChange?.(index);
+  };
+
+  const goNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const next = step < roadmapSteps.length - 1 ? step + 1 : 0;
+    onStepChange?.(next);
+  };
+
+  const goPrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const prev = step > 0 ? step - 1 : roadmapSteps.length - 1;
+    onStepChange?.(prev);
+  };
+
+  // Wheel Scroll Cycling with Cooldown
+  const lastWheelTime = React.useRef(0);
+  const handleWheel = (e: React.WheelEvent) => {
+    const now = Date.now();
+    if (now - lastWheelTime.current < 380) return;
+    if (e.deltaY > 18) {
+      if (step < roadmapSteps.length - 1) {
+        onStepChange?.(step + 1);
+        lastWheelTime.current = now;
+      }
+    } else if (e.deltaY < -18) {
+      if (step > 0) {
+        onStepChange?.(step - 1);
+        lastWheelTime.current = now;
+      }
+    }
+  };
+
+  const current = roadmapSteps[step] || roadmapSteps[0];
+
+  return (
+    <div
+      ref={containerRef}
+      onWheel={handleWheel}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative flex flex-col items-center justify-center select-none py-2 w-full perspective-[1200px]"
+    >
+      {/* Background ambient lighting directly behind the phone */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] h-[440px] bg-purple-600/25 rounded-full blur-[110px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#C8B6FF]/15 rounded-full blur-[90px] pointer-events-none" />
+
+      {/* Floating Step Badge Above Phone */}
+      <div className="relative z-20 mb-3 flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-[#C8B6FF]/30 text-xs text-white shadow-xl">
+        <span className="w-2 h-2 rounded-full bg-[#C8B6FF] animate-pulse" />
+        <span className="font-bold text-[#C8B6FF]">Step 0{step + 1} of 05</span>
+        <span className="text-zinc-500">·</span>
+        <span className="text-zinc-200 font-medium">{current.title}</span>
+      </div>
+
+      {/* 3D Interactive Smartphone Chassis */}
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        onClick={handlePhoneClick}
+        title="Click or scroll wheel to advance"
+        className="relative z-10 cursor-pointer w-[230px] sm:w-[245px] lg:w-[255px] aspect-[500/1020] flex items-center justify-center transition-shadow duration-300 hover:shadow-[0_25px_60px_-15px_rgba(200,182,255,0.25)]"
+      >
+        {/* Physical side buttons */}
+        <div className="absolute -left-[3px] top-16 w-[3px] h-6 bg-zinc-600 rounded-l" />
+        <div className="absolute -left-[3px] top-25 w-[3px] h-9 bg-zinc-600 rounded-l" />
+        <div className="absolute -left-[3px] top-37 w-[3px] h-9 bg-zinc-600 rounded-l" />
+        <div className="absolute -right-[3px] top-20 w-[3px] h-12 bg-zinc-600 rounded-r" />
+
+        {/* Outer Phone Bezel Chassis */}
+        <div className="relative w-full h-full rounded-[38px] p-[5px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-950 border-[2px] border-zinc-600/80 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.95),_0_0_40px_rgba(200,182,255,0.2)] ring-1 ring-white/10">
+          {/* Inner Phone Screen */}
+          <div className="relative w-full h-full rounded-[33px] overflow-hidden bg-black shadow-inner">
+            {/* Dynamic Island Pill Notch */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full z-30 flex items-center justify-end px-1.5 border border-white/10 shadow-sm pointer-events-none">
+              <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 border border-zinc-700" />
+            </div>
+
+            {/* Buttery Smooth Concurrent 3D Crossfade & Layer Transition */}
+            <div className="relative w-full h-full">
+              {roadmapSteps.map((s, idx) => {
+                const isActive = step === idx;
+                const isPast = idx < step;
+                return (
+                  <motion.div
+                    key={s.id}
+                    initial={false}
+                    animate={{
+                      opacity: isActive ? 1 : 0,
+                      scale: isActive ? 1 : 0.95,
+                      rotateY: isActive ? 0 : isPast ? -8 : 8,
+                      y: isActive ? 0 : isPast ? -8 : 8,
+                      filter: isActive ? "blur(0px)" : "blur(3px)",
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="absolute inset-0 w-full h-full will-change-transform"
+                    style={{
+                      zIndex: isActive ? 10 : 1,
+                      pointerEvents: isActive ? "auto" : "none",
+                    }}
+                  >
+                    <Image
+                      src={s.image}
+                      alt={s.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 450px"
+                      className="object-cover object-top"
+                      priority
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Subtle Glass Glare Sheen Reflection */}
+            <div className="absolute inset-0 pointer-events-none z-20 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08]" />
+
+            {/* Click Tap Helper Prompt on Screen Bottom */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/10 text-[10px] text-zinc-300 font-medium pointer-events-none whitespace-nowrap shadow-lg">
+              <span>{current.actionHint}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Interactive Step Controllers & Progress Dots */}
+      <div className="relative z-20 mt-4 flex flex-col items-center gap-2.5 w-full max-w-sm">
+        {/* 5 Segmented Step Indicator Pills */}
+        <div className="flex items-center gap-1 p-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 shadow-lg">
+          {roadmapSteps.map((s, idx) => (
+            <button
+              key={s.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                goToStep(idx);
+              }}
+              type="button"
+              className={cn(
+                "px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 flex items-center gap-1",
+                step === idx
+                  ? "bg-[#C8B6FF] text-black shadow-md shadow-[#C8B6FF]/40 scale-105"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              )}
+            >
+              <span>{idx + 1}</span>
+              <span className="hidden sm:inline text-[10px]">{s.title.split(" ")[0]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Prev / Hint / Next Action Row */}
+        <div className="flex items-center justify-between w-full px-2 text-xs">
+          <button
+            type="button"
+            onClick={goPrev}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-zinc-300 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Prev</span>
+          </button>
+
+          <span className="text-[11px] font-mono text-zinc-400 text-center truncate max-w-[170px]">
+            🖱️ Scroll or tap to browse
+          </span>
+
+          <button
+            type="button"
+            onClick={goNext}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#C8B6FF]/40 bg-[#C8B6FF]/15 text-[#C8B6FF] hover:bg-[#C8B6FF]/25 transition-colors font-medium shadow-sm shadow-[#C8B6FF]/20"
+          >
+            <span>{step === 4 ? "Restart ↻" : "Next →"}</span>
+            {step !== 4 && <ChevronRight className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── 1. SkillBits Interactive Reel Mockup ───────────────────────────────────────
 function SkillBitsPreview() {
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-[#0B0D1B] via-[#120E29] to-[#0A0718] p-5 sm:p-7 flex flex-col justify-between overflow-hidden select-none">
-      {/* Background ambient lighting */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#C8B6FF]/10 rounded-full blur-2xl pointer-events-none" />
+    <div className="relative flex items-center justify-center select-none py-2 w-full">
+      {/* Background ambient lighting directly behind the phone - no card box */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-purple-600/25 rounded-full blur-[110px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#C8B6FF]/15 rounded-full blur-[90px] pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <div className="relative z-10 flex items-center justify-between">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold text-white">
-          <Film className="w-3.5 h-3.5 text-[#C8B6FF]" />
-          <span>SkillBits · 45s Reel</span>
-        </div>
-        <span className="text-[11px] font-mono text-zinc-400 bg-black/40 px-2 py-0.5 rounded-md border border-white/10">
-          0:38 / 0:45
-        </span>
-      </div>
+      {/* Realistic Compact Smartphone Frame */}
+      <div className="relative z-10 w-[230px] sm:w-[245px] lg:w-[255px] aspect-[462/875] flex items-center justify-center">
+        {/* Physical side buttons */}
+        <div className="absolute -left-[3px] top-16 w-[3px] h-6 bg-zinc-600 rounded-l" />
+        <div className="absolute -left-[3px] top-25 w-[3px] h-9 bg-zinc-600 rounded-l" />
+        <div className="absolute -left-[3px] top-37 w-[3px] h-9 bg-zinc-600 rounded-l" />
+        <div className="absolute -right-[3px] top-20 w-[3px] h-12 bg-zinc-600 rounded-r" />
 
-      {/* Center Phone/Reel Visual Card */}
-      <div className="relative z-10 my-auto py-2 flex items-center justify-center">
-        <div className="w-full max-w-sm rounded-2xl bg-black/60 border border-white/15 p-4 sm:p-5 backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-[#C8B6FF] flex items-center justify-center font-bold text-black text-xs shrink-0 shadow-sm">
-              SC
+        {/* Outer Phone Bezel Chassis */}
+        <div className="relative w-full h-full rounded-[38px] p-[5px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-950 border-[2px] border-zinc-600/80 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.95),_0_0_40px_rgba(200,182,255,0.2)] ring-1 ring-white/10">
+          {/* Inner Phone Screen */}
+          <div className="relative w-full h-full rounded-[33px] overflow-hidden bg-black shadow-inner">
+            {/* Dynamic Island Pill Notch */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full z-20 flex items-center justify-end px-1.5 border border-white/10 shadow-sm pointer-events-none">
+              <div className="w-1.5 h-1.5 rounded-full bg-zinc-800 border border-zinc-700" />
             </div>
-            <div>
-              <p className="text-xs font-bold text-white">React 19 & Next.js 16</p>
-              <p className="text-[10px] text-zinc-400">Server Actions vs API Routes</p>
-            </div>
-            <span className="ml-auto text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#C8B6FF]/20 text-[#C8B6FF] border border-[#C8B6FF]/30">
-              Pro Tip
-            </span>
-          </div>
 
-          <div className="rounded-xl bg-zinc-950/90 border border-white/10 p-3 font-mono text-[11px] text-zinc-300 leading-relaxed overflow-hidden">
-            <p className="text-purple-400 font-semibold">// Async Server Action</p>
-            <p className="text-zinc-400">
-              <span className="text-pink-400">&quot;use server&quot;</span>;
-            </p>
-            <p className="text-zinc-200">
-              <span className="text-blue-400">export async function</span>{" "}
-              <span className="text-yellow-300">updateSkill</span>(id) &#123;
-            </p>
-            <p className="pl-3 text-emerald-400">await db.revalidateTag(id);</p>
-            <p className="text-zinc-200">&#125;</p>
-          </div>
+            {/* Cropped Real SkillBits Screenshot */}
+            <Image
+              src="/images/skillbits_preview.png"
+              alt="SkillBits Mobile Reel Preview"
+              fill
+              sizes="(max-width: 768px) 100vw, 450px"
+              className="object-cover object-top"
+              priority
+            />
 
-          <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-white/10">
-            <span className="text-[#C8B6FF] font-medium">#NextJS #TypeScript #CleanCode</span>
-            <div className="flex items-center gap-3 text-zinc-300">
-              <span>❤️ 2.4k</span>
-              <span>🔖 940</span>
-            </div>
+            {/* Subtle Glass Glare Sheen Reflection */}
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08]" />
           </div>
-        </div>
-      </div>
-
-      {/* Bottom Progress Bar */}
-      <div className="relative z-10 w-full">
-        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-          <div className="w-[84%] h-full bg-gradient-to-r from-[#C8B6FF] to-purple-500 rounded-full shadow-[0_0_8px_#C8B6FF]" />
         </div>
       </div>
     </div>
@@ -142,7 +397,7 @@ function SkillBitsPreview() {
 // ── 2. Scholarships, Events & Tech News Mockup ─────────────────────────────────
 function ScholarshipsEventsPreview() {
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-[#080B14] via-[#0E1322] to-[#0A0D18] p-5 sm:p-7 flex flex-col justify-between select-none overflow-hidden">
+    <div className="relative w-full max-w-lg aspect-[4/3] rounded-3xl border border-[#C8B6FF]/30 bg-black/85 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between select-none overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9),_0_0_35px_rgba(200,182,255,0.12)]">
       {/* Background Glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -210,7 +465,7 @@ function ScholarshipsEventsPreview() {
 // ── 3. Learning, Videos, Tracking & Roadmaps Mockup ────────────────────────────
 function LearningRoadmapsPreview() {
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-[#0C0816] via-[#140D26] to-[#080512] p-5 sm:p-7 flex flex-col justify-between select-none overflow-hidden">
+    <div className="relative w-full max-w-lg aspect-[4/3] rounded-3xl border border-[#C8B6FF]/30 bg-black/85 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between select-none overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9),_0_0_35px_rgba(200,182,255,0.12)]">
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-[#C8B6FF]/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -278,6 +533,12 @@ function LearningRoadmapsPreview() {
 // ── Feature Items Configuration ───────────────────────────────────────────────
 const items: FeatureItem[] = [
   {
+    title: "Roadmaps with Resources & Curated Videos.",
+    alt: "Explore step-by-step career pathways from main dashboard to full curriculum tree and verified YouTube 4K video lessons.",
+    badge: "Interactive Flow",
+    content: <RoadmapScrollShowcase />,
+  },
+  {
     title: "SkillBits — High-Impact Video Reels.",
     alt: "Bite-sized, zero-fluff coding concepts and architectural insights in 45-second interactive clips.",
     badge: "Bite-Sized",
@@ -289,47 +550,146 @@ const items: FeatureItem[] = [
     badge: "Opportunities",
     content: <ScholarshipsEventsPreview />,
   },
-  {
-    title: "Learning with Best Videos, Tracking System & Roadmaps.",
-    alt: "Structured step-by-step career roadmaps with curated YouTube lessons, automated progress tracking and streak incentives.",
-    badge: "Career Roadmaps",
-    content: <LearningRoadmapsPreview />,
-  },
 ];
 
 export default function FeaturesWithPanel() {
+  const sectionRef = React.useRef<HTMLDivElement>(null);
   const [active, setActive] = React.useState(0);
+  const [roadmapStep, setRoadmapStep] = React.useState(0);
+  const [direction, setDirection] = React.useState(1);
+
+  // Exact same scroll transition as Ecosystem Orbiting Circles (GSAP ScrollTrigger pin & scrub)
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !sectionRef.current) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+
+      // Desktop & Tablet: Smooth scroll-pinned 5-step animation (buttery smooth scrub)
+      mm.add("(min-width: 768px)", () => {
+        gsap.timeline({
+          scrollTrigger: {
+            id: "features-roadmap-trigger",
+            trigger: sectionRef.current,
+            start: "top top",
+            end: "+=2400",
+            pin: true,
+            pinSpacing: true,
+            scrub: 1.2,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              const clamped = Math.min(0.999, Math.max(0, self.progress));
+              const step = Math.floor(clamped * 5);
+              setRoadmapStep((prev) => {
+                if (prev !== step) {
+                  setDirection(step > prev ? 1 : -1);
+                  return step;
+                }
+                return prev;
+              });
+            },
+          },
+        });
+      });
+
+      // Mobile: Compact pin distance with fluid scrub
+      mm.add("(max-width: 767px)", () => {
+        gsap.timeline({
+          scrollTrigger: {
+            id: "features-roadmap-trigger",
+            trigger: sectionRef.current,
+            start: "top top",
+            end: "+=1600",
+            pin: true,
+            pinSpacing: true,
+            scrub: 1.0,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              const clamped = Math.min(0.999, Math.max(0, self.progress));
+              const step = Math.floor(clamped * 5);
+              setRoadmapStep((prev) => {
+                if (prev !== step) {
+                  setDirection(step > prev ? 1 : -1);
+                  return step;
+                }
+                return prev;
+              });
+            },
+          },
+        });
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const scrollToRoadmapStep = (stepIndex: number) => {
+    setRoadmapStep(stepIndex);
+    const st = ScrollTrigger.getById("features-roadmap-trigger");
+    if (st) {
+      const targetScroll = st.start + (st.end - st.start) * ((stepIndex + 0.5) / 5);
+      window.scrollTo({
+        top: targetScroll,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Dynamic feature items with controlled RoadmapScrollShowcase
+  const featureList: FeatureItem[] = [
+    {
+      title: "Roadmaps with Resources & Curated Videos.",
+      alt: "Explore step-by-step career pathways from main dashboard to full curriculum tree and verified YouTube 4K video lessons.",
+      badge: "Interactive Flow",
+      content: (
+        <RoadmapScrollShowcase
+          step={roadmapStep}
+          direction={direction}
+          onStepChange={scrollToRoadmapStep}
+        />
+      ),
+    },
+    {
+      title: "SkillBits — High-Impact Video Reels.",
+      alt: "Bite-sized, zero-fluff coding concepts and architectural insights in 45-second interactive clips.",
+      badge: "Bite-Sized",
+      content: <SkillBitsPreview />,
+    },
+    {
+      title: "Scholarships, Events & Tech News.",
+      alt: "Direct access to top hackathons, verified student scholarships, and daily engineering breakthroughs.",
+      badge: "Opportunities",
+      content: <ScholarshipsEventsPreview />,
+    },
+  ];
 
   return (
-    <section className="relative w-full py-24 bg-[#06070D] text-white overflow-hidden border-t border-white/10">
+    <section
+      ref={sectionRef}
+      className="relative w-full min-h-screen flex flex-col justify-center bg-[#06070D] text-white overflow-hidden border-t border-white/10 select-none py-10 lg:py-14"
+    >
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-purple-900/10 blur-[130px] pointer-events-none rounded-full" />
       <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-[#C8B6FF]/10 blur-[140px] pointer-events-none rounded-full" />
 
+      {/* Top Header positioned towards left side corner */}
+      <div className="w-full max-w-[1440px] xl:max-w-[1536px] mx-auto px-6 sm:px-10 lg:px-14 mb-6 relative z-10">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
+          Features in{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C8B6FF] to-purple-400">
+            SkillsCatalyst
+          </span>
+        </h2>
+      </div>
+
       <div className="mx-auto max-w-6xl px-6 relative z-10">
-        {/* Top Header Pill */}
-        <div className="flex flex-col items-start mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#C8B6FF]/15 border border-[#C8B6FF]/35 text-[#C8B6FF] text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm shadow-[#C8B6FF]/10">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Platform Capabilities</span>
-          </div>
-
-          <h2 className="text-4xl font-black tracking-tight text-white md:text-5xl lg:text-6xl leading-tight">
-            Features that accelerate{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C8B6FF] to-purple-400">
-              your tech career.
-            </span>
-          </h2>
-          <p className="mt-3 text-base text-zinc-400 max-w-2xl leading-relaxed">
-            Everything you need in one cohesive ecosystem—from short-form SkillBits to verified scholarships and personalized roadmaps.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 lg:items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-14 lg:items-center">
           {/* Left: Feature List */}
           <div>
             <ul className="flex flex-col gap-2.5">
-              {items.map((item, index) => (
+              {featureList.map((item, index) => (
                 <motion.li
                   key={index}
                   initial={{ opacity: 0, y: 8 }}
@@ -342,13 +702,13 @@ export default function FeaturesWithPanel() {
                   }}
                   onClick={() => setActive(index)}
                   className={cn(
-                    "flex flex-col px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 lg:flex-row lg:items-center lg:gap-4 border",
+                    "flex flex-col px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 border",
                     active === index
                       ? "bg-white/[0.08] border-[#C8B6FF]/50 ring-1 ring-[#C8B6FF]/40 shadow-xl shadow-[#C8B6FF]/10"
                       : "bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20"
                   )}
                 >
-                  <div className="flex flex-row items-center gap-4 w-full lg:contents">
+                  <div className="flex flex-row items-center gap-4 w-full">
                     <span
                       className={cn(
                         "size-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors duration-200",
@@ -376,6 +736,44 @@ export default function FeaturesWithPanel() {
                     </div>
                   </div>
 
+                  {/* Progressive Roadmap Milestones inside Step 1 (same as Orbit cards) */}
+                  {active === 0 && index === 0 && (
+                    <div className="mt-3.5 pt-3 border-t border-white/10 flex flex-col gap-1.5 w-full">
+                      {roadmapSteps.map((s, sIdx) => (
+                        <div
+                          key={s.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scrollToRoadmapStep(sIdx);
+                          }}
+                          className={cn(
+                            "flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-200 text-xs border",
+                            roadmapStep === sIdx
+                              ? "bg-white/10 border-[#C8B6FF]/50 text-white shadow-sm"
+                              : "bg-black/20 border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "size-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors",
+                              roadmapStep === sIdx
+                                ? "bg-[#C8B6FF] text-black"
+                                : "bg-white/10 text-zinc-500"
+                            )}
+                          >
+                            {sIdx + 1}
+                          </span>
+                          <span className="font-semibold truncate text-[11px]">{s.title}</span>
+                          {roadmapStep === sIdx && (
+                            <span className="ml-auto text-[9px] uppercase tracking-wider text-[#C8B6FF] font-bold">
+                              Live
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Mobile Preview Accordion Dropdown */}
                   <AnimatePresence initial={false}>
                     {active === index && (
@@ -384,16 +782,12 @@ export default function FeaturesWithPanel() {
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                        className="w-full overflow-hidden lg:hidden mt-3"
+                        className="w-full overflow-hidden lg:hidden mt-4 flex items-center justify-center py-2"
                       >
-                        <Card className="w-full overflow-hidden p-0 gap-0 aspect-4/3 relative border-white/15 bg-black rounded-2xl">
-                          <div className="absolute inset-0">
-                            <FeatureMedia
-                              content={item.content}
-                              alt={item.alt}
-                            />
-                          </div>
-                        </Card>
+                        <FeatureMedia
+                          content={item.content}
+                          alt={item.alt}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -402,25 +796,23 @@ export default function FeaturesWithPanel() {
             </ul>
           </div>
 
-          {/* Right: Sticky Media Panel (Desktop) */}
-          <div className="hidden lg:block sticky top-24">
-            <Card className="relative w-full aspect-[4/3] overflow-hidden p-0 gap-0 rounded-3xl border border-[#C8B6FF]/30 bg-black shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9),_0_0_35px_rgba(200,182,255,0.12)]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={active}
-                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute inset-0"
-                >
-                  <FeatureMedia
-                    content={items[active].content}
-                    alt={items[active].alt}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </Card>
+          {/* Right: Sticky Media Panel (Desktop) - No Card Backside */}
+          <div className="hidden lg:flex items-center justify-center sticky top-20 min-h-[500px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                className="w-full flex items-center justify-center"
+              >
+                <FeatureMedia
+                  content={featureList[active].content}
+                  alt={featureList[active].alt}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
