@@ -4,10 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Trophy,
   ChevronRight,
-  ChevronLeft,
-  Sparkles,
   ExternalLink,
   Calendar,
   Crown,
@@ -54,6 +51,12 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Swipe gesture refs
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const pointerStartX = useRef<number | null>(null);
+  const isPointerDown = useRef<boolean>(false);
+
   const handleOpenPricing = () => {
     if (onOpenPricing) {
       onOpenPricing();
@@ -87,6 +90,54 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
     }
   };
 
+  // Touch swipe support for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsPaused(false);
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+    // Detect horizontal swipe
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  // Pointer drag/swipe for mouse/trackpad
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("a, button")) return;
+    pointerStartX.current = e.clientX;
+    isPointerDown.current = true;
+    setIsPaused(true);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsPaused(false);
+    if (!isPointerDown.current || pointerStartX.current === null) return;
+    const deltaX = e.clientX - pointerStartX.current;
+    if (Math.abs(deltaX) > 35) {
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+    pointerStartX.current = null;
+    isPointerDown.current = false;
+  };
+
   // If no live events published yet
   if (!loading && events.length === 0) {
     return (
@@ -98,14 +149,10 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-purple-950/40 pointer-events-none" />
 
-        {/* ── Top-Left Metadata Pill ── */}
+        {/* ── Top-Left Metadata Pill (Prize removed) ── */}
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
-            <Trophy className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-900 leading-none">Prize:</span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-purple-600 leading-none">$50,000</span>
-            <span className="text-slate-300 font-light text-[9px] leading-none mx-0.5">|</span>
-            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 shrink-0" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
+            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
             <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 leading-none">Upcoming 2026</span>
           </div>
         </div>
@@ -120,14 +167,14 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           </p>
         </div>
 
-        {/* ── Bottom Actions (12-16px breathing room) ── */}
+        {/* ── Bottom Actions (Register only) ── */}
         <div className="relative z-10 flex items-center justify-between pt-1">
           <button
             type="button"
             className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-            <span>Register / View Event</span>
+            <span>Register</span>
             <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
 
@@ -164,7 +211,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   }
 
   const startDateStr = formatEventDate(currentEvent.start_date);
-  const cleanPrize = formatPrizePool(currentEvent.prize_pool);
 
   return (
     <motion.div
@@ -173,7 +219,22 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       transition={{ duration: 0.35, ease: "easeOut" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => {
+        touchStartX.current = null;
+        touchStartY.current = null;
+        setIsPaused(false);
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => {
+        pointerStartX.current = null;
+        isPointerDown.current = false;
+        setIsPaused(false);
+      }}
+      style={{ touchAction: "pan-y" }}
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all cursor-grab active:cursor-grabbing"
     >
       {/* ── Background Event Banner Image with Adaptive Readability Scrim ── */}
       <AnimatePresence mode="wait">
@@ -201,7 +262,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Top-Left Bar: Compact Prize + Date Metadata Pill ── */}
+      {/* ── Top-Left Bar: Date Metadata Pill (Prize Pool removed) ── */}
       <div className="absolute top-2.5 sm:top-3 left-3.5 sm:left-4 z-20 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -210,48 +271,21 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 3 }}
             transition={{ duration: 0.2 }}
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md"
+            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-slate-900/90 border border-slate-200/60 dark:border-slate-800 shadow-xs backdrop-blur-md"
           >
-            <Trophy className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-semibold text-slate-900 leading-none">Prize:</span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-purple-600 leading-none">{cleanPrize}</span>
-            <span className="text-slate-300 font-light text-[9px] leading-none mx-0.5">|</span>
-            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-600 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 leading-none">{startDateStr}</span>
+            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">{startDateStr}</span>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* ── Vertically Centered Edge Arrows ── */}
-      {events.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={handlePrev}
-            aria-label="Previous event"
-            className="absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 z-30 pointer-events-auto w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-black/40 hover:bg-black/70 text-white/80 hover:text-white backdrop-blur-xs flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/10 hover:border-white/25 active:scale-90"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
 
-          <button
-            type="button"
-            onClick={handleNext}
-            aria-label="Next event"
-            className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 z-30 pointer-events-auto w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-black/40 hover:bg-black/70 text-white/80 hover:text-white backdrop-blur-xs flex items-center justify-center transition-all duration-150 cursor-pointer border border-white/10 hover:border-white/25 active:scale-90"
-          >
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
-        </>
-      )}
-
-
-      {/* ── Downside Area: Breathing room, Primary CTA, Pagination Dots, PRO Badge ── */}
+      {/* ── Downside Area: Breathing room, Primary CTA (Register only), PRO Badge ── */}
       <div
         className="absolute bottom-3 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-4 sm:px-5"
         style={{ left: 0, right: 0 }}
       >
-        {/* Primary CTA */}
+        {/* Primary CTA: Register only */}
         <a
           href={currentEvent.event_link || "#"}
           target="_blank"
@@ -260,10 +294,9 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-          <span>Register / View Event</span>
+          <span>Register</span>
           <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
         </a>
-
 
         {/* Secondary Status Badge (PRO User vs Get PRO) */}
         {isPremium ? (

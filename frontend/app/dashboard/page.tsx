@@ -112,7 +112,7 @@ export default function DashboardPage() {
           className="w-full max-w-[540px] space-y-3.5 sm:space-y-4"
         >
           <EventHeroCard onOpenPricing={openPricingModal} />
-          {/* 48-Hour Tech News Stories (Compact icon strip below Event Hero Card) */}
+          {/* Tech News Stories */}
           <TechNewsStories />
           <QuickHubNav />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />

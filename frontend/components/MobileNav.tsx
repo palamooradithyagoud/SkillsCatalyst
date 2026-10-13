@@ -157,10 +157,10 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels) ── */}
       {!pathname.startsWith("/skillbits") && (
-        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-white/60 dark:bg-slate-900/80 border-b border-black/5 dark:border-slate-800 backdrop-blur-xl text-slate-900 dark:text-white shadow-xs">
+        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/40 dark:bg-slate-950/40 border-b border-black/[0.04] dark:border-white/[0.06] backdrop-blur-2xl backdrop-saturate-180 text-slate-900 dark:text-white transition-colors duration-200 shadow-xs">
           <div className="flex items-center gap-2">
-            <Link href="/dashboard">
-              <SkillsCatalystLogo size="sm" showText animated />
+            <Link href="/dashboard" className="flex items-center">
+              <SkillsCatalystLogo size="sm" showText={false} animated />
             </Link>
           </div>
 
@@ -178,14 +178,13 @@ function MobileNavContent() {
                 className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
                   isNotificationOpen
                     ? "bg-[#5227FF]/15 text-[#5227FF] border-[#5227FF]/30 dark:bg-[#5227FF]/25 dark:text-purple-300"
-                    : "bg-white/30 hover:bg-white/50 dark:bg-slate-800/50 dark:hover:bg-slate-800/80 border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200"
+                    : "bg-white/40 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/15 border-black/[0.06] dark:border-white/[0.1] text-slate-800 dark:text-slate-200"
                 }`}
               >
                 <Bell size={18} strokeWidth={2.2} className="transition-transform active:rotate-12" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EAB308] ring-1.5 ring-white dark:ring-slate-900" />
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
@@ -202,7 +201,7 @@ function MobileNavContent() {
               type="button"
               onClick={() => router.push("/settings")}
               aria-label="User Profile"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               <span>{userInitial}</span>
             </button>
@@ -215,7 +214,7 @@ function MobileNavContent() {
                 setIsNotificationOpen(false);
               }}
               aria-label="Toggle Menu"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/30 hover:bg-white/50 border border-black/10 backdrop-blur-xl flex items-center justify-center text-slate-800 shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/40 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/15 border border-black/[0.06] dark:border-white/[0.1] backdrop-blur-xl flex items-center justify-center text-slate-800 dark:text-slate-200 shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               {drawerOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
             </button>

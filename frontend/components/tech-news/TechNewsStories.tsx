@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Sparkles, ChevronLeft, ChevronRight, RefreshCw, Zap } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import type { GroupedTechNewsSource } from "@/types/tech_news";
 import { useStudentTechNews } from "@/hooks/useStudentTechNews";
 import { useWatchedStories } from "@/hooks/useWatchedStories";
 import { TechNewsSourceCircle } from "./TechNewsSourceCircle";
 import { TechNewsStoryViewer } from "./TechNewsStoryViewer";
-import { TechNewsEmptyState } from "./TechNewsEmptyState";
 
 interface TechNewsStoriesProps {
   className?: string;
@@ -94,7 +93,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
     <div
       className={`w-full bg-white dark:bg-[#111625] rounded-[18px] sm:rounded-[22px] p-2.5 sm:p-3 border border-slate-100 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors relative group/tray ${className}`}
     >
-      {/* ── Top Bar: Title, 48h Badge, Refresh ── */}
+      {/* ── Top Bar: Title, Refresh ── */}
       <div className="flex items-center justify-between mb-2 px-1">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
@@ -106,10 +105,6 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
               Tech Stories
             </h3>
           </div>
-          <span className="px-1.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 border border-purple-200/80 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[9.5px] font-bold flex items-center gap-1">
-            <Zap className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
-            <span>48h Drops</span>
-          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -127,7 +122,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
         </div>
       </div>
 
-      {/* ── Content: Loading, Error, Empty, or Horizontal Tray ── */}
+      {/* ── Content: Loading, Error, or Horizontal Tray (No text downside when empty) ── */}
       {isLoading ? (
         // Skeleton circles
         <div className="flex items-center gap-3 overflow-hidden py-1 px-1">
@@ -148,9 +143,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             Retry
           </button>
         </div>
-      ) : sortedSources.length === 0 ? (
-        <TechNewsEmptyState compact={true} onRefresh={loadFeed} />
-      ) : (
+      ) : sortedSources.length === 0 ? null : (
         <div className="relative">
           {/* Left scroll chevron */}
           {canScrollLeft && (
