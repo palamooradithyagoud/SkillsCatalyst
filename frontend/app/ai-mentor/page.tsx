@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowUp,
+  Mic,
   PanelLeft,
   PanelLeftClose,
   Plus,
@@ -27,7 +29,6 @@ import {
   sendMentorMessage,
 } from "@/lib/api/career";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
-import { PromptInput } from "@/components/ui/ai-chat-input";
 
 // ----------------------------------------------------------------------
 // Curated High-Value SkillsCatalyst Prompts (Authentic Platform Context)
@@ -452,6 +453,59 @@ export default function AIMentorPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Search / prompt input state (Image 2 style)
+  const [inputValue, setInputValue] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const toggleListening = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) {
+          setInputValue((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -817,79 +871,115 @@ export default function AIMentorPage() {
 
       {/* ── Main Chat Area ── */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#0c0d10] relative w-full">
-        {/* Top Header */}
+        {/* Top Header - Floating Circular Action Buttons (Image 2) */}
         <header
-          className={`h-14 px-4 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-850 shrink-0 ${
+          className={`h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 bg-transparent z-10 ${
             isSidebarOpen ? "hidden md:hidden" : "flex"
           }`}
         >
           <div className="flex items-center gap-2.5">
+            {/* Back Button */}
             <Link
               href="/dashboard"
-              className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+              className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               title="Back to Dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
+            {/* Sidebar Toggle Button (Circle with Dark Shadow) */}
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="p-1.5 rounded-lg text-neutral-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors cursor-pointer mr-1"
+              className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               title="Open sidebar"
+              aria-label="Open sidebar"
             >
               <PanelLeft className="h-4 w-4" />
             </button>
-            <span className="font-bold text-base tracking-tight text-purple-600 dark:text-purple-400 select-none">
-              AI Catalyst
-            </span>
           </div>
-          {activeConversationId && (
-            <button
-              type="button"
-              onClick={handleStartNewConversation}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
-            >
-              New Chat
-            </button>
-          )}
+
+          {/* New Chat Button (Circle with Dark Shadow on Top-Right - Image 2) */}
+          <button
+            type="button"
+            onClick={handleStartNewConversation}
+            className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+            title="Start new chat"
+            aria-label="Start new chat"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </header>
 
-        {/* Content Body: Empty State Hero (TOP-LEFT ALIGNED) OR Message History */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-12 lg:px-16 py-4 md:py-8 flex flex-col">
+        {/* Content Body: Empty State Hero (Image 2) OR Message History */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-12 lg:px-16 py-3 md:py-6 flex flex-col">
           {isLoadingHistory ? (
             <div className="flex items-center justify-center my-auto text-neutral-400 dark:text-neutral-500 text-xs gap-2">
               <RotateCw className="h-4 w-4 animate-spin text-purple-600" />
               Loading chat history...
             </div>
           ) : messages.length === 0 ? (
-            /* TOP-LEFT ALIGNED GREETING + AUTHENTIC SKILLSCATALYST PROMPTS */
-            <div className="w-full max-w-3xl flex flex-col items-start text-left pt-1 md:pt-4">
-              {/* Luminous Glowing Orb at Top Left */}
-              <div className="size-9 rounded-full overflow-hidden mb-3 bg-purple-500/10 ring-1 ring-purple-500/25 shadow-xs">
-                <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
+            /* EMPTY STATE HERO MATCHING IMAGE 2 (WHITE + DARK SHADOW) */
+            <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col justify-between pt-1 md:pt-2">
+              {/* Top Left: Glowing Orb + Greeting Headline + 3 Prompt Pills */}
+              <div className="flex flex-col items-start text-left">
+                {/* Luminous Glowing Orb at Top Left */}
+                <div className="size-9 sm:size-10 rounded-full overflow-hidden mb-3 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)] p-0.5 flex items-center justify-center">
+                  <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
+                </div>
+
+                {/* Greeting Headline */}
+                <p className="text-xs sm:text-sm text-neutral-500 font-normal leading-tight text-left">
+                  Hi {displayName}
+                </p>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-neutral-950 mt-1 mb-4 leading-snug text-left">
+                  What can AI Catalyst help you with?
+                </h1>
+
+                {/* High-Value SkillsCatalyst Context Prompt Pills (White with Dark Shadow) */}
+                <div className="flex flex-col items-start gap-2.5 w-full">
+                  {PLATFORM_PROMPTS.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendMessage(item.prompt)}
+                      className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white text-neutral-900 text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
+                    >
+                      <span className="text-sm select-none shrink-0">{item.icon}</span>
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Greeting Headline - Aligned to Top Left */}
-              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-normal leading-tight text-left">
-                Hi {displayName}
-              </p>
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-950 dark:text-white mt-1 mb-4 leading-snug text-left">
-                What can AI Catalyst help you with?
-              </h1>
+              {/* Bottom Right Cards (Stacked on the bottom right like Image 2 - White with Dark Shadow) */}
+              <div className="mt-auto ml-auto flex flex-col items-end gap-2.5 pb-2 pt-6">
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage("Evaluate my resume against top ATS standards for software engineering roles, highlighting keywords and skills gaps.")}
+                  className="w-52 sm:w-64 p-3.5 rounded-2xl bg-white text-neutral-900 shadow-[0_6px_22px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:scale-[1.01] active:scale-[0.98] transition-all text-left flex flex-col gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-neutral-900">
+                    <span className="text-sm">📄</span>
+                    <span>ATS Resume Review</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 line-clamp-2 leading-relaxed font-normal">
+                    Check ATS keyword score, tech skills match, and improvements.
+                  </p>
+                </button>
 
-              {/* High-Value SkillsCatalyst Context Prompt Pills (Top-Left Stack) */}
-              <div className="flex flex-col items-start gap-2 w-full">
-                {PLATFORM_PROMPTS.map((item, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSendMessage(item.prompt)}
-                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-neutral-100/90 hover:bg-purple-50 dark:bg-neutral-850 dark:hover:bg-purple-950/40 text-xs font-medium text-neutral-800 dark:text-neutral-200 hover:text-purple-700 dark:hover:text-purple-300 transition-all cursor-pointer border border-transparent hover:border-purple-300 dark:hover:border-purple-800 shadow-2xs hover:scale-[1.008] active:scale-[0.99] text-left max-w-full"
-                  >
-                    <span className="text-sm select-none shrink-0">{item.icon}</span>
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage("Create a targeted 30-day technical interview sprint roadmap for software engineering placement prep.")}
+                  className="w-52 sm:w-64 p-3.5 rounded-2xl bg-white text-neutral-900 shadow-[0_6px_22px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:scale-[1.01] active:scale-[0.98] transition-all text-left flex flex-col gap-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-neutral-900">
+                    <span className="text-sm">🗺️</span>
+                    <span>Placement Sprint</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 line-clamp-2 leading-relaxed font-normal">
+                    Curated daily roadmap, coding drills, and system milestones.
+                  </p>
+                </button>
               </div>
             </div>
           ) : (
@@ -906,21 +996,21 @@ export default function AIMentorPage() {
                   >
                     {/* Assistant Avatar in Purple Ring */}
                     {!isUser && (
-                      <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-purple-500/15 ring-1 ring-purple-500/30 shadow-xs">
+                      <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
                         <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                       </div>
                     )}
 
-                    {/* Bubble */}
+                    {/* Bubble (White with Dark Shadow) */}
                     <div
-                      className={`px-4.5 py-3 leading-relaxed break-words shadow-2xs ${
+                      className={`px-4.5 py-3 leading-relaxed break-words shadow-[0_4px_16px_rgba(0,0,0,0.08)] ${
                         isUser
-                          ? "rounded-2xl rounded-tr-none bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-normal"
-                          : "flex-1 min-w-0 rounded-2xl rounded-tl-none bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100"
+                          ? "rounded-2xl rounded-tr-none bg-white text-neutral-900 font-normal"
+                          : "flex-1 min-w-0 rounded-2xl rounded-tl-none bg-white text-neutral-900"
                       }`}
                     >
                       {isUser ? (
-                        <div className="whitespace-pre-wrap break-words text-white dark:text-neutral-950 text-[13.5px] leading-relaxed">
+                        <div className="whitespace-pre-wrap break-words text-neutral-900 text-[13.5px] leading-relaxed">
                           {msg.content}
                         </div>
                       ) : (
@@ -941,14 +1031,14 @@ export default function AIMentorPage() {
               {/* Thinking State */}
               {isLoading && (
                 <div className="flex gap-3 mr-auto justify-start">
-                  <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-purple-500/15 ring-1 ring-purple-500/30 shadow-xs">
+                  <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
                     <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                   </div>
-                  <div className="rounded-2xl px-4 py-3 text-xs bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 flex items-center gap-2 shadow-xs">
+                  <div className="rounded-2xl px-4 py-3 text-xs bg-white text-neutral-500 flex items-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce" />
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.18s]" />
                     <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.36s]" />
-                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400 ml-1">
+                    <span className="text-[11px] text-neutral-500 ml-1">
                       Thinking...
                     </span>
                   </div>
@@ -957,7 +1047,7 @@ export default function AIMentorPage() {
 
               {/* Error Message */}
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs flex items-center gap-2.5">
+                <div className="p-3 rounded-xl bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-red-200 text-red-700 text-xs flex items-center gap-2.5">
                   <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
                   <span className="flex-1">{errorMsg}</span>
                   <button
@@ -978,15 +1068,58 @@ export default function AIMentorPage() {
           )}
         </div>
 
-        {/* ── Bottom Dedicated Prompt Input Bar (Smooth Morphing PromptInput) ── */}
-        <div className="p-4 md:p-6 pb-6 w-full flex flex-col items-center shrink-0">
-          <PromptInput
-            placeholder="Ask AI Catalyst..."
-            onSubmit={(value, meta) => handleSendMessage(value, meta)}
-            maxWidthCollapsed={480}
-            maxWidthExpanded={840}
-            className="w-full"
-          />
+        {/* ── Bottom Dedicated Search/Prompt Bar (Matching Image 2 - White with Dark Shadow) ── */}
+        <div className="p-3 sm:p-5 pb-5 sm:pb-6 w-full flex flex-col items-center shrink-0 z-10">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (inputValue.trim() && !isLoading) {
+                const text = inputValue.trim();
+                setInputValue("");
+                handleSendMessage(text);
+              }
+            }}
+            className="w-full max-w-xl mx-auto"
+          >
+            <div className="h-12 sm:h-14 rounded-full bg-white shadow-[0_10px_35px_rgba(0,0,0,0.14)] border border-black/[0.04] pl-5 pr-1.5 flex items-center justify-between transition-all duration-200 focus-within:shadow-[0_14px_45px_rgba(0,0,0,0.18)] focus-within:border-black/[0.08]">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Ask AI Catalyst..."
+                disabled={isLoading}
+                className="flex-1 h-full bg-transparent border-0 outline-none text-sm text-neutral-900 placeholder:text-neutral-400 font-normal pr-2 selection:bg-purple-200"
+              />
+              <button
+                type={inputValue.trim() ? "submit" : "button"}
+                onClick={() => {
+                  if (!inputValue.trim() && !isLoading) {
+                    toggleListening();
+                  }
+                }}
+                disabled={isLoading}
+                className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-sm cursor-pointer ${
+                  isLoading
+                    ? "bg-neutral-800 text-white cursor-wait opacity-80"
+                    : inputValue.trim()
+                    ? "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
+                    : isListening
+                    ? "bg-purple-600 text-white animate-pulse"
+                    : "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
+                }`}
+                aria-label={inputValue.trim() ? "Send prompt" : isListening ? "Stop listening" : "Voice input"}
+                title={inputValue.trim() ? "Send prompt" : isListening ? "Listening..." : "Voice input"}
+              >
+                {isLoading ? (
+                  <RotateCw className="h-4 w-4 animate-spin text-white" />
+                ) : inputValue.trim() ? (
+                  <ArrowUp className="h-4.5 w-4.5 stroke-[2.5]" />
+                ) : (
+                  <Mic className="h-4.5 w-4.5 stroke-[2.2]" />
+                )}
+              </button>
+            </div>
+          </form>
           <p className="text-[11px] text-neutral-400 dark:text-neutral-500 text-center mt-2.5 select-none">
             AI Catalyst can assist with system design, career roadmaps, code architecture, and interview preparation.
           </p>
