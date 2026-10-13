@@ -1,30 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type PanInfo, type Variants } from "framer-motion";
 import {
   ChevronRight,
+  ChevronLeft,
   ExternalLink,
   Calendar,
   Crown,
 } from "lucide-react";
-import type { EventItem } from "@/types/events";
 import { useStudentEvents } from "@/hooks/useStudentEvents";
 import { useSubscription } from "@/hooks/useSubscription";
 
 interface EventHeroCardProps {
   onOpenPricing?: () => void;
-}
-
-function formatPrizePool(prize?: string | null): string {
-  if (!prize) return "$50,000";
-  const cleaned = prize.replace(/^prize\s*[:\-]?\s*/i, "").trim();
-  if (!cleaned) return "$50,000";
-  if (/^\d+$/.test(cleaned)) {
-    return `$${Number(cleaned).toLocaleString()}`;
-  }
-  return cleaned;
 }
 
 function formatEventDate(dateStr?: string | null): string {
@@ -42,20 +32,45 @@ function formatEventDate(dateStr?: string | null): string {
   }
 }
 
+const slideVariants: Variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? "100%" : direction < 0 ? "-100%" : 0,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: "spring", stiffness: 320, damping: 32 },
+      opacity: { duration: 0.25 },
+    },
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? "-100%" : "100%",
+    opacity: 0,
+    transition: {
+      x: { type: "spring", stiffness: 320, damping: 32 },
+      opacity: { duration: 0.25 },
+    },
+  }),
+};
+
 export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const { isPremium } = useSubscription();
   const { data, isLoading } = useStudentEvents();
   const events = data?.events ?? [];
   const loading = isLoading;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Swipe gesture refs
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
-  const pointerStartX = useRef<number | null>(null);
-  const isPointerDown = useRef<boolean>(false);
+  const touchStartTime = useRef<number>(0);
+  const isSwipingRef = useRef<boolean>(false);
+  const isNavigatingRef = useRef<boolean>(false);
 
   const handleOpenPricing = () => {
     if (onOpenPricing) {
@@ -65,36 +80,59 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
     }
   };
 
-  // Auto-advance slideshow every 4.5 seconds if multiple events exist
+  const paginate = useCallback(
+    (newDirection: number) => {
+      if (events.length <= 1 || isNavigatingRef.current) return;
+      isNavigatingRef.current = true;
+      setDirection(newDirection);
+      setCurrentIndex((prev) => {
+        if (newDirection > 0) {
+          return (prev + 1) % events.length;
+        }
+        return (prev - 1 + events.length) % events.length;
+      });
+      setTimeout(() => {
+        isNavigatingRef.current = false;
+        isSwipingRef.current = false;
+      }, 350);
+    },
+    [events.length]
+  );
+
+  const handleNext = useCallback(() => paginate(1), [paginate]);
+  const handlePrev = useCallback(() => paginate(-1), [paginate]);
+
+  // Auto-advance slideshow every 5 seconds if multiple events exist
   useEffect(() => {
     if (isPaused || events.length <= 1) return;
 
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % events.length);
-    }, 4500);
+      paginate(1);
+    }, 5000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPaused, events.length]);
+  }, [isPaused, events.length, paginate]);
 
-  const handleNext = () => {
-    if (events.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % events.length);
-    }
-  };
-
-  const handlePrev = () => {
-    if (events.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + events.length) % events.length);
-    }
-  };
-
-  // Touch swipe support for mobile
+  // Direct touch handlers for reliable finger swiping on mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+    isSwipingRef.current = false;
     setIsPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+
+    // Detect if finger gesture is primarily horizontal
+    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      isSwipingRef.current = true;
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -102,40 +140,38 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
     if (touchStartX.current === null || touchStartY.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
     const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    const elapsed = Date.now() - touchStartTime.current;
 
-    // Detect horizontal swipe
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+    // Trigger swipe if horizontal delta exceeds threshold (or quick flick)
+    if (
+      Math.abs(deltaX) > Math.abs(deltaY) &&
+      (Math.abs(deltaX) > 30 || (Math.abs(deltaX) > 15 && elapsed < 300))
+    ) {
       if (deltaX < 0) {
         handleNext();
       } else {
         handlePrev();
       }
     }
+
     touchStartX.current = null;
     touchStartY.current = null;
   };
 
-  // Pointer drag/swipe for mouse/trackpad
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest("a, button")) return;
-    pointerStartX.current = e.clientX;
-    isPointerDown.current = true;
-    setIsPaused(true);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
+  // Framer Motion drag end handler for fluid tactile physics
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     setIsPaused(false);
-    if (!isPointerDown.current || pointerStartX.current === null) return;
-    const deltaX = e.clientX - pointerStartX.current;
-    if (Math.abs(deltaX) > 35) {
-      if (deltaX < 0) {
-        handleNext();
-      } else {
-        handlePrev();
-      }
+    const swipeThreshold = 35;
+    const velocityThreshold = 180;
+
+    if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
+      handleNext();
+    } else if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
+      handlePrev();
     }
-    pointerStartX.current = null;
-    isPointerDown.current = false;
   };
 
   // If no live events published yet
@@ -149,7 +185,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-purple-950/40 pointer-events-none" />
 
-        {/* ── Top-Left Metadata Pill (Prize removed) ── */}
+        {/* ── Top-Left Metadata Pill ── */}
         <div className="relative z-10">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
             <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
@@ -159,7 +195,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
 
         {/* ── Main Content Hierarchy ── */}
         <div className="relative z-10 space-y-0.5 sm:space-y-1">
-          <h3 className="text-sm sm:text-base md:text-[17px] font-extrabold text-purple-400 tracking-tight leading-snug">
+          <h3 className="text-sm sm:base md:text-[17px] font-extrabold text-purple-400 tracking-tight leading-snug">
             Campus Hackathons &amp; Tech Sprints
           </h3>
           <p className="text-[11px] sm:text-xs text-purple-300 font-medium line-clamp-1">
@@ -213,38 +249,39 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const startDateStr = formatEventDate(currentEvent.start_date);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+    <div
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={() => {
         touchStartX.current = null;
         touchStartY.current = null;
         setIsPaused(false);
       }}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={() => {
-        pointerStartX.current = null;
-        isPointerDown.current = false;
-        setIsPaused(false);
-      }}
       style={{ touchAction: "pan-y" }}
       className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all cursor-grab active:cursor-grabbing"
     >
-      {/* ── Background Event Banner Image with Adaptive Readability Scrim ── */}
-      <AnimatePresence mode="wait">
+      {/* ── Background Event Banner with Tactile Drag & Swipe Animation ── */}
+      <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentEvent.id}
-          initial={{ opacity: 0, x: 14 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -14 }}
-          transition={{ duration: 0.35, ease: "easeInOut" }}
+          custom={direction}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          drag={events.length > 1 ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.25}
+          onDragStart={() => {
+            isSwipingRef.current = true;
+            setIsPaused(true);
+          }}
+          onDragEnd={handleDragEnd}
           className="absolute inset-0 w-full h-full"
+          style={{ touchAction: "pan-y" }}
         >
           {currentEvent.banner_url ? (
             <Image
@@ -253,16 +290,20 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               fill
               priority={currentIndex === 0}
               sizes="(max-width: 768px) 100vw, 540px"
-              className="object-cover object-center"
+              className="object-cover object-center pointer-events-none select-none"
+              draggable={false}
               unoptimized
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-purple-950 to-slate-950" />
           )}
+
+          {/* Gentle gradient scrim to ensure high contrast for text and badges */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Top-Left Bar: Date Metadata Pill (Prize Pool removed) ── */}
+      {/* ── Top-Left Bar: Date Metadata Pill ── */}
       <div className="absolute top-2.5 sm:top-3 left-3.5 sm:left-4 z-20 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -274,13 +315,43 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-slate-900/90 border border-slate-200/60 dark:border-slate-800 shadow-xs backdrop-blur-md"
           >
             <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">{startDateStr}</span>
+            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">
+              {startDateStr}
+            </span>
           </motion.div>
         </AnimatePresence>
       </div>
 
 
-      {/* ── Downside Area: Breathing room, Primary CTA (Register only), PRO Badge ── */}
+      {/* ── Desktop Hover Chevron Buttons (Left & Right) ── */}
+      {events.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrev();
+            }}
+            aria-label="Previous event"
+            className="hidden sm:flex absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-slate-950/60 hover:bg-slate-900/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+            aria-label="Next event"
+            className="hidden sm:flex absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-slate-950/60 hover:bg-slate-900/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </>
+      )}
+
+      {/* ── Downside Area: Primary CTA (Register) & PRO Badge ── */}
       <div
         className="absolute bottom-3 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-4 sm:px-5"
         style={{ left: 0, right: 0 }}
@@ -291,6 +362,12 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Register for ${currentEvent.event_name}`}
+          onClick={(e) => {
+            if (isSwipingRef.current) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
           className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
@@ -319,6 +396,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
