@@ -897,36 +897,7 @@ export default function AIMentorPage() {
                 </div>
               </div>
 
-              {/* Bottom Right Cards (Stacked on the bottom right like Image 2 - White with Dark Shadow) */}
-              <div className="mt-auto ml-auto flex flex-col items-end gap-2.5 pb-2 pt-6">
-                <button
-                  type="button"
-                  onClick={() => handleSendMessage("Evaluate my resume against top ATS standards for software engineering roles, highlighting keywords and skills gaps.")}
-                  className="w-52 sm:w-64 p-3.5 rounded-2xl bg-white text-neutral-900 shadow-[0_6px_22px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:scale-[1.01] active:scale-[0.98] transition-all text-left flex flex-col gap-1 cursor-pointer"
-                >
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-neutral-900">
-                    <span className="text-sm">📄</span>
-                    <span>ATS Resume Review</span>
-                  </div>
-                  <p className="text-[11px] text-neutral-500 line-clamp-2 leading-relaxed font-normal">
-                    Check ATS keyword score, tech skills match, and improvements.
-                  </p>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleSendMessage("Create a targeted 30-day technical interview sprint roadmap for software engineering placement prep.")}
-                  className="w-52 sm:w-64 p-3.5 rounded-2xl bg-white text-neutral-900 shadow-[0_6px_22px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:scale-[1.01] active:scale-[0.98] transition-all text-left flex flex-col gap-1 cursor-pointer"
-                >
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-neutral-900">
-                    <span className="text-sm">🗺️</span>
-                    <span>Placement Sprint</span>
-                  </div>
-                  <p className="text-[11px] text-neutral-500 line-clamp-2 leading-relaxed font-normal">
-                    Curated daily roadmap, coding drills, and system milestones.
-                  </p>
-                </button>
-              </div>
             </div>
           ) : (
             /* Render Active Message History */
