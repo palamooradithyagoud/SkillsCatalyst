@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowUp,
-  Mic,
   PanelLeft,
   PanelLeftClose,
   Plus,
@@ -29,6 +27,7 @@ import {
   sendMentorMessage,
 } from "@/lib/api/career";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
+import { RecessedMorphingSearch } from "@/components/ui/recessed-morphing-search";
 
 // ----------------------------------------------------------------------
 // Curated High-Value SkillsCatalyst Prompts (Authentic Platform Context)
@@ -452,59 +451,6 @@ export default function AIMentorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // Search / prompt input state (Image 2 style)
-  const [inputValue, setInputValue] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-
-  const toggleListening = () => {
-    if (typeof window === "undefined") return;
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0]?.[0]?.transcript;
-        if (transcript) {
-          setInputValue((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        }
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch {
-      setIsListening(false);
-    }
-  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -1068,61 +1014,13 @@ export default function AIMentorPage() {
           )}
         </div>
 
-        {/* ── Bottom Dedicated Search/Prompt Bar (Matching Image 2 - White with Dark Shadow) ── */}
-        <div className="p-3 sm:p-5 pb-5 sm:pb-6 w-full flex flex-col items-center shrink-0 z-10">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (inputValue.trim() && !isLoading) {
-                const text = inputValue.trim();
-                setInputValue("");
-                handleSendMessage(text);
-              }
-            }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <div className="h-12 sm:h-14 rounded-full bg-white shadow-[0_10px_35px_rgba(0,0,0,0.14)] border border-black/[0.04] pl-5 pr-1.5 flex items-center justify-between transition-all duration-200 focus-within:shadow-[0_14px_45px_rgba(0,0,0,0.18)] focus-within:border-black/[0.08]">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask AI Catalyst..."
-                disabled={isLoading}
-                className="flex-1 h-full bg-transparent border-0 outline-none text-sm text-neutral-900 placeholder:text-neutral-400 font-normal pr-2 selection:bg-purple-200"
-              />
-              <button
-                type={inputValue.trim() ? "submit" : "button"}
-                onClick={() => {
-                  if (!inputValue.trim() && !isLoading) {
-                    toggleListening();
-                  }
-                }}
-                disabled={isLoading}
-                className={`size-9 sm:size-10 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-sm cursor-pointer ${
-                  isLoading
-                    ? "bg-neutral-800 text-white cursor-wait opacity-80"
-                    : inputValue.trim()
-                    ? "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
-                    : isListening
-                    ? "bg-purple-600 text-white animate-pulse"
-                    : "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
-                }`}
-                aria-label={inputValue.trim() ? "Send prompt" : isListening ? "Stop listening" : "Voice input"}
-                title={inputValue.trim() ? "Send prompt" : isListening ? "Listening..." : "Voice input"}
-              >
-                {isLoading ? (
-                  <RotateCw className="h-4 w-4 animate-spin text-white" />
-                ) : inputValue.trim() ? (
-                  <ArrowUp className="h-4.5 w-4.5 stroke-[2.5]" />
-                ) : (
-                  <Mic className="h-4.5 w-4.5 stroke-[2.2]" />
-                )}
-              </button>
-            </div>
-          </form>
-          <p className="text-[11px] text-neutral-400 dark:text-neutral-500 text-center mt-2.5 select-none">
-            AI Catalyst can assist with system design, career roadmaps, code architecture, and interview preparation.
-          </p>
+        {/* ── Bottom Dedicated Animated Recessed Morphing Search Bar (Inspired by Mockup) ── */}
+        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full flex flex-col items-center shrink-0 z-20">
+          <RecessedMorphingSearch
+            onSendMessage={(query) => handleSendMessage(query)}
+            isLoading={isLoading}
+            placeholder="Ask AI Catalyst..."
+          />
         </div>
       </main>
     </div>
