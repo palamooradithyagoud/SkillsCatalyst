@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion, type Transition } from "framer-motion";
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { Search, X, ArrowUp, Mic, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,6 @@ export interface RecessedMorphingSearchProps {
   isLoading: boolean;
   placeholder?: string;
   className?: string;
-  suggestions?: { label: string; prompt: string }[];
 }
 
 export function RecessedMorphingSearch({
@@ -18,11 +17,6 @@ export function RecessedMorphingSearch({
   isLoading,
   placeholder = "Ask AI Catalyst...",
   className,
-  suggestions = [
-    { label: "Resume Review", prompt: "Evaluate my resume against top ATS standards for software engineering roles." },
-    { label: "Placement Prep", prompt: "Create a 30-day technical interview sprint roadmap for placement prep." },
-    { label: "System Design", prompt: "How do I approach designing a scalable real-time chat architecture?" },
-  ],
 }: RecessedMorphingSearchProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [query, setQuery] = useState("");
@@ -153,11 +147,6 @@ export function RecessedMorphingSearch({
     onSendMessage(textToSend);
   };
 
-  const handleSuggestionClick = (promptText: string) => {
-    setQuery("");
-    onSendMessage(promptText);
-  };
-
   // Tactile spring physics
   const springTransition: Transition = shouldReduceMotion
     ? { duration: 0.15, ease: "easeInOut" as const }
@@ -180,8 +169,18 @@ export function RecessedMorphingSearch({
         className
       )}
     >
-      {/* ── Outer Recessed Dark Housing (Matching Reference Wireframe) ── */}
-      <div className="w-full max-w-xl mx-auto flex flex-col items-center relative">
+      {/* ── Outer Recessed Dark Housing (Fades smoothly when expanded so no black tab peeks out) ── */}
+      <motion.div
+        animate={{
+          opacity: isExpanded ? 0 : 1,
+          scale: isExpanded ? 0.96 : 1,
+        }}
+        transition={springTransition}
+        className={cn(
+          "w-full max-w-xl mx-auto flex flex-col items-center relative",
+          isExpanded && "pointer-events-none"
+        )}
+      >
         {/* Top Dark Shelf Bar */}
         <div className="w-full h-8 sm:h-9 bg-[#16171d] rounded-t-2xl border-t border-x border-white/[0.06] shadow-sm relative">
           <div className="absolute inset-x-0 top-0 h-px bg-white/[0.08]" />
@@ -211,155 +210,131 @@ export function RecessedMorphingSearch({
             <div className="w-8 h-8 rounded-tl-xl bg-transparent shadow-[-4px_-4px_0_4px_#16171d]" />
           </div>
         </div>
+      </motion.div>
 
-        {/* ── Morphing Search Control (Pill -> Expanded Rectangular Search Bar) ── */}
-        <motion.div
-          layout
-          initial={false}
-          animate={{
-            y: isExpanded ? -22 : 0,
-            width: isExpanded ? "100%" : idleWidth,
-            height: isExpanded ? 52 : idleHeight,
-            borderRadius: isExpanded ? 18 : 9999,
-            backgroundColor: isExpanded ? "#ffffff" : "#dcdde2",
-            boxShadow: isExpanded
-              ? "0 20px 48px -10px rgba(0,0,0,0.22), 0 4px 16px -2px rgba(0,0,0,0.08)"
-              : "0 1px 3px rgba(0,0,0,0.12)",
-          }}
-          transition={springTransition}
-          onClick={() => {
-            if (!isExpanded) setIsExpanded(true);
-          }}
-          className={cn(
-            "absolute z-30 flex items-center overflow-hidden border transition-colors",
-            isExpanded
-              ? "bottom-1.5 max-w-xl mx-auto border-black/[0.06] cursor-default"
-              : "bottom-[6px] border-white/20 hover:brightness-105 active:scale-[0.98] cursor-pointer shadow-sm"
-          )}
-          role="search"
-          aria-expanded={isExpanded}
-        >
-          {/* 1. IDLE STATE VIEW: Minimal Clean Pill with Solid Dark Circle on Right */}
-          {!isExpanded ? (
-            <div className="w-full h-full flex items-center justify-between pl-4 pr-1 select-none">
-              <span className="text-[11.5px] sm:text-xs text-neutral-500 font-normal truncate max-w-[140px]">
-                {query ? query : placeholder}
-              </span>
-              {/* Solid clean dark circle matching reference mockup */}
-              <div className="size-7 sm:size-7.5 rounded-full bg-[#18191f] text-white flex items-center justify-center shrink-0 mr-0.5 shadow-sm" />
-            </div>
-          ) : (
-            /* 2. EXPANDED STATE VIEW: Tactile Rectangular Search Field */
-            <form
-              onSubmit={handleSubmit}
-              className="w-full h-full flex items-center pl-3.5 pr-1.5 gap-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Search Icon */}
-              <Search className="h-4 w-4 text-neutral-400 shrink-0" />
-
-              {/* Text Input */}
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={placeholder}
-                disabled={isLoading}
-                className="flex-1 h-full bg-transparent border-0 outline-none text-sm text-neutral-900 placeholder:text-neutral-400 font-normal selection:bg-purple-200 min-w-0"
-              />
-
-              {/* Clear Button (Visible if query has text) */}
-              {query.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuery("");
-                    inputRef.current?.focus();
-                  }}
-                  className="size-5.5 rounded-full bg-neutral-200 hover:bg-neutral-300 text-neutral-600 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
-                  title="Clear input"
-                  aria-label="Clear input"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-
-              {/* Action Circle Button (Send / Voice / Spinner) */}
-              <button
-                type={query.trim() ? "submit" : "button"}
-                onClick={() => {
-                  if (!query.trim() && !isLoading) {
-                    toggleListening();
-                  }
-                }}
-                disabled={isLoading}
-                className={cn(
-                  "size-9 sm:size-9.5 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-xs cursor-pointer",
-                  isLoading
-                    ? "bg-neutral-800 text-white cursor-wait opacity-80"
-                    : query.trim()
-                    ? "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
-                    : isListening
-                    ? "bg-purple-600 text-white animate-pulse"
-                    : "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
-                )}
-                aria-label={
-                  query.trim()
-                    ? "Send prompt"
-                    : isListening
-                    ? "Stop listening"
-                    : "Voice input"
-                }
-                title={
-                  query.trim()
-                    ? "Send prompt"
-                    : isListening
-                    ? "Listening..."
-                    : "Voice input"
-                }
-              >
-                {isLoading ? (
-                  <RotateCw className="h-4 w-4 animate-spin text-white" />
-                ) : query.trim() ? (
-                  <ArrowUp className="h-4.5 w-4.5 stroke-[2.5]" />
-                ) : (
-                  <Mic
-                    className={cn(
-                      "h-4.5 w-4.5 stroke-[2.2]",
-                      isListening ? "text-white" : "text-neutral-200"
-                    )}
-                  />
-                )}
-              </button>
-            </form>
-          )}
-        </motion.div>
-      </div>
-
-      {/* ── Search Suggestions (Smoothly Revealed Below When Expanded) ── */}
-      <AnimatePresence>
-        {isExpanded && suggestions && suggestions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.2 }}
-            className="w-full max-w-xl mx-auto flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap mt-2.5 px-2"
-          >
-            {suggestions.map((item, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSuggestionClick(item.prompt)}
-                className="px-2.5 py-1 rounded-full bg-white text-neutral-800 text-[11px] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] border border-neutral-100 hover:border-neutral-200 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              >
-                {item.label}
-              </button>
-            ))}
-          </motion.div>
+      {/* ── Morphing Search Control (Pill -> Expanded Rectangular Search Bar) ── */}
+      <motion.div
+        layout
+        initial={false}
+        animate={{
+          y: isExpanded ? 0 : 0,
+          width: isExpanded ? "100%" : idleWidth,
+          height: isExpanded ? 50 : idleHeight,
+          borderRadius: isExpanded ? 16 : 9999,
+          backgroundColor: isExpanded ? "#ffffff" : "#dcdde2",
+          boxShadow: isExpanded
+            ? "0 20px 48px -8px rgba(0,0,0,0.22), 0 4px 16px -2px rgba(0,0,0,0.08)"
+            : "0 1px 3px rgba(0,0,0,0.12)",
+        }}
+        transition={springTransition}
+        onClick={() => {
+          if (!isExpanded) setIsExpanded(true);
+        }}
+        className={cn(
+          "absolute z-30 flex items-center overflow-hidden border transition-colors",
+          isExpanded
+            ? "bottom-0 max-w-xl mx-auto border-black/[0.06] cursor-default"
+            : "bottom-[6px] border-white/20 hover:brightness-105 active:scale-[0.98] cursor-pointer shadow-sm"
         )}
-      </AnimatePresence>
+        role="search"
+        aria-expanded={isExpanded}
+      >
+        {/* 1. IDLE STATE VIEW: Minimal Clean Pill with Solid Dark Circle on Right */}
+        {!isExpanded ? (
+          <div className="w-full h-full flex items-center justify-between pl-4 pr-1 select-none">
+            <span className="text-[11.5px] sm:text-xs text-neutral-500 font-normal truncate max-w-[140px]">
+              {query ? query : placeholder}
+            </span>
+            {/* Solid clean dark circle matching reference mockup */}
+            <div className="size-7 sm:size-7.5 rounded-full bg-[#18191f] text-white flex items-center justify-center shrink-0 mr-0.5 shadow-sm" />
+          </div>
+        ) : (
+          /* 2. EXPANDED STATE VIEW: Tactile Rectangular Search Field */
+          <form
+            onSubmit={handleSubmit}
+            className="w-full h-full flex items-center pl-3.5 pr-1.5 gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Search Icon */}
+            <Search className="h-4 w-4 text-neutral-400 shrink-0" />
+
+            {/* Text Input */}
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={placeholder}
+              disabled={isLoading}
+              className="flex-1 h-full bg-transparent border-0 outline-none text-sm text-neutral-900 placeholder:text-neutral-400 font-normal selection:bg-purple-200 min-w-0"
+            />
+
+            {/* Clear Button (Visible if query has text) */}
+            {query.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  inputRef.current?.focus();
+                }}
+                className="size-5.5 rounded-full bg-neutral-200 hover:bg-neutral-300 text-neutral-600 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                title="Clear input"
+                aria-label="Clear input"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {/* Action Circle Button (Send / Voice / Spinner) */}
+            <button
+              type={query.trim() ? "submit" : "button"}
+              onClick={() => {
+                if (!query.trim() && !isLoading) {
+                  toggleListening();
+                }
+              }}
+              disabled={isLoading}
+              className={cn(
+                "size-8.5 sm:size-9 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-xs cursor-pointer",
+                isLoading
+                  ? "bg-neutral-800 text-white cursor-wait opacity-80"
+                  : query.trim()
+                  ? "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
+                  : isListening
+                  ? "bg-purple-600 text-white animate-pulse"
+                  : "bg-neutral-950 hover:bg-black text-white hover:scale-105 active:scale-95"
+              )}
+              aria-label={
+                query.trim()
+                  ? "Send prompt"
+                  : isListening
+                  ? "Stop listening"
+                  : "Voice input"
+              }
+              title={
+                query.trim()
+                  ? "Send prompt"
+                  : isListening
+                  ? "Listening..."
+                  : "Voice input"
+              }
+            >
+              {isLoading ? (
+                <RotateCw className="h-4 w-4 animate-spin text-white" />
+              ) : query.trim() ? (
+                <ArrowUp className="h-4.5 w-4.5 stroke-[2.5]" />
+              ) : (
+                <Mic
+                  className={cn(
+                    "h-4 w-4 stroke-[2.2]",
+                    isListening ? "text-white" : "text-neutral-200"
+                  )}
+                />
+              )}
+            </button>
+          </form>
+        )}
+      </motion.div>
     </div>
   );
 }
