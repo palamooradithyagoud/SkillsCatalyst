@@ -19,11 +19,13 @@ import {
   LogOut,
   Sparkles,
   Film,
+  Crown,
+  Calendar,
 } from "lucide-react";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { SubscriptionStatus } from "@/components/premium";
+import { usePricingModal } from "@/contexts/PricingModalContext";
 import ThemeSwitch from "@/components/ThemeSwitch";
 
 // Register GSAP Plugins safely
@@ -146,7 +148,16 @@ export function Component({
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const router = useRouter();
   const { session, logout } = useAuth();
-  const { isPremium } = useSubscription();
+  const { isPremium, expiresAt } = useSubscription();
+  const { openPricingModal } = usePricingModal();
+
+  const formattedExpiry = expiresAt
+    ? new Date(expiresAt).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
 
   const isControlled = typeof isOpen === "boolean";
   const isMenuOpen = isControlled ? isOpen : internalMenuOpen;
@@ -612,9 +623,8 @@ export function Component({
                 </ul>
               </div>
 
-              {/* Drawer Plan Status & Theme Mode */}
-              <div data-menu-fade className="pt-2 pb-1 space-y-2 shrink-0">
-                <SubscriptionStatus compact variant="electric" />
+              {/* Drawer Theme Mode */}
+              <div data-menu-fade className="pt-2 pb-1 shrink-0">
                 <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-purple-950/40 border border-slate-200/80 dark:border-purple-800/50">
                   <span className="text-xs font-semibold text-slate-700 dark:text-purple-200">
                     Theme Mode
@@ -638,15 +648,42 @@ export function Component({
                     <p className="text-xs font-semibold text-slate-900 dark:text-purple-100 truncate max-w-[130px] sm:max-w-[170px]">
                       {userEmail}
                     </p>
-                    <p
-                      className={`text-[10px] font-medium ${
-                        isPremium
-                          ? "text-purple-600 dark:text-purple-400 font-semibold"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {isPremium ? "Pro Explorer" : "Free Explorer"}
-                    </p>
+                    {isPremium ? (
+                      <div className="flex flex-col mt-0.5">
+                        <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-300 flex items-center gap-1 leading-tight">
+                          Pro Explorer
+                          <Crown className="w-2.5 h-2.5 text-purple-600 dark:text-purple-300 shrink-0" />
+                        </span>
+                        {formattedExpiry && (
+                          <span className="text-[9.5px] font-medium text-purple-500/90 dark:text-purple-400 flex items-center gap-1 mt-0.5 leading-tight">
+                            <Calendar className="w-2.5 h-2.5 text-purple-500/80 dark:text-purple-400/80 shrink-0" />
+                            Renews {formattedExpiry}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-start gap-1 mt-0.5">
+                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight">
+                          Free Explorer
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            closeMenu();
+                            if (openPricingModal) {
+                              openPricingModal();
+                            } else {
+                              window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/80 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-bold text-[9.5px] shadow-2xs transition-all active:scale-95 cursor-pointer leading-tight"
+                        >
+                          <Crown className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                          <span>Buy PRO</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
