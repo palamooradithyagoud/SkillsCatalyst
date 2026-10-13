@@ -4,6 +4,8 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Home,
+  Clapperboard,
   LayoutGrid,
   Map,
   Target,
@@ -56,12 +58,11 @@ const navItems = [
 ];
 
 const mobileNavItems: NavItem[] = [
-  { name: "Home", url: "/dashboard", icon: LayoutGrid },
-  { name: "SkillBits", url: "/skillbits", icon: Film },
-  { name: "Learn", url: "/learning", icon: BookOpen },
-  { name: "AI Mentor", url: "/ai-mentor", icon: Bot },
-  { name: "Practice", url: "/practice", icon: Target },
+  { name: "Home", url: "/dashboard", icon: Home },
+  { name: "SkillBits", url: "/skillbits", icon: Clapperboard },
   { name: "Explore", url: "/explore", icon: Compass },
+  { name: "AI Mentor", url: "/ai-mentor", icon: Bot },
+  { name: "Practice & Learn", url: "/practice", icon: Target },
 ];
 
 const bottomBarItems = [
@@ -232,10 +233,11 @@ function MobileNavContent() {
       </div>
 
 
-      {/* ── Mobile Floating Tubelight Bottom Navigation Bar (Hidden when Drawer is Open) ── */}
+      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden when Drawer is Open) ── */}
       {!isHideBottomBar && !drawerOpen && (
         <NavBar
           items={mobileNavItems}
+          userInitial={userInitial}
           className="md:hidden"
         />
       )}
