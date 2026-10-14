@@ -5,7 +5,7 @@ import {
   BarChart3, TrendingUp, TrendingDown, Zap, Clock, Award, Target,
   Flame, Brain, Code2, Trophy, ArrowUpRight, ArrowDownRight,
   Calendar, Activity, BookOpen, CheckCircle2, Star, Layers,
-  GitCommit, LayoutDashboard, Database, PlayCircle, Bookmark
+  GitCommit, Database, PlayCircle, Bookmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -111,8 +111,6 @@ const TOPIC_TOTALS: Record<string, number> = {
   "Binary Search": 18,
 };
 
-const TIME_RANGES = ["7D", "30D", "90D", "1Y"];
-
 // Color scheme
 const C = {
   blue: "#3b82f6",
@@ -125,9 +123,9 @@ const C = {
 };
 
 /** SVG Radar Chart */
-function RadarChart({ data }: { data: { label: string; score: number }[] }) {
-  const size = 220;
-  const cx = size / 2, cy = size / 2, r = 80;
+function RadarChart({ data }: { data: { label: string; shortLabel?: string; score: number }[] }) {
+  const size = 280;
+  const cx = size / 2, cy = size / 2, r = 78;
   const n = data.length;
   const angleStep = (2 * Math.PI) / n;
   const angle = (i: number) => -Math.PI / 2 + i * angleStep;
@@ -143,38 +141,55 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
     }).join(" ");
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
-      {gridLevels.map((level) => (
-        <polygon
-          key={level}
-          points={Array.from({ length: n }, (_, i) => {
-            const a = angle(i);
-            const ra = (level / 100) * r;
-            return `${cx + ra * Math.cos(a)},${cy + ra * Math.sin(a)}`;
-          }).join(" ")}
-          fill="none"
-          stroke="#cbd5e1"
-          className="stroke-slate-200 dark:stroke-neutral-800"
-          strokeWidth="1"
-        />
-      ))}
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto overflow-visible select-none max-w-full h-auto">
+      {/* Spider Web Background Rings */}
+      {gridLevels.map((level) => {
+        const isOuter = level === 100;
+        return (
+          <polygon
+            key={level}
+            points={Array.from({ length: n }, (_, i) => {
+              const a = angle(i);
+              const ra = (level / 100) * r;
+              return `${cx + ra * Math.cos(a)},${cy + ra * Math.sin(a)}`;
+            }).join(" ")}
+            fill={level % 40 === 0 ? "rgba(139, 92, 246, 0.05)" : "none"}
+            className={
+              isOuter
+                ? "stroke-slate-300 dark:stroke-white/35"
+                : "stroke-slate-200 dark:stroke-white/20"
+            }
+            strokeWidth={isOuter ? "1.5" : "1"}
+          />
+        );
+      })}
+
+      {/* Spider Web Radial Spokes */}
       {data.map((_, i) => (
         <line
           key={i}
-          x1={cx} y1={cy}
+          x1={cx}
+          y1={cy}
           x2={cx + r * Math.cos(angle(i))}
           y2={cy + r * Math.sin(angle(i))}
-          stroke="#cbd5e1"
-          className="stroke-slate-200 dark:stroke-neutral-800"
+          className="stroke-slate-200 dark:stroke-white/20"
           strokeWidth="1"
+          strokeDasharray="2 3"
         />
       ))}
+
+      {/* Center Origin Dot */}
+      <circle cx={cx} cy={cy} r={2} className="fill-slate-400 dark:fill-purple-400" />
+
+      {/* Active Data Filled Polygon */}
       <polygon
         points={polygon(data.map((d) => d.score))}
-        fill="rgba(99,102,241,0.2)"
-        stroke="#4f46e5"
+        fill="rgba(139, 92, 246, 0.3)"
+        className="stroke-purple-600 dark:stroke-purple-400 fill-purple-600/25 dark:fill-purple-500/30"
         strokeWidth="2.5"
       />
+
+      {/* Data Point Markers */}
       {data.map((d, i) => {
         const a = angle(i);
         const ra = scaleR(d.score);
@@ -183,32 +198,45 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
             key={i}
             cx={cx + ra * Math.cos(a)}
             cy={cy + ra * Math.sin(a)}
-            r={4.5}
-            fill="#4f46e5"
-            stroke="#ffffff"
-            className="stroke-white dark:stroke-[#18191F]"
-            strokeWidth="2"
+            r={4}
+            className="fill-purple-600 dark:fill-purple-400 stroke-white dark:stroke-[#18191F]"
+            strokeWidth="1.5"
           />
         );
       })}
+
+      {/* Category Labels with Smart Geometric Alignment */}
       {data.map((d, i) => {
         const a = angle(i);
-        const labelR = r + 20;
-        const x = cx + labelR * Math.cos(a);
-        const y = cy + labelR * Math.sin(a);
+        const cosA = Math.cos(a);
+        const sinA = Math.sin(a);
+        const labelR = r + 15;
+        const x = cx + labelR * cosA;
+        const y = cy + labelR * sinA;
+
+        let textAnchor: "start" | "middle" | "end" = "middle";
+        if (cosA > 0.2) textAnchor = "start";
+        else if (cosA < -0.2) textAnchor = "end";
+
+        let dy = "0.35em";
+        if (sinA < -0.7) dy = "-0.2em";
+        else if (sinA > 0.7) dy = "0.9em";
+
+        const text = d.shortLabel || d.label;
+
         return (
           <text
             key={i}
-            x={x} y={y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize="10"
-            fontWeight="800"
-            fill="currentColor"
-            className="fill-slate-600 dark:fill-neutral-300"
+            x={x}
+            y={y}
+            dy={dy}
+            textAnchor={textAnchor}
+            fontSize="8.5"
+            fontWeight="700"
+            className="fill-slate-600 dark:fill-neutral-300 pointer-events-none select-none tracking-tight"
             fontFamily="Inter, sans-serif"
           >
-            {d.label}
+            {text}
           </text>
         );
       })}
@@ -293,7 +321,6 @@ export default function AnalyticsPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
 
-  const [timeRange, setTimeRange] = useState("30D");
   const [solvedKeys, setSolvedKeys] = useState<string[]>([]);
   const [dbLeetcodeProgress, setDbLeetcodeProgress] = useState<any[]>([]);
 
@@ -459,24 +486,24 @@ export default function AnalyticsPage() {
 
     // 3. Exact 12 tree node specifications matching Beginner Tree Data from Practice page
     const NODE_SPECS = [
-      { id: "two-pointers", label: "Two Pointers (Arrays)", total: 21, ids: [26,27,88,283,349,350,455,905,922,977,2460,11,15,16,18,80,167,189,611,881,42] },
-      { id: "sliding-window-arr", label: "Sliding Window (Arrays)", total: 17, ids: [643,209,713,904,930,1004,1052,1248,1343,1423,1493,1658,1695,1838,2024,2958,992] },
-      { id: "prefix-sum", label: "Prefix Sum", total: 16, ids: [1480,724,303,1732,1991,238,560,525,523,930,974,1248,1314,1352,304,327] },
-      { id: "kadanes", label: "Kadane's Algorithm", total: 5, ids: [53,918,1749,1191,2321] },
-      { id: "two-pointers-str", label: "Two Pointer (Strings)", total: 12, ids: [125,344,345,392,1768,28,151,443,680,165,2109,408] },
-      { id: "sliding-window-str", label: "Sliding Window (Strings)", total: 9, ids: [1456,2379,3090,3,424,438,567,2516,76] },
-      { id: "frequency-map", label: "Frequency Map", total: 19, ids: [1,217,219,242,383,387,389,1207,1512,169,1748,350,49,347,451,560,659,692,1636] },
-      { id: "prefix-hashmap", label: "Prefix Sum + HashMap", total: 10, ids: [560,525,523,974,930,1248,1590,2845,325,437] },
-      { id: "classic-bs", label: "Classic Binary Search", total: 18, ids: [704,35,69,278,374,1539,33,34,74,81,153,162,540,875,1011,1283,2226,410] },
-      { id: "lower-upper-bound", label: "Lower / Upper Bound", total: 3, ids: [35,744,34] },
-      { id: "bs-on-answers", label: "Binary Search on Answers", total: 13, ids: [69,367,875,1011,1283,1482,1552,1760,1870,2187,2226,2251,410] },
-      { id: "search-2d-matrix", label: "Search in 2D Matrix", total: 5, ids: [240,74,1901,1428,302] },
+      { id: "two-pointers", label: "Two Pointers (Arrays)", shortLabel: "Two Pointers", total: 21, ids: [26,27,88,283,349,350,455,905,922,977,2460,11,15,16,18,80,167,189,611,881,42] },
+      { id: "sliding-window-arr", label: "Sliding Window (Arrays)", shortLabel: "Sliding Window", total: 17, ids: [643,209,713,904,930,1004,1052,1248,1343,1423,1493,1658,1695,1838,2024,2958,992] },
+      { id: "prefix-sum", label: "Prefix Sum", shortLabel: "Prefix Sum", total: 16, ids: [1480,724,303,1732,1991,238,560,525,523,930,974,1248,1314,1352,304,327] },
+      { id: "kadanes", label: "Kadane's Algorithm", shortLabel: "Kadane's", total: 5, ids: [53,918,1749,1191,2321] },
+      { id: "two-pointers-str", label: "Two Pointer (Strings)", shortLabel: "Two Ptr (Str)", total: 12, ids: [125,344,345,392,1768,28,151,443,680,165,2109,408] },
+      { id: "sliding-window-str", label: "Sliding Window (Strings)", shortLabel: "Sliding (Str)", total: 9, ids: [1456,2379,3090,3,424,438,567,2516,76] },
+      { id: "frequency-map", label: "Frequency Map", shortLabel: "Frequency Map", total: 19, ids: [1,217,219,242,383,387,389,1207,1512,169,1748,350,49,347,451,560,659,692,1636] },
+      { id: "prefix-hashmap", label: "Prefix Sum + HashMap", shortLabel: "Prefix+Map", total: 10, ids: [560,525,523,974,930,1248,1590,2845,325,437] },
+      { id: "classic-bs", label: "Classic Binary Search", shortLabel: "Binary Search", total: 18, ids: [704,35,69,278,374,1539,33,34,74,81,153,162,540,875,1011,1283,2226,410] },
+      { id: "lower-upper-bound", label: "Lower / Upper Bound", shortLabel: "Upper/Lower", total: 3, ids: [35,744,34] },
+      { id: "bs-on-answers", label: "Binary Search on Answers", shortLabel: "BS Answers", total: 13, ids: [69,367,875,1011,1283,1482,1552,1760,1870,2187,2226,2251,410] },
+      { id: "search-2d-matrix", label: "Search in 2D Matrix", shortLabel: "2D Matrix", total: 5, ids: [240,74,1901,1428,302] },
     ];
 
     const topicRadarData = NODE_SPECS.map((spec) => {
       const solved = spec.ids.filter((id) => solvedDrawerIds.has(id)).length;
       const score = spec.total > 0 ? Math.min(100, Math.round((solved / spec.total) * 100)) : 0;
-      return { label: spec.label, score, solved, total: spec.total };
+      return { label: spec.label, shortLabel: spec.shortLabel, score, solved, total: spec.total };
     });
 
     // Company list with exact deduplicated solved counts
@@ -575,43 +602,6 @@ export default function AnalyticsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-7 pb-16 select-none"
     >
-      {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white dark:bg-[#18191F] p-6 rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden"
-      >
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
-            <LayoutDashboard className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Performance Analytics</h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">
-              Live metrics aggregated directly from your connected coding profile stats
-            </p>
-          </div>
-        </div>
-
-        {/* Time-range selector */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-800 shrink-0 z-10">
-          {TIME_RANGES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setTimeRange(r)}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                timeRange === r
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/25"
-                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#20222A]"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-
       {/* ── REAL KPI CARDS GRID ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* Metric 1: Problems Solved */}
