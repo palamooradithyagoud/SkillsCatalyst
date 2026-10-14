@@ -12,8 +12,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public assets (.svg, .png, .jpg, .jpeg, .gif, .webp)
+     * - robots.txt, sitemap.xml, site.webmanifest, manifest.json
+     * - public assets (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico, .txt, .xml)
      */
-    "/((?!_next/static|_next/image|favicon.ico|site\\.webmanifest|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|site\\.webmanifest|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest|txt|xml)$).*)",
   ],
 };

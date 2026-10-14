@@ -21,8 +21,19 @@ export default function TermsConditionsPage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to SkillsCatalyst</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-neutral-500">Official Legal Policy</span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/pricing"
+              className="text-xs font-bold text-purple-900 hover:underline"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/verify"
+              className="text-xs font-bold text-emerald-800 hover:underline"
+            >
+              Verify
+            </Link>
             <Link
               href="/privacy-policy"
               className="text-xs font-bold text-neutral-900 hover:underline"
@@ -98,10 +109,11 @@ export default function TermsConditionsPage() {
               <p className="font-bold text-black">100% 7-Day Money-Back Guarantee:</p>
               <p>
                 If you are not satisfied with your purchase, you can request a full refund within <strong>7 calendar days</strong>{" "}
-                from the payment timestamp. To initiate a refund, message our founder on WhatsApp at{" "}
-                <a href="tel:7330602101" className="font-bold text-purple-900 underline">+91 7330602101</a> or email{" "}
-                <a href="mailto:skillscatalyst5@gmail.com" className="font-bold text-purple-900 underline">skillscatalyst5@gmail.com</a>.
-                Refunds are approved within 24 to 48 hours and returned to your original payment method.
+                from the payment timestamp. To initiate a refund, email our support team at{" "}
+                <a href="mailto:support@skillscatalyst.in" className="font-bold text-purple-900 underline">support@skillscatalyst.in</a>{" "}
+                or message our student line at{" "}
+                <a href="tel:7330602101" className="font-bold text-purple-900 underline">+91 7330602101</a> with your registered email and transaction ID.
+                Refunds are processed within 24 to 48 hours and returned directly to your original payment method.
               </p>
             </div>
           </section>
@@ -143,11 +155,11 @@ export default function TermsConditionsPage() {
               <div className="text-neutral-600 font-medium">Founder: Palamoor Adithya Goud</div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
                 <a
-                  href="mailto:skillscatalyst5@gmail.com"
+                  href="mailto:support@skillscatalyst.in"
                   className="inline-flex items-center gap-1.5 text-purple-900 hover:underline font-bold"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>skillscatalyst5@gmail.com</span>
+                  <span>support@skillscatalyst.in</span>
                 </a>
                 <span className="hidden sm:inline text-neutral-300">&bull;</span>
                 <a
@@ -165,6 +177,15 @@ export default function TermsConditionsPage() {
         {/* Bottom Navigation */}
         <div className="mt-14 pt-8 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-neutral-600">
           <div className="flex items-center gap-4">
+            <Link href="/" className="hover:text-black transition-colors">
+              Home
+            </Link>
+            <Link href="/pricing" className="hover:text-black transition-colors text-purple-900 font-extrabold">
+              Pricing
+            </Link>
+            <Link href="/verify" className="hover:text-black transition-colors text-emerald-800 font-extrabold">
+              Verify
+            </Link>
             <Link href="/privacy-policy" className="hover:text-black transition-colors">
               Privacy Policy
             </Link>

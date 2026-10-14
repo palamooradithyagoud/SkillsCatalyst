@@ -105,8 +105,7 @@ export default function SkillsCatalystDesktopHero() {
 
   const handleNavPillClick = (item: NavItem) => {
     if (item.id === "pricing") {
-      setPricingInitialTier("all");
-      setIsPricingModalOpen(true);
+      router.push("/pricing");
       setActiveDropdown(null);
     } else {
       handleNavigateToLogin();
@@ -115,16 +114,7 @@ export default function SkillsCatalystDesktopHero() {
 
   const handleDropdownItemClick = (itemId: string, subItemTitle: string) => {
     if (itemId === "pricing") {
-      if (subItemTitle === "Student Free Tier") {
-        setPricingInitialTier("free");
-      } else if (subItemTitle === "Catalyst Pro") {
-        setPricingInitialTier("pro");
-      } else if (subItemTitle === "University Campus") {
-        setPricingInitialTier("enterprise");
-      } else {
-        setPricingInitialTier("all");
-      }
-      setIsPricingModalOpen(true);
+      router.push("/pricing");
       setActiveDropdown(null);
     } else {
       handleNavigateToLogin();
@@ -155,7 +145,7 @@ export default function SkillsCatalystDesktopHero() {
               <div className={`scBrandFull ${isScrolled ? "scBrandFullHidden" : ""}`}>
                 <Image
                   src="/logo_black.png"
-                  alt="Skills Catalyst Logo"
+                  alt="SkillsCatalyst Logo"
                   width={40}
                   height={40}
                   priority
@@ -169,7 +159,7 @@ export default function SkillsCatalystDesktopHero() {
                 <div className="scCompactLogoSquare">
                   <Image
                     src="/logo_white.png"
-                    alt="Skills Catalyst Logo Icon"
+                    alt="SkillsCatalyst Logo Icon"
                     width={24}
                     height={24}
                     priority
@@ -180,7 +170,7 @@ export default function SkillsCatalystDesktopHero() {
               </div>
             </div>
 
-            {/* Center: White Pill Navigation Bar with 5 Buttons */}
+            {/* Center: White Pill Navigation Bar with Buttons */}
             <div
               className={`scNavCenterBar ${isScrolled ? "scNavCenterBarScrolled" : ""}`}
               aria-label="Main Navigation"
@@ -270,7 +260,7 @@ export default function SkillsCatalystDesktopHero() {
           <div className="scDesktopHeroWallpaper">
             <Image
               src="/images/penguin_desktop_hero.jpg"
-              alt="Skills Catalyst Explorer Penguin Summit Hero"
+              alt="SkillsCatalyst Explorer Penguin Summit Hero"
               fill
               priority
               sizes="(max-width: 1600px) 100vw, 1600px"
@@ -280,6 +270,17 @@ export default function SkillsCatalystDesktopHero() {
 
           {/* Hero Central Typography & Actions */}
           <div className="scDesktopHeroContent">
+            {/* Student College Attribution Badge */}
+            <motion.div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-semibold mb-4 shadow-lg backdrop-blur-sm"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Built by students at Vardhaman College of Engineering, Hyderabad</span>
+            </motion.div>
+
             {/* Giant Bold Headline */}
             <motion.h1
               className="scHeadline"
@@ -287,13 +288,23 @@ export default function SkillsCatalystDesktopHero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <span className="scHeadlineWhite">Learn Anything,</span>
-              <span className="scHeadlineGradient">Go Further</span>
+              <span className="scHeadlineWhite">Learn anything.</span>
+              <span className="scHeadlineGradient">Go further.</span>
             </motion.h1>
+
+            {/* Hero Subtitle */}
+            <motion.p
+              className="text-slate-200 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed mb-8 px-4"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Pick a career goal. Get the exact roadmap. Practise until you&apos;re interview-ready — with an AI mentor checking your resume on the way.
+            </motion.p>
 
             {/* CTA Row */}
             <motion.div
-              className="scCTARow"
+              className="scCTARow flex flex-wrap items-center justify-center gap-3 sm:gap-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -304,15 +315,15 @@ export default function SkillsCatalystDesktopHero() {
                 onClick={handleNavigateToLogin}
                 className="scPrimaryCTA"
               >
-                <span>Get Started</span>
+                <span>Get Started Free</span>
                 <ArrowRight size={18} strokeWidth={2.6} />
               </button>
               <button
                 type="button"
-                onClick={handleNavigateToLogin}
+                onClick={() => router.push("/pricing")}
                 className="scSecondaryCTA"
               >
-                <span>Explore Platform</span>
+                <span>View Pricing (₹99)</span>
               </button>
             </motion.div>
           </div>

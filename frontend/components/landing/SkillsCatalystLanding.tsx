@@ -8,11 +8,8 @@ import "@/app/skills-landing.css";
 export default function SkillsCatalystLanding() {
   return (
     <main className="scLandingRoot">
-      {/* Laptop / PC Desktop Presentation (Penguin Summit Theme) */}
+      {/* Unified responsive landing presentation (Single DOM tree & single H1) */}
       <SkillsCatalystDesktopHero />
-
-      {/* Mobile Smartphone Presentation (Exact Vertical Visual Poster) */}
-      <MobilePosterHero />
     </main>
   );
 }

@@ -148,24 +148,24 @@ export default function MobilePosterHero() {
             <div className="scMobileMottoLine" />
             <div className="scMobileMottoContent">
               <span>SAME</span>
-              <span>LEARNING</span>
+              <span>LEARNING.</span>
               <span>A BRIGHTER</span>
-              <span>YOU</span>
+              <span>YOU.</span>
             </div>
           </div>
         </header>
 
         {/* 2. Hero Typography: Crisp Headline + Centered Subtitle */}
         <section className="scMobileTypography">
-          <motion.h1
+          <motion.h2
             className="scMobileTitle"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <span className="scMobileTitleWhite">Learn Anything,</span>
-            <span className="scMobileTitleGradient">Go Further</span>
-          </motion.h1>
+            <span className="scMobileTitleWhite">Learn anything.</span>
+            <span className="scMobileTitleGradient">Go further.</span>
+          </motion.h2>
 
           <motion.p
             className="scMobileSubtitle"
@@ -173,8 +173,7 @@ export default function MobilePosterHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            Your all-in-one platform for learning, practice,<br />
-            mentorship and real opportunities.
+            Pick a career goal. Get the exact roadmap. Practise until you&apos;re interview-ready — with an AI mentor checking your resume on the way.
           </motion.p>
         </section>
 

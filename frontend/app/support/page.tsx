@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "What is the refund policy for SkillsCatalyst Pro passes?",
-    a: "We offer a 100% 7-day money-back guarantee on all 1-Month and 3-Month Pro Passes. If you are not satisfied with the roadmaps or interview prep features, simply message us on WhatsApp or email palamooradithyagoud@gmail.com within 7 days of purchase for a prompt refund.",
+    a: "We offer a 100% 7-day money-back guarantee on all 1-Month and 3-Month Pro Passes. If you are not satisfied with the roadmaps or interview prep features, simply email support@skillscatalyst.in or message us within 7 days of purchase for a prompt refund.",
   },
   {
     q: "How is my personal and academic data protected?",
@@ -39,7 +39,7 @@ const FAQS = [
   },
   {
     q: "Who is the designated Grievance Officer for statutory compliance?",
-    a: "As mandated under Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, our Founder Palamoor Adithya Goud serves as the official Grievance Officer (Phone: +91 7330602101, Email: palamooradithyagoud@gmail.com).",
+    a: "As mandated under Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, our Founder Palamoor Adithya Goud serves as the official Grievance Officer (Phone: +91 7330602101, Email: support@skillscatalyst.in).",
   },
 ];
 
@@ -438,7 +438,7 @@ export default function SupportPage() {
               </p>
               <h4 className="font-extrabold text-slate-900 pt-2">2. Refund Request Procedure</h4>
               <p>
-                To claim your refund, send a quick message to our founder via WhatsApp (<a href="https://wa.me/917330602101" className="text-purple-700 font-bold hover:text-pink-600">+91 7330602101</a>) or email <a href="mailto:palamooradithyagoud@gmail.com" className="text-purple-700 font-bold hover:text-pink-600">palamooradithyagoud@gmail.com</a> with your registered account email and payment reference ID.
+                To claim your refund, send a quick email to our official support desk at <a href="mailto:support@skillscatalyst.in" className="text-purple-700 font-bold hover:text-pink-600">support@skillscatalyst.in</a> or message our student line (<a href="https://wa.me/917330602101" className="text-purple-700 font-bold hover:text-pink-600">+91 7330602101</a>) with your registered account email and payment reference ID.
               </p>
               <h4 className="font-extrabold text-slate-900 pt-2">3. Processing Timeline</h4>
               <p>
@@ -460,7 +460,7 @@ export default function SupportPage() {
                 <div><strong>Designation:</strong> Founder & Chief Grievance Officer</div>
                 <div><strong>Platform:</strong> SkillsCatalyst (<a href="https://www.skillscatalyst.in" className="text-purple-700 underline font-bold hover:text-pink-600">www.skillscatalyst.in</a>)</div>
                 <div><strong>Direct Phone:</strong> <a href="tel:+917330602101" className="text-purple-700 font-bold hover:text-pink-600">+91 7330602101</a></div>
-                <div><strong>Direct Email:</strong> <a href="mailto:palamooradithyagoud@gmail.com" className="text-purple-700 font-bold hover:text-pink-600">palamooradithyagoud@gmail.com</a></div>
+                <div><strong>Official Support:</strong> <a href="mailto:support@skillscatalyst.in" className="text-purple-700 font-bold hover:text-pink-600">support@skillscatalyst.in</a></div>
                 <div><strong>Office Location:</strong> Hyderabad, Telangana, India</div>
               </div>
               <h4 className="font-extrabold text-slate-900 pt-2">Grievance Redressal Timeline</h4>

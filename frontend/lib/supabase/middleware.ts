@@ -49,6 +49,8 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isPublicRoute =
     pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname.startsWith("/pricing/") ||
     pathname.startsWith("/ai-mentor") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
@@ -58,9 +60,26 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/certificate-preview") ||
     pathname.startsWith("/career/resume-builder") ||
     pathname.startsWith("/practice") ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
     isAuthPage ||
     isCallbackPage ||
     pathname.startsWith("/api/");
+
+  const isExplicitProtectedRoute =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/") ||
+    pathname === "/learning" || pathname.startsWith("/learning/") ||
+    pathname === "/roadmaps" || pathname.startsWith("/roadmaps/") ||
+    pathname === "/skillbits" || pathname.startsWith("/skillbits/") ||
+    pathname === "/scholarships" || pathname.startsWith("/scholarships/") ||
+    pathname === "/tech-news" || pathname.startsWith("/tech-news/") ||
+    pathname === "/profile" || pathname.startsWith("/profile/") ||
+    pathname === "/settings" || pathname.startsWith("/settings/") ||
+    pathname === "/analytics" || pathname.startsWith("/analytics/") ||
+    pathname === "/certificates" || pathname.startsWith("/certificates/") ||
+    pathname === "/explore" || pathname.startsWith("/explore/") ||
+    pathname === "/resume-review" || pathname.startsWith("/resume-review/") ||
+    (pathname.startsWith("/career") && !pathname.startsWith("/career/resume-builder"));
 
   // 1. Admin route protection: requires authenticated session with authoritative 'owner' role
   if (isAdminRoute) {
@@ -81,9 +100,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 2. Protected route check: if unauthenticated and trying to access private application routes
-  if (!user && !isPublicRoute) {
+  if (!user && isExplicitProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 

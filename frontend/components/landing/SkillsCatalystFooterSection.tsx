@@ -85,9 +85,11 @@ const SKILLSCATALYST_PILLARS: FeaturePillar[] = [
   {
     title: "Trust & Support",
     links: [
+      { label: "Plans & Student Pricing", href: "/pricing" },
+      { label: "Verify Certificates (/verify)", href: "/verify" },
       { label: "Help & Student Support", href: "/support" },
       { label: "Frequently Asked Questions", href: "/support" },
-      { label: "Email Support Desk", href: "mailto:skillscatalyst5@gmail.com" },
+      { label: "Official Support Desk", href: "mailto:support@skillscatalyst.in" },
     ],
   },
 ];
@@ -237,13 +239,13 @@ export default function SkillsCatalystFooterSection() {
                   </h3>
                   <div className="space-y-4 text-xs sm:text-sm font-semibold text-neutral-800">
                     <a
-                      href="mailto:skillscatalyst5@gmail.com"
+                      href="mailto:support@skillscatalyst.in"
                       className="flex items-center gap-2.5 hover:text-black transition-colors"
                     >
                       <div className="w-8 h-8 rounded-lg bg-white/90 border border-[#ccafe8] flex items-center justify-center shrink-0">
                         <Mail className="w-4 h-4 text-black" />
                       </div>
-                      <span className="break-all font-bold">skillscatalyst5@gmail.com</span>
+                      <span className="break-all font-bold">support@skillscatalyst.in</span>
                     </a>
 
                     <a
@@ -291,10 +293,10 @@ export default function SkillsCatalystFooterSection() {
             </div>
 
             {/* ── Signature Brand Watermark Text (Like "Student Tribe" in Image 2) ── */}
-            <div className="relative mt-12 sm:mt-16 md:mt-20 -mb-2 sm:-mb-5 md:-mb-8 w-full overflow-hidden select-none pointer-events-none flex justify-center">
-              <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[120px] xl:text-[145px] font-black tracking-tight leading-none text-[#4a1259] opacity-20 text-center whitespace-nowrap uppercase">
+            <div className="relative mt-12 sm:mt-16 md:mt-20 -mb-2 sm:-mb-5 md:-mb-8 w-full overflow-hidden select-none pointer-events-none flex justify-center" aria-hidden="true">
+              <div className="text-5xl sm:text-7xl md:text-8xl lg:text-[120px] xl:text-[145px] font-black tracking-tight leading-none text-[#4a1259] opacity-20 text-center whitespace-nowrap uppercase">
                 SkillsCatalyst
-              </h1>
+              </div>
             </div>
 
           </div>
@@ -304,6 +306,12 @@ export default function SkillsCatalystFooterSection() {
         {/* ── Sub-Footer / Legal Bar (Outside Card on Light Lilac Background, like Image 2) ── */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-neutral-700 tracking-wider">
           <div className="flex flex-wrap items-center gap-6 uppercase">
+            <Link href="/pricing" className="hover:text-black transition-colors text-purple-900 font-extrabold">
+              Pricing
+            </Link>
+            <Link href="/verify" className="hover:text-black transition-colors text-emerald-800 font-extrabold">
+              Verify
+            </Link>
             <Link href="/privacy-policy" className="hover:text-black transition-colors">
               Privacy Policy
             </Link>
@@ -315,8 +323,11 @@ export default function SkillsCatalystFooterSection() {
             </Link>
           </div>
 
-          <div className="text-neutral-700">
-            &copy; 2026 SkillsCatalyst. All Rights Reserved.
+          <div className="text-neutral-700 text-center sm:text-right">
+            <div>&copy; 2026 SkillsCatalyst. All Rights Reserved.</div>
+            <div className="text-[11px] font-semibold text-neutral-600 mt-0.5">
+              Built by students at Vardhaman College of Engineering, Hyderabad.
+            </div>
           </div>
         </div>
 

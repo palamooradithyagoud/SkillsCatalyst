@@ -77,7 +77,7 @@ export default function PrivacyPolicyPage() {
               <div className="border-l-2 border-purple-700 pl-4 py-1">
                 <h3 className="font-bold text-black text-base">A. Account &amp; Profile Information</h3>
                 <p className="text-neutral-700 text-sm mt-0.5">
-                  Your full name, email address, password hash (salted and encrypted via bcrypt), target tech stack,
+                  Your full name, email address, password hash (salted and hashed with bcrypt), target tech stack,
                   college/graduation year, and user preference settings.
                 </p>
               </div>
@@ -160,11 +160,11 @@ export default function PrivacyPolicyPage() {
               <div className="text-neutral-600 font-medium">Founder &amp; Designated Grievance Officer, SkillsCatalyst</div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
                 <a
-                  href="mailto:skillscatalyst5@gmail.com"
+                  href="mailto:support@skillscatalyst.in"
                   className="inline-flex items-center gap-1.5 text-purple-900 hover:underline font-bold"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>skillscatalyst5@gmail.com</span>
+                  <span>support@skillscatalyst.in</span>
                 </a>
                 <span className="hidden sm:inline text-neutral-300">&bull;</span>
                 <a
@@ -185,6 +185,15 @@ export default function PrivacyPolicyPage() {
         {/* Bottom Navigation */}
         <div className="mt-14 pt-8 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-neutral-600">
           <div className="flex items-center gap-4">
+            <Link href="/" className="hover:text-black transition-colors">
+              Home
+            </Link>
+            <Link href="/pricing" className="hover:text-black transition-colors text-purple-900 font-extrabold">
+              Pricing
+            </Link>
+            <Link href="/verify" className="hover:text-black transition-colors text-emerald-800 font-extrabold">
+              Verify
+            </Link>
             <Link href="/terms-conditions" className="hover:text-black transition-colors">
               Terms &amp; Conditions
             </Link>

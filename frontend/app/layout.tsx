@@ -7,8 +7,26 @@ import { TransitionProvider } from "@/providers/TransitionProvider";
 import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
-  title: "SkillsCatalyst — Learn Faster. Grow Smarter.",
-  description: "Track your progress and get personalized career recommendations powered by AI.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://skillscatalyst.in"),
+  title: {
+    default: "SkillsCatalyst — Targeted Career Roadmaps & Placement Prep",
+    template: "%s | SkillsCatalyst",
+  },
+  description:
+    "Pick a career goal. Get the exact roadmap. Practise until you're interview-ready — with an AI mentor checking your code and resume. Built by students at Vardhaman College of Engineering, Hyderabad.",
+  keywords: [
+    "SkillsCatalyst",
+    "Placement preparation",
+    "DSA sheet",
+    "Tech interview questions",
+    "AI mock interview",
+    "ATS resume review",
+    "Vardhaman College of Engineering",
+    "Career roadmaps",
+  ],
+  authors: [{ name: "SkillsCatalyst Team" }],
+  creator: "SkillsCatalyst",
+  publisher: "SkillsCatalyst",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -24,9 +42,39 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "SkillsCatalyst — Learn Faster. Grow Smarter.",
-    description: "Track your progress and get personalized career recommendations powered by AI.",
+    type: "website",
+    locale: "en_IN",
+    url: "https://skillscatalyst.in",
+    siteName: "SkillsCatalyst",
+    title: "SkillsCatalyst — Targeted Career Roadmaps & Placement Prep",
+    description:
+      "Pick a career goal. Get the exact roadmap. Practise until you're interview-ready — with an AI mentor checking your code and resume.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "SkillsCatalyst — Placement Preparation Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SkillsCatalyst — Targeted Career Roadmaps & Placement Prep",
+    description:
+      "Pick a career goal. Get the exact roadmap. Practise until you're interview-ready.",
     images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

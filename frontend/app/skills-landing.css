@@ -29,20 +29,40 @@
    ========================================================================== */
 
 .scDesktopView {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+  position: relative;
+  padding-top: 0.75rem;
+  box-sizing: border-box;
 }
 
-@media (min-width: 861px) {
-  .scDesktopView {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    background-color: #ffffff;
-    position: relative;
-    padding-top: 0.75rem;
-    box-sizing: border-box;
+@media (max-width: 860px) {
+  .scNavCenterBar {
+    display: none !important;
+  }
+  .scNavBrandArea {
+    width: auto !important;
+  }
+  .scNavRightActions {
+    width: auto !important;
+    padding-right: 0 !important;
+  }
+  .scNotchRow {
+    display: none !important;
+  }
+  .scDesktopHeroCard {
+    width: 96% !important;
+    min-height: 82vh !important;
+    border-radius: 32px !important;
+    padding: 5.5rem 1rem 2rem 1rem !important;
+  }
+  .scHeadline {
+    font-size: clamp(2.2rem, 9vw, 3.2rem) !important;
+    margin-bottom: 0.75rem !important;
   }
 }
 
@@ -657,16 +677,9 @@
    5-feature glowing constellation arc, and interactive CTA.
    ========================================================================== */
 
-/* Lock mobile viewport against accidental window scroll & rubber-banding */
-@media (max-width: 860px) {
-  html,
-  body,
-  .scLandingRoot {
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-    height: 100% !important;
-    max-height: 100% !important;
-  }
+/* Mobile layout is now unified responsively with the main presentation */
+.scMobileView {
+  display: none;
 }
 
 .scMobileView {

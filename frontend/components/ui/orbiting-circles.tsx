@@ -431,11 +431,11 @@ export function HowItWorks({
 }
 
 const STUDENT_THOUGHTS = [
-  "Too many tutorials... which one actually works? 😵‍💫",
-  "What do I learn next? I need a clear roadmap! 🧭",
-  "Which tech career path actually matches my skills? 🤔",
-  "Do I have the practical skills companies want? 💻",
-  "Missed another hackathon and internship deadline! 🤦‍♂️",
+  "Too many tutorials. No direction.",
+  "Which tech career path actually matches my skills?",
+  "What should I learn next? I need an exact roadmap.",
+  "Do I have the practical coding skills companies test for?",
+  "Missed another campus hackathon and hiring deadline.",
 ]
 
 /**
@@ -567,7 +567,7 @@ export function EcosystemOrbitingSection() {
         <div className="lg:col-span-7 flex flex-col items-start text-left w-full">
           {/* Top-Left Heading */}
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#683594] tracking-tight leading-tight mb-5">
-            What student is going through?
+            What students are actually going through
           </h2>
 
           {/* 5 Stacking Cards directly downside the text */}
