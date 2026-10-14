@@ -2907,12 +2907,12 @@ export default function RoadmapsPage() {
                           onClick={() => toggleNode(r.title, n)}
                           className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                             done
-                              ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/40"
+                              ? "text-purple-300 bg-purple-500/15 border-purple-500/40"
                               : "text-slate-300 bg-slate-800/40 border-slate-700/50 hover:border-slate-500"
                           }`}
                         >
                           {done ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="w-3.5 h-3.5 text-[#C084FC]" />
                           ) : (
                             <div className="w-3 h-3 rounded-full border border-slate-500" />
                           )}
@@ -2933,12 +2933,12 @@ export default function RoadmapsPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <BookOpen className="w-6 h-6 text-emerald-700 shrink-0" />
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+              <BookOpen className="w-6 h-6 text-slate-900 dark:text-white shrink-0" />
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 Skill Roadmaps
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 font-semibold ml-8">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-semibold ml-8">
               Select a core programming language or framework learning path.
             </p>
           </div>
@@ -2947,7 +2947,7 @@ export default function RoadmapsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {SKILL_ROADMAPS.map((item, idx) => {
             const Icon = item.icon;
-            const itemColor = item.color || "#10b981";
+            const itemColor = item.color || "#a855f7";
 
             return (
               <motion.div
@@ -2967,15 +2967,15 @@ export default function RoadmapsPage() {
                   glowIntensity={1.2}
                   coneSpread={25}
                   animated={false}
-                  colors={[itemColor, item.id === "python-mastery" ? '#3776AB' : '#10b981', '#6366f1']}
-                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                  colors={[itemColor, item.id === "python-mastery" ? '#3776AB' : '#a855f7', '#6366f1']}
+                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90 dark:border-neutral-800"
                 >
                   <div className="flex flex-col justify-between h-full space-y-5">
                     <div>
                       {/* Top Bar Badges */}
                       <div className="flex items-center justify-between mb-4">
                         {item.id === "python-mastery" ? (
-                          <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-sm">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-neutral-800/80 border border-slate-200/90 dark:border-neutral-700/80 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-sm">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src="/images/tech-logos/python.svg"
@@ -2999,13 +2999,13 @@ export default function RoadmapsPage() {
                           <span
                             className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs ${
                               item.id === "python-mastery"
-                                ? "bg-blue-50 border border-blue-200/90 text-blue-700"
-                                : "bg-emerald-50 border border-emerald-200/90 text-emerald-700"
+                                ? "bg-blue-50 dark:bg-blue-950/60 border border-blue-200/90 dark:border-blue-800/60 text-blue-700 dark:text-blue-300"
+                                : "bg-purple-50 dark:bg-purple-950/60 border border-purple-200/90 dark:border-purple-800/60 text-purple-700 dark:text-[#C084FC]"
                             }`}
                           >
                             <CheckCircle2
                               className={`w-3.5 h-3.5 ${
-                                item.id === "python-mastery" ? "text-blue-600" : "text-emerald-600"
+                                item.id === "python-mastery" ? "text-blue-600 dark:text-blue-400" : "text-purple-600 dark:text-[#C084FC]"
                               }`}
                             />{" "}
                             Enrolled
@@ -3016,7 +3016,7 @@ export default function RoadmapsPage() {
                             className={`flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full text-white shadow-md hover:scale-105 transition-all z-10 cursor-pointer ${
                               item.id === "python-mastery"
                                 ? "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-blue-600/20"
-                                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/20"
+                                : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-600/20"
                             }`}
                           >
                             <GraduationCap className="w-3.5 h-3.5 text-white" /> Enroll
@@ -3026,22 +3026,20 @@ export default function RoadmapsPage() {
 
                       {/* Title */}
                       <h3
-                        className={`text-lg font-extrabold text-slate-900 mb-1.5 transition-colors leading-snug ${
+                        className={`text-lg font-extrabold text-slate-900 dark:text-white mb-1.5 transition-colors leading-snug ${
                           item.id === "python-mastery"
-                            ? "group-hover:text-blue-600"
-                            : "group-hover:text-emerald-700"
+                            ? "group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                            : "group-hover:text-purple-500 dark:group-hover:text-[#C084FC]"
                         }`}
                       >
                         {item.title}
                       </h3>
 
                       {/* Subtitle */}
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
+                      <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed font-medium line-clamp-2">
                         {item.subtitle}
                       </p>
                     </div>
-
-
                   </div>
                 </BorderGlow>
               </motion.div>
@@ -3055,12 +3053,12 @@ export default function RoadmapsPage() {
       <section id="career-roadmaps-section" className="space-y-6">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <Briefcase className="w-6 h-6 text-emerald-700 shrink-0" />
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+            <Briefcase className="w-6 h-6 text-slate-900 dark:text-white shrink-0" />
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Career Roadmaps
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 font-semibold ml-8">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-semibold ml-8">
             Select a specialized career domain to launch your professional engineering journey.
           </p>
         </div>
@@ -3089,7 +3087,7 @@ export default function RoadmapsPage() {
                   coneSpread={25}
                   animated={false}
                   colors={[itemColor, '#38bdf8', '#6366f1']}
-                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90"
+                  className="roadmap-card card-morph h-full p-6 shadow-sm hover:shadow-2xl border border-slate-200/90 dark:border-neutral-800"
                 >
                   <div className="flex flex-col justify-between h-full space-y-5">
                     <div>
@@ -3106,13 +3104,13 @@ export default function RoadmapsPage() {
                         </div>
 
                         {enrolledIds.has(item.id) ? (
-                          <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-700 shadow-xs">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Enrolled
+                          <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200/90 dark:border-purple-800/60 text-purple-700 dark:text-[#C084FC] shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 dark:text-[#C084FC]" /> Enrolled
                           </span>
                         ) : (
                           <button
                             onClick={(e) => handleEnrollRoadmap(item, e)}
-                            className="flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/20 hover:scale-105 transition-all z-10 cursor-pointer"
+                            className="flex items-center gap-1 text-[11px] font-bold px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-md shadow-purple-600/20 hover:scale-105 transition-all z-10 cursor-pointer"
                           >
                             <GraduationCap className="w-3.5 h-3.5 text-white" /> Enroll
                           </button>
@@ -3120,17 +3118,15 @@ export default function RoadmapsPage() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-extrabold text-slate-900 mb-1.5 group-hover:text-sky-700 transition-colors leading-snug">
+                      <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-1.5 group-hover:text-sky-400 transition-colors leading-snug">
                         {item.title}
                       </h3>
 
                       {/* Subtitle */}
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
+                      <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed font-medium line-clamp-2">
                         {item.subtitle}
                       </p>
                     </div>
-
-
                   </div>
                 </BorderGlow>
               </motion.div>

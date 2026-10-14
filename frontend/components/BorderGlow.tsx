@@ -161,15 +161,17 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
   const fillBg = meshGradients.map(g => `${g} padding-box`);
   const angleDeg = `${cursorAngle.toFixed(3)}deg`;
 
+  const effectiveBg = backgroundColor === '#ffffff' ? 'var(--border-glow-bg, #ffffff)' : backgroundColor;
+
   return (
     <div
       ref={cardRef}
       onPointerMove={handlePointerMove}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className={`roadmap-card card-morph relative grid isolate border border-slate-200/80 ${className}`}
+      className={`roadmap-card card-morph relative grid isolate border border-slate-200/80 dark:border-neutral-800 [--border-glow-bg:#ffffff] dark:[--border-glow-bg:#18191F] ${className}`}
       style={{
-        background: backgroundColor,
+        background: effectiveBg,
         borderRadius: `${borderRadius}px`,
         transform: 'translate3d(0, 0, 0.01px)',
         boxShadow: 'rgba(0,0,0,0.04) 0 1px 2px, rgba(0,0,0,0.04) 0 2px 4px, rgba(0,0,0,0.04) 0 4px 8px, rgba(0,0,0,0.04) 0 8px 16px',
@@ -181,7 +183,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
         style={{
           border: '1px solid transparent',
           background: [
-            `linear-gradient(${backgroundColor} 0 100%) padding-box`,
+            `linear-gradient(${effectiveBg} 0 100%) padding-box`,
             'linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box',
             ...borderBg,
           ].join(', '),
