@@ -6,7 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers,
-  Sparkles,
+  Brain,
+  Cloud,
+  Database,
+  ShieldCheck,
   TrendingUp,
   Briefcase,
   Flame,
@@ -121,11 +124,11 @@ const PROGRAMMING_LANGUAGES = [
 ];
 
 const TRENDING_SKILLS = [
-  { name: "AI & Generative AI", icon: Sparkles, count: "62 Playlists", tag: "AI/ML", query: "Generative AI" },
+  { name: "AI & Generative AI", icon: Brain, count: "62 Playlists", tag: "AI/ML", query: "Generative AI" },
   { name: "Full-Stack Development", icon: Code2, count: "48 Playlists", tag: "FullStack", query: "Full Stack Development" },
-  { name: "Cloud & DevOps", icon: Zap, count: "42 Playlists", tag: "DevOps", query: "DevOps" },
-  { name: "Data Engineering & Analytics", icon: Terminal, count: "35 Playlists", tag: "Data", query: "Data Engineering" },
-  { name: "Cybersecurity", icon: Globe, count: "29 Playlists", tag: "Security", query: "Cybersecurity" },
+  { name: "Cloud & DevOps", icon: Cloud, count: "42 Playlists", tag: "DevOps", query: "DevOps" },
+  { name: "Data Engineering & Analytics", icon: Database, count: "35 Playlists", tag: "Data", query: "Data Engineering" },
+  { name: "Cybersecurity", icon: ShieldCheck, count: "29 Playlists", tag: "Security", query: "Cybersecurity" },
 ];
 
 const CAREER_TRACKS = [
