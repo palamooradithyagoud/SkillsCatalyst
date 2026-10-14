@@ -311,7 +311,7 @@ function PracticeContent() {
           {/* ── DSA SHEETS Heading with Horizontal Scroll Controls ── */}
           <div id="dsa-sheets" className="max-w-5xl mx-auto w-full flex items-center justify-between pt-2 sm:pt-4 scroll-mt-20">
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 DSA SHEETS
               </h2>
             </div>
@@ -322,7 +322,7 @@ function PracticeContent() {
                 type="button"
                 onClick={() => scrollSheets(-340)}
                 aria-label="Scroll left"
-                className="w-8 h-8 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
+                className="w-8 h-8 rounded-full border border-slate-200/90 dark:border-neutral-800 bg-white dark:bg-[#18191F] hover:bg-slate-50 dark:hover:bg-[#20222A] text-slate-700 dark:text-neutral-300 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -330,7 +330,7 @@ function PracticeContent() {
                 type="button"
                 onClick={() => scrollSheets(340)}
                 aria-label="Scroll right"
-                className="w-8 h-8 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
+                className="w-8 h-8 rounded-full border border-slate-200/90 dark:border-neutral-800 bg-white dark:bg-[#18191F] hover:bg-slate-50 dark:hover:bg-[#20222A] text-slate-700 dark:text-neutral-300 flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
