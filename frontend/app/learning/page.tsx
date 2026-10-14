@@ -558,15 +558,15 @@ export default function LearningPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-3xl py-16 sm:py-20 px-6 border border-slate-200/80 shadow-xs flex flex-col items-center gap-3.5 text-center"
+                className="bg-white dark:bg-[#18191F] rounded-3xl py-16 sm:py-20 px-6 border border-slate-200/80 dark:border-neutral-800 shadow-xs flex flex-col items-center gap-3.5 text-center"
               >
-                <div className="w-14 h-14 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-1 shadow-2xs">
-                  <Bookmark className="w-7 h-7 text-purple-600" />
+                <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-[#C084FC] mb-1 shadow-2xs">
+                  <Bookmark className="w-7 h-7 text-purple-600 dark:text-[#C084FC]" />
                 </div>
-                <div className="text-slate-800 font-bold text-base sm:text-lg">No saved playlists yet</div>
-                <div className="text-slate-500 text-xs sm:text-sm max-w-sm leading-relaxed">
+                <div className="text-slate-800 dark:text-white font-bold text-base sm:text-lg">No saved playlists yet</div>
+                <div className="text-slate-500 dark:text-neutral-400 text-xs sm:text-sm max-w-sm leading-relaxed">
                   Search for a skill in Explore Skills and click the{" "}
-                  <strong className="text-purple-600 font-semibold">Save</strong> button to build your personal learning track.
+                  <strong className="text-purple-600 dark:text-[#C084FC] font-semibold">Save</strong> button to build your personal learning track.
                 </div>
                 <button
                   onClick={() => setActiveCard("explore")}

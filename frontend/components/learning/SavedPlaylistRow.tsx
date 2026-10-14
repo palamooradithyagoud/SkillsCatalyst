@@ -75,25 +75,25 @@ export function SavedPlaylistRow({
     : "Not Started";
 
   const statusStyle = !hasLoaded
-    ? "text-slate-500 bg-slate-100 border-slate-200"
+    ? "text-slate-500 dark:text-neutral-400 bg-slate-100 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700"
     : pct === 100
-    ? "text-white bg-black border-black font-bold shadow-xs"
+    ? "text-white dark:text-[#C084FC] bg-black dark:bg-purple-950/60 border-black dark:border-purple-800/60 font-bold shadow-xs"
     : pct > 0
-    ? "text-black bg-slate-100 border-slate-300 font-bold"
-    : "text-slate-600 bg-slate-100 border-slate-200 font-semibold";
+    ? "text-black dark:text-[#C084FC] bg-slate-100 dark:bg-purple-950/40 border-slate-300 dark:border-purple-800/40 font-bold"
+    : "text-slate-600 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 font-semibold";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35 }}
-      className="course-card card-morph bg-white rounded-[24px] border border-slate-200/90 shadow-xs hover:shadow-md overflow-hidden"
+      className="course-card card-morph bg-white dark:bg-[#18191F] rounded-[24px] border border-slate-200/90 dark:border-neutral-800 shadow-xs hover:shadow-md overflow-hidden"
     >
       {/* ── Row Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 pt-5 pb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-black truncate">{pl.title}</h3>
-          <p className="text-xs font-semibold text-slate-500 mt-0.5">
+          <h3 className="text-base font-bold text-black dark:text-white truncate">{pl.title}</h3>
+          <p className="text-xs font-semibold text-slate-500 dark:text-[#C084FC]/85 mt-0.5">
             {[pl.channel, pl.language, pl.skill_query, pl.level].filter(Boolean).join(" • ")}
           </p>
         </div>
@@ -112,7 +112,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onWatch(pl)}
-            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-black hover:bg-neutral-800 active:bg-neutral-900 shadow-sm cursor-pointer transition-all"
+            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-black dark:bg-gradient-to-r dark:from-[#5f13e7] dark:to-[#7928ca] hover:bg-neutral-800 dark:hover:from-[#530dd4] dark:hover:to-[#6b20b8] active:bg-neutral-900 shadow-sm cursor-pointer transition-all"
           >
             Watch Track
           </motion.button>
@@ -120,7 +120,7 @@ export function SavedPlaylistRow({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onDelete(pl.id)}
-            className="px-4 py-2 rounded-full text-xs font-semibold text-white bg-black hover:bg-neutral-800 active:bg-neutral-900 border border-black shadow-sm transition-all cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold text-white bg-black dark:bg-white/[0.08] hover:bg-neutral-800 dark:hover:bg-rose-950/50 border border-black dark:border-neutral-700 dark:hover:border-rose-800 dark:text-neutral-200 dark:hover:text-rose-400 shadow-sm transition-all cursor-pointer"
           >
             Delete
           </motion.button>
@@ -130,18 +130,18 @@ export function SavedPlaylistRow({
       {/* ── Progress line */}
       <div className="flex items-center justify-between px-6 pb-3 mt-1">
         {!hasLoaded ? (
-          <span className="flex items-center gap-2 text-xs font-semibold text-black">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
+          <span className="flex items-center gap-2 text-xs font-semibold text-black dark:text-neutral-400">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-black dark:text-neutral-400" />
             <span>Syncing video progress...</span>
           </span>
         ) : (
-          <span className="text-xs font-semibold text-black">
-            <strong className="text-black font-bold">{watchedCount}</strong> of {displayCount} videos completed ({pct}%)
+          <span className="text-xs font-semibold text-black dark:text-neutral-300">
+            <strong className="text-black dark:text-white font-bold">{watchedCount}</strong> of {displayCount} videos completed ({pct}%)
           </span>
         )}
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="text-xs font-bold text-black hover:text-neutral-600 transition-colors cursor-pointer"
+          className="text-xs font-bold text-black dark:text-[#C084FC] hover:text-neutral-600 dark:hover:text-purple-300 transition-colors cursor-pointer"
         >
           {expanded
             ? "Hide Lessons ▲"
@@ -153,12 +153,12 @@ export function SavedPlaylistRow({
 
       {/* ── Progress bar */}
       {pct > 0 && (
-        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-slate-100 p-0.5 border border-slate-200">
+        <div className="mx-6 mb-4 h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-neutral-900 p-0.5 border border-slate-200 dark:border-neutral-800">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full bg-black"
+            className="h-full rounded-full bg-black dark:bg-gradient-to-r dark:from-[#A855F7] dark:to-[#C084FC] dark:shadow-[0_0_8px_rgba(192,132,252,0.4)]"
           />
         </div>
       )}
@@ -171,19 +171,19 @@ export function SavedPlaylistRow({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t border-slate-100"
+            className="overflow-hidden border-t border-slate-100 dark:border-neutral-800"
           >
             {loadingVideos ? (
-              <div className="flex items-center justify-center gap-3 py-8 text-slate-500 bg-white">
-                <Loader2 className="w-5 h-5 animate-spin text-black" />
+              <div className="flex items-center justify-center gap-3 py-8 text-slate-500 dark:text-neutral-400 bg-white dark:bg-[#18191F]">
+                <Loader2 className="w-5 h-5 animate-spin text-black dark:text-[#C084FC]" />
                 <span className="text-xs font-semibold">Loading course lessons...</span>
               </div>
             ) : videos.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-500 bg-white">
+              <div className="py-8 text-center text-xs text-slate-500 dark:text-neutral-400 bg-white dark:bg-[#18191F]">
                 No videos found for this track.
               </div>
             ) : (
-              <div className="bg-white divide-y divide-slate-100 border-t border-slate-100">
+              <div className="bg-white dark:bg-[#18191F] divide-y divide-slate-100 dark:divide-neutral-800 border-t border-slate-100 dark:border-neutral-800">
                 {videos.map((v, i) => {
                   const done = v.watched;
 
@@ -192,7 +192,9 @@ export function SavedPlaylistRow({
                       key={v.videoId}
                       onClick={() => onWatchVideo(pl, i)}
                       className={`w-full flex items-center justify-between px-6 py-3.5 text-left transition-colors duration-150 cursor-pointer group ${
-                        done ? "bg-[#f3e8ff]/60 hover:bg-[#ebd5ff]" : "bg-white hover:bg-[#f3e8ff]"
+                        done
+                          ? "bg-[#f3e8ff]/60 dark:bg-purple-950/20 hover:bg-[#ebd5ff] dark:hover:bg-purple-950/40"
+                          : "bg-white dark:bg-[#18191F] hover:bg-[#f3e8ff] dark:hover:bg-neutral-800/60"
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0 pr-4 flex-1">
@@ -206,7 +208,7 @@ export function SavedPlaylistRow({
                           className={`w-4.5 h-4.5 rounded-[4px] border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                             done
                               ? "bg-purple-600 border-purple-600 text-white shadow-xs"
-                              : "bg-white border-slate-300 group-hover:border-purple-400 hover:border-slate-500"
+                              : "bg-white dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 group-hover:border-purple-400 hover:border-slate-500"
                           }`}
                           aria-label={done ? "Mark as unwatched" : "Mark as watched"}
                         >
@@ -217,8 +219,8 @@ export function SavedPlaylistRow({
                         <span
                           className={`text-xs sm:text-sm leading-normal line-clamp-1 transition-colors ${
                             done
-                              ? "line-through text-slate-400 font-normal decoration-slate-400"
-                              : "text-black font-medium"
+                              ? "line-through text-slate-400 dark:text-neutral-500 font-normal decoration-slate-400 dark:decoration-neutral-500"
+                              : "text-black dark:text-white font-medium"
                           }`}
                         >
                           {v.title}
