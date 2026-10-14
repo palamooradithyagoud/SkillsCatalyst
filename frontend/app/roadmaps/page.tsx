@@ -2742,10 +2742,10 @@ export default function RoadmapsPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="py-3 px-4 sm:px-6 rounded-2xl bg-white border border-slate-200/90 shadow-xs"
+        className="py-3 px-4 sm:px-6 rounded-2xl bg-white dark:bg-[#1E1F28] border border-slate-200/90 dark:border-neutral-700/60 shadow-xs transition-colors"
       >
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 shrink-0 hidden md:inline-block">
+          <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-neutral-400 shrink-0 hidden md:inline-block">
             ECOSYSTEM &amp; TOOLS
           </span>
           <div className="flex-1 overflow-hidden">
@@ -2787,7 +2787,7 @@ export default function RoadmapsPage() {
                   node: (
                     <div className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer group" title="Next.js">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/tech-logos/nextjs.svg" alt="Next.js" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115" />
+                      <img src="/images/tech-logos/nextjs.svg" alt="Next.js" className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-115 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.2)]" />
                     </div>
                   ),
                 },
@@ -2854,7 +2854,7 @@ export default function RoadmapsPage() {
               pauseOnHover
               scaleOnHover
               fadeOut
-              fadeOutColor="#ffffff"
+              className="[--logoloop-fadeColorAuto:#ffffff] dark:[--logoloop-fadeColorAuto:#1E1F28]"
             />
           </div>
         </div>
