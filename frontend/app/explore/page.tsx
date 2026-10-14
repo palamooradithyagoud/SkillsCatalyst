@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -187,8 +188,25 @@ function ExplorePageContent() {
   const searchParams = useSearchParams();
   const [companyInput, setCompanyInput] = useState("");
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [hackathons, setHackathons] = useState<EventItem[]>([]);
   const [loadingHackathons, setLoadingHackathons] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent background scrolling when foundation language modal is open
+  useEffect(() => {
+    if (isLangModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isLangModalOpen]);
 
   useEffect(() => {
     let active = true;
@@ -667,93 +685,98 @@ function ExplorePageContent() {
       />
 
       {/* ── Programming Language Selection Modal ── */}
-      <AnimatePresence>
-        {isLangModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            {/* Backdrop click to close */}
-            <div
-              className="absolute inset-0"
-              onClick={() => setIsLangModalOpen(false)}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-white dark:bg-[#18191F] w-full max-w-xl rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-neutral-800 shadow-2xl relative overflow-hidden space-y-5 z-10"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3 relative z-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-[#121318] border border-indigo-200 dark:border-neutral-700 flex items-center justify-center text-indigo-600 dark:text-[#C084FC] shadow-xs shrink-0">
-                    <Code2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                      Choose Programming Language
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">
-                      Select a language to launch your foundation learning track.
-                    </p>
-                  </div>
-                </div>
-
-                <button
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isLangModalOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md">
+                {/* Backdrop click to close */}
+                <div
+                  className="absolute inset-0"
                   onClick={() => setIsLangModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="bg-white dark:bg-[#18191F] w-full max-w-xl max-h-[88dvh] sm:max-h-[85vh] rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-2xl relative overflow-hidden flex flex-col z-10"
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* 4 Language Cards: C, CPP, Java, Python */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative z-10 pt-1">
-                {PROGRAMMING_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.name}
-                    onClick={() => {
-                      setIsLangModalOpen(false);
-                      router.push(`/learning?query=${encodeURIComponent(lang.query)}`);
-                    }}
-                    className={`p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] hover:bg-white dark:hover:bg-[#20222A] border border-slate-200/90 dark:border-neutral-700 ${lang.borderHover} transition-all duration-200 text-left shadow-2xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group flex flex-col justify-between space-y-2.5`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={`w-9 h-9 rounded-xl bg-gradient-to-br ${lang.iconGradient} text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0`}
-                        >
-                          {lang.name}
-                        </div>
-                        <div>
-                          <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#C084FC] transition-colors">
-                            {lang.title}
-                          </div>
-                          <div className="text-[10px] font-bold text-slate-500 dark:text-neutral-400">
-                            {lang.tagline}
-                          </div>
-                        </div>
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-indigo-50 dark:bg-[#121318] border border-indigo-200 dark:border-neutral-700 flex items-center justify-center text-indigo-600 dark:text-[#C084FC] shadow-xs shrink-0">
+                        <Code2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${lang.badgeColor}`}>
-                        {lang.badge}
-                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+                          Choose Programming Language
+                        </h3>
+                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5 truncate">
+                          Select a language to launch your foundation learning track.
+                        </p>
+                      </div>
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium line-clamp-2 leading-relaxed">
-                      {lang.desc}
-                    </p>
+                    <button
+                      onClick={() => setIsLangModalOpen(false)}
+                      aria-label="Close modal"
+                      className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                    <div className="pt-2 border-t border-slate-200/70 dark:border-neutral-700/70 flex items-center justify-between text-[11px] font-black text-indigo-600 dark:text-[#C084FC]">
-                      <span>Open in Learning</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </button>
-                ))}
+                  {/* 4 Language Cards: C, CPP, Java, Python (Scrollable) */}
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3.5">
+                    {PROGRAMMING_LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.name}
+                        onClick={() => {
+                          setIsLangModalOpen(false);
+                          router.push(`/learning?query=${encodeURIComponent(lang.query)}`);
+                        }}
+                        className={`w-full p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#121318] hover:bg-white dark:hover:bg-[#20222A] border border-slate-200/90 dark:border-neutral-700 ${lang.borderHover} transition-all duration-200 text-left shadow-2xs hover:shadow-lg cursor-pointer group flex flex-col justify-between space-y-2`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br ${lang.iconGradient} text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0`}
+                            >
+                              {lang.name}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#C084FC] transition-colors truncate">
+                                {lang.title}
+                              </div>
+                              <div className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 truncate">
+                                {lang.tagline}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border shrink-0 ${lang.badgeColor}`}>
+                            {lang.badge}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-neutral-300 font-medium line-clamp-2 leading-relaxed">
+                          {lang.desc}
+                        </p>
+
+                        <div className="pt-2 border-t border-slate-200/70 dark:border-neutral-700/70 flex items-center justify-between text-[10px] sm:text-[11px] font-black text-indigo-600 dark:text-[#C084FC]">
+                          <span>Open in Learning</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }
