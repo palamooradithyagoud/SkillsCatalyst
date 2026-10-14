@@ -94,33 +94,33 @@ export default function EventsWidget() {
       {/* ── Section Header ── */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-600 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-[#18191F] border border-purple-200/80 dark:border-neutral-800 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shadow-2xs">
             <Trophy className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
               Live Campus Events &amp; Hackathons
             </h2>
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
               Click on any event card to view complete details, prizes, and registration.
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-purple-950/60 text-purple-300 border border-purple-800/60 shrink-0">
           {liveEvents.length} Active
         </span>
       </div>
 
       {/* ── Small / Compact Cards Grid ── */}
       {loadingLiveEvents ? (
-        <div className="p-8 text-center text-xs font-semibold text-slate-400 bg-white border border-slate-200/90 rounded-2xl">
+        <div className="p-8 text-center text-xs font-semibold text-slate-400 dark:text-neutral-400 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 rounded-2xl">
           Loading active events...
         </div>
       ) : liveEvents.length === 0 ? (
-        <div className="p-8 text-center bg-white border border-dashed border-slate-200/90 rounded-2xl space-y-2">
-          <Trophy className="w-8 h-8 text-slate-300 mx-auto" />
-          <p className="text-xs font-bold text-slate-700">No active events published at this moment</p>
-          <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+        <div className="p-8 text-center bg-white dark:bg-[#18191F] border border-dashed border-slate-200/90 dark:border-neutral-800 rounded-2xl space-y-2">
+          <Trophy className="w-8 h-8 text-slate-300 dark:text-neutral-600 mx-auto" />
+          <p className="text-xs font-bold text-slate-700 dark:text-white">No active events published at this moment</p>
+          <p className="text-[11px] text-slate-400 dark:text-neutral-400 max-w-sm mx-auto">
             New college hackathons, hiring challenges, and tech symposia will be published here directly.
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function EventsWidget() {
             <div
               key={ev.id}
               onClick={() => setSelectedEvent(ev)}
-              className="rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 hover:border-purple-400 hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group cursor-pointer shadow-2xs"
+              className="rounded-xl sm:rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group cursor-pointer shadow-2xs"
             >
               {/* Compact Banner Thumbnail */}
               <div className="relative w-full h-24 sm:h-28 bg-slate-950 overflow-hidden">
@@ -163,7 +163,7 @@ export default function EventsWidget() {
 
                 {ev.is_hackathon && ev.prize_pool && (
                   <div className="absolute bottom-1.5 left-1.5 z-10 max-w-[90%]">
-                    <span className="text-[8px] sm:text-[10px] font-black text-emerald-300 bg-black/75 backdrop-blur-md px-1.5 py-0.5 rounded border border-emerald-400/40 inline-flex items-center gap-0.5 truncate">
+                    <span className="text-[8px] sm:text-[10px] font-black text-purple-300 bg-black/75 backdrop-blur-md px-1.5 py-0.5 rounded border border-purple-400/40 inline-flex items-center gap-0.5 truncate">
                       <Award className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 shrink-0" />
                       <span className="truncate">{ev.prize_pool}</span>
                     </span>
@@ -174,23 +174,23 @@ export default function EventsWidget() {
               {/* Compact Info Body */}
               <div className="p-2.5 sm:p-3.5 space-y-1 sm:space-y-2 flex-1 flex flex-col justify-between">
                 <div className="space-y-0.5 sm:space-y-1">
-                  <h3 className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-purple-700 transition-colors line-clamp-1 leading-snug">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-[#C084FC] transition-colors line-clamp-1 leading-snug">
                     {ev.event_name}
                   </h3>
-                  <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 truncate flex items-center gap-1">
-                    <span className="text-purple-600 shrink-0">🏛</span>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-neutral-400 truncate flex items-center gap-1">
+                    <span className="text-purple-600 dark:text-[#C084FC] shrink-0">🏛</span>
                     <span className="truncate">{ev.conducted_by_college}</span>
                   </p>
                 </div>
 
-                <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] sm:text-[11px]">
-                  <span className="text-slate-500 font-medium flex items-center gap-1 truncate pr-1">
-                    <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
+                <div className="pt-1.5 sm:pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[9px] sm:text-[11px]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium flex items-center gap-1 truncate pr-1">
+                    <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
                     <span className="truncate">
                       {formatDateShort(ev.start_date)}
                     </span>
                   </span>
-                  <span className="text-purple-600 font-black flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
+                  <span className="text-purple-600 dark:text-[#C084FC] font-black flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
                     <span>Details</span>
                     <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </span>
@@ -214,13 +214,13 @@ export default function EventsWidget() {
               exit={{ opacity: 0, scale: 0.96, y: 20 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 my-0 sm:my-auto"
+              className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-white dark:bg-[#18191F] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-neutral-800 my-0 sm:my-auto"
             >
               {/* Mobile Drag Indicator */}
-              <div className="w-10 h-1 rounded-full bg-slate-300 mx-auto mt-2.5 mb-0.5 sm:hidden shrink-0" />
+              <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-neutral-700 mx-auto mt-2.5 mb-0.5 sm:hidden shrink-0" />
 
               {/* Modal Header: Clean, Uncluttered, Separated from Poster */}
-              <div className="px-4 py-3 sm:p-5 border-b border-slate-100 bg-white flex items-start justify-between gap-3 shrink-0">
+              <div className="px-4 py-3 sm:p-5 border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-[#18191F] flex items-start justify-between gap-3 shrink-0">
                 <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0 pr-1">
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -233,16 +233,16 @@ export default function EventsWidget() {
                         Campus Event
                       </span>
                     )}
-                    <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200/80">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-purple-50 dark:bg-[#121318] text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-neutral-700">
                       {selectedEvent.category === "online" ? "🌐 Online" : "📍 In-Person"}
                     </span>
                     {selectedEvent.mode && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 capitalize">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-neutral-700 capitalize">
                         {selectedEvent.mode}
                       </span>
                     )}
                     {selectedEvent.is_hackathon && selectedEvent.prize_pool && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-purple-950/60 text-purple-300 border border-purple-800/60 flex items-center gap-1">
                         <Award className="w-3 h-3 text-amber-500" />
                         <span>Prize Pool: {selectedEvent.prize_pool}</span>
                       </span>
@@ -250,11 +250,11 @@ export default function EventsWidget() {
                   </div>
 
                   {/* Title & Conducting College */}
-                  <h3 className="text-base sm:text-xl font-black text-slate-900 leading-snug">
+                  <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-snug">
                     {selectedEvent.event_name}
                   </h3>
-                  <p className="text-[11px] sm:text-xs font-bold text-slate-500 flex items-center gap-1 truncate">
-                    <span className="text-purple-600 shrink-0">🏛</span>
+                  <p className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-neutral-400 flex items-center gap-1 truncate">
+                    <span className="text-purple-600 dark:text-[#C084FC] shrink-0">🏛</span>
                     <span className="truncate">{selectedEvent.conducted_by_college}</span>
                   </p>
                 </div>
@@ -263,7 +263,7 @@ export default function EventsWidget() {
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5"
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-300 flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5"
                   aria-label="Close details"
                 >
                   <X className="w-4 h-4" />
@@ -271,10 +271,10 @@ export default function EventsWidget() {
               </div>
 
               {/* Scrollable Content Body */}
-              <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3.5 sm:space-y-4 flex-1 text-slate-800">
+              <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3.5 sm:space-y-4 flex-1 text-slate-800 dark:text-neutral-200">
                 {/* Poster Display (Clean frame, full image visible) */}
                 {selectedEvent.banner_url && (
-                  <div className="relative w-full h-44 sm:h-52 bg-slate-950 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs border border-slate-200/80">
+                  <div className="relative w-full h-44 sm:h-52 bg-slate-950 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-neutral-800">
                     <Image
                       src={selectedEvent.banner_url}
                       alt={selectedEvent.event_name}
@@ -287,12 +287,12 @@ export default function EventsWidget() {
 
                 {/* Highlights Grid */}
                 <div className="grid grid-cols-2 gap-2 sm:gap-2.5 text-xs">
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-purple-600 shrink-0" />
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
                       <span>Event Dates</span>
                     </span>
-                    <span className="font-black text-slate-900 block text-[11px] sm:text-xs leading-snug">
+                    <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs leading-snug">
                       {formatDate(selectedEvent.start_date)}
                       {" – "}
                       {formatDate(selectedEvent.end_date)}
@@ -300,56 +300,56 @@ export default function EventsWidget() {
                   </div>
 
                   {selectedEvent.registration_deadline ? (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span>Register By</span>
                       </span>
-                      <span className="font-black text-amber-700 block text-[11px] sm:text-xs leading-snug">
+                      <span className="font-black text-amber-700 dark:text-amber-300 block text-[11px] sm:text-xs leading-snug">
                         {formatDate(selectedEvent.registration_deadline)}
                       </span>
                     </div>
                   ) : (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
                         <span>Registration</span>
                       </span>
-                      <span className="font-black text-emerald-700 block text-[11px] sm:text-xs leading-snug">
+                      <span className="font-black text-purple-700 dark:text-purple-300 block text-[11px] sm:text-xs leading-snug">
                         Open Now
                       </span>
                     </div>
                   )}
 
                   {selectedEvent.team_size && (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                        <Users className="w-3 h-3 text-blue-600 shrink-0" />
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+                        <Users className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
                         <span>Team Size</span>
                       </span>
-                      <span className="font-black text-slate-900 block text-[11px] sm:text-xs leading-snug">
+                      <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs leading-snug">
                         {selectedEvent.team_size}
                       </span>
                     </div>
                   )}
 
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      <Trophy className="w-3 h-3 text-purple-600 shrink-0" />
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+                      <Trophy className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
                       <span>Format</span>
                     </span>
-                    <span className="font-black text-slate-900 block text-[11px] sm:text-xs capitalize leading-snug">
+                    <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs capitalize leading-snug">
                       {selectedEvent.category} {selectedEvent.mode ? `• ${selectedEvent.mode}` : ""}
                     </span>
                   </div>
 
                   {selectedEvent.location && (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1 col-span-2">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1 col-span-2">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-red-500 shrink-0" />
                         <span>Venue / Location</span>
                       </span>
-                      <span className="font-semibold text-slate-800 block text-[11px] sm:text-xs leading-relaxed">
+                      <span className="font-semibold text-slate-800 dark:text-neutral-200 block text-[11px] sm:text-xs leading-relaxed">
                         {selectedEvent.location}
                       </span>
                     </div>
@@ -359,10 +359,10 @@ export default function EventsWidget() {
                 {/* About Description (Sanitized & Clean) */}
                 {selectedEvent.description && (
                   <div className="space-y-1.5">
-                    <h4 className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                    <h4 className="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-neutral-400 uppercase tracking-wider">
                       About the Event
                     </h4>
-                    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-[13px] text-slate-700 leading-relaxed whitespace-pre-line font-medium">
+                    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 text-xs sm:text-[13px] text-slate-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line font-medium">
                       {cleanEventDescription(selectedEvent.description)}
                     </div>
                   </div>
@@ -370,9 +370,9 @@ export default function EventsWidget() {
               </div>
 
               {/* Sticky Modal Footer */}
-              <div className="p-3 sm:px-5 bg-white border-t border-slate-100 flex items-center justify-between gap-2.5 shrink-0">
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-emerald-700 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <div className="p-3 sm:px-5 bg-white dark:bg-[#18191F] border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between gap-2.5 shrink-0">
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-purple-600 dark:text-purple-300 shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
                   <span className="hidden sm:inline">Registrations Open</span>
                   <span className="sm:hidden">Open</span>
                 </div>
@@ -381,7 +381,7 @@ export default function EventsWidget() {
                   <button
                     type="button"
                     onClick={() => setSelectedEvent(null)}
-                    className="px-3 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
+                    className="px-3 py-2 rounded-xl border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-[#20222A] text-xs font-bold transition-all cursor-pointer"
                   >
                     Close
                   </button>

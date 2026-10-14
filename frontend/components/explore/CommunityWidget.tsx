@@ -98,11 +98,11 @@ export default function CommunityWidget() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* ── Spatial Hero Banner with Antigravity 3D Tilt & Specular Lighting ── */}
-      <AntigravityHeroCard glowColor="rgba(16, 185, 129, 0.25)">
+      <AntigravityHeroCard glowColor="rgba(168, 85, 247, 0.2)">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-xl space-y-3.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-black tracking-wide uppercase shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-300 text-xs font-black tracking-wide uppercase shadow-xs">
+              <Users className="w-3.5 h-3.5 text-purple-400" />
               <span>Upcoming Module · Peer Guilds</span>
             </div>
 
@@ -115,8 +115,8 @@ export default function CommunityWidget() {
             </p>
 
             <div className="pt-1 flex flex-wrap items-center gap-3">
-              <span className="text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold text-slate-300 bg-slate-800/90 dark:bg-[#121318] border border-slate-700/80 dark:border-neutral-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                <ShieldCheck className="w-4 h-4 text-purple-400" />
                 <span>Small Disciplined Squads · Zero Spam</span>
               </span>
 
@@ -127,8 +127,8 @@ export default function CommunityWidget() {
                 onClick={() => setIsWaitlisted((prev) => !prev)}
                 className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer select-none shadow-md ${
                   isWaitlisted
-                    ? "bg-emerald-600 text-white shadow-emerald-900/30"
-                    : "bg-[#234B3B] hover:bg-[#1b3b2e] text-white shadow-emerald-950/40"
+                    ? "bg-purple-600 text-white shadow-purple-900/30"
+                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/40"
                 }`}
               >
                 {isWaitlisted ? (
@@ -149,17 +149,17 @@ export default function CommunityWidget() {
           {/* Antigravity floating 3D emblem with Z-axis pop */}
           <div
             style={{ transform: "translateZ(45px)" }}
-            className="hidden lg:flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-800/70 border border-slate-700/80 shadow-2xl shrink-0 w-52 text-center backdrop-blur-2xl group-hover:shadow-[0_20px_40px_rgba(16,185,129,0.2)] transition-shadow"
+            className="hidden lg:flex flex-col items-center justify-center p-6 rounded-3xl bg-slate-800/70 dark:bg-[#121318] border border-slate-700/80 dark:border-neutral-700 shadow-2xl shrink-0 w-52 text-center backdrop-blur-2xl group-hover:shadow-[0_20px_40px_rgba(168,85,247,0.2)] transition-shadow"
           >
             <motion.div
               animate={{ y: [0, -6, 0], rotate: [0, 1.5, -1.5, 0] }}
               transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-[0_12px_28px_rgba(16,185,129,0.4)] mb-3"
+              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-white shadow-[0_12px_28px_rgba(168,85,247,0.35)] mb-3"
             >
               <Users className="w-9 h-9 stroke-[2.2]" />
             </motion.div>
             <span className="text-xs font-black text-slate-200 block">Focused Pods</span>
-            <span className="text-[11px] font-bold text-emerald-400 mt-0.5 block">4-5 Members Each</span>
+            <span className="text-[11px] font-bold text-purple-300 mt-0.5 block">4-5 Members Each</span>
           </div>
         </div>
       </AntigravityHeroCard>
@@ -167,11 +167,11 @@ export default function CommunityWidget() {
       {/* ── Interactive Pod Track Switcher ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#234B3B]" />
+          <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <Users className="w-4 h-4 text-purple-600 dark:text-[#C084FC]" />
             <span>Study Pod Formats</span>
           </h3>
-          <span className="text-[11px] font-bold text-slate-400">Select to preview daily routine</span>
+          <span className="text-[11px] font-bold text-slate-400 dark:text-neutral-400">Select to preview daily routine</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -188,29 +188,29 @@ export default function CommunityWidget() {
                 onClick={() => setSelectedPodId(pod.id)}
                 className={`p-5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
                   isSelected
-                    ? "bg-white border-[#234B3B] shadow-[0_14px_32px_rgba(35,75,59,0.1)] ring-1 ring-[#234B3B]/30"
-                    : "bg-white hover:bg-slate-50 border-slate-200/90 shadow-2xs"
+                    ? "bg-white dark:bg-[#18191F] border-purple-600 dark:border-purple-500 shadow-md ring-1 ring-purple-600/30 dark:ring-purple-500/30"
+                    : "bg-white dark:bg-[#18191F] hover:bg-slate-50 dark:hover:bg-[#20222A] border-slate-200/90 dark:border-neutral-800 shadow-2xs"
                 }`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-[#234B3B]">
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-[#121318] border border-purple-200/80 dark:border-neutral-700 flex items-center justify-center text-purple-600 dark:text-[#C084FC]">
                       <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-extrabold text-purple-800 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 px-2 py-0.5 rounded-md">
                       {pod.category}
                     </span>
                   </div>
 
-                  <h4 className="font-black text-slate-900 text-sm leading-snug">
+                  <h4 className="font-black text-slate-900 dark:text-white text-sm leading-snug">
                     {pod.name}
                   </h4>
-                  <p className="text-xs text-slate-600 font-medium line-clamp-2">
+                  <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium line-clamp-2">
                     {pod.description}
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-black text-[#234B3B]">
+                <div className="pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[11px] font-black text-purple-600 dark:text-[#C084FC]">
                   <span>Squad Routine</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
@@ -226,23 +226,23 @@ export default function CommunityWidget() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4"
+        className="p-6 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm space-y-4"
       >
-        <div className="border-b border-slate-100 pb-3">
-          <h4 className="text-base font-black text-slate-900">{selectedPod.name}</h4>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
+        <div className="border-b border-slate-100 dark:border-neutral-800 pb-3">
+          <h4 className="text-base font-black text-slate-900 dark:text-white">{selectedPod.name}</h4>
+          <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
             Target Audience: {selectedPod.targetRole}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           {selectedPod.dailyRoutine.map((item, i) => (
-            <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-              <span className="text-[10px] font-black text-[#234B3B] uppercase tracking-wider block">
+            <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1.5">
+              <span className="text-[10px] font-black text-purple-600 dark:text-[#C084FC] uppercase tracking-wider block">
                 Routine Step {i + 1}
               </span>
-              <h5 className="text-xs font-bold text-slate-900 leading-snug">{item.title}</h5>
-              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-snug">{item.title}</h5>
+              <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium leading-relaxed">
                 {item.desc}
               </p>
             </div>
@@ -257,23 +257,23 @@ export default function CommunityWidget() {
           return (
             <div
               key={std.title}
-              className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-2 flex flex-col justify-between"
+              className="p-5 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-2xs space-y-2 flex flex-col justify-between"
             >
               <div className="space-y-1.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-[#234B3B] mb-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-[#121318] border border-purple-200/80 dark:border-neutral-700 flex items-center justify-center text-purple-600 dark:text-[#C084FC] mb-2">
                   <Icon className="w-4 h-4" />
                 </div>
-                <h5 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+                <h5 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug">
                   {std.title}
                 </h5>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium leading-relaxed">
                   {std.desc}
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+              <div className="pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[10px] font-extrabold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">
                 <span>Standard</span>
-                <span className="text-[#234B3B] font-black">Coming Soon</span>
+                <span className="text-purple-600 dark:text-[#C084FC] font-black">Coming Soon</span>
               </div>
             </div>
           );
