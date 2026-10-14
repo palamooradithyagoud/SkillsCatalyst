@@ -62,7 +62,7 @@ export default function QuickHubNav() {
                 handleCareerPathClick(e as unknown as React.MouseEvent);
               }
             }}
-            className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-[#171527] dark:via-[#1A172E] dark:to-[#221B3C] rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-indigo-900/40 shadow-[0_4px_24px_rgba(99,102,241,0.05)] hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
+            className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-black dark:via-black dark:to-black rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(99,102,241,0.05)] dark:shadow-none hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] dark:hover:border-neutral-700 transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
             <div className="relative z-10 max-w-[65%] sm:max-w-[54%] flex flex-col justify-between h-full">
@@ -77,7 +77,7 @@ export default function QuickHubNav() {
                   Career
                   <span className="text-[#635BFF] dark:text-[#818CF8]">path</span>
                 </h3>
-                <p className="text-[10px] sm:text-[12.5px] text-slate-500 dark:text-slate-400 font-medium leading-tight sm:leading-snug mt-1 hidden xs:block line-clamp-2 max-w-[190px]">
+                <p className="text-[10px] sm:text-[12.5px] text-slate-500 dark:text-neutral-400 font-medium leading-tight sm:leading-snug mt-1 hidden xs:block line-clamp-2 max-w-[190px]">
                   Get a personalized roadmap to your dream career.
                 </p>
               </div>
@@ -115,19 +115,19 @@ export default function QuickHubNav() {
           >
             <Link
               href="/learning"
-              className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-black rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-blue-600 transition-colors truncate">
+                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                   Learn
                 </h4>
-                <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
+                <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 dark:text-neutral-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
                   Curated playlists.
                 </p>
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#f0f5ff] flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
+                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#f0f5ff] dark:bg-neutral-900 flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/courses.png"
@@ -138,7 +138,7 @@ export default function QuickHubNav() {
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -153,19 +153,19 @@ export default function QuickHubNav() {
           >
             <Link
               href="/practice"
-              className="group flex-1 bg-white rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-black rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight leading-snug group-hover:text-[#e11d48] transition-colors truncate">
+                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-[#e11d48] dark:group-hover:text-rose-400 transition-colors truncate">
                   Practice
                 </h4>
-                <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
+                <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 dark:text-neutral-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
                   Code &amp; interview prep.
                 </p>
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#fff1f4] flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
+                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#fff1f4] dark:bg-neutral-900 flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
                   <div className="relative w-full h-full">
                     <Image
                       src="/images/hub/projects.png"
@@ -176,7 +176,7 @@ export default function QuickHubNav() {
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -194,10 +194,10 @@ export default function QuickHubNav() {
         >
           <Link
             href="/explore?tab=scholarships"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fefce8] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fefce8] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/scholarships.png"
@@ -210,10 +210,10 @@ export default function QuickHubNav() {
 
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
-              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Scholarships
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -227,10 +227,10 @@ export default function QuickHubNav() {
         >
           <Link
             href="/explore?tab=events"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fffbeb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fffbeb] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/competition.png"
@@ -243,10 +243,10 @@ export default function QuickHubNav() {
 
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
-              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Competitions
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -260,10 +260,10 @@ export default function QuickHubNav() {
         >
           <Link
             href="/practice?section=dsa-sheets#dsa-sheets"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f4fa] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f4fa] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/mock.png"
@@ -276,10 +276,10 @@ export default function QuickHubNav() {
 
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
-              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 DSA Sheets
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -293,10 +293,10 @@ export default function QuickHubNav() {
         >
           <Link
             href="/career"
-            className="group block bg-white rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
             {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f5fb] flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
+            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f5fb] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
               <div className="relative w-full h-full">
                 <Image
                   src="/images/hub/interview.png"
@@ -309,10 +309,10 @@ export default function QuickHubNav() {
 
             {/* Bottom Label & Chevron */}
             <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-0.5 gap-1 min-w-0">
-              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 tracking-tight group-hover:text-[#4f46e5] transition-colors whitespace-nowrap">
+              <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Career
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 group-hover:bg-slate-200/90 flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>

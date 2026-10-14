@@ -87,34 +87,47 @@
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --bg-base: #09090b;
-  --bg-surface: #121214;
-  --bg-card: #121214;
-  --bg-card-hover: #18181b;
+  --background: #000000;
+  --foreground: #ffffff;
+  --bg-base: #000000;
+  --bg-surface: #000000;
+  --bg-card: #000000;
+  --bg-card-hover: #0a0a0a;
 
   --primary: #10b981;
   --primary-foreground: #022c22;
-  --secondary: #18181b;
-  --secondary-foreground: #fafafa;
-  --accent: #18181b;
-  --accent-foreground: #fafafa;
+  --secondary: #121212;
+  --secondary-foreground: #ffffff;
+  --accent: #121212;
+  --accent-foreground: #ffffff;
   --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
-  --muted: #18181b;
+  --destructive-foreground: #ffffff;
+  --muted: #121212;
   --muted-foreground: #a1a1aa;
-  --border: #27272a;
-  --input: #27272a;
+  --border: #262626;
+  --input: #262626;
   --ring: #10b981;
-  --card: #121214;
+  --card: #000000;
 
-  --text-primary: #f4f4f5;
+  --color-dark: #000000;
+  --color-neutral-800: #171717;
+
+  --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
 
-  --border-subtle: #27272a;
-  --border-card: #27272a;
+  --border-subtle: #262626;
+  --border-card: #262626;
+
+  /* Glass / Surfaces in Dark Mode */
+  --glass-bg: rgba(0, 0, 0, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(12, 12, 12, 0.95);
+}
+
+.dark body {
+  background-color: #000000;
+  color: #ffffff;
 }
 
 * {
@@ -240,9 +253,26 @@ input:-webkit-autofill:active {
   box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.04);
 }
 
+.dark .glass {
+  background: #000000;
+  border-color: #262626;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+}
+
+.dark .glass-strong {
+  background: #000000;
+  border-color: #262626;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+}
+
 .glass-sidebar {
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
+}
+
+.dark .glass-sidebar {
+  background: #000000;
+  border-right: 1px solid #262626;
 }
 
 /* ────────────── GLOW EFFECTS ────────────── */

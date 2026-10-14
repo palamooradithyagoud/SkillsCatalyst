@@ -91,7 +91,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
 
   return (
     <div
-      className={`w-full bg-white dark:bg-[#111625] rounded-[18px] sm:rounded-[22px] p-2.5 sm:p-3 border border-slate-100 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors relative group/tray ${className}`}
+      className={`w-full bg-white dark:bg-black rounded-[18px] sm:rounded-[22px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors relative group/tray ${className}`}
     >
       {/* ── Top Bar: Title, Refresh ── */}
       <div className="flex items-center justify-between mb-2 px-1">
@@ -115,7 +115,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             onClick={loadFeed}
             title="Refresh Stories"
             aria-label="Refresh Stories"
-            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-900 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin text-purple-600" : ""}`} />
           </button>
@@ -128,8 +128,8 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
         <div className="flex items-center gap-3 overflow-hidden py-1 px-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 animate-pulse">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
-              <div className="w-10 h-2 rounded bg-slate-100 dark:bg-slate-800" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800" />
+              <div className="w-10 h-2 rounded bg-slate-100 dark:bg-neutral-900" />
             </div>
           ))}
         </div>
@@ -150,7 +150,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             <button
               onClick={() => scrollBy(-180)}
               aria-label="Scroll left"
-              className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center shadow-md transition-all cursor-pointer"
+              className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white dark:bg-black border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-neutral-900 flex items-center justify-center shadow-md transition-all cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -182,7 +182,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             <button
               onClick={() => scrollBy(180)}
               aria-label="Scroll right"
-              className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center shadow-md transition-all cursor-pointer"
+              className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white dark:bg-black border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-neutral-900 flex items-center justify-center shadow-md transition-all cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>

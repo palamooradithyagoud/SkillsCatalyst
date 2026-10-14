@@ -205,8 +205,8 @@ export default function Sidebar() {
         }}
         className={`group relative flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors select-none ${
           isActive
-            ? "bg-[#ECEEF2] dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-            : "text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
+            ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
+            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-slate-50 dark:hover:bg-neutral-900/60 hover:text-slate-900 dark:hover:text-white"
         }`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
@@ -219,7 +219,7 @@ export default function Sidebar() {
             className={`w-[18px] h-[18px] shrink-0 transition-colors ${
               isActive
                 ? "text-slate-900 dark:text-white"
-                : "text-slate-800 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"
+                : "text-slate-800 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white"
             }`}
             strokeWidth={isActive ? 2 : 1.8}
           />
@@ -231,8 +231,8 @@ export default function Sidebar() {
           <span
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider ${
               item.badge === "AI"
-                ? "bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300"
-                : "bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
+                : "bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300"
             }`}
           >
             {item.badge}
@@ -245,7 +245,7 @@ export default function Sidebar() {
   return (
     <>
       <aside
-        className="hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 w-[240px] bg-white dark:bg-slate-900 border-r border-slate-200/90 dark:border-slate-800 select-none"
+        className="hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 w-[240px] bg-white dark:bg-black border-r border-slate-200/90 dark:border-neutral-800 select-none"
       >
 
         {/* ── Scrollable Navigation Items List (no scrollbars visible) ── */}
@@ -256,10 +256,10 @@ export default function Sidebar() {
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-4 border-b border-slate-200 dark:border-slate-800" />
+          <div className="my-2 mx-4 border-b border-slate-200 dark:border-neutral-800" />
 
           {/* CAREER & TOOLS Section Header */}
-          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-slate-200 uppercase">
+          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase">
             CAREER & INTELLIGENCE
           </div>
 
@@ -269,10 +269,10 @@ export default function Sidebar() {
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-4 border-b border-slate-200 dark:border-slate-800" />
+          <div className="my-2 mx-4 border-b border-slate-200 dark:border-neutral-800" />
 
           {/* ACCOUNT Section Header */}
-          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-slate-200 uppercase">
+          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase">
             ACCOUNT
           </div>
 
@@ -285,10 +285,10 @@ export default function Sidebar() {
 
       {/* ── Quick Search Modal (Command + K) ── */}
       {isSearchOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh] bg-slate-900/40 backdrop-blur-xs px-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh] bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs px-4">
           <div className="fixed inset-0" onClick={() => setIsSearchOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 gap-3">
+          <div className="relative w-full max-w-lg bg-white dark:bg-black rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-neutral-800 gap-3">
               <Search className="w-5 h-5 text-slate-400" />
               <input
                 type="text"
@@ -324,7 +324,7 @@ export default function Sidebar() {
                           router.push(item.href);
                         }
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-700 dark:hover:text-purple-300 text-left text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-purple-50 dark:hover:bg-neutral-900 hover:text-purple-700 dark:hover:text-purple-300 text-left text-sm font-medium text-slate-700 dark:text-neutral-300 transition-colors"
                     >
                       <Icon className="w-4 h-4 text-slate-500" />
                       <span>{item.title}</span>
@@ -333,7 +333,7 @@ export default function Sidebar() {
                 })}
             </div>
 
-            <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <div className="px-4 py-2 bg-slate-50 dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 text-[11px] text-slate-400 flex items-center justify-between">
               <span>Use ESC or click outside to dismiss</span>
               <span className="flex items-center gap-1 font-mono">
                 <Command className="w-3 h-3" /> K Navigator

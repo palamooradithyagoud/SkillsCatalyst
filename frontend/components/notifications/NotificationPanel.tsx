@@ -55,15 +55,15 @@ export default function NotificationPanel({
 
   const containerClasses =
     align === "mobile"
-      ? "fixed top-14 left-3 right-3 sm:left-auto sm:right-4 sm:w-92 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
-      : "absolute right-0 top-[46px] w-80 sm:w-92 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100";
+      ? "fixed top-14 left-3 right-3 sm:left-auto sm:right-4 sm:w-92 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
+      : "absolute right-0 top-[46px] w-80 sm:w-92 bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-xl shadow-slate-900/10 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100";
 
   return (
     <>
       {/* Backdrop for outside clicks */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/10 dark:bg-black/30 backdrop-blur-xs"
+          className="fixed inset-0 z-40 bg-black/10 dark:bg-black/60 backdrop-blur-xs"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -77,7 +77,7 @@ export default function NotificationPanel({
           aria-label="Notifications panel"
         >
           {/* Header */}
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-extrabold text-slate-900 dark:text-white">
                 Notifications
@@ -87,7 +87,7 @@ export default function NotificationPanel({
                   {unreadCount} new
                 </span>
               ) : (
-                <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 rounded-full">
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-neutral-900 dark:text-neutral-400 rounded-full">
                   Caught up
                 </span>
               )}
@@ -108,7 +108,7 @@ export default function NotificationPanel({
               <button
                 type="button"
                 onClick={() => setIsPreferencesOpen(true)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
                 title="Notification preferences"
                 aria-label="Notification preferences"
               >
@@ -117,7 +117,7 @@ export default function NotificationPanel({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
                 aria-label="Close notifications"
               >
                 <X className="w-4 h-4" />
@@ -127,14 +127,14 @@ export default function NotificationPanel({
 
           {/* Filter Tabs (only shown when notifications exist) */}
           {notifications.length > 0 && (
-            <div className="px-3 pt-2 pb-1.5 flex items-center gap-1 bg-slate-50/70 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="px-3 pt-2 pb-1.5 flex items-center gap-1 bg-slate-50/70 dark:bg-black border-b border-slate-100 dark:border-neutral-800">
               <button
                 type="button"
                 onClick={() => setFilter("all")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filter === "all"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs"
-                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                    ? "bg-white dark:bg-neutral-900 text-slate-900 dark:text-white shadow-2xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-neutral-300"
                 }`}
               >
                 All ({notifications.length})
@@ -144,8 +144,8 @@ export default function NotificationPanel({
                 onClick={() => setFilter("unread")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filter === "unread"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs"
-                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                    ? "bg-white dark:bg-neutral-900 text-slate-900 dark:text-white shadow-2xs"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-neutral-300"
                 }`}
               >
                 Unread ({unreadCount})
@@ -154,10 +154,10 @@ export default function NotificationPanel({
           )}
 
           {/* Notifications List */}
-          <div className="max-h-84 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div className="max-h-84 overflow-y-auto divide-y divide-slate-100 dark:divide-neutral-800">
             {filteredNotifications.length === 0 ? (
               <div className="py-10 px-6 text-center flex flex-col items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2.5">
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center text-slate-400 mb-2.5">
                   <Bell className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -194,8 +194,8 @@ export default function NotificationPanel({
                     key={notif.id}
                     className={`group relative w-full p-3 flex items-start gap-3 transition-colors ${
                       !notif.isRead
-                        ? "bg-[#5227FF]/[0.03] dark:bg-[#5227FF]/[0.06] hover:bg-slate-100/80 dark:hover:bg-slate-800/60"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                        ? "bg-[#5227FF]/[0.03] dark:bg-[#5227FF]/[0.06] hover:bg-slate-100/80 dark:hover:bg-neutral-900"
+                        : "hover:bg-slate-50 dark:hover:bg-neutral-900"
                     }`}
                   >
                     <button
@@ -238,7 +238,7 @@ export default function NotificationPanel({
                         e.stopPropagation();
                         deleteNotification(notif.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-red-500 transition-opacity cursor-pointer shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-400 hover:text-red-500 transition-opacity cursor-pointer shrink-0"
                       title="Delete notification"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -250,7 +250,7 @@ export default function NotificationPanel({
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex items-center justify-between text-[11px]">
+          <div className="p-2 border-t border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-black flex items-center justify-between text-[11px]">
             <span className="text-slate-400 px-2 font-medium">SkillsCatalyst Alerts</span>
             <button
               type="button"

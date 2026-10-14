@@ -43,10 +43,10 @@ export const TechNewsSourceCircle: React.FC<TechNewsSourceCircleProps> = ({
           className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full p-[2px] transition-all duration-300 group-hover:scale-105 group-active:scale-95 ${
             hasUnviewed
               ? "bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 shadow-[0_0_10px_rgba(244,63,94,0.3)] group-hover:shadow-[0_0_14px_rgba(244,63,94,0.5)]"
-              : "bg-slate-200 dark:bg-slate-700/80 border border-slate-300 dark:border-slate-600/60"
+              : "bg-slate-200 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700"
           }`}
         >
-          <div className="w-full h-full rounded-full bg-white dark:bg-[#0D111D] p-[1.5px] flex items-center justify-center overflow-hidden">
+          <div className="w-full h-full rounded-full bg-white dark:bg-black p-[1.5px] flex items-center justify-center overflow-hidden">
             {source.logo_url && !imgError ? (
               <Image
                 src={source.logo_url}
@@ -67,7 +67,7 @@ export const TechNewsSourceCircle: React.FC<TechNewsSourceCircleProps> = ({
 
         {/* Story Count Pill Badge: only shown if there are unwatched stories */}
         {hasUnviewed && displayCount > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 border border-white dark:border-slate-900 text-[8.5px] font-black text-white flex items-center justify-center shadow-xs animate-in zoom-in-50 duration-200">
+          <span className="absolute -bottom-0.5 -right-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 border border-white dark:border-black text-[8.5px] font-black text-white flex items-center justify-center shadow-xs animate-in zoom-in-50 duration-200">
             {displayCount}
           </span>
         )}

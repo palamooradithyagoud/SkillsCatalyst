@@ -276,13 +276,13 @@ export default function MetricCards({
           className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#eab308] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-all"
           onClick={() => router.push("/learning")}
         >
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-white">
             <Video className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white/20 shrink-0" />
             <span className="truncate">Playlists</span>
           </div>
 
           <div className="flex items-baseline gap-1 my-0.5">
-            <span className="text-lg sm:text-2xl font-black tracking-tight" suppressHydrationWarning>
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white" suppressHydrationWarning>
               {displayPlaylistsCount}
             </span>
             <span className="text-[7.5px] sm:text-[8.5px] font-bold px-1.5 py-0.2 rounded-full bg-white/25 text-white backdrop-blur-sm">
@@ -303,13 +303,13 @@ export default function MetricCards({
           className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#3b82f6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-all"
           onClick={() => router.push("/learning")}
         >
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-white">
             <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
             <span className="truncate">Progress</span>
           </div>
 
           <div className="flex items-baseline gap-1 my-0.5">
-            <span className="text-lg sm:text-2xl font-black tracking-tight">
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white">
               {overallProgressPct}%
             </span>
             <span className="text-[7.5px] sm:text-[8.5px] font-bold px-1 py-0.2 rounded-full bg-white/25 text-white backdrop-blur-sm truncate max-w-[45px]">
@@ -336,7 +336,7 @@ export default function MetricCards({
             }
           }}
         >
-          <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold">
+          <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-white">
             <div className="flex items-center gap-1 min-w-0">
               <Code2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-200 shrink-0" />
               <span className="truncate">LeetCode</span>
@@ -349,7 +349,7 @@ export default function MetricCards({
           </div>
 
           <div className="flex items-baseline gap-1 my-0.5">
-            <span className="text-lg sm:text-2xl font-black tracking-tight" suppressHydrationWarning>
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white" suppressHydrationWarning>
               {totalSolved}
             </span>
             <span className="text-[7.5px] sm:text-[8.5px] font-bold px-1.5 py-0.2 rounded-full bg-white/25 text-white backdrop-blur-sm">
@@ -378,12 +378,12 @@ export default function MetricCards({
           {/* ── Your Learning Progress Section ── */}
           <div className="space-y-2.5 sm:space-y-3">
             <div className="w-full max-w-[540px] flex items-center justify-between">
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
                 Your Learning Progress
               </h3>
               <Link
                 href="/learning"
-                className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 transition-colors"
+                className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-neutral-400 dark:hover:text-white flex items-center gap-0.5 transition-colors"
               >
                 <span>Browse & Save</span>
                 <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -391,21 +391,21 @@ export default function MetricCards({
             </div>
 
             {loading ? (
-              <div className="w-full max-w-[540px] bg-white rounded-[18px] p-6 border border-slate-100 shadow-sm flex items-center justify-center space-x-3 text-slate-400">
-                <Loader2 className="w-4 h-4 animate-spin text-[#234B3B]" />
+              <div className="w-full max-w-[540px] bg-white dark:bg-black rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
+                <Loader2 className="w-4 h-4 animate-spin text-[#234B3B] dark:text-emerald-400" />
                 <span className="text-xs font-semibold">Loading learning progress...</span>
               </div>
             ) : savedPlaylists.length === 0 ? (
               /* Empty State when user has zero saved YouTube playlists */
-              <div className="w-full max-w-[540px] bg-white rounded-[18px] p-6 border border-dashed border-slate-200 text-center space-y-2.5 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
+              <div className="w-full max-w-[540px] bg-white dark:bg-black rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto">
                   <Video className="w-5 h-5" />
                 </div>
                 <div className="space-y-1 max-w-xs mx-auto">
-                  <h4 className="text-xs font-bold text-slate-900">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                     No Learning Progress Yet
                   </h4>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                  <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium leading-relaxed">
                     Save playlists on the Learning page to track your real video completion progress here!
                   </p>
                 </div>
@@ -428,11 +428,11 @@ export default function MetricCards({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 * idx }}
                 onClick={() => router.push(course.href)}
-                className="playlist-card card-morph bg-white rounded-[14px] sm:rounded-[18px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex flex-col justify-between group min-h-[148px] sm:min-h-[162px]"
+                className="playlist-card card-morph bg-white dark:bg-black rounded-[14px] sm:rounded-[18px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex flex-col justify-between group min-h-[148px] sm:min-h-[162px]"
               >
                 <div>
                   {/* 3D Clay Image Thumbnail (Compact) */}
-                  <div className="relative w-11 h-11 sm:w-13 sm:h-13 mx-auto mb-1.5 overflow-hidden rounded-xl bg-slate-50/80 shrink-0 flex items-center justify-center">
+                  <div className="relative w-11 h-11 sm:w-13 sm:h-13 mx-auto mb-1.5 overflow-hidden rounded-xl bg-slate-50/80 dark:bg-neutral-900 shrink-0 flex items-center justify-center">
                     <Image
                       src={course.image}
                       alt={course.title}
@@ -444,34 +444,34 @@ export default function MetricCards({
 
                   {course.progressPct === 100 && (
                     <div className="flex items-center justify-end mb-1">
-                      <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     </div>
                   )}
 
-                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#234B3B] transition-colors line-clamp-1 leading-snug">
+                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#234B3B] dark:group-hover:text-emerald-400 transition-colors line-clamp-1 leading-snug">
                     {course.title}
                   </h4>
 
-                  <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 mt-0.5 flex items-center gap-1">
-                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#234B3B] fill-[#234B3B] shrink-0" />
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
+                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#234B3B] dark:text-emerald-400 fill-[#234B3B] dark:fill-emerald-400 shrink-0" />
                     <span>{course.completedVideos}/{course.totalVideos} videos completed</span>
                   </p>
                 </div>
 
                 {/* Exact Progress Bar & Percentage */}
                 <div className="space-y-1 mt-1.5">
-                  <div className="w-full bg-slate-100 h-1 sm:h-1.5 rounded-full overflow-hidden flex gap-0.5 p-0.2">
+                  <div className="w-full bg-slate-100 dark:bg-neutral-900 h-1 sm:h-1.5 rounded-full overflow-hidden flex gap-0.5 p-0.2">
                     <div
-                      className="bg-[#234B3B] h-full rounded-full transition-all duration-500"
+                      className="bg-[#234B3B] dark:bg-emerald-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${course.progressPct}%` }}
                     />
-                    <div className="bg-slate-200 h-full rounded-full flex-1" />
+                    <div className="bg-slate-200 dark:bg-neutral-800 h-full rounded-full flex-1" />
                   </div>
                   <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px]">
-                    <span className="font-bold text-slate-700">
+                    <span className="font-bold text-slate-700 dark:text-neutral-300">
                       {course.progressPct}% complete
                     </span>
-                    <span className="text-[8.5px] font-semibold text-slate-400 group-hover:text-[#234B3B] transition-colors inline-flex items-center gap-0.5">
+                    <span className="text-[8.5px] font-semibold text-slate-400 dark:text-neutral-500 group-hover:text-[#234B3B] dark:group-hover:text-emerald-400 transition-colors inline-flex items-center gap-0.5">
                       <span>Watch</span>
                       <ArrowUpRight className="w-2.5 h-2.5" />
                     </span>
@@ -487,14 +487,14 @@ export default function MetricCards({
       <div className="space-y-2.5 sm:space-y-3 pt-1">
         <div className="w-full max-w-[540px] flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-[#7c3aed]" />
-            <h3 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight">
+            <TrendingUp className="w-4 h-4 text-[#7c3aed] dark:text-purple-400" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
               Trending Skills
             </h3>
           </div>
           <Link
             href="/learning"
-            className="text-[11px] sm:text-xs font-bold text-[#7c3aed] hover:text-[#6d28d9] flex items-center gap-0.5 transition-colors"
+            className="text-[11px] sm:text-xs font-bold text-[#7c3aed] dark:text-purple-400 hover:text-[#6d28d9] dark:hover:text-purple-300 flex items-center gap-0.5 transition-colors"
           >
             <span>View All</span>
             <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -507,7 +507,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=Python")}
-            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official Python Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -527,13 +527,13 @@ export default function MetricCards({
               <circle cx="70.6" cy="96.1" r="4.2" fill="#FFFFFF"/>
             </svg>
             <div className="min-w-0 flex-1">
-              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#7c3aed] dark:group-hover:text-purple-400 transition-colors truncate leading-tight">
                 Python
               </h4>
-              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 leading-none mt-0.5">
                 ↑ 24%
               </span>
-              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 dark:text-neutral-400 font-medium truncate mt-0.5 leading-none">
                 1.2M learners
               </p>
             </div>
@@ -544,7 +544,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=React")}
-            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official React Atom Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -554,13 +554,13 @@ export default function MetricCards({
               <circle cx="12" cy="12" r="2.2" fill="#00D8FF" />
             </svg>
             <div className="min-w-0 flex-1">
-              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#7c3aed] dark:group-hover:text-purple-400 transition-colors truncate leading-tight">
                 React.js
               </h4>
-              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 leading-none mt-0.5">
                 ↑ 18%
               </span>
-              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 dark:text-neutral-400 font-medium truncate mt-0.5 leading-none">
                 850K learners
               </p>
             </div>
@@ -571,7 +571,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=AI")}
-            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Icon provided by user for Generative AI */}
             <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 relative flex items-center justify-center">
@@ -585,13 +585,13 @@ export default function MetricCards({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#7c3aed] dark:group-hover:text-purple-400 transition-colors truncate leading-tight">
                 Generative AI
               </h4>
-              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 leading-none mt-0.5">
                 ↑ 32%
               </span>
-              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 dark:text-neutral-400 font-medium truncate mt-0.5 leading-none">
                 1.5M learners
               </p>
             </div>
@@ -602,7 +602,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=UI%2FUX")}
-            className="bg-white rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official Figma Logo */}
             <svg className="w-5 h-6 sm:w-5.5 sm:h-7 shrink-0" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -613,13 +613,13 @@ export default function MetricCards({
               <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
             </svg>
             <div className="min-w-0 flex-1">
-              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 tracking-tight group-hover:text-[#7c3aed] transition-colors truncate leading-tight">
+              <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#7c3aed] dark:group-hover:text-purple-400 transition-colors truncate leading-tight">
                 UI/UX Design
               </h4>
-              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 leading-none mt-0.5">
+              <span className="inline-block text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 leading-none mt-0.5">
                 ↑ 21%
               </span>
-              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-medium truncate mt-0.5 leading-none">
+              <p className="text-[8.5px] sm:text-[9.5px] text-slate-400 dark:text-neutral-400 font-medium truncate mt-0.5 leading-none">
                 920K learners
               </p>
             </div>

@@ -261,7 +261,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         setIsPaused(false);
       }}
       style={{ touchAction: "pan-y" }}
-      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all cursor-grab active:cursor-grabbing"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-neutral-800 select-none group bg-slate-950 dark:bg-black transition-all cursor-grab active:cursor-grabbing"
     >
       {/* ── Background Event Banner with Tactile Drag & Swipe Animation ── */}
       <AnimatePresence initial={false} custom={direction}>
@@ -312,7 +312,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 3 }}
             transition={{ duration: 0.2 }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-slate-900/90 border border-slate-200/60 dark:border-slate-800 shadow-xs backdrop-blur-md"
+            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-black/90 border border-slate-200/60 dark:border-neutral-800 shadow-xs backdrop-blur-md"
           >
             <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-purple-400 shrink-0" />
             <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">
@@ -333,7 +333,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               handlePrev();
             }}
             aria-label="Previous event"
-            className="hidden sm:flex absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-slate-950/60 hover:bg-slate-900/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
+            className="hidden sm:flex absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 dark:border-neutral-800 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -344,7 +344,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               handleNext();
             }}
             aria-label="Next event"
-            className="hidden sm:flex absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-slate-950/60 hover:bg-slate-900/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
+            className="hidden sm:flex absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-black/60 hover:bg-black/90 text-white/80 hover:text-white items-center justify-center backdrop-blur-md border border-white/10 dark:border-neutral-800 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer shadow-md active:scale-95"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -379,7 +379,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         {isPremium ? (
           <span
             data-testid="event-hero-pro-badge"
-            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[10px] sm:text-xs font-semibold shadow-xs"
+            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 dark:bg-black/90 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 text-slate-800 dark:text-white text-[10px] sm:text-xs font-semibold shadow-xs"
           >
             <Crown className="w-3 h-3 text-purple-600 shrink-0" />
             <span>PRO User</span>
@@ -389,7 +389,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             type="button"
             onClick={handleOpenPricing}
             data-testid="event-hero-get-pro-btn"
-            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
+            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 dark:bg-black/90 hover:bg-purple-50/90 dark:hover:bg-neutral-900 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 hover:border-purple-300 text-slate-800 dark:text-white hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
           >
             <Crown className="w-3 h-3 text-purple-600 shrink-0" />
             <span>Get PRO</span>
