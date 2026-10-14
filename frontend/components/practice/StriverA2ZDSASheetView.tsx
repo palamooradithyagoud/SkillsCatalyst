@@ -579,7 +579,7 @@ export function StriverA2ZDSASheetView() {
                     className="border-t border-slate-100 dark:border-neutral-800"
                   >
                     {/* Clean Table Header */}
-                    <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 bg-slate-50/90 dark:bg-[#14151C] border-b border-slate-200/80 dark:border-neutral-800 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-neutral-400">
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 bg-slate-50/90 dark:bg-[#14151C] border-b border-slate-200/80 dark:border-neutral-800 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white">
                       <div className="flex items-center gap-2">
                         <span>Problem</span>
                       </div>
@@ -621,19 +621,19 @@ export function StriverA2ZDSASheetView() {
                                 onClick={(e) => toggleBookmark(problem.id, e)}
                                 aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                                 className={`shrink-0 transition-colors p-0.5 rounded cursor-pointer ${
-                                  isBookmarked ? "text-amber-500" : "text-slate-300 hover:text-slate-500"
+                                  isBookmarked ? "text-amber-500" : "text-slate-300 dark:text-neutral-500 hover:text-slate-500 dark:hover:text-neutral-300"
                                 }`}
                               >
                                 <Bookmark className="w-3.5 h-3.5 fill-current" />
                               </button>
 
-                              <span className="text-[11px] font-bold text-slate-400 shrink-0 w-8">
+                              <span className="text-[11px] font-bold text-slate-400 dark:text-neutral-300 shrink-0 w-8">
                                 Q{problem.qno}
                               </span>
 
                               <span
                                 className={`text-xs sm:text-sm font-semibold truncate ${
-                                  isSolved ? "line-through text-slate-400" : "text-slate-800"
+                                  isSolved ? "line-through text-slate-400 dark:text-neutral-500" : "text-slate-800 dark:text-white"
                                 }`}
                                 title={problem.title}
                               >
@@ -646,7 +646,7 @@ export function StriverA2ZDSASheetView() {
                               {hasVideo ? (
                                 <button
                                   onClick={() => setActiveVideoProblem(problem)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200/80 text-red-700 font-bold text-xs transition-all shadow-2xs hover:scale-102 cursor-pointer group"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200/80 dark:border-red-800/60 text-red-700 dark:text-red-300 font-bold text-xs transition-all shadow-2xs hover:scale-102 cursor-pointer group"
                                   title={
                                     startTimestamp !== null
                                       ? `Watch solution starting at ${formatTimestampBadge(startTimestamp)}`
