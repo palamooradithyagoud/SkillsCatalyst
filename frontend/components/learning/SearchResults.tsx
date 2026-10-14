@@ -122,26 +122,11 @@ export function SearchResults({
           exit={{ opacity: 0 }}
           className="flex flex-col items-center py-20 gap-3 text-center"
         >
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center mb-2 shadow-sm">
-            <Search className="w-8 h-8 text-purple-600" />
+          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-[#18191F] border border-purple-100 dark:border-neutral-800 flex items-center justify-center mb-1 shadow-sm">
+            <Search className="w-8 h-8 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-slate-800 font-bold text-base">
-            Search for a programming skill or technology to get started.
-          </div>
-          <div className="text-slate-500 text-xs mt-0.5 mb-2 font-medium">
-            Only skills, frameworks, and tools — no movies or entertainment.
-          </div>
-          <div className="text-slate-600 text-sm flex items-center gap-2 flex-wrap justify-center font-medium">
-            Try:{" "}
-            {["Python", "Java", "C++", "DSA", "React", "System Design", "Machine Learning", "SQL"].map((s) => (
-              <button
-                key={s}
-                onClick={() => onSelectSuggestion(s)}
-                className="text-purple-700 font-semibold hover:text-purple-800 hover:underline underline-offset-2 transition-colors px-2 py-0.5 rounded-md bg-purple-50/60 border border-purple-200/60"
-              >
-                {s}
-              </button>
-            ))}
+          <div className="text-slate-800 dark:text-white font-bold text-base sm:text-lg">
+            Search
           </div>
         </motion.div>
       )}
