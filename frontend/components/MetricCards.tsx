@@ -392,13 +392,13 @@ export default function MetricCards({
 
             {loading ? (
               <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
-                <Loader2 className="w-4 h-4 animate-spin text-[#234B3B] dark:text-emerald-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
                 <span className="text-xs font-semibold">Loading learning progress...</span>
               </div>
             ) : savedPlaylists.length === 0 ? (
               /* Empty State when user has zero saved YouTube playlists */
               <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-[#A855F7] dark:text-[#C084FC] flex items-center justify-center mx-auto">
                   <Video className="w-5 h-5" />
                 </div>
                 <div className="space-y-1 max-w-xs mx-auto">
@@ -412,7 +412,7 @@ export default function MetricCards({
                 <div className="pt-0.5">
                   <button
                     onClick={() => router.push("/learning")}
-                    className="px-4 py-2 rounded-full bg-[#234B3B] text-white text-[11px] font-bold hover:bg-[#1b3b2e] shadow-sm transition-all active:scale-95 cursor-pointer"
+                    className="px-4 py-2 rounded-full bg-[#A855F7] text-white text-[11px] font-bold hover:bg-[#9333EA] shadow-sm transition-all active:scale-95 cursor-pointer"
                   >
                     + Browse & Save Playlists
                   </button>
@@ -444,16 +444,16 @@ export default function MetricCards({
 
                   {course.progressPct === 100 && (
                     <div className="flex items-center justify-end mb-1">
-                      <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#A855F7] dark:text-[#C084FC] shrink-0" />
                     </div>
                   )}
 
-                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#234B3B] dark:group-hover:text-emerald-400 transition-colors line-clamp-1 leading-snug">
+                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#A855F7] dark:group-hover:text-[#C084FC] transition-colors line-clamp-1 leading-snug">
                     {course.title}
                   </h4>
 
                   <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
-                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#234B3B] dark:text-emerald-400 fill-[#234B3B] dark:fill-emerald-400 shrink-0" />
+                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#A855F7] dark:text-[#C084FC] fill-[#A855F7] dark:fill-[#C084FC] shrink-0" />
                     <span>{course.completedVideos}/{course.totalVideos} videos completed</span>
                   </p>
                 </div>
@@ -462,7 +462,7 @@ export default function MetricCards({
                 <div className="space-y-1 mt-1.5">
                   <div className="w-full bg-slate-100 dark:bg-neutral-900 h-1 sm:h-1.5 rounded-full overflow-hidden flex gap-0.5 p-0.2">
                     <div
-                      className="bg-[#234B3B] dark:bg-emerald-500 h-full rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-[#A855F7] to-[#C084FC] dark:from-[#A855F7] dark:to-[#C084FC] h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(192,132,252,0.4)]"
                       style={{ width: `${course.progressPct}%` }}
                     />
                     <div className="bg-slate-200 dark:bg-neutral-800 h-full rounded-full flex-1" />
@@ -471,7 +471,7 @@ export default function MetricCards({
                     <span className="font-bold text-slate-700 dark:text-neutral-300">
                       {course.progressPct}% complete
                     </span>
-                    <span className="text-[8.5px] font-semibold text-slate-400 dark:text-neutral-500 group-hover:text-[#234B3B] dark:group-hover:text-emerald-400 transition-colors inline-flex items-center gap-0.5">
+                    <span className="text-[8.5px] font-semibold text-slate-400 dark:text-neutral-500 group-hover:text-[#A855F7] dark:group-hover:text-[#C084FC] transition-colors inline-flex items-center gap-0.5">
                       <span>Watch</span>
                       <ArrowUpRight className="w-2.5 h-2.5" />
                     </span>
