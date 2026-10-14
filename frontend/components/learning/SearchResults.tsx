@@ -43,10 +43,10 @@ export function SearchResults({
           exit={{ opacity: 0 }}
           className="flex flex-col items-center py-24 gap-4"
         >
-          <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
-          <div className="text-slate-600 text-sm font-medium">
-            Searching CSV database &amp; YouTube API for{" "}
-            <span className="text-slate-900 font-bold">"{query}"</span>...
+          <Loader2 className="w-10 h-10 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
+          <div className="text-slate-600 dark:text-neutral-400 text-sm font-medium">
+            Searching curated playlists &amp; YouTube API for{" "}
+            <span className="text-slate-900 dark:text-white font-bold">"{query}"</span>...
           </div>
         </motion.div>
       )}
@@ -59,11 +59,11 @@ export function SearchResults({
           exit={{ opacity: 0 }}
           className="flex flex-col items-center py-20 gap-3 text-center"
         >
-          <Globe className="w-12 h-12 text-slate-400" />
-          <div className="text-slate-600 text-sm font-medium">
-            No results found for "<span className="text-slate-900 font-bold">{searchTerm}</span>"
+          <Globe className="w-12 h-12 text-slate-400 dark:text-neutral-500" />
+          <div className="text-slate-600 dark:text-neutral-400 text-sm font-medium">
+            No results found for "<span className="text-slate-900 dark:text-white font-bold">{searchTerm}</span>"
           </div>
-          <div className="text-slate-500 text-xs">Try a broader term like "Python", "Java", or "DSA"</div>
+          <div className="text-slate-500 dark:text-neutral-500 text-xs">Try a broader term like "Python", "Java", or "DSA"</div>
         </motion.div>
       )}
 
@@ -75,27 +75,10 @@ export function SearchResults({
           exit={{ opacity: 0 }}
         >
           <div className="flex items-center gap-3 mb-5">
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               {results.length} Playlist{results.length !== 1 ? "s" : ""} for
-              <span className="text-purple-600 font-extrabold ml-2">"{searchTerm}"</span>
+              <span className="text-[#A855F7] dark:text-[#C084FC] font-extrabold ml-2">"{searchTerm}"</span>
             </h2>
-            <span
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 shadow-xs ${
-                searchData?.source === "csv"
-                  ? "bg-purple-50 border-purple-200/90 text-purple-700"
-                  : "bg-indigo-50 border-indigo-200/90 text-indigo-700"
-              }`}
-            >
-              {searchData?.source === "csv" ? (
-                <>
-                  <CheckCircle className="w-3 h-3 text-purple-600" /> From local CSV database
-                </>
-              ) : (
-                <>
-                  <Database className="w-3 h-3 text-indigo-600" /> Fetched from YouTube API
-                </>
-              )}
-            </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {results.map((pl, i) => (

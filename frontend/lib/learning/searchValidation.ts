@@ -99,10 +99,10 @@ export function isNonSkillQuery(q: string): string | null {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export function getLevelStyle(level: string): string {
   const l = level.toLowerCase();
-  if (l.includes("beginner"))     return "text-emerald-700 bg-emerald-50 border-emerald-200/90 font-bold shadow-xs";
-  if (l.includes("intermediate")) return "text-sky-700 bg-sky-50 border-sky-200/90 font-bold shadow-xs";
-  if (l.includes("advanced"))     return "text-indigo-700 bg-indigo-50 border-indigo-200/90 font-bold shadow-xs";
-  return "text-purple-700 bg-purple-50 border-purple-200/90 font-bold shadow-xs";
+  if (l.includes("beginner"))     return "text-emerald-700 bg-emerald-50 border-emerald-200/90 dark:text-[#C084FC] dark:bg-purple-950/60 dark:border-purple-800/60 font-bold shadow-xs";
+  if (l.includes("intermediate")) return "text-sky-700 bg-sky-50 border-sky-200/90 dark:text-sky-300 dark:bg-sky-950/60 dark:border-sky-800/60 font-bold shadow-xs";
+  if (l.includes("advanced"))     return "text-indigo-700 bg-indigo-50 border-indigo-200/90 dark:text-indigo-300 dark:bg-indigo-950/60 dark:border-indigo-800/60 font-bold shadow-xs";
+  return "text-purple-700 bg-purple-50 border-purple-200/90 dark:text-[#C084FC] dark:bg-purple-950/60 dark:border-purple-800/60 font-bold shadow-xs";
 }
 
 export function extractPlaylistId(url: string): string | null {
