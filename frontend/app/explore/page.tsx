@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Layers,
   Sparkles,
   TrendingUp,
   Briefcase,
@@ -80,7 +81,7 @@ const PROGRAMMING_LANGUAGES = [
     desc: "Syntax, pointers, memory management, and procedural problem-solving.",
     query: "C Language",
     badge: "Procedural",
-    badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+    badgeColor: "bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/60",
     iconGradient: "from-blue-600 to-cyan-600",
     borderHover: "hover:border-blue-500",
   },
@@ -91,7 +92,7 @@ const PROGRAMMING_LANGUAGES = [
     desc: "Object-oriented programming, STL containers, templates, and competitive DSA.",
     query: "C++",
     badge: "Competitive",
-    badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    badgeColor: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60",
     iconGradient: "from-indigo-600 to-purple-600",
     borderHover: "hover:border-indigo-500",
   },
@@ -102,7 +103,7 @@ const PROGRAMMING_LANGUAGES = [
     desc: "Classes, objects, JVM architecture, Collections framework, and robust backend logic.",
     query: "Java",
     badge: "Enterprise",
-    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+    badgeColor: "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60",
     iconGradient: "from-amber-500 to-orange-600",
     borderHover: "hover:border-amber-500",
   },
@@ -113,9 +114,9 @@ const PROGRAMMING_LANGUAGES = [
     desc: "Readable syntax, versatile data structures, algorithms, and practical development.",
     query: "Python",
     badge: "High-Level",
-    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    iconGradient: "from-emerald-600 to-teal-600",
-    borderHover: "hover:border-emerald-500",
+    badgeColor: "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800/60",
+    iconGradient: "from-purple-600 to-indigo-600",
+    borderHover: "hover:border-purple-500",
   },
 ];
 
@@ -261,9 +262,7 @@ function ExplorePageContent() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28">
       {/* ── Top Header ── */}
-      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
-
+      <div className="bg-white dark:bg-[#18191F] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md relative overflow-hidden">
         <div className="flex flex-row items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
@@ -280,7 +279,7 @@ function ExplorePageContent() {
               )}
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none flex items-center min-h-[28px] sm:min-h-[36px]">
+              <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none flex items-center min-h-[28px] sm:min-h-[36px]">
                 <StrokeText
                   key={activeTab}
                   text={
@@ -309,7 +308,7 @@ function ExplorePageContent() {
                   className="h-7 sm:h-9 w-auto"
                 />
               </h1>
-              <p className="text-slate-500 text-[11px] sm:text-sm font-semibold mt-0.5">
+              <p className="text-slate-500 dark:text-neutral-400 text-[11px] sm:text-sm font-semibold mt-0.5">
                 {activeTab === "trending" && "Curated roadmaps & skill paths"}
                 {activeTab === "scholarships" && "Verified tech scholarships & fellowships"}
                 {activeTab === "news" && "48-hour curated tech stories & engineering drops"}
@@ -340,7 +339,7 @@ function ExplorePageContent() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
                 isActive
                   ? "bg-pink-600 text-white shadow-xs"
-                  : "bg-white text-slate-600 border border-slate-200"
+                  : "bg-white dark:bg-[#18191F] text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -358,11 +357,11 @@ function ExplorePageContent() {
       {/* ── 1. Foundation Carousel (Compact Poster Cards on Smartphone) ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-[#C084FC]" />
             <span>Foundation</span>
           </h2>
-          <span className="text-[10px] sm:text-[11px] text-slate-400 font-extrabold">Swipe →</span>
+          <span className="text-[10px] sm:text-[11px] text-slate-400 dark:text-neutral-500 font-extrabold">Swipe →</span>
         </div>
 
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar mobile-touch-scroll pb-2 snap-x snap-mandatory px-0.5">
@@ -370,38 +369,33 @@ function ExplorePageContent() {
             const isTrigger = !item.href || item.isModalTrigger;
             const cardInner = (
               <>
-                {/* Vibrant ambient glow */}
-                <div
-                  className={`absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br ${item.gradient} opacity-15 rounded-full blur-xl group-hover:opacity-30 transition-opacity pointer-events-none`}
-                />
-
                 <div className="relative z-10 space-y-2">
                   <div className="flex items-center justify-between gap-1 flex-wrap">
                     <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs">
                       {item.category}
                     </span>
-                    <span className="text-[9px] sm:text-[11px] font-black bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shadow-2xs">
+                    <span className="text-[9px] sm:text-[11px] font-black bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 px-2 py-0.5 rounded-full shadow-2xs">
                       {item.badge}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-xs sm:text-lg font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
+                    <h3 className="text-xs sm:text-lg font-black text-slate-900 dark:text-white leading-snug group-hover:text-indigo-600 dark:group-hover:text-[#C084FC] transition-colors line-clamp-2">
                       {item.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-600 mt-1.5 font-extrabold">
-                      <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.level}</span>
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-600 dark:text-neutral-300 mt-1.5 font-extrabold">
+                      <span className="bg-slate-100 dark:bg-[#121318] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-neutral-700">{item.level}</span>
                       {item.duration && (
                         <>
                           <span>•</span>
-                          <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">{item.duration}</span>
+                          <span className="bg-slate-100 dark:bg-[#121318] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-neutral-700">{item.duration}</span>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-xs font-black text-indigo-600 group-hover:translate-x-1 transition-transform relative z-10">
+                <div className="pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[10px] sm:text-xs font-black text-indigo-600 dark:text-[#C084FC] group-hover:translate-x-1 transition-transform relative z-10">
                   <span>{isTrigger ? "Choose Language" : "Start Learning"}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </div>
@@ -413,7 +407,7 @@ function ExplorePageContent() {
                 <button
                   key={item.id}
                   onClick={() => setIsLangModalOpen(true)}
-                  className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3 text-left cursor-pointer"
+                  className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 dark:border-neutral-800 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3 text-left cursor-pointer"
                 >
                   {cardInner}
                 </button>
@@ -424,7 +418,7 @@ function ExplorePageContent() {
               <Link
                 key={item.id}
                 href={item.href || "/learning"}
-                className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3"
+                className="card-morph snap-start flex-shrink-0 w-[200px] sm:w-[330px] bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 dark:border-neutral-800 relative overflow-hidden group hover:shadow-xl shadow-sm flex flex-col justify-between space-y-3"
               >
                 {cardInner}
               </Link>
@@ -436,8 +430,8 @@ function ExplorePageContent() {
       {/* ── 2. Trending Skill Chips Carousel ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-[#C084FC]" />
             <span>Top Tech Stack Skills</span>
           </h2>
         </div>
@@ -449,14 +443,14 @@ function ExplorePageContent() {
               <Link
                 key={skill.name}
                 href={`/learning?query=${encodeURIComponent(skill.query || skill.name)}`}
-                className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-bold text-slate-700 hover:text-slate-950 transition-all shadow-2xs hover:shadow-md cursor-pointer"
+                className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl bg-white dark:bg-[#18191F] hover:bg-slate-50 dark:hover:bg-[#20222A] border border-slate-200/90 dark:border-neutral-800 text-xs font-bold text-slate-700 dark:text-neutral-300 hover:text-slate-950 dark:hover:text-white transition-all shadow-2xs hover:shadow-md cursor-pointer"
               >
                 <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-2xs shrink-0">
                   <Icon className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />
                 </div>
                 <div>
-                  <div className="font-extrabold text-slate-900 text-[11px] sm:text-xs whitespace-nowrap">{skill.name}</div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold mt-0.5">{skill.count}</div>
+                  <div className="font-extrabold text-slate-900 dark:text-white text-[11px] sm:text-xs whitespace-nowrap">{skill.name}</div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-neutral-400 font-bold mt-0.5">{skill.count}</div>
                 </div>
               </Link>
             );
@@ -467,11 +461,11 @@ function ExplorePageContent() {
       {/* ── 3. Career Tracks Carousel ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-            <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+            <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 dark:text-[#C084FC]" />
             <span>Target Career Tracks</span>
           </h2>
-          <Link href="/roadmaps" className="text-[11px] sm:text-xs text-indigo-600 font-black hover:underline">
+          <Link href="/roadmaps" className="text-[11px] sm:text-xs text-indigo-600 dark:text-[#C084FC] font-black hover:underline">
             All Tracks →
           </Link>
         </div>
@@ -480,12 +474,12 @@ function ExplorePageContent() {
           {CAREER_TRACKS.map((track) => (
             <div
               key={track.title}
-              className="snap-start flex-shrink-0 w-[210px] sm:w-[320px] bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 flex flex-col justify-between shadow-sm space-y-3 hover:shadow-lg transition-all overflow-hidden"
+              className="snap-start flex-shrink-0 w-[210px] sm:w-[320px] bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-slate-200/90 dark:border-neutral-800 flex flex-col justify-between shadow-sm space-y-3 hover:shadow-lg transition-all overflow-hidden"
             >
               <div>
                 <Link
                   href={`/learning?query=${encodeURIComponent(track.title)}`}
-                  className="text-xs sm:text-base font-black text-slate-900 hover:text-indigo-600 transition-colors mb-2 leading-snug block"
+                  className="text-xs sm:text-base font-black text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-[#C084FC] transition-colors mb-2 leading-snug block"
                 >
                   {track.title}
                 </Link>
@@ -494,15 +488,15 @@ function ExplorePageContent() {
                     <Link
                       key={s}
                       href={`/learning?query=${encodeURIComponent(s)}`}
-                      className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-200/80 shadow-2xs transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-indigo-50 dark:bg-[#121318] hover:bg-indigo-100 dark:hover:bg-[#20222A] text-indigo-700 dark:text-purple-300 hover:text-indigo-900 dark:hover:text-purple-200 border border-indigo-200/80 dark:border-neutral-700 shadow-2xs transition-colors cursor-pointer"
                     >
                       {s}
                     </Link>
                   ))}
                 </div>
               </div>
-              <div className="text-[10px] sm:text-[11px] text-slate-600 font-bold border-t border-slate-100 pt-2 flex items-center justify-between">
-                <span>Hiring: <strong className="text-slate-900 font-black truncate max-w-[130px] inline-block align-bottom">{track.companyFav}</strong></span>
+              <div className="text-[10px] sm:text-[11px] text-slate-600 dark:text-neutral-400 font-bold border-t border-slate-100 dark:border-neutral-800 pt-2 flex items-center justify-between">
+                <span>Hiring: <strong className="text-slate-900 dark:text-white font-black truncate max-w-[130px] inline-block align-bottom">{track.companyFav}</strong></span>
               </div>
             </div>
           ))}
@@ -512,8 +506,8 @@ function ExplorePageContent() {
       {/* ── 4. Popular Video Tracks & Practice Sets (2-Column Mobile Grid) ── */}
       <div className="space-y-2.5 sm:space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+          <h2 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-[#C084FC]" />
             <span>Popular Tracks &amp; Sets</span>
           </h2>
         </div>
@@ -523,26 +517,26 @@ function ExplorePageContent() {
             <Link
               key={c.title}
               href={`/learning?query=${encodeURIComponent(c.query || c.title)}`}
-              className="w-full min-w-0 bg-white p-3 sm:p-4.5 rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3.5 cursor-pointer group overflow-hidden"
+              className="w-full min-w-0 bg-white dark:bg-[#18191F] p-3 sm:p-4.5 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3.5 cursor-pointer group overflow-hidden"
             >
               <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
                 <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white" />
               </div>
               <div className="w-full min-w-0 flex-1 flex flex-col justify-between self-stretch">
                 <div>
-                  <h4 className="text-[11px] sm:text-xs font-black text-slate-900 line-clamp-2 leading-snug break-words group-hover:text-purple-700 transition-colors">
+                  <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white line-clamp-2 leading-snug break-words group-hover:text-purple-700 dark:group-hover:text-[#C084FC] transition-colors">
                     {c.title}
                   </h4>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-semibold mt-0.5 truncate block w-full">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 font-semibold mt-0.5 truncate block w-full">
                     {c.instructor}
                   </p>
                 </div>
-                <div className="w-full min-w-0 flex items-center justify-between gap-1 mt-2 sm:mt-2.5 pt-1.5 sm:pt-2 border-t border-slate-100 text-[9px] sm:text-[10px] font-black">
-                  <span className="text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-md shrink-0 flex items-center gap-0.5">
+                <div className="w-full min-w-0 flex items-center justify-between gap-1 mt-2 sm:mt-2.5 pt-1.5 sm:pt-2 border-t border-slate-100 dark:border-neutral-800 text-[9px] sm:text-[10px] font-black">
+                  <span className="text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 px-1.5 py-0.5 rounded-md shrink-0 flex items-center gap-0.5">
                     <span>⭐</span>
                     <span>{c.rating}</span>
                   </span>
-                  <span className="text-slate-600 bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded-md truncate font-bold text-right min-w-0 max-w-[70px] sm:max-w-none" title={c.level}>
+                  <span className="text-slate-600 dark:text-neutral-300 bg-slate-100 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 px-1.5 py-0.5 rounded-md truncate font-bold text-right min-w-0 max-w-[70px] sm:max-w-none" title={c.level}>
                     {c.level}
                   </span>
                 </div>
@@ -555,26 +549,26 @@ function ExplorePageContent() {
       {/* ── 5. Company Question Banks & Hackathons ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
         {/* Company Banks */}
-        <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md space-y-3.5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <h3 className="text-[11px] sm:text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+        <div className="bg-white dark:bg-[#18191F] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-3.5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-2.5">
+            <h3 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-[#C084FC]" />
               <span>Company Question Banks</span>
             </h3>
-            <Link href="/practice?period=thirty-days&mode=company" className="text-[11px] sm:text-xs text-blue-600 font-black hover:underline">
+            <Link href="/practice?period=thirty-days&mode=company" className="text-[11px] sm:text-xs text-blue-600 dark:text-[#C084FC] font-black hover:underline">
               Practice 30D →
             </Link>
           </div>
 
           {/* Quick Enter Company Search */}
           <form onSubmit={handleCompanySubmit} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-neutral-500" />
             <input
               type="text"
               value={companyInput}
               onChange={(e) => setCompanyInput(e.target.value)}
               placeholder="Enter company (e.g. Google, Meta, TCS)..."
-              className="w-full bg-slate-50 border border-slate-200/90 focus:border-indigo-500 focus:bg-white text-slate-900 placeholder:text-slate-400 text-xs font-bold pl-9 pr-16 py-2 rounded-xl transition-all outline-none shadow-2xs"
+              className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-700 focus:border-indigo-500 focus:bg-white dark:focus:bg-[#18191F] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 text-xs font-bold pl-9 pr-16 py-2 rounded-xl transition-all outline-none shadow-2xs"
             />
             <button
               type="submit"
@@ -589,34 +583,34 @@ function ExplorePageContent() {
               <Link
                 key={comp.name}
                 href={`/practice?company=${comp.slug}&period=thirty-days&mode=company`}
-                className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-indigo-500 hover:bg-white transition-all text-left shadow-2xs cursor-pointer group min-w-0 overflow-hidden"
+                className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 hover:border-indigo-500 dark:hover:border-purple-500 hover:bg-white dark:hover:bg-[#20222A] transition-all text-left shadow-2xs cursor-pointer group min-w-0 overflow-hidden"
               >
                 <div className="flex items-center justify-between gap-1 min-w-0">
-                  <div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 truncate min-w-0">{comp.name}</div>
-                  <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.2 rounded-md shrink-0">
+                  <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#C084FC] truncate min-w-0">{comp.name}</div>
+                  <span className="text-[9px] font-black text-purple-300 bg-purple-950/60 border border-purple-800/60 px-1.5 py-0.2 rounded-md shrink-0">
                     30D
                   </span>
                 </div>
-                <div className="text-[9px] sm:text-[10px] text-indigo-600 font-bold mt-0.5 truncate">{comp.open}</div>
+                <div className="text-[9px] sm:text-[10px] text-indigo-600 dark:text-[#C084FC] font-bold mt-0.5 truncate">{comp.open}</div>
               </Link>
             ))}
           </div>
         </div>
 
         {/* Hackathons & Challenges */}
-        <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-md space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <h3 className="text-[11px] sm:text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
+        <div className="bg-white dark:bg-[#18191F] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-2.5">
+            <h3 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 sm:gap-2">
               <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
               <span>Hackathons &amp; Challenges</span>
             </h3>
-            <span className="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">Live</span>
+            <span className="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-950/60 text-purple-300 border border-purple-800/60 shrink-0">Live</span>
           </div>
 
           {loadingHackathons ? (
-            <div className="p-4 text-center text-xs text-slate-400 font-semibold">Loading hackathons...</div>
+            <div className="p-4 text-center text-xs text-slate-400 dark:text-neutral-500 font-semibold">Loading hackathons...</div>
           ) : hackathons.length === 0 ? (
-            <div className="p-4 text-center text-xs text-slate-500 font-medium bg-slate-50 rounded-xl border border-slate-200/70">
+            <div className="p-4 text-center text-xs text-slate-500 dark:text-neutral-400 font-medium bg-slate-50 dark:bg-[#121318] rounded-xl border border-slate-200/70 dark:border-neutral-800">
               No live hackathons active today. Check back soon for upcoming campus challenges!
             </div>
           ) : (
@@ -627,13 +621,13 @@ function ExplorePageContent() {
                   href={h.event_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100/70 hover:to-orange-100/70 border border-amber-200/80 flex items-center justify-between shadow-2xs gap-2 min-w-0 overflow-hidden transition-all cursor-pointer group"
+                  className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-50/70 dark:bg-[#121318] hover:bg-amber-100/70 dark:hover:bg-[#20222A] border border-amber-200/80 dark:border-neutral-800 flex items-center justify-between shadow-2xs gap-2 min-w-0 overflow-hidden transition-all cursor-pointer group"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate group-hover:text-amber-700 transition-colors">
+                    <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                       {h.event_name}
                     </div>
-                    <div className="text-[9px] sm:text-[10px] text-amber-900 font-extrabold mt-0.5 truncate">
+                    <div className="text-[9px] sm:text-[10px] text-amber-900 dark:text-amber-300 font-extrabold mt-0.5 truncate">
                       {h.conducted_by_college} {h.prize_pool ? `• Prize: ${h.prize_pool}` : ""}
                     </div>
                   </div>
@@ -684,22 +678,19 @@ function ExplorePageContent() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-white w-full max-w-xl rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xl relative overflow-hidden space-y-5 z-10"
+              className="bg-white dark:bg-[#18191F] w-full max-w-xl rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-neutral-800 shadow-2xl relative overflow-hidden space-y-5 z-10"
             >
-              {/* Glow Accent */}
-              <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
               {/* Header */}
               <div className="flex items-start justify-between gap-3 relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-xs shrink-0">
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-[#121318] border border-indigo-200 dark:border-neutral-700 flex items-center justify-center text-indigo-600 dark:text-[#C084FC] shadow-xs shrink-0">
                     <Code2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
                       Choose Programming Language
                     </h3>
-                    <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">
                       Select a language to launch your foundation learning track.
                     </p>
                   </div>
@@ -707,7 +698,7 @@ function ExplorePageContent() {
 
                 <button
                   onClick={() => setIsLangModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -722,7 +713,7 @@ function ExplorePageContent() {
                       setIsLangModalOpen(false);
                       router.push(`/learning?query=${encodeURIComponent(lang.query)}`);
                     }}
-                    className={`p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200/90 ${lang.borderHover} transition-all duration-200 text-left shadow-2xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group flex flex-col justify-between space-y-2.5`}
+                    className={`p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] hover:bg-white dark:hover:bg-[#20222A] border border-slate-200/90 dark:border-neutral-700 ${lang.borderHover} transition-all duration-200 text-left shadow-2xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group flex flex-col justify-between space-y-2.5`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
@@ -732,10 +723,10 @@ function ExplorePageContent() {
                           {lang.name}
                         </div>
                         <div>
-                          <div className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-[#C084FC] transition-colors">
                             {lang.title}
                           </div>
-                          <div className="text-[10px] font-bold text-slate-500">
+                          <div className="text-[10px] font-bold text-slate-500 dark:text-neutral-400">
                             {lang.tagline}
                           </div>
                         </div>
@@ -745,11 +736,11 @@ function ExplorePageContent() {
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium line-clamp-2 leading-relaxed">
                       {lang.desc}
                     </p>
 
-                    <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] font-black text-indigo-600">
+                    <div className="pt-2 border-t border-slate-200/70 dark:border-neutral-700/70 flex items-center justify-between text-[11px] font-black text-indigo-600 dark:text-[#C084FC]">
                       <span>Open in Learning</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </div>
