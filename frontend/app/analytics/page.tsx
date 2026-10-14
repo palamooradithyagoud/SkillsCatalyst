@@ -154,6 +154,7 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
           }).join(" ")}
           fill="none"
           stroke="#cbd5e1"
+          className="stroke-slate-200 dark:stroke-neutral-800"
           strokeWidth="1"
         />
       ))}
@@ -164,6 +165,7 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
           x2={cx + r * Math.cos(angle(i))}
           y2={cy + r * Math.sin(angle(i))}
           stroke="#cbd5e1"
+          className="stroke-slate-200 dark:stroke-neutral-800"
           strokeWidth="1"
         />
       ))}
@@ -184,6 +186,7 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
             r={4.5}
             fill="#4f46e5"
             stroke="#ffffff"
+            className="stroke-white dark:stroke-[#18191F]"
             strokeWidth="2"
           />
         );
@@ -201,7 +204,8 @@ function RadarChart({ data }: { data: { label: string; score: number }[] }) {
             dominantBaseline="middle"
             fontSize="10"
             fontWeight="800"
-            fill="#334155"
+            fill="currentColor"
+            className="fill-slate-600 dark:fill-neutral-300"
             fontFamily="Inter, sans-serif"
           >
             {d.label}
@@ -220,7 +224,7 @@ function RingProgress({ pct: p, color, size = 80, stroke = 8 }: { pct: number; c
   const offset = circ - (safePct / 100) * circ;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={stroke} className="stroke-slate-200 dark:stroke-neutral-800" />
       <motion.circle
         cx={size/2} cy={size/2} r={radius}
         fill="none" stroke={color} strokeWidth={stroke}
@@ -576,22 +580,22 @@ export default function AnalyticsPage() {
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden"
+        className="bg-white dark:bg-[#18191F] p-6 rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden"
       >
         <div className="flex items-center gap-4 relative z-10">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
             <LayoutDashboard className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Performance Analytics</h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Performance Analytics</h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">
               Live metrics aggregated directly from your connected coding profile stats
             </p>
           </div>
         </div>
 
         {/* Time-range selector */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/90 shrink-0 z-10">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-800 shrink-0 z-10">
           {TIME_RANGES.map((r) => (
             <button
               key={r}
@@ -599,7 +603,7 @@ export default function AnalyticsPage() {
               className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 timeRange === r
                   ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/25"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#20222A]"
               }`}
             >
               {r}
@@ -613,18 +617,18 @@ export default function AnalyticsPage() {
         {/* Metric 1: Problems Solved */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <Code2 className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.problemsSolved}
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Total Solved</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full w-max">
-              <ArrowUpRight className="w-3 h-3 text-emerald-700" /> {stats.isProfileConnected ? "Coding Profile" : "Live Data"}
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Total Solved</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 px-2 py-0.5 rounded-full w-max">
+              <ArrowUpRight className="w-3 h-3 text-emerald-700 dark:text-emerald-300" /> {stats.isProfileConnected ? "Coding Profile" : "Live Data"}
             </div>
           </div>
         </motion.div>
@@ -632,18 +636,18 @@ export default function AnalyticsPage() {
         {/* Metric 2: Videos Completed */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <PlayCircle className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.completedVideos}
-              <span className="text-xs font-semibold text-slate-400">/{stats.totalVideos}</span>
+              <span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">/{stats.totalVideos}</span>
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Videos Watched</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-cyan-700 bg-cyan-100/90 px-2 py-0.5 rounded-full w-max">
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Videos Watched</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-cyan-700 dark:text-cyan-300 bg-cyan-100/90 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/60 px-2 py-0.5 rounded-full w-max">
               {stats.learningPct}% Complete
             </div>
           </div>
@@ -652,17 +656,17 @@ export default function AnalyticsPage() {
         {/* Metric 3: Saved Playlists */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <Bookmark className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.savedPlaylistsCount}
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Saved Playlists</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-purple-700 bg-purple-100/90 px-2 py-0.5 rounded-full w-max">
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Saved Playlists</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-100/90 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 px-2 py-0.5 rounded-full w-max">
               Video Library
             </div>
           </div>
@@ -671,17 +675,17 @@ export default function AnalyticsPage() {
         {/* Metric 4: Success Rate */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <Target className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.successRate}%
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Accuracy Rate</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full w-max">
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Accuracy Rate</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 px-2 py-0.5 rounded-full w-max">
               Submission Rate
             </div>
           </div>
@@ -690,17 +694,17 @@ export default function AnalyticsPage() {
         {/* Metric 5: Streak Days */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <Flame className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
-              {stats.streakDays} <span className="text-xs font-semibold text-slate-400">days</span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
+              {stats.streakDays} <span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">days</span>
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">Active Streak</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-full w-max">
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Active Streak</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 px-2 py-0.5 rounded-full w-max">
               Daily Practice
             </div>
           </div>
@@ -709,17 +713,17 @@ export default function AnalyticsPage() {
         {/* Metric 6: AI Career Score */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
         >
-          <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 font-black flex items-center justify-center mb-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black flex items-center justify-center mb-3 shadow-2xs">
             <Brain className="w-4.5 h-4.5" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-900 tabular-nums leading-none mb-1">
-              {stats.aiCareerHealth}<span className="text-xs font-semibold text-slate-400">/100</span>
+            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
+              {stats.aiCareerHealth}<span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">/100</span>
             </div>
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2">AI Career Health</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-indigo-700 bg-indigo-100/90 px-2 py-0.5 rounded-full w-max">
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">AI Career Health</div>
+            <div className="flex items-center gap-1 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100/90 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/60 px-2 py-0.5 rounded-full w-max">
               Progress Score
             </div>
           </div>
@@ -732,23 +736,23 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-md space-y-3"
+          className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-3"
         >
           <div>
-            <h3 className="text-base font-black text-slate-900 mb-0.5">Pattern Radar</h3>
-            <p className="text-xs text-slate-500 font-semibold">Topic distribution</p>
+            <h3 className="text-base font-black text-slate-900 dark:text-white mb-0.5">Pattern Radar</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Topic distribution</p>
           </div>
           <RadarChart data={stats.topicRadarData} />
           <div className="grid grid-cols-2 gap-2 mt-4">
             {stats.topicRadarData.filter((t) => t.solved > 0).length > 0 ? (
               stats.topicRadarData.filter((t) => t.solved > 0).map((s) => (
                 <div key={s.label} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 font-bold">{s.label}</span>
-                  <span className="font-black text-indigo-600 tabular-nums">{s.score}%</span>
+                  <span className="text-slate-600 dark:text-neutral-300 font-bold">{s.label}</span>
+                  <span className="font-black text-indigo-600 dark:text-purple-400 tabular-nums">{s.score}%</span>
                 </div>
               ))
             ) : (
-              <div className="col-span-2 text-center text-xs text-slate-400 font-bold py-2">
+              <div className="col-span-2 text-center text-xs text-slate-400 dark:text-neutral-500 font-bold py-2">
                 0% Active Coverage
               </div>
             )}
@@ -760,15 +764,15 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-md space-y-4"
+          className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
         >
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h3 className="text-base font-black text-slate-900">Difficulty Breakdown</h3>
-              <p className="text-xs text-slate-500 font-semibold mt-0.5">{stats.problemsSolved} total problems solved on profile</p>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Difficulty Breakdown</h3>
+              <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">{stats.problemsSolved} total problems solved on profile</p>
             </div>
             {stats.leetcodeHandle && (
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 shadow-2xs">
                 @{stats.leetcodeHandle}
               </span>
             )}
@@ -780,12 +784,12 @@ export default function AnalyticsPage() {
               <div className="relative">
                 <RingProgress pct={stats.easyPct} color="#10b981" size={76} stroke={7} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-black text-slate-900">{stats.easyPct}%</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">{stats.easyPct}%</span>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-black text-slate-900">{stats.easyCount}</div>
-                <div className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">Easy</div>
+                <div className="text-lg font-black text-slate-900 dark:text-white">{stats.easyCount}</div>
+                <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Easy</div>
               </div>
             </div>
 
@@ -794,12 +798,12 @@ export default function AnalyticsPage() {
               <div className="relative">
                 <RingProgress pct={stats.mediumPct} color="#f59e0b" size={76} stroke={7} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-black text-slate-900">{stats.mediumPct}%</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">{stats.mediumPct}%</span>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-black text-slate-900">{stats.mediumCount}</div>
-                <div className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Medium</div>
+                <div className="text-lg font-black text-slate-900 dark:text-white">{stats.mediumCount}</div>
+                <div className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Medium</div>
               </div>
             </div>
 
@@ -808,26 +812,26 @@ export default function AnalyticsPage() {
               <div className="relative">
                 <RingProgress pct={stats.hardPct} color="#f43f5e" size={76} stroke={7} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-black text-slate-900">{stats.hardPct}%</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">{stats.hardPct}%</span>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-black text-slate-900">{stats.hardCount}</div>
-                <div className="text-[10px] font-black text-rose-600 uppercase tracking-wider">Hard</div>
+                <div className="text-lg font-black text-slate-900 dark:text-white">{stats.hardCount}</div>
+                <div className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">Hard</div>
               </div>
             </div>
           </div>
 
           {/* Stacked bar */}
-          <div className="h-3 rounded-full overflow-hidden flex gap-0.5 bg-slate-100 border border-slate-200/80">
+          <div className="h-3 rounded-full overflow-hidden flex gap-0.5 bg-slate-100 dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700">
             <div style={{ width: `${stats.easyPct}%`, background: "#10b981" }} className="h-full" />
             <div style={{ width: `${stats.mediumPct}%`, background: "#f59e0b" }} className="h-full" />
             <div style={{ width: `${stats.hardPct}%`, background: "#f43f5e" }} className="h-full" />
           </div>
-          <div className="flex justify-between text-[10px] text-slate-500 font-extrabold pt-1">
-            <span className="text-emerald-700">Easy ({stats.easyCount})</span>
-            <span className="text-amber-700">Medium ({stats.mediumCount})</span>
-            <span className="text-rose-700">Hard ({stats.hardCount})</span>
+          <div className="flex justify-between text-[10px] text-slate-500 dark:text-neutral-400 font-extrabold pt-1">
+            <span className="text-emerald-700 dark:text-emerald-400">Easy ({stats.easyCount})</span>
+            <span className="text-amber-700 dark:text-amber-400">Medium ({stats.mediumCount})</span>
+            <span className="text-rose-700 dark:text-rose-400">Hard ({stats.hardCount})</span>
           </div>
         </motion.div>
 
@@ -836,11 +840,11 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-md space-y-4"
+          className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
         >
           <div>
-            <h3 className="text-base font-black text-slate-900 mb-0.5">Topic Completion</h3>
-            <p className="text-xs text-slate-500 font-semibold">Practice pattern coverage</p>
+            <h3 className="text-base font-black text-slate-900 dark:text-white mb-0.5">Topic Completion</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Practice pattern coverage</p>
           </div>
 
           <div className="space-y-4">
@@ -848,12 +852,12 @@ export default function AnalyticsPage() {
               stats.topicRadarData.filter((t) => t.solved > 0).map((t) => (
                 <div key={t.label}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-slate-700">{t.label}</span>
-                    <span className="text-xs font-black tabular-nums text-indigo-600">
+                    <span className="text-xs font-bold text-slate-700 dark:text-neutral-200">{t.label}</span>
+                    <span className="text-xs font-black tabular-nums text-indigo-600 dark:text-purple-400">
                       {t.solved}/{t.total} ({t.score}%)
                     </span>
                   </div>
-                  <div className="h-2.5 rounded-full overflow-hidden bg-slate-100 border border-slate-200/60">
+                  <div className="h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-neutral-800 border border-slate-200/60 dark:border-neutral-700">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${t.score}%` }}
@@ -864,7 +868,7 @@ export default function AnalyticsPage() {
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-xs text-slate-400 font-bold">
+              <div className="py-8 text-center text-xs text-slate-400 dark:text-neutral-500 font-bold">
                 No active topic progress yet. Solve practice problems to unlock pattern metrics!
               </div>
             )}
@@ -877,14 +881,14 @@ export default function AnalyticsPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="rounded-3xl p-6 bg-white border border-slate-200/90 shadow-md space-y-4"
+        className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
       >
-        <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
+        <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-neutral-800">
           <div>
-            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
               <span>Company Target Solved Overview</span>
             </h3>
-            <p className="text-xs text-slate-500 font-semibold mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">
               Real-time solved problem counts aggregated per target company track
             </p>
           </div>
@@ -896,21 +900,21 @@ export default function AnalyticsPage() {
               key={comp.slug}
               className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between ${
                 comp.count > 0
-                  ? "bg-indigo-50/80 border-indigo-200 text-indigo-900 shadow-2xs"
-                  : "bg-slate-50 border-slate-200/80 text-slate-700"
+                  ? "bg-indigo-50/80 dark:bg-[#121318] border-indigo-200 dark:border-neutral-700 text-indigo-900 dark:text-white shadow-2xs"
+                  : "bg-slate-50 dark:bg-[#121318] border-slate-200/80 dark:border-neutral-800 text-slate-700 dark:text-neutral-300"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-black truncate">{comp.name}</span>
+                <span className="text-xs font-black truncate text-slate-900 dark:text-white">{comp.name}</span>
                 {comp.count > 0 ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-neutral-700 shrink-0" />
                 )}
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xs text-slate-500 font-bold">Solved</span>
-                <span className={`text-sm font-black tabular-nums ${comp.count > 0 ? "text-emerald-700" : "text-slate-400"}`}>
+                <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold">Solved</span>
+                <span className={`text-sm font-black tabular-nums ${comp.count > 0 ? "text-emerald-700 dark:text-emerald-400" : "text-slate-400 dark:text-neutral-500"}`}>
                   {comp.count}
                 </span>
               </div>
@@ -925,15 +929,15 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 rounded-3xl p-6 bg-gradient-to-br from-indigo-50 via-purple-50 to-white border border-indigo-200/90 shadow-md flex flex-col justify-between space-y-4"
+          className="lg:col-span-2 rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md flex flex-col justify-between space-y-4"
         >
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-2xl bg-purple-600 text-white shadow-md shadow-purple-600/25">
               <Brain className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="text-base font-black text-slate-900">AI Career Health Index</div>
-              <div className="text-xs text-slate-500 font-semibold">Live platform score</div>
+              <div className="text-base font-black text-slate-900 dark:text-white">AI Career Health Index</div>
+              <div className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Live platform score</div>
             </div>
           </div>
 
@@ -941,14 +945,14 @@ export default function AnalyticsPage() {
             <div className="relative">
               <RingProgress pct={stats.aiCareerHealth} color="#7c3aed" size={130} stroke={10} />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-slate-900">{stats.aiCareerHealth}</span>
-                <span className="text-[10px] text-slate-500 font-bold">/100</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.aiCareerHealth}</span>
+                <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-bold">/100</span>
               </div>
             </div>
 
             <div className="text-center">
-              <div className="text-sm font-black text-purple-700 mb-0.5">Live Readiness Rating</div>
-              <div className="text-xs text-slate-500 font-semibold">Based on your practice &amp; profile metrics</div>
+              <div className="text-sm font-black text-purple-700 dark:text-purple-300 mb-0.5">Live Readiness Rating</div>
+              <div className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Based on your practice &amp; profile metrics</div>
             </div>
           </div>
         </motion.div>
@@ -958,11 +962,11 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="lg:col-span-3 rounded-3xl p-6 bg-white border border-slate-200/90 shadow-md space-y-4"
+          className="lg:col-span-3 rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
         >
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-black text-slate-900">Real Activity Stream</h3>
-            <p className="text-xs text-slate-500 font-semibold mt-0.5">Your actual recent actions across SkillsCatalyst</p>
+          <div className="border-b border-slate-100 dark:border-neutral-800 pb-3">
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Real Activity Stream</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">Your actual recent actions across SkillsCatalyst</p>
           </div>
 
           <div className="space-y-3">
@@ -971,16 +975,16 @@ export default function AnalyticsPage() {
               return (
                 <div
                   key={i}
-                  className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-2xs"
+                  className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 shadow-2xs"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5 font-black shadow-2xs">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0 mt-0.5 font-black shadow-2xs">
                     <Icon className="w-4.5 h-4.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm text-slate-800 font-bold leading-snug truncate">{a.text}</p>
-                    <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{a.time}</p>
+                    <p className="text-xs sm:text-sm text-slate-800 dark:text-white font-bold leading-snug truncate">{a.text}</p>
+                    <p className="text-[11px] text-slate-400 dark:text-neutral-500 font-semibold mt-0.5">{a.time}</p>
                   </div>
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0">
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shrink-0">
                     {a.tag}
                   </span>
                 </div>
