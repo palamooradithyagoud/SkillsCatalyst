@@ -252,7 +252,7 @@ export function LearningProgressCard({
             {/* Stat 2: Completed Videos */}
             <div className="group/stat flex flex-col items-center text-center p-1.5 sm:px-2">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 flex items-center justify-center mb-1.5 shadow-2xs backdrop-blur-xs transition-all duration-200 group-hover/stat:scale-105">
-                <CheckCircle2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-300 drop-shadow-[0_2px_8px_rgba(110,231,183,0.4)]" strokeWidth={2.2} />
+                <CheckCircle2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-purple-300 drop-shadow-[0_2px_8px_rgba(216,180,254,0.4)]" strokeWidth={2.2} />
               </div>
               <span className="text-xs sm:text-base lg:text-lg font-black text-white leading-tight truncate max-w-full">
                 {metrics.completedVideos}

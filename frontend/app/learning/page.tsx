@@ -231,12 +231,12 @@ export default function LearningPage() {
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             className={`fixed top-5 right-5 z-[60] px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl text-sm font-semibold border backdrop-blur-xl ${
               notification.type === "success"
-                ? "bg-emerald-900/85 border-emerald-500/30 text-emerald-200"
+                ? "bg-purple-950/90 border-purple-500/40 text-purple-200"
                 : "bg-rose-900/85 border-rose-500/30 text-rose-200"
             }`}
           >
             {notification.type === "success" ? (
-              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <CheckCircle className="w-4 h-4 text-[#C084FC]" />
             ) : (
               <X className="w-4 h-4 text-rose-400" />
             )}
@@ -529,8 +529,8 @@ export default function LearningPage() {
 
                 {/* Column 2: Videos Watched */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pl-3 sm:pl-6 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 shadow-2xs">
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-[#C084FC] shrink-0 shadow-2xs">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C084FC]" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-[11px] sm:text-xs font-semibold text-pink-100/80 whitespace-nowrap">
