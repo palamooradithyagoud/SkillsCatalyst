@@ -391,13 +391,13 @@ export default function MetricCards({
             </div>
 
             {loading ? (
-              <div className="w-full max-w-[540px] bg-white dark:bg-black rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
+              <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
                 <Loader2 className="w-4 h-4 animate-spin text-[#234B3B] dark:text-emerald-400" />
                 <span className="text-xs font-semibold">Loading learning progress...</span>
               </div>
             ) : savedPlaylists.length === 0 ? (
               /* Empty State when user has zero saved YouTube playlists */
-              <div className="w-full max-w-[540px] bg-white dark:bg-black rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
+              <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
                 <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto">
                   <Video className="w-5 h-5" />
                 </div>
@@ -428,11 +428,11 @@ export default function MetricCards({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 * idx }}
                 onClick={() => router.push(course.href)}
-                className="playlist-card card-morph bg-white dark:bg-black rounded-[14px] sm:rounded-[18px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex flex-col justify-between group min-h-[148px] sm:min-h-[162px]"
+                className="playlist-card card-morph bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[18px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex flex-col justify-between group min-h-[148px] sm:min-h-[162px]"
               >
                 <div>
                   {/* 3D Clay Image Thumbnail (Compact) */}
-                  <div className="relative w-11 h-11 sm:w-13 sm:h-13 mx-auto mb-1.5 overflow-hidden rounded-xl bg-slate-50/80 dark:bg-neutral-900 shrink-0 flex items-center justify-center">
+                  <div className="relative w-11 h-11 sm:w-13 sm:h-13 mx-auto mb-1.5 overflow-hidden rounded-xl bg-slate-50/80 dark:bg-[#22232a] shrink-0 flex items-center justify-center">
                     <Image
                       src={course.image}
                       alt={course.title}
@@ -502,12 +502,12 @@ export default function MetricCards({
         </div>
 
         <div className="w-full max-w-[540px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-          {/* 1. Python */}
+            {/* 1. Python */}
           <motion.div
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=Python")}
-            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official Python Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -544,7 +544,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=React")}
-            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official React Atom Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -571,7 +571,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=AI")}
-            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Icon provided by user for Generative AI */}
             <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 relative flex items-center justify-center">
@@ -602,7 +602,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=UI%2FUX")}
-            className="bg-white dark:bg-black rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
           >
             {/* Exact Official Figma Logo */}
             <svg className="w-5 h-6 sm:w-5.5 sm:h-7 shrink-0" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">

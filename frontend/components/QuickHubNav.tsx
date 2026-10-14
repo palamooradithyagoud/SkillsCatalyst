@@ -62,7 +62,7 @@ export default function QuickHubNav() {
                 handleCareerPathClick(e as unknown as React.MouseEvent);
               }
             }}
-            className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-black dark:via-black dark:to-black rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(99,102,241,0.05)] dark:shadow-none hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] dark:hover:border-neutral-700 transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
+            className="group flex-1 bg-gradient-to-br from-[#FAF9FF] via-[#F6F7FE] to-[#EEF0FD] dark:from-[#18191F] dark:via-[#18191F] dark:to-[#18191F] rounded-[20px] sm:rounded-[26px] p-3 sm:p-5 border border-indigo-100/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(99,102,241,0.05)] dark:shadow-none hover:shadow-[0_12px_32px_rgba(99,102,241,0.12)] dark:hover:border-neutral-700 transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
             <div className="relative z-10 max-w-[65%] sm:max-w-[54%] flex flex-col justify-between h-full">
@@ -115,7 +115,7 @@ export default function QuickHubNav() {
           >
             <Link
               href="/learning"
-              className="group flex-1 bg-white dark:bg-black rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
@@ -127,8 +127,9 @@ export default function QuickHubNav() {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#f0f5ff] dark:bg-neutral-900 flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
-                  <div className="relative w-full h-full">
+                {/* Shining Circular Pod matching reference design */}
+                <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-blue-50/80 dark:bg-gradient-to-b dark:from-white/[0.14] dark:to-white/[0.03] border border-blue-100/80 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(59,130,246,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
+                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                     <Image
                       src="/images/hub/courses.png"
                       alt="Learning 3D Cap"
@@ -138,7 +139,7 @@ export default function QuickHubNav() {
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -153,7 +154,7 @@ export default function QuickHubNav() {
           >
             <Link
               href="/practice"
-              className="group flex-1 bg-white dark:bg-black rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[22px] px-2.5 py-2 sm:px-4 sm:py-3 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-[#e11d48] dark:group-hover:text-rose-400 transition-colors truncate">
@@ -165,8 +166,9 @@ export default function QuickHubNav() {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-[15px] bg-[#fff1f4] dark:bg-neutral-900 flex items-center justify-center shrink-0 overflow-hidden p-0.5 sm:p-1 group-hover:scale-106 transition-transform duration-300">
-                  <div className="relative w-full h-full">
+                {/* Shining Circular Pod matching reference design */}
+                <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-rose-50/80 dark:bg-gradient-to-b dark:from-white/[0.14] dark:to-white/[0.03] border border-rose-100/80 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(244,63,94,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
+                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                     <Image
                       src="/images/hub/projects.png"
                       alt="Practice 3D Code"
@@ -176,7 +178,7 @@ export default function QuickHubNav() {
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+                <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -194,17 +196,19 @@ export default function QuickHubNav() {
         >
           <Link
             href="/explore?tab=scholarships"
-            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fefce8] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/scholarships.png"
-                  alt="Scholarships 3D Graduation"
-                  fill
-                  className="object-contain"
-                />
+            {/* 3D Shining Circular Pod */}
+            <div className="w-full h-14 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
+              <div className="w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full bg-amber-50 dark:bg-gradient-to-b dark:from-white/[0.12] dark:to-white/[0.03] border border-amber-200/70 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(245,158,11,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center p-1.5 overflow-hidden group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <Image
+                    src="/images/hub/scholarships.png"
+                    alt="Scholarships 3D Graduation"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -213,7 +217,7 @@ export default function QuickHubNav() {
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Scholarships
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -227,17 +231,19 @@ export default function QuickHubNav() {
         >
           <Link
             href="/explore?tab=events"
-            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#fffbeb] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/competition.png"
-                  alt="Competitions 3D Trophy"
-                  fill
-                  className="object-contain"
-                />
+            {/* 3D Shining Circular Pod */}
+            <div className="w-full h-14 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
+              <div className="w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full bg-amber-50 dark:bg-gradient-to-b dark:from-white/[0.12] dark:to-white/[0.03] border border-amber-200/70 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(234,179,8,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center p-1.5 overflow-hidden group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <Image
+                    src="/images/hub/competition.png"
+                    alt="Competitions 3D Trophy"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -246,7 +252,7 @@ export default function QuickHubNav() {
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Competitions
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -260,17 +266,19 @@ export default function QuickHubNav() {
         >
           <Link
             href="/practice?section=dsa-sheets#dsa-sheets"
-            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f4fa] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/mock.png"
-                  alt="DSA Sheets 3D Checklist"
-                  fill
-                  className="object-contain"
-                />
+            {/* 3D Shining Circular Pod */}
+            <div className="w-full h-14 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
+              <div className="w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full bg-indigo-50 dark:bg-gradient-to-b dark:from-white/[0.12] dark:to-white/[0.03] border border-indigo-100 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(99,102,241,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center p-1.5 overflow-hidden group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <Image
+                    src="/images/hub/mock.png"
+                    alt="DSA Sheets 3D Checklist"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -279,7 +287,7 @@ export default function QuickHubNav() {
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 DSA Sheets
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
@@ -293,17 +301,19 @@ export default function QuickHubNav() {
         >
           <Link
             href="/career"
-            className="group block bg-white dark:bg-black rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] rounded-[16px] sm:rounded-[20px] p-1.5 sm:p-2.5 border border-slate-100 dark:border-neutral-800 dark:hover:border-neutral-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none hover:shadow-[0_10px_28px_rgba(0,0,0,0.06)] transition-all cursor-pointer"
           >
-            {/* 3D Illustration Container */}
-            <div className="w-full h-14 sm:h-20 md:h-22 rounded-[12px] sm:rounded-[16px] bg-[#f0f5fb] dark:bg-neutral-900 flex items-center justify-center overflow-hidden p-1 sm:p-1.5 group-hover:scale-103 transition-transform duration-300">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/hub/interview.png"
-                  alt="Career Goals 3D"
-                  fill
-                  className="object-contain"
-                />
+            {/* 3D Shining Circular Pod */}
+            <div className="w-full h-14 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
+              <div className="w-12 h-12 sm:w-15 sm:h-15 md:w-16 md:h-16 rounded-full bg-sky-50 dark:bg-gradient-to-b dark:from-white/[0.12] dark:to-white/[0.03] border border-sky-100 dark:border-white/[0.12] shadow-sm dark:shadow-[0_0_20px_rgba(14,165,233,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center p-1.5 overflow-hidden group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <Image
+                    src="/images/hub/interview.png"
+                    alt="Career Goals 3D"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             </div>
 
@@ -312,7 +322,7 @@ export default function QuickHubNav() {
               <span className="text-[9.5px] sm:text-[10px] md:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#4f46e5] dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Career
               </span>
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-neutral-900 group-hover:bg-slate-200/90 dark:group-hover:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100/90 dark:bg-white/[0.06] border border-transparent dark:border-white/[0.08] group-hover:bg-slate-200/90 dark:group-hover:bg-white/[0.12] flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0">
                 <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.2]" />
               </div>
             </div>
