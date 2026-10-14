@@ -131,7 +131,7 @@ function CircularProgress({ percent }: { percent: number }) {
           r={normalizedRadius}
           cx="28"
           cy="28"
-          className="dark:stroke-[#27272A]"
+          className="dark:stroke-neutral-800"
         />
         <circle
           stroke="#7C3AED"
@@ -467,7 +467,7 @@ function EditProfileContent() {
             <img
               src={personalForm.avatar_url}
               alt="Avatar"
-              className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-[#242428] shadow-sm"
+              className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-neutral-800 shadow-sm"
             />
           ) : (
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] text-white flex items-center justify-center font-black text-lg tracking-tight shadow-xs">
@@ -508,7 +508,7 @@ function EditProfileContent() {
             {personalForm.full_name || "Your Name"}
           </h1>
           <p className="text-xs text-slate-400 font-medium truncate">{userHandle}</p>
-          <p className="text-xs font-semibold text-slate-500 dark:text-zinc-400 truncate pt-0.5">
+          <p className="text-xs font-semibold text-slate-500 dark:text-neutral-400 truncate pt-0.5">
             {userRole}
           </p>
         </div>
@@ -517,7 +517,7 @@ function EditProfileContent() {
       {/* ── Real-time Profile Progress Card (Soft Lavender / Neutral Dark, No Blue, No Pink) ── */}
       <div
         onClick={() => setShowProgressDetails(!showProgressDetails)}
-        className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#151518] border border-[#E9E0FA] dark:border-[#27272A] flex items-center justify-between shadow-2xs cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 transition-all group"
+        className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#18191F] border border-[#E9E0FA] dark:border-neutral-800 flex items-center justify-between shadow-2xs cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 transition-all group"
       >
         <div className="space-y-0.5 pr-3 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -530,7 +530,7 @@ function EditProfileContent() {
               }`}
             />
           </div>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium truncate">
+          <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium truncate">
             {liveCompletion.totalPercent === 100
               ? "All profile sections 100% complete! Great job!"
               : "Tap to view & complete profile details"}
@@ -550,8 +550,8 @@ function EditProfileContent() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#121214] border border-slate-200/80 dark:border-[#242428] space-y-2.5 shadow-xs">
-              <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-[#242428]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/80 dark:border-neutral-800 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-neutral-800">
                 <span className="text-xs font-black text-slate-900 dark:text-white">
                   Profile Completion Breakdown
                 </span>
@@ -612,19 +612,19 @@ function EditProfileContent() {
                       setActiveTab(item.tab as EditTab);
                       setShowProgressDetails(false);
                     }}
-                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#18181B] border border-slate-200/60 dark:border-[#27272A] flex items-center justify-between text-left hover:border-purple-300 dark:hover:border-purple-600 transition-colors cursor-pointer"
+                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/60 dark:border-neutral-800 flex items-center justify-between text-left hover:border-purple-300 dark:hover:border-purple-600 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       {item.done ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       ) : (
-                        <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-[#323238] shrink-0" />
+                        <div className="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-neutral-700 shrink-0" />
                       )}
-                      <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                      <span className="font-semibold text-slate-800 dark:text-neutral-200 truncate">
                         {item.name}
                       </span>
                     </div>
-                    <span className="text-[11px] font-bold text-slate-500 shrink-0">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-neutral-400 shrink-0">
                       {item.score}/{item.max}
                     </span>
                   </button>
@@ -693,7 +693,7 @@ function EditProfileContent() {
                 className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs transition-all cursor-pointer font-bold ${
                   isActive
                     ? "bg-[#7C3AED] text-white shadow-xs shadow-purple-600/30"
-                    : "bg-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#18181B]"
+                    : "bg-transparent text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#18191F]"
                 }`}
               >
                 <span>{tab.label}</span>
@@ -702,7 +702,7 @@ function EditProfileContent() {
                     className={`ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
                       isActive
                         ? "bg-white/25 text-white"
-                        : "bg-slate-200 dark:bg-[#27272A] text-slate-700 dark:text-zinc-300"
+                        : "bg-slate-200 dark:bg-[#20222A] text-slate-700 dark:text-neutral-300"
                     }`}
                   >
                     {tab.count}
@@ -714,22 +714,22 @@ function EditProfileContent() {
         </div>
       </div>
 
-      {/* ── Main Form Card (Deep Obsidian Black in Dark Mode, Zero Blue!) ── */}
-      <div className="bg-white dark:bg-[#121214] rounded-3xl p-5 sm:p-7 border border-slate-200/80 dark:border-[#242428] shadow-xs">
+      {/* ── Main Form Card (Deep Dark Charcoal in Dark Mode, Zero Blue!) ── */}
+      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-5 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs">
         {/* ─────────────────────────────────────────────────────────────────── */}
         {/* TAB 1: PERSONAL / ACCOUNT DETAILS                                   */}
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "personal" && (
           <form id="personal-edit-form" onSubmit={handleSavePersonal} className="space-y-4">
             {/* Form Header with Cancel & Save changes (Purple, No Blue, No Pink!) */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Personal Details
               </h2>
               <div className="flex items-center gap-2">
                 <Link
                   href="/settings"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
@@ -764,7 +764,7 @@ function EditProfileContent() {
             {/* Full Name */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   Full Name <span className="text-rose-500">*</span>
                 </label>
                 {certIdentity?.is_identity_locked && (
@@ -780,14 +780,14 @@ function EditProfileContent() {
                 value={personalForm.full_name || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, full_name: e.target.value })}
                 placeholder="e.g. Palamoor Adithya Goud"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* College Name */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   College / University
                 </label>
                 {certIdentity?.is_identity_locked && (
@@ -802,13 +802,13 @@ function EditProfileContent() {
                 value={personalForm.college || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, college: e.target.value })}
                 placeholder="e.g. ABC Engineering College"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* Designation / Headline */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 Designation
               </label>
               <input
@@ -816,13 +816,13 @@ function EditProfileContent() {
                 value={personalForm.headline || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, headline: e.target.value })}
                 placeholder="e.g. Student / Full Stack Developer"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
             {/* Country */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 Country
               </label>
               <input
@@ -830,13 +830,13 @@ function EditProfileContent() {
                 value={personalForm.country || "India"}
                 onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
                 placeholder="e.g. India"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
             {/* State */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 State
               </label>
               <input
@@ -844,13 +844,13 @@ function EditProfileContent() {
                 value={personalForm.state || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
                 placeholder="e.g. Telangana"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
             {/* City */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 City
               </label>
               <input
@@ -858,14 +858,14 @@ function EditProfileContent() {
                 value={personalForm.city || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
                 placeholder="e.g. Hyderabad"
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
             {/* Phone Number & Gender */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                   Phone Number (Private)
                 </label>
                 <input
@@ -873,17 +873,17 @@ function EditProfileContent() {
                   value={personalForm.phone || ""}
                   onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
                   placeholder="e.g. 9392640702"
-                  className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                   Gender
                 </label>
                 <select
                   value={personalForm.gender || "Prefer not to say"}
                   onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
-                  className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white transition-colors"
+                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white transition-colors"
                 >
                   <option value="Prefer not to say">Prefer not to say</option>
                   <option value="Male">Male</option>
@@ -896,7 +896,7 @@ function EditProfileContent() {
 
             {/* About / Bio */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 About / Bio
               </label>
               <textarea
@@ -904,7 +904,7 @@ function EditProfileContent() {
                 value={personalForm.about || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, about: e.target.value })}
                 placeholder="Brief summary about your skills, passions, and background..."
-                className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y transition-colors"
               />
             </div>
           </form>
@@ -916,20 +916,20 @@ function EditProfileContent() {
         {activeTab === "career" && (
           <form onSubmit={handleSaveCareer} className="space-y-5">
             {/* Form Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <div>
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Target className="w-4 h-4 text-[#7C3AED]" />
                   <span>Career Preferences</span>
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
                   Set target roles, dream companies, and ideal work arrangements
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Link
                   href="/settings"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
@@ -946,7 +946,7 @@ function EditProfileContent() {
 
             {/* Target Job Roles */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block">
                 Target Job Roles
               </label>
               <div className="flex gap-2">
@@ -968,7 +968,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. SDE-1, Full Stack Developer, DevOps Engineer..."
-                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1014,7 +1014,7 @@ function EditProfileContent() {
 
               {/* Suggestions */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">
                   Suggestions:
                 </span>
                 {["SDE-1", "Full Stack Developer", "DevOps Engineer", "Frontend Engineer", "Cloud Architect", "Data Engineer"].map((sugg) => (
@@ -1028,7 +1028,7 @@ function EditProfileContent() {
                         target_roles: [...prev.target_roles, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-[#27272A] disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1037,8 +1037,8 @@ function EditProfileContent() {
             </div>
 
             {/* Dream Companies */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block">
                 Dream Companies
               </label>
               <div className="flex gap-2">
@@ -1060,7 +1060,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. Google, Microsoft, Atlassian, Amazon, Meta..."
-                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1106,7 +1106,7 @@ function EditProfileContent() {
 
               {/* Suggestions */}
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">
                   Suggestions:
                 </span>
                 {["Google", "Microsoft", "Amazon", "Atlassian", "Meta", "Uber", "Apple"].map((sugg) => (
@@ -1120,7 +1120,7 @@ function EditProfileContent() {
                         target_companies: [...prev.target_companies, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-[#27272A] disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1129,8 +1129,8 @@ function EditProfileContent() {
             </div>
 
             {/* Work Arrangements */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block">
                 Work Arrangements
               </label>
               <div className="flex flex-wrap gap-2">
@@ -1148,7 +1148,7 @@ function EditProfileContent() {
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isSelected
                           ? "bg-[#7C3AED] text-white shadow-xs"
-                          : "bg-slate-100 dark:bg-[#18181B] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-[#222226] border border-slate-200 dark:border-[#27272A]"
+                          : "bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-[#20222A] border border-slate-200 dark:border-neutral-800"
                       }`}
                     >
                       {arr}
@@ -1159,8 +1159,8 @@ function EditProfileContent() {
             </div>
 
             {/* Preferred Locations */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#242428]">
-              <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
+              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block">
                 Preferred Locations
               </label>
               <div className="flex gap-2">
@@ -1182,7 +1182,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. Bangalore, Hyderabad, Pune, Mumbai, Remote..."
-                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1207,7 +1207,7 @@ function EditProfileContent() {
                 {careerForm.preferred_locations.map((loc, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-slate-100 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] text-xs font-bold text-slate-800 dark:text-zinc-200 shadow-2xs"
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs"
                   >
                     <span>{loc}</span>
                     <button
@@ -1235,20 +1235,20 @@ function EditProfileContent() {
         {activeTab === "coding" && (
           <form onSubmit={handleSaveCoding} className="space-y-5">
             {/* Form Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <div>
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Code2 className="w-4 h-4 text-[#7C3AED]" />
                   <span>Developer & Coding Profiles</span>
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
                   Link your handles to automatically fetch and verify coding ratings and stats
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Link
                   href="/settings"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
@@ -1355,7 +1355,7 @@ function EditProfileContent() {
                 return (
                   <div
                     key={p.key}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-[#18181B] border border-slate-200/90 dark:border-[#27272A] space-y-2.5 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-800 space-y-2.5 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-h-[26px]">
@@ -1374,7 +1374,7 @@ function EditProfileContent() {
                         className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
                           isLinked
                             ? "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50"
-                            : "bg-slate-100 dark:bg-[#222226] text-slate-500 dark:text-zinc-400"
+                            : "bg-slate-100 dark:bg-[#20222A] text-slate-500 dark:text-neutral-400"
                         }`}
                       >
                         {isLinked ? "Connected" : "Not Linked"}
@@ -1391,12 +1391,12 @@ function EditProfileContent() {
                         }))
                       }
                       placeholder={p.placeholder}
-                      className="w-full bg-slate-50 dark:bg-[#141417] border border-slate-200 dark:border-[#2A2A2E] px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 transition-colors"
+                      className="w-full bg-slate-50 dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 transition-colors"
                     />
 
                     {/* Profile Link Display in Edit Section */}
                     {profileUrl ? (
-                      <div className="pt-1.5 flex items-center justify-between border-t border-slate-100 dark:border-[#242428]">
+                      <div className="pt-1.5 flex items-center justify-between border-t border-slate-100 dark:border-neutral-800">
                         <a
                           href={profileUrl}
                           target="_blank"
@@ -1409,8 +1409,8 @@ function EditProfileContent() {
                         </a>
                       </div>
                     ) : (
-                      <div className="pt-1 border-t border-slate-100/60 dark:border-[#222226]">
-                        <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic">
+                      <div className="pt-1 border-t border-slate-100/60 dark:border-neutral-800">
+                        <p className="text-[10px] text-slate-400 dark:text-neutral-500 italic">
                           Enter username to view profile link
                         </p>
                       </div>
@@ -1434,7 +1434,7 @@ function EditProfileContent() {
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "skills" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Skills & Technologies ({profileData.skills.length})
               </h2>
@@ -1467,7 +1467,7 @@ function EditProfileContent() {
                 }
                 setAddingSkill(false);
               }}
-              className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#151518] border border-[#E9E0FA] dark:border-[#27272A] space-y-3"
+              className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#121318] border border-[#E9E0FA] dark:border-neutral-800 space-y-3"
             >
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#7C3AED] dark:text-purple-300">
                 <Plus className="w-3.5 h-3.5" />
@@ -1481,7 +1481,7 @@ function EditProfileContent() {
                     value={newSkillName}
                     onChange={(e) => setNewSkillName(e.target.value)}
                     placeholder="Skill name (e.g. Python, Docker, Next.js)"
-                    className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
                     required
                   />
                 </div>
@@ -1489,7 +1489,7 @@ function EditProfileContent() {
                   <select
                     value={newSkillCategory}
                     onChange={(e) => setNewSkillCategory(e.target.value)}
-                    className="w-full bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-2.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
                   >
                     <option value="Programming / scripting Languages">Programming / Scripting</option>
                     <option value="Cloud & Devops">Cloud & DevOps</option>
@@ -1504,7 +1504,7 @@ function EditProfileContent() {
                   <select
                     value={newSkillProficiency}
                     onChange={(e) => setNewSkillProficiency(e.target.value as any)}
-                    className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-2 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+                    className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -1533,7 +1533,7 @@ function EditProfileContent() {
                   {profileData.skills.map((skill) => (
                     <div
                       key={skill.id}
-                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] text-xs font-bold text-slate-800 dark:text-zinc-200 shadow-2xs group"
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs group"
                     >
                       <span>{skill.skill_name}</span>
                       {skill.proficiency && (
@@ -1575,7 +1575,7 @@ function EditProfileContent() {
           <div className="space-y-4">
             {expView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
                   <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                     Work Experience ({profileData.experiences.length})
                   </h2>
@@ -1592,9 +1592,9 @@ function EditProfileContent() {
                 </div>
 
                 {profileData.experiences.length === 0 ? (
-                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-[#27272A] rounded-2xl bg-slate-50/50 dark:bg-[#161619]/60 p-6">
+                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-neutral-800 rounded-2xl bg-slate-50/50 dark:bg-[#121318]/60 p-6">
                     <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700 dark:text-zinc-300">No work experience added yet</p>
+                    <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">No work experience added yet</p>
                     <button
                       onClick={() => {
                         setSelectedExp(null);
@@ -1610,7 +1610,7 @@ function EditProfileContent() {
                     {profileData.experiences.map((exp) => (
                       <div
                         key={exp.id}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18181B] border border-slate-200/80 dark:border-[#27272A] hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
@@ -1639,7 +1639,7 @@ function EditProfileContent() {
                               setSelectedExp(exp);
                               setExpView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#27272A] hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-zinc-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -1702,7 +1702,7 @@ function EditProfileContent() {
           <div className="space-y-4">
             {eduView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
                   <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                     Education History ({profileData.education.length})
                   </h2>
@@ -1719,9 +1719,9 @@ function EditProfileContent() {
                 </div>
 
                 {profileData.education.length === 0 ? (
-                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-[#27272A] rounded-2xl bg-slate-50/50 dark:bg-[#161619]/60 p-6">
+                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-neutral-800 rounded-2xl bg-slate-50/50 dark:bg-[#121318]/60 p-6">
                     <GraduationCap className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700 dark:text-zinc-300">No education entries added yet</p>
+                    <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">No education entries added yet</p>
                     <button
                       onClick={() => {
                         setSelectedEdu(null);
@@ -1737,7 +1737,7 @@ function EditProfileContent() {
                     {profileData.education.map((edu) => (
                       <div
                         key={edu.id}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18181B] border border-slate-200/80 dark:border-[#27272A] hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
@@ -1763,7 +1763,7 @@ function EditProfileContent() {
                               setSelectedEdu(edu);
                               setEduView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#27272A] hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-zinc-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -1826,7 +1826,7 @@ function EditProfileContent() {
           <div className="space-y-4">
             {projView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#242428]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
                   <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                     Projects ({profileData.projects.length})
                   </h2>
@@ -1843,9 +1843,9 @@ function EditProfileContent() {
                 </div>
 
                 {profileData.projects.length === 0 ? (
-                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-[#27272A] rounded-2xl bg-slate-50/50 dark:bg-[#161619]/60 p-6">
+                  <div className="py-12 text-center space-y-2 border border-dashed border-slate-200 dark:border-neutral-800 rounded-2xl bg-slate-50/50 dark:bg-[#121318]/60 p-6">
                     <FolderGit2 className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700 dark:text-zinc-300">No projects added yet</p>
+                    <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">No projects added yet</p>
                     <button
                       onClick={() => {
                         setSelectedProj(null);
@@ -1861,13 +1861,13 @@ function EditProfileContent() {
                     {profileData.projects.map((proj) => (
                       <div
                         key={proj.id}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18181B] border border-slate-200/80 dark:border-[#27272A] hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                             {proj.project_name || (proj as any).title}
                           </h3>
-                          <p className="text-xs text-slate-600 dark:text-zinc-300 line-clamp-1">
+                          <p className="text-xs text-slate-600 dark:text-neutral-300 line-clamp-1">
                             {proj.description || "No description provided."}
                           </p>
                         </div>
@@ -1878,7 +1878,7 @@ function EditProfileContent() {
                               setSelectedProj(proj);
                               setProjView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#27272A] hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-zinc-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -1939,13 +1939,13 @@ function EditProfileContent() {
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "languages" && (
           <div className="space-y-4">
-            <div className="pb-3 border-b border-slate-100 dark:border-[#242428]">
+            <div className="pb-3 border-b border-slate-100 dark:border-neutral-800">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Languages ({languages.length})
               </h2>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#151518] border border-[#E9E0FA] dark:border-[#27272A] space-y-3">
+            <div className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#121318] border border-[#E9E0FA] dark:border-neutral-800 space-y-3">
               <label className="text-xs font-bold text-[#7C3AED] dark:text-purple-300 block">
                 Add Language
               </label>
@@ -1966,7 +1966,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. English, Hindi, Telugu, Spanish..."
-                  className="flex-1 bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+                  className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
                 />
                 <button
                   type="button"
@@ -1990,7 +1990,7 @@ function EditProfileContent() {
               {languages.map((lang) => (
                 <div
                   key={lang}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] text-xs font-bold text-slate-800 dark:text-zinc-200 shadow-2xs"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs"
                 >
                   <Languages className="w-3.5 h-3.5 text-[#7C3AED]" />
                   <span>{lang}</span>
@@ -2030,17 +2030,17 @@ function EditProfileContent() {
             type="button"
             onClick={() => router.push("/settings")}
             title="Back to Profile"
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 dark:bg-[#18181B]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-zinc-200 hover:text-[#7C3AED] hover:border-[#7C3AED] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-200 hover:text-[#7C3AED] hover:border-[#7C3AED] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             aria-label="Back to Profile"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
 
           {/* Floating Pill Action Dock */}
-          <div className="flex items-center gap-2 sm:gap-3 bg-white/90 dark:bg-[#18181B]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-white/10 rounded-full py-1.5 px-3 sm:px-4">
+          <div className="flex items-center gap-2 sm:gap-3 bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 rounded-full py-1.5 px-3 sm:px-4">
             <Link
               href="/settings"
-              className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100/80 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
+              className="flex items-center gap-1.5 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100/80 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
             >
               <User className="w-3.5 h-3.5" />
               <span className="text-[11px] font-bold">My Profile</span>
@@ -2134,11 +2134,11 @@ function ExperienceEditor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#242428]">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
+          className="text-xs font-bold text-slate-600 dark:text-neutral-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Experiences List</span>
@@ -2156,7 +2156,7 @@ function ExperienceEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Role / Job Title <span className="text-rose-500">*</span>
           </label>
           <input
@@ -2165,11 +2165,11 @@ function ExperienceEditor({
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="e.g. Software Engineer Intern"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Company Name <span className="text-rose-500">*</span>
           </label>
           <input
@@ -2178,14 +2178,14 @@ function ExperienceEditor({
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             placeholder="e.g. Google, Atlassian, Startup"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Location
           </label>
           <input
@@ -2193,17 +2193,17 @@ function ExperienceEditor({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Bengaluru, IN"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Work Type
           </label>
           <select
             value={workType}
             onChange={(e) => setWorkType(e.target.value as any)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
           >
             <option value="Full-time">Full-time</option>
             <option value="Internship">Internship</option>
@@ -2213,13 +2213,13 @@ function ExperienceEditor({
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Arrangement
           </label>
           <select
             value={empType}
             onChange={(e) => setEmpType(e.target.value as any)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
           >
             <option value="Remote">Remote</option>
             <option value="Hybrid">Hybrid</option>
@@ -2230,18 +2230,18 @@ function ExperienceEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date
           </label>
           <input
@@ -2249,12 +2249,12 @@ function ExperienceEditor({
             disabled={currentlyWorking}
             value={currentlyWorking ? "" : endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
+      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
           type="checkbox"
           checked={currentlyWorking}
@@ -2265,7 +2265,7 @@ function ExperienceEditor({
       </label>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Responsibilities / Impact
         </label>
         <textarea
@@ -2273,15 +2273,15 @@ function ExperienceEditor({
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           placeholder="Developed microservices, optimized database latency by 35%..."
-          className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
         />
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-[#242428]">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#222226] cursor-pointer text-center"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#20222A] cursor-pointer text-center"
         >
           Cancel
         </button>
@@ -2346,11 +2346,11 @@ function ProjectEditor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#242428]">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
+          className="text-xs font-bold text-slate-600 dark:text-neutral-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Projects List</span>
@@ -2367,7 +2367,7 @@ function ProjectEditor({
       )}
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Project Name <span className="text-rose-500">*</span>
         </label>
         <input
@@ -2376,12 +2376,12 @@ function ProjectEditor({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. AI Resume Reviewer & Portfolio Engine"
-          className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
         />
       </div>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Description
         </label>
         <textarea
@@ -2389,12 +2389,12 @@ function ProjectEditor({
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           placeholder="Full-stack interactive career intelligence application..."
-          className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
         />
       </div>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Technologies (Comma-separated)
         </label>
         <input
@@ -2402,24 +2402,24 @@ function ProjectEditor({
           value={tech}
           onChange={(e) => setTech(e.target.value)}
           placeholder="React, TypeScript, Supabase, Tailwind, Python"
-          className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date
           </label>
           <input
@@ -2427,12 +2427,12 @@ function ProjectEditor({
             disabled={currentlyWorking}
             value={currentlyWorking ? "" : endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
+      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
           type="checkbox"
           checked={currentlyWorking}
@@ -2444,7 +2444,7 @@ function ProjectEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             GitHub URL
           </label>
           <input
@@ -2452,11 +2452,11 @@ function ProjectEditor({
             value={github}
             onChange={(e) => setGithub(e.target.value)}
             placeholder="https://github.com/username/project"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Live Demo URL
           </label>
           <input
@@ -2464,16 +2464,16 @@ function ProjectEditor({
             value={demo}
             onChange={(e) => setDemo(e.target.value)}
             placeholder="https://project.vercel.app"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-[#242428]">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#222226] cursor-pointer text-center"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#20222A] cursor-pointer text-center"
         >
           Cancel
         </button>
@@ -2541,11 +2541,11 @@ function EducationEditor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#242428]">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
+          className="text-xs font-bold text-slate-600 dark:text-neutral-400 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Education List</span>
@@ -2562,7 +2562,7 @@ function EducationEditor({
       )}
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           College / Institution Name <span className="text-rose-500">*</span>
         </label>
         <input
@@ -2571,13 +2571,13 @@ function EducationEditor({
           value={college}
           onChange={(e) => setCollege(e.target.value)}
           placeholder="e.g. Indian Institute of Technology, Hyderabad"
-          className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Degree Type
           </label>
           <input
@@ -2585,11 +2585,11 @@ function EducationEditor({
             value={degreeType}
             onChange={(e) => setDegreeType(e.target.value)}
             placeholder="e.g. Bachelor of Technology (B.Tech)"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Field of Study
           </label>
           <input
@@ -2597,25 +2597,25 @@ function EducationEditor({
             value={field}
             onChange={(e) => setField(e.target.value)}
             placeholder="e.g. Computer Science & Engineering"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date (Graduation)
           </label>
           <input
@@ -2623,11 +2623,11 @@ function EducationEditor({
             disabled={currentlyStudying}
             value={currentlyStudying ? "" : endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none disabled:opacity-50 text-slate-900 dark:text-white"
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             GPA / Percentage
           </label>
           <input
@@ -2635,12 +2635,12 @@ function EducationEditor({
             value={gpa}
             onChange={(e) => setGpa(e.target.value)}
             placeholder="e.g. 8.8 / 10"
-            className="w-full bg-slate-50 dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
           />
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer">
+      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
           type="checkbox"
           checked={currentlyStudying}
@@ -2650,11 +2650,11 @@ function EducationEditor({
         <span>I am currently studying here</span>
       </label>
 
-      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-[#242428]">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-neutral-800">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#222226] cursor-pointer text-center"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#20222A] cursor-pointer text-center"
         >
           Cancel
         </button>

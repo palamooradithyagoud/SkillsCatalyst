@@ -6,7 +6,7 @@ import { usePricingModal } from "@/contexts/PricingModalContext";
 
 export interface UpgradeCTAProps {
   label?: string;
-  variant?: "primary" | "secondary" | "outline" | "subtle" | "ghost";
+  variant?: "primary" | "secondary" | "outline" | "subtle" | "ghost" | "purple";
   size?: "xs" | "sm" | "md" | "lg";
   icon?: "sparkles" | "crown" | "arrow" | "none";
   className?: string;
@@ -42,6 +42,8 @@ export function UpgradeCTA({
   const variantClasses = {
     primary:
       "bg-[#234B3B] hover:bg-[#1b3b2e] text-white shadow-sm hover:shadow active:scale-[0.98] transition-all duration-150 border border-emerald-900/20",
+    purple:
+      "bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-xs active:scale-[0.98] transition-all duration-150 border border-purple-700/20",
     secondary:
       "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow active:scale-[0.98] transition-all duration-150",
     outline:

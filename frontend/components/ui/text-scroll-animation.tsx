@@ -48,7 +48,7 @@ const CharacterV1 = ({
   return (
     <motion.span
       className={cn(
-        "inline-block bg-gradient-to-r from-[#6B21A8] via-[#7E22CE] to-[#EC4899] bg-clip-text text-transparent font-black drop-shadow-xs will-change-transform",
+        "inline-block bg-gradient-to-r from-[#6B21A8] via-[#7E22CE] to-[#EC4899] dark:from-[#C084FC] dark:via-[#E879F9] dark:to-[#F472B6] bg-clip-text text-transparent font-black drop-shadow-xs will-change-transform",
         isSpace && "w-3 sm:w-5 md:w-6",
         className
       )}
@@ -94,17 +94,17 @@ const SupportChannelItem = ({
   return (
     <motion.div
       style={{ x, scale, y, opacity, transformOrigin: "center" }}
-      className={`will-change-transform flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-white border shadow-md transition-all select-none w-full sm:w-[270px] ${
+      className={`will-change-transform flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#121318] border shadow-md transition-all select-none w-full sm:w-[270px] ${
         isPink
-          ? "border-pink-200/80 shadow-pink-500/5 hover:border-pink-400 hover:shadow-pink-500/15"
-          : "border-purple-200/80 shadow-purple-500/5 hover:border-purple-400 hover:shadow-purple-500/15"
+          ? "border-pink-200/80 dark:border-neutral-800 shadow-pink-500/5 hover:border-pink-400 dark:hover:border-pink-500/50 hover:shadow-pink-500/15"
+          : "border-purple-200/80 dark:border-neutral-800 shadow-purple-500/5 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-purple-500/15"
       }`}
     >
       <div
         className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
           isPink
-            ? "bg-pink-50 text-pink-600 border border-pink-100"
-            : "bg-purple-50 text-purple-700 border border-purple-100"
+            ? "bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-900/40"
+            : "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-100 dark:border-purple-900/40"
         }`}
       >
         <Icon className="w-5 h-5" strokeWidth={2} />
@@ -112,20 +112,22 @@ const SupportChannelItem = ({
 
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight">
+          <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white tracking-tight">
             {item.title}
           </span>
           {item.badge && (
             <span
               className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-                isPink ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700"
+                isPink
+                  ? "bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200/60 dark:border-pink-800/40"
+                  : "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40"
               }`}
             >
               {item.badge}
             </span>
           )}
         </div>
-        <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">
+        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-400 font-medium truncate mt-0.5">
           {item.subtitle}
         </p>
       </div>
@@ -169,10 +171,10 @@ const SupportPillarItem = ({
   return (
     <motion.div
       style={{ x, rotate, y, scale, opacity, transformOrigin: "center" }}
-      className={`will-change-transform flex-1 min-w-[220px] max-w-[270px] p-5 rounded-3xl bg-white border shadow-lg transition-all select-none ${
+      className={`will-change-transform flex-1 min-w-[220px] max-w-[270px] p-5 rounded-3xl bg-white dark:bg-[#121318] border shadow-lg transition-all select-none ${
         isPink
-          ? "border-pink-200/80 shadow-pink-500/5 hover:border-pink-400 hover:shadow-pink-500/15"
-          : "border-purple-200/80 shadow-purple-500/5 hover:border-purple-400 hover:shadow-purple-500/15"
+          ? "border-pink-200/80 dark:border-neutral-800 shadow-pink-500/5 hover:border-pink-400 dark:hover:border-pink-500/50 hover:shadow-pink-500/15"
+          : "border-purple-200/80 dark:border-neutral-800 shadow-purple-500/5 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-purple-500/15"
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -188,18 +190,18 @@ const SupportPillarItem = ({
         <span
           className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
             isPink
-              ? "bg-pink-50 text-pink-700 border border-pink-200/60"
-              : "bg-purple-50 text-purple-700 border border-purple-200/60"
+              ? "bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border border-pink-200/60 dark:border-pink-800/40"
+              : "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40"
           }`}
         >
           {item.stat}
         </span>
       </div>
 
-      <h4 className="font-black text-sm sm:text-base text-slate-900 tracking-tight">
+      <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white tracking-tight">
         {item.title}
       </h4>
-      <p className="text-xs text-slate-500 leading-relaxed font-medium mt-1.5">
+      <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed font-medium mt-1.5">
         {item.description}
       </p>
     </motion.div>
@@ -325,19 +327,19 @@ const Skiper31 = ({
         {/* ── Block 1: 3D Perspective Service Support Typography ── */}
         <div
           ref={targetRef}
-          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#FAF8FD] via-white to-[#FDF4F8] p-6 sm:p-12 border border-purple-100 rounded-[28px]"
+          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#FAF8FD] via-white to-[#FDF4F8] dark:from-[#18191F] dark:via-[#121318] dark:to-[#18191F] p-6 sm:p-12 border border-purple-100 dark:border-neutral-800 rounded-[28px] shadow-sm dark:shadow-none"
         >
           {/* Ambient Glow Orbs in Pink & Purple */}
-          <div className="absolute top-1/4 left-1/4 w-[320px] h-[320px] rounded-full bg-purple-400/10 blur-[80px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[320px] h-[320px] rounded-full bg-pink-400/10 blur-[80px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/4 w-[320px] h-[320px] rounded-full bg-purple-400/10 dark:bg-purple-600/10 blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-1/4 right-1/4 w-[320px] h-[320px] rounded-full bg-pink-400/10 dark:bg-pink-600/10 blur-[80px] pointer-events-none" />
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200/80 text-purple-700 text-xs font-bold uppercase tracking-wider mb-5">
-            <Headset className="w-3.5 h-3.5 text-pink-600" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 dark:bg-[#121318] border border-purple-200/80 dark:border-neutral-800 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-5">
+            <Headset className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
             <span>Customer Service Promise</span>
           </div>
 
           <div
-            className="w-full max-w-5xl text-center text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-slate-900 leading-none select-none"
+            className="w-full max-w-5xl text-center text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none select-none"
             style={{ perspective: "600px" }}
           >
             {characters.map((char, index) => (
@@ -351,7 +353,7 @@ const Skiper31 = ({
             ))}
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-500 font-semibold max-w-xl text-center mt-6">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-semibold max-w-xl text-center mt-6">
             Personal student care, fast turnaround time & statutory grievance redressal.
           </p>
         </div>
@@ -359,14 +361,14 @@ const Skiper31 = ({
         {/* ── Block 2: Service Channels Convergence ── */}
         <div
           ref={targetRef2}
-          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center gap-7 overflow-hidden bg-gradient-to-b from-[#FDF4F8] via-white to-[#FAF8FD] p-6 sm:p-12 border border-purple-100 rounded-[28px]"
+          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center gap-7 overflow-hidden bg-gradient-to-b from-[#FDF4F8] via-white to-[#FAF8FD] dark:from-[#18191F] dark:via-[#121318] dark:to-[#18191F] p-6 sm:p-12 border border-purple-100 dark:border-neutral-800 rounded-[28px] shadow-sm dark:shadow-none"
         >
-          <div className="flex items-center justify-center gap-3 text-base sm:text-2xl font-extrabold tracking-tight text-slate-900 text-center">
-            <Bracket className="h-8 sm:h-11 text-purple-600 shrink-0" />
-            <span className="bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-3 text-base sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center">
+            <Bracket className="h-8 sm:h-11 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span className="bg-gradient-to-r from-purple-700 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
               choose your preferred support channel
             </span>
-            <Bracket className="h-8 sm:h-11 scale-x-[-1] text-pink-600 shrink-0" />
+            <Bracket className="h-8 sm:h-11 scale-x-[-1] text-pink-600 dark:text-pink-400 shrink-0" />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-5 max-w-5xl">
@@ -385,14 +387,14 @@ const Skiper31 = ({
         {/* ── Block 3: Student-First Service Commitments (3D Perspective Tilting) ── */}
         <div
           ref={targetRef3}
-          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center gap-7 overflow-hidden bg-gradient-to-b from-[#FAF8FD] via-white to-white p-6 sm:p-12 border border-pink-100 rounded-[28px]"
+          className="relative box-border flex min-h-[60vh] sm:min-h-[75vh] flex-col items-center justify-center gap-7 overflow-hidden bg-gradient-to-b from-[#FAF8FD] via-white to-white dark:from-[#18191F] dark:via-[#121318] dark:to-[#18191F] p-6 sm:p-12 border border-pink-100 dark:border-neutral-800 rounded-[28px] shadow-sm dark:shadow-none"
         >
-          <div className="flex items-center justify-center gap-3 text-base sm:text-2xl font-extrabold tracking-tight text-slate-900 text-center">
-            <Bracket className="h-8 sm:h-11 text-pink-600 shrink-0" />
-            <span className="bg-gradient-to-r from-pink-600 to-purple-700 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-3 text-base sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center">
+            <Bracket className="h-8 sm:h-11 text-pink-600 dark:text-pink-400 shrink-0" />
+            <span className="bg-gradient-to-r from-pink-600 to-purple-700 dark:from-pink-400 dark:to-purple-300 bg-clip-text text-transparent">
               our student-first service commitments
             </span>
-            <Bracket className="h-8 sm:h-11 scale-x-[-1] text-purple-600 shrink-0" />
+            <Bracket className="h-8 sm:h-11 scale-x-[-1] text-purple-600 dark:text-purple-400 shrink-0" />
           </div>
 
           <div

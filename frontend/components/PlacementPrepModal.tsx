@@ -140,6 +140,7 @@ interface PlacementPrepModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialCategory?: PrepCategory | null;
+  hasPlacementAccessOverride?: boolean;
 }
 
 const PLACEMENT_PREP_DATA = {
@@ -195,8 +196,8 @@ const PLACEMENT_PREP_DATA = {
     {
       category: "Logical Reasoning",
       icon: Brain,
-      color: "from-purple-50/90 via-violet-50/40 to-white",
-      borderColor: "border-purple-200/90",
+      color: "from-[#EDE9FE] via-[#F5F3FF] to-[#DDD6FE]/80",
+      borderColor: "border-purple-300/80",
       iconBg: "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-xs",
       itemBorder: "border-purple-200/80 hover:border-purple-500 hover:bg-purple-50/50",
       badgeColor: "text-purple-700 bg-purple-100/90 border-purple-200/90",
@@ -232,8 +233,8 @@ const PLACEMENT_PREP_DATA = {
     {
       category: "Verbal Ability",
       icon: MessageSquare,
-      color: "from-emerald-50/90 via-teal-50/40 to-white",
-      borderColor: "border-emerald-200/90",
+      color: "from-[#DCFCE7] via-[#F0FDF4] to-[#BBF7D0]/80",
+      borderColor: "border-emerald-300/80",
       iconBg: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xs",
       itemBorder: "border-emerald-200/80 hover:border-emerald-500 hover:bg-emerald-50/50",
       badgeColor: "text-emerald-700 bg-emerald-100/90 border-emerald-200/90",
@@ -318,9 +319,10 @@ export default function PlacementPrepModal({
   isOpen,
   onClose,
   initialCategory = null,
+  hasPlacementAccessOverride,
 }: PlacementPrepModalProps) {
   const { canAccess } = useSubscription();
-  const hasPlacementAccess = canAccess("placement_prep");
+  const hasPlacementAccess = hasPlacementAccessOverride ?? canAccess("placement_prep");
   const [activeTab, setActiveTab] = useState<"aptitude" | "mockTests">("aptitude");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [mounted, setMounted] = useState<boolean>(false);
@@ -829,13 +831,13 @@ export default function PlacementPrepModal({
 
   const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[9999] bg-[#f4f6f3] select-none overflow-hidden flex flex-col shadow-2xl">
+      <div className="fixed inset-0 z-[9999] bg-white dark:bg-black select-none overflow-hidden flex flex-col shadow-2xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.2 }}
-          className="bg-[#f4f6f3] w-full h-full flex flex-col overflow-hidden"
+          className="bg-white dark:bg-black w-full h-full flex flex-col overflow-hidden"
         >
           {/* Sleek Floating Close Button for Main View */}
           {!selectedTopic && (
@@ -851,11 +853,11 @@ export default function PlacementPrepModal({
 
           {/* Compact Header Bar (Only visible during active Topic Practice / Quiz Mode) */}
           {selectedTopic && (
-            <div className="px-3 py-2 sm:px-6 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0 shadow-2xs">
+            <div className="px-3 py-2 sm:px-6 sm:py-3.5 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-[#18191F] flex items-center justify-between gap-2.5 shrink-0 shadow-2xs">
               <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
                 <button
                   onClick={() => setSelectedTopic(null)}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all flex items-center gap-1 text-xs font-black cursor-pointer border border-slate-200/80 shrink-0 active:scale-95 shadow-2xs"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-800 dark:text-white transition-all flex items-center gap-1 text-xs font-black cursor-pointer border border-slate-200/80 dark:border-neutral-800 shrink-0 active:scale-95 shadow-2xs"
                   aria-label="Back to Topics"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -863,10 +865,10 @@ export default function PlacementPrepModal({
                   <span className="sm:hidden">Back</span>
                 </button>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight truncate leading-tight">
+                  <h2 className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight truncate leading-tight">
                     {selectedTopic} Practice
                   </h2>
-                  <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-neutral-400 font-medium truncate hidden sm:block mt-0.5">
                     {totalQuestions} Questions • Practice Mode
                   </p>
                 </div>
@@ -875,13 +877,13 @@ export default function PlacementPrepModal({
               <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                 {/* Practice View Switcher */}
                 {!quizFinished && (
-                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[10px] sm:text-xs font-bold">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#121318] p-1 rounded-xl border border-slate-200 dark:border-neutral-800 text-[10px] sm:text-xs font-bold">
                     <button
                       onClick={() => setPracticeViewMode("card")}
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
                         practiceViewMode === "card"
-                          ? "bg-slate-900 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                          ? "bg-slate-900 dark:bg-[#20222A] text-white shadow-xs"
+                          : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#18191F]"
                       }`}
                     >
                       Single
@@ -891,7 +893,7 @@ export default function PlacementPrepModal({
                       className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer font-black ${
                         practiceViewMode === "sheet"
                           ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                          : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#18191F]"
                       }`}
                     >
                       Sheet
@@ -912,7 +914,7 @@ export default function PlacementPrepModal({
           )}
 
           {!hasPlacementAccess ? (
-            <div className="p-6 md:p-12 flex items-center justify-center flex-1 bg-[#f4f6f3] overflow-y-auto">
+            <div className="p-6 md:p-12 flex items-center justify-center flex-1 bg-white dark:bg-black overflow-y-auto">
               <PremiumLockCard
                 title="Placement Preparation Suite"
                 description="Master recruitment assessments with complete Quantitative Aptitude, Logical Reasoning, Verbal Ability question banks and timed full-length company mock tests (TCS NQT, Infosys, and top product firms)."
@@ -934,12 +936,20 @@ export default function PlacementPrepModal({
               {!selectedTopic && (
                 <>
                   {/* Content Body */}
-                  <div className="p-4 sm:p-6 md:p-8 pt-5 sm:pt-6 overflow-y-auto flex-1 space-y-6 bg-[#f4f6f3]">
+                  <div className="p-4 sm:p-6 md:p-8 pt-5 sm:pt-6 overflow-y-auto flex-1 space-y-6 bg-[#f4f6f3] dark:bg-black">
                     {activeTab === "aptitude" && (
                       <div className="max-w-5xl mx-auto w-full space-y-6">
                         {filteredAptitudeSections.map((section, idx) => {
                       const Icon = section.icon;
                       const isQuantitative = section.category === "Quantitative Aptitude";
+                      const isLogicalReasoning = section.category === "Logical Reasoning";
+                      const isVerbalAbility = section.category === "Verbal Ability";
+
+                      const heroCardTheme = isQuantitative
+                        ? "bg-gradient-to-br from-[#FEF9C3] via-[#FFFBEB] to-[#FEF08A]/80 border border-amber-300/80 shadow-amber-950/5"
+                        : isLogicalReasoning
+                        ? "bg-gradient-to-br from-[#EDE9FE] via-[#F5F3FF] to-[#DDD6FE]/80 border border-purple-300/80 shadow-purple-950/5"
+                        : "bg-gradient-to-br from-[#DCFCE7] via-[#F0FDF4] to-[#BBF7D0]/80 border border-emerald-300/80 shadow-emerald-950/5";
 
                       // Derive dynamic stats (zero hardcoded numbers)
                       const stats = categoryStats[section.category] || {
@@ -960,11 +970,7 @@ export default function PlacementPrepModal({
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className={`p-4 sm:p-5 md:p-6 rounded-[20px] sm:rounded-[24px] relative overflow-hidden flex flex-col justify-between shadow-md transition-all ${
-                              isQuantitative
-                                ? "bg-gradient-to-br from-[#FEF9C3] via-[#FFFBEB] to-[#FEF08A]/80 border border-amber-300/80 shadow-amber-950/5"
-                                : `bg-gradient-to-b ${section.color} border ${section.borderColor}`
-                            }`}
+                            className={`p-4 sm:p-5 md:p-6 rounded-[20px] sm:rounded-[24px] relative overflow-hidden flex flex-col justify-between shadow-md transition-all ${heroCardTheme}`}
                           >
                             {/* Dot Matrix Pattern Overlay for Engineering Tech Aesthetic */}
                             <div
@@ -1097,23 +1103,23 @@ export default function PlacementPrepModal({
                             return (
                               <div className="space-y-4">
                                 {/* Search & Filter Toolbar Card */}
-                                <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/90 p-2.5 sm:p-4 shadow-xs">
+                                <div className="bg-white dark:bg-[#18191F] rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-neutral-800 p-2.5 sm:p-4 shadow-xs">
                                   <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 sm:gap-3">
                                     {/* Search Input */}
                                     <div className="relative flex-1 min-w-0">
-                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-neutral-500" />
                                       <input
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder={`Search in ${section.category}...`}
-                                        className="w-full pl-8 sm:pl-10 pr-7 sm:pr-8 py-2 sm:py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                                        className="w-full pl-8 sm:pl-10 pr-7 sm:pr-8 py-2 sm:py-2.5 text-xs sm:text-sm bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500"
                                       />
                                       {searchQuery && (
                                         <button
                                           type="button"
                                           onClick={() => setSearchQuery("")}
-                                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-white"
                                         >
                                           <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                         </button>
@@ -1126,23 +1132,23 @@ export default function PlacementPrepModal({
                                       <select
                                         value={selectedStatusFilter}
                                         onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-white hover:border-slate-300 dark:hover:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
                                       >
-                                        <option value="all">Status</option>
-                                        <option value="solved">Solved</option>
-                                        <option value="attempted">Attempted</option>
-                                        <option value="unattempted">Unattempted</option>
+                                        <option value="all" className="dark:bg-[#121318] dark:text-white">Status</option>
+                                        <option value="solved" className="dark:bg-[#121318] dark:text-white">Solved</option>
+                                        <option value="attempted" className="dark:bg-[#121318] dark:text-white">Attempted</option>
+                                        <option value="unattempted" className="dark:bg-[#121318] dark:text-white">Unattempted</option>
                                       </select>
 
                                       {/* Sort By Dropdown */}
                                       <select
                                         value={selectedSort}
                                         onChange={(e) => setSelectedSort(e.target.value)}
-                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
+                                        className="flex-1 sm:flex-initial px-2 sm:px-3.5 py-1.5 sm:py-2.5 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-white hover:border-slate-300 dark:hover:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer min-w-0"
                                       >
-                                        <option value="default">Sort By</option>
-                                        <option value="name">Topic A-Z</option>
-                                        <option value="questions">Questions</option>
+                                        <option value="default" className="dark:bg-[#121318] dark:text-white">Sort By</option>
+                                        <option value="name" className="dark:bg-[#121318] dark:text-white">Topic A-Z</option>
+                                        <option value="questions" className="dark:bg-[#121318] dark:text-white">Questions</option>
                                       </select>
 
                                       {/* Pick Random Action Button */}
@@ -1164,39 +1170,39 @@ export default function PlacementPrepModal({
                                 </div>
 
                                 {/* Topic Rows List Container */}
-                                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
+                                <div className="bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-2xs divide-y divide-slate-100 dark:divide-neutral-800 overflow-hidden">
                                   {sectionTopicList.length === 0 ? (
-                                    <div className="p-8 text-center text-slate-500 text-sm">
+                                    <div className="p-8 text-center text-slate-500 dark:text-neutral-400 text-sm">
                                       No topics match your current filters in {section.category}.
                                     </div>
                                   ) : (
                                     sectionTopicList.map((item) => (
                                       <div
                                         key={item.name}
-                                        className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
+                                        className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-[#20222A] transition-colors"
                                       >
                                         <div className="flex-1 min-w-0">
                                           <h4
                                             onClick={() => startTopicQuiz(item.name, 0)}
-                                            className="text-sm sm:text-base font-black text-slate-900 hover:text-indigo-600 cursor-pointer transition-colors leading-snug"
+                                            className="text-sm sm:text-base font-black text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors leading-snug"
                                           >
                                             {item.name}
                                           </h4>
                                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                            <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
+                                            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                               <Zap className="w-3 h-3 fill-amber-500 text-amber-500" />
                                               {item.questionCount} Questions
                                             </span>
-                                            <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                                              <Clock className="w-3 h-3 text-slate-400" />
+                                            <span className="text-[11px] font-medium text-slate-400 dark:text-neutral-400 flex items-center gap-1">
+                                              <Clock className="w-3 h-3 text-slate-400 dark:text-neutral-400" />
                                               — {item.attemptedCount} attempted
                                             </span>
                                             {item.isSolved ? (
-                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-1">
                                                 <Check className="w-2.5 h-2.5 stroke-[3]" /> Solved
                                               </span>
                                             ) : item.isAttempted ? (
-                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 flex items-center gap-1">
                                                 {item.solvedCount}/{item.questionCount} Solved
                                               </span>
                                             ) : null}
@@ -1209,8 +1215,8 @@ export default function PlacementPrepModal({
                                             onClick={(e) => toggleTopicBookmark(item.name, e)}
                                             className={`p-2 rounded-xl transition-all cursor-pointer ${
                                               item.isBookmarked
-                                                ? "bg-rose-50 text-rose-500 hover:bg-rose-100"
-                                                : "text-slate-300 hover:text-slate-500 hover:bg-slate-100"
+                                                ? "bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/60"
+                                                : "text-slate-300 dark:text-neutral-600 hover:text-slate-500 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800"
                                             }`}
                                             title={item.isBookmarked ? "Remove Bookmark" : "Bookmark Topic"}
                                           >
@@ -1219,7 +1225,7 @@ export default function PlacementPrepModal({
                                           <button
                                             type="button"
                                             onClick={() => startTopicQuiz(item.name, 0)}
-                                            className="bg-[#0F172A] hover:bg-[#1E293B] text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                                            className="bg-[#0F172A] hover:bg-[#1E293B] dark:bg-[#121318] dark:hover:bg-[#20222A] dark:border dark:border-neutral-700 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
                                           >
                                             Solve
                                           </button>
@@ -1267,17 +1273,17 @@ export default function PlacementPrepModal({
                               {section.tests.map((test) => (
                                 <div
                                   key={test.name}
-                                  className={`p-3.5 rounded-2xl bg-white border ${section.itemBorder} transition-all space-y-1.5 group cursor-pointer shadow-2xs hover:shadow-md`}
+                                  className={`p-3.5 rounded-2xl bg-white dark:bg-[#18191F] border ${section.itemBorder} dark:border-neutral-800 transition-all space-y-1.5 group cursor-pointer shadow-2xs hover:shadow-md`}
                                 >
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs font-extrabold text-slate-900 group-hover:text-sky-700">
+                                    <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-sky-700 dark:group-hover:text-sky-400">
                                       {test.name}
                                     </span>
                                     <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${section.badgeColor}`}>
                                       {test.duration}
                                     </span>
                                   </div>
-                                  <div className="text-[11px] text-slate-500 font-semibold flex items-center justify-between">
+                                  <div className="text-[11px] text-slate-500 dark:text-neutral-400 font-semibold flex items-center justify-between">
                                     <span>{test.count}</span>
                                     <span className={`${section.footerColor} font-extrabold group-hover:underline`}>Start Test →</span>
                                   </div>
@@ -1286,7 +1292,7 @@ export default function PlacementPrepModal({
                             </div>
                           </div>
 
-                          <div className={`mt-6 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs font-extrabold ${section.footerColor}`}>
+                          <div className={`mt-6 pt-4 border-t border-slate-200/80 dark:border-neutral-800 flex items-center justify-between text-xs font-extrabold ${section.footerColor}`}>
                             <span>Evaluation Mode</span>
                             <ChevronRight className="w-4 h-4" />
                           </div>
@@ -1301,7 +1307,7 @@ export default function PlacementPrepModal({
 
           {/* Topic Practice Suite View */}
           {selectedTopic && (
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#f4f6f3] dark:bg-black">
               {/* If Practice is NOT finished */}
               {!quizFinished && (
                 <>
@@ -1309,23 +1315,23 @@ export default function PlacementPrepModal({
                   {practiceViewMode === "card" && currentQ && (
                     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                       {/* Left Main Question Column */}
-                      <div className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col justify-between space-y-6">
+                      <div className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col justify-between space-y-6 bg-[#f4f6f3] dark:bg-black">
                         <div>
                           {/* Top Practice Progress Bar & Stopwatch */}
                           <div className="space-y-2.5 mb-6">
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-slate-700">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-slate-700 dark:text-neutral-300">
                               <span>Question {currentIndex + 1} of {totalQuestions}</span>
                               <div className="flex items-center gap-2 sm:gap-3">
-                                <span className="flex items-center gap-1.5 text-amber-900 bg-amber-100/90 px-3 py-1 rounded-full border border-amber-300/80 font-black text-[11px] sm:text-xs shadow-2xs">
-                                  <Clock className="w-3.5 h-3.5 text-amber-700" />
+                                <span className="flex items-center gap-1.5 text-amber-900 bg-amber-100/90 dark:bg-amber-950/40 dark:text-amber-300 px-3 py-1 rounded-full border border-amber-300/80 dark:border-amber-800/60 font-black text-[11px] sm:text-xs shadow-2xs">
+                                  <Clock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                                   <span>{formatTimer(questionTimerSeconds)}</span>
                                 </span>
-                                <span className="text-purple-700 font-black text-xs bg-purple-100 px-3 py-1 rounded-full border border-purple-200/80">
+                                <span className="text-purple-700 dark:text-purple-300 font-black text-xs bg-purple-100 dark:bg-purple-950/40 px-3 py-1 rounded-full border border-purple-200/80 dark:border-purple-800/60">
                                   {answeredCount}/{totalQuestions} Practiced
                                 </span>
                               </div>
                             </div>
-                            <div className="w-full bg-slate-200/90 h-2.5 rounded-full overflow-hidden border border-slate-300/50">
+                            <div className="w-full bg-slate-200/90 dark:bg-neutral-800 h-2.5 rounded-full overflow-hidden border border-slate-300/50 dark:border-neutral-700">
                               <motion.div
                                 className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-500 rounded-full"
                                 initial={{ width: 0 }}
@@ -1350,7 +1356,7 @@ export default function PlacementPrepModal({
                                   : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
                                 const isCur = idx === currentIndex;
 
-                                let chipStyle = "bg-slate-100 text-slate-700 border-slate-200/90 font-extrabold";
+                                let chipStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold";
                                 if (hasAns) {
                                   chipStyle = isCorr ? "bg-emerald-500 text-white border-emerald-600 font-black" : "bg-rose-500 text-white border-rose-600 font-black";
                                 }
@@ -1371,11 +1377,11 @@ export default function PlacementPrepModal({
                           </div>
 
                           {/* Question Text Box */}
-                          <div className="p-6 sm:p-7 rounded-3xl border border-slate-200/90 mb-6 bg-white shadow-md relative">
+                          <div className="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-neutral-800 mb-6 bg-white dark:bg-[#18191F] shadow-md relative">
                             <div className="absolute -top-3.5 left-6 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white tracking-wider uppercase shadow-xs">
                               Practice Problem #{currentIndex + 1}
                             </div>
-                            <h3 className="text-base sm:text-xl font-extrabold text-slate-900 leading-relaxed pt-2">
+                            <h3 className="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white leading-relaxed pt-2">
                               {currentQ.question}
                             </h3>
                           </div>
@@ -1390,14 +1396,14 @@ export default function PlacementPrepModal({
                                 : (currentQ.correctIndex !== undefined ? optIdx === currentQ.correctIndex : false);
                               const hasAnswered = userAnswers[currentQ.id] !== undefined;
 
-                              let optionStyles = "bg-white border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 text-slate-900 font-extrabold shadow-2xs hover:shadow-md cursor-pointer";
+                              let optionStyles = "bg-white dark:bg-[#18191F] border-slate-200/90 dark:border-neutral-800 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] text-slate-900 dark:text-white font-extrabold shadow-2xs hover:shadow-md cursor-pointer";
                               if (hasAnswered) {
                                 if (isSelected && isCorrect) {
                                   optionStyles = "bg-emerald-500 border-emerald-600 text-white font-black shadow-md cursor-not-allowed";
                                 } else if (isSelected && !isCorrect) {
                                   optionStyles = "bg-rose-500 border-rose-600 text-white font-black shadow-md cursor-not-allowed";
                                 } else {
-                                  optionStyles = "bg-slate-100/90 border-slate-200 text-slate-400 font-semibold cursor-not-allowed opacity-50";
+                                  optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
                                 }
                               }
 
@@ -1422,17 +1428,17 @@ export default function PlacementPrepModal({
 
                           {/* Action Bar when Answered: Feedback & Retry Button */}
                           {userAnswers[currentQ.id] !== undefined && (
-                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm mb-6">
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm mb-6">
                               <div className="flex items-center gap-2 text-xs sm:text-sm font-black">
                                 {(revealedSolutions[currentQ.id] !== undefined
                                   ? revealedSolutions[currentQ.id].isCorrect
                                   : (currentQ.correctIndex !== undefined ? userAnswers[currentQ.id] === currentQ.correctIndex : false)) ? (
-                                  <span className="text-emerald-700 flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Correct Answer! Great Job 🎉
+                                  <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Correct Answer! Great Job 🎉
                                   </span>
                                 ) : (
-                                  <span className="text-rose-700 flex items-center gap-1.5">
-                                    <XCircle className="w-4 h-4 text-rose-600" /> Incorrect Answer!
+                                  <span className="text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                                    <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Incorrect Answer!
                                   </span>
                                 )}
                               </div>
@@ -1453,9 +1459,9 @@ export default function PlacementPrepModal({
                               {/* Step 1 Toggle */}
                               <button
                                 onClick={() => toggleCorrectOption(currentQ.id)}
-                                className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 text-xs font-extrabold text-emerald-800 border border-emerald-300/80 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-950/60 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                               >
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                                 <span>
                                   {showCorrectOptionMap[currentQ.id] ? "Hide Correct Option" : "Step 1: Show Correct Option 🎯"}
                                 </span>
@@ -1464,9 +1470,9 @@ export default function PlacementPrepModal({
                               {/* Step 2 Toggle */}
                               <button
                                 onClick={() => toggleSolution(currentQ.id)}
-                                className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100/90 text-xs font-extrabold text-amber-900 border border-amber-300/80 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-950/60 text-xs font-extrabold text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                               >
-                                <Lightbulb className="w-4 h-4 text-amber-600" />
+                                <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                                 <span>
                                   {showSolutionMap[currentQ.id] ? "Hide Solution" : "Step 2: Show Step-by-Step Solution 💡"}
                                 </span>
@@ -1480,7 +1486,7 @@ export default function PlacementPrepModal({
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: "auto" }}
                                   exit={{ opacity: 0, height: 0 }}
-                                  className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-extrabold flex items-center gap-2 shadow-2xs"
+                                  className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 font-extrabold flex items-center gap-2 shadow-2xs"
                                 >
                                   <span>🎯 Correct Option:</span>
                                   <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg border border-emerald-700 font-black">
@@ -1497,13 +1503,13 @@ export default function PlacementPrepModal({
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: "auto" }}
                                   exit={{ opacity: 0, height: 0 }}
-                                  className="p-5 rounded-3xl bg-white border border-purple-200/90 text-xs leading-relaxed text-slate-800 space-y-2 overflow-hidden shadow-md"
+                                  className="p-5 rounded-3xl bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-white space-y-2 overflow-hidden shadow-md"
                                 >
-                                  <div className="font-black text-amber-800 flex items-center gap-1.5">
-                                    <Lightbulb className="w-4 h-4 text-amber-600" />
+                                  <div className="font-black text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                                    <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                                     <span>💡 Step-by-Step Solution:</span>
                                   </div>
-                                  <div className="whitespace-pre-line text-slate-700 font-semibold pt-1">
+                                  <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1">
                                     {revealedSolutions[currentQ.id]?.solution || currentQ.solution}
                                   </div>
                                 </motion.div>
@@ -1513,11 +1519,11 @@ export default function PlacementPrepModal({
                         </div>
 
                         {/* Bottom Navigation Control Row */}
-                        <div className="pt-6 border-t border-slate-200/80 flex items-center justify-between gap-4">
+                        <div className="pt-6 border-t border-slate-200/80 dark:border-neutral-800 flex items-center justify-between gap-4">
                           <button
                             onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
                             disabled={currentIndex === 0}
-                            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-extrabold text-slate-800 border border-slate-200/90 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#18191F] hover:bg-slate-100 dark:hover:bg-[#20222A] disabled:opacity-40 disabled:cursor-not-allowed text-xs font-extrabold text-slate-800 dark:text-white border border-slate-200/90 dark:border-neutral-800 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                           >
                             <ChevronLeft className="w-4 h-4" />
                             <span>Previous Question</span>
@@ -1546,11 +1552,11 @@ export default function PlacementPrepModal({
                       </div>
 
                       {/* Right Question Index Palette (Sidebar on Desktop lg:, Bottom Sheet Modal on Mobile) */}
-                      <div className="hidden lg:flex lg:w-72 bg-white border-l border-slate-200/90 p-5 flex-col justify-between shrink-0 shadow-2xs">
+                      <div className="hidden lg:flex lg:w-72 bg-white dark:bg-[#18191F] border-l border-slate-200/90 dark:border-neutral-800 p-5 flex-col justify-between shrink-0 shadow-2xs">
                         <div>
-                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center justify-between">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center justify-between">
                             <span>Questions Index</span>
-                            <span className="text-[10px] text-purple-700 font-extrabold bg-purple-100 px-2 py-0.5 rounded-full">{answeredCount}/{totalQuestions}</span>
+                            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-extrabold bg-purple-100 dark:bg-purple-950/50 px-2 py-0.5 rounded-full">{answeredCount}/{totalQuestions}</span>
                           </h4>
 
                           {/* Question Grid Numbers */}
@@ -1562,7 +1568,7 @@ export default function PlacementPrepModal({
                                 : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
                               const isCur = idx === currentIndex;
 
-                              let gridStyle = "bg-slate-100 text-slate-700 border-slate-200/90 font-extrabold hover:bg-slate-200";
+                              let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
                               if (hasAns) {
                                 gridStyle = isCorr
                                   ? "bg-emerald-500 text-white border-emerald-600 font-black shadow-2xs"
@@ -1584,7 +1590,7 @@ export default function PlacementPrepModal({
                           </div>
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-slate-200/80 space-y-3">
+                        <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-neutral-800 space-y-3">
                           <button
                             onClick={() => setQuizFinished(true)}
                             className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-xs font-black text-white shadow-md shadow-purple-600/25 transition-all cursor-pointer"
@@ -1610,16 +1616,16 @@ export default function PlacementPrepModal({
                               animate={{ y: 0 }}
                               exit={{ y: "100%" }}
                               transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                              className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 rounded-t-3xl p-6 z-50 max-h-[85vh] overflow-y-auto lg:hidden shadow-2xl"
+                              className="fixed bottom-0 inset-x-0 bg-white dark:bg-[#18191F] border-t border-slate-200 dark:border-neutral-800 rounded-t-3xl p-6 z-50 max-h-[85vh] overflow-y-auto lg:hidden shadow-2xl"
                             >
-                              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
-                                <div className="font-black text-slate-900 text-sm flex items-center gap-2">
+                              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-neutral-800 mb-4">
+                                <div className="font-black text-slate-900 dark:text-white text-sm flex items-center gap-2">
                                   <Grid className="w-4 h-4 text-purple-600" />
                                   <span>Questions Index ({answeredCount}/{totalQuestions} Practiced)</span>
                                 </div>
                                 <button
                                   onClick={() => setMobileGridOpen(false)}
-                                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
+                                  className="p-2 rounded-xl bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-300 cursor-pointer"
                                 >
                                   <X className="w-5 h-5" />
                                 </button>
@@ -1633,7 +1639,7 @@ export default function PlacementPrepModal({
                                     : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
                                   const isCur = idx === currentIndex;
 
-                                  let gridStyle = "bg-slate-100 text-slate-700 border-slate-200 font-extrabold hover:bg-slate-200";
+                                  let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
                                   if (hasAns) {
                                     gridStyle = isCorr
                                       ? "bg-emerald-500 text-white border-emerald-600 font-black shadow-xs"
@@ -1675,17 +1681,17 @@ export default function PlacementPrepModal({
 
                   {/* Mode B: Full Practice Sheet (Scrollable List of All Questions) */}
                   {practiceViewMode === "sheet" && (
-                    <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 bg-white p-6 rounded-3xl border shadow-xs">
+                    <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6 bg-[#f4f6f3] dark:bg-black">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-neutral-800 pb-5 bg-white dark:bg-[#18191F] p-6 rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-xs">
                         <div>
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className="px-3 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-wider border border-purple-200">
+                            <span className="px-3 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 text-[10px] font-black uppercase tracking-wider border border-purple-200 dark:border-purple-800">
                               Sheet Mode
                             </span>
-                            <span className="text-xs text-slate-500 font-bold">• {totalQuestions} Practice Problems</span>
+                            <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold">• {totalQuestions} Practice Problems</span>
                           </div>
-                          <h3 className="text-xl font-black text-slate-900 tracking-tight">Full Practice Sheet: {selectedTopic}</h3>
-                          <p className="text-xs text-slate-600 font-medium mt-1">All {totalQuestions} practice questions listed with instant answer validation &amp; step-by-step solutions.</p>
+                          <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Full Practice Sheet: {selectedTopic}</h3>
+                          <p className="text-xs text-slate-600 dark:text-neutral-400 font-medium mt-1">All {totalQuestions} practice questions listed with instant answer validation &amp; step-by-step solutions.</p>
                         </div>
                         <button
                           onClick={() => setQuizFinished(true)}
@@ -1705,17 +1711,17 @@ export default function PlacementPrepModal({
                           const hasAnswered = userAnsIdx !== undefined;
 
                           return (
-                            <div key={q.id} className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md transition-all space-y-4">
+                            <div key={q.id} className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all space-y-4">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-2.5">
-                                  <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-800 text-xs font-black border border-purple-200/80 shadow-2xs">
+                                  <span className="px-3 py-1 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 text-xs font-black border border-purple-200/80 dark:border-purple-800 shadow-2xs">
                                     Problem #{idx + 1}
                                   </span>
                                   {hasAnswered && (
                                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                       isCorrect
-                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                        : "bg-rose-100 text-rose-800 border border-rose-300"
+                                        ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
+                                        : "bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800"
                                     }`}>
                                       {isCorrect ? "Correct ✓" : "Incorrect ✗"}
                                     </span>
@@ -1723,7 +1729,7 @@ export default function PlacementPrepModal({
                                 </div>
                               </div>
 
-                              <h4 className="text-sm sm:text-base font-extrabold text-slate-900 leading-relaxed">
+                              <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-relaxed">
                                 {q.question}
                               </h4>
 
@@ -1733,14 +1739,14 @@ export default function PlacementPrepModal({
                                   const isRight = revealedSolutions[q.id] !== undefined
                                     ? optIdx === revealedSolutions[q.id].correctIndex
                                     : (q.correctIndex !== undefined ? optIdx === q.correctIndex : false);
-                                  let style = "bg-white border-slate-200 text-slate-800 hover:border-indigo-400 hover:bg-indigo-50/40 hover:text-indigo-900 shadow-2xs cursor-pointer";
+                                  let style = "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-800 dark:text-white hover:border-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] shadow-2xs cursor-pointer";
                                   if (hasAnswered) {
                                     if (isRight) {
-                                      style = "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-400/30 cursor-not-allowed";
+                                      style = "bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 text-emerald-950 dark:text-emerald-200 font-black shadow-xs ring-1 ring-emerald-400/30 cursor-not-allowed";
                                     } else if (isSel && !isRight) {
-                                      style = "bg-rose-50 border-2 border-rose-500 text-rose-950 font-black shadow-xs ring-1 ring-rose-400/30 cursor-not-allowed";
+                                      style = "bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-500 text-rose-950 dark:text-rose-200 font-black shadow-xs ring-1 ring-rose-400/30 cursor-not-allowed";
                                     } else {
-                                      style = "bg-slate-50/60 border-slate-200/80 text-slate-400 font-medium opacity-60 cursor-not-allowed";
+                                      style = "bg-slate-50/60 dark:bg-[#121318]/50 border-slate-200/80 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-medium opacity-60 cursor-not-allowed";
                                     }
                                   }
 
@@ -1763,24 +1769,24 @@ export default function PlacementPrepModal({
                                 })}
                               </div>
 
-                              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                              <div className="pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between">
                                 <button
                                   onClick={() => toggleSolution(q.id)}
-                                  className="text-xs font-extrabold text-amber-900 bg-amber-50 hover:bg-amber-100 px-3.5 py-1.5 rounded-xl border border-amber-300/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                  className="text-xs font-extrabold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-950/60 px-3.5 py-1.5 rounded-xl border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                                 >
-                                  <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                                  <Lightbulb className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                   <span>{showSolutionMap[q.id] ? "Hide Solution" : "Show Solution 💡"}</span>
                                 </button>
                               </div>
 
                               {showSolutionMap[q.id] && (
-                                <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/90 text-xs text-slate-800 space-y-2 shadow-2xs">
-                                  <div className="font-black text-amber-950 flex items-center gap-2">
+                                <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-amber-50/80 dark:bg-[#121318] border border-amber-200/90 dark:border-neutral-800 text-xs text-slate-800 dark:text-neutral-200 space-y-2 shadow-2xs">
+                                  <div className="font-black text-amber-950 dark:text-amber-400 flex items-center gap-2">
                                     <span className="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg font-black text-[11px] shadow-2xs">
                                       Answer: {q.answerText || ((revealedSolutions[q.id]?.correctIndex ?? q.correctIndex) !== undefined ? q.options[revealedSolutions[q.id]?.correctIndex ?? q.correctIndex!] : "")}
                                     </span>
                                   </div>
-                                  <div className="whitespace-pre-line text-slate-700 font-semibold pt-1 border-t border-amber-200/60">
+                                  <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1 border-t border-amber-200/60 dark:border-neutral-800">
                                     {revealedSolutions[q.id]?.solution || q.solution}
                                   </div>
                                 </div>
@@ -1796,7 +1802,7 @@ export default function PlacementPrepModal({
 
               {/* Practice Summary Screen */}
               {quizFinished && (
-                <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8">
+                <div className="flex-1 p-6 md:p-8 overflow-y-auto space-y-8 bg-[#f4f6f3] dark:bg-black">
                   {/* Score Banner */}
                   <div className="p-8 rounded-3xl bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 border border-purple-400/30 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl text-white">
                     <div>
@@ -1835,7 +1841,7 @@ export default function PlacementPrepModal({
 
                   {/* Solutions Table & Breakdown */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <h4 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                       <Lightbulb className="w-5 h-5 text-amber-500" />
                       Detailed Solutions &amp; Answer Key
                     </h4>
@@ -1852,25 +1858,25 @@ export default function PlacementPrepModal({
                         return (
                           <div
                             key={q.id}
-                            className={`p-6 rounded-3xl border transition-all space-y-3 bg-white shadow-sm ${
+                            className={`p-6 rounded-3xl border transition-all space-y-3 bg-white dark:bg-[#18191F] shadow-sm ${
                               userAnsIdx === undefined
-                                ? "border-slate-200"
+                                ? "border-slate-200 dark:border-neutral-800"
                                 : isCorrect
-                                ? "border-emerald-300 ring-1 ring-emerald-400/20"
-                                : "border-rose-300 ring-1 ring-rose-400/20"
+                                ? "border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-400/20"
+                                : "border-rose-300 dark:border-rose-700 ring-1 ring-rose-400/20"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-4">
-                              <h5 className="text-sm sm:text-base font-extrabold text-slate-900 leading-relaxed">
+                              <h5 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-relaxed">
                                 {q.question}
                               </h5>
                               <span
                                 className={`text-xs font-black px-3 py-1 rounded-full shrink-0 ${
                                   userAnsIdx === undefined
-                                    ? "bg-slate-100 text-slate-600 border border-slate-200"
+                                    ? "bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
                                     : isCorrect
-                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                    : "bg-rose-100 text-rose-800 border border-rose-300"
+                                    ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
+                                    : "bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800"
                                 }`}
                               >
                                 {userAnsIdx === undefined
@@ -1883,26 +1889,26 @@ export default function PlacementPrepModal({
 
                             {/* User answer vs correct answer & Time taken */}
                             <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
-                              <div className="text-slate-600">
-                                Your Choice: <span className={isCorrect ? "text-emerald-700 font-black" : "text-rose-700 font-black"}>{userAnsText}</span>
+                              <div className="text-slate-600 dark:text-neutral-400">
+                                Your Choice: <span className={isCorrect ? "text-emerald-700 dark:text-emerald-400 font-black" : "text-rose-700 dark:text-rose-400 font-black"}>{userAnsText}</span>
                               </div>
-                              <div className="text-amber-800 font-black flex items-center gap-1">
-                                <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-lg border border-amber-200">Correct Answer: {correctText}</span>
+                              <div className="text-amber-800 dark:text-amber-300 font-black flex items-center gap-1">
+                                <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 px-2.5 py-0.5 rounded-lg border border-amber-200 dark:border-amber-800/60">Correct Answer: {correctText}</span>
                               </div>
                               {questionTimes[q.id] !== undefined && (
-                                <div className="text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200 font-extrabold flex items-center gap-1">
-                                  <Clock className="w-3 h-3 text-purple-600" />
+                                <div className="text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/40 px-2.5 py-0.5 rounded-lg border border-purple-200 dark:border-purple-800/60 font-extrabold flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                                   <span>Time Taken: {questionTimes[q.id]}s</span>
                                 </div>
                               )}
                             </div>
 
                             {/* Solution Box */}
-                            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-xs leading-relaxed text-slate-800 space-y-1">
-                              <div className="font-black text-indigo-900 text-[11px] uppercase tracking-wider mb-1">
+                            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 dark:bg-[#121318] border border-indigo-100 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-neutral-200 space-y-1">
+                              <div className="font-black text-indigo-900 dark:text-indigo-400 text-[11px] uppercase tracking-wider mb-1">
                                 Step-by-Step Solution
                               </div>
-                              <div className="whitespace-pre-line font-medium text-slate-700">
+                              <div className="whitespace-pre-line font-medium text-slate-700 dark:text-neutral-300">
                                 {revealedSolutions[q.id]?.solution || q.solution}
                               </div>
                             </div>
