@@ -41,24 +41,24 @@ export default function ScholarshipDetailPage({ params }: ScholarshipDetailPageP
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 animate-pulse">
-        <div className="h-6 bg-slate-200 rounded w-40" />
-        <div className="h-48 bg-slate-200 rounded-3xl" />
+        <div className="h-6 bg-slate-200 dark:bg-[#18191F] rounded w-40" />
+        <div className="h-48 bg-slate-200 dark:bg-[#18191F] rounded-3xl" />
         <div className="space-y-3">
-          <div className="h-8 bg-slate-200 rounded w-3/4" />
-          <div className="h-4 bg-slate-200 rounded w-1/3" />
+          <div className="h-8 bg-slate-200 dark:bg-[#18191F] rounded w-3/4" />
+          <div className="h-4 bg-slate-200 dark:bg-[#18191F] rounded w-1/3" />
         </div>
-        <div className="h-36 bg-slate-100 rounded-2xl" />
-        <div className="h-36 bg-slate-100 rounded-2xl" />
+        <div className="h-36 bg-slate-100 dark:bg-[#18191F] rounded-2xl" />
+        <div className="h-36 bg-slate-100 dark:bg-[#18191F] rounded-2xl" />
       </div>
     );
   }
 
   if (isError || !scholarship) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div className="max-w-xl mx-auto my-12 p-8 text-center bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-sm space-y-4">
         <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-black text-slate-900">Scholarship Not Available</h2>
-        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+        <h2 className="text-xl font-black text-slate-900 dark:text-white">Scholarship Not Available</h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 leading-relaxed">
           {error instanceof Error ? error.message : "This scholarship is either in draft status, expired, or does not exist."}
         </p>
         <div className="pt-2">
@@ -80,23 +80,23 @@ export default function ScholarshipDetailPage({ params }: ScholarshipDetailPageP
       <div className="flex items-center justify-between">
         <Link
           href="/explore?tab=scholarships"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-[#C084FC] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Scholarships</span>
         </Link>
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-purple-950/60 border border-emerald-200 dark:border-purple-800/60 text-emerald-700 dark:text-purple-300 text-xs font-black">
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Verified Opportunity</span>
         </span>
       </div>
 
       {/* ── Main Hero Card ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-sm overflow-hidden">
         {/* Banner Image or Graphic Header */}
         {scholarship.image_url ? (
-          <div className="w-full h-56 sm:h-72 relative bg-slate-900 border-b border-slate-100">
+          <div className="w-full h-56 sm:h-72 relative bg-slate-900 border-b border-slate-100 dark:border-neutral-800">
             <Image
               src={scholarship.image_url}
               alt={scholarship.name}
@@ -115,26 +115,26 @@ export default function ScholarshipDetailPage({ params }: ScholarshipDetailPageP
         {/* Content Header */}
         <div className="p-6 sm:p-8 space-y-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-black text-indigo-600">
+            <div className="flex items-center gap-2 text-xs font-black text-indigo-600 dark:text-purple-300">
               <Building className="w-4 h-4" />
               <span>{scholarship.provided_by}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
               {scholarship.name}
             </h1>
           </div>
 
           {/* Qualification Badge & Expiration Notice */}
           <div className="flex flex-wrap items-center gap-3 pt-1">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-800 text-xs font-bold">
-              <BookOpen className="w-4 h-4 text-indigo-600 shrink-0" />
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 text-slate-800 dark:text-neutral-200 text-xs font-bold">
+              <BookOpen className="w-4 h-4 text-indigo-600 dark:text-[#C084FC] shrink-0" />
               <span>Target Qualification: {scholarship.qualification_required}</span>
             </div>
 
             {scholarship.visible_until && (
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-                <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 text-xs font-bold">
+                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Application Deadline: {new Date(scholarship.visible_until).toLocaleDateString()}</span>
               </div>
             )}
@@ -156,32 +156,32 @@ export default function ScholarshipDetailPage({ params }: ScholarshipDetailPageP
       </div>
 
       {/* ── Section: Eligibility ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 space-y-3 shadow-2xs">
-        <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+      <div className="bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200/90 dark:border-neutral-800 p-6 sm:p-8 space-y-3 shadow-2xs">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-indigo-600 dark:text-[#C084FC]" />
           <span>Eligibility Criteria</span>
         </h2>
-        <div className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed whitespace-pre-line pl-7">
+        <div className="text-xs sm:text-sm text-slate-700 dark:text-neutral-300 font-medium leading-relaxed whitespace-pre-line pl-7">
           {scholarship.eligibility}
         </div>
       </div>
 
       {/* ── Section: Requirements ── */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 space-y-3 shadow-2xs">
-        <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-indigo-600" />
+      <div className="bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200/90 dark:border-neutral-800 p-6 sm:p-8 space-y-3 shadow-2xs">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <FileText className="w-5 h-5 text-indigo-600 dark:text-[#C084FC]" />
           <span>Submission Requirements &amp; Documents</span>
         </h2>
-        <div className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed whitespace-pre-line pl-7">
+        <div className="text-xs sm:text-sm text-slate-700 dark:text-neutral-300 font-medium leading-relaxed whitespace-pre-line pl-7">
           {scholarship.requirements}
         </div>
       </div>
 
       {/* ── Direct Footer Action ── */}
-      <div className="p-6 rounded-3xl bg-indigo-50/70 border border-indigo-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl bg-indigo-50/70 dark:bg-[#18191F] border border-indigo-200/80 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="space-y-0.5 text-center sm:text-left">
-          <h3 className="text-sm font-black text-indigo-950">Ready to complete your application?</h3>
-          <p className="text-xs text-indigo-700 font-medium">
+          <h3 className="text-sm font-black text-indigo-950 dark:text-white">Ready to complete your application?</h3>
+          <p className="text-xs text-indigo-700 dark:text-neutral-400 font-medium">
             You will be redirected directly to the official external portal for {scholarship.provided_by}.
           </p>
         </div>
