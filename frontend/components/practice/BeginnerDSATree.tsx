@@ -19,26 +19,26 @@ export function BeginnerDSATree({
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-[28px] p-6 sm:p-10 bg-white border border-slate-100 shadow-xs overflow-hidden min-h-[620px]"
+      className="relative rounded-[28px] p-6 sm:p-10 bg-white dark:bg-[#18191F] border border-slate-100 dark:border-neutral-800 shadow-xs overflow-hidden min-h-[620px] transition-colors [--node-bg:#ffffff] dark:[--node-bg:#14151C]"
     >
       {/* Ambient Glow Aura behind Foundation */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 blur-3xl rounded-full pointer-events-none" />
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 dark:bg-purple-500/15 blur-3xl rounded-full pointer-events-none" />
 
       {/* Top Foundation Root Node & Branching Tree Structure */}
       <div className="flex flex-col items-center justify-center relative z-10 mb-8">
         <motion.div
           whileHover={{ scale: 1.05, y: -2 }}
-          className="px-8 py-3.5 rounded-full text-white font-black text-lg flex items-center gap-2.5 shadow-lg bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] border border-emerald-400/40 cursor-pointer relative z-20"
+          className="px-8 py-3.5 rounded-full text-white font-black text-lg flex items-center gap-2.5 shadow-lg bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] dark:from-[#241738] dark:via-[#1c122c] dark:to-[#160e22] border border-emerald-400/40 dark:border-purple-500/50 cursor-pointer relative z-20"
         >
-          <Layers className="w-5 h-5 text-emerald-300" />
+          <Layers className="w-5 h-5 text-emerald-300 dark:text-[#C084FC]" />
           <span>Foundation</span>
         </motion.div>
 
         {/* Vertical trunk line below Foundation */}
-        <div className="w-0.5 h-8 bg-emerald-700" />
+        <div className="w-0.5 h-8 bg-emerald-700 dark:bg-purple-600" />
 
         {/* Horizontal Branch Bar spreading across 4 columns (Desktop) */}
-        <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-emerald-500 via-purple-500 to-sky-500 relative">
+        <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-emerald-500 via-purple-500 to-sky-500 dark:from-emerald-400 dark:via-purple-400 dark:to-sky-400 relative">
           <div className="absolute left-0 top-0 w-0.5 h-7 bg-emerald-600" />
           <div className="absolute left-0 top-7 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-xs" />
 
@@ -102,9 +102,9 @@ export function BeginnerDSATree({
                         whileHover={{ scale: 1.03, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onSelectTopic(node.title)}
-                        className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md relative overflow-hidden text-slate-900 cursor-pointer group"
+                        className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md relative overflow-hidden text-slate-900 dark:text-white cursor-pointer group"
                         style={{
-                          background: `linear-gradient(135deg, ${cat.color}14 0%, #ffffff 85%)`,
+                          background: `linear-gradient(135deg, ${cat.color}18 0%, var(--node-bg, #ffffff) 85%)`,
                           borderTopColor: `${cat.color}45`,
                           borderRightColor: `${cat.color}45`,
                           borderBottomColor: `${cat.color}45`,
@@ -120,7 +120,7 @@ export function BeginnerDSATree({
                             animate={{ width: `${pct}%` }}
                             transition={{ duration: 0.7, ease: "easeOut" }}
                             style={{
-                              background: `${cat.color}22`,
+                              background: `${cat.color}25`,
                             }}
                           />
                         )}
@@ -137,26 +137,27 @@ export function BeginnerDSATree({
                           <NodeIcon className="w-3.5 h-3.5 text-white" />
                         </div>
 
-                        <span className="flex-1 text-left relative z-10 text-slate-900 font-extrabold group-hover:text-slate-950 text-xs">
+                        <span className="flex-1 text-left relative z-10 text-slate-900 dark:text-white font-extrabold group-hover:text-slate-950 dark:group-hover:text-purple-200 text-xs transition-colors">
                           {node.title}
                         </span>
 
                         {/* Progress counter badge */}
                         {total > 0 && (
                           <span
-                            className="text-[10px] font-black px-2.5 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums"
+                            className={`text-[10px] font-black px-2.5 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums border ${
+                              pct > 0
+                                ? "text-white"
+                                : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border-slate-200 dark:border-neutral-700"
+                            }`}
                             style={
                               pct > 0
                                 ? {
                                     background: `linear-gradient(135deg, ${cat.color}, ${cat.color}ee)`,
                                     color: "#ffffff",
                                     boxShadow: `0 2px 8px ${cat.color}35`,
+                                    borderColor: "transparent",
                                   }
-                                : {
-                                    backgroundColor: "#f1f5f9",
-                                    color: "#475569",
-                                    border: "1px solid #e2e8f0",
-                                  }
+                                : undefined
                             }
                           >
                             {solved}/{total}

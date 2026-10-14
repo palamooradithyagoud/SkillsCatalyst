@@ -76,7 +76,7 @@ export function BeginnerRoadmapCard({
           <div className="text-[11px] font-bold tracking-widest uppercase text-zinc-400 mb-3.5 pb-2 border-b border-white/5 flex items-center justify-between">
             <span>YOUR PROGRESS</span>
             {pct === 100 && (
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="text-[10px] font-bold text-[#C084FC] bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/30">
                 Completed
               </span>
             )}
@@ -142,7 +142,7 @@ export function BeginnerRoadmapCard({
 
               <div className="flex items-center justify-between">
                 <span className="text-zinc-400 font-medium">Accuracy</span>
-                <span className="font-bold text-emerald-400 tabular-nums">
+                <span className="font-bold text-[#C084FC] tabular-nums">
                   {accuracy}%
                 </span>
               </div>
