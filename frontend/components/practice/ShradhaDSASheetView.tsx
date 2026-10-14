@@ -558,16 +558,16 @@ export function ShradhaDSASheetView() {
       {/* ─────────────────────────────────────────────────────────────
           2. CONTROLS STRIP: SEARCH, FILTERS & EXPAND/COLLAPSE
           ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-[#18191F] p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-sm">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search problems by name, company (Google, Microsoft), or platform..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
           />
         </div>
 
@@ -577,36 +577,36 @@ export function ShradhaDSASheetView() {
           <select
             value={selectedDifficulty}
             onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
           >
-            <option value="All">All Difficulties</option>
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
+            <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Difficulties</option>
+            <option value="Easy" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Easy</option>
+            <option value="Medium" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Medium</option>
+            <option value="Hard" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Hard</option>
           </select>
 
           {/* Status Dropdown */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
           >
-            <option value="All">All Status</option>
-            <option value="Unsolved">Unsolved</option>
-            <option value="Solved">Solved</option>
+            <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
+            <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
+            <option value="Solved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Solved</option>
           </select>
 
           {/* Expand/Collapse All */}
-          <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+          <div className="flex items-center gap-1 border-l border-slate-200 dark:border-neutral-700 pl-2">
             <button
               onClick={expandAll}
-              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-orange-500 dark:hover:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-neutral-800 transition-colors"
             >
               Expand All
             </button>
             <button
               onClick={collapseAll}
-              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-orange-500 dark:hover:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-neutral-800 transition-colors"
             >
               Collapse
             </button>
@@ -619,8 +619,8 @@ export function ShradhaDSASheetView() {
           ───────────────────────────────────────────────────────────── */}
       <div className="space-y-4">
         {filteredCategories.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-            <p className="text-slate-500 font-bold text-base">No problems matched your current filters.</p>
+          <div className="text-center py-16 bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200 dark:border-neutral-800 p-8 shadow-sm">
+            <p className="text-slate-500 dark:text-neutral-400 font-bold text-base">No problems matched your current filters.</p>
             <button
               onClick={() => {
                 setSearchQuery("");
@@ -644,25 +644,25 @@ export function ShradhaDSASheetView() {
             return (
               <div
                 key={category.id}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200"
+                className="bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-sm overflow-hidden transition-all duration-200"
               >
                 {/* Category Header */}
                 <button
                   onClick={() => toggleCategory(category.id)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left hover:bg-slate-50/70 transition-colors cursor-pointer"
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left hover:bg-slate-50/70 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                     {/* Day Range Pill */}
-                    <div className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 font-black text-xs shrink-0 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-orange-600" />
+                    <div className="px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800/60 text-orange-700 dark:text-orange-300 font-black text-xs shrink-0 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
                       <span>{category.dayRange}</span>
                     </div>
 
                     <div className="min-w-0">
-                      <h3 className="text-slate-900 font-extrabold text-base sm:text-lg tracking-tight truncate">
+                      <h3 className="text-slate-900 dark:text-white font-extrabold text-base sm:text-lg tracking-tight truncate">
                         {category.title}
                       </h3>
-                      <p className="text-slate-500 text-xs sm:text-[13px] font-medium truncate mt-0.5">
+                      <p className="text-slate-500 dark:text-neutral-400 text-xs sm:text-[13px] font-medium truncate mt-0.5">
                         {category.description}
                       </p>
                     </div>
@@ -671,10 +671,10 @@ export function ShradhaDSASheetView() {
                   {/* Right side stats + expand chevron */}
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-right">
-                      <span className="text-xs font-black text-slate-800">
+                      <span className="text-xs font-black text-slate-800 dark:text-neutral-200">
                         {category.solvedCount} / {category.problems.length}
                       </span>
-                      <div className="w-20 sm:w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden mt-1">
+                      <div className="w-20 sm:w-24 h-1.5 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden mt-1">
                         <div
                           className="h-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all duration-500"
                           style={{ width: `${categoryPercent}%` }}
@@ -682,11 +682,11 @@ export function ShradhaDSASheetView() {
                       </div>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-orange-100 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-600 dark:text-neutral-400 group-hover:bg-orange-100 dark:group-hover:bg-neutral-700 transition-colors">
                       {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-slate-700" />
+                        <ChevronUp className="w-4 h-4 text-slate-700 dark:text-neutral-300" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-700" />
+                        <ChevronDown className="w-4 h-4 text-slate-700 dark:text-neutral-300" />
                       )}
                     </div>
                   </div>
@@ -700,10 +700,10 @@ export function ShradhaDSASheetView() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="border-t border-slate-100"
+                      className="border-t border-slate-100 dark:border-neutral-800"
                     >
                       {/* Table Header: Problem | Youtube | Practice | Level | Company */}
-                      <div className="hidden md:grid md:grid-cols-12 gap-3 px-5 py-2.5 bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                      <div className="hidden md:grid md:grid-cols-12 gap-3 px-5 py-2.5 bg-slate-50/90 dark:bg-[#14151C] border-b border-slate-200/80 dark:border-neutral-800 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                         <div className="col-span-5 flex items-center gap-2">
                           <span>Problem</span>
                         </div>
@@ -722,7 +722,7 @@ export function ShradhaDSASheetView() {
                       </div>
 
                       {/* Problems List in Category */}
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-slate-100 dark:divide-neutral-800/80">
                         {category.filteredProblems.map((problem) => {
                           const isSolved = solvedIds.has(problem.id);
                           const isCompanyExpanded = expandedCompanyIds.has(problem.id);
@@ -735,7 +735,7 @@ export function ShradhaDSASheetView() {
                             <div
                               key={problem.id}
                               className={`px-3.5 sm:px-5 py-3 md:py-3.5 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-3 items-start md:items-center transition-colors ${
-                                isSolved ? "bg-emerald-50/40" : "hover:bg-slate-50/60"
+                                isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
                               }`}
                             >
                               {/* 1. Problem Top Line on Mobile / Col 5 on Desktop */}
@@ -746,8 +746,8 @@ export function ShradhaDSASheetView() {
                                     onClick={() => toggleSolved(problem.id)}
                                     className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                                       isSolved
-                                        ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
-                                        : "border-slate-300 hover:border-orange-500 bg-white"
+                                        ? "bg-purple-600 border-purple-600 text-white shadow-xs"
+                                        : "border-slate-300 dark:border-neutral-700 hover:border-orange-500 dark:hover:border-orange-500 bg-white dark:bg-[#121318]"
                                     }`}
                                     aria-label={isSolved ? "Mark unsolved" : "Mark solved"}
                                   >

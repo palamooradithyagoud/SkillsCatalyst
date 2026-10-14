@@ -485,16 +485,16 @@ export function StriverA2ZDSASheetView() {
       {/* ─────────────────────────────────────────────────────────────
           2. CONTROLS STRIP: SEARCH, STATUS & EXPAND/COLLAPSE
           ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-[#18191F] p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-sm">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search problems by title or topic..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
           />
         </div>
 
@@ -503,24 +503,24 @@ export function StriverA2ZDSASheetView() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
           >
-            <option value="All">All Status</option>
-            <option value="Unsolved">Unsolved</option>
-            <option value="Solved">Solved</option>
+            <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
+            <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
+            <option value="Solved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Solved</option>
           </select>
 
           {/* Expand / Collapse All */}
-          <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+          <div className="flex items-center gap-1 border-l border-slate-200 dark:border-neutral-700 pl-2">
             <button
               onClick={expandAll}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-[#C084FC] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Expand All
             </button>
             <button
               onClick={collapseAll}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-[#C084FC] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Collapse
             </button>
@@ -538,31 +538,31 @@ export function StriverA2ZDSASheetView() {
           return (
             <div
               key={category.id}
-              className="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-2xs transition-all hover:border-slate-300"
+              className="rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-neutral-800 bg-white dark:bg-[#18191F] overflow-hidden shadow-2xs transition-all hover:border-slate-300 dark:hover:border-neutral-700"
             >
               {/* Compact Category Header matching reference */}
               <button
                 onClick={() => toggleCategory(category.id)}
-                className="w-full px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3 text-left hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                className="w-full px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3 text-left hover:bg-slate-50/60 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer group"
               >
                 {/* Left: Clean Topic Title */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-slate-900 font-bold text-[13px] sm:text-[15px] tracking-tight truncate group-hover:text-emerald-700 transition-colors">
+                  <h3 className="text-slate-900 dark:text-white font-bold text-[13px] sm:text-[15px] tracking-tight truncate group-hover:text-purple-600 dark:group-hover:text-[#C084FC] transition-colors">
                     {cleanCategoryTitle(category.title)}
                   </h3>
                 </div>
 
                 {/* Right: Count Badge + Chevron */}
                 <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold text-xs tracking-tight">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 font-semibold text-xs tracking-tight">
                     {category.problems.length}
                   </span>
 
-                  <div className="text-slate-400 group-hover:text-slate-600 transition-colors">
+                  <div className="text-slate-400 dark:text-neutral-400 group-hover:text-slate-600 dark:group-hover:text-white transition-colors">
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-slate-500" />
+                      <ChevronUp className="w-4 h-4 text-slate-500 dark:text-neutral-400" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                      <ChevronDown className="w-4 h-4 text-slate-400 dark:text-neutral-400" />
                     )}
                   </div>
                 </div>
@@ -576,10 +576,10 @@ export function StriverA2ZDSASheetView() {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="border-t border-slate-100"
+                    className="border-t border-slate-100 dark:border-neutral-800"
                   >
                     {/* Clean Table Header */}
-                    <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 bg-slate-50/90 dark:bg-[#14151C] border-b border-slate-200/80 dark:border-neutral-800 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                       <div className="flex items-center gap-2">
                         <span>Problem</span>
                       </div>
@@ -589,7 +589,7 @@ export function StriverA2ZDSASheetView() {
                     </div>
 
                     {/* Problem Rows */}
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-neutral-800/80">
                       {category.filteredProblems.map((problem) => {
                         const isSolved = solvedIds.has(problem.id);
                         const isBookmarked = bookmarkedIds.has(problem.id);
@@ -600,7 +600,7 @@ export function StriverA2ZDSASheetView() {
                           <div
                             key={problem.id}
                             className={`p-3 sm:px-5 sm:py-3.5 transition-colors flex items-center justify-between gap-3 ${
-                              isSolved ? "bg-emerald-50/30" : "hover:bg-slate-50/60"
+                              isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
                             }`}
                           >
                             {/* Checkbox + Bookmark + Q# + Title */}
@@ -610,8 +610,8 @@ export function StriverA2ZDSASheetView() {
                                 aria-label={isSolved ? "Mark as unsolved" : "Mark as solved"}
                                 className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 cursor-pointer ${
                                   isSolved
-                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
-                                    : "border-slate-300 hover:border-emerald-500 bg-white"
+                                    ? "bg-purple-600 border-purple-600 text-white shadow-xs"
+                                    : "border-slate-300 dark:border-neutral-700 hover:border-purple-500 dark:hover:border-purple-500 bg-white dark:bg-[#121318]"
                                 }`}
                               >
                                 {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}

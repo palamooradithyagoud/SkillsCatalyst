@@ -386,22 +386,22 @@ export function PenguinDSASheetView() {
       {/* ─────────────────────────────────────────────────────────────
           2. FILTER & SEARCH CONTROLS
           ───────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-3.5">
+      <div className="bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200/90 dark:border-neutral-800 p-4 sm:p-5 shadow-sm space-y-3.5">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           {/* Search Box */}
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-neutral-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search problems by name or platform..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all bg-slate-50/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all bg-slate-50/50 dark:bg-[#121318]"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-neutral-400 hover:text-slate-600 dark:hover:text-white font-bold"
               >
                 Clear
               </button>
@@ -413,37 +413,37 @@ export function PenguinDSASheetView() {
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
             >
-              <option value="All">All Difficulties</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
+              <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Difficulties</option>
+              <option value="Easy" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Easy</option>
+              <option value="Medium" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Medium</option>
+              <option value="Hard" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Hard</option>
             </select>
 
             {/* Status Dropdown */}
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-              className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
             >
-              <option value="All">All Status</option>
-              <option value="Unsolved">Unsolved</option>
-              <option value="Solved">Solved</option>
+              <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
+              <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
+              <option value="Solved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Solved</option>
             </select>
 
             {/* Expand / Collapse Toggle Buttons */}
-            <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-2">
+            <div className="hidden md:flex items-center gap-1 border-l border-slate-200 dark:border-neutral-700 pl-2">
               <button
                 onClick={expandAll}
-                className="px-2.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
                 title="Expand All"
               >
                 Expand
               </button>
               <button
                 onClick={collapseAll}
-                className="px-2.5 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                className="px-2.5 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
                 title="Collapse All"
               >
                 Collapse
@@ -458,8 +458,8 @@ export function PenguinDSASheetView() {
           ───────────────────────────────────────────────────────────── */}
       <div className="space-y-4">
         {filteredCategories.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center space-y-3">
-            <p className="text-slate-500 font-semibold text-base">No problems match your current filters.</p>
+          <div className="bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200/90 dark:border-neutral-800 p-12 text-center space-y-3">
+            <p className="text-slate-500 dark:text-neutral-400 font-semibold text-base">No problems match your current filters.</p>
             <button
               onClick={() => {
                 setSearchQuery("");
@@ -479,22 +479,22 @@ export function PenguinDSASheetView() {
             return (
               <div
                 key={cat.id}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all"
+                className="bg-white dark:bg-[#18191F] rounded-2xl border border-slate-200/90 dark:border-neutral-800 shadow-sm overflow-hidden transition-all"
               >
                 {/* Accordion Header */}
                 <button
                   onClick={() => toggleCategory(cat.id)}
-                  className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left hover:bg-slate-50/70 transition-colors cursor-pointer"
+                  className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left hover:bg-slate-50/70 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <span className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-200/80 text-purple-700 font-black text-xs flex items-center justify-center shrink-0">
+                    <span className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 text-purple-700 dark:text-[#C084FC] font-black text-xs flex items-center justify-center shrink-0">
                       {catIdx + 1}
                     </span>
                     <div>
-                      <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <span>{cat.title}</span>
                         {cat.solvedCount === cat.total && cat.total > 0 && (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-100 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-[#C084FC] fill-purple-950/60 shrink-0" />
                         )}
                       </h2>
                     </div>
@@ -503,10 +503,10 @@ export function PenguinDSASheetView() {
                   <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                     {/* Category Solved Counter */}
                     <div className="text-right">
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-700">
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-700 dark:text-neutral-300">
                         {cat.solvedCount} / {cat.total}
                       </span>
-                      <div className="w-16 sm:w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden mt-1">
+                      <div className="w-16 sm:w-24 h-1.5 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden mt-1">
                         <div
                           className="h-full bg-purple-600 rounded-full transition-all"
                           style={{ width: `${catProgress}%` }}
@@ -514,7 +514,7 @@ export function PenguinDSASheetView() {
                       </div>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400">
                       {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
@@ -528,9 +528,9 @@ export function PenguinDSASheetView() {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25 }}
-                      className="border-t border-slate-100"
+                      className="border-t border-slate-100 dark:border-neutral-800"
                     >
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-slate-100 dark:divide-neutral-800/80">
                         {cat.filteredProblems.map((prob, pIdx) => {
                           const isSolved = solvedIds.has(prob.id);
 
@@ -538,7 +538,7 @@ export function PenguinDSASheetView() {
                             <div
                               key={prob.id}
                               className={`px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 transition-colors ${
-                                isSolved ? "bg-slate-50/60" : "hover:bg-slate-50/40"
+                                isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/40 dark:hover:bg-neutral-800/40"
                               }`}
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -549,7 +549,7 @@ export function PenguinDSASheetView() {
                                   className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                                     isSolved
                                       ? "bg-purple-600 border-purple-600 text-white shadow-sm"
-                                      : "border-slate-300 hover:border-purple-400 bg-white"
+                                      : "border-slate-300 dark:border-neutral-700 hover:border-purple-400 dark:hover:border-purple-400 bg-white dark:bg-[#121318]"
                                   }`}
                                   title={isSolved ? "Mark as unsolved" : "Mark as solved"}
                                 >
@@ -561,10 +561,10 @@ export function PenguinDSASheetView() {
                                   href={prob.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`text-xs sm:text-sm font-semibold tracking-tight truncate transition-colors hover:text-purple-600 ${
+                                  className={`text-xs sm:text-sm font-semibold tracking-tight truncate transition-colors hover:text-purple-600 dark:hover:text-[#C084FC] ${
                                     isSolved
-                                      ? "line-through text-slate-400 font-normal"
-                                      : "text-slate-800 font-bold"
+                                      ? "line-through text-slate-400 dark:text-neutral-500 font-normal"
+                                      : "text-slate-800 dark:text-white font-bold"
                                   }`}
                                   title={prob.title}
                                 >

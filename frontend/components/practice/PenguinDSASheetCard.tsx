@@ -16,7 +16,7 @@ export function PenguinDSASheetCard({ onSelect }: PenguinDSASheetCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       onClick={onSelect}
-      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white border border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none h-full"
+      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(168,85,247,0.18)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none h-full"
     >
       {/* ─────────────────────────────────────────────────────────────
           TOP BANNER / THUMBNAIL (IDENTICAL PROPORTIONS TO REFERENCE)
@@ -338,23 +338,23 @@ export function PenguinDSASheetCard({ onSelect }: PenguinDSASheetCardProps) {
       {/* ─────────────────────────────────────────────────────────────
           BOTTOM CARD BODY (MATCHES STRIVER REFERENCE EXACTLY)
           ───────────────────────────────────────────────────────────── */}
-      <div className="p-2.5 sm:p-5 pt-2 sm:pt-4 bg-white flex flex-col justify-between flex-1 text-left">
+      <div className="p-2.5 sm:p-5 pt-2 sm:pt-4 bg-white dark:bg-[#18191F] flex flex-col justify-between flex-1 text-left">
         <div>
           {/* Title */}
-          <h3 className="text-slate-900 font-extrabold text-[13px] sm:text-[18px] tracking-tight group-hover:text-purple-600 transition-colors leading-snug line-clamp-2">
+          <h3 className="text-slate-900 dark:text-white font-extrabold text-[13px] sm:text-[18px] tracking-tight group-hover:text-purple-600 dark:group-hover:text-[#C084FC] transition-colors leading-snug line-clamp-2">
             Penguin&apos;s A2Z DSA Sheet
           </h3>
 
           {/* Subtitle / Curated By */}
-          <p className="text-slate-500 font-medium text-[10px] sm:text-[13px] mt-0.5 sm:mt-1 truncate">
+          <p className="text-slate-500 dark:text-neutral-400 font-medium text-[10px] sm:text-[13px] mt-0.5 sm:mt-1 truncate">
             Curated by SkillsCatalyst
           </p>
         </div>
 
         {/* Problems Count with Bookmark/Book Icon */}
-        <div className="flex items-center gap-1 sm:gap-1.5 text-slate-700 text-[10px] sm:text-[13px] font-semibold mt-2 sm:mt-3.5 pt-1.5 sm:pt-2.5 border-t border-slate-100">
-          <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 shrink-0" />
-          <span>{TOTAL_PENGUIN_PROBLEMS} Problems</span>
+        <div className="flex items-center gap-1 sm:gap-1.5 text-slate-700 dark:text-neutral-300 text-[10px] sm:text-[13px] font-semibold mt-2 sm:mt-3.5 pt-1.5 sm:pt-2.5 border-t border-slate-100 dark:border-neutral-800">
+          <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-neutral-400 shrink-0" />
+          <span className="text-slate-900 dark:text-white font-bold">{TOTAL_PENGUIN_PROBLEMS} Problems</span>
         </div>
       </div>
     </motion.div>
