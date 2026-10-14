@@ -149,7 +149,7 @@ interface PopularSkillPillsProps {
 export function PopularSkillPills({ onSelectSkill, activeSkill }: PopularSkillPillsProps) {
   return (
     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full min-w-0 scroll-smooth">
-      <span className="text-slate-500 font-semibold text-xs sm:text-sm shrink-0 select-none mr-1">
+      <span className="text-slate-500 dark:text-neutral-400 font-semibold text-xs sm:text-sm shrink-0 select-none mr-1">
         Popular:
       </span>
 
@@ -165,8 +165,8 @@ export function PopularSkillPills({ onSelectSkill, activeSkill }: PopularSkillPi
               onClick={() => onSelectSkill(skill.name)}
               className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer select-none shrink-0 ${
                 isSelected
-                  ? "bg-purple-100 text-purple-900 border border-purple-300 ring-2 ring-purple-500/20 shadow-xs scale-102"
-                  : "bg-slate-100/80 hover:bg-slate-200/70 border border-slate-200/50 text-slate-700 hover:text-slate-900 active:scale-97"
+                  ? "bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-600 ring-2 ring-purple-500/20 shadow-xs scale-102"
+                  : "bg-slate-100/80 dark:bg-neutral-900/80 hover:bg-slate-200/70 dark:hover:bg-neutral-800 border border-slate-200/50 dark:border-neutral-700/80 text-slate-700 dark:text-neutral-200 hover:text-slate-900 dark:hover:text-white active:scale-97"
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />

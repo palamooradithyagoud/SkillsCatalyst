@@ -254,24 +254,26 @@ export default function LearningPage() {
       </AnimatePresence>
 
       {/* ── Text Sub-Navigation Tabs: Explore Skills & Saved Videos ── */}
-      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 pb-3 pt-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 dark:border-neutral-800 pb-3 pt-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveCard("explore")}
           className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeCard === "explore"
-              ? "text-slate-900"
-              : "text-slate-400 hover:text-slate-700"
+              ? "text-slate-900 dark:text-white"
+              : "text-slate-400 dark:text-white/80 hover:text-slate-700 dark:hover:text-white"
           }`}
         >
           <MagnifierIcon
             size={18}
-            className={activeCard === "explore" ? "text-purple-600" : "text-slate-400"}
+            className={activeCard === "explore" ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-white/80"}
           />
-          <span>Explore Skills</span>
+          <span className={activeCard === "explore" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
+            Explore Skills
+          </span>
           {activeCard === "explore" && (
             <motion.div
               layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 rounded-full"
             />
           )}
         </button>
@@ -280,20 +282,22 @@ export default function LearningPage() {
           onClick={() => setActiveCard("saved")}
           className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeCard === "saved"
-              ? "text-slate-900"
-              : "text-slate-400 hover:text-slate-700"
+              ? "text-slate-900 dark:text-white"
+              : "text-slate-400 dark:text-white/80 hover:text-slate-700 dark:hover:text-white"
           }`}
         >
           <Bookmark
-            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-purple-600" : "text-slate-400"}`}
+            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-white/80"}`}
           />
-          <span>Saved Videos</span>
+          <span className={activeCard === "saved" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
+            Saved Videos
+          </span>
           {savedList.length > 0 && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-extrabold transition-colors ${
                 activeCard === "saved"
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-slate-100 text-slate-500"
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-white"
+                  : "bg-slate-100 text-slate-500 dark:bg-neutral-800 dark:text-white"
               }`}
             >
               {savedList.length}
@@ -302,7 +306,7 @@ export default function LearningPage() {
           {activeCard === "saved" && (
             <motion.div
               layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 rounded-full"
             />
           )}
         </button>
@@ -331,12 +335,12 @@ export default function LearningPage() {
             />
 
             {/* Search bar matching Image 2 */}
-            <div className="bg-white rounded-[28px] p-4 sm:p-6 border border-slate-200/80 shadow-xs space-y-3 sm:space-y-4">
+            <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-4 sm:p-6 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-3 sm:space-y-4">
               <div className="flex flex-col gap-3">
                 {/* 1. Full-width Search Bar */}
                 <div className="relative w-full">
                   <Search
-                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#8b0b52] pointer-events-none"
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#8b0b52] dark:text-pink-400 pointer-events-none"
                   />
                   <input
                     type="text"
@@ -347,7 +351,7 @@ export default function LearningPage() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 border border-slate-200/90 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#8b0b52] focus:ring-2 focus:ring-[#8b0b52]/20 focus:outline-none transition-all shadow-2xs ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#8b0b52] dark:focus:border-purple-400 focus:ring-2 focus:ring-[#8b0b52]/20 dark:focus:ring-purple-400/20 focus:outline-none transition-all shadow-2xs ${
                       queryError ? "border-rose-500" : ""
                     }`}
                   />
