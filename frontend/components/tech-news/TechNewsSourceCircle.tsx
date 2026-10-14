@@ -46,7 +46,7 @@ export const TechNewsSourceCircle: React.FC<TechNewsSourceCircleProps> = ({
               : "bg-slate-200 dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700"
           }`}
         >
-          <div className="w-full h-full rounded-full bg-white dark:bg-black p-[1.5px] flex items-center justify-center overflow-hidden">
+          <div className="w-full h-full rounded-full bg-white dark:bg-[#18191F] p-[1.5px] flex items-center justify-center overflow-hidden">
             {source.logo_url && !imgError ? (
               <Image
                 src={source.logo_url}
@@ -67,7 +67,7 @@ export const TechNewsSourceCircle: React.FC<TechNewsSourceCircleProps> = ({
 
         {/* Story Count Pill Badge: only shown if there are unwatched stories */}
         {hasUnviewed && displayCount > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 border border-white dark:border-black text-[8.5px] font-black text-white flex items-center justify-center shadow-xs animate-in zoom-in-50 duration-200">
+          <span className="absolute -bottom-0.5 -right-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 border border-white dark:border-[#18191F] text-[8.5px] font-black text-white flex items-center justify-center shadow-xs animate-in zoom-in-50 duration-200">
             {displayCount}
           </span>
         )}
