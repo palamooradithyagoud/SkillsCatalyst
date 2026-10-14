@@ -430,14 +430,6 @@ export function HowItWorks({
   )
 }
 
-const STUDENT_THOUGHTS = [
-  "Too many tutorials. No direction.",
-  "Which tech career path actually matches my skills?",
-  "What should I learn next? I need an exact roadmap.",
-  "Do I have the practical coding skills companies test for?",
-  "Missed another campus hackathon and hiring deadline.",
-]
-
 /**
  * Ecosystem Orbiting Section:
  * Left column:
@@ -446,7 +438,7 @@ const STUDENT_THOUGHTS = [
  *   - Directly downside the text: 5 Pinned Process Cards stacking progressively via GSAP ScrollTrigger
  * Right column:
  *   - Revolving orbit with confused student sitting with laptop in the center
- *   - Dynamic thought bubble & Orbit icons sync-highlight to each scroll stage
+ *   - Orbit icons sync-highlight to each scroll stage
  */
 export function EcosystemOrbitingSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -579,14 +571,6 @@ export function EcosystemOrbitingSection() {
 
         {/* ── RIGHT COLUMN: The Orbiting Circles Effect with Confused Student ── */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center lg:items-end w-full pt-4">
-          {/* Dynamic Confused Thought Bubble syncing with current step */}
-          <div className="mb-2 max-w-[320px] bg-white dark:bg-neutral-900 border-2 border-[#683594]/30 shadow-md rounded-2xl px-3.5 py-1.5 flex items-center gap-2 animate-bounce select-none">
-            <span className="text-sm">💭</span>
-            <p className="text-[11px] sm:text-xs font-semibold text-[#683594] leading-snug">
-              {STUDENT_THOUGHTS[activeStep]}
-            </p>
-          </div>
-
           <div className="relative flex size-[380px] sm:size-[430px] items-center justify-center">
             {/* Central Figure: Confused human sitting with laptop */}
             <div className="relative z-20 flex flex-col items-center justify-center select-none pointer-events-none">
