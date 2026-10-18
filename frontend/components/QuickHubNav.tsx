@@ -6,12 +6,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import PlacementPrepModal from "@/components/PlacementPrepModal";
 import { CareerPathKatanaSequence, preloadKatanaFrames } from "@/components/career/katana";
 
 export default function QuickHubNav() {
   const router = useRouter();
-  const [isPlacementPrepOpen, setIsPlacementPrepOpen] = useState(false);
   const [isCareerTransitionActive, setIsCareerTransitionActive] = useState(false);
 
   // Katana anime sequence feature toggle (turned off for now, preserved for later)
@@ -330,11 +328,6 @@ export default function QuickHubNav() {
         </motion.div>
       </div>
 
-      {/* ── Placement Preparation Interactive Modal ── */}
-      <PlacementPrepModal
-        isOpen={isPlacementPrepOpen}
-        onClose={() => setIsPlacementPrepOpen(false)}
-      />
 
       {/* ── 5-Frame Cinematic Anime Katana Unsheathing CareerPath Transition (Turned off via flag) ── */}
       {ENABLE_KATANA_ANIMATION && (

@@ -2,9 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import PlacementPrepModal from "@/components/PlacementPrepModal";
+import dynamic from "next/dynamic";
 import CareerCards from "@/components/career/CareerCards";
 import { LandingAccordionItem } from "@/components/ui/interactive-image-accordion";
+
+// SYS-04: Lazy-load PlacementPrepModal to remove 64KB+ chunk from initial /career route bundle
+const PlacementPrepModal = dynamic(() => import("@/components/PlacementPrepModal"), {
+  ssr: false,
+});
 
 export default function CareerPage() {
   const router = useRouter();
@@ -42,12 +47,14 @@ export default function CareerPage() {
           onOpenResumeReview={() => router.push("/career/resume-review")}
         />
 
-        {/* ── Placement Preparation Modal ── */}
-        <PlacementPrepModal
-          isOpen={isPlacementPrepOpen}
-          onClose={handleClosePlacementPrep}
-          initialCategory={selectedPrepCategory}
-        />
+        {/* ── Placement Preparation Modal (dynamically loaded on demand) ── */}
+        {isPlacementPrepOpen && (
+          <PlacementPrepModal
+            isOpen={isPlacementPrepOpen}
+            onClose={handleClosePlacementPrep}
+            initialCategory={selectedPrepCategory}
+          />
+        )}
       </div>
     </div>
   );
