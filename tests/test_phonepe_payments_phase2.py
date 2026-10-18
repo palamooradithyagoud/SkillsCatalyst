@@ -583,6 +583,109 @@ class TestPhonePePaymentsPhase2(unittest.TestCase):
             self.assertEqual(data[0]["status"], "success")
             self.assertEqual(data[0]["amount_in_paise"], 9900)
 
+    # =========================================================================
+    # 15. REDIRECT URL CORRELATION WITH ORDER ID
+    # =========================================================================
+    def test_15_redirect_url_includes_merchant_order_id(self):
+        """PhonePe return redirect URL automatically carries server-generated order_id."""
+        with patch("backend.services.phonepe_service.get_phonepe_client", return_value=None):
+            order_id = "order_sc_test_redirect_123"
+            res = PhonePeService.create_checkout_order(
+                merchant_order_id=order_id,
+                amount_in_paise=9900,
+            )
+            self.assertIn("checkout_url", res)
+            self.assertIn("provider_order_id", res)
+
+        # Verify dynamic redirect URL generation with mock StandardCheckoutClient
+        mock_client = MagicMock()
+        mock_response = MagicMock(redirect_url="https://mercury.phonepe.com/pay", order_id="PP_001")
+        mock_client.pay.return_value = mock_response
+
+        with patch("backend.services.phonepe_service.get_phonepe_client", return_value=mock_client):
+            PhonePeService.create_checkout_order(
+                merchant_order_id="order_sc_check_456",
+                amount_in_paise=9900,
+                redirect_url="https://www.skillscatalyst.in/dashboard?payment=complete",
+            )
+            # Inspect the pay_request passed to client.pay
+            pay_req = mock_client.pay.call_args[0][0]
+            redirect_url = pay_req.payment_flow.merchant_urls.redirect_url
+            self.assertIn("order_id=order_sc_check_456", redirect_url)
+            self.assertNotIn("payment=complete", redirect_url)
+
+    # =========================================================================
+    # 16. REDIRECT URL TEMPLATE INTERPOLATION
+    # =========================================================================
+    def test_16_redirect_url_custom_template(self):
+        """Supports explicit {order_id} template placeholders in redirect URL."""
+        mock_client = MagicMock()
+        mock_client.pay.return_value = MagicMock(redirect_url="https://mercury.phonepe.com/pay")
+
+        with patch("backend.services.phonepe_service.get_phonepe_client", return_value=mock_client):
+            PhonePeService.create_checkout_order(
+                merchant_order_id="order_sc_tmpl_789",
+                amount_in_paise=25000,
+                redirect_url="https://www.skillscatalyst.in/dashboard?ref=pp&order_id={order_id}",
+            )
+            pay_req = mock_client.pay.call_args[0][0]
+            redirect_url = pay_req.payment_flow.merchant_urls.redirect_url
+            self.assertEqual(
+                redirect_url,
+                "https://www.skillscatalyst.in/dashboard?ref=pp&order_id=order_sc_tmpl_789",
+            )
+
+    # =========================================================================
+    # 17. CROSS-USER PAYMENT STATUS CHECK ISOLATION (IDOR PROTECTION)
+    # =========================================================================
+    def test_17_cross_user_payment_status_forbidden(self):
+        """A user cannot check or view another student's payment transaction status."""
+        other_user_order = "order_sc_other_student_999"
+
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.payment_service.get_supabase") as mock_pay_sb:
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.mock_student)
+            mock_auth_sb.return_value = mock_auth_client
+
+            # Return empty data because user_id does not match the transaction's owner
+            mock_db = MagicMock()
+            mock_db.from_().select().eq().eq().execute.return_value = MagicMock(data=[])
+            mock_pay_sb.return_value = mock_db
+
+            resp = client.get(
+                f"/api/payments/status/{other_user_order}",
+                headers={"Authorization": "Bearer mock-token"},
+            )
+            self.assertEqual(resp.status_code, 404)
+            self.assertIn("not found", resp.json()["detail"].lower())
+
+    # =========================================================================
+    # 18. FABRICATED ORDER ID RETURNS 404
+    # =========================================================================
+    def test_18_fabricated_payment_status_returns_404(self):
+        """Fabricated or unknown order IDs are rejected with 404."""
+        fabricated_order = "order_sc_fake_nonexistent_000"
+
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.payment_service.get_supabase") as mock_pay_sb:
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.mock_student)
+            mock_auth_sb.return_value = mock_auth_client
+
+            mock_db = MagicMock()
+            mock_db.from_().select().eq().eq().execute.return_value = MagicMock(data=[])
+            mock_pay_sb.return_value = mock_db
+
+            resp = client.get(
+                f"/api/payments/status/{fabricated_order}",
+                headers={"Authorization": "Bearer mock-token"},
+            )
+            self.assertEqual(resp.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -2,9 +2,19 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck } from "lucide-react";
-import PaymentPosSwipeAnimation from "@/components/PaymentPosSwipeAnimation";
+import {
+  X,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  LogIn,
+} from "lucide-react";
 import { Pricing, PricingPlan } from "@/components/ui/pricing";
 import {
   getTrialDaysRemaining,
@@ -12,6 +22,8 @@ import {
   isUserTrialClaimed,
 } from "@/lib/trial";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/lib/auth";
+import { createPaymentOrder } from "@/lib/api/payment";
 
 export interface PricingModalProps {
   isOpen: boolean;
@@ -19,6 +31,8 @@ export interface PricingModalProps {
 }
 
 export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
+  const router = useRouter();
+  const { session, isLoading: authLoading } = useAuth();
   const {
     plan: currentPlan,
     isPremium,
@@ -30,6 +44,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isTrialClaimed, setIsTrialClaimed] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
+  const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   const [activeCheckout, setActiveCheckout] = useState<{
     planId: "1month" | "3months";
     planName: string;
@@ -47,6 +64,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   useEffect(() => {
     if (isOpen) {
       refetchSubscription();
+      setCheckoutError(null);
+      setIsInitiatingPayment(false);
     }
   }, [isOpen, refetchSubscription]);
 
@@ -69,6 +88,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     numericPrice: number
   ) => {
     setSelectedPlan(plan);
+    setCheckoutError(null);
     setActiveCheckout({
       planId: plan,
       planName,
@@ -77,16 +97,38 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     });
   };
 
-  const handlePaymentSuccess = () => {
-    refetchSubscription();
-    setToastMessage(
-      `🎉 Payment confirmed! Your ${activeCheckout?.planName || "Subscription"} is now ACTIVE!`
-    );
-    setActiveCheckout(null);
-    setTimeout(() => {
-      setToastMessage(null);
+  const handleInitiatePhonePePayment = async () => {
+    if (!activeCheckout || isInitiatingPayment) return;
+
+    if (!session) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("skillscatalyst_selected_plan", activeCheckout.planId);
+      }
       onClose();
-    }, 2800);
+      router.push(`/login?plan=${activeCheckout.planId}&next=/dashboard`);
+      return;
+    }
+
+    setIsInitiatingPayment(true);
+    setCheckoutError(null);
+
+    const planCode = activeCheckout.planId === "1month" ? "premium_monthly" : "premium_3_month";
+
+    try {
+      const order = await createPaymentOrder(planCode);
+      if (order.checkout_url) {
+        // Authoritative browser redirect to PhonePe Standard Checkout
+        window.location.href = order.checkout_url;
+      } else {
+        throw new Error("PhonePe gateway did not return a valid checkout session.");
+      }
+    } catch (err: any) {
+      console.error("[PricingModal] Failed to initiate PhonePe order:", err);
+      setIsInitiatingPayment(false);
+      setCheckoutError(
+        err?.message || "Failed to initialize secure PhonePe checkout. Please try again."
+      );
+    }
   };
 
   const formattedExpiry = expiresAt
@@ -115,8 +157,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       currency: "INR",
       features: [
         "Saved videos: 1",
-        "❌ Company interview questions",
-        "❌ Placement Prep",
+        "Company interview questions: Pro only",
+        "Placement Prep: Pro only",
         "Scholarships: Limited details",
         "Tech News: 1–2 stories",
         "Other premium features: Limited access (AI mentor & roadmaps)",
@@ -150,8 +192,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       currency: "INR",
       features: [
         "Saved videos: Unlimited",
-        "✅ Company interview questions",
-        "✅ Placement Prep",
+        "Company interview questions: Full access",
+        "Placement Prep: Full access",
         "Scholarships: Full details",
         "Tech News: All stories",
         "Other premium features: Full access",
@@ -185,8 +227,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       currency: "INR",
       features: [
         "Saved videos: Unlimited",
-        "✅ Company interview questions",
-        "✅ Placement Prep",
+        "Company interview questions: Full access",
+        "Placement Prep: Full access",
         "Scholarships: Full details",
         "Tech News: All stories",
         "Other premium features: Full access",
@@ -240,24 +282,128 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
               <X className="w-5 h-5" />
             </button>
 
-            {/* ── CONDITIONAL VIEW: Active Checkout or New Pricing Component ── */}
+            {/* ── CONDITIONAL VIEW: Direct Clean PhonePe Checkout or Plans View ── */}
             <AnimatePresence mode="wait">
               {activeCheckout ? (
                 <motion.div
-                  key="checkout-pos"
-                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  key="checkout-dialog"
+                  initial={{ opacity: 0, scale: 0.96, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -15 }}
-                  className="py-4"
+                  exit={{ opacity: 0, scale: 0.96, y: -12 }}
+                  className="py-6 max-w-md mx-auto space-y-6 text-center"
                 >
-                  <PaymentPosSwipeAnimation
-                    planId={activeCheckout.planId}
-                    planName={activeCheckout.planName}
-                    price={activeCheckout.price}
-                    numericPrice={activeCheckout.numericPrice}
-                    onSuccess={handlePaymentSuccess}
-                    onCancel={() => setActiveCheckout(null)}
-                  />
+                  {/* PhonePe Security Header */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-semibold">
+                    <Lock className="w-3.5 h-3.5 text-blue-400" />
+                    <span>PhonePe Standard Checkout • 256-Bit SSL</span>
+                  </div>
+
+                  {/* Summary Card */}
+                  <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 text-left space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{activeCheckout.planName}</h3>
+                        <p className="text-xs text-slate-400">Full platform access • Billed once</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-3xl font-extrabold text-white">{activeCheckout.price}</span>
+                        <span className="block text-[11px] text-slate-400">All taxes included</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 space-y-2 text-xs text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>660+ company interview sets with verified questions</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>AI Mentor & unlimited placement prep playground</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-purple-400 shrink-0" />
+                        <span>100% 7-Day Money-Back Guarantee included</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Accepted Payment Rails */}
+                  <div className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+                    <span>Accepted:</span>
+                    <span className="text-slate-200 font-medium">UPI (GPay, PhonePe, Paytm), Cards, NetBanking</span>
+                  </div>
+
+                  {/* Authentication Notice for logged-out users */}
+                  {!session && !authLoading && (
+                    <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs text-center space-y-1">
+                      <div className="font-semibold text-amber-300 flex items-center justify-center gap-1.5">
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span>Student Account Required</span>
+                      </div>
+                      <p className="text-slate-300 text-[11px]">
+                        Subscriptions link directly to your student account. Please sign in to proceed with payment.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Checkout Error Alert */}
+                  {checkoutError && (
+                    <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs text-left flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                      <span>{checkoutError}</span>
+                    </div>
+                  )}
+
+                  {/* Primary Action Button */}
+                  <div className="space-y-3 pt-2">
+                    {!session && !authLoading ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem("skillscatalyst_selected_plan", activeCheckout.planId);
+                          }
+                          onClose();
+                          router.push(`/login?plan=${activeCheckout.planId}&next=/dashboard`);
+                        }}
+                        className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm transition-all shadow-lg shadow-amber-500/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        <span>Sign In to Pay {activeCheckout.price}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleInitiatePhonePePayment}
+                        disabled={isInitiatingPayment}
+                        className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 text-white font-extrabold text-sm transition-all shadow-lg shadow-blue-500/25 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {isInitiatingPayment ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Connecting to PhonePe...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4" />
+                            <span>Proceed to PhonePe Checkout ({activeCheckout.price})</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveCheckout(null)}
+                      disabled={isInitiatingPayment}
+                      className="text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back to plans</span>
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div

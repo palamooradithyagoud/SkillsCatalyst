@@ -36,7 +36,11 @@ def create_order(
     """
     Creates an internal pending payment_transactions record and initiates a PhonePe Standard Checkout session.
     """
-    return PaymentService.create_order(user_id=user_id, plan_code=payload.plan_code)
+    return PaymentService.create_order(
+        user_id=user_id,
+        plan_code=payload.plan_code,
+        redirect_url=payload.redirect_url,
+    )
 
 
 @router.get(

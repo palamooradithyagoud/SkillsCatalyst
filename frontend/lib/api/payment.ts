@@ -50,13 +50,19 @@ export async function createPaymentOrder(
     throw new Error("Please sign in to your account to purchase a subscription.");
   }
 
+  const returnOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const redirectUrl = returnOrigin ? `${returnOrigin}/dashboard` : undefined;
+
   const res = await apiFetch(`${API_BASE}/api/payments/create-order`, {
     method: "POST",
     headers: {
       ...headers,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ plan_code: planCode }),
+    body: JSON.stringify({
+      plan_code: planCode,
+      ...(redirectUrl ? { redirect_url: redirectUrl } : {}),
+    }),
   });
 
   if (!res.ok) {

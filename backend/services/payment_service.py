@@ -37,7 +37,26 @@ class PaymentService:
     """
 
     @staticmethod
-    def create_order(user_id: str, plan_code: PlanCode) -> CreatePaymentOrderResponse:
+    def _is_safe_redirect_url(url: Optional[str]) -> bool:
+        if not url:
+            return False
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https"):
+                return False
+            host = (parsed.hostname or "").lower()
+            allowed_hosts = {"localhost", "127.0.0.1", "skillscatalyst.in", "www.skillscatalyst.in"}
+            return host in allowed_hosts or host.endswith(".skillscatalyst.in")
+        except Exception:
+            return False
+
+    @staticmethod
+    def create_order(
+        user_id: str,
+        plan_code: PlanCode,
+        redirect_url: Optional[str] = None,
+    ) -> CreatePaymentOrderResponse:
         """
         Initiates a commercial payment order:
         1. Validates plan from database; rejects free plan.
@@ -100,10 +119,13 @@ class PaymentService:
                 logger.error(f"Failed to record pending transaction in database: {e}", exc_info=True)
                 # If table doesn't exist yet during transitional verification, log error
 
+        safe_redirect_url = redirect_url if PaymentService._is_safe_redirect_url(redirect_url) else None
+
         # Call PhonePe API to obtain checkout redirect URL
         checkout_info = PhonePeService.create_checkout_order(
             merchant_order_id=merchant_order_id,
             amount_in_paise=amount_in_paise,
+            redirect_url=safe_redirect_url,
         )
 
         checkout_url = checkout_info.get("checkout_url", "")
@@ -340,6 +362,18 @@ class PaymentService:
                     is_internal_sync=True,
                 )
                 current_status = PaymentStatus.SUCCESS
+            elif remote_state in ("FAILED", "CANCELLED"):
+                if sb:
+                    try:
+                        sb.from_("payment_transactions").update({
+                            "status": PaymentStatus.FAILED.value,
+                            "failure_code": remote_status.get("error_code") or "PAYMENT_FAILED",
+                            "failure_message": remote_status.get("detailed_error_code") or f"Payment state: {remote_state}",
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }).eq("id", tx["id"]).execute()
+                    except Exception as e:
+                        logger.error(f"Error marking transaction as failed: {e}")
+                current_status = PaymentStatus.FAILED
 
         plan_rel = tx.get("subscription_plans") or {}
         plan_code = plan_rel.get("code") or "premium_monthly"

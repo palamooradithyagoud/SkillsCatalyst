@@ -95,7 +95,24 @@ class PhonePeService:
         Calls PhonePe Standard Checkout v2 API to generate a payment session redirect URL.
         """
         client = get_phonepe_client()
-        target_redirect_url = redirect_url or PHONEPE_REDIRECT_URL
+        base_redirect_url = (redirect_url or PHONEPE_REDIRECT_URL).strip()
+        # Sanitize return URL: strip legacy or deceptive ?payment=complete query strings
+        cleaned_base = (
+            base_redirect_url
+            .replace("?payment=complete&", "?")
+            .replace("&payment=complete", "")
+            .replace("?payment=complete", "")
+        )
+        if "{merchant_order_id}" in cleaned_base or "{order_id}" in cleaned_base:
+            target_redirect_url = cleaned_base.format(
+                merchant_order_id=merchant_order_id,
+                order_id=merchant_order_id,
+            )
+        elif "order_id=" not in cleaned_base and "merchant_order_id=" not in cleaned_base:
+            sep = "&" if "?" in cleaned_base else "?"
+            target_redirect_url = f"{cleaned_base}{sep}order_id={merchant_order_id}"
+        else:
+            target_redirect_url = cleaned_base
 
         if client is None:
             # When sandbox credentials are not yet configured in environment, return clean test payload

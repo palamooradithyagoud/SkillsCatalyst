@@ -52,7 +52,7 @@ except ValueError:
 PHONEPE_WEBHOOK_USERNAME = os.getenv("PHONEPE_WEBHOOK_USERNAME", "").strip()
 PHONEPE_WEBHOOK_PASSWORD = os.getenv("PHONEPE_WEBHOOK_PASSWORD", "").strip()
 PHONEPE_WEBHOOK_SECRET = os.getenv("PHONEPE_WEBHOOK_SECRET", "").strip()
-PHONEPE_REDIRECT_URL = os.getenv("PHONEPE_REDIRECT_URL", f"{FRONTEND_URL}/dashboard?payment=complete").strip()
+PHONEPE_REDIRECT_URL = os.getenv("PHONEPE_REDIRECT_URL", f"{FRONTEND_URL}/dashboard").strip()
 
 # ── Mux Video Configuration (SkillBits Step 2) ───────────────────────────────
 MUX_TOKEN_ID = os.getenv("MUX_TOKEN_ID", "").strip()

@@ -22,6 +22,7 @@ class PaymentStatus(str, Enum):
 
 class CreatePaymentOrderRequest(BaseModel):
     plan_code: PlanCode = Field(..., description="Target commercial subscription plan code to purchase")
+    redirect_url: Optional[str] = Field(default=None, description="Optional safe return URL origin for the payment session")
 
     model_config = {
         "json_schema_extra": {
