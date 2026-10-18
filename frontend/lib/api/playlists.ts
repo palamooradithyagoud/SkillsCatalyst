@@ -36,7 +36,7 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
 
   const sessionId = getRawGuestSessionId();
 
-  // 1. Save via FastAPI backend
+  // Save exclusively via FastAPI backend (SYS-10 single mutation authority for entitlements & persistence)
   try {
     const authHeaders = await getAuthHeaders();
     const res = await apiFetch(`${API_BASE}/api/learning/save`, {
@@ -55,54 +55,17 @@ export async function savePlaylist(playlist: Playlist, skillQuery: string) {
         throw err;
       }
       console.warn("Backend save playlist returned non-OK status:", res.status);
+      throw new Error(`Failed to save playlist: HTTP ${res.status}`);
     }
+    const json = await res.json().catch(() => ({ success: true }));
+    return json?.success !== undefined ? json : { success: true };
   } catch (e: any) {
     if (e?.status === 403 || e?.code === "LIMIT_REACHED" || e?.code === "PREMIUM_REQUIRED") {
       throw e;
     }
     console.warn("Backend save playlist failed:", e);
+    throw e;
   }
-
-  // 2. Direct Supabase DB write (saved_playlists table)
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const targetUserId = session?.user?.id;
-    if (targetUserId) {
-      await supabase
-        .from("saved_playlists")
-        .upsert({ ...row, user_id: targetUserId }, { onConflict: "user_id,playlist_id" });
-    }
-  } catch (e) {
-    console.warn("Save playlist to Supabase DB failed:", e);
-  }
-
-  // 3. Direct Supabase DB write (learning_progress JSONB table - supports both auth user & guest session)
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const sid = session?.user?.id || sessionId;
-    const { data: existingLp } = await supabase
-      .from("learning_progress")
-      .select("completed_steps")
-      .eq("session_id", sid)
-      .eq("skill_name", "saved_playlists")
-      .limit(1);
-
-    const steps = existingLp && existingLp.length > 0 ? existingLp[0].completed_steps || [] : [];
-    if (!steps.some((p: any) => (p.id || p.playlist_id) === row.playlist_id)) {
-      steps.push({ ...row, id: row.playlist_id, completed: false, videos: [] });
-      await supabase.from("learning_progress").upsert({
-        session_id: sid,
-        user_id: session?.user?.id || null,
-        skill_name: "saved_playlists",
-        completed_steps: steps,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "session_id,skill_name" });
-    }
-  } catch (e) {
-    console.warn("Save playlist to learning_progress JSONB failed:", e);
-  }
-
-  return { success: true };
 }
 
 export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: boolean; completion_pct?: number }> {
@@ -148,54 +111,18 @@ export async function syncSavedPlaylists(playlists: any[]): Promise<{ success: b
 export async function unsavePlaylist(playlistId: string) {
   const cleanId = cleanPlaylistId(playlistId);
 
+  // Unsave exclusively via FastAPI backend (SYS-10 single mutation authority)
   try {
     const authHeaders = await getAuthHeaders();
-    await apiFetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
+    const res = await apiFetch(`${API_BASE}/api/learning/save/${encodeURIComponent(cleanId)}`, {
       method: "DELETE",
       headers: { ...authHeaders },
     });
+    if (!res.ok) {
+      console.warn("Backend unsave playlist returned non-OK status:", res.status);
+    }
   } catch (e) {
     console.warn("Backend unsave playlist failed:", e);
-  }
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      await supabase
-        .from("saved_playlists")
-        .delete()
-        .eq("user_id", session.user.id)
-        .or(`playlist_id.eq.${cleanId},playlist_id.eq.${playlistId}`);
-    }
-  } catch (e) {
-    console.warn("Unsave playlist from Supabase DB failed:", e);
-  }
-
-  try {
-    const sessionId = getRawGuestSessionId();
-    const { data: { session } } = await supabase.auth.getSession();
-    const sid = session?.user?.id || sessionId;
-    const { data: lpData } = await supabase
-      .from("learning_progress")
-      .select("completed_steps")
-      .eq("session_id", sid)
-      .eq("skill_name", "saved_playlists")
-      .limit(1);
-
-    if (lpData && lpData.length > 0) {
-      const steps = (lpData[0].completed_steps || []).filter(
-        (p: any) => (p.id || p.playlist_id) !== cleanId && (p.id || p.playlist_id) !== playlistId
-      );
-      await supabase.from("learning_progress").upsert({
-        session_id: sid,
-        user_id: session?.user?.id || null,
-        skill_name: "saved_playlists",
-        completed_steps: steps,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "session_id,skill_name" });
-    }
-  } catch (e) {
-    console.warn("Unsave playlist from learning_progress failed:", e);
   }
 
   return { success: true };
@@ -223,7 +150,7 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
     });
     if (res.ok) {
       const json = await res.json();
-      if (json.saved && Array.isArray(json.saved) && json.saved.length > 0) {
+      if (json.saved && Array.isArray(json.saved)) {
         return { saved: json.saved, count: json.saved.length };
       }
     }

@@ -46,6 +46,31 @@ def _get_sb():
     return get_supabase()
 
 
+def _canonicalize_playlist_id(playlist_url: str = "", playlist_id: str = "") -> str:
+    """
+    Extracts the canonical YouTube playlist ID or video ID from any combination
+    of playlist_url, playlist_id, or dirty URL/query strings.
+    Guarantees consistent canonical ID across all representations.
+    """
+    for val in (playlist_url, playlist_id):
+        if not val or not isinstance(val, str):
+            continue
+        val = val.strip()
+        if not val:
+            continue
+        extracted = _extract_youtube_ids(val, "")
+        if extracted.get("playlist_id"):
+            return extracted["playlist_id"].strip()
+        if extracted.get("video_id"):
+            return extracted["video_id"].strip()
+
+    raw = (playlist_id or playlist_url or "").strip()
+    if raw:
+        extracted = _extract_youtube_ids(raw, raw)
+        return (extracted.get("id") or raw).strip()
+    return ""
+
+
 # ── Pydantic Models ───────────────────────────────────────────────────────────
 class SavePlaylistRequest(BaseModel):
     playlist_id:  str
@@ -193,7 +218,11 @@ async def save_playlist(
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
         video_count = req.video_count
-        yt_pid = _extract_playlist_id(req.playlist_url, req.playlist_id)
+        clean_pid = _canonicalize_playlist_id(req.playlist_url, req.playlist_id)
+        if not clean_pid:
+            clean_pid = req.playlist_id.strip()
+
+        yt_pid = clean_pid
         if yt_pid:
             if not yt_pid.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) and re.match(r"^[a-zA-Z0-9_-]{11}$", yt_pid):
                 video_count = "1"
@@ -222,10 +251,16 @@ async def save_playlist(
                 try:
                     if _is_uuid(user_id):
                         existing_check = await asyncio.to_thread(
-                            lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", req.playlist_id).execute()
+                            lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", clean_pid).execute()
                         )
                         if existing_check.data and len(existing_check.data) > 0:
                             is_already_saved = True
+                        elif req.playlist_id != clean_pid:
+                            existing_check_raw = await asyncio.to_thread(
+                                lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).eq("playlist_id", req.playlist_id).execute()
+                            )
+                            if existing_check_raw.data and len(existing_check_raw.data) > 0:
+                                is_already_saved = True
                         count_res = await asyncio.to_thread(
                             lambda: sb.table("saved_playlists").select("id").eq("user_id", user_id).execute()
                         )
@@ -236,8 +271,12 @@ async def save_playlist(
                         )
                         if res_lp.data and len(res_lp.data) > 0:
                             existing_lp = res_lp.data[0].get("completed_steps", [])
-                            if any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
-                                is_already_saved = True
+                            for p in existing_lp:
+                                p_id = p.get("id") or p.get("playlist_id") or ""
+                                p_clean = _canonicalize_playlist_id(p.get("playlist_url", ""), p_id) or p_id
+                                if p_clean in (clean_pid, req.playlist_id) or p_id in (clean_pid, req.playlist_id):
+                                    is_already_saved = True
+                                    break
                             saved_count = len(existing_lp)
                 except Exception as count_err:
                     logger.warning(f"Error checking saved playlists count: {count_err}")
@@ -257,14 +296,14 @@ async def save_playlist(
         res_data = None
         if _is_uuid(user_id):
             data = {
-                "playlist_id":  req.playlist_id,
+                "playlist_id":  clean_pid,
                 "title":        req.title,
                 "channel":      req.channel or "",
                 "description":  req.description or "",
                 "level":        req.level or "",
                 "video_count":  video_count or "?",
                 "duration":     req.duration or "?",
-                "playlist_url": req.playlist_url or "",
+                "playlist_url": req.playlist_url or f"https://www.youtube.com/playlist?list={clean_pid}",
                 "thumbnail":    req.thumbnail or "",
                 "source":       req.source or "youtube",
                 "skill_query":  req.skill_query or "",
@@ -278,11 +317,16 @@ async def save_playlist(
             except Exception as upsert_err:
                 logger.warning(f"Upsert failed, falling back to manual select/insert: {upsert_err}")
                 existing = await asyncio.to_thread(
-                    lambda: sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                    lambda: sb.table("saved_playlists").select("id").eq("playlist_id", clean_pid).eq("user_id", user_id).execute()
                 )
+                if not (existing.data and len(existing.data) > 0) and req.playlist_id != clean_pid:
+                    existing = await asyncio.to_thread(
+                        lambda: sb.table("saved_playlists").select("id").eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                    )
                 if existing.data and len(existing.data) > 0:
+                    row_id = existing.data[0].get("id")
                     res_upd = await asyncio.to_thread(
-                        lambda: sb.table("saved_playlists").update(data).eq("playlist_id", req.playlist_id).eq("user_id", user_id).execute()
+                        lambda: sb.table("saved_playlists").update(data).eq("id", row_id).execute()
                     )
                     res_data = res_upd.data
                 else:
@@ -299,37 +343,52 @@ async def save_playlist(
             has_existing = bool(res_lp.data and len(res_lp.data) > 0)
             existing_lp = res_lp.data[0].get("completed_steps", []) if has_existing else []
             pl_entry = {
-                "id": req.playlist_id,
+                "id": clean_pid,
+                "playlist_id": clean_pid,
                 "title": req.title,
                 "channel": req.channel or "",
                 "description": req.description or "",
                 "level": req.level or "",
                 "video_count": video_count or "?",
                 "duration": req.duration or "?",
-                "playlist_url": req.playlist_url or "",
+                "playlist_url": req.playlist_url or f"https://www.youtube.com/playlist?list={clean_pid}",
                 "thumbnail": req.thumbnail or "",
                 "source": req.source or "youtube",
                 "skill_query": req.skill_query or "",
                 "completed": False,
                 "videos": []
             }
-            if not any(p.get("id") == req.playlist_id or p.get("playlist_id") == req.playlist_id for p in existing_lp):
+            found_idx = -1
+            for idx, p in enumerate(existing_lp):
+                p_id = p.get("id") or p.get("playlist_id") or ""
+                p_clean = _canonicalize_playlist_id(p.get("playlist_url", ""), p_id) or p_id
+                if p_clean in (clean_pid, req.playlist_id) or p_id in (clean_pid, req.playlist_id):
+                    found_idx = idx
+                    break
+
+            if found_idx >= 0:
+                existing_entry = existing_lp[found_idx]
+                pl_entry["completed"] = existing_entry.get("completed", False)
+                pl_entry["videos"] = existing_entry.get("videos", [])
+                existing_lp[found_idx] = pl_entry
+            else:
                 existing_lp.append(pl_entry)
-                lp_row = {
-                    "session_id": user_id,
-                    "skill_name": "saved_playlists",
-                    "completed_steps": existing_lp,
-                }
-                if _is_uuid(user_id):
-                    lp_row["user_id"] = user_id
-                if has_existing:
-                    await asyncio.to_thread(
-                        lambda: sb.table("learning_progress").update(lp_row).eq("session_id", user_id).eq("skill_name", "saved_playlists").execute()
-                    )
-                else:
-                    await asyncio.to_thread(
-                        lambda: sb.table("learning_progress").insert(lp_row).execute()
-                    )
+
+            lp_row = {
+                "session_id": user_id,
+                "skill_name": "saved_playlists",
+                "completed_steps": existing_lp,
+            }
+            if _is_uuid(user_id):
+                lp_row["user_id"] = user_id
+            if has_existing:
+                await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").update(lp_row).eq("session_id", user_id).eq("skill_name", "saved_playlists").execute()
+                )
+            else:
+                await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").insert(lp_row).execute()
+                )
         except Exception as jsonb_sync_err:
             logger.warning(f"Error syncing saved playlist to learning_progress: {jsonb_sync_err}")
 
@@ -339,7 +398,7 @@ async def save_playlist(
                 lambda: sb.table("user_feedback").insert({
                     "user_id": user_id,
                     "action": "save",
-                    "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={req.playlist_id}",
+                    "resource_url": req.playlist_url or f"https://www.youtube.com/playlist?list={clean_pid}",
                     "resource_title": req.title or "",
                     "skill_name": req.skill_query or "playlist",
                 }).execute()
@@ -364,7 +423,7 @@ async def unsave_playlist(
     if not sb:
         raise HTTPException(status_code=500, detail="Supabase not configured")
     try:
-        clean_pid = _extract_playlist_id(playlist_id, playlist_id)
+        clean_pid = _canonicalize_playlist_id("", playlist_id) or playlist_id.strip()
         if _is_uuid(user_id):
             await asyncio.to_thread(
                 lambda: sb.table("saved_playlists").delete().eq("user_id", user_id).in_("playlist_id", [playlist_id, clean_pid]).execute()
@@ -377,7 +436,12 @@ async def unsave_playlist(
             )
             if res_lp.data and len(res_lp.data) > 0:
                 existing_lp = res_lp.data[0].get("completed_steps", [])
-                filtered = [p for p in existing_lp if p.get("id") != playlist_id and p.get("id") != clean_pid and p.get("playlist_id") != playlist_id and p.get("playlist_id") != clean_pid]
+                filtered = [
+                    p for p in existing_lp
+                    if (_canonicalize_playlist_id(p.get("playlist_url", ""), p.get("id") or p.get("playlist_id") or "") not in (clean_pid, playlist_id))
+                    and (p.get("id") not in (clean_pid, playlist_id))
+                    and (p.get("playlist_id") not in (clean_pid, playlist_id))
+                ]
                 lp_row = {
                     "session_id": user_id,
                     "skill_name": "saved_playlists",
@@ -419,11 +483,14 @@ async def get_saved_playlists(user_id: str, sb=None) -> dict:
                     )
                 )
                 for row in (result.data or []):
-                    pid = row.get("playlist_id", row.get("id", ""))
-                    if pid and pid not in seen_ids:
-                        seen_ids.add(pid)
+                    raw_pid = row.get("playlist_id", row.get("id", ""))
+                    clean_id = _canonicalize_playlist_id(row.get("playlist_url", ""), raw_pid) or raw_pid
+                    if clean_id and clean_id not in seen_ids and raw_pid not in seen_ids:
+                        seen_ids.add(clean_id)
+                        if raw_pid:
+                            seen_ids.add(raw_pid)
                         remapped.append({
-                            "id":           pid,
+                            "id":           clean_id,
                             "title":        row.get("title", ""),
                             "channel":      row.get("channel", ""),
                             "description":  row.get("description", ""),
@@ -454,11 +521,14 @@ async def get_saved_playlists(user_id: str, sb=None) -> dict:
             if res_lp.data and len(res_lp.data) > 0:
                 jsonb_items = res_lp.data[0].get("completed_steps", [])
                 for item in jsonb_items:
-                    item_id = item.get("id") or item.get("playlist_id")
-                    if item_id and item_id not in seen_ids:
-                        seen_ids.add(item_id)
+                    raw_item_id = item.get("id") or item.get("playlist_id") or ""
+                    clean_item_id = _canonicalize_playlist_id(item.get("playlist_url", ""), raw_item_id) or raw_item_id
+                    if clean_item_id and clean_item_id not in seen_ids and raw_item_id not in seen_ids:
+                        seen_ids.add(clean_item_id)
+                        if raw_item_id:
+                            seen_ids.add(raw_item_id)
                         remapped.append({
-                            "id":           item_id,
+                            "id":           clean_item_id,
                             "title":        item.get("title", "Untitled Playlist"),
                             "channel":      item.get("channel", ""),
                             "description":  item.get("description", ""),
@@ -491,6 +561,25 @@ async def sync_saved_playlists(
     """
     sb = sb if sb is not None else _get_sb()
     playlists_list = req.playlists
+    seen_sync = set()
+    deduped_playlists = []
+    for p in playlists_list:
+        raw_id = p.get("id") or p.get("playlist_id") or ""
+        clean_id = _canonicalize_playlist_id(p.get("playlist_url", ""), raw_id) or raw_id
+        if clean_id and clean_id in seen_sync:
+            continue
+        if raw_id and raw_id in seen_sync:
+            continue
+        if clean_id:
+            seen_sync.add(clean_id)
+        if raw_id:
+            seen_sync.add(raw_id)
+        if clean_id:
+            p["id"] = clean_id
+            p["playlist_id"] = clean_id
+        deduped_playlists.append(p)
+    playlists_list = deduped_playlists
+
     total_videos = sum(len(p.get("videos", [])) for p in playlists_list)
     completed_videos = sum(len([v for v in p.get("videos", []) if v.get("completed") or v.get("watched")]) for p in playlists_list)
     pct = round((completed_videos / total_videos) * 100.0, 2) if total_videos > 0 else 0.0
@@ -565,7 +654,7 @@ async def get_saved_playlists_jsonb(current_user_id: str, sb=None) -> dict:
 async def get_playlist_videos(playlist_id: str, user_id: str, sb=None) -> dict:
     """Fetch playlist videos from YouTube API + merge progress/resume data from Supabase."""
     sb = sb if sb is not None else _get_sb()
-    clean_playlist_id = _extract_playlist_id(playlist_id, playlist_id)
+    clean_playlist_id = _canonicalize_playlist_id("", playlist_id) or playlist_id.strip()
     info = await asyncio.to_thread(_resolve_playlist_info, clean_playlist_id, sb, user_id)
     target_yt_id = info.get("real_yt_id") or (clean_playlist_id if clean_playlist_id.startswith(("PL", "UU", "FL", "RD", "OLAK5uy_")) else "")
     target_vid_id = info.get("video_id") or (clean_playlist_id if re.match(r"^[a-zA-Z0-9_-]{11}$", clean_playlist_id) else "")
