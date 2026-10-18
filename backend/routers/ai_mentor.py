@@ -12,6 +12,8 @@ from backend.services.groq_service import (
     get_ai_semaphore,
     acquire_ai_slot,
     run_bounded_ai_call,
+    AIProviderError,
+    AIProviderRateLimitError,
 )
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
@@ -560,6 +562,23 @@ async def chat_mentor(
                     prompt_text,
                     system_prompt=effective_system_prompt,
                 )
+        except AIProviderError as prov_err:
+            logger.warning(f"AI provider error in student chat_mentor: {prov_err.code} - {prov_err.message}")
+            if reservation_id:
+                release_ai_mentor_slot(current_user_id, reservation_id)
+                reservation_id = None
+            headers = {}
+            if isinstance(prov_err, AIProviderRateLimitError) and prov_err.retry_after:
+                headers["Retry-After"] = str(prov_err.retry_after)
+            raise HTTPException(
+                status_code=prov_err.status_code,
+                detail={
+                    "success": False,
+                    "code": prov_err.code,
+                    "message": prov_err.message,
+                },
+                headers=headers if headers else None,
+            )
         except HTTPException as http_exc:
             detail_str = str(http_exc.detail)
             # If acquire timeout: semaphore was full, prompt never reached Groq -> safe to refund
@@ -569,18 +588,28 @@ async def chat_mentor(
             else:
                 if reservation_id:
                     release_ai_mentor_slot(current_user_id, reservation_id)
+                    reservation_id = None
             raise
         except Exception:
             if reservation_id:
                 release_ai_mentor_slot(current_user_id, reservation_id)
+                reservation_id = None
             raise
 
         # 5. Handle LLM failure: User message preserved, NO fake assistant message written
         if not response or response == _AI_UNAVAILABLE_MSG:
-            logger.warning("Groq call failed or returned unavailable message; user message preserved, no assistant response saved.")
+            logger.warning("Groq call returned unavailable message; user message preserved, no assistant response saved.")
             if reservation_id:
                 release_ai_mentor_slot(current_user_id, reservation_id)
-            return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=conv_id, message_id=None)
+                reservation_id = None
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={
+                    "success": False,
+                    "code": "AI_PROVIDER_UNAVAILABLE",
+                    "message": "AI provider service is temporarily unavailable. Please try again shortly.",
+                },
+            )
 
         # Provider succeeded: commit reservation so it can never be refunded
         if reservation_id:
@@ -609,6 +638,23 @@ async def chat_mentor(
             prompt=prompt_text,
             system_prompt=_SKILLS_SYSTEM_PROMPT,
         )
+    except AIProviderError as prov_err:
+        logger.warning(f"AI provider error in guest chat_mentor: {prov_err.code} - {prov_err.message}")
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
+            reservation_id = None
+        headers = {}
+        if isinstance(prov_err, AIProviderRateLimitError) and prov_err.retry_after:
+            headers["Retry-After"] = str(prov_err.retry_after)
+        raise HTTPException(
+            status_code=prov_err.status_code,
+            detail={
+                "success": False,
+                "code": prov_err.code,
+                "message": prov_err.message,
+            },
+            headers=headers if headers else None,
+        )
     except HTTPException as http_exc:
         detail_str = str(http_exc.detail)
         if "hard deadline" in detail_str.lower():
@@ -616,17 +662,27 @@ async def chat_mentor(
         else:
             if reservation_id:
                 release_ai_mentor_slot(current_user_id, reservation_id)
+                reservation_id = None
         raise
     except Exception:
         if reservation_id:
             release_ai_mentor_slot(current_user_id, reservation_id)
+            reservation_id = None
         raise
 
     if not response or response == _AI_UNAVAILABLE_MSG:
-        logger.warning("Groq call failed or returned unavailable message; guest path.")
+        logger.warning("Groq call returned unavailable message in guest path.")
         if reservation_id:
             release_ai_mentor_slot(current_user_id, reservation_id)
-        return MentorChatResponse(reply=_AI_UNAVAILABLE_MSG, conversation_id=None, message_id=None)
+            reservation_id = None
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "success": False,
+                "code": "AI_PROVIDER_UNAVAILABLE",
+                "message": "AI provider service is temporarily unavailable. Please try again shortly.",
+            },
+        )
 
     if reservation_id:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
@@ -803,6 +859,23 @@ STRICT RULES:
 
     try:
         review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
+    except AIProviderError as prov_err:
+        logger.warning(f"AI provider error in review_resume: {prov_err.code} - {prov_err.message}")
+        if reservation_id:
+            release_ai_mentor_slot(current_user_id, reservation_id)
+            reservation_id = None
+        headers = {}
+        if isinstance(prov_err, AIProviderRateLimitError) and prov_err.retry_after:
+            headers["Retry-After"] = str(prov_err.retry_after)
+        raise HTTPException(
+            status_code=prov_err.status_code,
+            detail={
+                "success": False,
+                "code": prov_err.code,
+                "message": prov_err.message,
+            },
+            headers=headers if headers else None,
+        )
     except HTTPException as http_exc:
         detail_str = str(http_exc.detail)
         if "hard deadline" in detail_str.lower():
@@ -810,20 +883,24 @@ STRICT RULES:
         else:
             if reservation_id:
                 release_ai_mentor_slot(current_user_id, reservation_id)
+                reservation_id = None
         raise
     except Exception:
         if reservation_id:
             release_ai_mentor_slot(current_user_id, reservation_id)
+            reservation_id = None
         raise
 
     if not review_text or review_text == _AI_UNAVAILABLE_MSG:
         logger.error(f"Groq returned an error response: {review_text}")
         if reservation_id:
             release_ai_mentor_slot(current_user_id, reservation_id)
+            reservation_id = None
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={
                 "success": False,
+                "code": "AI_PROVIDER_UNAVAILABLE",
                 "message": "AI evaluator is temporarily unavailable. Please try again.",
             },
         )

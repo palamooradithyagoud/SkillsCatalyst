@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import time
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -18,6 +19,59 @@ from backend.config import GROQ_API_KEY
 from backend.services.observability import record_ai_call
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Structured AI Provider Error Hierarchy (SYS-07)
+# ---------------------------------------------------------------------------
+
+class AIProviderError(Exception):
+    """Base exception for upstream AI provider failures."""
+    def __init__(self, message: str, code: str = "AI_PROVIDER_ERROR", status_code: int = 502):
+        super().__init__(message)
+        self.message = message
+        self.code = code
+        self.status_code = status_code
+
+
+class AIProviderQuotaExhaustedError(AIProviderError):
+    """Raised when upstream provider quota or billing capacity is exhausted."""
+    def __init__(self, message: str = "AI service quota is currently exhausted. Please try again later."):
+        super().__init__(message=message, code="AI_QUOTA_EXHAUSTED", status_code=503)
+
+
+class AIProviderRateLimitError(AIProviderError):
+    """Raised when upstream provider rate limit (RPM/TPM) is reached."""
+    def __init__(
+        self,
+        message: str = "AI service rate limit reached. Please wait before trying again.",
+        retry_after: Optional[int] = None,
+    ):
+        super().__init__(message=message, code="AI_RATE_LIMIT_EXCEEDED", status_code=429)
+        self.retry_after = retry_after
+
+
+class AIProviderAuthError(AIProviderError):
+    """Raised when upstream provider authentication or credential verification fails (MUST NOT be 401)."""
+    def __init__(self, message: str = "AI service configuration error. Please contact support."):
+        super().__init__(message=message, code="AI_PROVIDER_AUTH_ERROR", status_code=502)
+
+
+class AIProviderTimeoutError(AIProviderError):
+    """Raised when upstream provider request times out."""
+    def __init__(self, message: str = "AI service request timed out. Please try again."):
+        super().__init__(message=message, code="AI_TIMEOUT", status_code=504)
+
+
+class AIProviderUnavailableError(AIProviderError):
+    """Raised when upstream provider network or server is unavailable."""
+    def __init__(self, message: str = "AI provider service is temporarily unavailable. Please try again shortly."):
+        super().__init__(message=message, code="AI_PROVIDER_UNAVAILABLE", status_code=502)
+
+
+class AIProviderInvalidResponseError(AIProviderError):
+    """Raised when upstream provider returns an empty or corrupted response."""
+    def __init__(self, message: str = "Received an invalid response from AI service. Please try again."):
+        super().__init__(message=message, code="AI_INVALID_RESPONSE", status_code=502)
 
 # Groq timeout specifications:
 # Enforces strict request-level timeouts to prevent threadpool starvation.
@@ -236,7 +290,7 @@ def chat_with_groq(
       - Read timeout (min(12s, remaining budget)): moves to next model, logs warning.
       - Rate-limit (429): moves to next model, logs warning.
       - Hard ceiling (25s): halts fallback loop before reverse proxy timeout.
-      - All models fail: returns safe user-facing _AI_UNAVAILABLE_MSG.
+      - All models fail: raises structured AIProviderError subclass.
 
     Observability:
       - record_ai_call(success=True, model=..., latency_ms=...) on success.
@@ -245,9 +299,10 @@ def chat_with_groq(
     if not groq_client:
         logger.error("Groq client is not initialised. Cannot process prompt.")
         record_ai_call(success=False, provider="groq", error_category="client_uninitialized")
-        return _AI_UNAVAILABLE_MSG
+        raise AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
 
     last_error_category = "unknown"
+    last_exception: Optional[AIProviderError] = None
     t_start = time.monotonic()
 
     for model_name in FALLBACK_MODELS:
@@ -260,6 +315,7 @@ def chat_with_groq(
                 f"Skipping further model fallbacks to maintain hard ceiling of {_GROQ_HARD_CEILING}s."
             )
             last_error_category = "hard_ceiling_timeout"
+            last_exception = AIProviderTimeoutError("AI service request timed out. Please try again.")
             break
 
         per_attempt_timeout = min(_GROQ_READ_TIMEOUT, remaining_budget)
@@ -292,7 +348,13 @@ def chat_with_groq(
                     pool=_GROQ_POOL_TIMEOUT,
                 ),
             )
-            reply = response.choices[0].message.content or "No response from AI."
+            if not response or not response.choices:
+                raise AIProviderInvalidResponseError("Received an invalid response from AI service. Please try again.")
+
+            reply = response.choices[0].message.content
+            if not reply or not reply.strip():
+                raise AIProviderInvalidResponseError("Received an invalid response from AI service. Please try again.")
+
             latency_ms = round((time.monotonic() - model_start) * 1000, 1)
             total_chain_ms = round((time.monotonic() - t_start) * 1000, 1)
             logger.info(
@@ -306,9 +368,26 @@ def chat_with_groq(
             )
             return reply
 
+        except AIProviderInvalidResponseError as e:
+            model_latency = round((time.monotonic() - model_start) * 1000, 1)
+            last_error_category = "invalid_response"
+            last_exception = e
+            logger.warning(
+                f"Groq model '{model_name}' returned empty/invalid response after {model_latency}ms. Trying next fallback."
+            )
+            record_ai_call(
+                success=False,
+                provider="groq",
+                model=model_name,
+                latency_ms=model_latency,
+                error_category="invalid_response",
+            )
+            continue
+
         except APITimeoutError as e:
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
             last_error_category = "timeout"
+            last_exception = AIProviderTimeoutError("AI service request timed out. Please try again.")
             logger.warning(
                 f"Groq model '{model_name}' timed out after {model_latency}ms. Trying next fallback."
             )
@@ -324,7 +403,58 @@ def chat_with_groq(
 
         except RateLimitError as e:
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
+            # 1. Inspect structured error body if available
+            body = getattr(e, "body", None)
+            err_type = ""
+            err_code = ""
+            if isinstance(body, dict):
+                err_obj = body.get("error", {})
+                if isinstance(err_obj, dict):
+                    err_type = str(err_obj.get("type", "")).lower()
+                    err_code = str(err_obj.get("code", "")).lower()
+
+            err_msg_lower = str(e).lower()
+            is_quota = (
+                err_type in ("insufficient_quota", "quota_exceeded", "billing_limit", "resource_exhausted")
+                or err_code in ("insufficient_quota", "quota_exceeded", "billing_limit", "resource_exhausted")
+                or any(k in err_msg_lower for k in ("quota", "insufficient_quota", "billing", "exceeded your current quota", "credit", "resource_exhausted"))
+            )
+            if is_quota:
+                last_error_category = "quota_exhausted"
+                last_exception = AIProviderQuotaExhaustedError("AI service quota is currently exhausted. Please try again later.")
+                logger.warning(
+                    f"Groq account quota exhausted (model '{model_name}'). Halting fallback chain."
+                )
+                record_ai_call(
+                    success=False,
+                    provider="groq",
+                    model=model_name,
+                    latency_ms=model_latency,
+                    error_category=last_error_category,
+                )
+                break  # Non-retryable across models on the same provider account
+
+            # Temporary rate limit (RPM/TPM)
             last_error_category = "rate_limit"
+            retry_after_val: Optional[int] = None
+            resp = getattr(e, "response", None)
+            if resp is not None and hasattr(resp, "headers"):
+                ra_hdr = resp.headers.get("retry-after")
+                if ra_hdr and ra_hdr.isdigit():
+                    retry_after_val = int(ra_hdr)
+            if retry_after_val is None:
+                ra_match = re.search(r"(?:retry\s+after|wait|in)\s+(\d+(?:\.\d+)?)\s*(?:s|sec|seconds)", str(e), re.IGNORECASE)
+                if ra_match:
+                    retry_after_val = int(float(ra_match.group(1)))
+            if retry_after_val is not None:
+                retry_after_val = max(1, min(3600, retry_after_val))
+
+            last_exception = AIProviderRateLimitError(
+                f"AI service rate limit reached. Please wait {retry_after_val}s before trying again."
+                if retry_after_val
+                else "AI service rate limit reached. Please wait before trying again.",
+                retry_after=retry_after_val,
+            )
             logger.warning(
                 f"Groq model '{model_name}' rate-limited (429) after {model_latency}ms. Trying next fallback."
             )
@@ -333,15 +463,16 @@ def chat_with_groq(
                 provider="groq",
                 model=model_name,
                 latency_ms=model_latency,
-                error_category="rate_limit",
+                error_category=last_error_category,
             )
             continue
 
         except AuthenticationError as e:
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
             last_error_category = "auth_error"
+            last_exception = AIProviderAuthError("AI service configuration error. Please contact support.")
             logger.error(
-                f"Groq model '{model_name}' authentication error. Check GROQ_API_KEY. Trying next fallback."
+                f"Groq authentication error on model '{model_name}'. Check GROQ_API_KEY. Halting fallback chain."
             )
             record_ai_call(
                 success=False,
@@ -350,11 +481,12 @@ def chat_with_groq(
                 latency_ms=model_latency,
                 error_category="auth_error",
             )
-            continue
+            break  # Invalid credentials will fail on all models; do not retry
 
         except APIConnectionError as e:
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
             last_error_category = "connection_error"
+            last_exception = AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
             logger.warning(
                 f"Groq model '{model_name}' connection error after {model_latency}ms. Trying next fallback."
             )
@@ -371,6 +503,19 @@ def chat_with_groq(
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
             status_code = getattr(e, "status_code", "unknown")
             last_error_category = f"status_{status_code}"
+            if status_code in (401, 403):
+                last_exception = AIProviderAuthError("AI service configuration error. Please contact support.")
+            elif status_code == 429:
+                err_msg_lower = str(e).lower()
+                if any(k in err_msg_lower for k in ("quota", "insufficient_quota", "billing", "resource_exhausted")):
+                    last_exception = AIProviderQuotaExhaustedError("AI service quota is currently exhausted. Please try again later.")
+                else:
+                    last_exception = AIProviderRateLimitError("AI service rate limit reached. Please wait before trying again.")
+            elif status_code == 504:
+                last_exception = AIProviderTimeoutError("AI service request timed out. Please try again.")
+            else:
+                last_exception = AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
+
             logger.warning(
                 f"Groq model '{model_name}' HTTP {status_code} error after {model_latency}ms. Trying next fallback."
             )
@@ -387,6 +532,7 @@ def chat_with_groq(
             model_latency = round((time.monotonic() - model_start) * 1000, 1)
             err_type = type(e).__name__
             last_error_category = err_type.lower()
+            last_exception = AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
             logger.warning(
                 f"Groq model '{model_name}' unexpected error [{err_type}] after {model_latency}ms. Trying next fallback."
             )
@@ -406,6 +552,8 @@ def chat_with_groq(
         f"Last failure category: '{last_error_category}'."
     )
 
-    # Return safe user-facing message — NO internal details or stack traces exposed
-    return _AI_UNAVAILABLE_MSG
+    if last_exception is not None:
+        raise last_exception
+
+    raise AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
 

@@ -83,7 +83,7 @@ export function useResumeReview() {
         }
       } catch {
         setErrorMessage(
-          "Unexpected server response. Please check the backend is running."
+          "Unexpected server response. Please try again later."
         );
         setUploadStage("upload_error");
       }

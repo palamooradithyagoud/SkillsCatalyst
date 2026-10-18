@@ -1756,6 +1756,12 @@ export default function ResumeWorkspacePage() {
                           onChange={(e) => setEditedText(e.target.value)}
                           className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:bg-white focus:border-purple-600 focus:outline-none"
                         />
+                        {uploadStage === "review_error" && errorMessage && (
+                          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>{errorMessage}</span>
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={handleRunEvaluation}

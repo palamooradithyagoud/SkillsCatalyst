@@ -82,26 +82,78 @@ export async function deleteMentorConversation(conversationId: string): Promise<
   }
 }
 
+export class AIMentorError extends Error {
+  status: number;
+  code: string;
+  retryAfter?: number;
+  detail?: any;
+
+  constructor(message: string, status: number, code: string, retryAfter?: number, detail?: any) {
+    super(message);
+    this.name = "AIMentorError";
+    this.status = status;
+    this.code = code;
+    this.retryAfter = retryAfter;
+    this.detail = detail;
+  }
+}
+
 export async function sendMentorMessage(
   prompt: string,
   conversationId?: string,
 ): Promise<{ reply: string; conversation_id?: string; message_id?: string }> {
+  const authHeaders = await getAuthHeaders();
+  const body: Record<string, any> = { message: prompt, prompt };
+  if (conversationId) {
+    body.conversation_id = conversationId;
+  }
+
+  let res: Response;
   try {
-    const authHeaders = await getAuthHeaders();
-    const body: Record<string, any> = { message: prompt, prompt };
-    if (conversationId) {
-      body.conversation_id = conversationId;
-    }
-    const res = await apiFetch(`${API_BASE}/api/ai-mentor/chat`, {
+    res = await apiFetch(`${API_BASE}/api/ai-mentor/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error("Failed to reach AI mentor");
-    return await res.json();
-  } catch {
-    return { reply: "I am your SkillsCatalyst AI Mentor powered by Groq. Please start the FastAPI backend to interact live!" };
+  } catch (err: any) {
+    // Genuine network connection failure reaching the backend server
+    throw new AIMentorError(
+      "Unable to connect to SkillsCatalyst server. Please check your network connection.",
+      0,
+      "NETWORK_ERROR"
+    );
   }
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    const detail = errorBody?.detail;
+    const code = detail?.code || errorBody?.code || (res.status === 429 ? "RATE_LIMIT" : "SERVER_ERROR");
+    const retryHeader = res.headers.get("retry-after");
+    const retryAfter = retryHeader && !isNaN(Number(retryHeader)) ? Number(retryHeader) : undefined;
+
+    let message = detail?.message || errorBody?.message;
+    if (!message) {
+      if (res.status === 403) {
+        message = "Free plan limit reached. Upgrade to Pro for unlimited AI Mentor access.";
+      } else if (res.status === 429) {
+        message = retryAfter
+          ? `AI service rate limit reached. Please wait ${retryAfter}s before trying again.`
+          : "AI service rate limit reached. Please wait a moment before trying again.";
+      } else if (res.status === 503) {
+        message = "AI service quota is currently exhausted. Please try again later.";
+      } else if (res.status === 504) {
+        message = "AI service request timed out. Please try again.";
+      } else if (res.status === 502) {
+        message = "AI service configuration error or provider unavailable. Please try again later.";
+      } else {
+        message = `AI Mentor request failed (HTTP ${res.status}).`;
+      }
+    }
+
+    throw new AIMentorError(message, res.status, code, retryAfter, detail);
+  }
+
+  return await res.json();
 }
 
 export async function extractResume(file: File): Promise<{ success: boolean; text?: string; filename?: string; char_count?: number; message?: string }> {
@@ -147,9 +199,10 @@ export async function reviewResume(
   companyType: string = "Product-Based",
   jobDescription: string = ""
 ): Promise<ResumeReviewResponse> {
+  const authHeaders = await getAuthHeaders();
+  let res: Response;
   try {
-    const authHeaders = await getAuthHeaders();
-    const res = await apiFetch(`${API_BASE}/api/ai-mentor/review-resume`, {
+    res = await apiFetch(`${API_BASE}/api/ai-mentor/review-resume`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
@@ -160,64 +213,79 @@ export async function reviewResume(
         job_description: jobDescription,
       }),
     });
-    if (!res.ok) {
-      const errorBody = await res.json().catch(() => null);
-      if (res.status === 403) {
-        const detail = errorBody?.detail;
-        const err: any = new Error(
-          detail?.message || "Free plan limit reached. Upgrade to Premium for unlimited AI Resume Reviews."
-        );
-        err.status = 403;
-        err.code = detail?.code || "LIMIT_REACHED";
-        err.detail = detail;
-        throw err;
-      }
-      const errorMsg =
-        errorBody?.detail?.message ||
-        errorBody?.message ||
-        `Failed to evaluate resume (HTTP ${res.status})`;
-      throw new Error(errorMsg);
-    }
-    const data = await res.json();
-    let overallScore: number | null = null;
-
-    if (typeof data?.overall_score === "number" && !isNaN(data.overall_score)) {
-      if (data.overall_score >= 0 && data.overall_score <= 100) {
-        overallScore = Math.round(data.overall_score);
-      }
-    } else if (data?.overall_score === undefined && data?.review) {
-      // Backwards-compatibility fallback if an older server omitted overall_score
-      const match = data.review.match(
-        /(?:Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:\-*]*\s*(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\b/i
-      );
-      if (match) {
-        const val = parseFloat(match[1]);
-        const denom = parseFloat(match[2]);
-        if (denom === 10 && val >= 0 && val <= 10) {
-          overallScore = Math.round(val * 10);
-        } else if (denom === 100 && val >= 0 && val <= 100) {
-          overallScore = Math.round(val);
-        }
-      }
-    }
-
-    if (typeof overallScore === "number" && typeof window !== "undefined") {
-      localStorage.setItem("skillscatalyst_latest_resume_score", String(overallScore));
-    }
-
-    const scoringStatus: "scored" | "unscored" =
-      overallScore !== null ? "scored" : "unscored";
-
-    return {
-      review: data?.review || "",
-      overall_score: overallScore,
-      scoring_status: scoringStatus,
-    };
-  } catch (error: any) {
-    if (error?.status === 403 || error?.code === "LIMIT_REACHED") {
-      throw error;
-    }
-    console.error("Resume review error:", error);
-    throw error;
+  } catch (err: any) {
+    const netErr: any = new Error("Unable to connect to SkillsCatalyst server. Please check your network connection.");
+    netErr.status = 0;
+    netErr.code = "NETWORK_ERROR";
+    throw netErr;
   }
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    const detail = errorBody?.detail;
+    const code = detail?.code || errorBody?.code || (res.status === 429 ? "RATE_LIMIT" : "SERVER_ERROR");
+    const retryHeader = res.headers.get("retry-after");
+    const retryAfter = retryHeader && !isNaN(Number(retryHeader)) ? Number(retryHeader) : undefined;
+
+    let errorMsg = detail?.message || errorBody?.message;
+    if (!errorMsg) {
+      if (res.status === 403) {
+        errorMsg = "Free plan limit reached. Upgrade to Premium for unlimited AI Resume Reviews.";
+      } else if (res.status === 429) {
+        errorMsg = retryAfter
+          ? `AI service rate limit reached. Please wait ${retryAfter}s before trying again.`
+          : "AI service rate limit reached. Please wait a moment before trying again.";
+      } else if (res.status === 503) {
+        errorMsg = "AI service quota is currently exhausted. Please try again later.";
+      } else if (res.status === 504) {
+        errorMsg = "AI service request timed out. Please try again.";
+      } else if (res.status === 502) {
+        errorMsg = "AI evaluator is temporarily unavailable. Please try again.";
+      } else {
+        errorMsg = `Failed to evaluate resume (HTTP ${res.status})`;
+      }
+    }
+    const err: any = new Error(errorMsg);
+    err.status = res.status;
+    err.code = code;
+    err.retryAfter = retryAfter;
+    err.detail = detail;
+    throw err;
+  }
+
+  const data = await res.json();
+  let overallScore: number | null = null;
+
+  if (typeof data?.overall_score === "number" && !isNaN(data.overall_score)) {
+    if (data.overall_score >= 0 && data.overall_score <= 100) {
+      overallScore = Math.round(data.overall_score);
+    }
+  } else if (data?.overall_score === undefined && data?.review) {
+    // Backwards-compatibility fallback if an older server omitted overall_score
+    const match = data.review.match(
+      /(?:Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:\-*]*\s*(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\b/i
+    );
+    if (match) {
+      const val = parseFloat(match[1]);
+      const denom = parseFloat(match[2]);
+      if (denom === 10 && val >= 0 && val <= 10) {
+        overallScore = Math.round(val * 10);
+      } else if (denom === 100 && val >= 0 && val <= 100) {
+        overallScore = Math.round(val);
+      }
+    }
+  }
+
+  if (typeof overallScore === "number" && typeof window !== "undefined") {
+    localStorage.setItem("skillscatalyst_latest_resume_score", String(overallScore));
+  }
+
+  const scoringStatus: "scored" | "unscored" =
+    overallScore !== null ? "scored" : "unscored";
+
+  return {
+    review: data?.review || "",
+    overall_score: overallScore,
+    scoring_status: scoringStatus,
+  };
 }
