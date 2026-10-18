@@ -179,7 +179,8 @@ def run_tests():
             }).execute()
             assert False, "Should have raised exception for unauthenticated attempt!"
         except Exception as e:
-            assert "Not authenticated" in str(e) or "P0001" in str(e) or "error" in str(e).lower()
+            err_msg = str(e).lower()
+            assert "not authenticated" in err_msg or "p0001" in err_msg or "permission denied" in err_msg or "42501" in err_msg or "error" in err_msg
 
     test("submit_question_attempt blocks unauthenticated access", test_unauthenticated_attempt)
 

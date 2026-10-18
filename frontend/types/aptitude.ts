@@ -95,8 +95,5 @@ export interface LegacyPlacementQuestion {
   dbId?: string;
   question: string;
   options: string[];
-  correctIndex?: number;
-  answerText?: string;
-  solution?: string;
   dbOptions?: QuestionOptionDTO[];
 }

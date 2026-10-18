@@ -30,7 +30,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PERCENTAGES_QUESTIONS, PlacementQuestion, QUANTITATIVE_APTITUDE_MAP } from "@/data/aptitudeQuestions";
+// Sourced securely via Supabase RPC get_topic_questions & submit_question_attempt
 import { supabase } from "@/lib/supabase";
 import { getAuthHeaders, apiFetch, API_BASE } from "@/lib/api";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -42,8 +42,9 @@ import {
   getLegacyTopicAttempts,
   getQuestionsByTopicName,
   toLegacyQuestions,
+  getUserTopicProgress,
 } from "@/lib/aptitude";
-import { LegacyPlacementQuestion } from "@/types/aptitude";
+import { LegacyPlacementQuestion, UserTopicProgress } from "@/types/aptitude";
 
 const TOPIC_ID_MAP: Record<string, number> = {
   // Quantitative Aptitude
@@ -354,7 +355,7 @@ export default function PlacementPrepModal({
   const [showSolutionMap, setShowSolutionMap] = useState<Record<number, boolean>>({});
   const [dbQuestionsMap, setDbQuestionsMap] = useState<Record<string, LegacyPlacementQuestion[]>>({});
   const [isLoadingTopicQuestions, setIsLoadingTopicQuestions] = useState<boolean>(false);
-  const [revealedSolutions, setRevealedSolutions] = useState<Record<number, { solution: string; correctIndex: number; isCorrect: boolean }>>({});
+  const [revealedSolutions, setRevealedSolutions] = useState<Record<number, { solution?: string; correctIndex?: number; isCorrect: boolean }>>({});
   const [practiceViewMode, setPracticeViewMode] = useState<"card" | "sheet">("card");
   const [quizFinished, setQuizFinished] = useState<boolean>(false);
   const [mobileGridOpen, setMobileGridOpen] = useState<boolean>(false);
@@ -391,6 +392,7 @@ export default function PlacementPrepModal({
   };
 
   // Aggregated live progress statistics per category (dynamic, zero hardcoding)
+  const [userProgressMap, setUserProgressMap] = useState<Record<string, UserTopicProgress>>({});
   const [categoryStats, setCategoryStats] = useState<Record<string, {
     totalQuestions: number;
     solvedCount: number;
@@ -418,29 +420,34 @@ export default function PlacementPrepModal({
       let correctCount = 0;
 
       for (const t of section.topics) {
-        const qList = dbQuestionsMap[t.name] || QUANTITATIVE_APTITUDE_MAP[t.name] || [];
-        totalQuestions += qList.length;
+        const prog = userProgressMap[t.name];
+        const qList = dbQuestionsMap[t.name] || [];
+        const tCount = prog?.total_questions || qList.length || 0;
+        totalQuestions += tCount;
 
-        try {
-          const storageKey = `skillscatalyst_aptitude_progress_${t.name}`;
-          const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            const savedAns: Record<number, number> = parsed.userAnswers || {};
-            const answeredIds = Object.keys(savedAns);
-            if (answeredIds.length > 0) {
-              startedCount += 1;
-              solvedCount += answeredIds.length;
-              totalAttempts += answeredIds.length;
-              qList.forEach((q) => {
-                if (savedAns[q.id] === q.correctIndex) {
-                  correctCount += 1;
-                }
-              });
+        const attempted = prog?.attempted_count || 0;
+        const solved = prog?.solved_count || 0;
+
+        if (attempted > 0) {
+          startedCount += 1;
+          totalAttempts += attempted;
+          solvedCount += attempted;
+          correctCount += solved;
+        } else {
+          try {
+            const storageKey = `skillscatalyst_aptitude_progress_${t.name}`;
+            const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              const savedAns: Record<number, number> = parsed.userAnswers || {};
+              const count = Object.keys(savedAns).length;
+              if (count > 0) {
+                startedCount += 1;
+                totalAttempts += count;
+                solvedCount += count;
+              }
             }
-          }
-        } catch (e) {
-          // ignore error
+          } catch (_) {}
         }
       }
 
@@ -448,13 +455,7 @@ export default function PlacementPrepModal({
       if (selectedTopic && section.topics.some((t) => t.name === selectedTopic)) {
         const currentAnsKeys = Object.keys(userAnswers);
         if (currentAnsKeys.length > 0) {
-          try {
-            const storageKey = `skillscatalyst_aptitude_progress_${selectedTopic}`;
-            const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
-            if (!saved) {
-              startedCount = Math.max(startedCount, 1);
-            }
-          } catch (_) {}
+          startedCount = Math.max(startedCount, 1);
         }
       }
 
@@ -472,10 +473,17 @@ export default function PlacementPrepModal({
     }
 
     setCategoryStats(statsRecord);
-  }, [selectedTopic, userAnswers]);
+  }, [selectedTopic, userAnswers, userProgressMap, dbQuestionsMap]);
 
   useEffect(() => {
     if (isOpen) {
+      getUserTopicProgress()
+        .then((map) => {
+          if (map && Object.keys(map).length > 0) {
+            setUserProgressMap(map);
+          }
+        })
+        .catch(() => {});
       refreshCategoryStats();
     }
   }, [isOpen, refreshCategoryStats]);
@@ -516,33 +524,27 @@ export default function PlacementPrepModal({
     (sectionTopics: { name: string; status: string }[]) => {
       const topicItems = sectionTopics.map((t) => {
         const topicName = t.name;
-        const qArray = dbQuestionsMap[topicName] || QUANTITATIVE_APTITUDE_MAP[topicName] || [];
-        const questionCount = qArray.length;
-        let savedAns: Record<number, number> = {};
+        const prog = userProgressMap[topicName];
+        const qArray = dbQuestionsMap[topicName] || [];
+        const questionCount = prog?.total_questions || qArray.length || 0;
+        let localAnsCount = 0;
         try {
           const saved = typeof window !== "undefined" ? localStorage.getItem(`skillscatalyst_aptitude_progress_${topicName}`) : null;
           if (saved) {
-            savedAns = JSON.parse(saved).userAnswers || {};
+            localAnsCount = Object.keys(JSON.parse(saved).userAnswers || {}).length;
           }
         } catch (_) {}
 
-        const answeredIds = Object.keys(savedAns);
-        const attemptedCount = answeredIds.length;
-        let correctCount = 0;
-        qArray.forEach((q) => {
-          if (savedAns[q.id] === q.correctIndex) {
-            correctCount++;
-          }
-        });
-
-        const isSolved = attemptedCount > 0 && correctCount === questionCount && questionCount > 0;
+        const attemptedCount = prog?.attempted_count || localAnsCount;
+        const solvedCount = prog?.solved_count || 0;
+        const isSolved = attemptedCount > 0 && solvedCount === questionCount && questionCount > 0;
         const isAttempted = attemptedCount > 0;
 
         return {
           name: topicName,
           questionCount,
           attemptedCount,
-          solvedCount: correctCount,
+          solvedCount,
           isSolved,
           isAttempted,
           isBookmarked: !!bookmarkedTopicKeys[topicName],
@@ -612,10 +614,13 @@ export default function PlacementPrepModal({
     // 2. Sync from Supabase DB via clean data-access layer
     const syncDatabaseProgress = async () => {
       try {
-        const { answers, times } = await getLegacyTopicAttempts(selectedTopic);
+        const { answers, times, solutions } = await getLegacyTopicAttempts(selectedTopic);
         if (Object.keys(answers).length > 0) {
           setUserAnswers((prev) => ({ ...answers, ...prev }));
           setQuestionTimes((prev) => ({ ...times, ...prev }));
+        }
+        if (solutions && Object.keys(solutions).length > 0) {
+          setRevealedSolutions((prev) => ({ ...solutions, ...prev }));
         }
       } catch (err) {
         console.warn("Failed to sync database attempts:", err);
@@ -658,27 +663,17 @@ export default function PlacementPrepModal({
     };
   }, [selectedTopic, dbQuestionsMap]);
 
-  // Questions for current topic:
-  // Primary Source: Supabase PostgreSQL (via get_topic_questions RPC + aptitudeCache)
-  // Fallback Source: QUANTITATIVE_APTITUDE_MAP / PERCENTAGES_QUESTIONS for offline reliability
-  const questionsList: (PlacementQuestion | LegacyPlacementQuestion)[] = React.useMemo(() => {
-    if (!selectedTopic) return PERCENTAGES_QUESTIONS;
-    if (dbQuestionsMap[selectedTopic] && dbQuestionsMap[selectedTopic].length > 0) {
-      return dbQuestionsMap[selectedTopic];
-    }
-    return QUANTITATIVE_APTITUDE_MAP[selectedTopic] || PERCENTAGES_QUESTIONS;
+  // Questions for current topic loaded securely from Supabase PostgreSQL via get_topic_questions RPC
+  const questionsList: LegacyPlacementQuestion[] = React.useMemo(() => {
+    if (!selectedTopic) return [];
+    return dbQuestionsMap[selectedTopic] || [];
   }, [selectedTopic, dbQuestionsMap]);
 
   const currentQ = questionsList[currentIndex] || questionsList[0];
   const totalQuestions = questionsList.length;
   const answeredCount = Object.keys(userAnswers).length;
   const correctCount = questionsList.reduce((acc, q) => {
-    if (revealedSolutions[q.id] !== undefined) {
-      return revealedSolutions[q.id].isCorrect ? acc + 1 : acc;
-    }
-    return userAnswers[q.id] !== undefined && q.correctIndex !== undefined && userAnswers[q.id] === q.correctIndex
-      ? acc + 1
-      : acc;
+    return revealedSolutions[q.id]?.isCorrect ? acc + 1 : acc;
   }, 0);
   const accuracyPercent = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
   const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex + 1) / totalQuestions) * 100) : 0;
@@ -691,11 +686,10 @@ export default function PlacementPrepModal({
     topicName: string,
     questionId: number,
     optionIdx: number,
-    isCorrect: boolean,
     timeSpentSec: number,
     updatedAnswers: Record<number, number>,
     updatedTimes: Record<number, number>,
-    targetQ?: PlacementQuestion | LegacyPlacementQuestion
+    targetQ?: LegacyPlacementQuestion
   ) => {
     // 1. LocalStorage
     try {
@@ -710,9 +704,23 @@ export default function PlacementPrepModal({
 
     // 2. Data-Access Layer: Supabase RPC (Server-side validation & answer protection)
     try {
-      const rpcResult = await recordLegacyAttempt(topicName, questionId, optionIdx, isCorrect, timeSpentSec);
+      let optId: string | undefined;
+      if (targetQ && targetQ.dbOptions && targetQ.dbOptions.length > 0) {
+        optId = (targetQ.dbOptions as any[]).find((o: any) => o.display_order === optionIdx)?.id;
+      }
+
+      const rpcResult = await recordLegacyAttempt(
+        topicName,
+        questionId,
+        optionIdx,
+        false,
+        timeSpentSec,
+        targetQ?.dbId,
+        optId
+      );
+
       if (rpcResult) {
-        let resolvedCorrectIdx = targetQ?.correctIndex;
+        let resolvedCorrectIdx = 0;
         if (targetQ && targetQ.dbOptions && targetQ.dbOptions.length > 0) {
           const foundIdx = (targetQ.dbOptions as any[]).findIndex((o: any) => o.id === rpcResult.correct_option_id);
           if (foundIdx !== -1) resolvedCorrectIdx = foundIdx;
@@ -722,7 +730,7 @@ export default function PlacementPrepModal({
           ...prev,
           [questionId]: {
             solution: rpcResult.explanation,
-            correctIndex: resolvedCorrectIdx ?? (targetQ?.correctIndex ?? 0),
+            correctIndex: resolvedCorrectIdx,
             isCorrect: rpcResult.is_correct,
           },
         }));
@@ -742,7 +750,7 @@ export default function PlacementPrepModal({
               topic_id: topicId,
               question_id: questionId,
               selected_option_index: optionIdx,
-              is_correct: rpcResult?.is_correct ?? isCorrect,
+              is_correct: rpcResult?.is_correct ?? false,
               time_taken_seconds: timeSpentSec,
             }),
           }).catch(() => {});
@@ -759,7 +767,6 @@ export default function PlacementPrepModal({
     if (quizFinished || userAnswers[questionId] !== undefined) return;
     const timeSpent = questionTimes[questionId] !== undefined ? questionTimes[questionId] : questionTimerSeconds;
     const targetQ = questionsList.find((item) => item.id === questionId);
-    const isCorrect = targetQ && targetQ.correctIndex !== undefined ? optionIdx === targetQ.correctIndex : false;
 
     const newAnswers = { ...userAnswers, [questionId]: optionIdx };
     const newTimes = { ...questionTimes, [questionId]: timeSpent };
@@ -768,7 +775,7 @@ export default function PlacementPrepModal({
     setQuestionTimes(newTimes);
 
     if (selectedTopic) {
-      persistAttempt(selectedTopic, questionId, optionIdx, isCorrect, timeSpent, newAnswers, newTimes, targetQ);
+      persistAttempt(selectedTopic, questionId, optionIdx, timeSpent, newAnswers, newTimes, targetQ);
     }
   };
 
@@ -779,8 +786,20 @@ export default function PlacementPrepModal({
     const newTimes = { ...questionTimes };
     delete newTimes[questionId];
 
+    const newRevealed = { ...revealedSolutions };
+    delete newRevealed[questionId];
+
+    const newCorrectMap = { ...showCorrectOptionMap };
+    delete newCorrectMap[questionId];
+
+    const newSolMap = { ...showSolutionMap };
+    delete newSolMap[questionId];
+
     setUserAnswers(newAnswers);
     setQuestionTimes(newTimes);
+    setRevealedSolutions(newRevealed);
+    setShowCorrectOptionMap(newCorrectMap);
+    setShowSolutionMap(newSolMap);
     setQuestionTimerSeconds(0);
 
     if (selectedTopic) {
@@ -954,7 +973,7 @@ export default function PlacementPrepModal({
                       // Derive dynamic stats (zero hardcoded numbers)
                       const stats = categoryStats[section.category] || {
                         totalQuestions: section.topics.reduce(
-                          (acc, t) => acc + (dbQuestionsMap[t.name]?.length || QUANTITATIVE_APTITUDE_MAP[t.name]?.length || 0),
+                          (acc, t) => acc + (userProgressMap[t.name]?.total_questions || dbQuestionsMap[t.name]?.length || 0),
                           0
                         ),
                         solvedCount: 0,
@@ -1351,9 +1370,7 @@ export default function PlacementPrepModal({
                               </button>
                               {questionsList.map((q, idx) => {
                                 const hasAns = userAnswers[q.id] !== undefined;
-                                const isCorr = revealedSolutions[q.id] !== undefined
-                                  ? revealedSolutions[q.id].isCorrect
-                                  : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
+                                const isCorr = revealedSolutions[q.id]?.isCorrect;
                                 const isCur = idx === currentIndex;
 
                                 let chipStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold";
@@ -1389,21 +1406,29 @@ export default function PlacementPrepModal({
                           {/* Options Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
                             {currentQ.options.map((opt, optIdx) => {
-                              const effectiveCorrectIdx = revealedSolutions[currentQ.id]?.correctIndex ?? currentQ.correctIndex;
-                              const isSelected = userAnswers[currentQ.id] === optIdx;
-                              const isCorrect = revealedSolutions[currentQ.id] !== undefined
-                                ? optIdx === revealedSolutions[currentQ.id].correctIndex
-                                : (currentQ.correctIndex !== undefined ? optIdx === currentQ.correctIndex : false);
                               const hasAnswered = userAnswers[currentQ.id] !== undefined;
+                              const solutionData = revealedSolutions[currentQ.id];
+                              const isSelected = userAnswers[currentQ.id] === optIdx;
+                              const isCorrect = solutionData ? optIdx === solutionData.correctIndex : false;
 
                               let optionStyles = "bg-white dark:bg-[#18191F] border-slate-200/90 dark:border-neutral-800 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] text-slate-900 dark:text-white font-extrabold shadow-2xs hover:shadow-md cursor-pointer";
                               if (hasAnswered) {
-                                if (isSelected && isCorrect) {
-                                  optionStyles = "bg-emerald-500 border-emerald-600 text-white font-black shadow-md cursor-not-allowed";
-                                } else if (isSelected && !isCorrect) {
-                                  optionStyles = "bg-rose-500 border-rose-600 text-white font-black shadow-md cursor-not-allowed";
+                                if (solutionData) {
+                                  if (isSelected && solutionData.isCorrect) {
+                                    optionStyles = "bg-emerald-500 border-emerald-600 text-white font-black shadow-md cursor-not-allowed";
+                                  } else if (isSelected && !solutionData.isCorrect) {
+                                    optionStyles = "bg-rose-500 border-rose-600 text-white font-black shadow-md cursor-not-allowed";
+                                  } else if (!isSelected && optIdx === solutionData.correctIndex) {
+                                    optionStyles = "bg-emerald-500/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold cursor-not-allowed";
+                                  } else {
+                                    optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
+                                  }
                                 } else {
-                                  optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
+                                  if (isSelected) {
+                                    optionStyles = "bg-indigo-500/20 border-indigo-500 text-indigo-800 dark:text-indigo-300 font-bold animate-pulse cursor-not-allowed";
+                                  } else {
+                                    optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
+                                  }
                                 }
                               }
 
@@ -1415,10 +1440,10 @@ export default function PlacementPrepModal({
                                   className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between text-xs sm:text-sm ${optionStyles}`}
                                 >
                                   <span>{opt}</span>
-                                  {hasAnswered && isSelected && isCorrect && (
+                                  {hasAnswered && isSelected && solutionData?.isCorrect && (
                                     <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                                   )}
-                                  {hasAnswered && isSelected && !isCorrect && (
+                                  {hasAnswered && isSelected && solutionData && !solutionData.isCorrect && (
                                     <XCircle className="w-5 h-5 text-white shrink-0" />
                                   )}
                                 </button>
@@ -1430,15 +1455,19 @@ export default function PlacementPrepModal({
                           {userAnswers[currentQ.id] !== undefined && (
                             <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm mb-6">
                               <div className="flex items-center gap-2 text-xs sm:text-sm font-black">
-                                {(revealedSolutions[currentQ.id] !== undefined
-                                  ? revealedSolutions[currentQ.id].isCorrect
-                                  : (currentQ.correctIndex !== undefined ? userAnswers[currentQ.id] === currentQ.correctIndex : false)) ? (
-                                  <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Correct Answer! Great Job 🎉
-                                  </span>
+                                {revealedSolutions[currentQ.id] ? (
+                                  revealedSolutions[currentQ.id].isCorrect ? (
+                                    <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Correct Answer! Great Job 🎉
+                                    </span>
+                                  ) : (
+                                    <span className="text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                                      <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Incorrect Answer!
+                                    </span>
+                                  )
                                 ) : (
-                                  <span className="text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                                    <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Incorrect Answer!
+                                  <span className="text-slate-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" /> Verifying answer with server...
                                   </span>
                                 )}
                               </div>
@@ -1454,68 +1483,70 @@ export default function PlacementPrepModal({
                           )}
 
                           {/* Two Solution Steps: Step 1 (Show Correct Option) & Step 2 (Show Step-by-Step Solution) */}
-                          <div className="space-y-3">
-                            <div className="flex flex-wrap items-center gap-3">
-                              {/* Step 1 Toggle */}
-                              <button
-                                onClick={() => toggleCorrectOption(currentQ.id)}
-                                className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-950/60 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
-                              >
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                <span>
-                                  {showCorrectOptionMap[currentQ.id] ? "Hide Correct Option" : "Step 1: Show Correct Option 🎯"}
-                                </span>
-                              </button>
-
-                              {/* Step 2 Toggle */}
-                              <button
-                                onClick={() => toggleSolution(currentQ.id)}
-                                className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-950/60 text-xs font-extrabold text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
-                              >
-                                <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                <span>
-                                  {showSolutionMap[currentQ.id] ? "Hide Solution" : "Step 2: Show Step-by-Step Solution 💡"}
-                                </span>
-                              </button>
-                            </div>
-
-                            {/* Display Step 1: Correct Option Card */}
-                            <AnimatePresence>
-                              {showCorrectOptionMap[currentQ.id] && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 font-extrabold flex items-center gap-2 shadow-2xs"
+                          {userAnswers[currentQ.id] !== undefined && revealedSolutions[currentQ.id] && (
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap items-center gap-3">
+                                {/* Step 1 Toggle */}
+                                <button
+                                  onClick={() => toggleCorrectOption(currentQ.id)}
+                                  className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-950/60 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                                 >
-                                  <span>🎯 Correct Option:</span>
-                                  <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg border border-emerald-700 font-black">
-                                    {currentQ.answerText || ((revealedSolutions[currentQ.id]?.correctIndex ?? currentQ.correctIndex) !== undefined ? currentQ.options[revealedSolutions[currentQ.id]?.correctIndex ?? currentQ.correctIndex!] : "")}
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                  <span>
+                                    {showCorrectOptionMap[currentQ.id] ? "Hide Correct Option" : "Step 1: Show Correct Option 🎯"}
                                   </span>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                                </button>
 
-                            {/* Display Step 2: Step-by-Step Solution Card */}
-                            <AnimatePresence>
-                              {showSolutionMap[currentQ.id] && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="p-5 rounded-3xl bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-white space-y-2 overflow-hidden shadow-md"
+                                {/* Step 2 Toggle */}
+                                <button
+                                  onClick={() => toggleSolution(currentQ.id)}
+                                  className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-950/60 text-xs font-extrabold text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                                 >
-                                  <div className="font-black text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
-                                    <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                    <span>💡 Step-by-Step Solution:</span>
-                                  </div>
-                                  <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1">
-                                    {revealedSolutions[currentQ.id]?.solution || currentQ.solution}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
+                                  <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                  <span>
+                                    {showSolutionMap[currentQ.id] ? "Hide Solution" : "Step 2: Show Step-by-Step Solution 💡"}
+                                  </span>
+                                </button>
+                              </div>
+
+                              {/* Display Step 1: Correct Option Card */}
+                              <AnimatePresence>
+                                {showCorrectOptionMap[currentQ.id] && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 font-extrabold flex items-center gap-2 shadow-2xs"
+                                  >
+                                    <span>🎯 Correct Option:</span>
+                                    <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg border border-emerald-700 font-black">
+                                      {revealedSolutions[currentQ.id]?.correctIndex !== undefined ? currentQ.options[revealedSolutions[currentQ.id].correctIndex!] : ""}
+                                    </span>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+
+                              {/* Display Step 2: Step-by-Step Solution Card */}
+                              <AnimatePresence>
+                                {showSolutionMap[currentQ.id] && (
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="p-5 rounded-3xl bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-white space-y-2 overflow-hidden shadow-md"
+                                  >
+                                    <div className="font-black text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                                      <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                      <span>💡 Step-by-Step Solution:</span>
+                                    </div>
+                                    <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1">
+                                      {revealedSolutions[currentQ.id]?.solution || "No detailed solution recorded."}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
                         </div>
 
                         {/* Bottom Navigation Control Row */}
@@ -1563,9 +1594,7 @@ export default function PlacementPrepModal({
                           <div className="grid grid-cols-4 gap-2">
                             {questionsList.map((q, idx) => {
                               const hasAns = userAnswers[q.id] !== undefined;
-                              const isCorr = revealedSolutions[q.id] !== undefined
-                                ? revealedSolutions[q.id].isCorrect
-                                : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
+                              const isCorr = revealedSolutions[q.id]?.isCorrect;
                               const isCur = idx === currentIndex;
 
                               let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
@@ -1634,9 +1663,7 @@ export default function PlacementPrepModal({
                               <div className="grid grid-cols-6 gap-2 mb-6">
                                 {questionsList.map((q, idx) => {
                                   const hasAns = userAnswers[q.id] !== undefined;
-                                  const isCorr = revealedSolutions[q.id] !== undefined
-                                    ? revealedSolutions[q.id].isCorrect
-                                    : (q.correctIndex !== undefined ? userAnswers[q.id] === q.correctIndex : false);
+                                  const isCorr = revealedSolutions[q.id]?.isCorrect;
                                   const isCur = idx === currentIndex;
 
                                   let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
@@ -1705,9 +1732,7 @@ export default function PlacementPrepModal({
                       <div className="space-y-6">
                         {questionsList.map((q, idx) => {
                           const userAnsIdx = userAnswers[q.id];
-                          const isCorrect = revealedSolutions[q.id] !== undefined
-                            ? revealedSolutions[q.id].isCorrect
-                            : (q.correctIndex !== undefined ? userAnsIdx === q.correctIndex : false);
+                          const isCorrect = revealedSolutions[q.id]?.isCorrect ?? false;
                           const hasAnswered = userAnsIdx !== undefined;
 
                           return (
@@ -1736,9 +1761,7 @@ export default function PlacementPrepModal({
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {q.options.map((opt, optIdx) => {
                                   const isSel = userAnsIdx === optIdx;
-                                  const isRight = revealedSolutions[q.id] !== undefined
-                                    ? optIdx === revealedSolutions[q.id].correctIndex
-                                    : (q.correctIndex !== undefined ? optIdx === q.correctIndex : false);
+                                  const isRight = revealedSolutions[q.id] ? optIdx === revealedSolutions[q.id].correctIndex : false;
                                   let style = "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-800 dark:text-white hover:border-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] shadow-2xs cursor-pointer";
                                   if (hasAnswered) {
                                     if (isRight) {
@@ -1783,11 +1806,11 @@ export default function PlacementPrepModal({
                                 <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-amber-50/80 dark:bg-[#121318] border border-amber-200/90 dark:border-neutral-800 text-xs text-slate-800 dark:text-neutral-200 space-y-2 shadow-2xs">
                                   <div className="font-black text-amber-950 dark:text-amber-400 flex items-center gap-2">
                                     <span className="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg font-black text-[11px] shadow-2xs">
-                                      Answer: {q.answerText || ((revealedSolutions[q.id]?.correctIndex ?? q.correctIndex) !== undefined ? q.options[revealedSolutions[q.id]?.correctIndex ?? q.correctIndex!] : "")}
+                                      Answer: {revealedSolutions[q.id]?.correctIndex !== undefined ? q.options[revealedSolutions[q.id].correctIndex!] : ""}
                                     </span>
                                   </div>
                                   <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1 border-t border-amber-200/60 dark:border-neutral-800">
-                                    {revealedSolutions[q.id]?.solution || q.solution}
+                                    {revealedSolutions[q.id]?.solution || "No detailed solution recorded."}
                                   </div>
                                 </div>
                               )}
@@ -1849,11 +1872,9 @@ export default function PlacementPrepModal({
                     <div className="space-y-4">
                       {questionsList.map((q) => {
                         const userAnsIdx = userAnswers[q.id];
-                        const isCorrect = revealedSolutions[q.id] !== undefined
-                          ? revealedSolutions[q.id].isCorrect
-                          : (q.correctIndex !== undefined ? userAnsIdx === q.correctIndex : false);
+                        const isCorrect = revealedSolutions[q.id]?.isCorrect ?? false;
                         const userAnsText = userAnsIdx !== undefined ? q.options[userAnsIdx] : "Unattempted";
-                        const correctText = q.answerText || ((revealedSolutions[q.id]?.correctIndex ?? q.correctIndex) !== undefined ? q.options[revealedSolutions[q.id]?.correctIndex ?? q.correctIndex!] : "");
+                        const correctText = revealedSolutions[q.id]?.correctIndex !== undefined ? q.options[revealedSolutions[q.id].correctIndex!] : "Submitted";
 
                         return (
                           <div
@@ -1909,7 +1930,7 @@ export default function PlacementPrepModal({
                                 Step-by-Step Solution
                               </div>
                               <div className="whitespace-pre-line font-medium text-slate-700 dark:text-neutral-300">
-                                {revealedSolutions[q.id]?.solution || q.solution}
+                                {revealedSolutions[q.id]?.solution || "No detailed solution recorded."}
                               </div>
                             </div>
                           </div>

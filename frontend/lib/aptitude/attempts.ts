@@ -58,20 +58,27 @@ export async function getUserAttemptsForTopic(topicId: string): Promise<Question
 
 /**
  * Record an attempt from PlacementPrepModal using legacy_id (1..N) and option index (0..3)
+ * If dbQuestionId and dbOptionId are supplied, skips redundant DB lookup and calls RPC directly.
  */
 export async function recordLegacyAttempt(
   topicName: string,
   legacyId: number,
   optionIdx: number,
-  _isCorrect: boolean,
-  timeSpentSec: number
+  _isCorrect: boolean = false,
+  timeSpentSec: number = 0,
+  dbQuestionId?: string,
+  dbOptionId?: string
 ): Promise<QuestionAttemptResult | null> {
   try {
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
     if (!userId) return null;
 
-    // Look up question by topic name and legacy_id
+    if (dbQuestionId && dbOptionId) {
+      return await submitQuestionAttempt(dbQuestionId, dbOptionId, timeSpentSec);
+    }
+
+    // Fallback: Look up question by topic name and legacy_id
     const { data: qData } = await supabase
       .from("questions")
       .select("id, topic_id, topics!inner(name), question_options(id, display_order)")
@@ -93,20 +100,23 @@ export async function recordLegacyAttempt(
 }
 
 /**
- * Get saved answers map { [legacy_id]: option_index } and times { [legacy_id]: seconds }
+ * Get saved answers map { [legacy_id]: option_index }, times { [legacy_id]: seconds },
+ * and server-verified results { [legacy_id]: { isCorrect: boolean } } for authenticated user
  */
 export async function getLegacyTopicAttempts(topicName: string): Promise<{
   answers: Record<number, number>;
   times: Record<number, number>;
+  solutions: Record<number, { isCorrect: boolean }>;
 }> {
   try {
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
-    if (!userId) return { answers: {}, times: {} };
+    if (!userId) return { answers: {}, times: {}, solutions: {} };
 
     const { data, error } = await supabase
       .from("question_attempts")
       .select(`
+        is_correct,
         time_taken_seconds,
         questions!inner(legacy_id, topics!inner(name)),
         question_options(display_order)
@@ -114,10 +124,11 @@ export async function getLegacyTopicAttempts(topicName: string): Promise<{
       .eq("user_id", userId)
       .eq("questions.topics.name", topicName);
 
-    if (error || !data) return { answers: {}, times: {} };
+    if (error || !data) return { answers: {}, times: {}, solutions: {} };
 
     const answers: Record<number, number> = {};
     const times: Record<number, number> = {};
+    const solutions: Record<number, { isCorrect: boolean }> = {};
 
     data.forEach((row: any) => {
       const legId = row.questions?.legacy_id;
@@ -125,11 +136,12 @@ export async function getLegacyTopicAttempts(topicName: string): Promise<{
       if (legId !== undefined && optIdx !== undefined) {
         answers[legId] = optIdx;
         times[legId] = row.time_taken_seconds || 0;
+        solutions[legId] = { isCorrect: Boolean(row.is_correct) };
       }
     });
 
-    return { answers, times };
+    return { answers, times, solutions };
   } catch {
-    return { answers: {}, times: {} };
+    return { answers: {}, times: {}, solutions: {} };
   }
 }
