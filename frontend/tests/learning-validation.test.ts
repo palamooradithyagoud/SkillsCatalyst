@@ -10,6 +10,9 @@ import {
   OFFTOPIC_TERMS,
   SKILL_TERMS,
   LANGUAGES,
+  DEFAULT_LANGUAGE,
+  STORAGE_KEY_LANGUAGE,
+  isValidLanguage,
 } from '@/lib/learning/searchValidation';
 
 describe('Learning Search Validation & Helpers', () => {
@@ -157,6 +160,20 @@ describe('Learning Search Validation & Helpers', () => {
         LANGUAGES.map((l) => l.value),
         ['english', 'telugu', 'hindi']
       );
+    });
+
+    it('exports DEFAULT_LANGUAGE and STORAGE_KEY_LANGUAGE correctly', () => {
+      assert.strictEqual(DEFAULT_LANGUAGE, 'english');
+      assert.strictEqual(STORAGE_KEY_LANGUAGE, 'sc_learning_language');
+    });
+
+    it('isValidLanguage validates only supported languages', () => {
+      assert.strictEqual(isValidLanguage('english'), true);
+      assert.strictEqual(isValidLanguage('telugu'), true);
+      assert.strictEqual(isValidLanguage('hindi'), true);
+      assert.strictEqual(isValidLanguage('french'), false);
+      assert.strictEqual(isValidLanguage(''), false);
+      assert.strictEqual(isValidLanguage(null), false);
     });
 
     it('exports non-empty PROHIBITED_TERMS, OFFTOPIC_TERMS, and SKILL_TERMS', () => {

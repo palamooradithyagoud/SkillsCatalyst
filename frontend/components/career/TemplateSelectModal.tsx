@@ -117,6 +117,9 @@ export default function TemplateSelectModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 12 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="template-select-modal-title"
           className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
@@ -130,7 +133,7 @@ export default function TemplateSelectModal({
                   All templates are ATS Calibrated
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
+              <h2 id="template-select-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
                 Select Your Resume Template
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
@@ -141,6 +144,7 @@ export default function TemplateSelectModal({
             <button
               type="button"
               onClick={onClose}
+              aria-label="Close template selection"
               className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -155,8 +159,17 @@ export default function TemplateSelectModal({
               return (
                 <div
                   key={tmpl.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select ${tmpl.name} template`}
                   onClick={() => onSelectTemplate(tmpl.id)}
-                  className={`group relative rounded-xl sm:rounded-2xl border-2 transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelectTemplate(tmpl.id);
+                    }
+                  }}
+                  className={`group relative rounded-xl sm:rounded-2xl border-2 transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-purple-600 ${
                     isSelected
                       ? "border-purple-600 bg-purple-50/40 shadow-lg shadow-purple-600/10 ring-4 ring-purple-600/10"
                       : "border-slate-200 hover:border-purple-300 bg-white hover:shadow-md"
@@ -342,6 +355,7 @@ export default function TemplateSelectModal({
                       e.stopPropagation();
                       onSelectTemplate(tmpl.id);
                     }}
+                    aria-label={isSelected ? `${tmpl.name} template selected` : `Use ${tmpl.name} template`}
                     className={`w-full py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                       isSelected
                         ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"

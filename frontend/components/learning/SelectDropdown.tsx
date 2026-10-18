@@ -19,6 +19,8 @@ export function SelectDropdown({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as Lang)}
+        suppressHydrationWarning
+        aria-label="Select learning language"
         className="appearance-none pl-10 pr-9 py-3 sm:py-3.5 text-sm font-semibold rounded-2xl cursor-pointer bg-slate-50/80 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 text-slate-800 dark:text-white hover:bg-slate-100/80 dark:hover:bg-neutral-800 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#8b0b52] dark:focus:border-purple-400 focus:ring-2 focus:ring-[#8b0b52]/20 dark:focus:ring-purple-400/20 focus:outline-none transition-all shadow-2xs"
       >
         {options.map((o) => (

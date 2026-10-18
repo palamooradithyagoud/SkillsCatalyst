@@ -395,21 +395,23 @@ async def upload_event_banner(
 
 @router.get("/scholarships", status_code=status.HTTP_200_OK)
 def list_admin_scholarships(
-    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status: 'draft', 'published', 'archived', or 'all'"),
+    status: Optional[str] = Query(None, description="Filter by status: 'draft', 'published', 'archived', or 'all'"),
+    status_filter: Optional[str] = Query(None, description="Alternative alias for status filter"),
     search: Optional[str] = Query(None, description="Keyword search in name, provider, or qualification"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     owner: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """Owner directory: returns all scholarships with optional status and search filters."""
-    scholarships = get_admin_scholarships(
-        status_filter=status_filter,
+    resolved_status = status or status_filter
+    scholarships, total_count = get_admin_scholarships(
+        status_filter=resolved_status,
         search=search,
         limit=limit,
         offset=offset,
     )
     return {
-        "total": len(scholarships),
+        "total": total_count,
         "scholarships": scholarships,
     }
 

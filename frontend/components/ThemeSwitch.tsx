@@ -91,6 +91,7 @@ export default function ThemeSwitch() {
           type="checkbox"
           checked={!isDark}
           onChange={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         />
         <span className="theme-slider">
           {/* Stars (visible in dark mode) */}

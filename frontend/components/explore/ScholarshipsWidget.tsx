@@ -39,6 +39,7 @@ export default function ScholarshipsWidget() {
   });
 
   const scholarships: ScholarshipItem[] = data?.scholarships || [];
+  const totalCount: number = typeof data?.total === "number" ? data.total : scholarships.length;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -48,8 +49,10 @@ export default function ScholarshipsWidget() {
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500" />
           <input
+            id="scholarships-search-input"
             type="text"
             placeholder="Search by scholarship name, provider, or qualification..."
+            aria-label="Search scholarships by name, provider, or qualification"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:border-indigo-600 dark:focus:border-[#C084FC] transition-colors"
@@ -76,6 +79,28 @@ export default function ScholarshipsWidget() {
           isPremium={isPremium}
           compact
         />
+      )}
+
+      {/* ── Results Count Bar ── */}
+      {!isLoading && !isError && (
+        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-neutral-400 font-semibold px-1">
+          <span>
+            {searchQuery.trim() ? (
+              <>
+                Found <strong className="text-slate-900 dark:text-white font-bold">{totalCount}</strong> scholarship{totalCount !== 1 ? "s" : ""} matching &ldquo;{searchQuery.trim()}&rdquo;
+              </>
+            ) : (
+              <>
+                <strong className="text-slate-900 dark:text-white font-bold">{totalCount}</strong> Available Scholarship{totalCount !== 1 ? "s" : ""}
+              </>
+            )}
+          </span>
+          {scholarships.length < totalCount && (
+            <span className="text-[11px] text-slate-400 dark:text-neutral-500">
+              Showing top {scholarships.length} of {totalCount}
+            </span>
+          )}
+        </div>
       )}
 
       {/* ── Listings Container ── */}

@@ -495,6 +495,7 @@ export default function AdminSkillBitsCMS() {
               <input
                 type="text"
                 placeholder="Search SkillBits..."
+                aria-label="Search SkillBits"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -508,6 +509,7 @@ export default function AdminSkillBitsCMS() {
             <input
               type="text"
               placeholder="Filter by topic (e.g. React)"
+              aria-label="Filter by topic"
               value={topicFilter}
               onChange={(e) => {
                 setTopicFilter(e.target.value);
@@ -519,6 +521,7 @@ export default function AdminSkillBitsCMS() {
             {/* Difficulty Filter */}
             <select
               value={difficultyFilter}
+              aria-label="Filter by difficulty"
               onChange={(e) => {
                 setDifficultyFilter(e.target.value);
                 setPage(1);
@@ -534,6 +537,7 @@ export default function AdminSkillBitsCMS() {
             {/* Status Filter */}
             <select
               value={statusFilter}
+              aria-label="Filter by status"
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
@@ -549,6 +553,7 @@ export default function AdminSkillBitsCMS() {
             {/* Sort Selector */}
             <select
               value={sortOption}
+              aria-label="Sort skill bits"
               onChange={(e) => {
                 setSortOption(e.target.value as SkillBitSortOption);
                 setPage(1);
@@ -569,6 +574,7 @@ export default function AdminSkillBitsCMS() {
               onClick={reloadSkillBits}
               disabled={loading}
               title="Refresh list"
+              aria-label="Refresh list"
               className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />

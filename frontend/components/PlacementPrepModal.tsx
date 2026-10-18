@@ -856,6 +856,9 @@ export default function PlacementPrepModal({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.2 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedTopic ? `${selectedTopic} Practice Quiz` : "Placement Prep Quiz Catalog"}
           className="bg-white dark:bg-black w-full h-full flex flex-col overflow-hidden"
         >
           {/* Sleek Floating Close Button for Main View */}
@@ -1232,6 +1235,7 @@ export default function PlacementPrepModal({
                                           <button
                                             type="button"
                                             onClick={(e) => toggleTopicBookmark(item.name, e)}
+                                            aria-label={item.isBookmarked ? `Remove ${item.name} from bookmarks` : `Bookmark ${item.name}`}
                                             className={`p-2 rounded-xl transition-all cursor-pointer ${
                                               item.isBookmarked
                                                 ? "bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/60"

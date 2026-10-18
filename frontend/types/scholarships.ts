@@ -31,3 +31,8 @@ export interface CreateScholarshipPayload {
 }
 
 export type UpdateScholarshipPayload = Partial<CreateScholarshipPayload>;
+
+export interface ScholarshipListResponse {
+  total: number;
+  scholarships: ScholarshipItem[];
+}

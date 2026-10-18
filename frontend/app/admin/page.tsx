@@ -229,6 +229,7 @@ export default function AdminPage() {
           <button
             onClick={() => refreshAdminData()}
             title="Refresh Telemetry"
+            aria-label="Refresh Telemetry"
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${dataLoading ? "animate-spin text-purple-400" : ""}`} />
@@ -237,6 +238,7 @@ export default function AdminPage() {
           <button
             onClick={logout}
             title="Log out"
+            aria-label="Log out"
             className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/30 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />

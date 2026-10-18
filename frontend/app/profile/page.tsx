@@ -491,6 +491,9 @@ export default function ProfilePage() {
         <div className="col-span-5 flex flex-col gap-1.5 sm:gap-3 justify-between">
           {/* Card 1: Resume */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="Resume card. Click or press Enter to preview or upload resume."
             onClick={() => {
               if (profileData.resume?.filename || resumePreviewUrl) {
                 setActiveModal("resume_preview");
@@ -498,7 +501,17 @@ export default function ProfilePage() {
                 fileInputRef.current?.click();
               }
             }}
-            className="flex-1 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 cursor-pointer group"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (profileData.resume?.filename || resumePreviewUrl) {
+                  setActiveModal("resume_preview");
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }
+            }}
+            className="flex-1 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
           >
             <div className="min-w-0 flex-1">
               <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate">Resume</h3>
@@ -509,16 +522,17 @@ export default function ProfilePage() {
                     Preview
                   </span>
                   <span className="text-[9px] text-slate-300 dark:text-neutral-600">•</span>
-                  <span
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200"
-                    title="Upload replacement resume"
+                    className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 cursor-pointer focus:outline-none focus:underline"
+                    aria-label="Upload replacement resume"
                   >
                     Update
-                  </span>
+                  </button>
                 </div>
               ) : (
                 <p className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 mt-0.5 truncate">
@@ -576,8 +590,17 @@ export default function ProfilePage() {
 
           {/* Center Monogram Initials / Big Profile Picture */}
           <div
-            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-3 relative z-10 cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label="Change photo or avatar"
+            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-3 relative z-10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-2 rounded-2xl"
             onClick={() => setActiveModal("avatar")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActiveModal("avatar");
+              }
+            }}
             title="Change photo or avatar"
           >
             {personalForm.avatar_url ? (
@@ -1340,12 +1363,16 @@ function ModalShell({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="bg-white dark:bg-[#18191F] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 dark:border-neutral-800 space-y-4 my-8"
       >
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-3">
           <h3 className="text-base font-black text-slate-900 dark:text-white">{title}</h3>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />

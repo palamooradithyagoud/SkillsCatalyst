@@ -102,6 +102,7 @@ export default function TechNewsWidget() {
           <button
             onClick={loadFeed}
             title="Refresh stories feed"
+            aria-label="Refresh stories feed"
             className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#18191F] hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-purple-600" : ""}`} />

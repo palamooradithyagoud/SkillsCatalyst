@@ -764,7 +764,7 @@ function EditProfileContent() {
             {/* Full Name */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300">
+                <label htmlFor="personal-full-name" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   Full Name <span className="text-rose-500">*</span>
                 </label>
                 {certIdentity?.is_identity_locked && (
@@ -774,6 +774,7 @@ function EditProfileContent() {
                 )}
               </div>
               <input
+                id="personal-full-name"
                 type="text"
                 required
                 disabled={certIdentity?.is_identity_locked}
@@ -787,7 +788,7 @@ function EditProfileContent() {
             {/* College Name */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300">
+                <label htmlFor="personal-college" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   College / University
                 </label>
                 {certIdentity?.is_identity_locked && (
@@ -797,6 +798,7 @@ function EditProfileContent() {
                 )}
               </div>
               <input
+                id="personal-college"
                 type="text"
                 disabled={certIdentity?.is_identity_locked}
                 value={personalForm.college || ""}
@@ -808,10 +810,11 @@ function EditProfileContent() {
 
             {/* Designation / Headline */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+              <label htmlFor="personal-headline" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 Designation
               </label>
               <input
+                id="personal-headline"
                 type="text"
                 value={personalForm.headline || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, headline: e.target.value })}
@@ -822,10 +825,11 @@ function EditProfileContent() {
 
             {/* Country */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+              <label htmlFor="personal-country" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 Country
               </label>
               <input
+                id="personal-country"
                 type="text"
                 value={personalForm.country || "India"}
                 onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
@@ -836,10 +840,11 @@ function EditProfileContent() {
 
             {/* State */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+              <label htmlFor="personal-state" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 State
               </label>
               <input
+                id="personal-state"
                 type="text"
                 value={personalForm.state || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
@@ -850,10 +855,11 @@ function EditProfileContent() {
 
             {/* City */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+              <label htmlFor="personal-city" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 City
               </label>
               <input
+                id="personal-city"
                 type="text"
                 value={personalForm.city || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
@@ -865,10 +871,11 @@ function EditProfileContent() {
             {/* Phone Number & Gender */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+                <label htmlFor="personal-phone" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                   Phone Number (Private)
                 </label>
                 <input
+                  id="personal-phone"
                   type="tel"
                   value={personalForm.phone || ""}
                   onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
@@ -877,10 +884,11 @@ function EditProfileContent() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+                <label htmlFor="personal-gender" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                   Gender
                 </label>
                 <select
+                  id="personal-gender"
                   value={personalForm.gender || "Prefer not to say"}
                   onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
                   className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white transition-colors"
@@ -896,10 +904,11 @@ function EditProfileContent() {
 
             {/* About / Bio */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+              <label htmlFor="personal-about" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
                 About / Bio
               </label>
               <textarea
+                id="personal-about"
                 rows={3}
                 value={personalForm.about || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, about: e.target.value })}
@@ -2156,10 +2165,11 @@ function ExperienceEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-role" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Role / Job Title <span className="text-rose-500">*</span>
           </label>
           <input
+            id="exp-role"
             type="text"
             required
             value={role}
@@ -2169,10 +2179,11 @@ function ExperienceEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-company" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Company Name <span className="text-rose-500">*</span>
           </label>
           <input
+            id="exp-company"
             type="text"
             required
             value={company}
@@ -2185,10 +2196,11 @@ function ExperienceEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-location" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Location
           </label>
           <input
+            id="exp-location"
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
@@ -2197,10 +2209,11 @@ function ExperienceEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-work-type" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Work Type
           </label>
           <select
+            id="exp-work-type"
             value={workType}
             onChange={(e) => setWorkType(e.target.value as any)}
             className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
@@ -2213,10 +2226,11 @@ function ExperienceEditor({
           </select>
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-arrangement" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Arrangement
           </label>
           <select
+            id="exp-arrangement"
             value={empType}
             onChange={(e) => setEmpType(e.target.value as any)}
             className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
@@ -2230,10 +2244,11 @@ function ExperienceEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-start-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
+            id="exp-start-date"
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -2241,10 +2256,11 @@ function ExperienceEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="exp-end-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date
           </label>
           <input
+            id="exp-end-date"
             type="month"
             disabled={currentlyWorking}
             value={currentlyWorking ? "" : endDate}
@@ -2254,8 +2270,9 @@ function ExperienceEditor({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
+      <label htmlFor="exp-currently-working" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
+          id="exp-currently-working"
           type="checkbox"
           checked={currentlyWorking}
           onChange={(e) => setCurrentlyWorking(e.target.checked)}
@@ -2265,10 +2282,11 @@ function ExperienceEditor({
       </label>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+        <label htmlFor="exp-desc" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Responsibilities / Impact
         </label>
         <textarea
+          id="exp-desc"
           rows={3}
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
@@ -2367,10 +2385,11 @@ function ProjectEditor({
       )}
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+        <label htmlFor="proj-name" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Project Name <span className="text-rose-500">*</span>
         </label>
         <input
+          id="proj-name"
           type="text"
           required
           value={name}
@@ -2381,10 +2400,11 @@ function ProjectEditor({
       </div>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+        <label htmlFor="proj-desc" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Description
         </label>
         <textarea
+          id="proj-desc"
           rows={3}
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
@@ -2394,10 +2414,11 @@ function ProjectEditor({
       </div>
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+        <label htmlFor="proj-tech" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           Technologies (Comma-separated)
         </label>
         <input
+          id="proj-tech"
           type="text"
           value={tech}
           onChange={(e) => setTech(e.target.value)}
@@ -2408,10 +2429,11 @@ function ProjectEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="proj-start-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
+            id="proj-start-date"
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -2419,10 +2441,11 @@ function ProjectEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="proj-end-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date
           </label>
           <input
+            id="proj-end-date"
             type="month"
             disabled={currentlyWorking}
             value={currentlyWorking ? "" : endDate}
@@ -2432,8 +2455,9 @@ function ProjectEditor({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
+      <label htmlFor="proj-currently-working" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
+          id="proj-currently-working"
           type="checkbox"
           checked={currentlyWorking}
           onChange={(e) => setCurrentlyWorking(e.target.checked)}
@@ -2444,10 +2468,11 @@ function ProjectEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="proj-github" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             GitHub URL
           </label>
           <input
+            id="proj-github"
             type="url"
             value={github}
             onChange={(e) => setGithub(e.target.value)}
@@ -2456,10 +2481,11 @@ function ProjectEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="proj-demo" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Live Demo URL
           </label>
           <input
+            id="proj-demo"
             type="url"
             value={demo}
             onChange={(e) => setDemo(e.target.value)}
@@ -2562,10 +2588,11 @@ function EducationEditor({
       )}
 
       <div>
-        <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+        <label htmlFor="edu-college" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
           College / Institution Name <span className="text-rose-500">*</span>
         </label>
         <input
+          id="edu-college"
           type="text"
           required
           value={college}
@@ -2577,10 +2604,11 @@ function EducationEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="edu-degree" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Degree Type
           </label>
           <input
+            id="edu-degree"
             type="text"
             value={degreeType}
             onChange={(e) => setDegreeType(e.target.value)}
@@ -2589,10 +2617,11 @@ function EducationEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="edu-field" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Field of Study
           </label>
           <input
+            id="edu-field"
             type="text"
             value={field}
             onChange={(e) => setField(e.target.value)}
@@ -2604,10 +2633,11 @@ function EducationEditor({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="edu-start-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             Start Date
           </label>
           <input
+            id="edu-start-date"
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -2615,10 +2645,11 @@ function EducationEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="edu-end-date" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             End Date (Graduation)
           </label>
           <input
+            id="edu-end-date"
             type="month"
             disabled={currentlyStudying}
             value={currentlyStudying ? "" : endDate}
@@ -2627,10 +2658,11 @@ function EducationEditor({
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
+          <label htmlFor="edu-gpa" className="text-xs font-bold text-slate-700 dark:text-neutral-300 block mb-1">
             GPA / Percentage
           </label>
           <input
+            id="edu-gpa"
             type="text"
             value={gpa}
             onChange={(e) => setGpa(e.target.value)}
@@ -2640,8 +2672,9 @@ function EducationEditor({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
+      <label htmlFor="edu-currently-studying" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-neutral-300 cursor-pointer">
         <input
+          id="edu-currently-studying"
           type="checkbox"
           checked={currentlyStudying}
           onChange={(e) => setCurrentlyStudying(e.target.checked)}

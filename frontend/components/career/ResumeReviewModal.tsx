@@ -101,6 +101,9 @@ export default function ResumeReviewModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
           transition={{ duration: 0.2 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="resume-review-modal-title"
           className="bg-white border-0 sm:border border-purple-200 w-full h-full sm:h-auto sm:max-w-4xl sm:max-h-[92vh] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-[10000]"
         >
           {/* Modal Header */}
@@ -118,7 +121,10 @@ export default function ResumeReviewModal({
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm sm:text-lg font-black text-slate-900 truncate leading-tight">
+                <h3
+                  id="resume-review-modal-title"
+                  className="text-sm sm:text-lg font-black text-slate-900 truncate leading-tight"
+                >
                   AI Resume Evaluator
                 </h3>
                 <p className="text-[10px] sm:text-xs text-slate-500 truncate hidden sm:block mt-0.5">
@@ -200,14 +206,17 @@ export default function ResumeReviewModal({
                     <Building2 className="w-4 h-4 text-purple-600" />
                     2. Target Company Type (Rubric Calibration)
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Target Company Type">
                     {COMPANY_TYPES.map((type) => {
                       const isSelected = companyType === type.id;
                       return (
-                        <div
+                        <button
                           key={type.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
                           onClick={() => setCompanyType(type.id)}
-                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-left focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
                             isSelected
                               ? "bg-purple-50/80 border-purple-600 text-purple-950 shadow-md shadow-purple-600/10 ring-2 ring-purple-100"
                               : "bg-white border-purple-100 text-slate-600 hover:border-purple-300 hover:bg-purple-50/30"
@@ -238,7 +247,7 @@ export default function ResumeReviewModal({
                           >
                             {type.desc}
                           </p>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -283,11 +292,20 @@ export default function ResumeReviewModal({
 
                     {/* Drop Zone */}
                     <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Upload resume file (Supports PDF, DOCX, TXT, MD up to 10 MB)"
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
                         isDragging
                           ? "border-purple-600 bg-purple-50 scale-[1.01]"
                           : "border-purple-200 hover:border-purple-500 bg-purple-50/20 hover:bg-purple-50/40"
@@ -315,6 +333,7 @@ export default function ResumeReviewModal({
                         ref={fileInputRef}
                         type="file"
                         accept=".pdf,.docx,.doc,.txt,.md"
+                        aria-label="Resume file upload input"
                         onChange={handleFileChange}
                         className="hidden"
                       />

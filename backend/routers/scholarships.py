@@ -31,7 +31,7 @@ def list_student_scholarships(
     - Default sorting: newest/most recently published first
     - Slices by plan limit if configured
     """
-    scholarships = get_student_scholarships(
+    scholarships, total_count = get_student_scholarships(
         search=search,
         limit=limit,
         offset=offset,
@@ -40,7 +40,7 @@ def list_student_scholarships(
         scholarships = scholarships[:entitlement.limit]
 
     return {
-        "total": len(scholarships),
+        "total": total_count,
         "scholarships": scholarships,
     }
 

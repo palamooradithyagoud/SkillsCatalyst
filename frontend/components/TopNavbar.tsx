@@ -159,6 +159,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
         <button
           onClick={handleSearchClick}
           title="Search (⌘K)"
+          aria-label="Search platform (⌘K)"
           className="p-1.5 text-slate-600 dark:text-neutral-300 hover:text-[#5227FF] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-900 rounded-lg transition-colors cursor-pointer"
         >
           <Search className="w-[18px] h-[18px]" strokeWidth={2} />
@@ -175,6 +176,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
             }}
             title="Notifications"
             aria-label="Open notifications"
+            aria-expanded={isNotificationOpen}
             className={`relative p-1.5 rounded-lg transition-colors cursor-pointer group ${
               isNotificationOpen
                 ? "text-[#5227FF] bg-[#5227FF]/10 dark:bg-[#5227FF]/20"
@@ -213,6 +215,8 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
               setIsWorkspaceOpen(false);
             }}
             title={`Account (${userDisplayName})`}
+            aria-label={`Account (${userDisplayName})`}
+            aria-expanded={isUserMenuOpen}
             className="w-8 h-8 rounded-full bg-[#FEF9C3] text-[#713F12] border border-[#FDE047]/60 flex items-center justify-center font-bold text-xs shadow-2xs hover:ring-2 hover:ring-[#5227FF]/20 transition-all cursor-pointer"
           >
             {userInitials}

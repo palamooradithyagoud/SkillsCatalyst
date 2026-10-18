@@ -9,7 +9,7 @@ import uuid
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from fastapi import UploadFile, HTTPException, status
 
 from backend.services.supabase_service import get_supabase
@@ -94,17 +94,21 @@ def get_student_scholarships(
     search: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], int]:
     """
     Fetches scholarships visible to students:
     - status = 'published'
     - visible_from <= NOW()
     - visible_until > NOW() (or NULL)
+    Returns a tuple of (paginated_scholarships, total_matching_count).
     """
     sb = get_supabase()
     if not sb:
         logger.warning("Supabase client unavailable when fetching student scholarships")
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service unavailable",
+        )
 
     now_dt = datetime.now(timezone.utc)
 
@@ -132,6 +136,8 @@ def get_student_scholarships(
                 or kw in (s.get("eligibility") or "").lower()
             ]
 
+        total_count = len(visible_items)
+
         # Apply pagination
         paginated = visible_items[offset : offset + limit]
 
@@ -142,10 +148,15 @@ def get_student_scholarships(
             s["created_at"] = _format_datetime(s.get("created_at"))
             s["updated_at"] = _format_datetime(s.get("updated_at"))
 
-        return paginated
+        return paginated, total_count
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to fetch student scholarships: {e}")
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve scholarships: {str(e)}",
+        )
 
 
 def get_student_scholarship_by_id(scholarship_id: str) -> Optional[Dict[str, Any]]:
@@ -191,9 +202,10 @@ def get_admin_scholarships(
     search: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], int]:
     """
     Fetches all scholarships for the platform owner with optional status filtering and search.
+    Returns a tuple of (paginated_scholarships, total_matching_count).
     """
     sb = get_supabase()
     if not sb:
@@ -220,7 +232,10 @@ def get_admin_scholarships(
                 if kw in (s.get("name") or "").lower()
                 or kw in (s.get("provided_by") or "").lower()
                 or kw in (s.get("qualification_required") or "").lower()
+                or kw in (s.get("eligibility") or "").lower()
             ]
+
+        total_count = len(items)
 
         paginated = items[offset : offset + limit]
 
@@ -230,7 +245,9 @@ def get_admin_scholarships(
             s["created_at"] = _format_datetime(s.get("created_at"))
             s["updated_at"] = _format_datetime(s.get("updated_at"))
 
-        return paginated
+        return paginated, total_count
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to fetch admin scholarships: {e}")
         raise HTTPException(

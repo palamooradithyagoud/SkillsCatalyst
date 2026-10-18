@@ -1,20 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchSkill, SearchResult } from "@/lib/api";
-import { Lang, validateClientSkillQuery } from "@/lib/learning/searchValidation";
+import {
+  Lang,
+  DEFAULT_LANGUAGE,
+  STORAGE_KEY_LANGUAGE,
+  isValidLanguage,
+  getStoredLanguage,
+  setStoredLanguage,
+  validateClientSkillQuery,
+} from "@/lib/learning/searchValidation";
 
 export function useLearningSearch() {
   const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState<Lang>("english");
+  const [language, setLanguageState] = useState<Lang>(() => {
+    if (typeof window !== "undefined") {
+      return getStoredLanguage();
+    }
+    return DEFAULT_LANGUAGE;
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [queryError, setQueryError] = useState<string | null>(null);
 
-  // ── Auto-search from URL query param (e.g. /learning?query=Python)
+  // ── Auto-search from URL query param & restore / sync persistent language
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // 1. Sync stored language preference if different from initial state
+      const saved = getStoredLanguage();
+      setLanguageState((prev) => (prev !== saved ? saved : prev));
+
+      // 2. Parse URL search parameter
       const params = new URLSearchParams(window.location.search);
       const qParam = params.get("query") || params.get("topic") || params.get("q");
       if (qParam && qParam.trim()) {
@@ -23,6 +41,30 @@ export function useLearningSearch() {
         setSearchTerm(cleanQ);
         setHasSearched(true);
       }
+
+      // 3. Cross-tab synchronization via storage event
+      const handleStorage = (e: StorageEvent) => {
+        if (e.key === STORAGE_KEY_LANGUAGE) {
+          const current = getStoredLanguage();
+          setLanguageState(current);
+        }
+      };
+
+      // 4. In-tab synchronization via custom event
+      const handleCustomChange = (e: Event) => {
+        const ce = e as CustomEvent<Lang>;
+        if (ce.detail && isValidLanguage(ce.detail)) {
+          setLanguageState(ce.detail);
+        }
+      };
+
+      window.addEventListener("storage", handleStorage);
+      window.addEventListener("sc_language_change", handleCustomChange);
+
+      return () => {
+        window.removeEventListener("storage", handleStorage);
+        window.removeEventListener("sc_language_change", handleCustomChange);
+      };
     }
   }, []);
 
@@ -36,6 +78,18 @@ export function useLearningSearch() {
     enabled: !!searchTerm,
     staleTime: 5 * 60 * 1000,
   });
+
+  const setLanguage = useCallback((newLang: Lang) => {
+    if (isValidLanguage(newLang)) {
+      setLanguageState(newLang);
+      setStoredLanguage(newLang);
+      if (typeof window !== "undefined") {
+        try {
+          window.dispatchEvent(new CustomEvent("sc_language_change", { detail: newLang }));
+        } catch {}
+      }
+    }
+  }, []);
 
   const handleSearch = (overrideQuery?: string) => {
     const raw = typeof overrideQuery === "string" ? overrideQuery : query;

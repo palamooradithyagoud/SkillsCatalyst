@@ -75,6 +75,7 @@ const INITIAL_FORM_STATE: ScholarshipFormState = {
 
 export default function AdminScholarshipsCMS({ onScholarshipCountChange }: AdminScholarshipsCMSProps) {
   const [scholarships, setScholarships] = useState<ScholarshipItem[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
         search: searchQuery.trim() || undefined,
       });
       setScholarships(res.scholarships || []);
+      setTotalCount(typeof res.total === "number" ? res.total : (res.scholarships?.length || 0));
       if (onScholarshipCountChange) onScholarshipCountChange();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load scholarships.";
@@ -362,7 +364,7 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
             </div>
             <h3 className="text-lg font-bold text-white tracking-tight">Scholarships CMS</h3>
             <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              {scholarships.length} Registered
+              {totalCount} {statusFilter !== "all" || searchQuery.trim() ? "Found" : "Registered"}
             </span>
           </div>
           <p className="text-xs text-slate-400">
@@ -411,8 +413,10 @@ export default function AdminScholarshipsCMS({ onScholarshipCountChange }: Admin
         <div className="relative w-full md:w-80">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
+            id="admin-scholarships-search-input"
             type="text"
             placeholder="Search by scholarship name or provider..."
+            aria-label="Search scholarships by name or provider"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"

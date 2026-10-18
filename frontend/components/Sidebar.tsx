@@ -286,21 +286,29 @@ export default function Sidebar() {
       {/* ── Quick Search Modal (Command + K) ── */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh] bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs px-4">
-          <div className="fixed inset-0" onClick={() => setIsSearchOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white dark:bg-black rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-150">
+          <div className="fixed inset-0" onClick={() => setIsSearchOpen(false)} aria-hidden="true" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick Search"
+            className="relative w-full max-w-lg bg-white dark:bg-black rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-150"
+          >
             <div className="flex items-center px-4 py-3.5 border-b border-slate-200 dark:border-neutral-800 gap-3">
               <Search className="w-5 h-5 text-slate-400" />
               <input
+                id="sidebar-quick-search-input"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search SkillsCatalyst roadmaps, practice, resume builder..."
+                aria-label="Search SkillsCatalyst roadmaps, practice, resume builder"
                 autoFocus
                 className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
               />
               <button
                 onClick={() => setIsSearchOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label="Close search"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

@@ -2,11 +2,93 @@
 export type ActiveCard = "explore" | "saved";
 export type Lang = "english" | "telugu" | "hindi";
 
+export const DEFAULT_LANGUAGE: Lang = "english";
+export const STORAGE_KEY_LANGUAGE = "sc_learning_language";
+
 export const LANGUAGES: { value: Lang; label: string }[] = [
   { value: "english", label: "English" },
   { value: "telugu",  label: "Telugu"  },
   { value: "hindi",   label: "Hindi"   },
 ];
+
+/**
+ * Validates whether a given value is one of the supported learning languages.
+ */
+export function isValidLanguage(val: unknown): val is Lang {
+  return typeof val === "string" && LANGUAGES.some((l) => l.value === val);
+}
+
+/**
+ * Safely reads the persisted learning language preference from browser localStorage.
+ * Handles SSR safety, JSON parsing, whitespace, corrupted values, and storage exceptions.
+ * Falls back to DEFAULT_LANGUAGE ("english") if no valid preference is found.
+ */
+export function getStoredLanguage(): Lang {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return DEFAULT_LANGUAGE;
+  }
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY_LANGUAGE);
+    if (!raw) return DEFAULT_LANGUAGE;
+
+    let candidate = raw.trim();
+    if (
+      (candidate.startsWith('"') && candidate.endsWith('"')) ||
+      (candidate.startsWith("'") && candidate.endsWith("'"))
+    ) {
+      try {
+        candidate = JSON.parse(candidate);
+      } catch {
+        candidate = candidate.slice(1, -1);
+      }
+    }
+    const normalized = candidate.toLowerCase();
+    if (isValidLanguage(normalized)) {
+      return normalized;
+    }
+  } catch (e) {
+    console.warn("[LanguagePersistence] Failed to read stored language:", e);
+  }
+  return DEFAULT_LANGUAGE;
+}
+
+/**
+ * Safely writes the learning language preference to browser localStorage.
+ * Validates the language, guards against SSR, and handles storage errors (e.g. quota, private mode).
+ * Returns true if successfully saved, false otherwise.
+ */
+export function setStoredLanguage(lang: Lang): boolean {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return false;
+  }
+  if (!isValidLanguage(lang)) {
+    return false;
+  }
+  try {
+    window.localStorage.setItem(STORAGE_KEY_LANGUAGE, lang);
+    return true;
+  } catch (e) {
+    console.warn("[LanguagePersistence] Failed to write stored language:", e);
+    return false;
+  }
+}
+
+/**
+ * Safely removes the stored learning language preference from browser localStorage.
+ * Returns true if removed, false otherwise.
+ */
+export function clearStoredLanguage(): boolean {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return false;
+  }
+  try {
+    window.localStorage.removeItem(STORAGE_KEY_LANGUAGE);
+    return true;
+  } catch (e) {
+    console.warn("[LanguagePersistence] Failed to clear stored language:", e);
+    return false;
+  }
+}
 
 // ── Client-side skill-query guard ─────────────────────────────────────────────
 // Zero-tolerance prohibited terms (Adult, Romance, Songs, Music, Explicit Entertainment)

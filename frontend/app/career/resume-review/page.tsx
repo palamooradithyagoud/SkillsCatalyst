@@ -693,6 +693,9 @@ export default function ResumeWorkspacePage() {
                   return (
                     <div
                       key={resume.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Select resume ${resume.title}`}
                       onClick={() => {
                         setSelectedResumeId(resume.id);
                         if (resume.templateId && resume.resumeData) {
@@ -703,7 +706,20 @@ export default function ResumeWorkspacePage() {
                           setViewMode("upload");
                         }
                       }}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedResumeId(resume.id);
+                          if (resume.templateId && resume.resumeData) {
+                            setSelectedTemplate(resume.templateId);
+                            setResumeData(resume.resumeData);
+                            setViewMode("create");
+                          } else {
+                            setViewMode("upload");
+                          }
+                        }
+                      }}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1 ${
                         isSelected
                           ? "bg-purple-50/80 border-purple-600 shadow-xs"
                           : "bg-white border-slate-200 hover:border-purple-300"
@@ -736,6 +752,7 @@ export default function ResumeWorkspacePage() {
                         <button
                           type="button"
                           onClick={(e) => toggleStar(resume.id, e)}
+                          aria-label={resume.starred ? "Unstar resume" : "Star resume"}
                           className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-amber-500"
                         >
                           <Star
@@ -749,6 +766,7 @@ export default function ResumeWorkspacePage() {
                         <button
                           type="button"
                           onClick={(e) => deleteResume(resume.id, e)}
+                          aria-label="Delete resume"
                           className="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1599,14 +1617,17 @@ export default function ResumeWorkspacePage() {
                       <Building2 className="w-4 h-4 text-purple-600" />
                       2. Target Company Rubric
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="radiogroup" aria-label="Target Company Rubric">
                       {COMPANY_TYPES.map((type) => {
                         const isSelected = companyType === type.id;
                         return (
-                          <div
+                          <button
                             key={type.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
                             onClick={() => setCompanyType(type.id)}
-                            className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                            className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all text-left focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1 ${
                               isSelected
                                 ? "bg-purple-50/80 border-purple-600 text-purple-950 shadow-2xs"
                                 : "bg-white border-slate-200 text-slate-600 hover:border-purple-300"
@@ -1629,7 +1650,7 @@ export default function ResumeWorkspacePage() {
                             <p className="text-[11px] text-slate-500 leading-tight">
                               {type.desc}
                             </p>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -1670,11 +1691,20 @@ export default function ResumeWorkspacePage() {
                         4. Upload Resume Document
                       </label>
                       <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Upload resume document (Supports PDF, DOCX, TXT, MD up to 10 MB)"
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer ${
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
                           isDragging
                             ? "border-purple-600 bg-purple-50"
                             : "border-purple-200 hover:border-purple-500 bg-purple-50/20 hover:bg-purple-50/40"
@@ -1693,6 +1723,7 @@ export default function ResumeWorkspacePage() {
                           ref={fileInputRef}
                           type="file"
                           accept=".pdf,.docx,.doc,.txt,.md"
+                          aria-label="Resume document upload input"
                           onChange={handleFileChange}
                           className="hidden"
                         />

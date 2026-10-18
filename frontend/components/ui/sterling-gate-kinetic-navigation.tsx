@@ -377,12 +377,33 @@ export function Component({
                 </a>
                 <div className="nav-row__right">
                   {/* Clean Menu Indicator */}
-                  <div className="nav-toggle-label" onClick={toggleMenu} style={{ cursor: "pointer", pointerEvents: "auto" }}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Explore Menu"
+                    aria-expanded={isMenuOpen}
+                    className="nav-toggle-label"
+                    onClick={toggleMenu}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleMenu();
+                      }
+                    }}
+                    style={{ cursor: "pointer", pointerEvents: "auto" }}
+                  >
                     <span className="toggle-text">Explore Menu</span>
                   </div>
 
                   {/* Restored Kinetic Menu Button */}
-                  <button role="button" aria-label="Toggle Menu" className="nav-close-btn" onClick={toggleMenu} style={{ pointerEvents: "auto" }}>
+                  <button
+                    type="button"
+                    aria-label="Toggle Menu"
+                    aria-expanded={isMenuOpen}
+                    className="nav-close-btn"
+                    onClick={toggleMenu}
+                    style={{ pointerEvents: "auto" }}
+                  >
                     <div className="menu-button-text">
                       <p className="p-large">Menu</p>
                       <p className="p-large">Close</p>
@@ -433,7 +454,7 @@ export function Component({
       <section className="fullscreen-menu-container">
         <div data-nav="closed" className="nav-overlay-wrapper">
           {/* Backdrop Click Dismiss */}
-          <div className="overlay" onClick={closeMenu} aria-label="Close navigation overlay" />
+          <div className="overlay" onClick={closeMenu} aria-hidden="true" />
 
           <nav className="menu-content" aria-label="Mobile Navigation">
             {/* Sliding Curtain Layers & Shapes */}

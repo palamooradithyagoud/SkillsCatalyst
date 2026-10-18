@@ -24,6 +24,7 @@ export const TechNewsEmptyState: React.FC<TechNewsEmptyStateProps> = ({
             onClick={onRefresh}
             className="p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
             title="Refresh feed"
+            aria-label="Refresh feed"
           >
             <RefreshCw className="w-3 h-3" />
           </button>
