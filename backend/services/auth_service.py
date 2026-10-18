@@ -491,20 +491,34 @@ def get_session_or_user_id(
     """
     Secure Session Identity Resolver.
     - If valid Bearer JWT provided: returns authenticated user's Supabase UUID via local cryptographic verification.
-    - Else: resolves client x-session-id to verified guest token or namespaced guest session ID.
+    - If invalid, expired, or malformed Bearer JWT provided: raises HTTP 401 Unauthorized (does not silently degrade to guest).
+    - If no Bearer JWT provided (authorization is None or empty): resolves client x-session-id to verified guest token or namespaced guest session ID.
     Guarantees backward compatibility while preventing unauthenticated UUID spoofing.
     """
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ", 1)[1].strip()
-        if token and token not in ("undefined", "null", ""):
-            try:
+    if authorization and authorization.strip():
+        if authorization.startswith("Bearer "):
+            token = authorization.split(" ", 1)[1].strip()
+            if token and token not in ("undefined", "null", ""):
+                # Cryptographically verify token; do NOT catch HTTPException (fail closed on invalid/expired credentials)
                 decoded = verify_jwt_token(token)
                 if decoded and decoded.get("sub"):
                     return str(decoded["sub"])
-            except HTTPException:
-                pass
-            except Exception as e:
-                logger.debug(f"Token verification fallback in get_session_or_user_id: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid user identity in token.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing authentication token.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication scheme. Bearer token required.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
     raw_session = x_session_id if isinstance(x_session_id, str) else None
     raw_db_id, _ = sanitize_or_generate_guest_id(raw_session)

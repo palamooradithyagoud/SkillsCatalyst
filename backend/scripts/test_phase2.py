@@ -113,13 +113,13 @@ def test_security_headers_and_cors():
 
 @patch("backend.services.subscription_service.SubscriptionService.get_user_entitlements")
 def test_aptitude_attempt_optional_user_id(mock_entitlements):
+    from unittest.mock import MagicMock
     from backend.models.subscription import AccessLevel, EntitlementDetailDTO, FeatureKey
     mock_entitlements.return_value = {
         FeatureKey.PLACEMENT_PREP.value: EntitlementDetailDTO(access=AccessLevel.FULL, limit=None)
     }
     print("Testing aptitude attempt authorization consistency...")
     
-    # Send attempt without client user_id in body
     payload = {
         "topic_id": 1,
         "question_id": 10,
@@ -127,11 +127,42 @@ def test_aptitude_attempt_optional_user_id(mock_entitlements):
         "is_correct": True,
         "time_taken_seconds": 15
     }
-    resp = client.post("/api/practice/aptitude/attempt", json=payload)
-    assert resp.status_code == 200
-    res_json = resp.json()
-    assert res_json["status"] == "success"
-    assert res_json["attempt"]["user_id"].startswith("guest_")
+
+    # 1. Unauthenticated request without Bearer token must fail closed with 401 Unauthorized
+    unauth_resp = client.post("/api/practice/aptitude/attempt", json=payload)
+    assert unauth_resp.status_code == 401, f"Expected 401 for unauthenticated attempt, got {unauth_resp.status_code}"
+
+    # 2. Authenticated request without client user_id in body binds strictly to authenticated identity
+    auth_user_id = "4113d832-6ac1-402a-bd00-1fd7f2b7ab26"
+    mock_user = MagicMock()
+    mock_user.id = auth_user_id
+    mock_user.email = "student@skillscatalyst.com"
+    mock_user.app_metadata = {"provider": "google", "role": "student"}
+    mock_user.user_metadata = {"full_name": "Test Student"}
+
+    with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+         patch("backend.routers.practice.get_supabase") as mock_practice_sb:
+        mock_auth_client = MagicMock()
+        mock_auth_client.auth.get_user.return_value = MagicMock(user=mock_user)
+        mock_auth_sb.return_value = mock_auth_client
+
+        # Mock question row and attempt upsert in database
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(
+            data=[{"id": 10, "topic_id": 1, "correct_index": 2, "options": ["A", "B", "C", "D"]}]
+        )
+        mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock(data=[])
+        mock_practice_sb.return_value = mock_sb
+
+        resp = client.post(
+            "/api/practice/aptitude/attempt",
+            json=payload,
+            headers={"Authorization": "Bearer mock-student-jwt"},
+        )
+        assert resp.status_code == 200, f"Expected 200 for authenticated attempt, got {resp.status_code}"
+        res_json = resp.json()
+        assert res_json["status"] == "success"
+        assert res_json["attempt"]["user_id"] == auth_user_id
 
     print("[OK] Authorization consistency test passed!")
 
