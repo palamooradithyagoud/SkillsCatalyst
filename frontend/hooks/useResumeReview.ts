@@ -19,6 +19,8 @@ export function useResumeReview() {
   const [editedText, setEditedText] = useState(""); // editable extracted text
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reviewText, setReviewText] = useState<string | null>(null);
+  const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [scoringStatus, setScoringStatus] = useState<"scored" | "unscored" | null>(null);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -155,6 +157,8 @@ export function useResumeReview() {
 
     setErrorMessage(null);
     setReviewText(null);
+    setOverallScore(null);
+    setScoringStatus(null);
     setUploadStage("reviewing");
 
     try {
@@ -167,6 +171,13 @@ export function useResumeReview() {
       );
       if (res?.review) {
         setReviewText(res.review);
+        if (typeof res.overall_score === "number" && !isNaN(res.overall_score)) {
+          setOverallScore(res.overall_score);
+          setScoringStatus("scored");
+        } else {
+          setOverallScore(null);
+          setScoringStatus("unscored");
+        }
         setUploadStage("done");
       } else {
         setErrorMessage(
@@ -190,6 +201,8 @@ export function useResumeReview() {
     setExtraction(null);
     setEditedText("");
     setReviewText(null);
+    setOverallScore(null);
+    setScoringStatus(null);
     setErrorMessage(null);
     setUploadProgress(0);
     setIsDragging(false);
@@ -212,6 +225,8 @@ export function useResumeReview() {
     setEditedText,
     errorMessage,
     reviewText,
+    overallScore,
+    scoringStatus,
     isDragging,
     fileInputRef,
     stageNum,

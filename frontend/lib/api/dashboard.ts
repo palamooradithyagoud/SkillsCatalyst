@@ -88,8 +88,10 @@ async function getFallbackDashboardData() {
         .limit(1);
 
       if (resumeData && resumeData.length > 0) {
-        const sc = resumeData[0].overall_score || resumeData[0].ats_compatibility_score;
-        if (sc) resumeScore = Math.round(Number(sc));
+        const sc = resumeData[0].overall_score ?? resumeData[0].ats_compatibility_score;
+        if (sc !== null && sc !== undefined && !isNaN(Number(sc))) {
+          resumeScore = Math.round(Number(sc));
+        }
       }
 
       // Query active roadmap and completed roadmap nodes
@@ -132,10 +134,15 @@ async function getFallbackDashboardData() {
     } catch {}
   }
 
-  const localResumeScoreRaw = typeof window !== "undefined" ? localStorage.getItem("skillscatalyst_latest_resume_score") : null;
-  if (localResumeScoreRaw) {
-    const lScore = parseInt(localResumeScoreRaw, 10);
-    if (lScore > resumeScore) resumeScore = lScore;
+  // Guest / unauthenticated fallback only: do not leak guest scores into authenticated accounts
+  if (!userId && typeof window !== "undefined") {
+    const localResumeScoreRaw = localStorage.getItem("skillscatalyst_latest_resume_score");
+    if (localResumeScoreRaw && resumeScore === 0) {
+      const lScore = parseInt(localResumeScoreRaw, 10);
+      if (!isNaN(lScore) && lScore >= 0 && lScore <= 100) {
+        resumeScore = lScore;
+      }
+    }
   }
 
   const activeTotal = getActivePlaylistTotal();

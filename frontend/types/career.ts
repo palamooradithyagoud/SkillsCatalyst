@@ -25,3 +25,9 @@ export interface ExpLevelItem {
   id: string;
   label: string;
 }
+
+export interface ResumeReviewResponse {
+  review: string;
+  overall_score?: number | null;
+  scoring_status?: "scored" | "unscored";
+}

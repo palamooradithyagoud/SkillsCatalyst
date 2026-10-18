@@ -175,6 +175,132 @@ class ResumeReviewRequest(BaseModel):
         return v.strip()
 
 
+class ResumeReviewResponse(BaseModel):
+    review: str
+    overall_score: Optional[float] = None
+    scoring_status: str = "scored"  # "scored" | "unscored"
+
+
+def extract_and_validate_resume_score(review_text: str) -> Optional[float]:
+    """
+    Extracts and normalizes the overall ATS score (0.00 - 100.00) from AI review markdown.
+
+    Precedence & Conflict Resolution Rules:
+    1. Tier 1 Authoritative Labels: 'Final Score', 'Overall Score'.
+       Tier 2 Secondary / Alias Labels: 'ATS Score', 'Total Score', 'Score'.
+    2. Tier 1 always takes precedence over Tier 2, regardless of document order:
+       - 'ATS Score: 92/100 followed by Final Score: 65/100' -> evaluates to 65.0.
+       - 'Final Score: 65/100 followed by ATS Score: 92/100' -> evaluates to 65.0.
+    3. Conflicting values under the same label tier:
+       - Duplicate 'Final Score' or conflicting Tier 1 scores (e.g. 65 vs 80) -> returns None (ambiguous).
+    4. Invalid explicit overall scores fail closed:
+       - If an explicit overall score is present but out-of-bounds (e.g. 'Final Score: 15/10')
+         or malformed (e.g. 'Final Score: 8/20'), it returns None.
+       - It does NOT fall back to section scores.
+    5. Section-score fallback is permitted ONLY when NO explicit overall score was attempted:
+       - Requires at least 3 valid section scores ('ATS Compatibility', 'Role Alignment', 'Impact', 'Structure').
+       - If any found section score is invalid or out-of-bounds, returns None.
+    6. If neither a valid explicit score nor sufficient valid section scores exists:
+       - Returns None (strictly no fabricated default scores).
+    """
+    if not review_text or not isinstance(review_text, str):
+        return None
+
+    def _normalize_match(val_str: str, denom_str: str) -> Optional[float]:
+        try:
+            val = float(val_str)
+            denom = float(denom_str)
+        except (ValueError, TypeError):
+            return None
+
+        if denom == 10.0:
+            if 0.0 <= val <= 10.0:
+                return round(val * 10.0, 2)
+            return None
+        elif denom == 100.0:
+            if 0.0 <= val <= 100.0:
+                return round(val, 2)
+            return None
+        return None
+
+    clean_text = review_text.replace("**", " ").replace("*", " ").replace("`", "")
+
+    # 1. Search for all explicit overall score patterns
+    explicit_pattern = re.compile(
+        r"\b(Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:=\-]*\s*(-?\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)\b",
+        re.IGNORECASE,
+    )
+    raw_matches = explicit_pattern.findall(clean_text)
+
+    tier1_scores = []
+    tier1_has_invalid = False
+    tier2_scores = []
+    tier2_has_invalid = False
+
+    for label, val_str, denom_str in raw_matches:
+        norm = _normalize_match(val_str, denom_str)
+        is_tier1 = bool(re.match(r"^(Final|Overall)\s*Score$", label.strip(), re.IGNORECASE))
+        if is_tier1:
+            if norm is None:
+                tier1_has_invalid = True
+            else:
+                tier1_scores.append(norm)
+        else:
+            if norm is None:
+                tier2_has_invalid = True
+            else:
+                tier2_scores.append(norm)
+
+    # If Tier 1 explicit score existed:
+    if raw_matches and any(re.match(r"^(Final|Overall)\s*Score$", m[0].strip(), re.IGNORECASE) for m in raw_matches):
+        if tier1_has_invalid:
+            # Out-of-bounds or malformed Tier 1 score: fail closed, do not fall back
+            return None
+        # Check for conflicting duplicate Tier 1 values
+        if len(set(tier1_scores)) > 1:
+            return None  # Conflicting explicit scores
+        if tier1_scores:
+            return tier1_scores[0]
+
+    # If Tier 2 explicit score existed (no Tier 1):
+    if raw_matches:
+        if tier2_has_invalid:
+            return None
+        if len(set(tier2_scores)) > 1:
+            return None  # Conflicting Tier 2 scores
+        if tier2_scores:
+            return tier2_scores[0]
+
+    # 2. Check if an explicit overall score label was attempted with non-numeric/corrupted formatting
+    explicit_attempt = re.search(
+        r"\b(Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:=\-]*\s*([^\n\r]+)",
+        clean_text,
+        re.IGNORECASE,
+    )
+    if explicit_attempt:
+        # An explicit overall score was attempted but couldn't be parsed as a valid fraction
+        return None
+
+    # 3. Section scores fallback (only when no explicit overall score was present)
+    section_matches = re.findall(
+        r"(?:ATS\s*Compatibility|Role\s*Alignment|Impact|Structure)\s*[:=\-]*\s*(-?\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)\b",
+        clean_text,
+        re.IGNORECASE,
+    )
+    if section_matches:
+        scores = []
+        for s_val_str, s_denom_str in section_matches:
+            norm = _normalize_match(s_val_str, s_denom_str)
+            if norm is None:
+                return None  # Out-of-bounds section score rejects entire fallback
+            scores.append(norm)
+
+        if len(scores) >= 3:
+            return round(sum(scores) / len(scores), 2)
+
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Strict skills-only system prompt for general chat
 # ---------------------------------------------------------------------------
@@ -512,7 +638,11 @@ async def chat_mentor(
     return MentorChatResponse(reply=response, conversation_id=None, message_id=None)
 
 
-@router.post("/review-resume", dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))])
+@router.post(
+    "/review-resume",
+    response_model=ResumeReviewResponse,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
 async def review_resume(
     req: ResumeReviewRequest,
     current_user_id: str = Depends(get_current_user_id),
@@ -702,52 +832,48 @@ STRICT RULES:
     if reservation_id:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
 
-    # Persist resume score and review into Supabase
-    try:
-        from backend.services.supabase_service import get_supabase
-        import datetime
+    # 1. Authoritative score extraction and validation
+    overall_score = extract_and_validate_resume_score(review_text)
+    scoring_status = "scored" if overall_score is not None else "unscored"
 
-        sb = get_supabase()
-        if sb:
-            user_id = current_user_id
+    # 2. Persist resume score and review into Supabase ONLY if a valid score exists
+    if overall_score is not None:
+        try:
+            from backend.services.supabase_service import get_supabase
+            import datetime
 
-            # Extract numerical score (0-10 or 0-100)
-            overall_score = 80.0
-            match = re.search(r"(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*/\s*(100|10)", review_text, re.IGNORECASE)
-            if not match:
-                match = re.search(r"(\d+(?:\.\d+)?)\s*/\s*(100|10)", review_text)
-            if match:
-                val = float(match.group(1))
-                denom = match.group(2)
-                if denom == "10" or val <= 10.0:
-                    val = val * 10.0
-                overall_score = round(val, 2)
+            sb = get_supabase()
+            if sb:
+                user_id = current_user_id
+                score_record = {
+                    "user_id": user_id,
+                    "filename": "resume.pdf",
+                    "target_role": target_role,
+                    "company_type": company_type,
+                    "overall_score": overall_score,
+                    "ats_compatibility_score": overall_score,
+                    "skills_match_score": overall_score,
+                    "experience_score": overall_score,
+                    "full_review_json": {"review": review_text},
+                }
+                def _persist_resume_score():
+                    sb.table("resume_scores").insert(score_record).execute()
+                    sb.table("user_progress").upsert(
+                        {
+                            "user_id": user_id,
+                            "resume_readiness_score": overall_score,
+                            "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                        },
+                        on_conflict="user_id"
+                    ).execute()
 
-            score_record = {
-                "user_id": user_id,
-                "filename": "resume.pdf",
-                "target_role": target_role,
-                "company_type": company_type,
-                "overall_score": overall_score,
-                "ats_compatibility_score": overall_score,
-                "skills_match_score": overall_score,
-                "experience_score": overall_score,
-                "full_review_json": {"review": review_text},
-            }
-            def _persist_resume_score():
-                sb.table("resume_scores").insert(score_record).execute()
-                sb.table("user_progress").upsert(
-                    {
-                        "user_id": user_id,
-                        "resume_readiness_score": overall_score,
-                        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                    },
-                    on_conflict="user_id"
-                ).execute()
+                await asyncio.to_thread(_persist_resume_score)
+        except Exception as save_err:
+            logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
 
-            await asyncio.to_thread(_persist_resume_score)
-    except Exception as save_err:
-        logger.warning(f"Failed to persist resume score to Supabase: {save_err}")
-
-    logger.info(f"Resume review completed ({len(review_text)} chars returned).")
-    return {"review": review_text}
+    logger.info(f"Resume review completed ({len(review_text)} chars returned, score={overall_score}, status={scoring_status}).")
+    return ResumeReviewResponse(
+        review=review_text,
+        overall_score=overall_score,
+        scoring_status=scoring_status,
+    )

@@ -1,4 +1,5 @@
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
+import { ResumeReviewResponse } from "@/types/career";
 
 export interface MentorConversation {
   id: string;
@@ -139,7 +140,13 @@ export async function extractResume(file: File): Promise<{ success: boolean; tex
   }
 }
 
-export async function reviewResume(resumeText: string, targetRole: string, yearsExperience: string, companyType: string = "Product-Based", jobDescription: string = "") {
+export async function reviewResume(
+  resumeText: string,
+  targetRole: string,
+  yearsExperience: string,
+  companyType: string = "Product-Based",
+  jobDescription: string = ""
+): Promise<ResumeReviewResponse> {
   try {
     const authHeaders = await getAuthHeaders();
     const res = await apiFetch(`${API_BASE}/api/ai-mentor/review-resume`, {
@@ -154,8 +161,8 @@ export async function reviewResume(resumeText: string, targetRole: string, years
       }),
     });
     if (!res.ok) {
+      const errorBody = await res.json().catch(() => null);
       if (res.status === 403) {
-        const errorBody = await res.json().catch(() => null);
         const detail = errorBody?.detail;
         const err: any = new Error(
           detail?.message || "Free plan limit reached. Upgrade to Premium for unlimited AI Resume Reviews."
@@ -165,26 +172,52 @@ export async function reviewResume(resumeText: string, targetRole: string, years
         err.detail = detail;
         throw err;
       }
-      throw new Error("Failed to evaluate resume");
+      const errorMsg =
+        errorBody?.detail?.message ||
+        errorBody?.message ||
+        `Failed to evaluate resume (HTTP ${res.status})`;
+      throw new Error(errorMsg);
     }
     const data = await res.json();
-    if (data?.review) {
-      const match = data.review.match(/(?:Final Score:|Score:)?\s*(\d+(?:\.\d+)?)\s*\/\s*(100|10)/i) || data.review.match(/(\d+(?:\.\d+)?)\s*\/\s*(100|10)/);
+    let overallScore: number | null = null;
+
+    if (typeof data?.overall_score === "number" && !isNaN(data.overall_score)) {
+      if (data.overall_score >= 0 && data.overall_score <= 100) {
+        overallScore = Math.round(data.overall_score);
+      }
+    } else if (data?.overall_score === undefined && data?.review) {
+      // Backwards-compatibility fallback if an older server omitted overall_score
+      const match = data.review.match(
+        /(?:Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:\-*]*\s*(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\b/i
+      );
       if (match) {
-        let val = parseFloat(match[1]);
-        if (match[2] === "10" || val <= 10) val = val * 10;
-        const scoreVal = Math.round(val);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("skillscatalyst_latest_resume_score", String(scoreVal));
+        const val = parseFloat(match[1]);
+        const denom = parseFloat(match[2]);
+        if (denom === 10 && val >= 0 && val <= 10) {
+          overallScore = Math.round(val * 10);
+        } else if (denom === 100 && val >= 0 && val <= 100) {
+          overallScore = Math.round(val);
         }
       }
     }
-    return data;
+
+    if (typeof overallScore === "number" && typeof window !== "undefined") {
+      localStorage.setItem("skillscatalyst_latest_resume_score", String(overallScore));
+    }
+
+    const scoringStatus: "scored" | "unscored" =
+      overallScore !== null ? "scored" : "unscored";
+
+    return {
+      review: data?.review || "",
+      overall_score: overallScore,
+      scoring_status: scoringStatus,
+    };
   } catch (error: any) {
     if (error?.status === 403 || error?.code === "LIMIT_REACHED") {
       throw error;
     }
     console.error("Resume review error:", error);
-    return { review: "Error: Unable to connect to Groq AI Resume Evaluator. Please ensure the backend is running." };
+    throw error;
   }
 }

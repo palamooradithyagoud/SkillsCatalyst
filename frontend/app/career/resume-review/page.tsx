@@ -68,7 +68,7 @@ interface SavedResumeItem {
   title: string;
   role: string;
   date: string;
-  atsScore: number;
+  atsScore: number | null;
   starred?: boolean;
   templateId?: ResumeTemplateId;
   resumeData?: ResumeData;
@@ -200,6 +200,7 @@ export default function ResumeWorkspacePage() {
     setEditedText,
     errorMessage,
     reviewText,
+    overallScore,
     isDragging,
     fileInputRef,
     stageNum,
@@ -216,12 +217,16 @@ export default function ResumeWorkspacePage() {
     if (uploadStage === "done" && reviewText) {
       const existing = savedResumes.find((r) => r.id === extraction?.filename);
       if (!existing && extraction) {
+        const calculatedAtsScore =
+          typeof overallScore === "number" && !isNaN(overallScore)
+            ? Math.round(overallScore)
+            : null;
         const newItem: SavedResumeItem = {
           id: extraction.filename || `resume-${Date.now()}`,
           title: extraction.filename,
           role: targetRole,
           date: "Just now",
-          atsScore: 92,
+          atsScore: calculatedAtsScore,
           starred: false,
         };
         setSavedResumes((prev) => {
@@ -234,7 +239,7 @@ export default function ResumeWorkspacePage() {
         setSelectedResumeId(newItem.id);
       }
     }
-  }, [uploadStage, reviewText, extraction, targetRole, savedResumes]);
+  }, [uploadStage, reviewText, extraction, targetRole, savedResumes, overallScore]);
 
   const handleStartUpload = () => {
     setViewMode("upload");
@@ -706,7 +711,7 @@ export default function ResumeWorkspacePage() {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold text-xs">
-                          {resume.atsScore}
+                          {resume.atsScore !== null && resume.atsScore !== undefined ? resume.atsScore : "—"}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-slate-900 truncate">
@@ -1793,9 +1798,15 @@ export default function ResumeWorkspacePage() {
                         {companyType}
                       </span>
                     </div>
-                    <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full text-xs">
-                      ATS Score: 92/100
-                    </span>
+                    {typeof overallScore === "number" && !isNaN(overallScore) ? (
+                      <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                        ATS Score: {Math.round(overallScore)}/100
+                      </span>
+                    ) : (
+                      <span className="font-bold text-amber-700 bg-amber-100/80 px-2.5 py-0.5 rounded-full text-xs">
+                        ATS Score: Qualitative Evaluation Only
+                      </span>
+                    )}
                   </div>
 
                   <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-slate-200 space-y-3 overflow-x-hidden">
