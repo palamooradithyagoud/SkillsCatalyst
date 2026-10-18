@@ -1,18 +1,36 @@
+import os
 import logging
 import asyncio
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import re
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Response
 from pydantic import BaseModel
 import httpx
 from backend.services.supabase_service import get_supabase
-from backend.services.auth_service import get_current_user_id
+from backend.services.auth_service import get_current_user_id, is_valid_uuid
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
-_PROFILE_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="profile_db")
+
+# SYS-09 (BE-PERF-01): Scaled worker pool to eliminate thread starvation during fallback.
+# Each fallback request submits 12 sub-queries; 24 workers allow multiple concurrent requests without queue delay.
+import threading
+_PROFILE_EXECUTOR_MAX_WORKERS = int(os.getenv("PROFILE_EXECUTOR_MAX_WORKERS", "24"))
+_PROFILE_EXECUTOR = ThreadPoolExecutor(max_workers=_PROFILE_EXECUTOR_MAX_WORKERS, thread_name_prefix="profile_db")
+_PROFILE_FALLBACK_TIMEOUT = float(os.getenv("PROFILE_FALLBACK_TIMEOUT", "5.0"))
+_MAX_FALLBACK_QUEUE_DEPTH = int(os.getenv("PROFILE_MAX_QUEUE_DEPTH", "24"))
+_MAX_CONCURRENT_FALLBACKS = int(os.getenv("PROFILE_MAX_CONCURRENT_FALLBACKS", "3"))
+_FALLBACK_SEMAPHORE = threading.Semaphore(_MAX_CONCURRENT_FALLBACKS)
+
+def _get_profile_executor_queue_depth() -> int:
+    """Return the number of work items currently queued in the executor work queue."""
+    try:
+        return _PROFILE_EXECUTOR._work_queue.qsize()
+    except Exception:
+        return 0
 
 # ── Models ────────────────────────────────────────────────--------------------
 
@@ -388,111 +406,64 @@ async def _extract_hackerrank(input_val: str) -> Dict[str, Any]:
 # ── Profile Fetch Helpers (Bounded Concurrency & RPC) ─────────────────────────
 
 def _fetch_academic_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"Failed to fetch user_academic_profile: {e}")
-        return None
+    res = sb.from_("user_academic_profile").select("*").eq("user_id", user_id).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
 
 
 def _fetch_personal_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("profiles").select("*").eq("id", user_id).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"Profiles table query notice: {e}")
-        return None
+    res = sb.from_("profiles").select("*").eq("id", user_id).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
 
 
 def _fetch_coding_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("user_coding_profiles").select("*").eq("user_id", user_id).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"Failed to fetch user_coding_profiles: {e}")
-        return None
+    res = sb.from_("user_coding_profiles").select("*").eq("user_id", user_id).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
 
 
 def _fetch_skills_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("user_skills").select("*").eq("user_id", user_id).order("created_at").execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"User skills query notice: {e}")
-        return []
+    res = sb.from_("user_skills").select("*").eq("user_id", user_id).order("created_at").execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_experiences_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("experiences").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"Experiences query notice: {e}")
-        return []
+    res = sb.from_("experiences").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_education_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("education").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"Education query notice: {e}")
-        return []
+    res = sb.from_("education").select("*").eq("user_id", user_id).order("start_date", desc=True).execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_projects_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("projects").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"Projects query notice: {e}")
-        return []
+    res = sb.from_("projects").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_certifications_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("certifications").select("*").eq("user_id", user_id).order("issue_date", desc=True).execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"Certifications query notice: {e}")
-        return []
+    res = sb.from_("certifications").select("*").eq("user_id", user_id).order("issue_date", desc=True).execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_achievements_data(sb, user_id: str) -> list:
-    try:
-        res = sb.from_("achievements").select("*").eq("user_id", user_id).order("achievement_date", desc=True).execute()
-        return res.data or []
-    except Exception as e:
-        logger.debug(f"Achievements query notice: {e}")
-        return []
+    res = sb.from_("achievements").select("*").eq("user_id", user_id).order("achievement_date", desc=True).execute()
+    return (res.data or []) if (res and getattr(res, "data", None) is not None) else []
 
 
 def _fetch_career_preferences_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("career_preferences").select("*").eq("user_id", user_id).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"Career preferences query notice: {e}")
-        return None
+    res = sb.from_("career_preferences").select("*").eq("user_id", user_id).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
 
 
 def _fetch_resume_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("resume_scores").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"Resume scores query notice: {e}")
-        return None
+    res = sb.from_("resume_scores").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
 
 
 def _fetch_progress_data(sb, user_id: str) -> Optional[Dict[str, Any]]:
-    try:
-        res = sb.from_("user_progress").select("*").eq("user_id", user_id).execute()
-        return res.data[0] if res.data else None
-    except Exception as e:
-        logger.debug(f"User progress query notice: {e}")
-        return None
+    res = sb.from_("user_progress").select("*").eq("user_id", user_id).execute()
+    return res.data[0] if (res and getattr(res, "data", None)) else None
+
 
 
 def _format_unified_profile_from_rpc(raw: Dict[str, Any], user_id: str) -> Dict[str, Any]:
@@ -575,13 +546,22 @@ def _format_unified_profile_from_rpc(raw: Dict[str, Any], user_id: str) -> Dict[
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("")
-def get_profile(user_id: str = Depends(get_current_user_id)):
+def get_profile(
+    response: Response = None,
+    user_id: str = Depends(get_current_user_id),
+):
     """
     Fetch current user's complete Unified Profile across all normalized entities,
     with extracted coding platform stats and backward-compatible fallbacks.
     Optimized with RPC single-roundtrip fast path and bounded parallel fallback.
     """
     sb = get_supabase()
+    if not sb:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service is currently unavailable.",
+        )
+
     academic_data = {
         "user_id": user_id,
         "full_name": "",
@@ -628,17 +608,46 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
     resume_data = None
     progress_data = {}
 
-    if sb:
-        # 1. Attempt single-roundtrip RPC if deployed
-        if hasattr(sb, "rpc"):
-            try:
-                rpc_res = sb.rpc("get_user_unified_profile", {"p_user_id": user_id}).execute()
-                if rpc_res and getattr(rpc_res, "data", None) and isinstance(rpc_res.data, dict):
-                    return _format_unified_profile_from_rpc(rpc_res.data, user_id)
-            except Exception as rpc_err:
-                logger.debug(f"RPC get_user_unified_profile notice (falling back to bounded parallel execution): {rpc_err}")
+    # 1. Attempt single-roundtrip RPC if deployed and user_id is a valid UUID
+    if hasattr(sb, "rpc") and is_valid_uuid(user_id):
+        try:
+            rpc_res = sb.rpc("get_user_unified_profile", {"p_user_id": user_id}).execute()
+            if rpc_res and getattr(rpc_res, "data", None) and isinstance(rpc_res.data, dict):
+                if response is not None:
+                    response.headers["X-Profile-Status"] = "complete"
+                    response.headers["X-Profile-Source"] = "rpc"
+                return _format_unified_profile_from_rpc(rpc_res.data, user_id)
+        except Exception as rpc_err:
+            logger.debug(f"RPC get_user_unified_profile notice (falling back to bounded parallel execution): {rpc_err}")
 
-        # 2. Bounded parallel execution: submit all 12 independent entity reads concurrently
+    # 2. Atomic Admission Control: Check non-blocking semaphore first to eliminate TOCTOU race conditions
+    if not _FALLBACK_SEMAPHORE.acquire(blocking=False):
+        logger.warning(
+            f"Profile fallback admission limit ({_MAX_CONCURRENT_FALLBACKS} concurrent requests) reached. "
+            f"Shedding fallback request to prevent thread pool exhaustion."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile service is currently saturated under high load. Please retry in a few moments.",
+            headers={"Retry-After": "2"},
+        )
+
+    # Secondary queue depth check (supports test overrides of _MAX_FALLBACK_QUEUE_DEPTH)
+    pending_queue_size = _get_profile_executor_queue_depth()
+    if pending_queue_size >= _MAX_FALLBACK_QUEUE_DEPTH:
+        _FALLBACK_SEMAPHORE.release()
+        logger.warning(
+            f"Profile executor saturated ({pending_queue_size} pending tasks >= {_MAX_FALLBACK_QUEUE_DEPTH}). "
+            f"Shedding fallback request to prevent thread pool exhaustion."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Profile service is currently saturated under high load. Please retry in a few moments.",
+            headers={"Retry-After": "2"},
+        )
+
+    try:
+        # 3. Bounded parallel execution: submit all 12 independent entity reads concurrently
         f_acad = _PROFILE_EXECUTOR.submit(_fetch_academic_data, sb, user_id)
         f_prof = _PROFILE_EXECUTOR.submit(_fetch_personal_data, sb, user_id)
         f_code = _PROFILE_EXECUTOR.submit(_fetch_coding_data, sb, user_id)
@@ -652,106 +661,175 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
         f_resume = _PROFILE_EXECUTOR.submit(_fetch_resume_data, sb, user_id)
         f_prog = _PROFILE_EXECUTOR.submit(_fetch_progress_data, sb, user_id)
 
-        # Retrieve and merge academic profile
-        try:
-            acad_row = f_acad.result()
-            if acad_row:
-                academic_data.update(acad_row)
-                if academic_data.get("full_name"):
-                    personal_data["full_name"] = academic_data["full_name"]
-        except Exception as e:
-            logger.warning(f"Failed to resolve academic profile: {e}")
+        all_futures = [
+            f_acad, f_prof, f_code, f_skills, f_exp, f_edu,
+            f_proj, f_certs, f_ach, f_cp, f_resume, f_prog
+        ]
+    except Exception:
+        _FALLBACK_SEMAPHORE.release()
+        raise
 
-        # Retrieve and merge personal profile
-        try:
-            prof_row = f_prof.result()
-            if prof_row:
-                personal_data.update({
-                    k: v for k, v in prof_row.items()
-                    if k in personal_data and v is not None
-                })
-        except Exception as e:
-            logger.debug(f"Profiles table resolution notice: {e}")
+    # Bind semaphore permit release to the actual completion of all submitted futures.
+    # If the HTTP request times out while background queries continue running in worker threads,
+    # the semaphore permit remains held until all background work terminates, preventing
+    # subsequent requests from exceeding worker pool capacity.
+    remaining_tasks = len(all_futures)
+    release_lock = threading.Lock()
+    permit_released = False
 
-        # Retrieve and merge coding profile
-        try:
-            code_row = f_code.result()
-            if code_row:
-                coding_inputs["leetcode"] = code_row.get("leetcode_url", "")
-                coding_inputs["github"] = code_row.get("github_url", "")
-                coding_inputs["hackerrank"] = code_row.get("hackerrank_url", "")
-                coding_inputs["codechef"] = code_row.get("codechef_url", "")
-                coding_inputs["geeksforgeeks"] = code_row.get("geeksforgeeks_url", "")
-                coding_inputs["codeforces"] = code_row.get("codeforces_url", "")
-                coding_stats = code_row.get("stats_json", {})
-        except Exception as e:
-            logger.warning(f"Failed to resolve coding profiles: {e}")
+    def _on_subquery_done(fut):
+        nonlocal remaining_tasks, permit_released
+        with release_lock:
+            remaining_tasks -= 1
+            if remaining_tasks == 0 and not permit_released:
+                permit_released = True
+                _FALLBACK_SEMAPHORE.release()
 
-        # Retrieve relational lists
-        try:
-            skills_data = f_skills.result()
-        except Exception as e:
-            logger.debug(f"Skills resolution notice: {e}")
+    for fut in all_futures:
+        fut.add_done_callback(_on_subquery_done)
 
-        try:
-            experiences_data = f_exp.result()
-        except Exception as e:
-            logger.debug(f"Experiences resolution notice: {e}")
+    # Bounded wait across all sub-queries to prevent thread starvation or socket hangs
+    done, not_done = concurrent.futures.wait(
+        all_futures,
+        timeout=_PROFILE_FALLBACK_TIMEOUT,
+        return_when=concurrent.futures.ALL_COMPLETED,
+    )
 
-        try:
-            edu_rows = f_edu.result()
-            if edu_rows:
-                education_data = edu_rows
-            elif academic_data.get("college"):
-                education_data = [{
-                    "id": f"legacy_edu_{user_id}",
-                    "user_id": user_id,
-                    "college": academic_data.get("college", ""),
-                    "field_of_study": academic_data.get("department", ""),
-                    "degree_type": academic_data.get("academic_year", ""),
-                    "currently_studying": True,
-                }]
-        except Exception as e:
-            logger.debug(f"Education resolution notice: {e}")
+    if not_done:
+        # Immediately cancel queued tasks that have not started running to free executor capacity
+        for f in not_done:
+            f.cancel()
+        logger.warning(
+            f"Profile fallback sub-queries timed out after {_PROFILE_FALLBACK_TIMEOUT}s: "
+            f"{len(not_done)} incomplete queries cancelled."
+        )
 
+    # Classify completed and failed queries
+    done_success = {}
+    failed_queries = []
+    for f in done:
         try:
-            projects_data = f_proj.result()
-        except Exception as e:
-            logger.debug(f"Projects resolution notice: {e}")
+            exc = f.exception()
+            if exc is not None:
+                failed_queries.append(f)
+                logger.warning(f"Profile fallback sub-query error: {type(exc).__name__}")
+            else:
+                done_success[f] = f.result(timeout=0)
+        except Exception as exc:
+            failed_queries.append(f)
+            logger.warning(f"Profile fallback future resolution error: {type(exc).__name__}")
 
-        try:
-            certifications_data = f_certs.result()
-        except Exception as e:
-            logger.debug(f"Certifications resolution notice: {e}")
+    incomplete_count = len(not_done) + len(failed_queries)
 
-        try:
-            achievements_data = f_ach.result()
-        except Exception as e:
-            logger.debug(f"Achievements resolution notice: {e}")
+    # If all queries timed out or failed: fail closed rather than returning a deceptive blank profile
+    if incomplete_count == len(all_futures):
+        if not_done:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Profile data retrieval timed out due to slow database queries. Please try again.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to retrieve profile data from database.",
+            )
 
-        # Career preferences
-        try:
-            cp_row = f_cp.result()
-            if cp_row:
-                career_prefs_data["target_roles"] = cp_row.get("target_roles") or ([cp_row.get("target_role")] if cp_row.get("target_role") else [])
-                career_prefs_data["preferred_industries"] = cp_row.get("preferred_industries") or ([cp_row.get("target_industry")] if cp_row.get("target_industry") else [])
-                career_prefs_data["target_companies"] = cp_row.get("target_companies") or []
-                career_prefs_data["preferred_locations"] = cp_row.get("preferred_locations") or ([cp_row.get("preferred_work_location")] if cp_row.get("preferred_work_location") else [])
-                career_prefs_data["work_arrangements"] = cp_row.get("work_arrangements") or ([cp_row.get("preferred_work_type")] if cp_row.get("preferred_work_type") else [])
-            if academic_data.get("target_role") and not career_prefs_data["target_roles"]:
-                career_prefs_data["target_roles"] = [academic_data["target_role"]]
-        except Exception as e:
-            logger.debug(f"Career preferences resolution notice: {e}")
+    # Core profile identity check: if both personal and academic profiles failed or timed out:
+    f_prof_ok = f_prof in done_success
+    f_acad_ok = f_acad in done_success
+    if not f_prof_ok and not f_acad_ok:
+        if (f_prof in not_done) or (f_acad in not_done):
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Core profile identity retrieval timed out. Please try again.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to retrieve core profile identity from database.",
+            )
 
-        try:
-            resume_data = f_resume.result()
-        except Exception as e:
-            logger.debug(f"Resume scores resolution notice: {e}")
+    if response is not None:
+        response.headers["X-Profile-Source"] = "fallback"
+        response.headers["X-Profile-Status"] = "partial" if incomplete_count > 0 else "complete"
+        response.headers["X-Profile-Incomplete-Count"] = str(incomplete_count)
 
-        try:
-            progress_data = f_prog.result() or {}
-        except Exception as e:
-            logger.debug(f"User progress resolution notice: {e}")
+    # Retrieve and merge academic profile
+    if f_acad in done_success:
+        acad_row = done_success[f_acad]
+        if acad_row:
+            academic_data.update(acad_row)
+            if academic_data.get("full_name"):
+                personal_data["full_name"] = academic_data["full_name"]
+
+    # Retrieve and merge personal profile
+    if f_prof in done_success:
+        prof_row = done_success[f_prof]
+        if prof_row:
+            personal_data.update({
+                k: v for k, v in prof_row.items()
+                if k in personal_data and v is not None
+            })
+
+    # Retrieve and merge coding profile
+    if f_code in done_success:
+        code_row = done_success[f_code]
+        if code_row:
+            coding_inputs["leetcode"] = code_row.get("leetcode_url", "")
+            coding_inputs["github"] = code_row.get("github_url", "")
+            coding_inputs["hackerrank"] = code_row.get("hackerrank_url", "")
+            coding_inputs["codechef"] = code_row.get("codechef_url", "")
+            coding_inputs["geeksforgeeks"] = code_row.get("geeksforgeeks_url", "")
+            coding_inputs["codeforces"] = code_row.get("codeforces_url", "")
+            coding_stats = code_row.get("stats_json", {})
+
+    # Retrieve relational lists
+    if f_skills in done_success:
+        skills_data = done_success[f_skills] or []
+
+    if f_exp in done_success:
+        experiences_data = done_success[f_exp] or []
+
+    if f_edu in done_success:
+        edu_rows = done_success[f_edu] or []
+        if edu_rows:
+            education_data = edu_rows
+        elif academic_data.get("college"):
+            education_data = [{
+                "id": f"legacy_edu_{user_id}",
+                "user_id": user_id,
+                "college": academic_data.get("college", ""),
+                "field_of_study": academic_data.get("department", ""),
+                "degree_type": academic_data.get("academic_year", ""),
+                "currently_studying": True,
+            }]
+
+    if f_proj in done_success:
+        projects_data = done_success[f_proj] or []
+
+    if f_certs in done_success:
+        certifications_data = done_success[f_certs] or []
+
+    if f_ach in done_success:
+        achievements_data = done_success[f_ach] or []
+
+    # Career preferences
+    if f_cp in done_success:
+        cp_row = done_success[f_cp]
+        if cp_row:
+            career_prefs_data["target_roles"] = cp_row.get("target_roles") or ([cp_row.get("target_role")] if cp_row.get("target_role") else [])
+            career_prefs_data["preferred_industries"] = cp_row.get("preferred_industries") or ([cp_row.get("target_industry")] if cp_row.get("target_industry") else [])
+            career_prefs_data["target_companies"] = cp_row.get("target_companies") or []
+            career_prefs_data["preferred_locations"] = cp_row.get("preferred_locations") or ([cp_row.get("preferred_work_location")] if cp_row.get("preferred_work_location") else [])
+            career_prefs_data["work_arrangements"] = cp_row.get("work_arrangements") or ([cp_row.get("preferred_work_type")] if cp_row.get("preferred_work_type") else [])
+        if academic_data.get("target_role") and not career_prefs_data["target_roles"]:
+            career_prefs_data["target_roles"] = [academic_data["target_role"]]
+
+    if f_resume in done_success:
+        resume_data = done_success[f_resume]
+
+    if f_prog in done_success:
+        progress_data = done_success[f_prog] or {}
 
     return {
         "personal": personal_data,
@@ -768,6 +846,7 @@ def get_profile(user_id: str = Depends(get_current_user_id)):
         "coding_inputs": coding_inputs,
         "coding_stats": coding_stats,
     }
+
 
 
 @router.post("/personal")

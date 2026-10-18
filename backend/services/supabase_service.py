@@ -64,7 +64,7 @@ class ObservableHTTPTransport(httpx.HTTPTransport):
                     row_count=row_count,
                 )
                 return response
-            except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.ReadTimeout) as exc:
+            except (httpx.ConnectError, httpx.RemoteProtocolError) as exc:
                 if attempt < max_attempts - 1:
                     time.sleep(0.1)
                     continue
@@ -77,6 +77,19 @@ class ObservableHTTPTransport(httpx.HTTPTransport):
                     success=False,
                     status_code=None,
                     error_category=type(exc).__name__,
+                )
+                raise
+            except httpx.ReadTimeout as exc:
+                # Do NOT retry ReadTimeout to avoid doubling worker thread occupancy during database slowdowns
+                duration_ms = (time.perf_counter() - start_time) * 1000.0
+                record_db_operation(
+                    operation=op_label,
+                    method=method,
+                    table=table_name,
+                    duration_ms=duration_ms,
+                    success=False,
+                    status_code=None,
+                    error_category="ReadTimeout",
                 )
                 raise
             except Exception as exc:
@@ -93,10 +106,17 @@ class ObservableHTTPTransport(httpx.HTTPTransport):
                 raise
 
 
+import os
+
+SUPABASE_HTTP_TIMEOUT = float(os.getenv("SUPABASE_HTTP_TIMEOUT", "6.0"))
+SUPABASE_CONNECT_TIMEOUT = float(os.getenv("SUPABASE_CONNECT_TIMEOUT", "3.0"))
+
+
 def _create_robust_client(url: str, key: str) -> Client:
     """
     Creates a Supabase client with HTTP/1.1 explicitly enforced (http2=False).
     Instruments all PostgREST operations with privacy-safe duration telemetry and bounded read retries.
+    Enforces bounded HTTP timeouts to prevent hanging sockets from permanently exhausting thread pools.
     """
     transport = ObservableHTTPTransport(
         http2=False,
@@ -105,7 +125,7 @@ def _create_robust_client(url: str, key: str) -> Client:
     custom_httpx = httpx.Client(
         http2=False,
         transport=transport,
-        timeout=httpx.Timeout(20.0, connect=10.0),
+        timeout=httpx.Timeout(SUPABASE_HTTP_TIMEOUT, connect=SUPABASE_CONNECT_TIMEOUT),
     )
     options = ClientOptions(httpx_client=custom_httpx)
     return create_client(url, key, options=options)
