@@ -14,6 +14,13 @@ describe('SYS-04: OAuth Callback Redirect Security Suite', () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    delete process.env.APP_ENV;
+    delete process.env.ENVIRONMENT;
+    delete process.env.VERCEL_ENV;
+    delete process.env.VERCEL_URL;
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.APP_URL;
+    delete process.env.ALLOWED_REDIRECT_HOSTS;
   });
 
   afterEach(() => {

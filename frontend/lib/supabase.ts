@@ -1,1 +1,2 @@
-export { supabase, createClient } from "./supabase/client";
+export { supabase, createClient, setClientInstance, resetClientInstance } from "./supabase/client";
+
