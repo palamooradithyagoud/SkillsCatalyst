@@ -75,7 +75,7 @@ export const defaultNavItems: iNavItem[] = [
   },
   {
     heading: "Profile",
-    href: "/settings",
+    href: "/profile",
     subheading: "Account & Preferences",
   },
 ];

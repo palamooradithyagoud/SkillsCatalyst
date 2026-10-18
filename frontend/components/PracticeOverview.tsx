@@ -173,7 +173,7 @@ export default function PracticeOverview({
         </div>
 
         <Link
-          href="/settings"
+          href="/settings/edit?tab=coding"
           className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center gap-1.5"
         >
           <TrendingUp className="w-3.5 h-3.5" />
@@ -214,7 +214,7 @@ export default function PracticeOverview({
             <Code2 className="w-4 h-4 text-indigo-400" />
             <span>Connected LeetCode Live Stats</span>
           </span>
-          <Link href="/settings" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+          <Link href="/settings/edit?tab=coding" className="text-indigo-400 hover:text-indigo-300 transition-colors">
             Manage Link →
           </Link>
         </div>
@@ -294,7 +294,7 @@ function PlatformStatItem({ title, url, dotColor, stat }: PlatformStatItemProps)
           </a>
         ) : (
           <Link
-            href="/settings"
+            href="/settings/edit?tab=coding"
             className="text-[10px] font-semibold text-slate-500 hover:text-indigo-300 transition-colors flex items-center gap-1"
           >
             <Plus className="w-2.5 h-2.5" />

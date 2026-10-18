@@ -98,14 +98,14 @@ export default function MobileQuickDock() {
     {
       id: "profile",
       name: "Profile",
-      href: "/settings",
+      href: "/profile",
       icon: UserIcon,
       desc: "Account",
     },
     {
       id: "avatar",
       name: "User",
-      href: "/settings",
+      href: "/settings/edit",
       text: userInitial,
       desc: "Settings",
     },
@@ -126,6 +126,8 @@ export default function MobileQuickDock() {
         {dockItems.map((item, index) => {
           const isActive =
             pathname === item.href ||
+            (item.id === "profile" && pathname.startsWith("/profile")) ||
+            (item.id === "avatar" && pathname.startsWith("/settings")) ||
             (pathname === "/" && item.href === "/dashboard");
 
           return (

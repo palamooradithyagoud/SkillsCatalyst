@@ -275,7 +275,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
                 <button
                   onClick={() => {
                     setIsUserMenuOpen(false);
-                    router.push("/settings");
+                    router.push("/profile");
                   }}
                   className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >
@@ -284,7 +284,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
                 <button
                   onClick={() => {
                     setIsUserMenuOpen(false);
-                    router.push("/settings");
+                    router.push("/settings/edit");
                   }}
                   className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-900 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-left"
                 >

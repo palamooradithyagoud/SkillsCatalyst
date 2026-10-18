@@ -363,7 +363,7 @@ export default function MetricCards({
           className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#8b5cf6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer group hover:brightness-105 active:scale-98 transition-all"
           onClick={() => {
             if (!isLeetcodeConfigured) {
-              router.push("/settings");
+              router.push("/settings/edit?tab=coding");
             } else {
               router.push("/practice");
             }

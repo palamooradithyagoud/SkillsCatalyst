@@ -54,7 +54,7 @@ const navItems = [
   { name: "Explore", href: "/explore", icon: ExploreIcon, desc: "Trending skills & tools" },
   { name: "Analytics", href: "/analytics", icon: BarChart3, desc: "Detailed performance" },
   { name: "Support & Help", href: "/support", icon: LifeBuoy, desc: "Customer desk & policies" },
-  { name: "Profile", href: "/settings", icon: UserIcon, desc: "Account & settings" },
+  { name: "Profile", href: "/profile", icon: UserIcon, desc: "Account & settings" },
 ];
 
 const mobileNavItems: NavItem[] = [
@@ -200,7 +200,7 @@ function MobileNavContent() {
             {/* User's Profile Avatar (Transparent Background with Purple Initials) */}
             <button
               type="button"
-              onClick={() => router.push("/settings")}
+              onClick={() => router.push("/profile")}
               aria-label="User Profile"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
             >

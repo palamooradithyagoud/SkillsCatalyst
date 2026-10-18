@@ -130,7 +130,7 @@ export default function Sidebar() {
     {
       id: "profile",
       title: "My Profile",
-      href: "/settings",
+      href: "/profile",
       icon: User,
     },
     {

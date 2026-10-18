@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
@@ -476,7 +477,8 @@ def test_database_write_failure_returns_error(mock_sb_getter):
 
 def test_resume_pipeline_does_not_use_text_length_formula():
     """Verify that fake length-based score formula is strictly absent from the codebase."""
-    with open("frontend/app/settings/page.tsx", "r", encoding="utf-8") as f:
+    target_path = "frontend/app/profile/page.tsx" if os.path.exists("frontend/app/profile/page.tsx") else "frontend/app/settings/page.tsx"
+    with open(target_path, "r", encoding="utf-8") as f:
         content = f.read()
     assert "Math.min(25, res.text.length / 150)" not in content
     assert "skillscatalyst_latest_resume_score" not in content or "localStorage.setItem(\"skillscatalyst_latest_resume_score\", String(estScore))" not in content

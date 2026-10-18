@@ -728,7 +728,7 @@ function EditProfileContent() {
               </h2>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
@@ -928,7 +928,7 @@ function EditProfileContent() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
@@ -1247,7 +1247,7 @@ function EditProfileContent() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
@@ -2028,7 +2028,7 @@ function EditProfileContent() {
           {/* Circular Floating Back Button (Requested by User) */}
           <button
             type="button"
-            onClick={() => router.push("/settings")}
+            onClick={() => router.push("/profile")}
             title="Back to Profile"
             className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-200 hover:text-[#7C3AED] hover:border-[#7C3AED] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             aria-label="Back to Profile"
@@ -2039,7 +2039,7 @@ function EditProfileContent() {
           {/* Floating Pill Action Dock */}
           <div className="flex items-center gap-2 sm:gap-3 bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 rounded-full py-1.5 px-3 sm:px-4">
             <Link
-              href="/settings"
+              href="/profile"
               className="flex items-center gap-1.5 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100/80 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
             >
               <User className="w-3.5 h-3.5" />

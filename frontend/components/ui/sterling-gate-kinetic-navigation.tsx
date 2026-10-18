@@ -125,7 +125,7 @@ const defaultFeatures: NavFeatureItem[] = [
     shapeIndex: 8,
     title: "Profile & Settings",
     subtitle: "Account & Preferences",
-    href: "/settings",
+    href: "/profile",
     icon: User,
     accentColor: "rgba(99, 102, 241, 0.2)",
   },
@@ -638,7 +638,7 @@ export function Component({
               {/* Drawer Bottom Bar: User Info & Support */}
               <div data-menu-fade className="pt-3 border-t border-slate-100 dark:border-purple-900/30 shrink-0 flex items-center justify-between gap-2">
                 <div
-                  onClick={() => handleNavigate("/settings")}
+                  onClick={() => handleNavigate("/profile")}
                   className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-purple-950/30 transition-colors min-w-0"
                 >
                   <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/60 border border-purple-200 dark:border-purple-700/60 flex items-center justify-center text-purple-700 dark:text-purple-300 font-bold text-xs shrink-0">

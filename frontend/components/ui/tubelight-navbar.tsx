@@ -29,7 +29,7 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
     if (!pathname) return;
     const current = items.find((item) => {
       if (item.url === "/dashboard") return pathname === "/dashboard" || pathname === "/";
-      if (item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
+      if (item.url === "/profile" || item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
       if (item.url === "/practice") return pathname.startsWith("/practice") || pathname.startsWith("/learning");
       return pathname.startsWith(item.url);
     });
@@ -41,7 +41,7 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
   const isTabActive = (item: NavItem) => {
     if (!pathname) return activeTab === item.name;
     if (item.url === "/dashboard") return pathname === "/dashboard" || pathname === "/";
-    if (item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
+    if (item.url === "/profile" || item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
     if (item.url === "/practice") return pathname.startsWith("/practice") || pathname.startsWith("/learning");
     return pathname.startsWith(item.url);
   };
@@ -62,7 +62,7 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = isTabActive(item);
-          const isProfile = item.name.toLowerCase() === "profile" || item.url === "/settings";
+          const isProfile = item.name.toLowerCase() === "profile" || item.url === "/profile" || item.url === "/settings";
 
           return (
             <Link
