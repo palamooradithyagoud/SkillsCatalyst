@@ -14,7 +14,8 @@ import os
 import re
 import logging
 import httpx
-from typing import Optional
+from collections import defaultdict
+from typing import Optional, Dict, Any, List
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
@@ -89,6 +90,10 @@ class SavePlaylistRequest(BaseModel):
 
 class SyncSavedPlaylistsRequest(BaseModel):
     playlists: list[dict]
+
+
+class PlaylistStatsBatchRequest(BaseModel):
+    playlist_ids: Optional[list[str]] = None
 
 
 # ── Fallback Video IDs & Generator ────────────────────────────────────────────
@@ -544,10 +549,314 @@ async def get_saved_playlists(user_id: str, sb=None) -> dict:
         except Exception as jsonb_fetch_err:
             logger.warning(f"Error fetching JSONB playlists in /saved: {jsonb_fetch_err}")
 
+        # Batch resolve statistics (completed_videos, total_videos, progress_pct) in 1 query
+        all_pids = [p["id"] for p in remapped if isinstance(p, dict) and p.get("id")]
+        if all_pids:
+            try:
+                stats_map = await get_batch_playlist_stats_internal(all_pids, user_id, sb=sb)
+                for p in remapped:
+                    if isinstance(p, dict):
+                        pid = p.get("id")
+                        clean = _canonicalize_playlist_id(p.get("playlist_url", ""), pid) or pid
+                        st = stats_map.get(clean) or stats_map.get(pid) or {}
+                        st_status = st.get("status")
+
+                        vc_raw = p.get("video_count")
+                        m = re.search(r'\d+', str(vc_raw or ""))
+                        vc_int = int(m.group()) if m else None
+
+                        p["stats_status"] = st_status or "missing"
+                        if st_status in ("unavailable", "partial"):
+                            p["completed_videos"] = None
+                            p["total_videos"] = st.get("total_videos") or vc_int
+                            p["progress_pct"] = None
+                        elif st_status == "available":
+                            p["completed_videos"] = st.get("completed_videos", 0)
+                            p["total_videos"] = st.get("total_videos") or vc_int or 0
+                            p["progress_pct"] = st.get("progress_pct", 0)
+                        else:  # missing or unstarted
+                            p["completed_videos"] = 0
+                            p["total_videos"] = st.get("total_videos") or vc_int or 0
+                            p["progress_pct"] = 0
+                            p["stats_status"] = "missing"
+                        p["last_watched_at"] = st.get("last_watched_at")
+            except Exception as stats_err:
+                logger.warning(f"Error enriching saved playlists with stats: {stats_err}")
+                for p in remapped:
+                    if isinstance(p, dict):
+                        vc_raw = p.get("video_count")
+                        m = re.search(r'\d+', str(vc_raw or ""))
+                        p["stats_status"] = "unavailable"
+                        p["completed_videos"] = None
+                        p["total_videos"] = int(m.group()) if m else None
+                        p["progress_pct"] = None
+                        p["last_watched_at"] = None
+
         return {"saved": remapped, "count": len(remapped)}
     except Exception as e:
         logger.error(f"Error fetching saved playlists: {e}")
         return {"saved": [], "count": 0}
+
+
+async def get_batch_playlist_stats_internal(
+    playlist_ids: Optional[list[str]],
+    user_id: str,
+    sb=None,
+) -> Dict[str, dict]:
+    """
+    Core set-based query resolving statistics for target playlist IDs in 1-3 set queries
+    instead of N+1 waterfalls.
+    Explicitly distinguishes:
+    1. available (genuine progress or genuine zero progress)
+    2. missing (playlist not found in user's saved list or progress records)
+    3. unavailable (database failure on progress/metadata queries)
+    4. partial (metadata retrieved, but progress query failed)
+    """
+    sb = sb if sb is not None else _get_sb()
+    if not user_id:
+        return {}
+
+    clean_to_raw: Dict[str, str] = {}
+    clean_pids: list[str] = []
+
+    if playlist_ids is not None:
+        for raw_pid in playlist_ids:
+            if not raw_pid or not isinstance(raw_pid, str):
+                continue
+            clean = _canonicalize_playlist_id("", raw_pid) or raw_pid.strip()
+            if clean and clean not in clean_to_raw:
+                clean_to_raw[clean] = raw_pid
+                clean_pids.append(clean)
+    else:
+        # Fetch all saved playlist IDs for this user
+        if _is_uuid(user_id) and sb:
+            try:
+                res_saved = await asyncio.to_thread(
+                    lambda: sb.table("saved_playlists").select("playlist_id, video_count").eq("user_id", user_id).execute()
+                )
+                if res_saved.data and isinstance(res_saved.data, list):
+                    for row in res_saved.data:
+                        if isinstance(row, dict):
+                            pid = row.get("playlist_id")
+                            if pid:
+                                clean = _canonicalize_playlist_id("", pid) or pid.strip()
+                                if clean and clean not in clean_to_raw:
+                                    clean_to_raw[clean] = pid
+                                    clean_pids.append(clean)
+            except Exception as e:
+                logger.warning(f"Error querying saved_playlists in batch stats: {e}")
+
+        # Also merge IDs from learning_progress JSONB
+        if sb:
+            try:
+                res_lp = await asyncio.to_thread(
+                    lambda: sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+                )
+                if res_lp.data and isinstance(res_lp.data, list) and len(res_lp.data) > 0:
+                    first_row = res_lp.data[0]
+                    if isinstance(first_row, dict):
+                        for pl in first_row.get("completed_steps", []):
+                            if isinstance(pl, dict):
+                                raw_id = pl.get("id") or pl.get("playlist_id") or ""
+                                if raw_id:
+                                    clean = _canonicalize_playlist_id(pl.get("playlist_url", ""), raw_id) or raw_id.strip()
+                                    if clean and clean not in clean_to_raw:
+                                        clean_to_raw[clean] = raw_id
+                                        clean_pids.append(clean)
+            except Exception as lp_err:
+                logger.warning(f"Error reading JSONB in batch stats: {lp_err}")
+
+    if not clean_pids:
+        return {}
+
+    # If database is unavailable, return explicit unavailable status
+    if not sb:
+        stats: Dict[str, dict] = {}
+        for pid in clean_pids:
+            stat_item = {
+                "playlist_id": pid,
+                "total_videos": None,
+                "completed_videos": None,
+                "progress_pct": None,
+                "last_watched_at": None,
+                "status": "unavailable",
+            }
+            stats[pid] = stat_item
+            raw = clean_to_raw.get(pid)
+            if raw and raw != pid:
+                stats[raw] = stat_item
+        return stats
+
+    total_map: Dict[str, int] = {}
+    found_in_saved: set[str] = set()
+    vc_error = False
+
+    # Query 1: Fetch stored video counts for all target clean_pids in ONE set-based IN query
+    if _is_uuid(user_id):
+        try:
+            res_vc = await asyncio.to_thread(
+                lambda: sb.table("saved_playlists").select("playlist_id, video_count").eq("user_id", user_id).in_("playlist_id", clean_pids).execute()
+            )
+            if res_vc.data and isinstance(res_vc.data, list):
+                for row in res_vc.data:
+                    if isinstance(row, dict):
+                        pid = _canonicalize_playlist_id("", row.get("playlist_id")) or row.get("playlist_id")
+                        found_in_saved.add(pid)
+                        vc_str = str(row.get("video_count") or "")
+                        m = re.search(r'\d+', vc_str)
+                        if m:
+                            total_map[pid] = int(m.group())
+        except Exception as vc_err:
+            logger.warning(f"Error fetching video_count in batch stats: {vc_err}")
+            vc_error = True
+
+    # Query 2: Fetch watched progress for all target clean_pids in ONE set-based IN query
+    watched_counts: Dict[str, int] = defaultdict(int)
+    found_in_progress: set[str] = set()
+    last_watched_map: Dict[str, Optional[str]] = {}
+    prog_error = False
+
+    if _is_uuid(user_id):
+        try:
+            res_prog = await asyncio.to_thread(
+                lambda: (
+                    sb.table("video_progress")
+                    .select("playlist_id, video_id, watched, completed_at, updated_at")
+                    .eq("user_id", user_id)
+                    .in_("playlist_id", clean_pids)
+                    .execute()
+                )
+            )
+            if res_prog.data and isinstance(res_prog.data, list):
+                for row in res_prog.data:
+                    if isinstance(row, dict):
+                        pid = _canonicalize_playlist_id("", row.get("playlist_id")) or row.get("playlist_id")
+                        found_in_progress.add(pid)
+                        if row.get("watched") or row.get("completed_at"):
+                            watched_counts[pid] += 1
+                        upd = row.get("completed_at") or row.get("updated_at")
+                        if upd and (pid not in last_watched_map or (last_watched_map[pid] and upd > last_watched_map[pid])):
+                            last_watched_map[pid] = upd
+        except Exception as prog_err:
+            logger.warning(f"Error querying video_progress in batch stats: {prog_err}")
+            prog_error = True
+
+    # Query 3: Merge progress from learning_progress JSONB table (guests & dual persistence) in ONE query
+    lp_error = False
+    try:
+        res_lp = await asyncio.to_thread(
+            lambda: sb.table("learning_progress").select("completed_steps").eq("session_id", user_id).eq("skill_name", "saved_playlists").limit(1).execute()
+        )
+        if res_lp.data and isinstance(res_lp.data, list) and len(res_lp.data) > 0:
+            first_row = res_lp.data[0]
+            if isinstance(first_row, dict):
+                for pl in first_row.get("completed_steps", []):
+                    if isinstance(pl, dict):
+                        raw_id = pl.get("id") or pl.get("playlist_id") or ""
+                        clean = _canonicalize_playlist_id(pl.get("playlist_url", ""), raw_id) or raw_id
+                        target_id = None
+                        if clean in clean_to_raw:
+                            target_id = clean
+                        elif raw_id in clean_to_raw:
+                            target_id = raw_id
+
+                        if target_id:
+                            found_in_saved.add(target_id)
+                            videos = pl.get("videos", [])
+                            if videos and isinstance(videos, list):
+                                if target_id not in total_map or total_map[target_id] == 0:
+                                    total_map[target_id] = len(videos)
+                                jsonb_watched = sum(1 for v in videos if isinstance(v, dict) and (v.get("watched") or v.get("completed") or v.get("completed_at")))
+                                watched_counts[target_id] = max(watched_counts[target_id], jsonb_watched)
+                                if jsonb_watched > 0:
+                                    found_in_progress.add(target_id)
+                            elif pl.get("video_count") and (target_id not in total_map or total_map[target_id] == 0):
+                                vc_str = str(pl.get("video_count"))
+                                m = re.search(r'\d+', vc_str)
+                                if m:
+                                    total_map[target_id] = int(m.group())
+    except Exception as lp_err:
+        logger.warning(f"Error querying learning_progress in batch stats: {lp_err}")
+        lp_error = True
+
+    # Final assembly of stats dictionary distinguishing:
+    # 1. available (genuine progress or genuine zero progress)
+    # 2. missing (playlist not found in user's saved list or progress records)
+    # 3. unavailable (database failure on progress/metadata queries)
+    # 4. partial (metadata retrieved, but progress query failed)
+    stats: Dict[str, dict] = {}
+    for pid in clean_pids:
+        # Check if progress could not be fetched due to DB error
+        if prog_error:
+            if pid in total_map:
+                item_status = "partial"
+                total = total_map[pid]
+            else:
+                item_status = "unavailable"
+                total = None
+            completed = None
+            pct = None
+            last_watched = None
+        else:
+            is_known = (pid in found_in_saved) or (pid in found_in_progress) or (pid in total_map)
+            if is_known:
+                total = total_map.get(pid, 0)
+                completed = watched_counts.get(pid, 0)
+                if completed > total and total > 0:
+                    total = completed
+                pct = round((completed / total) * 100) if total > 0 else 0
+                item_status = "available"
+                last_watched = last_watched_map.get(pid)
+            else:
+                total = 0
+                completed = 0
+                pct = 0
+                item_status = "missing"
+                last_watched = None
+
+        stat_item = {
+            "playlist_id": pid,
+            "total_videos": total,
+            "completed_videos": completed,
+            "progress_pct": min(100, max(0, pct)) if pct is not None else None,
+            "last_watched_at": last_watched,
+            "status": item_status,
+        }
+        stats[pid] = stat_item
+        raw = clean_to_raw.get(pid)
+        if raw and raw != pid:
+            stats[raw] = stat_item
+
+    return stats
+
+
+async def get_batch_playlist_stats(
+    playlist_ids: Optional[list[str]],
+    user_id: str,
+    sb=None,
+) -> dict:
+    """
+    SYS-11: Batch retrieve statistics (total_videos, completed_videos, progress_pct, last_watched_at)
+    for multiple playlists in a single set-based query without N+1 query waterfalls.
+    """
+    sb = sb if sb is not None else _get_sb()
+    if not sb or not user_id:
+        return {"stats": {}, "count": 0, "status": "unavailable"}
+
+    stats = await get_batch_playlist_stats_internal(playlist_ids, user_id, sb=sb)
+
+    if not stats:
+        batch_status = "available" if (playlist_ids is not None and len(playlist_ids) == 0) else "missing"
+    else:
+        statuses = {v.get("status") for v in stats.values()}
+        if statuses == {"unavailable"}:
+            batch_status = "unavailable"
+        elif "unavailable" in statuses or "partial" in statuses:
+            batch_status = "partial"
+        else:
+            batch_status = "available"
+
+    return {"stats": stats, "count": len(stats), "status": batch_status}
 
 
 async def sync_saved_playlists(

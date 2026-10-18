@@ -35,6 +35,7 @@ describe("API Domain Modules & Facade Verification", () => {
     assert.strictEqual(FacadeAPI.unsavePlaylist, PlaylistsAPI.unsavePlaylist);
     assert.strictEqual(FacadeAPI.fetchSavedPlaylists, PlaylistsAPI.fetchSavedPlaylists);
     assert.strictEqual(FacadeAPI.fetchPlaylistVideos, PlaylistsAPI.fetchPlaylistVideos);
+    assert.strictEqual(FacadeAPI.fetchPlaylistsStats, PlaylistsAPI.fetchPlaylistsStats);
 
     // Progress
     assert.strictEqual(FacadeAPI.markVideoWatched, ProgressAPI.markVideoWatched);

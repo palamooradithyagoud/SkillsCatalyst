@@ -237,6 +237,72 @@ export async function fetchSavedPlaylists(): Promise<{ saved: Playlist[]; count:
   return _inFlightSavedPlaylistsPromise;
 }
 
+export interface PlaylistStats {
+  playlist_id: string;
+  total_videos?: number | null;
+  completed_videos?: number | null;
+  progress_pct?: number | null;
+  last_watched_at?: string | null;
+  status?: "available" | "missing" | "unavailable" | "partial";
+}
+
+const _inFlightStatsMap = new Map<string, Promise<Record<string, PlaylistStats>>>();
+
+export async function fetchPlaylistsStats(
+  playlistIds?: string[]
+): Promise<Record<string, PlaylistStats>> {
+  const authHeaders = await getAuthHeaders();
+  const userScope = authHeaders.Authorization || authHeaders["X-Guest-Session"] || "anon";
+  const cleanList = playlistIds && playlistIds.length > 0
+    ? Array.from(new Set(playlistIds.map(cleanPlaylistId).filter(Boolean))).sort()
+    : [];
+  const cacheKey = `${userScope}::${cleanList.length > 0 ? cleanList.join(",") : "__all__"}`;
+
+  if (_inFlightStatsMap.has(cacheKey)) {
+    return _inFlightStatsMap.get(cacheKey)!;
+  }
+
+  const promise = (async () => {
+    try {
+      let res: Response;
+      if (cleanList.length > 0 && cleanList.length <= 15) {
+        const queryParams = new URLSearchParams({
+          playlist_ids: cleanList.join(","),
+        });
+        res = await apiFetch(`${API_BASE}/api/learning/playlists/stats?${queryParams.toString()}`, {
+          headers: { ...authHeaders },
+        });
+      } else if (cleanList.length > 15) {
+        res = await apiFetch(`${API_BASE}/api/learning/playlists/stats`, {
+          method: "POST",
+          headers: { ...authHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ playlist_ids: cleanList }),
+        });
+      } else {
+        res = await apiFetch(`${API_BASE}/api/learning/playlists/stats`, {
+          headers: { ...authHeaders },
+        });
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.stats || {};
+      }
+      return {};
+    } catch (err) {
+      console.warn("fetchPlaylistsStats failed:", err);
+      return {};
+    } finally {
+      setTimeout(() => {
+        _inFlightStatsMap.delete(cacheKey);
+      }, 1000);
+    }
+  })();
+
+  _inFlightStatsMap.set(cacheKey, promise);
+  return promise;
+}
+
 export async function fetchPlaylistVideos(
   playlistId: string,
 ): Promise<{ videos: PlaylistVideo[]; count: number }> {

@@ -15,6 +15,11 @@ export interface Playlist {
   source: "csv" | "youtube";
   skill_query?: string;
   created_at?: string;
+  completed_videos?: number | null;
+  total_videos?: number | null;
+  progress_pct?: number | null;
+  last_watched_at?: string | null;
+  stats_status?: "available" | "missing" | "unavailable" | "partial";
 }
 
 export interface SearchResult {

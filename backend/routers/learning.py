@@ -8,7 +8,7 @@ All domain and business logic is decoupled into `backend.services.learning.*`.
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Query, Depends, HTTPException, status
+from fastapi import APIRouter, Query, Depends, HTTPException, status, Response
 
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
@@ -78,6 +78,7 @@ from backend.services.learning.search_service import (
 from backend.services.learning.playlist_service import (
     SavePlaylistRequest,
     SyncSavedPlaylistsRequest,
+    PlaylistStatsBatchRequest,
     FALLBACK_EDUCATIONAL_VIDEO_IDS,
     _generate_fallback_playlist_videos,
     _resolve_playlist_info,
@@ -87,6 +88,7 @@ from backend.services.learning.playlist_service import (
     sync_saved_playlists as _sync_saved_playlists_svc,
     get_saved_playlists_jsonb as _get_saved_playlists_jsonb_svc,
     get_playlist_videos as _get_playlist_videos_svc,
+    get_batch_playlist_stats as _get_batch_playlist_stats_svc,
 )
 
 # ---------------------------------------------------------------------------
@@ -173,6 +175,56 @@ async def sync_saved_playlists(
 async def get_saved_playlists_jsonb(current_user_id: str = Depends(get_session_or_user_id)):
     """Compatibility endpoint for guest JSONB saved playlists."""
     return await _get_saved_playlists_jsonb_svc(current_user_id, sb=get_supabase())
+
+
+# ── Playlist Statistics (Batch SYS-11) ────────────────────────────────────────
+@router.get("/playlists/stats")
+async def get_playlists_stats_get(
+    response:     Response,
+    playlist_ids: Optional[str] = Query(None, description="Comma-separated playlist IDs"),
+    user_id:      str = Depends(get_session_or_user_id),
+):
+    """
+    SYS-11: Batch retrieve statistics (total_videos, completed_videos, progress_pct, last_watched_at)
+    for multiple playlists in a single set-based query without N+1 waterfalls.
+    Explicitly distinguishes available, missing, partial, and unavailable failure states.
+    """
+    ids_list = [pid.strip() for pid in playlist_ids.split(",") if pid.strip()] if playlist_ids else None
+    res = await _get_batch_playlist_stats_svc(ids_list, user_id, sb=get_supabase())
+
+    batch_status = res.get("status", "available")
+    response.headers["X-Stats-Status"] = batch_status
+
+    if ids_list and batch_status == "unavailable":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Playlist statistics temporarily unavailable",
+        )
+    return res
+
+
+@router.post("/playlists/stats")
+async def get_playlists_stats_post(
+    response: Response,
+    req:      PlaylistStatsBatchRequest,
+    user_id:  str = Depends(get_session_or_user_id),
+):
+    """
+    SYS-11: Batch retrieve statistics (total_videos, completed_videos, progress_pct, last_watched_at)
+    for multiple playlists via POST body for arbitrarily large batches.
+    Explicitly distinguishes available, missing, partial, and unavailable failure states.
+    """
+    res = await _get_batch_playlist_stats_svc(req.playlist_ids, user_id, sb=get_supabase())
+
+    batch_status = res.get("status", "available")
+    response.headers["X-Stats-Status"] = batch_status
+
+    if req.playlist_ids and batch_status == "unavailable":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Playlist statistics temporarily unavailable",
+        )
+    return res
 
 
 # ── Video List ────────────────────────────────────────────────────────────────

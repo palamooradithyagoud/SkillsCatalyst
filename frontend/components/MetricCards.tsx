@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { fetchSavedPlaylists, fetchPlaylistVideos, Playlist } from "@/lib/api";
+import { fetchSavedPlaylists, fetchPlaylistsStats, cleanPlaylistId, Playlist, PlaylistStats } from "@/lib/api";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PricingModal from "@/components/PricingModal";
 import EventHeroCard from "@/components/EventHeroCard";
@@ -61,6 +61,7 @@ export interface SavedYTPlaylistItem {
   progressPct: number;
   image: string;
   href: string;
+  isUnavailable?: boolean;
 }
 
 export default function MetricCards({
@@ -149,57 +150,89 @@ export default function MetricCards({
         const { saved } = await fetchSavedPlaylists();
 
         if (saved && Array.isArray(saved) && saved.length > 0) {
-          // 2. Fetch exact video watched/completed count for each playlist
-          const playlistItems: SavedYTPlaylistItem[] = await Promise.all(
-            saved.map(async (playlist: Playlist, idx: number) => {
-              let completedVideos = 0;
-              let totalVideos = parseInt(playlist.video_count) || 0;
+          // 2. Resolve stats in single batch if not already attached to saved playlists
+          let statsMap: Record<string, PlaylistStats> = {};
+          const needsBatchStats = saved.some((p: any) => p.completed_videos === undefined);
+          if (needsBatchStats) {
+            try {
+              statsMap = await fetchPlaylistsStats(saved.map((p) => p.id));
+            } catch (statsErr) {
+              console.warn("Failed to fetch batch playlist stats:", statsErr);
+            }
+          }
 
-              try {
-                const { videos } = await fetchPlaylistVideos(playlist.id);
-                if (videos && Array.isArray(videos) && videos.length > 0) {
-                  totalVideos = videos.length;
-                  completedVideos = videos.filter(
-                    (v) => v.watched || v.completed_at
-                  ).length;
+          // Retrieve previous cached playlists to avoid overwriting valid stats with zero on database failures
+          let previousCachedMap: Record<string, SavedYTPlaylistItem> = {};
+          try {
+            const rawCached = localStorage.getItem(CACHE_KEY);
+            if (rawCached) {
+              const parsed = JSON.parse(rawCached);
+              if (Array.isArray(parsed)) {
+                for (const item of parsed) {
+                  if (item && item.id) {
+                    previousCachedMap[item.id] = item;
+                  }
                 }
-              } catch (e) {
-                console.warn(`Failed to fetch videos for ${playlist.id}:`, e);
               }
+            }
+          } catch { }
 
-              const progressPct =
-                totalVideos > 0
-                  ? Math.round((completedVideos / totalVideos) * 100)
-                  : 0;
+          let hasAnyUnavailable = false;
 
-              const rawThumb = playlist.thumbnail || "";
-              const isValidThumb =
-                rawThumb &&
-                !rawThumb.includes("/vi/default/") &&
-                !rawThumb.endsWith("default.jpg");
+          const playlistItems: SavedYTPlaylistItem[] = saved.map((playlist: any, idx: number) => {
+            const st = statsMap[playlist.id] || statsMap[cleanPlaylistId(playlist.id)] || {};
+            const status = playlist.stats_status ?? st.status ?? (playlist.completed_videos !== undefined ? "available" : "unknown");
+            const isUnavailable = status === "unavailable" || status === "partial";
+            if (isUnavailable) {
+              hasAnyUnavailable = true;
+            }
 
-              const imageSrc = isValidThumb
-                ? rawThumb
-                : clayImages[idx % clayImages.length];
+            const prev = previousCachedMap[playlist.id] || previousCachedMap[cleanPlaylistId(playlist.id)];
 
-              return {
-                id: playlist.id,
-                title: playlist.title || "YouTube Learning Playlist",
-                channel: playlist.channel || "YouTube Creator",
-                completedVideos,
-                totalVideos,
-                progressPct,
-                image: imageSrc,
-                href: `/learning?playlist=${encodeURIComponent(playlist.id)}`,
-              };
-            })
-          );
+            // If unavailable, preserve previously cached stats if available; otherwise use 0
+            const completedVideos = isUnavailable
+              ? (prev?.completedVideos ?? (playlist.completed_videos ?? 0))
+              : (playlist.completed_videos ?? st.completed_videos ?? 0);
+
+            const totalVideos = playlist.total_videos ?? st.total_videos ?? (parseInt(playlist.video_count) || prev?.totalVideos || 0);
+
+            const progressPct = isUnavailable
+              ? (prev?.progressPct ?? (totalVideos > 0 && typeof completedVideos === "number" ? Math.round((completedVideos / totalVideos) * 100) : 0))
+              : (playlist.progress_pct ?? st.progress_pct ?? (totalVideos > 0 && typeof completedVideos === "number" ? Math.round((completedVideos / totalVideos) * 100) : 0));
+
+            const rawThumb = playlist.thumbnail || "";
+            const isValidThumb =
+              rawThumb &&
+              !rawThumb.includes("/vi/default/") &&
+              !rawThumb.endsWith("default.jpg");
+
+            const imageSrc = isValidThumb
+              ? rawThumb
+              : clayImages[idx % clayImages.length];
+
+            return {
+              id: playlist.id,
+              title: playlist.title || "YouTube Learning Playlist",
+              channel: playlist.channel || "YouTube Creator",
+              completedVideos,
+              totalVideos,
+              progressPct,
+              image: imageSrc,
+              href: `/learning?playlist=${encodeURIComponent(playlist.id)}`,
+              isUnavailable,
+            };
+          });
 
           setSavedPlaylists(playlistItems);
-          try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(playlistItems));
-            localStorage.setItem(`${CACHE_KEY}_ts`, String(Date.now()));
-          } catch { }
+
+          // Only cache in localStorage if we did not experience an unavailable database failure,
+          // preventing overwriting valid stored statistics with fabricated zero values.
+          if (!hasAnyUnavailable) {
+            try {
+              localStorage.setItem(CACHE_KEY, JSON.stringify(playlistItems));
+              localStorage.setItem(`${CACHE_KEY}_ts`, String(Date.now()));
+            } catch { }
+          }
         } else {
           setSavedPlaylists([]);
           try {
@@ -454,7 +487,11 @@ export default function MetricCards({
 
                   <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
                     <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#A855F7] dark:text-[#C084FC] fill-[#A855F7] dark:fill-[#C084FC] shrink-0" />
-                    <span>{course.completedVideos}/{course.totalVideos} videos completed</span>
+                    {course.isUnavailable ? (
+                      <span className="text-amber-500 dark:text-amber-400">Progress syncing...</span>
+                    ) : (
+                      <span>{course.completedVideos}/{course.totalVideos} videos completed</span>
+                    )}
                   </p>
                 </div>
 

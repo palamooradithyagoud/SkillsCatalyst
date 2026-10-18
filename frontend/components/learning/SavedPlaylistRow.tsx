@@ -29,19 +29,26 @@ export function SavedPlaylistRow({
   // Use the actual YouTube playlist ID from the URL, not the row rank
   const ytPlaylistId = extractPlaylistId(pl.playlist_url ?? "") ?? pl.id;
 
+  const storedCount = parseInt(pl.video_count ?? "0") || 0;
+  const initialTotal = (typeof pl.total_videos === "number" && pl.total_videos > 0) ? pl.total_videos : storedCount;
+  const initialWatched = typeof pl.completed_videos === "number" ? pl.completed_videos : null;
+  const initialPct = typeof pl.progress_pct === "number" ? pl.progress_pct : null;
+  const isStatsUnavailable = pl.stats_status === "unavailable" || (pl.stats_status === "partial" && initialWatched === null);
+
   const { data: videoData, isLoading: loadingVideos } = useQuery({
     queryKey: ["playlist-videos", ytPlaylistId, userId],
     queryFn: () => fetchPlaylistVideos(ytPlaylistId),
-    enabled: !!ytPlaylistId,
+    enabled: !!ytPlaylistId && (expanded || initialWatched === null || isStatsUnavailable),
     staleTime: 5 * 60 * 1000,
   });
 
-  const hasLoaded = !!videoData;
+  const hasLoaded = !!videoData || (initialWatched !== null && !isStatsUnavailable);
   const videos = videoData?.videos ?? [];
-  const storedCount = parseInt(pl.video_count ?? "0") || 0;
-  const displayCount = videos.length > 0 ? videos.length : storedCount;
-  const watchedCount = videos.filter((v) => v.watched).length;
-  const pct = videos.length > 0 ? Math.round((watchedCount / videos.length) * 100) : 0;
+  const displayCount = videos.length > 0 ? videos.length : initialTotal;
+  const watchedCount = videos.length > 0 ? videos.filter((v) => v.watched).length : (initialWatched ?? 0);
+  const pct = videos.length > 0
+    ? (displayCount > 0 ? Math.round((watchedCount / displayCount) * 100) : 0)
+    : (initialPct ?? (displayCount > 0 && initialWatched !== null ? Math.round((initialWatched / displayCount) * 100) : 0));
 
   const markMut = useMutation({
     mutationFn: ({ videoId, watched }: { videoId: string; watched: boolean }) =>
@@ -129,7 +136,11 @@ export function SavedPlaylistRow({
 
       {/* ── Progress line */}
       <div className="flex items-center justify-between px-6 pb-3 mt-1">
-        {!hasLoaded ? (
+        {isStatsUnavailable && !videoData ? (
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+            Progress temporarily unavailable
+          </span>
+        ) : !hasLoaded ? (
           <span className="flex items-center gap-2 text-xs font-semibold text-black dark:text-neutral-400">
             <Loader2 className="w-3.5 h-3.5 animate-spin text-black dark:text-neutral-400" />
             <span>Syncing video progress...</span>
