@@ -22,10 +22,13 @@ from backend.models.coupon import (
     CouponValidationResponse,
 )
 from backend.services.coupon_service import CouponService
+from backend.models.reporting import PaymentReceiptDTO
+from backend.services.reporting_service import ReportingService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
+
 
 
 @router.post(
@@ -125,3 +128,24 @@ def get_payment_history(
     Returns list of safe payment transaction records.
     """
     return PaymentService.get_user_payment_history(user_id=user_id)
+
+
+@router.get(
+    "/receipt/{merchant_order_id}",
+    response_model=PaymentReceiptDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get Payment Receipt",
+    description="Returns verified receipt or promotional pass confirmation for a completed transaction owned by the authenticated student.",
+)
+def get_payment_receipt(
+    merchant_order_id: str,
+    user_id: str = Depends(get_current_user_id),
+) -> PaymentReceiptDTO:
+    """
+    Returns verified electronic receipt. Authenticated students can only access their own receipts.
+    """
+    return ReportingService.get_payment_receipt(
+        merchant_order_id=merchant_order_id,
+        requesting_user_id=user_id,
+        is_admin=False,
+    )

@@ -23,3 +23,4 @@ export * from "./api/payment";
 export * from "./api/coupon";
 export * from "./api/admin_payment";
 export * from "./api/courses";
+export * from "./api/reporting";

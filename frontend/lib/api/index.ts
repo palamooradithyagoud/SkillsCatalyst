@@ -15,3 +15,4 @@ export * from "./payment";
 export * from "./coupon";
 export * from "./admin_payment";
 export * from "./courses";
+export * from "./reporting";

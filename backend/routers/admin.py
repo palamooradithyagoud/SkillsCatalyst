@@ -6,8 +6,9 @@ Students and unauthenticated callers are rejected with 403 Forbidden or 401 Unau
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, BackgroundTasks, Response
 from pydantic import BaseModel, Field
 
 from backend.services.auth_service import require_owner, require_admin
@@ -1298,6 +1299,169 @@ def cancel_admin_subscription(
         subscription_id=subscription_id,
         admin_user_id=admin.get("user_id", "admin"),
         reason=payload.reason,
+    )
+
+
+# ==============================================================================
+# Phase 7: Financial Reporting, Receipts, Secure CSV Exports & Reconciliation
+# ==============================================================================
+from backend.models.reporting import (
+    PaymentReceiptDTO,
+    ReconciliationSummaryDTO,
+    RunReconciliationRequest,
+    SingleReconciliationResponse,
+)
+from backend.services.reporting_service import ReportingService
+from backend.services.reconciliation_service import ReconciliationService
+
+
+@router.get(
+    "/payments/receipt/{merchant_order_id}",
+    response_model=PaymentReceiptDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get Payment Receipt (Admin)",
+    description="Returns verified payment receipt or promotional confirmation for any transaction on the platform.",
+)
+def get_admin_payment_receipt(
+    merchant_order_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> PaymentReceiptDTO:
+    """Protected Admin endpoint returning verified payment receipt."""
+    return ReportingService.get_payment_receipt(
+        merchant_order_id=merchant_order_id,
+        requesting_user_id=admin.get("user_id", "admin"),
+        is_admin=True,
+    )
+
+
+@router.get(
+    "/reports/financial",
+    response_model=AdminPaymentMetricsDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get Authoritative Financial Report (Admin)",
+    description="Returns comprehensive financial report metrics including gross value, net cash, promotional passes, and coupon discounts.",
+)
+def get_financial_report(
+    preset: Optional[str] = Query("30d", description="Preset date range: 'today', '7d', '30d', or 'all'"),
+    start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
+    end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminPaymentMetricsDTO:
+    """Protected Admin endpoint returning authoritative financial metrics."""
+    return AdminPaymentService.get_payment_dashboard_metrics(
+        preset=preset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@router.get(
+    "/reports/export/transactions.csv",
+    status_code=status.HTTP_200_OK,
+    summary="Export Payment Transactions to CSV (Admin)",
+    description="Downloads formula-injection-protected CSV export of payment transactions with applied filters.",
+)
+def export_transactions_csv(
+    status: Optional[str] = Query(None, description="Filter by status: 'success', 'pending', 'failed', 'cancelled', or 'all'"),
+    preset: Optional[str] = Query(None, description="Preset date range: 'today', '7d', '30d', or 'all'"),
+    start_date: Optional[str] = Query(None, description="Filter by creation start date (ISO-8601 UTC)"),
+    end_date: Optional[str] = Query(None, description="Filter by creation end date (ISO-8601 UTC)"),
+    plan_code: Optional[str] = Query(None, description="Filter by plan code"),
+    coupon_code: Optional[str] = Query(None, description="Filter by coupon code"),
+    search: Optional[str] = Query(None, description="Search by merchant order reference, user ID, or email"),
+    limit: int = Query(5000, ge=1, le=10000, description="Max rows to export"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Response:
+    """Protected Admin endpoint for secure CSV export of transactions."""
+    csv_content = ReportingService.export_transactions_csv(
+        admin_user_id=admin.get("user_id", "admin"),
+        status_filter=status,
+        preset=preset,
+        start_date=start_date,
+        end_date=end_date,
+        plan_code=plan_code,
+        coupon_code=coupon_code,
+        search=search,
+        max_rows=limit,
+    )
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"skillscatalyst_transactions_{timestamp}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+    )
+
+
+@router.get(
+    "/reports/export/revenue-summary.csv",
+    status_code=status.HTTP_200_OK,
+    summary="Export Revenue Summary Report to CSV (Admin)",
+    description="Downloads formula-injection-protected CSV export of authoritative revenue aggregates, plan breakdowns, coupon totals, and daily trends.",
+)
+def export_revenue_summary_csv(
+    preset: Optional[str] = Query("30d", description="Preset date range: 'today', '7d', '30d', or 'all'"),
+    start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
+    end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> Response:
+    """Protected Admin endpoint for secure CSV export of revenue summary."""
+    csv_content = ReportingService.export_revenue_summary_csv(
+        admin_user_id=admin.get("user_id", "admin"),
+        preset=preset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"skillscatalyst_revenue_summary_{timestamp}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+    )
+
+
+@router.post(
+    "/reconciliation/run",
+    response_model=ReconciliationSummaryDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Run Payment Reconciliation Batch (Admin)",
+    description="Performs authoritative comparison between local payment ledger and PhonePe gateway. Safely recovers pending transactions.",
+)
+def run_reconciliation(
+    payload: RunReconciliationRequest = RunReconciliationRequest(),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> ReconciliationSummaryDTO:
+    """Protected Admin endpoint executing bounded payment reconciliation."""
+    return ReconciliationService.run_reconciliation_batch(
+        admin_user_id=admin.get("user_id", "admin"),
+        preset=payload.preset,
+        status_filter=payload.status_filter,
+        limit=payload.limit,
+    )
+
+
+@router.post(
+    "/reconciliation/transaction/{merchant_order_id}/sync",
+    response_model=SingleReconciliationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Reconcile Single Transaction (Admin)",
+    description="Performs an authoritative on-demand reconciliation check for a specific merchant order reference.",
+)
+def reconcile_single_transaction(
+    merchant_order_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> SingleReconciliationResponse:
+    """Protected Admin endpoint reconciling a single transaction with PhonePe."""
+    return ReconciliationService.reconcile_single_order(
+        merchant_order_id=merchant_order_id,
+        admin_user_id=admin.get("user_id", "admin"),
     )
 
 
