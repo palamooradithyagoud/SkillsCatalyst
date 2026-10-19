@@ -9,7 +9,7 @@ import uuid
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from fastapi import HTTPException, status
 
 from backend.services.supabase_service import get_supabase

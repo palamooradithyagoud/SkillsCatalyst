@@ -8,7 +8,7 @@ Phase: Payments Phase 1 — Subscription + Entitlement Foundation
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Union
 
 from backend.services.supabase_service import get_supabase
 from backend.services.auth_service import is_valid_uuid
