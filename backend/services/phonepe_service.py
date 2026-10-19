@@ -246,6 +246,7 @@ class PhonePeService:
         provider_order_id = payload.get("orderId") or payload.get("order_id")
         state = (payload.get("state") or "").upper()
         amount = payload.get("amount")
+        currency = payload.get("currency")
         error_code = payload.get("errorCode") or payload.get("error_code")
         detailed_error_code = payload.get("detailedErrorCode") or payload.get("detailed_error_code")
 
@@ -256,6 +257,7 @@ class PhonePeService:
             "provider_order_id": provider_order_id,
             "state": state,
             "amount": amount,
+            "currency": currency,
             "error_code": error_code,
             "detailed_error_code": detailed_error_code,
             "raw_payload": payload,

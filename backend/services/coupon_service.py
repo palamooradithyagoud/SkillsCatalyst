@@ -52,7 +52,7 @@ class CouponService:
     5. Safe redemption recording strictly upon successful payment lifecycle.
     """
 
-    _lock = threading.Lock()
+    _lock = threading.RLock()
     # In-memory registry fallback for isolated unit testing & transitional mocks
     _memory_coupons: Dict[str, Dict[str, Any]] = {}
     _memory_redemptions: List[Dict[str, Any]] = []
@@ -460,28 +460,27 @@ class CouponService:
         now_utc = datetime.now(timezone.utc)
         sb = get_supabase()
 
+        is_new_memory_record = False
         with cls._lock:
             # Check memory store for duplicate first
-            for r in cls._memory_redemptions:
-                if r["coupon_id"] == coupon_id and r["payment_transaction_id"] == payment_transaction_id:
-                    return True
+            is_mem_duplicate = any(
+                r["coupon_id"] == coupon_id and r["payment_transaction_id"] == payment_transaction_id
+                for r in cls._memory_redemptions
+            )
+            if not is_mem_duplicate:
+                cls._memory_redemptions.append({
+                    "id": str(uuid.uuid4()),
+                    "coupon_id": coupon_id,
+                    "user_id": user_id,
+                    "payment_transaction_id": payment_transaction_id,
+                    "discount_in_paise": discount_in_paise,
+                    "original_amount_in_paise": original_amount_in_paise,
+                    "final_amount_in_paise": final_amount_in_paise,
+                    "redeemed_at": now_utc.isoformat(),
+                })
+                is_new_memory_record = True
 
-            # Always maintain memory store ledger for fallback & fast counting
-            cls._memory_redemptions.append({
-                "id": str(uuid.uuid4()),
-                "coupon_id": coupon_id,
-                "user_id": user_id,
-                "payment_transaction_id": payment_transaction_id,
-                "discount_in_paise": discount_in_paise,
-                "original_amount_in_paise": original_amount_in_paise,
-                "final_amount_in_paise": final_amount_in_paise,
-                "redeemed_at": now_utc.isoformat(),
-            })
-
-            if coupon_id in cls._memory_coupons:
-                cls._memory_coupons[coupon_id]["used_count"] = cls._memory_coupons[coupon_id].get("used_count", 0) + 1
-                cls._memory_coupons[coupon_id]["updated_at"] = now_utc.isoformat()
-
+        is_new_db_record = False
         if sb and is_valid_uuid(coupon_id):
             if is_valid_uuid(user_id) and is_valid_uuid(payment_transaction_id):
                 try:
@@ -504,23 +503,184 @@ class CouponService:
                             "final_amount_in_paise": final_amount_in_paise,
                             "redeemed_at": now_utc.isoformat(),
                         }
-                        sb.from_("coupon_redemptions").insert(redemption_record).execute()
+                        insert_res = sb.from_("coupon_redemptions").insert(redemption_record).execute()
+                        if insert_res.data and len(insert_res.data) > 0:
+                            is_new_db_record = True
                 except Exception as e:
                     logger.warning(f"Database error during coupon redemption recording: {e}")
 
-            # 3. Increment used_count on coupon in DB
+            # 3. Increment used_count on coupon in DB strictly when newly recorded
+            if is_new_db_record:
+                try:
+                    curr = sb.from_("coupons").select("used_count").eq("id", coupon_id).execute()
+                    if curr.data and len(curr.data) > 0:
+                        new_count = int(curr.data[0].get("used_count", 0)) + 1
+                        sb.from_("coupons").update({
+                            "used_count": new_count,
+                            "updated_at": now_utc.isoformat(),
+                        }).eq("id", coupon_id).execute()
+                except Exception as e:
+                    logger.warning(f"Database error updating coupon used_count: {e}")
+
+        # Update in-memory used_count strictly if newly recorded in memory
+        with cls._lock:
+            if is_new_memory_record and coupon_id in cls._memory_coupons:
+                cls._memory_coupons[coupon_id]["used_count"] = cls._memory_coupons[coupon_id].get("used_count", 0) + 1
+                cls._memory_coupons[coupon_id]["updated_at"] = now_utc.isoformat()
+
+        return True
+
+    @classmethod
+    def claim_and_record_free_coupon(
+        cls,
+        coupon_id: str,
+        user_id: str,
+        payment_transaction_id: str,
+        plan_code: str,
+        discount_in_paise: int,
+        original_amount_in_paise: int,
+    ) -> bool:
+        """
+        Atomically validates limits, claims the slot, and records the redemption
+        for a 100% free promotional coupon BEFORE provisioning access.
+        Throws HTTPException(400) if the coupon usage cap or user cap is reached under concurrency.
+        """
+        from backend.services.auth_service import is_valid_uuid
+
+        now_utc = datetime.now(timezone.utc)
+        sb = get_supabase()
+
+        with cls._lock:
+            # 1. Retrieve coupon and re-validate under exclusive process lock
+            coupon = cls.get_coupon_by_id(coupon_id)
+            if not coupon:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found.")
+            if not coupon.is_active:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Coupon '{coupon.code}' is currently inactive.")
+            if coupon.expires_at and now_utc > coupon.expires_at:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Coupon '{coupon.code}' has expired.")
+
+            # Check Global Usage Cap
+            if coupon.max_uses is not None and coupon.used_count >= coupon.max_uses:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Coupon '{coupon.code}' has reached its global redemption limit.",
+                )
+
+            # Check Per-Student Redemption Limit
+            user_redemptions = cls._count_user_redemptions(coupon.id, user_id)
+            if user_redemptions >= coupon.max_uses_per_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"You have already redeemed coupon '{coupon.code}' the maximum permitted number of times.",
+                )
+
+            # Check database for global limit if DB is active
+            if sb and is_valid_uuid(coupon_id):
+                try:
+                    curr = sb.from_("coupons").select("used_count, max_uses").eq("id", coupon_id).execute()
+                    if curr.data and len(curr.data) > 0:
+                        db_used = int(curr.data[0].get("used_count", 0))
+                        db_max = curr.data[0].get("max_uses")
+                        if db_max is not None and db_used >= db_max:
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"Coupon '{coupon.code}' has reached its global redemption limit.",
+                            )
+                except HTTPException:
+                    raise
+                except Exception as db_err:
+                    logger.warning(f"Error checking coupon usage limit in DB: {db_err}")
+
+            # 2. Claim slot in memory
+            cls._memory_redemptions.append({
+                "id": str(uuid.uuid4()),
+                "coupon_id": coupon_id,
+                "user_id": user_id,
+                "payment_transaction_id": payment_transaction_id,
+                "discount_in_paise": discount_in_paise,
+                "original_amount_in_paise": original_amount_in_paise,
+                "final_amount_in_paise": 0,
+                "redeemed_at": now_utc.isoformat(),
+            })
+            if coupon_id in cls._memory_coupons:
+                cls._memory_coupons[coupon_id]["used_count"] = cls._memory_coupons[coupon_id].get("used_count", 0) + 1
+                cls._memory_coupons[coupon_id]["updated_at"] = now_utc.isoformat()
+
+            # 3. Claim slot and record redemption in database
+            if sb and is_valid_uuid(coupon_id):
+                is_new_db_record = False
+                if is_valid_uuid(user_id) and is_valid_uuid(payment_transaction_id):
+                    try:
+                        existing = (
+                            sb.from_("coupon_redemptions")
+                            .select("id")
+                            .eq("coupon_id", coupon_id)
+                            .eq("payment_transaction_id", payment_transaction_id)
+                            .execute()
+                        )
+                        if not (existing.data and len(existing.data) > 0):
+                            redemption_record = {
+                                "coupon_id": coupon_id,
+                                "user_id": user_id,
+                                "payment_transaction_id": payment_transaction_id,
+                                "discount_in_paise": discount_in_paise,
+                                "original_amount_in_paise": original_amount_in_paise,
+                                "final_amount_in_paise": 0,
+                                "redeemed_at": now_utc.isoformat(),
+                            }
+                            ins_res = sb.from_("coupon_redemptions").insert(redemption_record).execute()
+                            if ins_res.data and len(ins_res.data) > 0:
+                                is_new_db_record = True
+                    except Exception as ins_err:
+                        logger.warning(f"Database error inserting free coupon redemption: {ins_err}")
+
+                if is_new_db_record:
+                    try:
+                        curr = sb.from_("coupons").select("used_count").eq("id", coupon_id).execute()
+                        if curr.data and len(curr.data) > 0:
+                            new_count = int(curr.data[0].get("used_count", 0)) + 1
+                            sb.from_("coupons").update({
+                                "used_count": new_count,
+                                "updated_at": now_utc.isoformat(),
+                            }).eq("id", coupon_id).execute()
+                    except Exception as up_err:
+                        logger.warning(f"Database error incrementing used_count: {up_err}")
+
+            return True
+
+    @classmethod
+    def rollback_coupon_redemption(cls, coupon_id: str, payment_transaction_id: str) -> None:
+        """
+        Rolls back a coupon redemption and decrements used_count if downstream provisioning failed.
+        """
+        from backend.services.auth_service import is_valid_uuid
+
+        sb = get_supabase()
+        now_utc = datetime.now(timezone.utc)
+
+        with cls._lock:
+            cls._memory_redemptions = [
+                r for r in cls._memory_redemptions
+                if not (r["coupon_id"] == coupon_id and r["payment_transaction_id"] == payment_transaction_id)
+            ]
+            if coupon_id in cls._memory_coupons:
+                curr = cls._memory_coupons[coupon_id].get("used_count", 1)
+                cls._memory_coupons[coupon_id]["used_count"] = max(0, curr - 1)
+                cls._memory_coupons[coupon_id]["updated_at"] = now_utc.isoformat()
+
+        if sb and is_valid_uuid(coupon_id) and is_valid_uuid(payment_transaction_id):
             try:
+                sb.from_("coupon_redemptions").delete().eq("coupon_id", coupon_id).eq("payment_transaction_id", payment_transaction_id).execute()
                 curr = sb.from_("coupons").select("used_count").eq("id", coupon_id).execute()
                 if curr.data and len(curr.data) > 0:
-                    new_count = int(curr.data[0].get("used_count", 0)) + 1
+                    new_count = max(0, int(curr.data[0].get("used_count", 1)) - 1)
                     sb.from_("coupons").update({
                         "used_count": new_count,
                         "updated_at": now_utc.isoformat(),
                     }).eq("id", coupon_id).execute()
             except Exception as e:
-                logger.warning(f"Database error updating coupon used_count: {e}")
-
-        return True
+                logger.warning(f"Error rolling back coupon redemption: {e}")
 
     @classmethod
     def _count_user_redemptions(cls, coupon_id: str, user_id: str) -> int:

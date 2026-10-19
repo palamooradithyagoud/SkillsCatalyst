@@ -157,42 +157,72 @@ class PaymentService:
         if amount_in_paise == 0:
             logger.info(f"100% Promotional coupon applied for order {merchant_order_id}. Directly provisioning subscription...")
             now_iso = datetime.now(timezone.utc).isoformat()
+
+            # 1. Atomically validate and claim coupon slot BEFORE provisioning
+            if coupon_id:
+                from backend.services.coupon_service import CouponService
+                # Atomic claim under process lock and DB constraint; raises HTTPException(400) if limit reached
+                CouponService.claim_and_record_free_coupon(
+                    coupon_id=coupon_id,
+                    user_id=user_id,
+                    payment_transaction_id=tx_row_id or merchant_order_id,
+                    plan_code=plan_code_str,
+                    discount_in_paise=discount_in_paise,
+                    original_amount_in_paise=original_amount_in_paise,
+                )
+
+            # 2. Provision subscription with transactional rollback protection
+            try:
+                sub_res = SubscriptionService.activate_or_extend_subscription(
+                    user_id=user_id,
+                    plan_id=db_plan_id,
+                    duration_days=plan.duration_days or 30,
+                    provider="coupon",
+                    provider_event_id=merchant_order_id,
+                )
+            except Exception as prov_err:
+                logger.error(
+                    f"Subscription provisioning failed for free coupon order {merchant_order_id}: {prov_err}",
+                    exc_info=True,
+                )
+                # Compensating rollback: release coupon slot and mark transaction failed
+                if coupon_id:
+                    try:
+                        from backend.services.coupon_service import CouponService
+                        CouponService.rollback_coupon_redemption(
+                            coupon_id=coupon_id,
+                            payment_transaction_id=tx_row_id or merchant_order_id,
+                        )
+                    except Exception as rb_err:
+                        logger.error(f"Failed to rollback coupon redemption: {rb_err}")
+
+                if sb:
+                    try:
+                        sb.from_("payment_transactions").update({
+                            "status": PaymentStatus.FAILED.value,
+                            "failure_code": "PROVISIONING_FAILED",
+                            "failure_message": str(prov_err),
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }).eq("merchant_order_id", merchant_order_id).execute()
+                    except Exception:
+                        pass
+
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to provision subscription for promotional pass.",
+                )
+
+            # 3. Finalize payment_transactions row as success with subscription_id
+            sub_id = sub_res.get("subscription_id")
             if sb:
                 try:
                     sb.from_("payment_transactions").update({
                         "status": PaymentStatus.SUCCESS.value,
-                        "updated_at": now_iso,
-                    }).eq("merchant_order_id", merchant_order_id).execute()
-                except Exception as e:
-                    logger.warning(f"Error marking 100% discounted transaction as success: {e}")
-
-            sub_res = SubscriptionService.activate_or_extend_subscription(
-                user_id=user_id,
-                plan_id=db_plan_id,
-                duration_days=plan.duration_days or 30,
-                provider="coupon",
-                provider_event_id=merchant_order_id,
-            )
-
-            if sb and sub_res.get("subscription_id"):
-                try:
-                    sb.from_("payment_transactions").update({
-                        "subscription_id": sub_res.get("subscription_id"),
+                        "subscription_id": sub_id,
                         "updated_at": now_iso,
                     }).eq("merchant_order_id", merchant_order_id).execute()
                 except Exception as e:
                     logger.warning(f"Error updating subscription_id on zero-amount transaction: {e}")
-
-            if coupon_id:
-                from backend.services.coupon_service import CouponService
-                CouponService.record_coupon_redemption(
-                    coupon_id=coupon_id,
-                    user_id=user_id,
-                    payment_transaction_id=tx_row_id or merchant_order_id,
-                    discount_in_paise=discount_in_paise,
-                    original_amount_in_paise=original_amount_in_paise,
-                    final_amount_in_paise=0,
-                )
 
             success_url = redirect_url if PaymentService._is_safe_redirect_url(redirect_url) else "/dashboard?payment=success"
             return CreatePaymentOrderResponse(
@@ -339,7 +369,14 @@ class PaymentService:
                     "Detected stranded unfulfilled payment from prior process crash. Initiating recovery provisioning..."
                 )
 
-        # 4. Verify Amount (prevent payload tampering)
+        # 4. Verify Amount and Currency (prevent payload tampering)
+        if amount is None and not is_internal_sync:
+            logger.error(f"Missing amount in external PhonePe webhook for {merchant_order_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Transaction amount missing in webhook payload.",
+            )
+
         if amount is not None:
             expected_amount = int(tx["amount_in_paise"])
             if int(amount) != expected_amount:
@@ -356,6 +393,25 @@ class PaymentService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Transaction amount mismatch.",
+                )
+
+        callback_currency = callback.get("currency")
+        if callback_currency:
+            expected_currency = str(tx.get("currency") or "INR").upper()
+            if str(callback_currency).upper() != expected_currency:
+                logger.error(
+                    f"Payment currency mismatch for {merchant_order_id}: received {callback_currency}, expected {expected_currency}"
+                )
+                if sb:
+                    sb.from_("payment_transactions").update({
+                        "status": PaymentStatus.FAILED.value,
+                        "failure_code": "CURRENCY_MISMATCH",
+                        "failure_message": f"Received {callback_currency}, expected {expected_currency}",
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("id", tx["id"]).execute()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Transaction currency mismatch.",
                 )
 
         # 5. Handle Outcome
@@ -383,6 +439,19 @@ class PaymentService:
                         "p_provider_response": callback.get("raw_payload", {}),
                     }).execute()
                     if isinstance(rpc_res.data, dict):
+                        # Idempotency check: Already fully processed and provisioned
+                        if rpc_res.data.get("already_provisioned") is True:
+                            logger.info(
+                                f"Payment {merchant_order_id} already provisioned via RPC. "
+                                "Returning idempotent acknowledgement."
+                            )
+                            return {
+                                "success": True,
+                                "message": rpc_res.data.get("message") or "Payment already processed and provisioned.",
+                                "merchant_order_id": merchant_order_id,
+                                "status": "success",
+                            }
+
                         if rpc_res.data.get("success") is True:
                             # Record coupon redemption if coupon was applied
                             coupon_id = tx.get("coupon_id")
@@ -580,28 +649,36 @@ class PaymentService:
             remote_status = PhonePeService.get_order_status(merchant_order_id)
             remote_state = (remote_status.get("state") or "").upper()
             if remote_state in ("COMPLETED", "SUCCESS"):
-                # Authoritative out-of-band synchronization
-                PaymentService.process_webhook(
-                    authorization_header=None,
-                    raw_body=json.dumps({
-                        "event": "checkout.order.completed",
-                        "payload": {
-                            "merchantOrderId": merchant_order_id,
-                            "orderId": remote_status.get("order_id") or tx.get("provider_order_id"),
-                            "state": "COMPLETED",
-                            "amount": tx["amount_in_paise"],
-                        },
-                    }),
-                    is_internal_sync=True,
-                )
-                if sb:
-                    refreshed = sb.from_("payment_transactions").select("status").eq("merchant_order_id", merchant_order_id).limit(1).execute()
-                    if refreshed.data:
-                        current_status = PaymentStatus(refreshed.data[0].get("status", "pending"))
+                remote_amount = remote_status.get("amount")
+                # Authoritative out-of-band synchronization using PhonePe-reported amount
+                try:
+                    PaymentService.process_webhook(
+                        authorization_header=None,
+                        raw_body=json.dumps({
+                            "event": "checkout.order.completed",
+                            "payload": {
+                                "merchantOrderId": merchant_order_id,
+                                "orderId": remote_status.get("order_id") or tx.get("provider_order_id"),
+                                "state": "COMPLETED",
+                                "amount": remote_amount if remote_amount is not None else tx["amount_in_paise"],
+                            },
+                        }),
+                        is_internal_sync=True,
+                    )
+                    if sb:
+                        refreshed = sb.from_("payment_transactions").select("status").eq("merchant_order_id", merchant_order_id).limit(1).execute()
+                        if refreshed.data:
+                            current_status = PaymentStatus(refreshed.data[0].get("status", "pending"))
+                        else:
+                            current_status = PaymentStatus.SUCCESS
                     else:
                         current_status = PaymentStatus.SUCCESS
-                else:
-                    current_status = PaymentStatus.SUCCESS
+                except HTTPException as val_err:
+                    if val_err.status_code == status.HTTP_400_BAD_REQUEST:
+                        logger.error(f"Out-of-band sync rejected order {merchant_order_id}: {val_err.detail}")
+                        current_status = PaymentStatus.FAILED
+                    else:
+                        raise
             elif remote_state in ("FAILED", "CANCELLED"):
                 if sb:
                     try:
@@ -660,21 +737,37 @@ class PaymentService:
                 if not m_order_id:
                     continue
                 remote = PhonePeService.get_order_status(m_order_id)
-                if (remote.get("state") or "").upper() in ("COMPLETED", "SUCCESS"):
-                    PaymentService.process_webhook(
-                        authorization_header=None,
-                        raw_body=json.dumps({
-                            "event": "checkout.order.completed",
-                            "payload": {
-                                "merchantOrderId": m_order_id,
-                                "orderId": remote.get("order_id") or r.get("provider_order_id"),
-                                "state": "COMPLETED",
-                                "amount": r["amount_in_paise"],
-                            },
-                        }),
-                        is_internal_sync=True,
-                    )
-                    any_synced = True
+                remote_state = (remote.get("state") or "").upper()
+                if remote_state in ("COMPLETED", "SUCCESS"):
+                    remote_amount = remote.get("amount")
+                    try:
+                        PaymentService.process_webhook(
+                            authorization_header=None,
+                            raw_body=json.dumps({
+                                "event": "checkout.order.completed",
+                                "payload": {
+                                    "merchantOrderId": m_order_id,
+                                    "orderId": remote.get("order_id") or r.get("provider_order_id"),
+                                    "state": "COMPLETED",
+                                    "amount": remote_amount if remote_amount is not None else r["amount_in_paise"],
+                                },
+                            }),
+                            is_internal_sync=True,
+                        )
+                        any_synced = True
+                    except Exception as sync_proc_err:
+                        logger.warning(f"Failed to process out-of-band webhook for order {m_order_id}: {sync_proc_err}")
+                elif remote_state in ("FAILED", "CANCELLED"):
+                    if sb:
+                        try:
+                            sb.from_("payment_transactions").update({
+                                "status": PaymentStatus.FAILED.value,
+                                "failure_code": remote.get("error_code") or "PAYMENT_FAILED",
+                                "failure_message": remote.get("detailed_error_code") or f"Payment state: {remote_state}",
+                                "updated_at": datetime.now(timezone.utc).isoformat(),
+                            }).eq("merchant_order_id", m_order_id).execute()
+                        except Exception as fail_err:
+                            logger.warning(f"Failed to mark transaction {m_order_id} as failed: {fail_err}")
             return any_synced
         except Exception as e:
             logger.warning(f"Error syncing pending payments for user {user_id}: {e}")
