@@ -489,21 +489,38 @@ class SubscriptionService:
                     if insert_res.data and len(insert_res.data) > 0:
                         sub_id = insert_res.data[0]["id"]
 
-                # Audit event logging
+                # Audit event logging (idempotent on provider_event_id)
                 event_type = "subscription_updated" if is_extension else "subscription_activated"
-                sb.from_("subscription_events").insert({
-                    "user_id": user_id,
-                    "subscription_id": sub_id,
-                    "event_type": event_type,
-                    "provider": provider,
-                    "provider_event_id": provider_event_id,
-                    "metadata": {
-                        "plan_id": plan_id,
-                        "duration_days": duration_days,
-                        "is_extension": is_extension,
-                        "expires_at": new_expires_at.isoformat(),
-                    },
-                }).execute()
+                try:
+                    already_recorded = False
+                    if provider_event_id:
+                        try:
+                            chk = sb.from_("subscription_events").select("id").eq("provider_event_id", provider_event_id).limit(1).execute()
+                            if chk.data and len(chk.data) > 0:
+                                already_recorded = True
+                                logger.info(f"Subscription event already recorded for provider_event_id {provider_event_id}")
+                        except Exception:
+                            pass
+
+                    if not already_recorded:
+                        sb.from_("subscription_events").insert({
+                            "user_id": user_id,
+                            "subscription_id": sub_id,
+                            "event_type": event_type,
+                            "provider": provider,
+                            "provider_event_id": provider_event_id,
+                            "metadata": {
+                                "plan_id": plan_id,
+                                "duration_days": duration_days,
+                                "is_extension": is_extension,
+                                "expires_at": new_expires_at.isoformat(),
+                            },
+                        }).execute()
+                except Exception as evt_err:
+                    if "uq_subscription_events_provider_event_id" in str(evt_err) or "duplicate key" in str(evt_err):
+                        logger.info(f"Duplicate subscription event ignored for provider_event_id {provider_event_id}")
+                    else:
+                        logger.warning(f"Failed to record subscription event: {evt_err}")
 
                 # Invalidate Redis cache on DB write
                 try:

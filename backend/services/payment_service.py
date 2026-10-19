@@ -255,34 +255,106 @@ class PaymentService:
             duration_days = plan_rel.get("duration_days") or 30
             plan_id = tx["plan_id"]
 
-            # Authoritative activation or extension of subscription
-            sub_res = SubscriptionService.activate_or_extend_subscription(
-                user_id=user_id,
-                plan_id=plan_id,
-                duration_days=duration_days,
-                provider="phonepe",
-                provider_event_id=provider_order_id,
-            )
-
-            # Update payment transaction record to success
+            claimed = False
             if sb:
+                # 1. Try atomic PostgreSQL RPC claim_and_provision_payment if installed
                 try:
-                    sb.from_("payment_transactions").update({
+                    rpc_res = sb.rpc("claim_and_provision_payment", {
+                        "p_merchant_order_id": merchant_order_id,
+                        "p_provider_order_id": provider_order_id,
+                        "p_provider_response": callback.get("raw_payload", {}),
+                    }).execute()
+                    if isinstance(rpc_res.data, dict) and rpc_res.data.get("success") is True:
+                        return {
+                            "success": True,
+                            "message": "Payment verified and subscription activated successfully via atomic RPC.",
+                            "merchant_order_id": merchant_order_id,
+                            "status": "success",
+                        }
+                    elif isinstance(rpc_res.data, dict) and rpc_res.data.get("claimed") is False:
+                        logger.info(f"Order {merchant_order_id} already claimed or finalized in RPC.")
+                        return {
+                            "success": True,
+                            "message": "Payment already claimed or finalized by concurrent worker.",
+                            "merchant_order_id": merchant_order_id,
+                            "status": "success",
+                        }
+                except Exception as rpc_err:
+                    logger.debug(f"RPC claim_and_provision_payment unavailable, falling back to direct atomic claim: {rpc_err}")
+
+                # 2. Atomic PostgREST Claim:
+                # Atomically update payment_transactions where status == 'pending'.
+                # Only 1 worker can successfully match status='pending' and transition to 'success'.
+                claim_res = (
+                    sb.from_("payment_transactions")
+                    .update({
                         "status": PaymentStatus.SUCCESS.value,
                         "provider_order_id": provider_order_id or tx.get("provider_order_id"),
-                        "subscription_id": sub_res.get("subscription_id"),
                         "provider_response": callback.get("raw_payload", {}),
                         "updated_at": now.isoformat(),
-                    }).eq("id", tx["id"]).execute()
-                except Exception as e:
-                    logger.error(f"Error marking transaction as success in database: {e}")
+                    })
+                    .eq("merchant_order_id", merchant_order_id)
+                    .eq("status", PaymentStatus.PENDING.value)
+                    .execute()
+                )
+                if isinstance(claim_res.data, list):
+                    claimed = (len(claim_res.data) >= 1)
+                else:
+                    claimed = bool(claim_res.data)
 
-            return {
-                "success": True,
-                "message": "Payment verified and subscription activated successfully.",
-                "merchant_order_id": merchant_order_id,
-                "status": "success",
-            }
+                if not claimed:
+                    logger.info(f"Order {merchant_order_id} could not be claimed (already claimed or completed).")
+                    curr = sb.from_("payment_transactions").select("status").eq("merchant_order_id", merchant_order_id).limit(1).execute()
+                    c_status = curr.data[0].get("status") if (isinstance(curr.data, list) and len(curr.data) > 0 and isinstance(curr.data[0], dict)) else "unknown"
+                    return {
+                        "success": True,
+                        "message": f"Payment already {c_status}. Duplicate event ignored.",
+                        "merchant_order_id": merchant_order_id,
+                        "status": c_status,
+                    }
+            else:
+                claimed = True
+
+            if claimed:
+                try:
+                    # Authoritative activation or extension of subscription
+                    sub_res = SubscriptionService.activate_or_extend_subscription(
+                        user_id=user_id,
+                        plan_id=plan_id,
+                        duration_days=duration_days,
+                        provider="phonepe",
+                        provider_event_id=provider_order_id,
+                    )
+
+                    # Update payment transaction record with subscription_id
+                    if sb and sub_res.get("subscription_id"):
+                        try:
+                            sb.from_("payment_transactions").update({
+                                "subscription_id": sub_res.get("subscription_id"),
+                                "updated_at": datetime.now(timezone.utc).isoformat(),
+                            }).eq("id", tx["id"]).execute()
+                        except Exception as e:
+                            logger.error(f"Error updating subscription_id on transaction: {e}")
+
+                    return {
+                        "success": True,
+                        "message": "Payment verified and subscription activated successfully.",
+                        "merchant_order_id": merchant_order_id,
+                        "status": "success",
+                    }
+                except Exception as prov_err:
+                    logger.error(f"Provisioning failed after claiming order {merchant_order_id}: {prov_err}", exc_info=True)
+                    # REVERT STATUS: return to 'pending' so retry or out-of-band sync can resume
+                    if sb:
+                        try:
+                            sb.from_("payment_transactions").update({
+                                "status": PaymentStatus.PENDING.value,
+                                "failure_message": f"Provisioning failed, reverted to pending for retry: {str(prov_err)}",
+                                "updated_at": datetime.now(timezone.utc).isoformat(),
+                            }).eq("id", tx["id"]).execute()
+                        except Exception as rev_err:
+                            logger.critical(f"Failed to revert transaction status to pending: {rev_err}")
+                    raise
         else:
             # Payment failed or cancelled
             logger.info(f"PhonePe payment FAILED for order: {merchant_order_id} (State: {state})")
@@ -361,7 +433,14 @@ class PaymentService:
                     }),
                     is_internal_sync=True,
                 )
-                current_status = PaymentStatus.SUCCESS
+                if sb:
+                    refreshed = sb.from_("payment_transactions").select("status").eq("merchant_order_id", merchant_order_id).limit(1).execute()
+                    if refreshed.data:
+                        current_status = PaymentStatus(refreshed.data[0].get("status", "pending"))
+                    else:
+                        current_status = PaymentStatus.SUCCESS
+                else:
+                    current_status = PaymentStatus.SUCCESS
             elif remote_state in ("FAILED", "CANCELLED"):
                 if sb:
                     try:

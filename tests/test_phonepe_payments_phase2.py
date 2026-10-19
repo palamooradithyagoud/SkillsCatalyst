@@ -251,7 +251,9 @@ class TestPhonePePaymentsPhase2(unittest.TestCase):
 
             mock_db = MagicMock()
             mock_db.from_().select().eq().execute.return_value = MagicMock(data=[mock_tx])
-            mock_db.from_().update().eq().execute.return_value = MagicMock(data=[{"id": "tx-100"}])
+            mock_update = mock_db.from_().update()
+            mock_update.eq.return_value = mock_update
+            mock_update.execute.return_value = MagicMock(data=[{"id": "tx-100"}])
             mock_sb.return_value = mock_db
 
             mock_act.return_value = {
@@ -685,7 +687,216 @@ class TestPhonePePaymentsPhase2(unittest.TestCase):
             )
             self.assertEqual(resp.status_code, 404)
 
+    # =========================================================================
+    # 19. CONCURRENT WEBHOOK CLAIMS ASSERT EXACTLY ONE PROVISIONING
+    # =========================================================================
+    def test_19_concurrent_webhook_claims(self):
+        """Two concurrent webhook calls for the same order assert exactly one subscription provisioning."""
+        import concurrent.futures
+        import threading
+
+        merchant_order_id = "order_sc_concurrent_001"
+        order_state = {"status": "pending"}
+        state_lock = threading.Lock()
+
+        def mock_from(table_name):
+            query = MagicMock()
+            if table_name == "payment_transactions":
+                def mock_select(*args, **kwargs):
+                    sel = MagicMock()
+                    sel.eq.return_value = sel
+                    sel.limit.return_value = sel
+                    def mock_exec():
+                        with state_lock:
+                            return MagicMock(data=[{
+                                "id": "tx-conc-1",
+                                "user_id": self.student_id,
+                                "plan_id": "plan-uuid-monthly",
+                                "amount_in_paise": 9900,
+                                "currency": "INR",
+                                "status": order_state["status"],
+                                "subscription_plans": {"code": "premium_monthly", "duration_days": 30},
+                            }])
+                    sel.execute = mock_exec
+                    return sel
+                query.select = mock_select
+
+                def mock_update(payload):
+                    upd = MagicMock()
+                    def mock_eq1(col1, val1):
+                        def mock_eq2(col2, val2):
+                            upd_exec = MagicMock()
+                            def do_exec():
+                                with state_lock:
+                                    # Atomic conditional claim: only transitions if current state is pending
+                                    if col2 == "status" and val2 == "pending":
+                                        if order_state["status"] == "pending":
+                                            order_state["status"] = payload.get("status", "success")
+                                            return MagicMock(data=[{"id": "tx-conc-1"}])
+                                        else:
+                                            return MagicMock(data=[])
+                                    return MagicMock(data=[{"id": "tx-conc-1"}])
+                            upd_exec.execute = do_exec
+                            return upd_exec
+                        upd.eq = mock_eq2
+                        return upd
+                    upd.eq = mock_eq1
+                    return upd
+                query.update = mock_update
+            return query
+
+        webhook_payload = {
+            "type": "CHECKOUT_ORDER",
+            "event": "checkout.order.completed",
+            "payload": {
+                "merchantOrderId": merchant_order_id,
+                "orderId": "PP_CONCURRENT_123",
+                "state": "COMPLETED",
+                "amount": 9900,
+            },
+        }
+
+        with patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_USERNAME", self.webhook_user), \
+             patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_PASSWORD", self.webhook_pass), \
+             patch("backend.services.payment_service.get_supabase") as mock_sb, \
+             patch.object(SubscriptionService, "activate_or_extend_subscription") as mock_act:
+
+            mock_act.return_value = {"subscription_id": "sub-conc-1", "status": SubscriptionStatus.ACTIVE}
+            mock_db = MagicMock()
+            mock_db.from_ = mock_from
+            mock_db.rpc.side_effect = Exception("RPC not installed in mock")
+            mock_sb.return_value = mock_db
+
+            def send_webhook():
+                return client.post(
+                    "/api/subscriptions/webhook/phonepe",
+                    headers={"Authorization": self.valid_auth_header},
+                    content=json.dumps(webhook_payload),
+                )
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                f1 = executor.submit(send_webhook)
+                f2 = executor.submit(send_webhook)
+                res1 = f1.result()
+                res2 = f2.result()
+
+            self.assertEqual(res1.status_code, 200)
+            self.assertEqual(res2.status_code, 200)
+            # CRITICAL INVARIANT: Exactly one thread must have provisioned
+            self.assertEqual(mock_act.call_count, 1)
+
+    # =========================================================================
+    # 20. CONCURRENT WEBHOOK AND STATUS-POLL OUT-OF-BAND SYNC
+    # =========================================================================
+    def test_20_concurrent_status_and_webhook_calls(self):
+        """Simultaneous out-of-band status query and webhook callback provision exactly once."""
+        import concurrent.futures
+        import threading
+
+        merchant_order_id = "order_sc_concurrent_002"
+        order_state = {"status": "pending"}
+        state_lock = threading.Lock()
+
+        def mock_from(table_name):
+            query = MagicMock()
+            if table_name == "payment_transactions":
+                def mock_select(*args, **kwargs):
+                    sel = MagicMock()
+                    sel.eq.return_value = sel
+                    sel.limit.return_value = sel
+                    def mock_exec():
+                        with state_lock:
+                            return MagicMock(data=[{
+                                "id": "tx-conc-2",
+                                "user_id": self.student_id,
+                                "plan_id": "plan-uuid-monthly",
+                                "amount_in_paise": 9900,
+                                "currency": "INR",
+                                "status": order_state["status"],
+                                "subscription_plans": {"code": "premium_monthly", "duration_days": 30},
+                            }])
+                    sel.execute = mock_exec
+                    return sel
+                query.select = mock_select
+
+                def mock_update(payload):
+                    upd = MagicMock()
+                    def mock_eq1(col1, val1):
+                        def mock_eq2(col2, val2):
+                            upd_exec = MagicMock()
+                            def do_exec():
+                                with state_lock:
+                                    if col2 == "status" and val2 == "pending":
+                                        if order_state["status"] == "pending":
+                                            order_state["status"] = payload.get("status", "success")
+                                            return MagicMock(data=[{"id": "tx-conc-2"}])
+                                        else:
+                                            return MagicMock(data=[])
+                                    return MagicMock(data=[{"id": "tx-conc-2"}])
+                            upd_exec.execute = do_exec
+                            return upd_exec
+                        upd.eq = mock_eq2
+                        return upd
+                    upd.eq = mock_eq1
+                    return upd
+                query.update = mock_update
+            return query
+
+        webhook_payload = {
+            "type": "CHECKOUT_ORDER",
+            "event": "checkout.order.completed",
+            "payload": {
+                "merchantOrderId": merchant_order_id,
+                "orderId": "PP_CONCURRENT_456",
+                "state": "COMPLETED",
+                "amount": 9900,
+            },
+        }
+
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_USERNAME", self.webhook_user), \
+             patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_PASSWORD", self.webhook_pass), \
+             patch("backend.services.payment_service.get_supabase") as mock_pay_sb, \
+             patch.object(PhonePeService, "is_configured", return_value=True), \
+             patch.object(PhonePeService, "get_order_status", return_value={"state": "COMPLETED", "order_id": "PP_CONCURRENT_456"}), \
+             patch.object(SubscriptionService, "activate_or_extend_subscription") as mock_act:
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.mock_student)
+            mock_auth_sb.return_value = mock_auth_client
+
+            mock_act.return_value = {"subscription_id": "sub-conc-2", "status": SubscriptionStatus.ACTIVE}
+            mock_db = MagicMock()
+            mock_db.from_ = mock_from
+            mock_db.rpc.side_effect = Exception("RPC not installed in mock")
+            mock_pay_sb.return_value = mock_db
+
+            def send_webhook():
+                return client.post(
+                    "/api/subscriptions/webhook/phonepe",
+                    headers={"Authorization": self.valid_auth_header},
+                    content=json.dumps(webhook_payload),
+                )
+
+            def poll_status():
+                return client.get(
+                    f"/api/payments/status/{merchant_order_id}",
+                    headers={"Authorization": "Bearer mock-token"},
+                )
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                f_webhook = executor.submit(send_webhook)
+                f_status = executor.submit(poll_status)
+                res_webhook = f_webhook.result()
+                res_status = f_status.result()
+
+            self.assertEqual(res_webhook.status_code, 200)
+            self.assertEqual(res_status.status_code, 200)
+            # CRITICAL INVARIANT: Exactly one activation occurred across concurrent webhook + status poll
+            self.assertEqual(mock_act.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
