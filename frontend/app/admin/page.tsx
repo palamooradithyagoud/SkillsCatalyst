@@ -20,6 +20,7 @@ import {
   Sparkles,
   BookOpen,
   CreditCard,
+  Tag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
@@ -28,8 +29,9 @@ import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 import AdminSkillBitsCMS from "@/components/admin/AdminSkillBitsCMS";
 import AdminPlansCMS from "@/components/admin/AdminPlansCMS";
+import AdminCouponsCMS from "@/components/admin/AdminCouponsCMS";
 
-type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits" | "plans";
+type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits" | "plans" | "coupons";
 
 interface AdminOverviewData {
   stats: {
@@ -183,6 +185,7 @@ export default function AdminPage() {
     { id: "users", label: "User Governance", icon: Users, badge: overviewData?.stats.total_users },
     { id: "skillbits", label: "SkillBits", icon: Sparkles },
     { id: "plans", label: "Plans & Pricing", icon: CreditCard },
+    { id: "coupons", label: "Coupons & Discounts", icon: Tag },
   ];
 
   return (
@@ -557,6 +560,13 @@ export default function AdminPage() {
           {activeTab === "plans" && (
             <div className="animate-in fade-in duration-150">
               <AdminPlansCMS />
+            </div>
+          )}
+
+          {/* TAB 9: COUPONS & DISCOUNTS CMS */}
+          {activeTab === "coupons" && (
+            <div className="animate-in fade-in duration-150">
+              <AdminCouponsCMS />
             </div>
           )}
         </main>

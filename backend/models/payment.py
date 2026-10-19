@@ -23,6 +23,7 @@ class PaymentStatus(str, Enum):
 class CreatePaymentOrderRequest(BaseModel):
     plan_code: str = Field(..., pattern=r"^[a-z0-9_]{2,50}$", description="Target commercial subscription plan code to purchase")
     redirect_url: Optional[str] = Field(default=None, description="Optional safe return URL origin for the payment session")
+    coupon_code: Optional[str] = Field(default=None, description="Optional promotional coupon code to apply")
 
     @field_validator("plan_code")
     @classmethod
@@ -36,10 +37,19 @@ class CreatePaymentOrderRequest(BaseModel):
             raise ValueError(f"Plan code '{clean}' is not a recognized subscription plan.")
         return clean
 
+    @field_validator("coupon_code")
+    @classmethod
+    def clean_coupon_code(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        clean = str(v).strip().upper()
+        return clean if clean else None
+
     model_config = {
         "json_schema_extra": {
             "example": {
-                "plan_code": "premium_monthly"
+                "plan_code": "premium_monthly",
+                "coupon_code": "WELCOME50"
             }
         }
     }
@@ -49,7 +59,10 @@ class CreatePaymentOrderResponse(BaseModel):
     success: bool = Field(..., description="Whether checkout order generation succeeded")
     merchant_order_id: str = Field(..., description="Unique merchant order tracking identifier")
     checkout_url: str = Field(..., description="PhonePe Standard Checkout redirect URL")
-    amount_in_paise: int = Field(..., description="Amount charged in integer paise")
+    amount_in_paise: int = Field(..., description="Amount charged in integer paise (after discount)")
+    original_amount_in_paise: Optional[int] = Field(None, description="Original plan price in paise before coupon discount")
+    discount_in_paise: Optional[int] = Field(default=0, description="Discount amount applied in paise")
+    coupon_code: Optional[str] = Field(None, description="Applied coupon code if any")
     currency: str = Field(default="INR", description="Three-letter currency code")
     plan_code: Union[PlanCode, str] = Field(..., description="Plan code purchased")
 
@@ -59,7 +72,10 @@ class CreatePaymentOrderResponse(BaseModel):
                 "success": True,
                 "merchant_order_id": "order_sc_f47ac10b58cc4372a5670e02b2c3d479",
                 "checkout_url": "https://mercury-uat.phonepe.com/transact/pg?token=...",
-                "amount_in_paise": 9900,
+                "amount_in_paise": 4950,
+                "original_amount_in_paise": 9900,
+                "discount_in_paise": 4950,
+                "coupon_code": "WELCOME50",
                 "currency": "INR",
                 "plan_code": "premium_monthly"
             }
@@ -72,7 +88,10 @@ class PaymentStatusResponse(BaseModel):
     status: PaymentStatus = Field(..., description="Current transaction status")
     is_completed: bool = Field(..., description="True if payment succeeded and subscription is active")
     plan_code: str = Field(..., description="Plan associated with this payment")
-    amount_in_paise: int = Field(..., description="Transaction amount in paise")
+    amount_in_paise: int = Field(..., description="Transaction payable amount in paise")
+    original_amount_in_paise: Optional[int] = Field(None, description="Original amount in paise before discount")
+    discount_in_paise: Optional[int] = Field(default=0, description="Discount in paise if coupon applied")
+    coupon_id: Optional[str] = Field(None, description="Applied coupon UUID if any")
     created_at: Optional[datetime] = Field(None, description="Order timestamp")
 
 
@@ -83,6 +102,9 @@ class PaymentTransactionDTO(BaseModel):
     plan_code: str = Field(..., description="Purchased plan code")
     plan_name: str = Field(..., description="Purchased plan display name")
     amount_in_paise: int = Field(..., description="Amount paid in integer paise")
+    original_amount_in_paise: Optional[int] = Field(None, description="Original plan price in paise before discount")
+    discount_in_paise: Optional[int] = Field(default=0, description="Discount amount in paise")
+    coupon_code: Optional[str] = Field(None, description="Applied coupon code if any")
     currency: str = Field(default="INR", description="Currency code")
     status: PaymentStatus = Field(..., description="Transaction status")
     created_at: datetime = Field(..., description="When transaction was initiated")

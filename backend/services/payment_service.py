@@ -56,13 +56,15 @@ class PaymentService:
         user_id: str,
         plan_code: Union[PlanCode, str],
         redirect_url: Optional[str] = None,
+        coupon_code: Optional[str] = None,
     ) -> CreatePaymentOrderResponse:
         """
         Initiates a commercial payment order:
         1. Validates plan from database; rejects free plan and inactive plans.
-        2. Generates internal unique merchant_order_id.
-        3. Creates pending record in payment_transactions with server-authoritative amount.
-        4. Calls PhonePe Standard Checkout v2 API to generate redirect URL.
+        2. Validates promotional coupon if provided and calculates server-authoritative discount.
+        3. Generates internal unique merchant_order_id.
+        4. Creates pending record in payment_transactions with server-authoritative amount.
+        5. Calls PhonePe Standard Checkout v2 API to generate redirect URL (or auto-provisions if 100% discount).
         """
         if not user_id or not is_valid_uuid(user_id):
             raise HTTPException(
@@ -92,7 +94,25 @@ class PaymentService:
                 detail=f"Subscription plan '{plan_code_str}' is currently inactive and cannot be purchased.",
             )
 
-        amount_in_paise = plan.price_in_paise
+        original_amount_in_paise = plan.price_in_paise
+        discount_in_paise = 0
+        coupon_id: Optional[str] = None
+        applied_coupon_code: Optional[str] = None
+
+        # Authoritative coupon validation and discount calculation
+        if coupon_code and str(coupon_code).strip():
+            from backend.services.coupon_service import CouponService
+            coupon, discount_in_paise, final_amount = CouponService.validate_coupon_for_user_and_plan(
+                code=str(coupon_code).strip(),
+                plan_code=plan_code_str,
+                user_id=user_id,
+            )
+            amount_in_paise = final_amount
+            coupon_id = coupon.id
+            applied_coupon_code = coupon.code
+        else:
+            amount_in_paise = original_amount_in_paise
+
         currency = plan.currency or "INR"
         merchant_order_id = f"order_sc_{uuid.uuid4().hex[:20]}"
 
@@ -100,6 +120,7 @@ class PaymentService:
         db_plan_id = plan.id
 
         # Insert pending record in payment_transactions
+        tx_row_id = None
         if sb:
             try:
                 # If plan.id is not a valid UUID (e.g. fallback string), resolve real DB plan ID
@@ -107,29 +128,88 @@ class PaymentService:
                     plan_row = (
                         sb.from_("subscription_plans")
                         .select("id")
-                        .eq("code", plan_code.value)
+                        .eq("code", plan_code.value if hasattr(plan_code, "value") else str(plan_code))
                         .execute()
                     )
                     if plan_row.data and len(plan_row.data) > 0:
                         db_plan_id = plan_row.data[0]["id"]
 
-                sb.from_("payment_transactions").insert({
+                insert_payload = {
                     "user_id": user_id,
                     "plan_id": db_plan_id,
-                    "provider": "phonepe",
+                    "provider": "phonepe" if amount_in_paise > 0 else "coupon",
                     "merchant_order_id": merchant_order_id,
                     "amount_in_paise": amount_in_paise,
+                    "original_amount_in_paise": original_amount_in_paise,
+                    "discount_in_paise": discount_in_paise,
+                    "coupon_id": coupon_id,
                     "currency": currency,
                     "status": PaymentStatus.PENDING.value,
                     "provider_response": {},
-                }).execute()
+                }
+                res = sb.from_("payment_transactions").insert(insert_payload).execute()
+                if res.data and len(res.data) > 0:
+                    tx_row_id = str(res.data[0]["id"])
             except Exception as e:
                 logger.error(f"Failed to record pending transaction in database: {e}", exc_info=True)
-                # If table doesn't exist yet during transitional verification, log error
+
+        # Handle 100% Free Promotional Pass (amount_in_paise == 0)
+        if amount_in_paise == 0:
+            logger.info(f"100% Promotional coupon applied for order {merchant_order_id}. Directly provisioning subscription...")
+            now_iso = datetime.now(timezone.utc).isoformat()
+            if sb:
+                try:
+                    sb.from_("payment_transactions").update({
+                        "status": PaymentStatus.SUCCESS.value,
+                        "updated_at": now_iso,
+                    }).eq("merchant_order_id", merchant_order_id).execute()
+                except Exception as e:
+                    logger.warning(f"Error marking 100% discounted transaction as success: {e}")
+
+            sub_res = SubscriptionService.activate_or_extend_subscription(
+                user_id=user_id,
+                plan_id=db_plan_id,
+                duration_days=plan.duration_days or 30,
+                provider="coupon",
+                provider_event_id=merchant_order_id,
+            )
+
+            if sb and sub_res.get("subscription_id"):
+                try:
+                    sb.from_("payment_transactions").update({
+                        "subscription_id": sub_res.get("subscription_id"),
+                        "updated_at": now_iso,
+                    }).eq("merchant_order_id", merchant_order_id).execute()
+                except Exception as e:
+                    logger.warning(f"Error updating subscription_id on zero-amount transaction: {e}")
+
+            if coupon_id:
+                from backend.services.coupon_service import CouponService
+                CouponService.record_coupon_redemption(
+                    coupon_id=coupon_id,
+                    user_id=user_id,
+                    payment_transaction_id=tx_row_id or merchant_order_id,
+                    discount_in_paise=discount_in_paise,
+                    original_amount_in_paise=original_amount_in_paise,
+                    final_amount_in_paise=0,
+                )
+
+            success_url = redirect_url if PaymentService._is_safe_redirect_url(redirect_url) else "/dashboard?payment=success"
+            return CreatePaymentOrderResponse(
+                success=True,
+                merchant_order_id=merchant_order_id,
+                checkout_url=success_url,
+                amount_in_paise=0,
+                original_amount_in_paise=original_amount_in_paise,
+                discount_in_paise=discount_in_paise,
+                coupon_code=applied_coupon_code,
+                currency=currency,
+                plan_code=plan_code,
+            )
 
         safe_redirect_url = redirect_url if PaymentService._is_safe_redirect_url(redirect_url) else None
 
-        # Call PhonePe API to obtain checkout redirect URL
+        # Call PhonePe API to obtain checkout redirect URL with the final payable amount
         checkout_info = PhonePeService.create_checkout_order(
             merchant_order_id=merchant_order_id,
             amount_in_paise=amount_in_paise,
@@ -153,6 +233,9 @@ class PaymentService:
             merchant_order_id=merchant_order_id,
             checkout_url=checkout_url,
             amount_in_paise=amount_in_paise,
+            original_amount_in_paise=original_amount_in_paise,
+            discount_in_paise=discount_in_paise,
+            coupon_code=applied_coupon_code,
             currency=currency,
             plan_code=plan_code,
         )
@@ -301,6 +384,22 @@ class PaymentService:
                     }).execute()
                     if isinstance(rpc_res.data, dict):
                         if rpc_res.data.get("success") is True:
+                            # Record coupon redemption if coupon was applied
+                            coupon_id = tx.get("coupon_id")
+                            if coupon_id:
+                                try:
+                                    from backend.services.coupon_service import CouponService
+                                    CouponService.record_coupon_redemption(
+                                        coupon_id=str(coupon_id),
+                                        user_id=str(tx["user_id"]),
+                                        payment_transaction_id=str(tx["id"]),
+                                        discount_in_paise=int(tx.get("discount_in_paise") or 0),
+                                        original_amount_in_paise=int(tx.get("original_amount_in_paise") or tx.get("amount_in_paise", 0)),
+                                        final_amount_in_paise=int(tx["amount_in_paise"]),
+                                    )
+                                except Exception as c_err:
+                                    logger.debug(f"Coupon sync notice: {c_err}")
+
                             return {
                                 "success": True,
                                 "message": rpc_res.data.get("message") or "Payment verified and subscription activated successfully via atomic RPC.",
@@ -381,6 +480,22 @@ class PaymentService:
                             }).eq("id", tx["id"]).execute()
                         except Exception as e:
                             logger.error(f"Error updating subscription_id on transaction: {e}")
+
+                    # Record coupon redemption if coupon was applied
+                    coupon_id = tx.get("coupon_id")
+                    if coupon_id:
+                        try:
+                            from backend.services.coupon_service import CouponService
+                            CouponService.record_coupon_redemption(
+                                coupon_id=str(coupon_id),
+                                user_id=str(user_id),
+                                payment_transaction_id=str(tx["id"]),
+                                discount_in_paise=int(tx.get("discount_in_paise") or 0),
+                                original_amount_in_paise=int(tx.get("original_amount_in_paise") or tx.get("amount_in_paise", 0)),
+                                final_amount_in_paise=int(tx["amount_in_paise"]),
+                            )
+                        except Exception as c_err:
+                            logger.error(f"Error recording coupon redemption on order {merchant_order_id}: {c_err}")
 
                     return {
                         "success": True,
@@ -509,6 +624,9 @@ class PaymentService:
             is_completed=(current_status == PaymentStatus.SUCCESS),
             plan_code=plan_code,
             amount_in_paise=int(tx["amount_in_paise"]),
+            original_amount_in_paise=tx.get("original_amount_in_paise"),
+            discount_in_paise=int(tx.get("discount_in_paise") or 0),
+            coupon_id=str(tx.get("coupon_id")) if tx.get("coupon_id") else None,
             created_at=tx.get("created_at"),
         )
 
@@ -577,7 +695,7 @@ class PaymentService:
         try:
             res = (
                 sb.from_("payment_transactions")
-                .select("*, subscription_plans(*)")
+                .select("*, subscription_plans(*), coupons(code)")
                 .eq("user_id", user_id)
                 .order("created_at", desc=True)
                 .execute()
@@ -586,6 +704,8 @@ class PaymentService:
             transactions = []
             for r in rows:
                 plan_rel = r.get("subscription_plans") or {}
+                coupon_rel = r.get("coupons") or {}
+                coupon_code = coupon_rel.get("code") if isinstance(coupon_rel, dict) else None
                 transactions.append(
                     PaymentTransactionDTO(
                         id=str(r["id"]),
@@ -594,6 +714,9 @@ class PaymentService:
                         plan_code=plan_rel.get("code", "premium_monthly"),
                         plan_name=plan_rel.get("name", "Premium Monthly"),
                         amount_in_paise=int(r["amount_in_paise"]),
+                        original_amount_in_paise=r.get("original_amount_in_paise"),
+                        discount_in_paise=int(r.get("discount_in_paise") or 0),
+                        coupon_code=coupon_code,
                         currency=str(r.get("currency", "INR")),
                         status=PaymentStatus(r.get("status", "pending")),
                         created_at=r["created_at"],

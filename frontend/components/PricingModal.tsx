@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Loader2,
   LogIn,
+  Tag,
+  Percent,
 } from "lucide-react";
 import { Pricing, PricingPlan } from "@/components/ui/pricing";
 import {
@@ -23,7 +25,7 @@ import {
 } from "@/lib/trial";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/lib/auth";
-import { createPaymentOrder } from "@/lib/api/payment";
+import { createPaymentOrder, validateCoupon, CouponValidationResponse } from "@/lib/api/payment";
 import { fetchSubscriptionPlans, SubscriptionPlanDTO } from "@/lib/api/subscription";
 
 export interface PricingModalProps {
@@ -57,6 +59,11 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     price: string;
     numericPrice: number;
   } | null>(null);
+
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResponse | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -132,6 +139,29 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const monthlyPrice = monthlyPlan ? monthlyPlan.price_in_paise / 100 : 99;
   const threeMonthsPrice = threeMonthsPlan ? threeMonthsPlan.price_in_paise / 100 : 250;
 
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim() || !activeCheckout) return;
+    setIsValidatingCoupon(true);
+    setCouponError(null);
+    const planCode = activeCheckout.planId === "1month" ? "premium_monthly" : "premium_3_month";
+    try {
+      const res = await validateCoupon(couponCodeInput.trim(), planCode);
+      setAppliedCoupon(res);
+      setCouponError(null);
+    } catch (err: any) {
+      setCouponError(err?.message || "Invalid or ineligible coupon code.");
+      setAppliedCoupon(null);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCodeInput("");
+    setCouponError(null);
+  };
+
   const handleInitiatePhonePePayment = async () => {
     if (!activeCheckout || isInitiatingPayment) return;
 
@@ -158,7 +188,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     }
 
     try {
-      const order = await createPaymentOrder(planCode);
+      const couponToSend = appliedCoupon?.coupon_code;
+      const order = await createPaymentOrder(planCode, couponToSend);
       if (order.checkout_url) {
         // Authoritative browser redirect to PhonePe Standard Checkout
         window.location.href = order.checkout_url;
@@ -369,8 +400,24 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                         <p className="text-xs text-slate-400">Full platform access • Billed once</p>
                       </div>
                       <div className="text-right">
-                        <span className="text-3xl font-extrabold text-white">{activeCheckout.price}</span>
-                        <span className="block text-[11px] text-slate-400">All taxes included</span>
+                        {appliedCoupon ? (
+                          <>
+                            <span className="text-xs text-slate-400 line-through block">{activeCheckout.price}</span>
+                            <span className="text-3xl font-extrabold text-emerald-400">
+                              ₹{(appliedCoupon.final_amount_in_paise / 100).toFixed(2).replace(/\.00$/, "")}
+                            </span>
+                            <span className="block text-[11px] text-emerald-300 font-medium">
+                              {appliedCoupon.discount_type === "percentage"
+                                ? `${appliedCoupon.discount_value}% OFF applied`
+                                : `₹${(appliedCoupon.discount_in_paise / 100).toFixed(2).replace(/\.00$/, "")} OFF applied`}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-3xl font-extrabold text-white">{activeCheckout.price}</span>
+                            <span className="block text-[11px] text-slate-400">All taxes included</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -388,6 +435,74 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                         <span>100% 7-Day Money-Back Guarantee included</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Promotional Coupon Input Box */}
+                  <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-left space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="coupon-input" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Promotional Coupon</span>
+                      </label>
+                      {appliedCoupon && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-[11px] text-red-400 hover:text-red-300 transition-colors font-medium cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    {!appliedCoupon ? (
+                      <div className="flex gap-2">
+                        <input
+                          id="coupon-input"
+                          type="text"
+                          value={couponCodeInput}
+                          onChange={(e) => {
+                            setCouponCodeInput(e.target.value.toUpperCase());
+                            setCouponError(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleApplyCoupon();
+                            }
+                          }}
+                          placeholder="e.g. WELCOME50"
+                          disabled={isValidatingCoupon || !session}
+                          className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900/60 border border-white/15 focus:border-amber-400 focus:outline-none text-white text-xs placeholder:text-slate-500 uppercase tracking-wider"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={isValidatingCoupon || !couponCodeInput.trim() || !session}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+                        >
+                          {isValidatingCoupon ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <span>Apply</span>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>{appliedCoupon.coupon_code}</strong> applied ({appliedCoupon.message})</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {couponError && (
+                      <p className="text-[11px] text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        <span>{couponError}</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* Accepted Payment Rails */}
@@ -432,7 +547,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                         className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm transition-all shadow-lg shadow-amber-500/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <LogIn className="w-4 h-4" />
-                        <span>Sign In to Pay {activeCheckout.price}</span>
+                        <span>Sign In to Pay {appliedCoupon ? `₹${(appliedCoupon.final_amount_in_paise / 100).toFixed(2).replace(/\.00$/, "")}` : activeCheckout.price}</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     ) : (
@@ -450,7 +565,11 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                         ) : (
                           <>
                             <Lock className="w-4 h-4" />
-                            <span>Proceed to PhonePe Checkout ({activeCheckout.price})</span>
+                            <span>
+                              {appliedCoupon && appliedCoupon.final_amount_in_paise === 0
+                                ? "Claim Free Access with Coupon"
+                                : `Proceed to PhonePe Checkout (${appliedCoupon ? `₹${(appliedCoupon.final_amount_in_paise / 100).toFixed(2).replace(/\.00$/, "")}` : activeCheckout.price})`}
+                            </span>
                             <ArrowRight className="w-4 h-4" />
                           </>
                         )}
@@ -459,7 +578,10 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
 
                     <button
                       type="button"
-                      onClick={() => setActiveCheckout(null)}
+                      onClick={() => {
+                        setActiveCheckout(null);
+                        handleRemoveCoupon();
+                      }}
                       disabled={isInitiatingPayment}
                       className="text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
                     >

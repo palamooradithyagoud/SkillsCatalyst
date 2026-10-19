@@ -1084,6 +1084,110 @@ def set_admin_plan_status(
     return PlanAdminService.set_plan_status(plan_id, payload.is_active)
 
 
+# ==============================================================================
+# Promotional Coupons & Campaigns CMS Endpoints
+# ==============================================================================
+from backend.models.coupon import (
+    CouponAdminDTO,
+    CreateCouponRequest,
+    UpdateCouponRequest,
+    SetCouponStatusRequest,
+)
+from backend.services.coupon_service import CouponService
+
+
+@router.get(
+    "/coupons",
+    response_model=List[CouponAdminDTO],
+    status_code=status.HTTP_200_OK,
+    summary="Get All Coupons (Admin)",
+    description="Returns all active, inactive, and expired promotional coupons for Admin CMS.",
+)
+def get_admin_coupons(
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[CouponAdminDTO]:
+    """Protected Admin endpoint returning full promotional coupon catalog."""
+    return CouponService.get_all_coupons_admin()
+
+
+@router.post(
+    "/coupons",
+    response_model=CouponAdminDTO,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Promotional Coupon (Admin)",
+    description="Creates a new promotional campaign coupon with authoritative discount rules.",
+)
+def create_admin_coupon(
+    payload: CreateCouponRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CouponAdminDTO:
+    """Protected Admin endpoint to create a promotional coupon."""
+    return CouponService.create_coupon(payload)
+
+
+@router.get(
+    "/coupons/{coupon_id}",
+    response_model=CouponAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get Coupon By ID (Admin)",
+    description="Returns a single coupon campaign by its unique identifier.",
+)
+def get_admin_coupon_by_id(
+    coupon_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CouponAdminDTO:
+    """Protected Admin endpoint to get a single coupon."""
+    return CouponService.get_coupon_by_id(coupon_id)
+
+
+@router.put(
+    "/coupons/{coupon_id}",
+    response_model=CouponAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Update Coupon (Admin)",
+    description="Updates coupon discount rules, expiry dates, limits, or eligibility.",
+)
+def update_admin_coupon(
+    coupon_id: str,
+    payload: UpdateCouponRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CouponAdminDTO:
+    """Protected Admin endpoint to update an existing coupon."""
+    return CouponService.update_coupon(coupon_id, payload)
+
+
+@router.patch(
+    "/coupons/{coupon_id}/status",
+    response_model=CouponAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Activate / Deactivate Coupon (Admin)",
+    description="Toggles whether a promotional coupon is active for redemption.",
+)
+def set_admin_coupon_status(
+    coupon_id: str,
+    payload: SetCouponStatusRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CouponAdminDTO:
+    """Protected Admin endpoint to activate or deactivate a coupon."""
+    return CouponService.set_coupon_status(coupon_id, payload.is_active)
+
+
+@router.post(
+    "/coupons/{coupon_id}/expire",
+    response_model=CouponAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Expire Coupon Immediately (Admin)",
+    description="Forces a coupon to immediately expire and sets its status to inactive.",
+)
+def expire_admin_coupon(
+    coupon_id: str,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> CouponAdminDTO:
+    """Protected Admin endpoint to expire a coupon immediately."""
+    return CouponService.expire_coupon(coupon_id)
+
+
+
 
 
 

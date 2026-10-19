@@ -17,6 +17,12 @@ from backend.models.payment import (
     PaymentTransactionDTO,
 )
 
+from backend.models.coupon import (
+    ValidateCouponRequest,
+    CouponValidationResponse,
+)
+from backend.services.coupon_service import CouponService
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
@@ -27,7 +33,7 @@ router = APIRouter(prefix="/api/payments", tags=["payments"])
     response_model=CreatePaymentOrderResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Commercial Payment Order",
-    description="Authenticates user, derives canonical price and duration from subscription_plans, and initiates PhonePe checkout.",
+    description="Authenticates user, derives canonical price and duration from subscription_plans, validates any coupon, and initiates PhonePe checkout.",
 )
 def create_order(
     payload: CreatePaymentOrderRequest,
@@ -40,6 +46,51 @@ def create_order(
         user_id=user_id,
         plan_code=payload.plan_code,
         redirect_url=payload.redirect_url,
+        coupon_code=payload.coupon_code,
+    )
+
+
+@router.post(
+    "/validate-coupon",
+    response_model=CouponValidationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Validate Coupon Code for Checkout",
+    description="Validates a promotional coupon against plan rules, user limits, and dates, returning discounted quote in paise.",
+)
+def validate_coupon(
+    payload: ValidateCouponRequest,
+    user_id: str = Depends(get_current_user_id),
+) -> CouponValidationResponse:
+    """
+    Validates a coupon code and calculates server-authoritative payable amount.
+    """
+    coupon, discount_paise, final_paise = CouponService.validate_coupon_for_user_and_plan(
+        code=payload.code,
+        plan_code=payload.plan_code,
+        user_id=user_id,
+    )
+
+    from backend.services.subscription_service import SubscriptionService
+    plan = SubscriptionService.get_plan_by_code(payload.plan_code)
+    orig_paise = plan.price_in_paise if plan else (final_paise + discount_paise)
+
+    msg = f"Coupon '{coupon.code}' applied successfully!"
+    if coupon.discount_type.value == "percentage":
+        msg = f"Coupon '{coupon.code}' applied! {coupon.discount_value}% discount."
+    else:
+        disc_rs = discount_paise / 100.0
+        msg = f"Coupon '{coupon.code}' applied! ₹{disc_rs:,.2f} discount."
+
+    return CouponValidationResponse(
+        valid=True,
+        coupon_code=coupon.code,
+        discount_type=coupon.discount_type,
+        discount_value=coupon.discount_value,
+        original_amount_in_paise=orig_paise,
+        discount_in_paise=discount_paise,
+        final_amount_in_paise=final_paise,
+        currency="INR",
+        message=msg,
     )
 
 

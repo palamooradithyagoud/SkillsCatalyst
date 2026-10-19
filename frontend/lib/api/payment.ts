@@ -13,8 +13,23 @@ export interface CreatePaymentOrderResponse {
   merchant_order_id: string;
   checkout_url: string;
   amount_in_paise: number;
+  original_amount_in_paise?: number | null;
+  discount_in_paise?: number;
+  coupon_code?: string | null;
   currency: string;
   plan_code: string;
+}
+
+export interface CouponValidationResponse {
+  valid: boolean;
+  coupon_code: string;
+  discount_type: "percentage" | "fixed_amount";
+  discount_value: number;
+  original_amount_in_paise: number;
+  discount_in_paise: number;
+  final_amount_in_paise: number;
+  currency: string;
+  message: string;
 }
 
 export interface PaymentStatusResponse {
@@ -23,6 +38,9 @@ export interface PaymentStatusResponse {
   is_completed: boolean;
   plan_code: string;
   amount_in_paise: number;
+  original_amount_in_paise?: number | null;
+  discount_in_paise?: number;
+  coupon_id?: string | null;
   created_at?: string;
 }
 
@@ -33,9 +51,46 @@ export interface PaymentTransactionDTO {
   plan_code: string;
   plan_name: string;
   amount_in_paise: number;
+  original_amount_in_paise?: number | null;
+  discount_in_paise?: number;
+  coupon_code?: string | null;
   currency: string;
   status: PaymentStatus;
   created_at: string;
+}
+
+/**
+ * Validates a promotional coupon code against backend rules before checkout.
+ */
+export async function validateCoupon(
+  code: string,
+  planCode: string
+): Promise<CouponValidationResponse> {
+  const headers = await getAuthHeaders();
+  if (!headers.Authorization) {
+    throw new Error("Please sign in to apply a promotional coupon.");
+  }
+
+  const res = await apiFetch(`${API_BASE}/api/payments/validate-coupon`, {
+    method: "POST",
+    headers: {
+      ...headers,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      code: code.trim(),
+      plan_code: planCode,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    throw new Error(
+      errorBody.detail || errorBody.message || `Invalid coupon (${res.status})`
+    );
+  }
+
+  return (await res.json()) as CouponValidationResponse;
 }
 
 /**
@@ -43,7 +98,8 @@ export interface PaymentTransactionDTO {
  * Returns the PhonePe Standard Checkout redirect URL.
  */
 export async function createPaymentOrder(
-  planCode: "premium_monthly" | "premium_3_month" | string
+  planCode: "premium_monthly" | "premium_3_month" | string,
+  couponCode?: string
 ): Promise<CreatePaymentOrderResponse> {
   const headers = await getAuthHeaders();
   if (!headers.Authorization) {
@@ -62,6 +118,7 @@ export async function createPaymentOrder(
     body: JSON.stringify({
       plan_code: planCode,
       ...(redirectUrl ? { redirect_url: redirectUrl } : {}),
+      ...(couponCode && couponCode.trim() ? { coupon_code: couponCode.trim() } : {}),
     }),
   });
 
