@@ -24,6 +24,7 @@ import {
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/lib/auth";
 import { createPaymentOrder } from "@/lib/api/payment";
+import { fetchSubscriptionPlans, SubscriptionPlanDTO } from "@/lib/api/subscription";
 
 export interface PricingModalProps {
   isOpen: boolean;
@@ -46,6 +47,9 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const [trialDaysLeft, setTrialDaysLeft] = useState(7);
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [serverPlans, setServerPlans] = useState<SubscriptionPlanDTO[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState<string | null>(null);
 
   const [activeCheckout, setActiveCheckout] = useState<{
     planId: "1month" | "3months";
@@ -60,12 +64,34 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     setTrialDaysLeft(getTrialDaysRemaining());
   }, []);
 
-  // When modal is opened, always refetch latest server subscription status
+  // When modal is opened, always refetch latest server subscription status and live plans
   useEffect(() => {
     if (isOpen) {
       refetchSubscription();
       setCheckoutError(null);
       setIsInitiatingPayment(false);
+
+      let isMounted = true;
+      setPlansLoading(true);
+      fetchSubscriptionPlans()
+        .then((data) => {
+          if (isMounted) {
+            setServerPlans(data);
+            setPlansError(null);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setPlansError(err?.message || "Failed to load live plans.");
+          }
+        })
+        .finally(() => {
+          if (isMounted) setPlansLoading(false);
+        });
+
+      return () => {
+        isMounted = false;
+      };
     }
   }, [isOpen, refetchSubscription]);
 
@@ -97,6 +123,15 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     });
   };
 
+  const monthlyPlan = serverPlans.find((p) => p.code === "premium_monthly");
+  const threeMonthsPlan = serverPlans.find((p) => p.code === "premium_3_month");
+
+  const monthlyAvailable = monthlyPlan ? monthlyPlan.is_active : false;
+  const threeMonthsAvailable = threeMonthsPlan ? threeMonthsPlan.is_active : false;
+
+  const monthlyPrice = monthlyPlan ? monthlyPlan.price_in_paise / 100 : 99;
+  const threeMonthsPrice = threeMonthsPlan ? threeMonthsPlan.price_in_paise / 100 : 250;
+
   const handleInitiatePhonePePayment = async () => {
     if (!activeCheckout || isInitiatingPayment) return;
 
@@ -113,6 +148,14 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     setCheckoutError(null);
 
     const planCode = activeCheckout.planId === "1month" ? "premium_monthly" : "premium_3_month";
+
+    // Validate that the plan is active on client before sending request
+    const chosenPlan = serverPlans.find((p) => p.code === planCode);
+    if (serverPlans.length > 0 && (!chosenPlan || !chosenPlan.is_active)) {
+      setIsInitiatingPayment(false);
+      setCheckoutError("This plan has been deactivated or is no longer available.");
+      return;
+    }
 
     try {
       const order = await createPaymentOrder(planCode);
@@ -174,8 +217,8 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     },
     {
       name: "PREMIUM (1 MONTH)",
-      price: "99",
-      yearlyPrice: "99",
+      price: String(monthlyPrice),
+      yearlyPrice: String(monthlyPrice),
       period: "month",
       billingNote: isMonthlyActive && formattedExpiry
         ? `Active until ${formattedExpiry}`
@@ -183,9 +226,13 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       description: "Fast-paced interview sprint preparation",
       buttonText: isMonthlyActive
         ? "Current Plan (Active)"
+        : plansLoading
+        ? "Loading price..."
+        : !monthlyAvailable && serverPlans.length > 0
+        ? "Unavailable"
         : isPremium
-        ? "Switch to Monthly (₹99)"
-        : "Upgrade to 1 Month (₹99)",
+        ? `Switch to Monthly (₹${monthlyPrice})`
+        : `Upgrade to 1 Month (₹${monthlyPrice})`,
       href: "#",
       isPopular: false,
       currencySymbol: "₹",
@@ -199,28 +246,38 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         "Other premium features: Full access",
       ],
       onAction: () => {
+        if (plansLoading) return;
+        if (!monthlyAvailable && serverPlans.length > 0) {
+          setToastMessage("1-Month plan is currently unavailable.");
+          setTimeout(() => setToastMessage(null), 2500);
+          return;
+        }
         if (isMonthlyActive) {
           setToastMessage(`Your 1-Month Premium is active until ${formattedExpiry}.`);
           setTimeout(() => setToastMessage(null), 2500);
           return;
         }
-        handleSelectPlan("1month", "Premium 1 Month Pass", "₹99", 99);
+        handleSelectPlan("1month", "Premium 1 Month Pass", `₹${monthlyPrice}`, monthlyPrice);
       },
     },
     {
       name: "PREMIUM (3 MONTHS)",
-      price: "250",
-      yearlyPrice: "250",
+      price: String(threeMonthsPrice),
+      yearlyPrice: String(threeMonthsPrice),
       period: "3 months",
       billingNote: is3MonthsActive && formattedExpiry
         ? `Active until ${formattedExpiry}`
-        : "Billed every 3 months • ₹83/month",
+        : `Billed every 3 months • ₹${Math.round(threeMonthsPrice / 3)}/month`,
       description: "Complete 90-day placement preparation pack (Save ~16%)",
       buttonText: is3MonthsActive
         ? "Current Plan (Active)"
+        : plansLoading
+        ? "Loading price..."
+        : !threeMonthsAvailable && serverPlans.length > 0
+        ? "Unavailable"
         : isMonthlyActive
-        ? "Extend for 3 Months (₹250)"
-        : "Upgrade to 3 Months (₹250)",
+        ? `Extend for 3 Months (₹${threeMonthsPrice})`
+        : `Upgrade to 3 Months (₹${threeMonthsPrice})`,
       href: "#",
       isPopular: true,
       currencySymbol: "₹",
@@ -234,12 +291,18 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         "Other premium features: Full access",
       ],
       onAction: () => {
+        if (plansLoading) return;
+        if (!threeMonthsAvailable && serverPlans.length > 0) {
+          setToastMessage("3-Month plan is currently unavailable.");
+          setTimeout(() => setToastMessage(null), 2500);
+          return;
+        }
         if (is3MonthsActive) {
           setToastMessage(`Your 3-Month Premium is active until ${formattedExpiry}.`);
           setTimeout(() => setToastMessage(null), 2500);
           return;
         }
-        handleSelectPlan("3months", "Premium 3 Months Pass", "₹250", 250);
+        handleSelectPlan("3months", "Premium 3 Months Pass", `₹${threeMonthsPrice}`, threeMonthsPrice);
       },
     },
   ];
@@ -412,6 +475,26 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
+                  {plansError && (
+                    <div className="mb-4 p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between max-w-xl mx-auto">
+                      <span>Live pricing could not be refreshed from the server.</span>
+                      <button
+                        onClick={() => {
+                          setPlansLoading(true);
+                          fetchSubscriptionPlans()
+                            .then((data) => {
+                              setServerPlans(data);
+                              setPlansError(null);
+                            })
+                            .catch((err) => setPlansError(err?.message || "Failed to load plans"))
+                            .finally(() => setPlansLoading(false));
+                        }}
+                        className="text-amber-300 font-bold underline hover:text-white cursor-pointer ml-3"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
                   <Pricing
                     plans={pricingPlans}
                     title="Simple, Transparent Pricing"

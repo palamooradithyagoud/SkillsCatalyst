@@ -82,10 +82,11 @@ class SubscriptionService:
                 if res.data and len(res.data) > 0:
                     plans = []
                     for row in res.data:
+                        raw_code = row["code"]
                         plans.append(
                             SubscriptionPlanDTO(
                                 id=str(row["id"]),
-                                code=PlanCode(row["code"]),
+                                code=raw_code,
                                 name=str(row["name"]),
                                 description=row.get("description"),
                                 price_in_paise=int(row["price_in_paise"]),
@@ -105,7 +106,8 @@ class SubscriptionService:
         """Looks up a specific plan by code, either from DB or canonical defaults."""
         plans = SubscriptionService.get_active_plans()
         for p in plans:
-            if p.code.value == code:
+            p_code = p.code.value if hasattr(p.code, "value") else str(p.code)
+            if p_code == code:
                 return p
         return None
 
@@ -228,14 +230,14 @@ class SubscriptionService:
         cancelled_at = _parse_timestamp(sub.get("cancelled_at"))
 
         plan_rel = sub.get("subscription_plans") or {}
-        plan_code_str = plan_rel.get("code") or "free"
+        plan_code_str = str(plan_rel.get("code") or "free").strip().lower()
         try:
-            stored_plan_code = PlanCode(plan_code_str)
+            stored_plan_code: Union[PlanCode, str] = PlanCode(plan_code_str)
         except ValueError:
-            stored_plan_code = PlanCode.FREE
+            stored_plan_code = plan_code_str
 
         # Case 1: Free plan row
-        if stored_plan_code == PlanCode.FREE:
+        if stored_plan_code == PlanCode.FREE or stored_plan_code == "free":
             result = {
                 "plan": PlanCode.FREE,
                 "status": SubscriptionStatus.ACTIVE,
@@ -341,10 +343,11 @@ class SubscriptionService:
             return {k: v.model_copy() for k, v in DEFAULT_FREE_ENTITLEMENTS.items()}
 
         plan_code, is_premium = SubscriptionService.get_effective_plan(user_id)
+        plan_key = plan_code.value if hasattr(plan_code, "value") else str(plan_code)
 
         # 1. Check in-memory cache first (eliminates 300-800ms DB roundtrip on every request)
         now_mono = time.monotonic()
-        cached = _PLAN_ENTITLEMENTS_CACHE.get(plan_code.value)
+        cached = _PLAN_ENTITLEMENTS_CACHE.get(plan_key)
         if cached and cached[0] > now_mono:
             return {k: v.model_copy() for k, v in cached[1].items()}
 
@@ -355,7 +358,7 @@ class SubscriptionService:
                 res = (
                     sb.from_("plan_entitlements")
                     .select("feature_key, access_level, limit_value, subscription_plans!inner(code)")
-                    .eq("subscription_plans.code", plan_code.value)
+                    .eq("subscription_plans.code", plan_key)
                     .execute()
                 )
                 if res.data and len(res.data) > 0:
@@ -368,14 +371,14 @@ class SubscriptionService:
                     # Verify all 7 feature keys present
                     all_present = all(k.value in entitlements for k in FeatureKey)
                     if all_present:
-                        _PLAN_ENTITLEMENTS_CACHE[plan_code.value] = (now_mono + _PLAN_ENTITLEMENTS_CACHE_TTL, entitlements)
+                        _PLAN_ENTITLEMENTS_CACHE[plan_key] = (now_mono + _PLAN_ENTITLEMENTS_CACHE_TTL, entitlements)
                         return {k: v.model_copy() for k, v in entitlements.items()}
             except Exception as e:
-                logger.warning(f"Failed to query plan_entitlements for {plan_code.value}: {e}")
+                logger.warning(f"Failed to query plan_entitlements for {plan_key}: {e}")
 
         # Fallback to canonical in-memory dictionary
         fallback = {k: v.model_copy() for k, v in (DEFAULT_PREMIUM_ENTITLEMENTS if is_premium else DEFAULT_FREE_ENTITLEMENTS).items()}
-        _PLAN_ENTITLEMENTS_CACHE[plan_code.value] = (now_mono + 60.0, fallback)
+        _PLAN_ENTITLEMENTS_CACHE[plan_key] = (now_mono + 60.0, fallback)
         return fallback
 
     @staticmethod
@@ -456,6 +459,34 @@ class SubscriptionService:
         sub_id = None
 
         if sb:
+            # 1. Idempotency Guard: Prevent double-extension if provider_event_id was already processed
+            if provider_event_id:
+                try:
+                    chk = (
+                        sb.from_("subscription_events")
+                        .select("id, subscription_id, metadata")
+                        .eq("provider_event_id", provider_event_id)
+                        .limit(1)
+                        .execute()
+                    )
+                    if chk.data and len(chk.data) > 0:
+                        ev = chk.data[0]
+                        logger.info(
+                            f"Subscription event {provider_event_id} already applied. "
+                            "Returning existing subscription without duplicate extension."
+                        )
+                        meta = ev.get("metadata") or {}
+                        recorded_expiry = _parse_timestamp(meta.get("expires_at"))
+                        return {
+                            "subscription_id": ev.get("subscription_id"),
+                            "started_at": existing.get("started_at") or now,
+                            "expires_at": recorded_expiry or existing.get("expires_at") or now,
+                            "is_extension": meta.get("is_extension", False),
+                            "status": SubscriptionStatus.ACTIVE,
+                        }
+                except Exception as chk_err:
+                    logger.warning(f"Error checking duplicate provider_event_id in subscription_events: {chk_err}")
+
             try:
                 # Check for existing user_subscriptions row to update or insert
                 existing_rows = (

@@ -191,7 +191,7 @@ export function SubscriptionStatus({
           </p>
           {showUpgradeCTA && (
             <UpgradeCTA
-              label="Upgrade to Premium — ₹99"
+              label="Upgrade to Premium"
               size="sm"
               variant="primary"
               className="w-full"

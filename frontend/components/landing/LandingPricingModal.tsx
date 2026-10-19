@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Pricing, PricingPlan } from "@/components/ui/pricing";
+import { fetchSubscriptionPlans, SubscriptionPlanDTO } from "@/lib/api/subscription";
 
 export type LandingPricingTier = "all" | "free" | "pro" | "enterprise";
 
@@ -38,10 +39,25 @@ export default function LandingPricingModal({
   const [mounted, setMounted] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [serverPlans, setServerPlans] = useState<SubscriptionPlanDTO[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (isOpen) {
+      fetchSubscriptionPlans()
+        .then((data) => {
+          if (isMounted) setServerPlans(data);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   // Handle escape key
   useEffect(() => {
@@ -74,6 +90,11 @@ export default function LandingPricingModal({
     }
   };
 
+  const monthlyPlan = serverPlans.find((p) => p.code === "premium_monthly");
+  const threeMonthsPlan = serverPlans.find((p) => p.code === "premium_3_month");
+  const monthlyPrice = monthlyPlan ? monthlyPlan.price_in_paise / 100 : 99;
+  const threeMonthsPrice = threeMonthsPlan ? threeMonthsPlan.price_in_paise / 100 : 250;
+
   const landingPlans: PricingPlan[] = [
     {
       name: "Student Free",
@@ -99,12 +120,12 @@ export default function LandingPricingModal({
     },
     {
       name: "Premium (1 Month)",
-      price: "99",
-      yearlyPrice: "99",
+      price: String(monthlyPrice),
+      yearlyPrice: String(monthlyPrice),
       period: "month",
       billingNote: "Billed monthly • Cancel anytime",
       description: "Fast-paced interview sprint preparation with 660+ company sets",
-      buttonText: "Get 1 Month Pass (₹99)",
+      buttonText: `Get 1 Month Pass (₹${monthlyPrice})`,
       href: "/login?plan=1month",
       isPopular: false,
       currencySymbol: "₹",
@@ -121,12 +142,12 @@ export default function LandingPricingModal({
     },
     {
       name: "Premium (3 Months)",
-      price: "250",
-      yearlyPrice: "250",
+      price: String(threeMonthsPrice),
+      yearlyPrice: String(threeMonthsPrice),
       period: "3 months",
-      billingNote: "Billed every 3 months • ₹83/month",
-      description: "Complete 90-day placement preparation pack (just ₹83/mo)",
-      buttonText: "Get 3 Months Pass (₹250)",
+      billingNote: `Billed every 3 months • ₹${Math.round(threeMonthsPrice / 3)}/month`,
+      description: `Complete 90-day placement preparation pack (just ₹${Math.round(threeMonthsPrice / 3)}/mo)`,
+      buttonText: `Get 3 Months Pass (₹${threeMonthsPrice})`,
       href: "/login?plan=3months",
       isPopular: true,
       currencySymbol: "₹",

@@ -25,7 +25,7 @@ export function PremiumLockCard({
     "Curated solutions, test cases & video explanations",
     "Unlimited practice & AI mentor feedback",
   ],
-  ctaLabel = "Upgrade to Premium — ₹99/mo",
+  ctaLabel = "Upgrade to Premium",
   secondaryAction,
   compact = false,
   className = "",

@@ -361,6 +361,7 @@ class TestPhonePePaymentsPhase2(unittest.TestCase):
             "amount_in_paise": 9900,
             "currency": "INR",
             "status": "success",  # Already succeeded
+            "subscription_id": "sub-300",
             "subscription_plans": {"code": "premium_monthly", "duration_days": 30},
         }
 

@@ -1011,6 +1011,80 @@ async def upload_admin_certificate_background_endpoint(
     return {"success": True, "background_media_url": public_url}
 
 
+# ==============================================================================
+# Commercial Plans & Pricing CMS Endpoints
+# ==============================================================================
+from backend.models.subscription import (
+    SubscriptionPlanAdminDTO,
+    CreatePlanRequest,
+    UpdatePlanRequest,
+    SetPlanStatusRequest,
+)
+from backend.services.plan_admin_service import PlanAdminService
+
+
+@router.get(
+    "/plans",
+    response_model=List[SubscriptionPlanAdminDTO],
+    status_code=status.HTTP_200_OK,
+    summary="Get All Subscription Plans (Admin)",
+    description="Returns all active and inactive subscription plans for administrative management.",
+)
+def get_admin_plans(
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> List[SubscriptionPlanAdminDTO]:
+    """Protected Admin endpoint returning full subscription plan catalog."""
+    return PlanAdminService.get_all_plans_admin()
+
+
+@router.post(
+    "/plans",
+    response_model=SubscriptionPlanAdminDTO,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Subscription Plan (Admin)",
+    description="Creates a new subscription plan with authoritative pricing and duration validation.",
+)
+def create_admin_plan(
+    payload: CreatePlanRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> SubscriptionPlanAdminDTO:
+    """Protected Admin endpoint to create a new commercial subscription plan."""
+    return PlanAdminService.create_plan(payload)
+
+
+@router.put(
+    "/plans/{plan_id}",
+    response_model=SubscriptionPlanAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Update Subscription Plan (Admin)",
+    description="Updates existing subscription plan pricing, name, description, and duration.",
+)
+def update_admin_plan(
+    plan_id: str,
+    payload: UpdatePlanRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> SubscriptionPlanAdminDTO:
+    """Protected Admin endpoint to update commercial plan terms."""
+    return PlanAdminService.update_plan(plan_id, payload)
+
+
+@router.patch(
+    "/plans/{plan_id}/status",
+    response_model=SubscriptionPlanAdminDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Activate / Deactivate Subscription Plan (Admin)",
+    description="Toggles whether a subscription plan is active and available for student checkout.",
+)
+def set_admin_plan_status(
+    plan_id: str,
+    payload: SetPlanStatusRequest,
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> SubscriptionPlanAdminDTO:
+    """Protected Admin endpoint to activate or deactivate a plan."""
+    return PlanAdminService.set_plan_status(plan_id, payload.is_active)
+
+
+
 
 
 

@@ -6,8 +6,8 @@ Phase: Payments Phase 2 — PhonePe Payment Integration (Backend-First)
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any, List, Union
+from pydantic import BaseModel, Field, field_validator
 
 from backend.models.subscription import PlanCode
 
@@ -21,8 +21,20 @@ class PaymentStatus(str, Enum):
 
 
 class CreatePaymentOrderRequest(BaseModel):
-    plan_code: PlanCode = Field(..., description="Target commercial subscription plan code to purchase")
+    plan_code: str = Field(..., pattern=r"^[a-z0-9_]{2,50}$", description="Target commercial subscription plan code to purchase")
     redirect_url: Optional[str] = Field(default=None, description="Optional safe return URL origin for the payment session")
+
+    @field_validator("plan_code")
+    @classmethod
+    def validate_plan_code(cls, v: str) -> str:
+        clean = str(v).strip().lower()
+        if clean in ("free", "premium_monthly", "premium_3_month"):
+            return clean
+        from backend.services.subscription_service import SubscriptionService
+        plan = SubscriptionService.get_plan_by_code(clean)
+        if not plan:
+            raise ValueError(f"Plan code '{clean}' is not a recognized subscription plan.")
+        return clean
 
     model_config = {
         "json_schema_extra": {
@@ -39,7 +51,7 @@ class CreatePaymentOrderResponse(BaseModel):
     checkout_url: str = Field(..., description="PhonePe Standard Checkout redirect URL")
     amount_in_paise: int = Field(..., description="Amount charged in integer paise")
     currency: str = Field(default="INR", description="Three-letter currency code")
-    plan_code: PlanCode = Field(..., description="Plan code purchased")
+    plan_code: Union[PlanCode, str] = Field(..., description="Plan code purchased")
 
     model_config = {
         "json_schema_extra": {

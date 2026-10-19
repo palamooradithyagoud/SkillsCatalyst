@@ -13,7 +13,7 @@ from typing import Optional, Dict, Any, List
 from fastapi import HTTPException, status
 
 from backend.services.supabase_service import get_supabase
-from backend.services.subscription_service import SubscriptionService
+from backend.services.subscription_service import SubscriptionService, _parse_timestamp
 from backend.services.phonepe_service import PhonePeService
 from backend.services.auth_service import is_valid_uuid
 from backend.models.payment import (
@@ -54,14 +54,14 @@ class PaymentService:
     @staticmethod
     def create_order(
         user_id: str,
-        plan_code: PlanCode,
+        plan_code: Union[PlanCode, str],
         redirect_url: Optional[str] = None,
     ) -> CreatePaymentOrderResponse:
         """
         Initiates a commercial payment order:
-        1. Validates plan from database; rejects free plan.
+        1. Validates plan from database; rejects free plan and inactive plans.
         2. Generates internal unique merchant_order_id.
-        3. Creates pending record in payment_transactions.
+        3. Creates pending record in payment_transactions with server-authoritative amount.
         4. Calls PhonePe Standard Checkout v2 API to generate redirect URL.
         """
         if not user_id or not is_valid_uuid(user_id):
@@ -70,18 +70,26 @@ class PaymentService:
                 detail="Valid authenticated user UUID required for purchasing subscriptions.",
             )
 
-        if plan_code == PlanCode.FREE:
+        plan_code_str = plan_code.value if hasattr(plan_code, "value") else str(plan_code)
+
+        if plan_code_str == "free" or plan_code == PlanCode.FREE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The free tier cannot be purchased via payment gateway.",
             )
 
         # Authoritative plan lookup from database/canonical catalog
-        plan = SubscriptionService.get_plan_by_code(plan_code.value)
+        plan = SubscriptionService.get_plan_by_code(plan_code_str)
         if not plan:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Subscription plan '{plan_code.value}' not found.",
+                detail=f"Subscription plan '{plan_code_str}' not found.",
+            )
+
+        if not plan.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Subscription plan '{plan_code_str}' is currently inactive and cannot be purchased.",
             )
 
         amount_in_paise = plan.price_in_paise
@@ -212,15 +220,41 @@ class PaymentService:
                 detail=f"Transaction with ID '{merchant_order_id}' was not found.",
             )
 
-        # 3. Idempotency Check: if already processed, return 200 immediately
+        # 3. Idempotency Check: if already processed AND subscription provisioned, return 200 immediately
         if tx.get("status") == PaymentStatus.SUCCESS.value:
-            logger.info(f"Payment {merchant_order_id} already marked as success. Returning idempotent acknowledgement.")
-            return {
-                "success": True,
-                "message": "Payment already processed successfully.",
-                "merchant_order_id": merchant_order_id,
-                "status": "success",
-            }
+            if tx.get("subscription_id"):
+                logger.info(f"Payment {merchant_order_id} already marked as success with active subscription. Returning idempotent acknowledgement.")
+                return {
+                    "success": True,
+                    "message": "Payment already processed successfully.",
+                    "merchant_order_id": merchant_order_id,
+                    "status": "success",
+                }
+            else:
+                # Transaction is 'success' but subscription_id is NULL:
+                # Distinguish active concurrent worker in-flight (< 10s lease) vs stranded crash (> 10s)
+                tx_updated_at = _parse_timestamp(tx.get("updated_at") or tx.get("created_at"))
+                now_utc = datetime.now(timezone.utc)
+                is_stale_or_recovery = is_internal_sync or (
+                    tx_updated_at is not None and (now_utc - tx_updated_at).total_seconds() >= 10.0
+                )
+
+                if not is_stale_or_recovery:
+                    logger.info(
+                        f"Payment {merchant_order_id} has status='success' and is in-flight by concurrent worker. "
+                        "Returning duplicate in-flight acknowledgement."
+                    )
+                    return {
+                        "success": True,
+                        "message": "Payment processing in progress.",
+                        "merchant_order_id": merchant_order_id,
+                        "status": "success",
+                    }
+
+                logger.warning(
+                    f"Payment {merchant_order_id} has status='success' but subscription_id is NULL (stale lease or recovery). "
+                    "Detected stranded unfulfilled payment from prior process crash. Initiating recovery provisioning..."
+                )
 
         # 4. Verify Amount (prevent payload tampering)
         if amount is not None:
@@ -246,6 +280,7 @@ class PaymentService:
         is_success = (
             state in ("COMPLETED", "SUCCESS")
             or event in ("checkout.order.completed", "pg.order.completed")
+            or (tx.get("status") == PaymentStatus.SUCCESS.value and not tx.get("subscription_id"))
         )
 
         if is_success:
@@ -264,48 +299,59 @@ class PaymentService:
                         "p_provider_order_id": provider_order_id,
                         "p_provider_response": callback.get("raw_payload", {}),
                     }).execute()
-                    if isinstance(rpc_res.data, dict) and rpc_res.data.get("success") is True:
-                        return {
-                            "success": True,
-                            "message": "Payment verified and subscription activated successfully via atomic RPC.",
-                            "merchant_order_id": merchant_order_id,
-                            "status": "success",
-                        }
-                    elif isinstance(rpc_res.data, dict) and rpc_res.data.get("claimed") is False:
-                        logger.info(f"Order {merchant_order_id} already claimed or finalized in RPC.")
-                        return {
-                            "success": True,
-                            "message": "Payment already claimed or finalized by concurrent worker.",
-                            "merchant_order_id": merchant_order_id,
-                            "status": "success",
-                        }
+                    if isinstance(rpc_res.data, dict):
+                        if rpc_res.data.get("success") is True:
+                            return {
+                                "success": True,
+                                "message": rpc_res.data.get("message") or "Payment verified and subscription activated successfully via atomic RPC.",
+                                "merchant_order_id": merchant_order_id,
+                                "status": "success",
+                            }
+                        elif rpc_res.data.get("error") == "TERMINAL_STATE":
+                            t_status = rpc_res.data.get("status") or "failed"
+                            logger.warning(f"RPC rejected order {merchant_order_id}: transaction is in terminal state '{t_status}'")
+                            return {
+                                "success": False,
+                                "message": f"Payment is in a terminal failure state ({t_status}).",
+                                "merchant_order_id": merchant_order_id,
+                                "status": t_status,
+                            }
+                        else:
+                            logger.warning(
+                                f"RPC claim_and_provision_payment returned unsuccessful status for {merchant_order_id}: "
+                                f"{rpc_res.data.get('error')} - {rpc_res.data.get('message')}"
+                            )
                 except Exception as rpc_err:
                     logger.debug(f"RPC claim_and_provision_payment unavailable, falling back to direct atomic claim: {rpc_err}")
 
                 # 2. Atomic PostgREST Claim:
-                # Atomically update payment_transactions where status == 'pending'.
-                # Only 1 worker can successfully match status='pending' and transition to 'success'.
-                claim_res = (
-                    sb.from_("payment_transactions")
-                    .update({
-                        "status": PaymentStatus.SUCCESS.value,
-                        "provider_order_id": provider_order_id or tx.get("provider_order_id"),
-                        "provider_response": callback.get("raw_payload", {}),
-                        "updated_at": now.isoformat(),
-                    })
-                    .eq("merchant_order_id", merchant_order_id)
-                    .eq("status", PaymentStatus.PENDING.value)
-                    .execute()
-                )
-                if isinstance(claim_res.data, list):
-                    claimed = (len(claim_res.data) >= 1)
-                else:
-                    claimed = bool(claim_res.data)
+                # If transaction is 'pending', atomically transition to 'success'.
+                # If transaction is already 'success' with NULL subscription_id (unfulfilled crash recovery), claim recovery.
+                if tx.get("status") == PaymentStatus.PENDING.value:
+                    claim_res = (
+                        sb.from_("payment_transactions")
+                        .update({
+                            "status": PaymentStatus.SUCCESS.value,
+                            "provider_order_id": provider_order_id or tx.get("provider_order_id"),
+                            "provider_response": callback.get("raw_payload", {}),
+                            "updated_at": now.isoformat(),
+                        })
+                        .eq("merchant_order_id", merchant_order_id)
+                        .eq("status", PaymentStatus.PENDING.value)
+                        .execute()
+                    )
+                    if isinstance(claim_res.data, list):
+                        claimed = (len(claim_res.data) >= 1)
+                    else:
+                        claimed = bool(claim_res.data)
+                elif tx.get("status") == PaymentStatus.SUCCESS.value and not tx.get("subscription_id"):
+                    # Unfulfilled crash recovery claim: proceed to ensure subscription provisioning
+                    claimed = True
 
                 if not claimed:
                     logger.info(f"Order {merchant_order_id} could not be claimed (already claimed or completed).")
-                    curr = sb.from_("payment_transactions").select("status").eq("merchant_order_id", merchant_order_id).limit(1).execute()
-                    c_status = curr.data[0].get("status") if (isinstance(curr.data, list) and len(curr.data) > 0 and isinstance(curr.data[0], dict)) else "unknown"
+                    curr = sb.from_("payment_transactions").select("status, subscription_id").eq("merchant_order_id", merchant_order_id).limit(1).execute()
+                    c_status = curr.data[0].get("status") if (isinstance(curr.data, list) and len(curr.data) > 0) else "unknown"
                     return {
                         "success": True,
                         "message": f"Payment already {c_status}. Duplicate event ignored.",

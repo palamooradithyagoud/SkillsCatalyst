@@ -64,8 +64,21 @@ class TestSubscriptionFoundation(unittest.TestCase):
 
     def setUp(self):
         self.student_id = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        self._cache_get_patcher = patch("backend.services.subscription_service.get_cached_user_subscription", return_value=None)
+        self._cache_set_patcher = patch("backend.services.subscription_service.set_cached_user_subscription", return_value=None)
+        self._cache_get_patcher.start()
+        self._cache_set_patcher.start()
+        SubscriptionService.invalidate_plan_entitlements_cache()
         self.mock_student = MockAuthUser(self.student_id, "student@skillscatalyst.com")
         self.now = datetime.now(timezone.utc)
+
+    def tearDown(self):
+        self._cache_get_patcher.stop()
+        self._cache_set_patcher.stop()
+        SubscriptionService.invalidate_plan_entitlements_cache()
+
+
+
 
     # =========================================================================
     # 1. FREE USER (NO SUBSCRIPTION RECORD)

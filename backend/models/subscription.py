@@ -6,7 +6,7 @@ Phase: Payments Phase 1 — Subscription + Entitlement Foundation
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from pydantic import BaseModel, Field
 
 
@@ -54,7 +54,7 @@ class EntitlementDetailDTO(BaseModel):
 
 class SubscriptionPlanDTO(BaseModel):
     id: Optional[str] = Field(None, description="UUID of the plan in database")
-    code: PlanCode = Field(..., description="Unique plan code identifier")
+    code: Union[PlanCode, str] = Field(..., description="Unique plan code identifier")
     name: str = Field(..., description="Human-readable plan name")
     description: Optional[str] = Field(None, description="Plan description")
     price_in_paise: int = Field(..., ge=0, description="Canonical price in Indian paise (e.g. 9900 = ₹99)")
@@ -78,8 +78,35 @@ class SubscriptionPlanDTO(BaseModel):
     }
 
 
+class SubscriptionPlanAdminDTO(SubscriptionPlanDTO):
+    created_at: Optional[str] = Field(None, description="Plan creation timestamp")
+    updated_at: Optional[str] = Field(None, description="Plan last update timestamp")
+
+
+class CreatePlanRequest(BaseModel):
+    code: str = Field(..., pattern=r"^[a-z0-9_]{2,50}$", description="Unique slug for plan (lowercase alphanumeric and underscores)")
+    name: str = Field(..., min_length=1, max_length=100, description="Display name of plan")
+    description: Optional[str] = Field(None, max_length=500, description="Optional plan description")
+    price_in_paise: int = Field(..., ge=0, description="Price in paise (>= 0)")
+    currency: str = Field(default="INR", pattern=r"^[A-Z]{3}$", description="ISO 4217 currency code")
+    duration_days: Optional[int] = Field(None, ge=1, le=3650, description="Duration in days (null only allowed for perpetual free plan)")
+    is_active: bool = Field(default=True, description="Whether plan is active")
+
+
+class UpdatePlanRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100, description="Display name of plan")
+    description: Optional[str] = Field(None, max_length=500, description="Optional plan description")
+    price_in_paise: Optional[int] = Field(None, ge=0, description="Price in paise (>= 0)")
+    duration_days: Optional[int] = Field(None, ge=1, le=3650, description="Duration in days")
+    is_active: Optional[bool] = Field(None, description="Whether plan is active")
+
+
+class SetPlanStatusRequest(BaseModel):
+    is_active: bool = Field(..., description="Target active status")
+
+
 class MySubscriptionResponse(BaseModel):
-    plan: PlanCode = Field(..., description="Effective subscription plan for user")
+    plan: Union[PlanCode, str] = Field(..., description="Effective subscription plan for user")
     status: SubscriptionStatus = Field(..., description="Subscription state: active, expired, or cancelled")
     is_premium: bool = Field(..., description="Whether user effectively has premium entitlement right now")
     started_at: Optional[datetime] = Field(None, description="When current plan period began")

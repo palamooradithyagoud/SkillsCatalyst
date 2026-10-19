@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Sparkles,
   BookOpen,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
@@ -26,8 +27,9 @@ import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 import AdminSkillBitsCMS from "@/components/admin/AdminSkillBitsCMS";
+import AdminPlansCMS from "@/components/admin/AdminPlansCMS";
 
-type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits";
+type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits" | "plans";
 
 interface AdminOverviewData {
   stats: {
@@ -180,6 +182,7 @@ export default function AdminPage() {
     { id: "community", label: "Community", icon: MessageSquare, badge: overviewData?.stats.cms_modules.community_threads },
     { id: "users", label: "User Governance", icon: Users, badge: overviewData?.stats.total_users },
     { id: "skillbits", label: "SkillBits", icon: Sparkles },
+    { id: "plans", label: "Plans & Pricing", icon: CreditCard },
   ];
 
   return (
@@ -547,6 +550,13 @@ export default function AdminPage() {
           {activeTab === "skillbits" && (
             <div className="animate-in fade-in duration-150">
               <AdminSkillBitsCMS />
+            </div>
+          )}
+
+          {/* TAB 8: PLANS & PRICING CMS */}
+          {activeTab === "plans" && (
+            <div className="animate-in fade-in duration-150">
+              <AdminPlansCMS />
             </div>
           )}
         </main>
