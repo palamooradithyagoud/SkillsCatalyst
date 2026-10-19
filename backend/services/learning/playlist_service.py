@@ -889,6 +889,21 @@ async def sync_saved_playlists(
         deduped_playlists.append(p)
     playlists_list = deduped_playlists
 
+    # Phase 3 Entitlement Enforcement for sync_saved_playlists (prevent alternate route bypass)
+    from backend.services.subscription_service import SubscriptionService
+    _, is_premium = SubscriptionService.get_effective_plan(current_user_id)
+    if not is_premium:
+        limit = SubscriptionService.get_feature_limit(current_user_id, "saved_videos")
+        if limit is not None and len(playlists_list) > limit:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "LIMIT_REACHED",
+                    "feature": "saved_videos",
+                    "limit": limit,
+                },
+            )
+
     total_videos = sum(len(p.get("videos", [])) for p in playlists_list)
     completed_videos = sum(len([v for v in p.get("videos", []) if v.get("completed") or v.get("watched")]) for p in playlists_list)
     pct = round((completed_videos / total_videos) * 100.0, 2) if total_videos > 0 else 0.0

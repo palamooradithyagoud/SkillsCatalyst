@@ -60,11 +60,22 @@ class MockAuthUser:
 class TestEntitlementEnforcementPhase3(unittest.TestCase):
 
     def setUp(self):
+        SubscriptionService.invalidate_plan_entitlements_cache()
         self.free_student_id = "11111111-1111-4111-a111-111111111111"
         self.premium_student_id = "22222222-2222-4222-a222-222222222222"
         self.free_user = MockAuthUser(self.free_student_id, "free@skillscatalyst.com")
         self.premium_user = MockAuthUser(self.premium_student_id, "premium@skillscatalyst.com")
         self.now = datetime.now(timezone.utc)
+        self._cache_get_patcher = patch("backend.services.subscription_service.get_cached_user_subscription", return_value=None)
+        self._cache_set_patcher = patch("backend.services.subscription_service.set_cached_user_subscription", return_value=None)
+        self._cache_get_patcher.start()
+        self._cache_set_patcher.start()
+
+    def tearDown(self):
+        self._cache_get_patcher.stop()
+        self._cache_set_patcher.stop()
+        SubscriptionService.invalidate_plan_entitlements_cache()
+
 
     # =========================================================================
     # SCENARIO 1: Free User - 1st Playlist Save Succeeds (200)
@@ -738,6 +749,134 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
             self.assertNotIn("leetcode", resp.text.lower())
             self.assertNotIn("acceptance", resp.text.lower())
 
+    # =========================================================================
+    # SCENARIO 21: Alternate Route Bypass Blocked (sync_saved_playlists)
+    # =========================================================================
+    def test_21_sync_saved_playlists_route_bypass_blocked_403(self):
+        """Free student attempting to sync multiple playlists via /sync-saved-playlists is blocked (403 LIMIT_REACHED)."""
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch("backend.services.learning.playlist_service.get_supabase") as mock_pay_sb, \
+             patch.object(SubscriptionService, "get_user_subscription_record", return_value=None):
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.free_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            payload = {
+                "playlists": [
+                    {"playlist_id": "PL_001", "title": "Course 1", "videos": []},
+                    {"playlist_id": "PL_002", "title": "Course 2", "videos": []},
+                ]
+            }
+            resp = client.post(
+                "/api/learning/sync-saved-playlists",
+                json=payload,
+                headers={"Authorization": "Bearer free-token"},
+            )
+            self.assertEqual(resp.status_code, 403)
+            self.assertEqual(resp.json()["detail"]["code"], "LIMIT_REACHED")
+            self.assertEqual(resp.json()["detail"]["feature"], "saved_videos")
+
+    # =========================================================================
+    # SCENARIO 22: Missing Entitlement Records Fail Safe (Closed)
+    # =========================================================================
+    def test_22_missing_entitlement_record_fails_safe(self):
+        """Missing or failed entitlement records fail closed (0 limit / 403) and never fail open."""
+        # Querying an unknown feature key returns 0 limit for non-premium user
+        limit = SubscriptionService.get_feature_limit(self.free_student_id, "unknown_feature_xyz")
+        self.assertEqual(limit, 0)
+
+        # has_feature_access for unknown feature returns False
+        has_access = SubscriptionService.has_feature_access(self.free_student_id, "unknown_feature_xyz")
+        self.assertFalse(has_access)
+
+    # =========================================================================
+    # SCENARIO 23: Plan Admin Changes Invalidate Entitlement Cache
+    # =========================================================================
+    def test_23_plan_admin_update_invalidates_entitlement_cache(self):
+        """When an admin updates a plan or status, plan entitlements cache is immediately cleared."""
+        from backend.services.plan_admin_service import PlanAdminService
+        from backend.models.subscription import UpdatePlanRequest
+
+        mock_sb = MagicMock()
+        mock_plan = {
+            "id": "plan-uuid-test",
+            "code": "premium_custom",
+            "name": "Custom Pro",
+            "price_in_paise": 14900,
+            "duration_days": 30,
+            "is_active": True,
+        }
+        mock_query = MagicMock()
+        mock_query.select.return_value = mock_query
+        mock_query.eq.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.execute.return_value = MagicMock(data=[mock_plan])
+        mock_query.update.return_value = mock_query
+        mock_sb.from_.return_value = mock_query
+
+        with patch("backend.services.plan_admin_service.get_supabase", return_value=mock_sb), \
+             patch.object(SubscriptionService, "invalidate_plan_entitlements_cache") as mock_inv:
+
+            req = UpdatePlanRequest(name="Updated Custom Pro", price_in_paise=19900)
+            PlanAdminService.update_plan("plan-uuid-test", req)
+
+            # Invalidation was triggered for the plan code
+            mock_inv.assert_called_with("premium_custom")
+
+    # =========================================================================
+    # SCENARIO 24: IDOR Protection on Placement Prep Attempts
+    # =========================================================================
+    def test_24_idor_protection_attempt_cannot_forge_other_user(self):
+        """Student cannot record practice attempt under another user's ID (HTTP 403)."""
+        mock_sub = {
+            "id": "sub-prem",
+            "user_id": self.premium_student_id,
+            "status": "active",
+            "started_at": (self.now - timedelta(days=1)).isoformat(),
+            "expires_at": (self.now + timedelta(days=29)).isoformat(),
+            "subscription_plans": {"code": "premium_monthly", "name": "Premium Monthly"},
+        }
+        with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
+             patch.object(SubscriptionService, "get_user_subscription_record", return_value=mock_sub):
+
+            mock_auth_client = MagicMock()
+            mock_auth_client.auth.get_user.return_value = MagicMock(user=self.premium_user)
+            mock_auth_sb.return_value = mock_auth_client
+
+            payload = {
+                "user_id": "99999999-9999-9999-9999-999999999999",  # Forged ID
+                "topic_id": 1,
+                "question_id": 10,
+                "selected_option_index": 2,
+                "time_taken_seconds": 15,
+            }
+            resp = client.post(
+                "/api/practice/aptitude/attempt",
+                json=payload,
+                headers={"Authorization": "Bearer premium-token"},
+            )
+            self.assertEqual(resp.status_code, 403)
+            self.assertIn("Cannot record attempt for another user", resp.json()["detail"])
+
+    # =========================================================================
+    # SCENARIO 25: Anonymous Callers Rejected on Protected Endpoints (401)
+    # =========================================================================
+    def test_25_anonymous_callers_rejected_on_protected_endpoints(self):
+        """Anonymous callers without tokens are rejected on protected endpoints with HTTP 401."""
+        endpoints = [
+            ("GET", "/api/subscriptions/me"),
+            ("POST", "/api/practice/aptitude/attempt"),
+            ("GET", "/api/ai-mentor/conversations"),
+        ]
+        for method, ep in endpoints:
+            if method == "GET":
+                r = client.get(ep)
+            else:
+                r = client.post(ep, json={})
+            self.assertEqual(r.status_code, 401, f"Endpoint {ep} should require authentication")
+
 
 if __name__ == "__main__":
     unittest.main()
+

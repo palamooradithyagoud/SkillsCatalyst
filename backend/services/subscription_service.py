@@ -364,15 +364,27 @@ class SubscriptionService:
                 if res.data and len(res.data) > 0:
                     entitlements: Dict[str, EntitlementDetailDTO] = {}
                     for row in res.data:
-                        fk = row["feature_key"]
-                        acc = AccessLevel(row["access_level"])
+                        fk = row.get("feature_key")
+                        if not fk:
+                            continue
+                        try:
+                            acc = AccessLevel(row.get("access_level", "none"))
+                        except Exception:
+                            logger.warning(f"Invalid access_level '{row.get('access_level')}' for feature '{fk}', failing closed to none.")
+                            acc = AccessLevel.NONE
                         lim = row.get("limit_value")
+                        if isinstance(lim, int) and lim < 0:
+                            lim = 0
                         entitlements[fk] = EntitlementDetailDTO(access=acc, limit=lim)
-                    # Verify all 7 feature keys present
-                    all_present = all(k.value in entitlements for k in FeatureKey)
-                    if all_present:
-                        _PLAN_ENTITLEMENTS_CACHE[plan_key] = (now_mono + _PLAN_ENTITLEMENTS_CACHE_TTL, entitlements)
-                        return {k: v.model_copy() for k, v in entitlements.items()}
+
+                    # Ensure all 7 canonical feature keys are present; fill missing keys with safe defaults
+                    canonical_base = DEFAULT_PREMIUM_ENTITLEMENTS if is_premium else DEFAULT_FREE_ENTITLEMENTS
+                    for k in FeatureKey:
+                        if k.value not in entitlements:
+                            entitlements[k.value] = canonical_base[k.value].model_copy()
+
+                    _PLAN_ENTITLEMENTS_CACHE[plan_key] = (now_mono + _PLAN_ENTITLEMENTS_CACHE_TTL, entitlements)
+                    return {k: v.model_copy() for k, v in entitlements.items()}
             except Exception as e:
                 logger.warning(f"Failed to query plan_entitlements for {plan_key}: {e}")
 
@@ -395,12 +407,19 @@ class SubscriptionService:
     @staticmethod
     def get_feature_limit(user_id: str, feature_key: str) -> Optional[int]:
         """
-        Returns numeric cap for a feature or None if unrestricted/unsupported.
+        Returns numeric cap for a feature or None if unrestricted.
+        Fails safe: non-premium users with missing entitlements or NONE access receive 0.
         """
+        _, is_premium = SubscriptionService.get_effective_plan(user_id)
         entitlements = SubscriptionService.get_user_entitlements(user_id)
         ent = entitlements.get(feature_key)
         if not ent:
-            return None
+            if is_premium:
+                return None
+            canon = DEFAULT_FREE_ENTITLEMENTS.get(feature_key)
+            return canon.limit if (canon and canon.access != AccessLevel.NONE) else 0
+        if not is_premium and ent.access == AccessLevel.NONE:
+            return 0
         return ent.limit
 
     @staticmethod

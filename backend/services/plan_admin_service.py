@@ -183,6 +183,12 @@ class PlanAdminService:
                         detail="Failed to initialize plan entitlements. Plan creation was rolled back.",
                     )
 
+            try:
+                from backend.services.subscription_service import SubscriptionService
+                SubscriptionService.invalidate_plan_entitlements_cache(code_clean)
+            except Exception:
+                pass
+
             return SubscriptionPlanAdminDTO(
                 id=plan_id,
                 code=str(created_row["code"]),
@@ -303,6 +309,12 @@ class PlanAdminService:
                     detail="Failed to update plan record.",
                 )
             updated_row = upd_res.data[0]
+            try:
+                from backend.services.subscription_service import SubscriptionService
+                SubscriptionService.invalidate_plan_entitlements_cache(str(existing.get("code")))
+            except Exception:
+                pass
+
             return SubscriptionPlanAdminDTO(
                 id=str(updated_row["id"]),
                 code=str(updated_row["code"]),
@@ -389,6 +401,12 @@ class PlanAdminService:
                     detail="Failed to update plan status.",
                 )
             row = upd_res.data[0]
+            try:
+                from backend.services.subscription_service import SubscriptionService
+                SubscriptionService.invalidate_plan_entitlements_cache(str(existing.get("code")))
+            except Exception:
+                pass
+
             return SubscriptionPlanAdminDTO(
                 id=str(row["id"]),
                 code=str(row["code"]),
