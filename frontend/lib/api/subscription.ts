@@ -39,6 +39,8 @@ export interface SubscriptionPlan {
   is_active: boolean;
 }
 
+export type SubscriptionPlanDTO = SubscriptionPlan;
+
 export interface MySubscriptionResponse {
   plan: PlanCode;
   status: SubscriptionStatus;

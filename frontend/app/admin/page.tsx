@@ -21,6 +21,8 @@ import {
   BookOpen,
   CreditCard,
   Tag,
+  IndianRupee,
+  CalendarCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
@@ -30,8 +32,21 @@ import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
 import AdminSkillBitsCMS from "@/components/admin/AdminSkillBitsCMS";
 import AdminPlansCMS from "@/components/admin/AdminPlansCMS";
 import AdminCouponsCMS from "@/components/admin/AdminCouponsCMS";
+import AdminPaymentsCMS from "@/components/admin/AdminPaymentsCMS";
+import AdminSubscriptionsCMS from "@/components/admin/AdminSubscriptionsCMS";
 
-type AdminTab = "overview" | "hackathons" | "scholarships" | "news" | "community" | "users" | "skillbits" | "plans" | "coupons";
+type AdminTab =
+  | "overview"
+  | "hackathons"
+  | "scholarships"
+  | "news"
+  | "community"
+  | "users"
+  | "skillbits"
+  | "plans"
+  | "coupons"
+  | "payments"
+  | "subscriptions";
 
 interface AdminOverviewData {
   stats: {
@@ -178,6 +193,8 @@ export default function AdminPage() {
 
   const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: Activity },
+    { id: "payments", label: "Payments & Revenue", icon: IndianRupee },
+    { id: "subscriptions", label: "Subscriptions", icon: CalendarCheck },
     { id: "hackathons", label: "Events & Hackathons", icon: Trophy, badge: overviewData?.stats.cms_modules.hackathons },
     { id: "scholarships", label: "Scholarships", icon: Award, badge: overviewData?.stats.cms_modules.scholarships },
     { id: "news", label: "Curated News", icon: Newspaper, badge: overviewData?.stats.cms_modules.news_updates },
@@ -567,6 +584,20 @@ export default function AdminPage() {
           {activeTab === "coupons" && (
             <div className="animate-in fade-in duration-150">
               <AdminCouponsCMS />
+            </div>
+          )}
+
+          {/* TAB 10: PAYMENTS & REVENUE DASHBOARD */}
+          {activeTab === "payments" && (
+            <div className="animate-in fade-in duration-150">
+              <AdminPaymentsCMS />
+            </div>
+          )}
+
+          {/* TAB 11: SUBSCRIPTIONS LIFECYCLE ROSTER */}
+          {activeTab === "subscriptions" && (
+            <div className="animate-in fade-in duration-150">
+              <AdminSubscriptionsCMS />
             </div>
           )}
         </main>

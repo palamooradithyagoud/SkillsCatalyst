@@ -1187,6 +1187,121 @@ def expire_admin_coupon(
     return CouponService.expire_coupon(coupon_id)
 
 
+# ==============================================================================
+# Phase 6: Admin Payment Dashboard & Subscription Lifecycle Management Endpoints
+# ==============================================================================
+from backend.models.admin_payment import (
+    AdminPaymentMetricsDTO,
+    AdminTransactionsListResponse,
+    AdminSubscriptionsListResponse,
+    AdminCancelSubscriptionRequest,
+    AdminCancelSubscriptionResponse,
+)
+from backend.services.admin_payment_service import AdminPaymentService
+
+
+@router.get(
+    "/payments/overview",
+    response_model=AdminPaymentMetricsDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get Payment Dashboard Metrics (Admin)",
+    description="Returns authoritative collected revenue, gross transaction value, discounts, and transaction counts across date boundaries.",
+)
+def get_admin_payment_metrics(
+    preset: Optional[str] = Query(None, description="Preset date range: 'today', '7d', '30d', or 'all'"),
+    start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
+    end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminPaymentMetricsDTO:
+    """Protected Admin endpoint returning authoritative platform payment telemetry."""
+    return AdminPaymentService.get_payment_dashboard_metrics(
+        preset=preset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@router.get(
+    "/payments/transactions",
+    response_model=AdminTransactionsListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Paginated Payment Transactions Ledger (Admin)",
+    description="Returns filtered and paginated ledger of payment transactions with customer profiles and plan references.",
+)
+def get_admin_transactions_ledger(
+    status: Optional[str] = Query(None, description="Filter by status: 'success', 'pending', 'failed', 'cancelled', or 'all'"),
+    start_date: Optional[str] = Query(None, description="Filter by creation start date (ISO-8601 UTC)"),
+    end_date: Optional[str] = Query(None, description="Filter by creation end date (ISO-8601 UTC)"),
+    plan_code: Optional[str] = Query(None, description="Filter by plan code"),
+    coupon_code: Optional[str] = Query(None, description="Filter by applied coupon code"),
+    search: Optional[str] = Query(None, description="Search by merchant order reference, user ID, or user email"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminTransactionsListResponse:
+    """Protected Admin endpoint returning paginated payment transactions ledger."""
+    return AdminPaymentService.get_transactions_ledger(
+        status_filter=status,
+        start_date=start_date,
+        end_date=end_date,
+        plan_code=plan_code,
+        coupon_code=coupon_code,
+        search=search,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/subscriptions",
+    response_model=AdminSubscriptionsListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get User Subscriptions Ledger (Admin)",
+    description="Returns filtered and paginated list of student subscriptions, lifecycle status, entitlement summaries, and cancellation info.",
+)
+def get_admin_subscriptions_ledger(
+    status: Optional[str] = Query(None, description="Filter by status: 'active', 'expired', 'cancelled', or 'all'"),
+    plan_code: Optional[str] = Query(None, description="Filter by plan code"),
+    search: Optional[str] = Query(None, description="Search by user ID, email, or student name"),
+    expires_before: Optional[str] = Query(None, description="Filter subscriptions expiring before date"),
+    expires_after: Optional[str] = Query(None, description="Filter subscriptions expiring after date"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminSubscriptionsListResponse:
+    """Protected Admin endpoint returning paginated user subscriptions."""
+    return AdminPaymentService.get_subscriptions_ledger(
+        status_filter=status,
+        plan_code=plan_code,
+        search=search,
+        expires_before=expires_before,
+        expires_after=expires_after,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.post(
+    "/subscriptions/{subscription_id}/cancel",
+    response_model=AdminCancelSubscriptionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Safely Cancel User Subscription (Admin)",
+    description="Safely cancels future subscription renewal while preserving paid access until existing expires_at. Safe and idempotent.",
+)
+def cancel_admin_subscription(
+    subscription_id: str,
+    payload: AdminCancelSubscriptionRequest = AdminCancelSubscriptionRequest(),
+    admin: Dict[str, Any] = Depends(require_admin),
+) -> AdminCancelSubscriptionResponse:
+    """Protected Admin endpoint to safely cancel subscription renewal."""
+    return AdminPaymentService.cancel_user_subscription(
+        subscription_id=subscription_id,
+        admin_user_id=admin.get("user_id", "admin"),
+        reason=payload.reason,
+    )
+
+
+
 
 
 

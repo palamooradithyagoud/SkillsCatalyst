@@ -12,4 +12,6 @@ export * from "./scholarships";
 export * from "./tech_news";
 export * from "./subscription";
 export * from "./payment";
+export * from "./coupon";
+export * from "./admin_payment";
 export * from "./courses";
