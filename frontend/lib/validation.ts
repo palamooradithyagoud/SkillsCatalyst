@@ -113,3 +113,45 @@ export function validateFullName(name: string | null | undefined): ValidationRes
 
   return { isValid: true };
 }
+
+export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
+
+/**
+ * Validates an email address format:
+ * - Required, non-empty
+ * - Standard email regex match
+ */
+export function validateEmail(email: string | null | undefined): ValidationResult {
+  if (email === null || email === undefined) {
+    return { isValid: false, error: "Email address is required." };
+  }
+
+  const clean = email.trim();
+  if (!clean) {
+    return { isValid: false, error: "Email address is required." };
+  }
+
+  if (!EMAIL_REGEX.test(clean)) {
+    return { isValid: false, error: "Please enter a valid email address." };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validates a password according to platform policy:
+ * - Required, non-empty
+ * - Minimum 6 characters (preserves existing registration policy)
+ */
+export function validatePassword(password: string | null | undefined): ValidationResult {
+  if (password === null || password === undefined || password.length === 0) {
+    return { isValid: false, error: "Password is required." };
+  }
+
+  if (password.length < 6) {
+    return { isValid: false, error: "Password must be at least 6 characters long." };
+  }
+
+  return { isValid: true };
+}
+

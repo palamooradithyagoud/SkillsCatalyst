@@ -62,6 +62,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/practice") ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
+    pathname === "/reset-password" ||
     isAuthPage ||
     isCallbackPage ||
     pathname.startsWith("/api/");
@@ -107,11 +108,26 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 3. If already authenticated and accessing login page, redirect to dashboard
-  if (user && isAuthPage) {
+  // 2b. Recovery containment check: if an authenticated session is in recovery flow (sc_recovery_flow cookie is set),
+  // prevent navigating to protected app routes (e.g. dashboard, learning) until the password has been reset.
+  if (user && isExplicitProtectedRoute && request.cookies.get("sc_recovery_flow")?.value === "true") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/login";
+    url.searchParams.set("mode", "reset");
     return NextResponse.redirect(url);
+  }
+
+  // 3. If already authenticated and accessing login page, redirect to dashboard UNLESS in recovery reset mode
+  if (user && isAuthPage) {
+    const isRecoveryMode =
+      request.nextUrl.searchParams.get("mode") === "reset" ||
+      request.cookies.get("sc_recovery_flow")?.value === "true";
+
+    if (!isRecoveryMode) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

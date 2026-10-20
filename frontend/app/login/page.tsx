@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData, checkUsernameAvailability } from "@/lib/api";
-import { validateUsername, validateFullName, normalizeUsername } from "@/lib/validation";
+import { validateUsername, validateFullName, normalizeUsername, validateEmail, validatePassword } from "@/lib/validation";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import InteractiveCharacter from "@/components/ui/interactive-3d-character";
 import RotatingText from "@/components/RotatingText";
@@ -29,7 +29,9 @@ export default function LoginPage() {
   const queryClient = useQueryClient();
   const { isLoading, unverifiedEmail, setUnverifiedEmail, clearUnverifiedEmail } = useAuth();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot" | "reset">("signin");
+  const [recoveryAuthorized, setRecoveryAuthorized] = useState<boolean | null>(null);
+  const [checkingRecovery, setCheckingRecovery] = useState<boolean>(false);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -39,6 +41,9 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
 
   const [loading, setLoading] = useState(false);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryCooldown, setRecoveryCooldown] = useState(0);
+  const recoveryCooldownTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [resendSent, setResendSent] = useState(false);
@@ -110,14 +115,107 @@ export default function LoginPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const urlError = params.get("error");
-      if (urlError) {
-        setErrorMessage(decodeURIComponent(urlError));
-        triggerWrongCredentialsSequence();
+      const resetSuccess = params.get("reset");
+      const modeParam = params.get("mode");
+      const hasRecoveryCookie = document.cookie.includes("sc_recovery_flow=true");
+      const hasRecoveryHash = window.location.hash.includes("type=recovery");
+
+      if (modeParam === "reset" || hasRecoveryCookie || hasRecoveryHash) {
+        setMode("reset");
+      }
+
+      if (urlError || resetSuccess) {
+        setTimeout(() => {
+          if (urlError) {
+            setErrorMessage(decodeURIComponent(urlError));
+            triggerWrongCredentialsSequence();
+          }
+          if (resetSuccess === "success") {
+            setSuccessMessage("Your password has been reset successfully. Please sign in with your new password.");
+          }
+        }, 0);
       }
     }
   }, []);
 
-  const switchMode = (newMode: "signin" | "signup") => {
+  // Listen for Supabase PASSWORD_RECOVERY auth event
+  React.useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset");
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Verify recovery session when in reset mode
+  React.useEffect(() => {
+    if (mode !== "reset") {
+      setRecoveryAuthorized(null);
+      setCheckingRecovery(false);
+      return;
+    }
+
+    let mounted = true;
+    setCheckingRecovery(true);
+
+    async function checkRecoveryAccess() {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (!mounted) return;
+
+        if (error || !user) {
+          setRecoveryAuthorized(false);
+          setCheckingRecovery(false);
+          return;
+        }
+
+        const hasRecoveryCookie = typeof document !== "undefined" && document.cookie.includes("sc_recovery_flow=true");
+        const hasRecoveryHash = typeof window !== "undefined" && window.location.hash.includes("type=recovery");
+
+        if (hasRecoveryCookie || hasRecoveryHash) {
+          setRecoveryAuthorized(true);
+        } else {
+          setRecoveryAuthorized(false);
+        }
+      } catch {
+        if (mounted) setRecoveryAuthorized(false);
+      } finally {
+        if (mounted) setCheckingRecovery(false);
+      }
+    }
+
+    checkRecoveryAccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [mode]);
+
+  // Cleanup recovery cooldown timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (recoveryCooldownTimerRef.current) clearInterval(recoveryCooldownTimerRef.current);
+    };
+  }, []);
+
+  const startRecoveryCooldown = (seconds: number = 60) => {
+    if (recoveryCooldownTimerRef.current) clearInterval(recoveryCooldownTimerRef.current);
+    setRecoveryCooldown(seconds);
+    recoveryCooldownTimerRef.current = setInterval(() => {
+      setRecoveryCooldown((prev) => {
+        if (prev <= 1) {
+          if (recoveryCooldownTimerRef.current) clearInterval(recoveryCooldownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const switchMode = (newMode: "signin" | "signup" | "forgot" | "reset") => {
     setMode(newMode);
     setErrorMessage("");
     clearReactionSequence();
@@ -125,6 +223,125 @@ export default function LoginPage() {
     clearUnverifiedEmail();
     setUsername("");
     setFullName("");
+    setPassword("");
+    setConfirmPassword("");
+    if (newMode !== "reset" && typeof window !== "undefined") {
+      if (window.location.search.includes("mode=reset")) {
+        window.history.replaceState(null, "", "/login");
+      }
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (recoveryLoading || recoveryCooldown > 0) return;
+
+    const emailVal = validateEmail(email);
+    if (!emailVal.isValid) {
+      setErrorMessage(emailVal.error || "Please enter a valid email address.");
+      triggerWrongCredentialsSequence();
+      return;
+    }
+
+    setRecoveryLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const recoveryRedirectUrl = `${window.location.origin}/auth/callback?next=/login?mode=reset`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: recoveryRedirectUrl,
+      });
+
+      if (error) {
+        if (
+          error.status === 429 ||
+          error.message.toLowerCase().includes("rate limit") ||
+          error.message.toLowerCase().includes("too many requests") ||
+          error.message.toLowerCase().includes("security purposes")
+        ) {
+          setErrorMessage("Too many requests. Please wait a few minutes before trying again.");
+          startRecoveryCooldown(60);
+        } else {
+          setErrorMessage(error.message || "Failed to send reset instructions.");
+        }
+        setRecoveryLoading(false);
+        return;
+      }
+
+      setSuccessMessage("If an account exists for this email address, password reset instructions will be sent.");
+      startRecoveryCooldown(60);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred while requesting password reset.";
+      setErrorMessage(message);
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+
+    // 1. Password validation
+    const passVal = validatePassword(password);
+    if (!passVal.isValid) {
+      setErrorMessage(passVal.error || "Password must be at least 6 characters long.");
+      triggerWrongCredentialsSequence();
+      return;
+    }
+
+    // 2. Confirmation match validation
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      triggerWrongCredentialsSequence();
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (error) {
+        setErrorMessage(error.message || "Failed to update password. Please try again.");
+        triggerWrongCredentialsSequence();
+        setLoading(false);
+        return;
+      }
+
+      // Clear recovery indicator cookie
+      if (typeof document !== "undefined") {
+        document.cookie = "sc_recovery_flow=; path=/; max-age=0";
+      }
+
+      // Explicitly sign out recovery session so user MUST sign in fresh with their new credentials
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // Sign-out error non-fatal
+      }
+
+      // Clear ?mode=reset from URL cleanly
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", "/login");
+      }
+
+      setPassword("");
+      setConfirmPassword("");
+      setLoading(false);
+      setMode("signin");
+      setSuccessMessage("Your password has been reset successfully. Please sign in with your new password.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred while resetting your password.";
+      setErrorMessage(message);
+      triggerWrongCredentialsSequence();
+      setLoading(false);
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -392,7 +609,7 @@ export default function LoginPage() {
           transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
           className="w-full flex items-end justify-center -space-x-10 sm:-space-x-14 lg:-space-x-18 my-auto pt-4 pb-1 sm:py-2 relative"
         >
-          {/* Animated Comic Punch Speech Bubble: "👊 TRY AGAIN! 💥" */}
+          {/* Animated Comic Punch Speech Bubble: TRY AGAIN */}
           <AnimatePresence>
             {reactionPhase === "slap" && (
               <motion.div
@@ -402,13 +619,12 @@ export default function LoginPage() {
                 transition={{ type: "spring", stiffness: 450, damping: 16 }}
                 className="absolute -top-14 sm:-top-18 left-1/2 -translate-x-1/2 z-50 bg-[#18191F] text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl shadow-[0_10px_35px_rgba(239,68,68,0.35)] flex items-center gap-3 border-2 border-rose-500 whitespace-nowrap pointer-events-none select-none"
               >
-                <span className="text-2xl sm:text-3xl animate-bounce">👊</span>
                 <div className="flex flex-col items-start leading-tight">
                   <span className="font-black text-xs sm:text-sm tracking-wider text-amber-300 flex items-center gap-1">
-                    TRY AGAIN! 💥
+                    TRY AGAIN!
                   </span>
                   <span className="text-[10px] sm:text-xs text-rose-300 font-extrabold uppercase tracking-wide">
-                    Wrong Password! Pow!
+                    Wrong Password!
                   </span>
                 </div>
                 {/* Speech bubble pointer triangle tail */}
@@ -514,6 +730,10 @@ export default function LoginPage() {
             <h1 className="text-2xl sm:text-[30px] font-black text-[#18191F] tracking-tight flex items-center justify-center min-h-[38px] sm:min-h-[44px]">
               {unverifiedEmail ? (
                 "Verify your email"
+              ) : mode === "reset" ? (
+                "Create new password"
+              ) : mode === "forgot" ? (
+                "Reset your password"
               ) : mode === "signin" ? (
                 <RotatingText
                   texts={["Learn Faster", "Grow Smarter"]}
@@ -534,6 +754,10 @@ export default function LoginPage() {
             <p className="text-xs sm:text-[13px] text-zinc-500 font-normal">
               {unverifiedEmail
                 ? "Check your inbox to verify your account"
+                : mode === "reset"
+                ? "Please enter and confirm your new password below."
+                : mode === "forgot"
+                ? "Enter your email address to receive password reset instructions"
                 : "Please enter your details"}
             </p>
           </div>
@@ -587,9 +811,10 @@ export default function LoginPage() {
                   switchMode("signin");
                 }}
                 suppressHydrationWarning
-                className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer"
+                className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
               >
-                ← Back to Log In
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Log In</span>
               </button>
             </motion.div>
           ) : (
@@ -621,235 +846,404 @@ export default function LoginPage() {
                 )}
               </AnimatePresence>
 
-              {/* Minimalist Underline Input Form */}
-              <form
-                onSubmit={mode === "signin" ? handleSignIn : handleSignUp}
-                className="space-y-4"
-                suppressHydrationWarning
-              >
-                {mode === "signup" && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-zinc-800 block">
-                        Full Name
-                      </label>
-                      <input
-                        id="signup-name"
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => {
-                          setFullName(e.target.value);
-                          if (errorMessage) setErrorMessage("");
-                          clearReactionSequence();
-                        }}
-                        placeholder="Alex Mercer"
-                        autoComplete="name"
-                        suppressHydrationWarning
-                        className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-zinc-800 block">
-                          Username
-                        </label>
-                        <span className="text-[10px] text-zinc-400">
-                          3–30 chars (letters, numbers, _)
-                        </span>
-                      </div>
-                      <div className="relative flex items-center">
-                        <span className="text-zinc-400 text-sm select-none mr-1">@</span>
-                        <input
-                          id="signup-username"
-                          type="text"
-                          required
-                          value={username}
-                          onChange={(e) => {
-                            setUsername(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ""));
-                            if (errorMessage) setErrorMessage("");
-                            clearReactionSequence();
-                          }}
-                          placeholder="alex_mercer"
-                          autoComplete="username"
-                          autoCapitalize="none"
-                          spellCheck={false}
-                          suppressHydrationWarning
-                          className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Email Field */}
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-800 block">
-                    Email
-                  </label>
-                  <input
-                    id="auth-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (errorMessage) setErrorMessage("");
-                      clearReactionSequence();
-                    }}
-                    placeholder="Enter your email"
-                    style={{ colorScheme: "light" }}
-                    suppressHydrationWarning
-                    className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                  />
+              {/* Recovery Verification States */}
+              {mode === "reset" && checkingRecovery ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <RefreshCw className="w-5 h-5 animate-spin text-zinc-500" />
+                  <span className="text-xs font-medium text-zinc-600">Verifying reset session...</span>
                 </div>
-
-                {/* Password Field */}
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-800 block">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="auth-password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (errorMessage) setErrorMessage("");
-                        clearReactionSequence();
-                      }}
-                      placeholder="••••••••"
-                      style={{ colorScheme: "light" }}
-                      suppressHydrationWarning
-                      className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      suppressHydrationWarning
-                      className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
+              ) : mode === "reset" && recoveryAuthorized === false ? (
+                <div className="space-y-4 pt-2 text-center">
+                  <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-2">
+                    <AlertCircle className="w-6 h-6 text-rose-600 mx-auto" />
+                    <h3 className="text-xs font-bold text-rose-900">Invalid or Expired Reset Session</h3>
+                    <p className="text-xs text-rose-700 leading-relaxed">
+                      The password reset link is invalid, expired, or has already been used. Please request a new link.
+                    </p>
                   </div>
-                </div>
-
-                {mode === "signup" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-zinc-800 block">
-                      Confirm Password
-                    </label>
-                    <input
-                      id="signup-confirm-password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        if (errorMessage) setErrorMessage("");
-                        clearReactionSequence();
-                      }}
-                      placeholder="Repeat your password"
-                      suppressHydrationWarning
-                      className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
-                )}
-
-                {/* Remember Me & Forgot Password Row */}
-                {mode === "signin" && (
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <label className="flex items-center gap-2 text-zinc-600 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        suppressHydrationWarning
-                        className="w-3.5 h-3.5 rounded border-zinc-300 text-[#18191F] focus:ring-0 cursor-pointer accent-[#18191F]"
-                      />
-                      <span className="font-medium">Remember for 30 days</span>
-                    </label>
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setErrorMessage("Password reset link will be sent if account exists.");
-                      }}
-                      className="text-zinc-500 hover:text-black font-medium transition-colors"
-                    >
-                      Forgot password?
-                    </a>
-                  </div>
-                )}
-
-                {/* Primary Submit Button: Solid Charcoal Pill */}
-                <div className="pt-2">
                   <button
-                    id="auth-submit"
-                    type="submit"
-                    disabled={loading}
-                    suppressHydrationWarning
-                    className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                    type="button"
+                    onClick={() => switchMode("forgot")}
+                    className="w-full py-3.5 px-4 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-xs transition-all cursor-pointer"
                   >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Processing...</span>
-                      </span>
-                    ) : mode === "signin" ? (
-                      "Log In"
-                    ) : (
-                      "Create Account"
-                    )}
+                    Request New Reset Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signin")}
+                    className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Log In</span>
                   </button>
                 </div>
-              </form>
+              ) : (
+                <>
+                  {/* Minimalist Underline Input Form */}
+                  <form
+                    onSubmit={
+                      mode === "signin"
+                        ? handleSignIn
+                        : mode === "signup"
+                        ? handleSignUp
+                        : mode === "forgot"
+                        ? handleForgotPassword
+                        : handleResetPassword
+                    }
+                    className="space-y-4"
+                    suppressHydrationWarning
+                  >
+                    {mode === "reset" ? (
+                      <>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold text-zinc-800 block">
+                              New Password
+                            </label>
+                            <span className="text-[10px] text-zinc-400">
+                              At least 6 characters
+                            </span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              id="reset-password"
+                              type={showPassword ? "text" : "password"}
+                              required
+                              value={password}
+                              onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (errorMessage) setErrorMessage("");
+                                clearReactionSequence();
+                              }}
+                              placeholder="••••••••"
+                              style={{ colorScheme: "light" }}
+                              suppressHydrationWarning
+                              className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              suppressHydrationWarning
+                              className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors cursor-pointer"
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
 
-              {/* Google OAuth Button: Solid Light Pill */}
-              <div>
-                <button
-                  id="auth-google"
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                  suppressHydrationWarning
-                  className="w-full py-3.5 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#1F2937] font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
-                >
-                  <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9c-.8-.9-1.3-2.1-1.3-3.6z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-                    />
-                  </svg>
-                  <span>Log in with Google</span>
-                </button>
-              </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-zinc-800 block">
+                            Confirm New Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="reset-confirm-password"
+                              type={showPassword ? "text" : "password"}
+                              required
+                              value={confirmPassword}
+                              onChange={(e) => {
+                                setConfirmPassword(e.target.value);
+                                if (errorMessage) setErrorMessage("");
+                                clearReactionSequence();
+                              }}
+                              placeholder="Repeat new password"
+                              style={{ colorScheme: "light" }}
+                              suppressHydrationWarning
+                              className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="pt-2">
+                          <button
+                            id="auth-reset-submit"
+                            type="submit"
+                            disabled={loading}
+                            suppressHydrationWarning
+                            className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                          >
+                            {loading ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Resetting Password...</span>
+                              </span>
+                            ) : (
+                              "Reset Password"
+                            )}
+                          </button>
+                          <p className="text-[11px] text-zinc-400 text-center pt-2">
+                            After resetting, you will be asked to sign in with your new password.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {mode === "signup" && (
+                          <>
+                            <div className="space-y-1">
+                              <label className="text-xs font-semibold text-zinc-800 block">
+                                Full Name
+                              </label>
+                              <input
+                                id="signup-name"
+                                type="text"
+                                required
+                                value={fullName}
+                                onChange={(e) => {
+                                  setFullName(e.target.value);
+                                  if (errorMessage) setErrorMessage("");
+                                  clearReactionSequence();
+                                }}
+                                placeholder="Alex Mercer"
+                                autoComplete="name"
+                                suppressHydrationWarning
+                                className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold text-zinc-800 block">
+                                  Username
+                                </label>
+                                <span className="text-[10px] text-zinc-400">
+                                  3–30 chars (letters, numbers, _)
+                                </span>
+                              </div>
+                              <div className="relative flex items-center">
+                                <span className="text-zinc-400 text-sm select-none mr-1">@</span>
+                                <input
+                                  id="signup-username"
+                                  type="text"
+                                  required
+                                  value={username}
+                                  onChange={(e) => {
+                                    setUsername(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ""));
+                                    if (errorMessage) setErrorMessage("");
+                                    clearReactionSequence();
+                                  }}
+                                  placeholder="alex_mercer"
+                                  autoComplete="username"
+                                  autoCapitalize="none"
+                                  spellCheck={false}
+                                  suppressHydrationWarning
+                                  className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Email Field */}
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-zinc-800 block">
+                            Email
+                          </label>
+                          <input
+                            id="auth-email"
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              if (errorMessage) setErrorMessage("");
+                              clearReactionSequence();
+                            }}
+                            placeholder="Enter your email"
+                            style={{ colorScheme: "light" }}
+                            suppressHydrationWarning
+                            className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                          />
+                        </div>
+
+                        {/* Password Field */}
+                        {mode !== "forgot" && (
+                          <>
+                            <div className="space-y-1">
+                              <label className="text-xs font-semibold text-zinc-800 block">
+                                Password
+                              </label>
+                              <div className="relative">
+                                <input
+                                  id="auth-password"
+                                  type={showPassword ? "text" : "password"}
+                                  required
+                                  value={password}
+                                  onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (errorMessage) setErrorMessage("");
+                                    clearReactionSequence();
+                                  }}
+                                  placeholder="••••••••"
+                                  style={{ colorScheme: "light" }}
+                                  suppressHydrationWarning
+                                  className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  suppressHydrationWarning
+                                  className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors"
+                                  aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+
+                            {mode === "signup" && (
+                              <div className="space-y-1">
+                                <label className="text-xs font-semibold text-zinc-800 block">
+                                  Confirm Password
+                                </label>
+                                <input
+                                  id="signup-confirm-password"
+                                  type={showPassword ? "text" : "password"}
+                                  required
+                                  value={confirmPassword}
+                                  onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    if (errorMessage) setErrorMessage("");
+                                    clearReactionSequence();
+                                  }}
+                                  placeholder="Repeat your password"
+                                  suppressHydrationWarning
+                                  className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                />
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {/* Remember Me & Forgot Password Row */}
+                        {mode === "signin" && (
+                          <div className="flex items-center justify-between text-xs pt-1">
+                            <label className="flex items-center gap-2 text-zinc-600 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                suppressHydrationWarning
+                                className="w-3.5 h-3.5 rounded border-zinc-300 text-[#18191F] focus:ring-0 cursor-pointer accent-[#18191F]"
+                              />
+                              <span className="font-medium">Remember for 30 days</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => switchMode("forgot")}
+                              className="text-zinc-500 hover:text-black font-medium transition-colors cursor-pointer"
+                            >
+                              Forgot password?
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Primary Submit Button: Solid Charcoal Pill */}
+                        <div className="pt-2">
+                          <button
+                            id="auth-submit"
+                            type="submit"
+                            disabled={mode === "forgot" ? (recoveryLoading || recoveryCooldown > 0) : loading}
+                            suppressHydrationWarning
+                            className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                          >
+                            {mode === "forgot" ? (
+                              recoveryLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                                  <span>Sending Instructions...</span>
+                                </span>
+                              ) : recoveryCooldown > 0 ? (
+                                <span>Resend in {recoveryCooldown}s</span>
+                              ) : (
+                                "Send Reset Link"
+                              )
+                            ) : loading ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Processing...</span>
+                              </span>
+                            ) : mode === "signin" ? (
+                              "Log In"
+                            ) : (
+                              "Create Account"
+                            )}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </form>
+
+                  {/* Google OAuth Button: Solid Light Pill */}
+                  {mode !== "forgot" && mode !== "reset" && (
+                    <div>
+                      <button
+                        id="auth-google"
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        disabled={loading}
+                        suppressHydrationWarning
+                        className="w-full py-3.5 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#1F2937] font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                      >
+                        <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9c-.8-.9-1.3-2.1-1.3-3.6z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
+                          />
+                        </svg>
+                        <span>Log in with Google</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
-          {/* Bottom Switcher: Don't have an account? Sign Up */}
+          {/* Bottom Switcher */}
           <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-            {mode === "signin" ? (
+            {mode === "reset" ? (
+              <button
+                type="button"
+                onClick={() => switchMode("signin")}
+                suppressHydrationWarning
+                className="inline-flex items-center gap-1.5 font-bold text-[#18191F] hover:underline cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Log In</span>
+              </button>
+            ) : mode === "forgot" ? (
+              <button
+                type="button"
+                onClick={() => switchMode("signin")}
+                suppressHydrationWarning
+                className="inline-flex items-center gap-1.5 font-bold text-[#18191F] hover:underline cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Log In</span>
+              </button>
+            ) : mode === "signin" ? (
               <>
                 Don&apos;t have an account?{" "}
                 <button

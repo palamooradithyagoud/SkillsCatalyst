@@ -336,12 +336,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/terms") ||
       pathname.startsWith("/cookie") ||
       pathname.startsWith("/support");
-    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage || isLegalPage;
+    const isResetPasswordPage = pathname === "/reset-password";
+    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage || isLegalPage || isResetPasswordPage;
+
+    const hasRecoveryCookie = typeof document !== "undefined" && document.cookie.includes("sc_recovery_flow=true");
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const isRecoveryReset = searchParams?.get("mode") === "reset" || hasRecoveryCookie;
+
+    // If an authenticated user is in recovery flow, contain them to password reset
+    if (session && hasRecoveryCookie && !isLoginPage && !isResetPasswordPage) {
+      router.replace("/login?mode=reset");
+      return;
+    }
 
     if (!session && !isPublicPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
-      router.replace(session.role === "owner" && appMode === "admin" ? "/admin" : "/dashboard");
+      if (!isRecoveryReset) {
+        router.replace(session.role === "owner" && appMode === "admin" ? "/admin" : "/dashboard");
+      }
     } else if (session && isAdminPage && session.role !== "owner") {
       // Normal students can NEVER access admin routes
       router.replace("/dashboard");

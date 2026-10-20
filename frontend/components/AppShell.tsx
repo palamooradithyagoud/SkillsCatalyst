@@ -12,7 +12,7 @@ import NotificationPermissionBanner from "@/components/notifications/Notificatio
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === "/login";
+  const isAuthPage = pathname === "/login" || pathname === "/reset-password";
   const isLandingPage = pathname === "/";
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAIMentorPage = pathname === "/ai-mentor" || pathname.startsWith("/ai-mentor");
