@@ -886,10 +886,15 @@ def check_username_availability(
 
     try:
         # Check if username is already taken (case-insensitive)
-        query = sb.from_("profiles").select("id, username").ilike("username", clean_username).limit(1)
+        escaped_username = clean_username.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = sb.from_("profiles").select("id, username").ilike("username", escaped_username).limit(5)
         res = query.execute()
-        if res.data and len(res.data) > 0:
-            existing_row = res.data[0]
+        exact_matches = [
+            r for r in (res.data or [])
+            if (r.get("username") or "").strip().lower() == clean_username
+        ]
+        if exact_matches:
+            existing_row = exact_matches[0]
             existing_id = existing_row.get("id") or existing_row.get("user_id")
             # If current authenticated user already owns this username, it's available to them
             if current_user_id and str(existing_id) == str(current_user_id):
@@ -961,8 +966,13 @@ def save_personal_profile(
         # Enforce case-insensitive uniqueness check against other users
         if sb:
             try:
-                res = sb.from_("profiles").select("id").ilike("username", clean_username).neq("id", user_id).limit(1).execute()
-                if res.data and len(res.data) > 0:
+                escaped_username = clean_username.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                res = sb.from_("profiles").select("id, username").ilike("username", escaped_username).neq("id", user_id).limit(5).execute()
+                exact_matches = [
+                    r for r in (res.data or [])
+                    if (r.get("username") or "").strip().lower() == clean_username
+                ]
+                if exact_matches:
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
                         detail="This username is already taken. Please choose another.",

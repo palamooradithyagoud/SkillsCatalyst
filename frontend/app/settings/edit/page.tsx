@@ -43,6 +43,7 @@ import { validateUsername, validateFullName } from "@/lib/validation";
 import {
   fetchFullProfileData,
   savePersonalProfile,
+  checkUsernameAvailability,
   saveSkill,
   deleteSkill,
   saveExperience,
@@ -229,6 +230,49 @@ function EditProfileContent() {
     college: "",
   });
   const [savingPersonal, setSavingPersonal] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
+  const [usernameMessage, setUsernameMessage] = useState("");
+
+  // Live debounced check for username availability
+  useEffect(() => {
+    const raw = personalForm.username?.trim();
+    if (!raw) {
+      setUsernameStatus("idle");
+      setUsernameMessage("");
+      return;
+    }
+    const val = validateUsername(raw);
+    if (!val.isValid) {
+      setUsernameStatus("invalid");
+      setUsernameMessage(val.error || "Invalid username format");
+      return;
+    }
+    const currentSaved = profileData.personal?.username?.toLowerCase().trim();
+    if (currentSaved && raw.toLowerCase() === currentSaved) {
+      setUsernameStatus("available");
+      setUsernameMessage("Your current username");
+      return;
+    }
+    setUsernameStatus("checking");
+    setUsernameMessage("Checking availability...");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkUsernameAvailability(raw);
+        if (res.available) {
+          setUsernameStatus("available");
+          setUsernameMessage("Username is available!");
+        } else {
+          setUsernameStatus("taken");
+          setUsernameMessage(res.message || "Username is already taken");
+        }
+      } catch {
+        setUsernameStatus("idle");
+        setUsernameMessage("");
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [personalForm.username, profileData.personal?.username]);
 
   // Sub-views for list vs form
   const [expView, setExpView] = useState<"list" | "form">("list");
@@ -360,9 +404,7 @@ function EditProfileContent() {
   const userEmail = session?.email || "";
   const userHandle = personalForm.username
     ? `@${personalForm.username}`
-    : userEmail
-    ? `@${userEmail.split("@")[0]}`
-    : "@learner";
+    : "No username set";
   const userInitials = personalForm.full_name
     ? personalForm.full_name
         .split(" ")
@@ -443,6 +485,19 @@ function EditProfileContent() {
       if (!userVal.isValid) {
         setErrorMsg(userVal.error || "Please enter a valid username (3-30 characters, letters, numbers, underscores).");
         return;
+      }
+      if (usernameStatus === "taken") {
+        setErrorMsg(usernameMessage || "This username is already taken. Please choose another.");
+        return;
+      }
+      // If user typed a new username and it hasn't been checked yet
+      const currentSaved = profileData.personal?.username?.toLowerCase().trim();
+      if (!currentSaved || personalForm.username.toLowerCase().trim() !== currentSaved) {
+        const check = await checkUsernameAvailability(personalForm.username);
+        if (!check.available) {
+          setErrorMsg(check.message || "This username is already taken. Please choose another.");
+          return;
+        }
       }
     }
 
@@ -778,9 +833,29 @@ function EditProfileContent() {
                 <label htmlFor="personal-username" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   Username
                 </label>
-                <span className="text-[10px] text-slate-400">
-                  3–30 chars (letters, numbers, _)
-                </span>
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  {usernameStatus === "checking" && (
+                    <span className="text-amber-500 font-medium animate-pulse">Checking...</span>
+                  )}
+                  {usernameStatus === "available" && (
+                    <span className="text-emerald-500 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
+                      <Check className="w-3 h-3 inline" /> {usernameMessage || "Available"}
+                    </span>
+                  )}
+                  {usernameStatus === "taken" && (
+                    <span className="text-rose-500 dark:text-rose-400 font-semibold flex items-center gap-0.5">
+                      <AlertCircle className="w-3 h-3 inline" /> {usernameMessage || "Taken"}
+                    </span>
+                  )}
+                  {usernameStatus === "invalid" && (
+                    <span className="text-rose-500 dark:text-rose-400 font-medium">
+                      {usernameMessage}
+                    </span>
+                  )}
+                  {usernameStatus === "idle" && (
+                    <span className="text-slate-400">3–30 chars (letters, numbers, _)</span>
+                  )}
+                </div>
               </div>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 text-slate-400 text-xs font-bold select-none pointer-events-none">
@@ -800,9 +875,18 @@ function EditProfileContent() {
                   autoComplete="username"
                   autoCapitalize="none"
                   spellCheck={false}
-                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 pl-8 pr-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className={`w-full bg-white dark:bg-[#121318] border pl-8 pr-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none transition-colors text-slate-900 dark:text-white ${
+                    usernameStatus === "taken" || usernameStatus === "invalid"
+                      ? "border-rose-400 focus:border-rose-500"
+                      : usernameStatus === "available"
+                      ? "border-emerald-400 focus:border-emerald-500"
+                      : "border-slate-200 dark:border-neutral-800 focus:border-[#7C3AED]"
+                  }`}
                 />
               </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Your unique handle across SkillsCatalyst. You choose your own handle; it is never auto-assigned.
+              </p>
             </div>
 
             {/* College Name */}

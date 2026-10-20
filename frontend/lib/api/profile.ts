@@ -794,6 +794,7 @@ export async function savePersonalProfile(data: Partial<UserProfile>): Promise<{
     }
 
     // 1. Authoritative Backend Sync via FastAPI (enforces username validation, uniqueness, certificate lock)
+    let backendSaved = false;
     try {
       const authHeaders = await getAuthHeaders();
       if (authHeaders.Authorization) {
@@ -820,60 +821,65 @@ export async function savePersonalProfile(data: Partial<UserProfile>): Promise<{
           const errMsg = errData.detail || `Server error (${backendRes.status})`;
           return { success: false, error: errMsg };
         }
+        backendSaved = true;
       }
     } catch (backendErr: any) {
       console.warn("Backend profile personal sync notice:", backendErr);
     }
 
-    // 2. Direct Supabase profiles update
-    try {
-      const { error: profileError } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
-      if (profileError) {
-        if (profileError.code === "23505" || profileError.message?.toLowerCase().includes("unique")) {
-          return { success: false, error: "This username is already taken. Please choose another." };
-        }
-        if (payload.username !== undefined && profileError.message?.toLowerCase().includes("username")) {
-          return { success: false, error: "Database schema error: username column is unavailable." };
-        }
-        if (payload.college !== undefined && profileError.message?.toLowerCase().includes("college")) {
-          return { success: false, error: "Database schema error: college column is unavailable." };
-        }
-        return { success: false, error: profileError.message || "Failed to update profile." };
-      }
-    } catch (e: any) {
-      console.warn("Direct Supabase profile upsert warning:", e);
-    }
-
-    // 3. Sync full_name and college to user_academic_profile for backward compatibility
-    try {
-      const acadSync: any = {
-        user_id: userId,
-        updated_at: new Date().toISOString(),
-      };
-      if (cleanName) acadSync.full_name = cleanName;
-      if (cleanCollege !== undefined) acadSync.college = cleanCollege;
-
-      await supabase.from("user_academic_profile").upsert(acadSync, { onConflict: "user_id" });
-    } catch (acadErr) {
-      console.warn("user_academic_profile sync warning:", acadErr);
-    }
-
-    // 4. Sync college to education table
-    if (cleanCollege) {
+    // 2. Direct Supabase profiles update (fallback only if backend was unreachable)
+    if (!backendSaved) {
       try {
-        const { data: existingEdu } = await supabase.from("education").select("id").eq("user_id", userId).order("created_at", { ascending: false }).limit(1);
-        if (existingEdu && existingEdu.length > 0) {
-          await supabase.from("education").update({ college: cleanCollege }).eq("id", existingEdu[0].id);
-        } else {
-          await supabase.from("education").insert({
-            user_id: userId,
-            college: cleanCollege,
-            degree_type: "Bachelor's",
-            field_of_study: "Computer Science",
-          });
+        const { error: profileError } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+        if (profileError) {
+          if (profileError.code === "23505" || profileError.message?.toLowerCase().includes("unique")) {
+            return { success: false, error: "This username is already taken. Please choose another." };
+          }
+          if (payload.username !== undefined && profileError.message?.toLowerCase().includes("username")) {
+            return { success: false, error: "Database schema error: username column is unavailable." };
+          }
+          if (payload.college !== undefined && profileError.message?.toLowerCase().includes("college")) {
+            return { success: false, error: "Database schema error: college column is unavailable." };
+          }
+          return { success: false, error: profileError.message || "Failed to update profile." };
         }
-      } catch (eduErr) {
-        console.warn("education table college sync warning:", eduErr);
+      } catch (e: any) {
+        console.warn("Direct Supabase profile upsert warning:", e);
+      }
+    }
+
+    // 3. Sync full_name and college to user_academic_profile for backward compatibility (fallback only)
+    if (!backendSaved) {
+      try {
+        const acadSync: any = {
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+        };
+        if (cleanName) acadSync.full_name = cleanName;
+        if (cleanCollege !== undefined) acadSync.college = cleanCollege;
+
+        await supabase.from("user_academic_profile").upsert(acadSync, { onConflict: "user_id" });
+      } catch (acadErr) {
+        console.warn("user_academic_profile sync warning:", acadErr);
+      }
+
+      // 4. Sync college to education table
+      if (cleanCollege) {
+        try {
+          const { data: existingEdu } = await supabase.from("education").select("id").eq("user_id", userId).order("created_at", { ascending: false }).limit(1);
+          if (existingEdu && existingEdu.length > 0) {
+            await supabase.from("education").update({ college: cleanCollege }).eq("id", existingEdu[0].id);
+          } else {
+            await supabase.from("education").insert({
+              user_id: userId,
+              college: cleanCollege,
+              degree_type: "Bachelor's",
+              field_of_study: "Computer Science",
+            });
+          }
+        } catch (eduErr) {
+          console.warn("education table college sync warning:", eduErr);
+        }
       }
     }
 

@@ -376,7 +376,7 @@ export default function ProfilePage() {
   };
 
   const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Student Profile");
-  const userHandle = personalForm.username || (session?.email ? session.email.split("@")[0] : "student");
+  const userHandle = personalForm.username ? `@${personalForm.username}` : "";
 
   // Categorized skills helper
   const SKILL_CATEGORIES = [
@@ -621,9 +621,18 @@ export default function ProfilePage() {
 
           {/* Bottom Profile Details */}
           <div className="relative z-10 space-y-0.5 mt-2">
-            <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-purple-200/90 truncate">
-              @{userHandle}
-            </p>
+            {personalForm.username ? (
+              <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-purple-200/90 truncate">
+                @{personalForm.username}
+              </p>
+            ) : (
+              <Link
+                href="/settings/edit?tab=personal"
+                className="inline-block text-[10px] sm:text-xs font-semibold text-purple-200/80 hover:text-white transition-colors truncate"
+              >
+                Set unique username &rarr;
+              </Link>
+            )}
             <h2 className="text-xs sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight truncate">
               {displayName}
             </h2>

@@ -243,3 +243,10 @@ DROP TRIGGER IF EXISTS trg_check_academic_profile_identity_lock ON public.user_a
 DROP FUNCTION IF EXISTS public.check_profile_identity_lock();
 DROP FUNCTION IF EXISTS public.check_academic_profile_identity_lock();
 
+-- ── 7. TABLE PERMISSIONS & ROLE GRANTS ──────────────────────────────
+-- Guarantees authenticated users and service_role have table permissions
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_academic_profile TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.education TO authenticated, service_role;
+
+
