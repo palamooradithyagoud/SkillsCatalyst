@@ -37,6 +37,7 @@ export interface UserProfile {
   id?: string;
   email?: string;
   full_name: string;
+  username?: string;
   headline?: string;
   country?: string;
   state?: string;
@@ -446,6 +447,8 @@ export async function fetchFullProfileData(): Promise<CompleteProfileData | null
         id: p.id,
         email: p.email || "",
         full_name: p.full_name || "",
+        username: p.username || "",
+        college: p.college || "",
         headline: p.headline || "",
         country: p.country || "",
         state: p.state || "",
@@ -475,6 +478,12 @@ export async function fetchFullProfileData(): Promise<CompleteProfileData | null
         personal = {
           ...(personal || { full_name: "" }),
           full_name: academic.full_name,
+        };
+      }
+      if (!personal?.college && academic?.college) {
+        personal = {
+          ...(personal || { full_name: "" }),
+          college: academic.college,
         };
       }
     }
@@ -579,7 +588,7 @@ export async function fetchFullProfileData(): Promise<CompleteProfileData | null
     if (education.length === 0 && academic?.college) {
       education = [
         {
-          id: undefined,
+          id: `legacy-edu-${userId}`,
           college: academic.college,
           degree_type: "Bachelor of Technology",
           field_of_study: academic.department || "Computer Science",
@@ -731,16 +740,41 @@ export async function fetchFullProfileData(): Promise<CompleteProfileData | null
   }
 }
 
-// ── Personal Profile Mutation ─────────────────────────────────────────────────
+// ── Personal Profile Mutation & Username Availability ────────────────────────
+
+export async function checkUsernameAvailability(username: string): Promise<{ available: boolean; message?: string }> {
+  try {
+    const clean = username.trim();
+    if (!clean) return { available: false, message: "Username cannot be empty." };
+    const authHeaders = await getAuthHeaders();
+    const res = await fetch(`${API_BASE}/api/profile/check-username?username=${encodeURIComponent(clean)}`, {
+      headers: { ...authHeaders },
+    });
+    if (!res.ok) {
+      return { available: false, message: `Server error (${res.status})` };
+    }
+    const data = await res.json();
+    return {
+      available: !!data.available,
+      message: data.message,
+    };
+  } catch (err: any) {
+    return { available: false, message: err?.message || "Failed to check username availability." };
+  }
+}
 
 export async function savePersonalProfile(data: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> {
   try {
     const { userId } = await ensureFreshSession();
     if (!userId) return { success: false, error: "Not authenticated. Please log in again." };
 
-    const payload = {
+    const cleanName = data.full_name?.trim() || "";
+    const cleanUsername = data.username !== undefined ? data.username.trim() : undefined;
+    const cleanCollege = data.college !== undefined ? data.college.trim() : undefined;
+
+    const payload: any = {
       id: userId,
-      full_name: data.full_name?.trim() || "",
+      full_name: cleanName,
       headline: data.headline?.trim() || "",
       country: data.country?.trim() || "",
       state: data.state?.trim() || "",
@@ -752,37 +786,100 @@ export async function savePersonalProfile(data: Partial<UserProfile>): Promise<{
       updated_at: new Date().toISOString(),
     };
 
-    // 1. Save to Supabase profiles table
-    const { error: profileError } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
-    if (profileError) {
-      console.error("Supabase profiles upsert error:", profileError);
-      return { success: false, error: profileError.message || "Failed to update profile." };
+    if (cleanUsername !== undefined) {
+      payload.username = cleanUsername;
+    }
+    if (cleanCollege !== undefined) {
+      payload.college = cleanCollege;
     }
 
-    // 2. CRITICAL: Sync full_name to user_academic_profile so dashboard.py greeting never breaks
-    if (payload.full_name) {
-      await supabase.from("user_academic_profile").upsert({
-        user_id: userId,
-        full_name: payload.full_name,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
-    }
-
-    // 3. Update localStorage cache ONLY on confirmed success
-    try {
-      localStorage.setItem(`sc_personal_profile_${userId}`, JSON.stringify(payload));
-    } catch {}
-
-    // 4. Async sync to FastAPI backend
+    // 1. Authoritative Backend Sync via FastAPI (enforces username validation, uniqueness, certificate lock)
     try {
       const authHeaders = await getAuthHeaders();
       if (authHeaders.Authorization) {
-        apiFetch(`${API_BASE}/api/profile/personal`, {
+        const backendRes = await fetch(`${API_BASE}/api/profile/personal`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders },
-          body: JSON.stringify(payload),
-        }).catch(() => {});
+          body: JSON.stringify({
+            full_name: cleanName,
+            username: cleanUsername,
+            college: cleanCollege,
+            headline: payload.headline,
+            country: payload.country,
+            state: payload.state,
+            city: payload.city,
+            phone: payload.phone,
+            gender: payload.gender,
+            about: payload.about,
+            avatar_url: payload.avatar_url,
+          }),
+        });
+
+        if (!backendRes.ok) {
+          const errData = await backendRes.json().catch(() => ({}));
+          const errMsg = errData.detail || `Server error (${backendRes.status})`;
+          return { success: false, error: errMsg };
+        }
       }
+    } catch (backendErr: any) {
+      console.warn("Backend profile personal sync notice:", backendErr);
+    }
+
+    // 2. Direct Supabase profiles update
+    try {
+      const { error: profileError } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+      if (profileError) {
+        if (profileError.code === "23505" || profileError.message?.toLowerCase().includes("unique")) {
+          return { success: false, error: "This username is already taken. Please choose another." };
+        }
+        if (payload.username !== undefined && profileError.message?.toLowerCase().includes("username")) {
+          return { success: false, error: "Database schema error: username column is unavailable." };
+        }
+        if (payload.college !== undefined && profileError.message?.toLowerCase().includes("college")) {
+          return { success: false, error: "Database schema error: college column is unavailable." };
+        }
+        return { success: false, error: profileError.message || "Failed to update profile." };
+      }
+    } catch (e: any) {
+      console.warn("Direct Supabase profile upsert warning:", e);
+    }
+
+    // 3. Sync full_name and college to user_academic_profile for backward compatibility
+    try {
+      const acadSync: any = {
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      };
+      if (cleanName) acadSync.full_name = cleanName;
+      if (cleanCollege !== undefined) acadSync.college = cleanCollege;
+
+      await supabase.from("user_academic_profile").upsert(acadSync, { onConflict: "user_id" });
+    } catch (acadErr) {
+      console.warn("user_academic_profile sync warning:", acadErr);
+    }
+
+    // 4. Sync college to education table
+    if (cleanCollege) {
+      try {
+        const { data: existingEdu } = await supabase.from("education").select("id").eq("user_id", userId).order("created_at", { ascending: false }).limit(1);
+        if (existingEdu && existingEdu.length > 0) {
+          await supabase.from("education").update({ college: cleanCollege }).eq("id", existingEdu[0].id);
+        } else {
+          await supabase.from("education").insert({
+            user_id: userId,
+            college: cleanCollege,
+            degree_type: "Bachelor's",
+            field_of_study: "Computer Science",
+          });
+        }
+      } catch (eduErr) {
+        console.warn("education table college sync warning:", eduErr);
+      }
+    }
+
+    // 5. Update localStorage cache ONLY on confirmed success
+    try {
+      localStorage.setItem(`sc_personal_profile_${userId}`, JSON.stringify(payload));
     } catch {}
 
     return { success: true };

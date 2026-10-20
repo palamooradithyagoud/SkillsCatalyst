@@ -16,9 +16,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     gender TEXT DEFAULT '',
     about TEXT DEFAULT '',
     role TEXT DEFAULT 'student',
+    username TEXT NULL,
+    college TEXT DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_lower
+    ON public.profiles (LOWER(TRIM(username)))
+    WHERE username IS NOT NULL AND TRIM(username) <> '';
+
 
 -- 2. USER ACADEMIC PROFILE (College & Target Role)
 CREATE TABLE IF NOT EXISTS public.user_academic_profile (
@@ -233,3 +240,9 @@ DROP TRIGGER IF EXISTS trg_prevent_profile_role_escalation ON public.profiles;
 CREATE TRIGGER trg_prevent_profile_role_escalation
     BEFORE INSERT OR UPDATE ON public.profiles
     FOR EACH ROW EXECUTE FUNCTION public.prevent_profile_role_escalation();
+
+-- Remove certificate identity lock triggers so users can freely edit full_name and college
+DROP TRIGGER IF EXISTS trg_check_profile_identity_lock ON public.profiles;
+DROP TRIGGER IF EXISTS trg_check_academic_profile_identity_lock ON public.user_academic_profile;
+DROP FUNCTION IF EXISTS public.check_profile_identity_lock();
+DROP FUNCTION IF EXISTS public.check_academic_profile_identity_lock();

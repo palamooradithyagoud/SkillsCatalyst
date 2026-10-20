@@ -407,26 +407,9 @@ def validate_course_certificate_readiness(course_id: str) -> None:
 
 def is_user_identity_locked(user_id: str) -> bool:
     """
-    Authoritative Server-Side Rule:
-    IF ANY issued certificate exists for this user across any course,
-    THEN user's certificate identity (name + college) is permanently locked.
-    Guards against PostgreSQL 22P02 error if user_id is not a valid UUID.
+    Identity lock disabled: users can freely change or update their name and college.
     """
-    if not _is_uuid(user_id):
-        return False
-
-    sb = get_supabase()
-    if not sb:
-        return False
-    res = (
-        sb.from_("certificates")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("status", "issued")
-        .limit(1)
-        .execute()
-    )
-    return bool(res.data and len(res.data) > 0)
+    return False
 
 
 def get_authoritative_user_identity(user_id: str) -> Dict[str, Any]:
@@ -488,13 +471,6 @@ def update_student_certificate_identity(user_id: str, full_name: Optional[str] =
 
     if not clean_name:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Full Name cannot be empty.")
-
-    # 1. Authoritative check: Is identity locked?
-    if is_user_identity_locked(user_id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
-        )
 
     sb = get_supabase()
     if not sb:

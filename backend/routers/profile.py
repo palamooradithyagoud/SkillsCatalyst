@@ -5,11 +5,16 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import re
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, status, Depends, Response
+from fastapi import APIRouter, HTTPException, status, Depends, Response, Query
 from pydantic import BaseModel
 import httpx
 from backend.services.supabase_service import get_supabase
-from backend.services.auth_service import get_current_user_id, is_valid_uuid
+from backend.services.auth_service import get_current_user_id, is_valid_uuid, get_optional_user_id
+from backend.services.validation_service import (
+    validate_username,
+    normalize_username,
+    validate_full_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +49,8 @@ class AcademicProfileModel(BaseModel):
 
 class PersonalProfileModel(BaseModel):
     full_name: str = ""
+    username: Optional[str] = None
+    college: Optional[str] = ""
     headline: Optional[str] = ""
     avatar_url: Optional[str] = ""
     country: Optional[str] = ""
@@ -476,6 +483,7 @@ def _format_unified_profile_from_rpc(raw: Dict[str, Any], user_id: str) -> Dict[
     personal_data = {
         "id": user_id,
         "full_name": personal.get("full_name") or academic.get("full_name", ""),
+        "username": personal.get("username") or "",
         "headline": personal.get("headline", ""),
         "avatar_url": personal.get("avatar_url", ""),
         "country": personal.get("country", ""),
@@ -573,6 +581,7 @@ def get_profile(
     personal_data = {
         "id": user_id,
         "full_name": "",
+        "username": "",
         "headline": "",
         "avatar_url": "",
         "country": "",
@@ -849,34 +858,127 @@ def get_profile(
 
 
 
+@router.get("/check-username")
+def check_username_availability(
+    username: str = Query("", max_length=50),
+    current_user_id: Optional[str] = Depends(get_optional_user_id),
+):
+    """
+    Checks if a username is valid and available for registration or profile update.
+    Case-insensitive uniqueness check against public.profiles.
+    """
+    clean_username = normalize_username(username)
+    is_valid, err_msg = validate_username(clean_username)
+    if not is_valid:
+        return {
+            "available": False,
+            "username": clean_username,
+            "message": err_msg or "Invalid username format.",
+        }
+
+    sb = get_supabase()
+    if not sb:
+        return {
+            "available": True,
+            "username": clean_username,
+            "message": "Database check bypassed (offline mode).",
+        }
+
+    try:
+        # Check if username is already taken (case-insensitive)
+        query = sb.from_("profiles").select("id, username").ilike("username", clean_username).limit(1)
+        res = query.execute()
+        if res.data and len(res.data) > 0:
+            existing_row = res.data[0]
+            existing_id = existing_row.get("id") or existing_row.get("user_id")
+            # If current authenticated user already owns this username, it's available to them
+            if current_user_id and str(existing_id) == str(current_user_id):
+                return {
+                    "available": True,
+                    "username": clean_username,
+                    "message": "You currently hold this username.",
+                }
+            return {
+                "available": False,
+                "username": clean_username,
+                "message": "This username is already taken. Please choose another.",
+            }
+        return {
+            "available": True,
+            "username": clean_username,
+            "message": "Username is available.",
+        }
+    except Exception as exc:
+        err_str = str(exc)
+        if "column" in err_str.lower() and "username" in err_str.lower():
+            logger.error(f"check_username: profiles.username column is not available in database schema: {exc}")
+            return {
+                "available": False,
+                "username": clean_username,
+                "message": "Username check is unavailable: database schema migration required.",
+            }
+        logger.error(f"Error checking username availability: {exc}")
+        return {
+            "available": False,
+            "username": clean_username,
+            "message": "Unable to verify username availability at this time.",
+        }
+
+
 @router.post("/personal")
 def save_personal_profile(
     body: PersonalProfileModel,
     current_user_id: str = Depends(get_current_user_id)
 ):
     """
-    Save personal details (headline, location, phone, bio, avatar) into profiles table,
+    Save personal details (full_name, username, headline, location, phone, bio, avatar) into profiles table,
     and synchronizes full_name with user_academic_profile for 100% backward compatibility.
     Enforces identity lock if student has already received a certificate.
     """
     user_id = current_user_id
     sb = get_supabase()
 
-    # Identity Lock Enforcement (Phase 7)
-    from backend.services.certificate_service import is_user_identity_locked
-    if is_user_identity_locked(user_id):
-        # Check if full_name is being modified
-        curr_p = sb.from_("profiles").select("full_name").eq("id", user_id).execute()
-        current_name = (curr_p.data[0].get("full_name") or "").strip() if (curr_p.data and len(curr_p.data) > 0) else ""
-        if body.full_name and body.full_name.strip() != current_name:
+    # 1. Validate full_name
+    valid_name, name_err = validate_full_name(body.full_name)
+    if not valid_name:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=name_err or "Invalid full name.",
+        )
+    clean_full_name = str(body.full_name).strip()
+
+    # 2. Validate username if provided
+    clean_username = None
+    if body.username is not None and str(body.username).strip() != "":
+        clean_username = normalize_username(body.username)
+        valid_u, u_err = validate_username(clean_username)
+        if not valid_u:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=u_err or "Invalid username format.",
             )
+
+        # Enforce case-insensitive uniqueness check against other users
+        if sb:
+            try:
+                res = sb.from_("profiles").select("id").ilike("username", clean_username).neq("id", user_id).limit(1).execute()
+                if res.data and len(res.data) > 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="This username is already taken. Please choose another.",
+                    )
+            except HTTPException:
+                raise
+            except Exception as e:
+                err_str = str(e)
+                if not ("column" in err_str.lower() and "username" in err_str.lower()):
+                    logger.warning(f"Username uniqueness query check notice: {e}")
+
+    clean_college = str(body.college or "").strip()
 
     prof_data = {
         "id": user_id,
-        "full_name": body.full_name,
+        "full_name": clean_full_name,
         "headline": body.headline or "",
         "avatar_url": body.avatar_url or "",
         "country": body.country or "",
@@ -886,29 +988,78 @@ def save_personal_profile(
         "gender": body.gender or "",
         "about": body.about or "",
     }
+    if clean_username is not None:
+        prof_data["username"] = clean_username
+    prof_data["college"] = clean_college
 
     if sb:
         try:
-            sb.from_("profiles").upsert(prof_data, on_conflict="id").execute()
-            # Synchronize full_name to user_academic_profile for backward compatibility
-            if body.full_name:
-                sb.from_("user_academic_profile").upsert({
-                    "user_id": user_id,
-                    "full_name": body.full_name,
-                }, on_conflict="user_id").execute()
+            try:
+                sb.from_("profiles").upsert(prof_data, on_conflict="id").execute()
+            except Exception as upsert_err:
+                err_str = str(upsert_err).lower()
+                if "duplicate key value" in err_str or "unique constraint" in err_str or "23505" in err_str:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="This username is already taken. Please choose another.",
+                    )
+                is_schema_err = any(kw in err_str for kw in ("column", "schema cache", "does not exist", "pgrst204"))
+                if clean_username is not None and is_schema_err and "username" in err_str:
+                    logger.error(f"Cannot save personal profile: 'username' column is missing from database schema: {upsert_err}")
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail="Database schema error: username column is unavailable. Please ensure database migrations have been applied.",
+                    )
+                if clean_college and is_schema_err and "college" in err_str:
+                    logger.error(f"Cannot save personal profile: 'college' column is missing from database schema: {upsert_err}")
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail="Database schema error: college column is unavailable. Please ensure database migrations have been applied.",
+                    )
+                logger.error(f"Failed to upsert profiles record: {upsert_err}")
+                raise HTTPException(status_code=500, detail="Failed to save personal profile.")
+
+            # Synchronize full_name and college to user_academic_profile for backward compatibility
+            acad_sync = {
+                "user_id": user_id,
+                "full_name": clean_full_name,
+                "college": clean_college,
+            }
+            sb.from_("user_academic_profile").upsert(acad_sync, on_conflict="user_id").execute()
+
+            # Synchronize college to education records if present
+            if clean_college:
+                try:
+                    edu_check = sb.from_("education").select("id").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
+                    if edu_check.data and len(edu_check.data) > 0:
+                        edu_id = edu_check.data[0]["id"]
+                        sb.from_("education").update({"college": clean_college}).eq("id", edu_id).execute()
+                except Exception as edu_err:
+                    logger.debug(f"Education college sync notice: {edu_err}")
+
+            # Sync full_name and username to Supabase Auth user_metadata if admin API is available
+            try:
+                meta_update = {"full_name": clean_full_name}
+                if clean_username:
+                    meta_update["username"] = clean_username
+                sb.auth.admin.update_user_by_id(user_id, {"user_metadata": meta_update})
+            except Exception as meta_err:
+                logger.debug(f"Auth user_metadata sync notice: {meta_err}")
+
         except HTTPException:
             raise
         except Exception as e:
             err_msg = str(e)
-            if "locked because a SkillsCatalyst certificate" in err_msg:
+            if "duplicate key value" in err_msg.lower() or "unique constraint" in err_msg.lower():
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="This username is already taken. Please choose another.",
                 )
             logger.error(f"Failed to save personal profile: {e}")
             raise HTTPException(status_code=500, detail="Failed to save personal profile.")
 
     return {"success": True, "message": "Personal profile saved successfully", "personal": prof_data}
+
 
 
 @router.post("/career-preferences")
@@ -959,21 +1110,6 @@ def save_academic_profile(
     user_id = current_user_id  # Always derived from verified JWT — body user_id is ignored
     sb = get_supabase()
 
-    # Identity Lock Enforcement (Phase 7)
-    from backend.services.certificate_service import is_user_identity_locked
-    if is_user_identity_locked(user_id):
-        curr_acad = sb.from_("user_academic_profile").select("full_name, college").eq("user_id", user_id).execute()
-        current_name = (curr_acad.data[0].get("full_name") or "").strip() if (curr_acad.data and len(curr_acad.data) > 0) else ""
-        current_college = (curr_acad.data[0].get("college") or "").strip() if (curr_acad.data and len(curr_acad.data) > 0) else ""
-
-        name_changed = bool(body.full_name and body.full_name.strip() != current_name)
-        college_changed = bool(body.college and body.college.strip() != current_college)
-        if name_changed or college_changed:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
-            )
-
     data = {
         "user_id": user_id,
         "full_name": body.full_name,
@@ -998,12 +1134,6 @@ def save_academic_profile(
         except HTTPException:
             raise
         except Exception as e:
-            err_msg = str(e)
-            if "locked because a SkillsCatalyst certificate" in err_msg:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Your name and college are locked because a SkillsCatalyst certificate has already been issued.",
-                )
             logger.error(f"Failed to save academic profile: {e}")
             raise HTTPException(status_code=500, detail="Failed to save academic profile.")
 

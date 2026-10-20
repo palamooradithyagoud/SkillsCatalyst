@@ -17,7 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchDashboardData } from "@/lib/api";
+import { fetchDashboardData, checkUsernameAvailability } from "@/lib/api";
+import { validateUsername, validateFullName, normalizeUsername } from "@/lib/validation";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import InteractiveCharacter from "@/components/ui/interactive-3d-character";
 import RotatingText from "@/components/RotatingText";
@@ -30,6 +31,7 @@ export default function LoginPage() {
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -121,6 +123,8 @@ export default function LoginPage() {
     clearReactionSequence();
     setSuccessMessage("");
     clearUnverifiedEmail();
+    setUsername("");
+    setFullName("");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -181,8 +185,28 @@ export default function LoginPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName) {
-      setErrorMessage("Please fill in all required fields.");
+    const cleanFullName = fullName.trim();
+    const cleanUsername = normalizeUsername(username);
+
+    // 1. Full name validation
+    const nameVal = validateFullName(cleanFullName);
+    if (!nameVal.isValid) {
+      setErrorMessage(nameVal.error || "Please enter your full name.");
+      triggerWrongCredentialsSequence();
+      return;
+    }
+
+    // 2. Username validation
+    const userVal = validateUsername(cleanUsername);
+    if (!userVal.isValid) {
+      setErrorMessage(userVal.error || "Please enter a valid username.");
+      triggerWrongCredentialsSequence();
+      return;
+    }
+
+    // 3. Email & password validation
+    if (!email.trim() || !password) {
+      setErrorMessage("Please enter both email and password.");
       triggerWrongCredentialsSequence();
       return;
     }
@@ -202,12 +226,23 @@ export default function LoginPage() {
     setSuccessMessage("");
 
     try {
+      // 4. Pre-check username availability
+      const availCheck = await checkUsernameAvailability(cleanUsername);
+      if (!availCheck.available) {
+        setErrorMessage(availCheck.message || "This username is already taken. Please choose another.");
+        triggerWrongCredentialsSequence();
+        setLoading(false);
+        return;
+      }
+
+      // 5. Proceed with Supabase Auth registration
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
         options: {
           data: {
-            full_name: fullName.trim(),
+            full_name: cleanFullName,
+            username: cleanUsername,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
@@ -593,25 +628,59 @@ export default function LoginPage() {
                 suppressHydrationWarning
               >
                 {mode === "signup" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-zinc-800 block">
-                      Full Name
-                    </label>
-                    <input
-                      id="signup-name"
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (errorMessage) setErrorMessage("");
-                        clearReactionSequence();
-                      }}
-                      placeholder="Alex Mercer"
-                      suppressHydrationWarning
-                      className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-zinc-800 block">
+                        Full Name
+                      </label>
+                      <input
+                        id="signup-name"
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(e) => {
+                          setFullName(e.target.value);
+                          if (errorMessage) setErrorMessage("");
+                          clearReactionSequence();
+                        }}
+                        placeholder="Alex Mercer"
+                        autoComplete="name"
+                        suppressHydrationWarning
+                        className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-zinc-800 block">
+                          Username
+                        </label>
+                        <span className="text-[10px] text-zinc-400">
+                          3–30 chars (letters, numbers, _)
+                        </span>
+                      </div>
+                      <div className="relative flex items-center">
+                        <span className="text-zinc-400 text-sm select-none mr-1">@</span>
+                        <input
+                          id="signup-username"
+                          type="text"
+                          required
+                          value={username}
+                          onChange={(e) => {
+                            setUsername(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ""));
+                            if (errorMessage) setErrorMessage("");
+                            clearReactionSequence();
+                          }}
+                          placeholder="alex_mercer"
+                          autoComplete="username"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          suppressHydrationWarning
+                          className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* Email Field */}

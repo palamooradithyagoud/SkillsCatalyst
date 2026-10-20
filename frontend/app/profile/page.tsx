@@ -97,6 +97,7 @@ export default function ProfilePage() {
   // ── Personal Section Form State ───────────────────────────────────────────
   const [personalForm, setPersonalForm] = useState<UserProfile>({
     full_name: "",
+    username: "",
     headline: "",
     country: "India",
     state: "",
@@ -213,6 +214,7 @@ export default function ProfilePage() {
         if (full.personal) {
           setPersonalForm({
             full_name: full.personal.full_name || defaultName,
+            username: full.personal.username || "",
             headline: full.personal.headline || "",
             country: full.personal.country || "India",
             state: full.personal.state || "",
@@ -221,6 +223,7 @@ export default function ProfilePage() {
             gender: full.personal.gender || "Prefer not to say",
             about: full.personal.about || "",
             avatar_url: full.personal.avatar_url || "",
+            college: full.personal.college || full.academic?.college || "",
           });
         }
 
@@ -373,7 +376,7 @@ export default function ProfilePage() {
   };
 
   const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Student Profile");
-  const userHandle = session?.email ? session.email.split("@")[0] : "student";
+  const userHandle = personalForm.username || (session?.email ? session.email.split("@")[0] : "student");
 
   // Categorized skills helper
   const SKILL_CATEGORIES = [
@@ -686,8 +689,8 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-3 pt-1">
-            {profileData.experiences.map((exp) => (
-              <div key={exp.id} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/70 dark:border-neutral-800 space-y-1">
+            {profileData.experiences.map((exp, idx) => (
+              <div key={exp.id || `exp-${idx}-${exp.company_name || "item"}`} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/70 dark:border-neutral-800 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-xs font-black text-slate-900 dark:text-white">{exp.role || (exp as any).job_title}</h4>
@@ -742,8 +745,8 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-3 pt-1">
-            {profileData.projects.map((proj) => (
-              <div key={proj.id} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/70 dark:border-neutral-800 space-y-2">
+            {profileData.projects.map((proj, idx) => (
+              <div key={proj.id || `proj-${idx}-${proj.project_name || "item"}`} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/70 dark:border-neutral-800 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <h4 className="text-xs font-black text-slate-900 dark:text-white">{proj.project_name || (proj as any).title}</h4>
                 </div>
@@ -927,8 +930,8 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-4 pt-1">
-            {profileData.education.map((edu) => (
-              <div key={edu.id} className="flex items-start gap-3.5">
+            {profileData.education.map((edu, idx) => (
+              <div key={edu.id || `edu-${idx}-${edu.college || "item"}`} className="flex items-start gap-3.5">
                 <div className="w-12 h-12 rounded-2xl bg-[#F97316] text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs">
                   {getOrgInitials(edu.college || (edu as any).institution || "VC")}
                 </div>

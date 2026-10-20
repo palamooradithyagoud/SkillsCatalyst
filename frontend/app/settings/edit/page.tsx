@@ -39,8 +39,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { fetchCertificateIdentity } from "@/lib/api/certificates";
-import type { CertificateIdentity } from "@/types/certificate";
+import { validateUsername, validateFullName } from "@/lib/validation";
 import {
   fetchFullProfileData,
   savePersonalProfile,
@@ -218,6 +217,7 @@ function EditProfileContent() {
   // Personal Form State
   const [personalForm, setPersonalForm] = useState<UserProfile>({
     full_name: "",
+    username: "",
     headline: "",
     country: "India",
     state: "",
@@ -229,7 +229,6 @@ function EditProfileContent() {
     college: "",
   });
   const [savingPersonal, setSavingPersonal] = useState(false);
-  const [certIdentity, setCertIdentity] = useState<CertificateIdentity | null>(null);
 
   // Sub-views for list vs form
   const [expView, setExpView] = useState<"list" | "form">("list");
@@ -292,6 +291,7 @@ function EditProfileContent() {
           if (full.personal) {
             setPersonalForm({
               full_name: full.personal.full_name || defaultName,
+              username: full.personal.username || "",
               headline: full.personal.headline || "",
               country: full.personal.country || "India",
               state: full.personal.state || "",
@@ -300,24 +300,13 @@ function EditProfileContent() {
               gender: full.personal.gender || "Prefer not to say",
               about: full.personal.about || "",
               avatar_url: full.personal.avatar_url || "",
+              college: full.personal.college || full.academic?.college || "",
             });
           } else {
             setPersonalForm((prev) => ({ ...prev, full_name: defaultName }));
           }
         }
 
-        // Phase 7: Fetch Authoritative Certificate Identity & Lock State
-        try {
-          const ident = await fetchCertificateIdentity();
-          if (ident) {
-            setCertIdentity(ident);
-            if (ident.college) {
-              setPersonalForm((prev) => ({ ...prev, college: ident.college }));
-            }
-          }
-        } catch {
-          // Ignore if unauthenticated or offline
-        }
       } catch (err) {
         console.warn("Failed to load profile:", err);
       } finally {
@@ -369,7 +358,11 @@ function EditProfileContent() {
 
   // User identity details
   const userEmail = session?.email || "";
-  const userHandle = userEmail ? `@${userEmail.split("@")[0]}` : "@learner";
+  const userHandle = personalForm.username
+    ? `@${personalForm.username}`
+    : userEmail
+    ? `@${userEmail.split("@")[0]}`
+    : "@learner";
   const userInitials = personalForm.full_name
     ? personalForm.full_name
         .split(" ")
@@ -436,6 +429,23 @@ function EditProfileContent() {
   const handleSavePersonal = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrorMsg("");
+
+    // Validate full name
+    const nameVal = validateFullName(personalForm.full_name || "");
+    if (!nameVal.isValid) {
+      setErrorMsg(nameVal.error || "Please provide a valid full name.");
+      return;
+    }
+
+    // Validate username if supplied
+    if (personalForm.username && personalForm.username.trim() !== "") {
+      const userVal = validateUsername(personalForm.username);
+      if (!userVal.isValid) {
+        setErrorMsg(userVal.error || "Please enter a valid username (3-30 characters, letters, numbers, underscores).");
+        return;
+      }
+    }
+
     setSavingPersonal(true);
     try {
       const res = await savePersonalProfile(personalForm);
@@ -744,45 +754,55 @@ function EditProfileContent() {
               </div>
             </div>
 
-            {/* Phase 7: Identity Lock Banner */}
-            {certIdentity?.is_identity_locked ? (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
-                <Lock className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>
-                  Your name and college are locked because a SkillsCatalyst certificate has already been issued.
-                </span>
-              </div>
-            ) : (
-              <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs flex items-center gap-2.5">
-                <Award className="w-4 h-4 shrink-0 text-purple-400" />
-                <span>
-                  Please make sure your full name and college are accurate. These details will be permanently locked after your first certificate is issued.
-                </span>
-              </div>
-            )}
-
             {/* Full Name */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label htmlFor="personal-full-name" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   Full Name <span className="text-rose-500">*</span>
                 </label>
-                {certIdentity?.is_identity_locked && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400">
-                    <Lock className="w-3 h-3" /> Locked
-                  </span>
-                )}
               </div>
               <input
                 id="personal-full-name"
                 type="text"
                 required
-                disabled={certIdentity?.is_identity_locked}
                 value={personalForm.full_name || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, full_name: e.target.value })}
                 placeholder="e.g. Palamoor Adithya Goud"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
+            </div>
+
+            {/* Username */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="personal-username" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
+                  Username
+                </label>
+                <span className="text-[10px] text-slate-400">
+                  3–30 chars (letters, numbers, _)
+                </span>
+              </div>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-slate-400 text-xs font-bold select-none pointer-events-none">
+                  @
+                </span>
+                <input
+                  id="personal-username"
+                  type="text"
+                  value={personalForm.username || ""}
+                  onChange={(e) => {
+                    setPersonalForm({
+                      ...personalForm,
+                      username: e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ""),
+                    });
+                  }}
+                  placeholder="e.g. adithya_goud"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 pl-8 pr-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                />
+              </div>
             </div>
 
             {/* College Name */}
@@ -791,20 +811,14 @@ function EditProfileContent() {
                 <label htmlFor="personal-college" className="text-xs font-bold text-slate-700 dark:text-neutral-300">
                   College / University
                 </label>
-                {certIdentity?.is_identity_locked && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400">
-                    <Lock className="w-3 h-3" /> Locked
-                  </span>
-                )}
               </div>
               <input
                 id="personal-college"
                 type="text"
-                disabled={certIdentity?.is_identity_locked}
                 value={personalForm.college || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, college: e.target.value })}
                 placeholder="e.g. ABC Engineering College"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -1539,9 +1553,9 @@ function EditProfileContent() {
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {profileData.skills.map((skill) => (
+                  {profileData.skills.map((skill, idx) => (
                     <div
-                      key={skill.id}
+                      key={skill.id || `skill-${idx}-${skill.skill_name}`}
                       className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs group"
                     >
                       <span>{skill.skill_name}</span>
@@ -1616,9 +1630,9 @@ function EditProfileContent() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {profileData.experiences.map((exp) => (
+                    {profileData.experiences.map((exp, idx) => (
                       <div
-                        key={exp.id}
+                        key={exp.id || `exp-${idx}-${exp.company_name || "item"}`}
                         className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
@@ -1743,9 +1757,9 @@ function EditProfileContent() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {profileData.education.map((edu) => (
+                    {profileData.education.map((edu, idx) => (
                       <div
-                        key={edu.id}
+                        key={edu.id || `edu-${idx}-${edu.college || "item"}`}
                         className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
@@ -1867,9 +1881,9 @@ function EditProfileContent() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {profileData.projects.map((proj) => (
+                    {profileData.projects.map((proj, idx) => (
                       <div
-                        key={proj.id}
+                        key={proj.id || `proj-${idx}-${proj.project_name || "item"}`}
                         className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">

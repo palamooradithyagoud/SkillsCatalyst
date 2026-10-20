@@ -108,14 +108,19 @@ def test_existing_user_login_no_email():
     mock_sb = MagicMock()
     mock_sb.auth.get_user.return_value = _mock_supabase_user(existing_user_id, existing_email)
 
-    with patch("backend.routers.auth.get_supabase", return_value=mock_sb):
-        mock_bg = MagicMock()
-        # Normal login has is_signup=False
-        res = trigger_welcome_email(
-            payload=WelcomeEmailRequest(is_signup=False),
-            background_tasks=mock_bg,
-            authorization="Bearer test_valid_token",
-        )
+    mock_bg = MagicMock()
+    # Normal login has is_signup=False
+    res = trigger_welcome_email(
+        payload=WelcomeEmailRequest(is_signup=False),
+        background_tasks=mock_bg,
+        current_user={
+            "user_id": existing_user_id,
+            "email": existing_email,
+            "name": "Test Learner",
+            "role": "student",
+            "is_owner": False,
+        },
+    )
 
     assert res["success"] is True
     assert res["status"] == "skipped_existing"
@@ -137,14 +142,19 @@ def test_repeated_login_already_sent():
     mock_sb.auth.get_user.return_value = _mock_supabase_user(user_id, email)
 
     mock_bg = MagicMock()
-    with patch("backend.routers.auth.get_supabase", return_value=mock_sb):
-        for _ in range(10):
-            res = trigger_welcome_email(
-                payload=WelcomeEmailRequest(is_signup=False),
-                background_tasks=mock_bg,
-                authorization="Bearer test_valid_token",
-            )
-            assert res["status"] == "already_sent"
+    for _ in range(10):
+        res = trigger_welcome_email(
+            payload=WelcomeEmailRequest(is_signup=False),
+            background_tasks=mock_bg,
+            current_user={
+                "user_id": user_id,
+                "email": email,
+                "name": "Test Learner",
+                "role": "student",
+                "is_owner": False,
+            },
+        )
+        assert res["status"] == "already_sent"
 
     mock_bg.add_task.assert_not_called()
 
@@ -262,15 +272,19 @@ def test_dashboard_page_refresh_twenty_times():
     mock_sb = MagicMock()
     mock_sb.auth.get_user.return_value = _mock_supabase_user(user_id, email)
     mock_bg = MagicMock()
-
-    with patch("backend.routers.auth.get_supabase", return_value=mock_sb):
-        for _ in range(20):
-            res = trigger_welcome_email(
-                payload=WelcomeEmailRequest(is_signup=False),
-                background_tasks=mock_bg,
-                authorization="Bearer test_valid_token",
-            )
-            assert res["status"] == "already_sent"
+    for _ in range(20):
+        res = trigger_welcome_email(
+            payload=WelcomeEmailRequest(is_signup=False),
+            background_tasks=mock_bg,
+            current_user={
+                "user_id": user_id,
+                "email": email,
+                "name": "Test Learner",
+                "role": "student",
+                "is_owner": False,
+            },
+        )
+        assert res["status"] == "already_sent"
 
     mock_bg.add_task.assert_not_called()
 
