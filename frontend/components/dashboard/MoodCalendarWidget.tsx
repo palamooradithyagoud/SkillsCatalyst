@@ -31,7 +31,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#8AE6A2",
     summaryTitle: "Happy",
     summaryMessage: "You're feeling calm and optimistic. Keep up the good vibes!",
-    summaryBg: "bg-[#D2F5A6] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#8AE6A2]",
+    summaryBg: "bg-[#8AE6A2] dark:bg-[#8AE6A2] text-[#15192B] dark:text-[#15192B]",
   },
   angry: {
     id: "angry",
@@ -40,7 +40,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#F88A58",
     summaryTitle: "Frustrated",
     summaryMessage: "Take a deep breath and give yourself a break. You've got this!",
-    summaryBg: "bg-[#FED5B7] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#F88A58]",
+    summaryBg: "bg-[#F88A58] dark:bg-[#F88A58] text-[#15192B] dark:text-[#15192B]",
   },
   sleepy: {
     id: "sleepy",
@@ -49,7 +49,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#88B7FA",
     summaryTitle: "Sleepy",
     summaryMessage: "Recharge your mind with good sleep. Tomorrow is a fresh start!",
-    summaryBg: "bg-[#CFE2FE] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#88B7FA]",
+    summaryBg: "bg-[#88B7FA] dark:bg-[#88B7FA] text-[#15192B] dark:text-[#15192B]",
   },
   bored: {
     id: "bored",
@@ -58,7 +58,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#E8A0E8",
     summaryTitle: "Uninspired",
     summaryMessage: "Try exploring something new today or taking a quick walk outside!",
-    summaryBg: "bg-[#F5D6F5] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#E8A0E8]",
+    summaryBg: "bg-[#E8A0E8] dark:bg-[#E8A0E8] text-[#15192B] dark:text-[#15192B]",
   },
   calm: {
     id: "calm",
@@ -67,7 +67,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#FDE278",
     summaryTitle: "Calm & Centered",
     summaryMessage: "Steady progress and peaceful focus. Keep up the gentle rhythm!",
-    summaryBg: "bg-[#FDF1BA] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#FDE278]",
+    summaryBg: "bg-[#FDE278] dark:bg-[#FDE278] text-[#15192B] dark:text-[#15192B]",
   },
   wacky: {
     id: "wacky",
@@ -76,7 +76,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#C6A4F9",
     summaryTitle: "Energetic",
     summaryMessage: "High momentum and curiosity driving your creative breakthroughs!",
-    summaryBg: "bg-[#E6D4FC] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#C6A4F9]",
+    summaryBg: "bg-[#C6A4F9] dark:bg-[#C6A4F9] text-[#15192B] dark:text-[#15192B]",
   },
   pouty: {
     id: "pouty",
@@ -85,7 +85,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#F68F8F",
     summaryTitle: "A Bit Low",
     summaryMessage: "Be kind to yourself today. Small steps still count as progress.",
-    summaryBg: "bg-[#FDCBCB] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#F68F8F]",
+    summaryBg: "bg-[#F68F8F] dark:bg-[#F68F8F] text-[#15192B] dark:text-[#15192B]",
   },
 };
 
@@ -197,6 +197,47 @@ export function renderMoodSvg(type: MoodType | null, className = "w-full h-full"
   }
 }
 
+export function renderSummarySvg(type: MoodType, className = "w-16 sm:w-18 h-10 sm:h-11 text-current") {
+  switch (type) {
+    case "angry":
+      return (
+        <svg viewBox="0 0 130 90" className={className} fill="none" stroke="currentColor">
+          <path d="M 18 36 L 50 26" strokeWidth="7" strokeLinecap="round" />
+          <path d="M 112 36 L 80 26" strokeWidth="7" strokeLinecap="round" />
+          <circle cx="34" cy="46" r="4.5" fill="currentColor" />
+          <circle cx="96" cy="46" r="4.5" fill="currentColor" />
+          <path d="M 32 74 Q 65 52 98 74" strokeWidth="7.5" strokeLinecap="round" />
+        </svg>
+      );
+    case "sleepy":
+      return (
+        <svg viewBox="0 0 130 90" className={className} fill="none" stroke="currentColor">
+          <path d="M 18 36 Q 34 26 50 36" strokeWidth="6.5" strokeLinecap="round" />
+          <path d="M 80 36 Q 96 26 112 36" strokeWidth="6.5" strokeLinecap="round" />
+          <ellipse cx="65" cy="62" rx="9" ry="12" strokeWidth="6.5" fill="currentColor" />
+        </svg>
+      );
+    case "bored":
+      return (
+        <svg viewBox="0 0 130 90" className={className} fill="none" stroke="currentColor">
+          <path d="M 20 34 L 50 35" strokeWidth="6.5" strokeLinecap="round" />
+          <path d="M 80 37 L 110 35" strokeWidth="6.5" strokeLinecap="round" />
+          <circle cx="35" cy="48" r="4" fill="currentColor" />
+          <circle cx="95" cy="48" r="4" fill="currentColor" />
+          <path d="M 38 67 L 92 67" strokeWidth="7" strokeLinecap="round" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 130 90" className={className} fill="none" stroke="currentColor">
+          <path d="M 12 30 Q 32 8 52 30" strokeWidth="7" strokeLinecap="round" />
+          <path d="M 78 24 Q 98 4 118 24" strokeWidth="7" strokeLinecap="round" />
+          <path d="M 22 66 Q 65 96 108 66" strokeWidth="7.5" strokeLinecap="round" />
+        </svg>
+      );
+  }
+}
+
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SELECTOR_MOODS: MoodType[] = ["happy", "angry", "sleepy", "bored"];
 
@@ -210,6 +251,7 @@ export default function MoodCalendarWidget() {
   // ── Month Navigation State ──
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => getTodayDateString());
+  const [activeMood, setActiveMood] = useState<MoodType | null>(null);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // 1-12
@@ -331,6 +373,7 @@ export default function MoodCalendarWidget() {
   });
 
   const handleSelectMood = (mood: MoodType) => {
+    setActiveMood(mood);
     logMutation.mutate(mood);
   };
 
@@ -349,9 +392,10 @@ export default function MoodCalendarWidget() {
     setSelectedDateStr(getTodayDateString());
   };
 
-  // ── Monthly Summary Card Content ──
+  // ── Mood Summary Card Content (reacts immediately to mood changes) ──
   const predominantMood = monthlyData?.predominant_mood;
-  const currentSummary = predominantMood ? MOODS[predominantMood] : null;
+  const displayMood: MoodType = activeMood || selectedDateMood || predominantMood || "happy";
+  const currentSummary = MOODS[displayMood];
 
   return (
     <div className="w-full bg-white dark:bg-[#18191F] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none p-3.5 sm:p-4 space-y-3.5 transition-all">
@@ -400,7 +444,7 @@ export default function MoodCalendarWidget() {
         <div className="grid grid-cols-4 gap-2">
           {SELECTOR_MOODS.map((mType) => {
             const mood = MOODS[mType];
-            const isSelected = selectedDateMood === mType;
+            const isSelected = displayMood === mType;
             return (
               <button
                 key={mType}
@@ -462,7 +506,12 @@ export default function MoodCalendarWidget() {
               <button
                 key={cell.dateStr}
                 type="button"
-                onClick={() => setSelectedDateStr(cell.dateStr)}
+                onClick={() => {
+                  setSelectedDateStr(cell.dateStr);
+                  if (cellMood) {
+                    setActiveMood(cellMood);
+                  }
+                }}
                 className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
                   isSelected
                     ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-1 dark:ring-offset-[#18191F] z-10"
@@ -518,18 +567,9 @@ export default function MoodCalendarWidget() {
             </p>
           </div>
 
-          {/* Stylized Smile Face Vector (Image 3 style) */}
+          {/* Dynamic Mood Vector (matches active mood expression) */}
           <div className="shrink-0 text-current opacity-95">
-            <svg
-              viewBox="0 0 130 90"
-              className="w-16 sm:w-18 h-10 sm:h-11 text-current"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path d="M 12 30 Q 32 8 52 30" strokeWidth="7" strokeLinecap="round" />
-              <path d="M 78 24 Q 98 4 118 24" strokeWidth="7" strokeLinecap="round" />
-              <path d="M 22 66 Q 65 96 108 66" strokeWidth="7.5" strokeLinecap="round" />
-            </svg>
+            {renderSummarySvg(displayMood)}
           </div>
         </div>
       </div>
