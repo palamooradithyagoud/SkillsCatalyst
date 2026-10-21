@@ -1112,8 +1112,8 @@ input:-webkit-autofill:active {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 0.85rem;
-  border-radius: 1rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.875rem;
   text-decoration: none;
   overflow: hidden;
   color: #0f172a;
@@ -1146,9 +1146,9 @@ input:-webkit-autofill:active {
 .nav-link-text {
   position: relative;
   z-index: 1;
-  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-size: clamp(0.95rem, 3.2vw, 1.05rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: #0f172a;
   line-height: 1.25;
   transition: color 0.2s ease;
@@ -1163,7 +1163,7 @@ input:-webkit-autofill:active {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.45rem 0.9rem;
+  padding: 0.4rem 0.8rem;
   background: rgba(15, 23, 42, 0.05);
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 9999px;
@@ -1179,19 +1179,19 @@ input:-webkit-autofill:active {
   border-color: rgba(15, 23, 42, 0.2);
 }
 
-/* ── Dark Mode: Black Charcoal Background & Purple Text/Accents ── */
+/* ── Dark Mode: Black Charcoal Background & White Text ── */
 .dark .menu-content {
   background: #111217; /* Black charcoal */
-  border-left: 1px solid rgba(168, 85, 247, 0.2);
-  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.7);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85);
 }
 
 .dark .backdrop-layer.first {
-  background: #1a1528; /* Deep indigo-charcoal curtain */
+  background: #18191f; /* Dark charcoal curtain */
 }
 
 .dark .backdrop-layer.second {
-  background: #221438; /* Deep violet-charcoal curtain */
+  background: #14151a; /* Dark charcoal curtain */
 }
 
 .dark .backdrop-layer:not(.first):not(.second) {
@@ -1199,32 +1199,32 @@ input:-webkit-autofill:active {
 }
 
 .dark .nav-link-text {
-  color: #c084fc; /* Vibrant purple text */
+  color: #ffffff; /* Clean pure white text in dark mode */
 }
 
 .dark .nav-link:hover .nav-link-text {
-  color: #f3e8ff; /* Luminous soft purple on hover */
+  color: #ffffff; /* Stays crisp white on hover */
 }
 
 .dark .nav-link:hover,
 .dark .nav-link:active {
-  border-color: rgba(168, 85, 247, 0.35);
-  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .dark .nav-link-hover-bg {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(192, 132, 252, 0.12));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(184, 146, 255, 0.08));
 }
 
 .dark .nav-close-btn {
-  background: rgba(168, 85, 247, 0.12);
-  border: 1px solid rgba(168, 85, 247, 0.28);
-  color: #e9d5ff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .dark .nav-close-btn:hover {
-  background: rgba(168, 85, 247, 0.22);
-  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .dark .nav-overlay-wrapper .overlay {

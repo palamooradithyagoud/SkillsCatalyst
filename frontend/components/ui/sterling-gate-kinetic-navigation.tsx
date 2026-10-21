@@ -21,6 +21,7 @@ import {
   Film,
   Crown,
   Calendar,
+  ListTodo,
 } from "lucide-react";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import { useAuth } from "@/lib/auth";
@@ -53,6 +54,15 @@ const defaultFeatures: NavFeatureItem[] = [
     href: "/dashboard",
     icon: LayoutGrid,
     accentColor: "rgba(99, 102, 241, 0.2)",
+  },
+  {
+    id: "tasks",
+    shapeIndex: 1,
+    title: "To-Do List",
+    subtitle: "Study Sessions & Tasks",
+    href: "/tasks",
+    icon: ListTodo,
+    accentColor: "rgba(184, 146, 255, 0.2)",
   },
   {
     id: "skillbits",
@@ -607,9 +617,9 @@ export function Component({
                           }}
                           className="nav-link w-inline-block group"
                         >
-                          <div className="flex items-center gap-3 relative z-10 min-w-0">
-                            <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/50 border border-purple-100/80 dark:border-purple-700/50 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 group-hover:bg-purple-600 dark:group-hover:bg-purple-500 group-hover:text-white dark:group-hover:text-white transition-all shrink-0 shadow-xs">
-                              <Icon className="w-5 h-5" strokeWidth={2.2} />
+                          <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-50 dark:bg-white/10 border border-purple-100/80 dark:border-white/10 flex items-center justify-center text-purple-600 dark:text-neutral-200 group-hover:scale-105 group-hover:bg-purple-600 dark:group-hover:bg-white/20 group-hover:text-white dark:group-hover:text-white transition-all shrink-0 shadow-xs">
+                              <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={2.2} />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -617,7 +627,7 @@ export function Component({
                                 {item.badge && (
                                   <span
                                     data-menu-fade
-                                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-700/60 shrink-0"
+                                    className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 dark:bg-white/15 text-purple-700 dark:text-neutral-200 border border-purple-200/80 dark:border-white/20 shrink-0"
                                   >
                                     {item.badge}
                                   </span>
@@ -625,7 +635,7 @@ export function Component({
                               </div>
                               <span
                                 data-menu-fade
-                                className="text-[11px] text-slate-500 dark:text-purple-300/80 block -mt-0.5 tracking-normal font-medium truncate"
+                                className="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 block -mt-0.5 tracking-normal font-medium truncate"
                               >
                                 {item.subtitle}
                               </span>
@@ -634,7 +644,7 @@ export function Component({
 
                           <div className="nav-link-hover-bg" />
                           <ChevronRight
-                            className="w-4 h-4 text-slate-400 dark:text-purple-400/60 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-all group-hover:translate-x-0.5 shrink-0"
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-neutral-500 group-hover:text-purple-600 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 shrink-0"
                             data-menu-fade
                           />
                         </Link>
