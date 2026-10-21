@@ -30,6 +30,7 @@ import {
   Compass,
   Film,
   Bot,
+  ListTodo,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,6 +47,7 @@ import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
+  { name: "To-Do List", href: "/tasks", icon: ListTodo, desc: "Personal study & task checklist" },
   { name: "SkillBits", href: "/skillbits", icon: Film, desc: "Bite-sized video reels" },
   { name: "Learning", href: "/learning", icon: BookIcon, desc: "Playlists & learning tracks" },
   { name: "Roadmaps", href: "/roadmaps", icon: Map, desc: "Interactive career tracks" },

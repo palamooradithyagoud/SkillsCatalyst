@@ -19,6 +19,7 @@ import {
   Search,
   Command,
   X,
+  ListTodo,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -69,6 +70,12 @@ export default function Sidebar() {
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      id: "tasks",
+      title: "To-Do List",
+      href: "/tasks",
+      icon: ListTodo,
     },
     {
       id: "skillbits",
@@ -155,6 +162,9 @@ export default function Sidebar() {
   const isItemActive = (item: NavItemData) => {
     if (item.id === "dashboard") {
       return pathname === "/dashboard" || pathname === "/";
+    }
+    if (item.id === "tasks") {
+      return pathname.startsWith("/tasks");
     }
     if (item.id === "skillbits") {
       return pathname.startsWith("/skillbits");

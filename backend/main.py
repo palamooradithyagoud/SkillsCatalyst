@@ -293,7 +293,7 @@ try:
         dashboard, ai_mentor, learning, resume, practice, profile,
         auth, support, admin, events, scholarships, tech_news,
         subscriptions, payments, skillbits, notifications,
-        certificates
+        certificates, tasks
     )
 except ModuleNotFoundError as e:
     if getattr(e, "name", None) in ("backend", "backend.routers") or "backend" in str(e):
@@ -301,7 +301,7 @@ except ModuleNotFoundError as e:
             dashboard, ai_mentor, learning, resume, practice, profile,
             auth, support, admin, events, scholarships, tech_news,
             subscriptions, payments, skillbits, notifications,
-            certificates
+            certificates, tasks
         )
     else:
         raise e
@@ -325,6 +325,7 @@ app.include_router(notifications.router)
 # app.include_router(courses.router)        # Student courses disabled
 # app.include_router(admin_courses.router)  # Admin courses disabled
 app.include_router(certificates.router)
+app.include_router(tasks.router)
 
 
 @app.post("/api/webhooks/mux", include_in_schema=False)

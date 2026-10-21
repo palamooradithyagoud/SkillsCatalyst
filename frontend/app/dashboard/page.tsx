@@ -13,6 +13,7 @@ import { usePricingModal } from "@/contexts/PricingModalContext";
 import { motion } from "framer-motion";
 import { CheckCircle2, X, Loader2, Clock, AlertCircle } from "lucide-react";
 import { fetchPaymentStatus } from "@/lib/api/payment";
+import TaskDashboardWidget from "@/components/tasks/TaskDashboardWidget";
 
 interface PaymentBannerState {
   type: "verifying" | "success" | "pending" | "failed" | "error";
@@ -222,11 +223,12 @@ export default function DashboardPage() {
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
-        {/* Right / Middle Area: Learning Progress & Trending Skills */}
+        {/* Right / Middle Area: Tasks, Learning Progress & Trending Skills */}
         <motion.div
           variants={rightPanelVariants}
           className="w-full max-w-[540px] space-y-4 sm:space-y-5 sticky top-6"
         >
+          <TaskDashboardWidget />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="learning-and-skills" />
         </motion.div>
       </div>
