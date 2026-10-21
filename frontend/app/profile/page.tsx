@@ -22,12 +22,6 @@ import {
   FolderGit2,
   FileText,
   Compass,
-  Plus,
-  ArrowDownLeft,
-  MessageSquareWarning,
-  MoreHorizontal,
-  IndianRupee,
-  Clock,
   Trash2,
   Edit3,
   Eye,
@@ -499,11 +493,78 @@ export default function ProfilePage() {
       />
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. HEADER CARD (EMPTY FULL-WIDTH LILAC CARD WITH BOWL CURVE)        */}
+      {/* 1. HEADER CARD (LILAC CARD WITH BOWL CURVE & USER PROFILE DETAILS)  */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="relative -mx-3 sm:-mx-4 -mt-4 sm:-mt-6 overflow-visible">
-        {/* Full-width lilac card: ~38% screen height, square top corners, empty */}
-        <div className="w-full h-[32vh] sm:h-[38vh] min-h-[220px] bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6]" />
+        {/* Lilac card body: photo on left, name/ID/followers on right */}
+        <div className="w-full bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6] pt-6 sm:pt-8 px-5 sm:px-8 pb-4 sm:pb-6 text-white">
+          <div className="max-w-md mx-auto flex items-center gap-4 sm:gap-5">
+            {/* Left Side: User Photo */}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Change photo or avatar"
+              onClick={() => setActiveModal("avatar")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setActiveModal("avatar");
+                }
+              }}
+              title="Change photo or avatar"
+              className="shrink-0 cursor-pointer focus:outline-none focus:ring-3 focus:ring-white/80 rounded-2xl sm:rounded-3xl group/avatar"
+            >
+              {personalForm.avatar_url ? (
+                <img
+                  src={personalForm.avatar_url}
+                  alt={displayName}
+                  className="w-22 h-22 sm:w-28 sm:h-28 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/85 shadow-lg group-hover/avatar:scale-[1.03] transition-all duration-300"
+                />
+              ) : (
+                <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/85 bg-white/20 backdrop-blur-md shadow-lg flex items-center justify-center group-hover/avatar:scale-[1.03] transition-all duration-300">
+                  <span className="text-3xl sm:text-4xl font-black text-white select-none drop-shadow-sm">
+                    {getInitials(displayName)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Right Side: Name (top), ID, and Followers/Following downside */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center space-y-1">
+              {/* Name (Top Right) */}
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight truncate drop-shadow-xs">
+                {displayName}
+              </h1>
+
+              {/* ID */}
+              {personalForm.username ? (
+                <p className="text-xs sm:text-sm font-semibold text-white/90 truncate flex items-center gap-1">
+                  <span>@{personalForm.username}</span>
+                </p>
+              ) : (
+                <Link
+                  href="/settings/edit?tab=personal"
+                  className="inline-block text-xs sm:text-sm font-semibold text-purple-100 hover:text-white transition-colors truncate underline"
+                >
+                  Set username &rarr;
+                </Link>
+              )}
+
+              {/* Followers & Following Downside */}
+              <div className="flex items-center gap-3.5 pt-1.5 border-t border-white/20 text-white">
+                <div className="flex items-baseline gap-1">
+                  <span className="font-black text-sm sm:text-base">0</span>
+                  <span className="text-[11px] sm:text-xs text-white/85 font-medium">Followers</span>
+                </div>
+                <div className="w-px h-3.5 bg-white/30" />
+                <div className="flex items-baseline gap-1">
+                  <span className="font-black text-sm sm:text-base">0</span>
+                  <span className="text-[11px] sm:text-xs text-white/85 font-medium">Following</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Downward Bowl Curve SVG: smooth downward arc (middle lowest, sides higher) */}
         <div className="relative -mt-0.5 w-full overflow-hidden leading-none z-10 pointer-events-none">
@@ -521,7 +582,7 @@ export default function ProfilePage() {
         {/* ───────────────────────────────────────────────────────────────── */}
         <div className="absolute left-0 right-0 z-30 bottom-0 pointer-events-auto">
           <div className="max-w-md mx-auto px-4 sm:px-6 flex items-center justify-between">
-            {/* Button 1: Plus (Half on lilac card, half on white background) */}
+            {/* 1st Button: Resume */}
             <button
               type="button"
               onClick={() => {
@@ -531,82 +592,62 @@ export default function ProfilePage() {
                   fileInputRef.current?.click();
                 }
               }}
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
               style={{
                 boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
                 transform: "translateY(50%)",
               }}
-              aria-label="Plus"
-              title="Plus"
+              aria-label="Resume"
+              title="Resume (Preview / Upload)"
             >
-              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
             </button>
 
-            {/* Button 2: Down-Left Arrow (Dips lower along curve to stay half on, half out) */}
+            {/* 2nd Button: Projects (Dips lower along curve to stay half on, half out) */}
             <a
               href="#proof-of-work"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
               style={{
                 boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
                 transform: "translateY(88%)",
               }}
-              aria-label="Down-left arrow"
-              title="Down-left arrow"
+              aria-label="Projects"
+              title="Projects"
             >
-              <ArrowDownLeft className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+              <Briefcase className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
             </a>
 
-            {/* Button 3: Chat bubble with exclamation mark (Dips lower along curve to stay half on, half out) */}
+            {/* 3rd Button: Roadmap Following (Dips lower along curve to stay half on, half out) */}
             <Link
               href="/roadmaps"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
               style={{
                 boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
                 transform: "translateY(88%)",
               }}
-              aria-label="Chat bubble with exclamation mark"
-              title="Chat bubble with exclamation mark"
+              aria-label="Roadmap Following"
+              title="Roadmap Following"
             >
-              <MessageSquareWarning className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+              <Compass className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
             </Link>
 
-            {/* Button 4: Three dots (Half on lilac card, half on white background) */}
+            {/* 4th Button: Edit */}
             <Link
               href="/settings/edit"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
               style={{
                 boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
                 transform: "translateY(50%)",
               }}
-              aria-label="Three dots"
-              title="Three dots"
+              aria-label="Edit Profile & Settings"
+              title="Edit Profile & Settings"
             >
-              <MoreHorizontal className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+              <Edit3 className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
             </Link>
           </div>
         </div>
       </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 3. BELOW THE CURVE: Two empty rounded cards side by side (White bg) */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="pt-16 sm:pt-20">
-        <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
-          {/* Card 1: Rupee on light lilac circle */}
-          <div className="rounded-[26px] bg-[#F1EEF8] dark:bg-[#1A1824] border border-[#E3DEEE] dark:border-neutral-800 p-4 h-32 sm:h-40 flex flex-col justify-between shadow-xs">
-            <div className="w-8 h-8 rounded-full bg-[#E0D5FA] dark:bg-[#342752] flex items-center justify-center text-[#4A2D99] dark:text-[#C5B4FA] shadow-xs">
-              <IndianRupee className="w-4 h-4 stroke-[2]" />
-            </div>
-          </div>
-
-          {/* Card 2: Clock on light orange circle */}
-          <div className="rounded-[26px] bg-[#F1EEF8] dark:bg-[#1A1824] border border-[#E3DEEE] dark:border-neutral-800 p-4 h-32 sm:h-40 flex flex-col justify-between shadow-xs">
-            <div className="w-8 h-8 rounded-full bg-[#FCE7D5] dark:bg-[#4A2E1A] flex items-center justify-center text-[#D96B27] dark:text-[#FBBF87] shadow-xs">
-              <Clock className="w-4 h-4 stroke-[2]" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="h-14 sm:h-18" />
 
       {resumeMsg && (
         <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/50 text-purple-900 dark:text-purple-200 text-xs font-bold flex items-center gap-2">
