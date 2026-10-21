@@ -41,7 +41,7 @@ export default function TaskViewTabs({
     <div
       role="tablist"
       aria-label="Task views"
-      className="flex items-center gap-1.5 p-1.5 bg-white/70 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-2xl border border-white/80 dark:border-white/10 shadow-xs overflow-x-auto no-scrollbar"
+      className="flex items-center gap-1.5 p-1 sm:p-1.5 bg-white/70 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-2xl border border-white/80 dark:border-white/10 shadow-xs overflow-x-auto no-scrollbar overscroll-contain"
     >
       {TABS.map((tab) => {
         const Icon = tab.icon;
@@ -57,7 +57,7 @@ export default function TaskViewTabs({
             aria-controls={`tabpanel-${tab.id}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onSelectView(tab.id)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
               isActive
                 ? "bg-white dark:bg-[#252A42] text-[#15192B] dark:text-white shadow-xs border border-slate-100 dark:border-white/10 font-bold"
                 : "text-[#7A82A6] dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-white hover:bg-white/60 dark:hover:bg-neutral-800/40"

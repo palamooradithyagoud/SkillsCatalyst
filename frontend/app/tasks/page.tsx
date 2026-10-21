@@ -265,35 +265,47 @@ export default function TasksPage() {
         <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#D4DCFC]/30 dark:bg-[#1A2040]/20 blur-3xl" />
       </div>
 
-      <div className="max-w-[1060px] xl:max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-5">
-        {/* ── Top Bar: Back Button ── */}
-        <div className="flex items-center">
+      <div className="w-full max-w-[1060px] xl:max-w-[1100px] mx-auto px-0.5 sm:px-4 md:px-6 pt-0 sm:pt-3 space-y-3.5 sm:space-y-5">
+        {/* ── Top Bar: Back Button & Mobile Quick Create ── */}
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1D30] border border-white/80 dark:border-neutral-800 shadow-xs flex items-center justify-center text-[#15192B] dark:text-white hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#1A1D30] border border-white/80 dark:border-neutral-800 shadow-xs flex items-center justify-center text-[#15192B] dark:text-white hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             aria-label="Go back"
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.2]" />
           </button>
+
+          {/* Quick Mobile "+ New Task" in top bar */}
+          <button
+            type="button"
+            onClick={handleOpenCreateModal}
+            className="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 active:scale-95 transition-all cursor-pointer"
+            aria-label="Create new task"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <span>New Task</span>
+          </button>
         </div>
 
         {/* ── Headline: "Your tasks" matching Image 3 ── */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-1">
+        <div className="flex items-center justify-between gap-3 pt-0.5 sm:pt-1">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-[#15192B] dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-black text-[#15192B] dark:text-white tracking-tight">
               Your tasks
             </h1>
-            <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 font-medium mt-1">
+            <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 font-medium mt-0.5 sm:mt-1">
               Organize study sessions, assignments, coding practice, and project milestones.
             </p>
           </div>
 
-          {/* Desktop "+ New Task" Button */}
+          {/* "+ New Task" Button (Always visible on mobile & desktop) */}
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+            aria-label="Create new task"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>New Task</span>
