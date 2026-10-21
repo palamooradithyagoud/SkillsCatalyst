@@ -431,54 +431,6 @@ export default function MoodCalendarWidget() {
           </div>
         </div>
       </div>
-
-      {/* ── Section 4: 3 Metric Cards (Activity, Therapy, Discipline, Compact) ── */}
-      <div className="grid grid-cols-3 gap-2">
-        {/* Card 1: Activity */}
-        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
-            Activity
-          </span>
-          <div className="mt-1">
-            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
-              101,513
-            </span>
-            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
-              Steps
-            </p>
-          </div>
-        </div>
-
-        {/* Card 2: Therapy */}
-        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
-            Therapy
-          </span>
-          <div className="mt-1">
-            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
-              10/30
-            </span>
-            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
-              Sessions
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3: Discipline */}
-        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
-            Discipline
-          </span>
-          <div className="mt-1">
-            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
-              88%
-            </span>
-            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
-              Focus score
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
