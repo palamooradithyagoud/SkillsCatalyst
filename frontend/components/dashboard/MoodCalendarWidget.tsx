@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-export type MoodType = "happy" | "angry" | "sleepy" | "bored" | "calm" | "wacky" | "pouty";
+import React, { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  computeCalendarGrid,
+  fetchMonthlyMoods,
+  logUserDailyMood,
+  getTodayDateString,
+  CalendarCell,
+} from "@/lib/api/moods";
+import { MoodType, MonthlyMoodSummary } from "@/types/mood";
 
 interface MoodItem {
   id: MoodType;
@@ -168,7 +176,7 @@ export function PoutyFaceSvg({ className = "w-full h-full" }: { className?: stri
   );
 }
 
-function renderMoodSvg(type: MoodType | null, className = "w-full h-full") {
+export function renderMoodSvg(type: MoodType | null, className = "w-full h-full") {
   switch (type) {
     case "happy":
       return <HappyFaceSvg className={className} />;
@@ -189,104 +197,187 @@ function renderMoodSvg(type: MoodType | null, className = "w-full h-full") {
   }
 }
 
-// ── Preset Month Pattern matching Image 3 (Sun-Sat grid) ──
-const INITIAL_CALENDAR_DAYS: Array<{ id: number; mood: MoodType | null }> = [
-  // Row 1
-  { id: 1, mood: null },
-  { id: 2, mood: null },
-  { id: 3, mood: "angry" },
-  { id: 4, mood: "angry" },
-  { id: 5, mood: "angry" },
-  { id: 6, mood: "happy" },
-  { id: 7, mood: "sleepy" },
-  // Row 2
-  { id: 8, mood: null },
-  { id: 9, mood: "calm" },
-  { id: 10, mood: "calm" },
-  { id: 11, mood: "wacky" },
-  { id: 12, mood: "sleepy" },
-  { id: 13, mood: "happy" },
-  { id: 14, mood: "happy" },
-  // Row 3
-  { id: 15, mood: "wacky" },
-  { id: 16, mood: "pouty" },
-  { id: 17, mood: null },
-  { id: 18, mood: "calm" },
-  { id: 19, mood: "calm" },
-  { id: 20, mood: "sleepy" },
-  { id: 21, mood: "happy" },
-  // Row 4
-  { id: 22, mood: "happy" }, // Today's slot (index 21)
-  { id: 23, mood: "happy" },
-  { id: 24, mood: null },
-  { id: 25, mood: null },
-  { id: 26, mood: "happy" },
-  { id: 27, mood: "sleepy" },
-  { id: 28, mood: "happy" },
-  // Row 5
-  { id: 29, mood: "wacky" },
-  { id: 30, mood: "pouty" },
-  { id: 31, mood: "angry" },
-  { id: 32, mood: "bored" },
-  { id: 33, mood: "calm" },
-  { id: 34, mood: "sleepy" },
-  { id: 35, mood: "happy" },
-];
-
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SELECTOR_MOODS: MoodType[] = ["happy", "angry", "sleepy", "bored"];
 
 export default function MoodCalendarWidget() {
-  const [selectedMood, setSelectedMood] = useState<MoodType>("happy");
-  const [calendarDays, setCalendarDays] = useState(INITIAL_CALENDAR_DAYS);
+  const { session } = useAuth();
+  const userId = session?.user_id || "anonymous_user";
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
+  const todayStr = useMemo(() => getTodayDateString(), []);
+
+  // ── Month Navigation State ──
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => getTodayDateString());
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+  // Month & Year header label (e.g. "Oct 2026", "Nov 2026")
+  const monthHeaderLabel = useMemo(() => {
+    return new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(currentDate);
+  }, [currentDate]);
+
+  // Selected date human label
+  const selectedDateLabel = useMemo(() => {
+    if (selectedDateStr === todayStr) return "Today";
     try {
-      const saved = localStorage.getItem("skillscatalyst_daily_mood");
-      if (saved && (saved in MOODS)) {
-        setSelectedMood(saved as MoodType);
-        setCalendarDays((prev) =>
-          prev.map((item, idx) => (idx === 21 ? { ...item, mood: saved as MoodType } : item))
+      const [y, m, d] = selectedDateStr.split("-").map(Number);
+      const dt = new Date(y, m - 1, d);
+      return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(dt);
+    } catch {
+      return selectedDateStr;
+    }
+  }, [selectedDateStr, todayStr]);
+
+  // Dynamic Calendar Grid Cells
+  const calendarCells = useMemo(() => {
+    return computeCalendarGrid(currentYear, currentMonth);
+  }, [currentYear, currentMonth]);
+
+  // ── Database Query ──
+  const { data: monthlyData, isLoading } = useQuery<MonthlyMoodSummary>({
+    queryKey: ["monthly-moods", userId, currentYear, currentMonth],
+    queryFn: () => fetchMonthlyMoods(userId, currentYear, currentMonth),
+    staleTime: 1000 * 60 * 5, // 5 mins
+  });
+
+  // Map of dateStr -> mood
+  const moodMap = useMemo(() => {
+    const map = new Map<string, MoodType>();
+    if (monthlyData?.logs) {
+      for (const log of monthlyData.logs) {
+        if (log.mood) {
+          map.set(log.log_date, log.mood);
+        }
+      }
+    }
+    return map;
+  }, [monthlyData?.logs]);
+
+  // Current mood for selected date
+  const selectedDateMood = moodMap.get(selectedDateStr) || null;
+
+  // ── Mutation: Log Mood ──
+  const logMutation = useMutation({
+    mutationFn: (mood: MoodType) =>
+      logUserDailyMood(userId, { mood, log_date: selectedDateStr }),
+    onMutate: async (newMood: MoodType) => {
+      // Optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ["monthly-moods", userId, currentYear, currentMonth],
+      });
+      const previous = queryClient.getQueryData<MonthlyMoodSummary>([
+        "monthly-moods",
+        userId,
+        currentYear,
+        currentMonth,
+      ]);
+
+      if (previous) {
+        const existingIdx = previous.logs.findIndex((l) => l.log_date === selectedDateStr);
+        let updatedLogs = [...previous.logs];
+        if (existingIdx >= 0) {
+          updatedLogs[existingIdx] = { ...updatedLogs[existingIdx], mood: newMood };
+        } else {
+          updatedLogs.push({
+            id: `temp_${Date.now()}`,
+            user_id: userId,
+            log_date: selectedDateStr,
+            mood: newMood,
+          });
+        }
+
+        // Recompute dominant
+        const counts: Record<string, number> = {};
+        for (const l of updatedLogs) counts[l.mood] = (counts[l.mood] || 0) + 1;
+        let dominant: MoodType | null = null;
+        let maxC = 0;
+        for (const [k, v] of Object.entries(counts)) {
+          if (v > maxC) {
+            maxC = v;
+            dominant = k as MoodType;
+          }
+        }
+
+        queryClient.setQueryData<MonthlyMoodSummary>(
+          ["monthly-moods", userId, currentYear, currentMonth],
+          {
+            ...previous,
+            logs: updatedLogs,
+            predominant_mood: dominant,
+            total_logged: updatedLogs.length,
+            mood_counts: counts,
+          }
         );
       }
-    } catch {
-      // ignore
-    }
-  }, []);
+
+      return { previous };
+    },
+    onError: (_err, _newMood, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          ["monthly-moods", userId, currentYear, currentMonth],
+          context.previous
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["monthly-moods", userId, currentYear, currentMonth],
+      });
+    },
+  });
 
   const handleSelectMood = (mood: MoodType) => {
-    setSelectedMood(mood);
-    try {
-      localStorage.setItem("skillscatalyst_daily_mood", mood);
-    } catch {
-      // ignore
-    }
-    setCalendarDays((prev) =>
-      prev.map((item, idx) => (idx === 21 ? { ...item, mood } : item))
-    );
+    logMutation.mutate(mood);
   };
 
-  const currentSummary = MOODS[selectedMood] || MOODS.happy;
+  // ── Month Navigation Handlers ──
+  const handlePrevMonth = () => {
+    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const handleJumpToToday = () => {
+    const now = new Date();
+    setCurrentDate(now);
+    setSelectedDateStr(getTodayDateString());
+  };
+
+  // ── Monthly Summary Card Content ──
+  const predominantMood = monthlyData?.predominant_mood;
+  const currentSummary = predominantMood ? MOODS[predominantMood] : null;
 
   return (
     <div className="w-full bg-white dark:bg-[#181B2B] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.05)] p-3.5 sm:p-4 space-y-3.5 transition-all">
-      {/* ── Header: Title & Month (Compact) ── */}
+      {/* ── Header: Title & Dynamic Month Navigation ── */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm sm:text-base font-black text-[#15192B] dark:text-white tracking-tight">
             Mood Tracker
           </h3>
           <p className="text-[11px] text-[#7A82A6] dark:text-neutral-400 font-medium">
-            Daily check-in & calendar
+            Daily check-in for <span className="font-semibold text-[#5D64D9] dark:text-indigo-400">{selectedDateLabel}</span>
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700">
-            Oct 2026
-          </span>
+          <button
+            type="button"
+            onClick={handleJumpToToday}
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700 hover:border-slate-300 hover:text-indigo-600 transition-colors cursor-pointer"
+            title="Click to jump to current month"
+          >
+            {monthHeaderLabel}
+          </button>
           <div className="flex items-center text-slate-400">
             <button
               type="button"
+              onClick={handlePrevMonth}
               className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               aria-label="Previous month"
             >
@@ -294,6 +385,7 @@ export default function MoodCalendarWidget() {
             </button>
             <button
               type="button"
+              onClick={handleNextMonth}
               className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               aria-label="Next month"
             >
@@ -308,16 +400,16 @@ export default function MoodCalendarWidget() {
         <div className="grid grid-cols-4 gap-2">
           {SELECTOR_MOODS.map((mType) => {
             const mood = MOODS[mType];
-            const isSelected = selectedMood === mType;
+            const isSelected = selectedDateMood === mType;
             return (
               <button
                 key={mType}
                 type="button"
                 onClick={() => handleSelectMood(mType)}
                 className="group flex flex-col items-center gap-1.5 transition-all cursor-pointer focus:outline-none"
-                aria-label={`Select ${mood.label} mood`}
+                aria-label={`Select ${mood.label} mood for ${selectedDateLabel}`}
               >
-                {/* Face Character Container */}
+                {/* Face Container */}
                 <div
                   className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-transform duration-150 group-hover:scale-105 active:scale-95 ${
                     isSelected
@@ -344,7 +436,7 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 2: Mood Calendar Grid (Image 3 style, Compact) ── */}
+      {/* ── Section 2: Mood Calendar Grid (Image 3 style, Dynamic) ── */}
       <div className="space-y-1">
         {/* Weekday Labels (Sun, Mon, Tue, Wed, Thu, Fri, Sat) */}
         <div className="grid grid-cols-7 gap-1 text-center">
@@ -358,50 +450,58 @@ export default function MoodCalendarWidget() {
           ))}
         </div>
 
-        {/* Calendar Day Squircles Grid */}
+        {/* Dynamic Calendar Day Cells */}
         <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-          {calendarDays.map((item, idx) => {
-            const isToday = idx === 21;
-            const hasMood = Boolean(item.mood);
+          {calendarCells.map((cell: CalendarCell) => {
+            const cellMood = moodMap.get(cell.dateStr) || null;
+            const hasMood = Boolean(cellMood);
+            const isSelected = selectedDateStr === cell.dateStr;
+            const isToday = cell.isToday;
 
             return (
-              <div
-                key={item.id}
-                className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all ${
-                  isToday
-                    ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#181B2B] shadow-xs"
+              <button
+                key={cell.dateStr}
+                type="button"
+                onClick={() => setSelectedDateStr(cell.dateStr)}
+                className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
+                  isSelected
+                    ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-1 dark:ring-offset-[#181B2B] z-10"
+                    : isToday
+                    ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#181B2B]"
                     : ""
                 } ${
                   hasMood
-                    ? "cursor-pointer hover:scale-105 active:scale-95"
-                    : "bg-slate-100/70 dark:bg-neutral-800/60"
-                }`}
+                    ? "hover:scale-105 active:scale-95"
+                    : "bg-slate-100/70 dark:bg-neutral-800/60 hover:bg-slate-200/80 dark:hover:bg-neutral-700/60"
+                } ${!cell.isCurrentMonth ? "opacity-30" : "opacity-100"}`}
                 title={
                   isToday
-                    ? `Today: ${selectedMood}`
-                    : hasMood
-                    ? `Day ${item.id}: ${item.mood}`
-                    : `Day ${item.id}: Rest day`
+                    ? `Today (${cell.dateStr}): ${cellMood || "No check-in"}`
+                    : `Day ${cell.dayNumber} (${cell.dateStr}): ${cellMood || "No check-in"}`
                 }
               >
                 {hasMood ? (
                   <div className="w-5 h-5 sm:w-6 sm:h-6 p-0.5">
-                    {renderMoodSvg(item.mood, "w-full h-full")}
+                    {renderMoodSvg(cellMood, "w-full h-full")}
                   </div>
                 ) : (
                   <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-semibold select-none">
-                    —
+                    {cell.dayNumber}
                   </span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* ── Section 3: Monthly Mood Summary Card (Image 3 style, Compact) ── */}
+      {/* ── Section 3: Monthly Mood Summary Card (Image 3 style, Dynamic) ── */}
       <div
-        className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 ${currentSummary.summaryBg} shadow-xs`}
+        className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 ${
+          currentSummary
+            ? currentSummary.summaryBg
+            : "bg-[#F3F4F6] dark:bg-[#1E2235] text-[#15192B] dark:text-[#E2E8F0]"
+        } shadow-xs`}
       >
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="space-y-0.5 max-w-[240px]">
@@ -409,10 +509,12 @@ export default function MoodCalendarWidget() {
               Monthly Mood Summary
             </p>
             <h4 className="text-lg sm:text-xl font-black tracking-tight leading-tight">
-              {currentSummary.summaryTitle}
+              {currentSummary ? currentSummary.summaryTitle : "Fresh Month Ahead"}
             </h4>
             <p className="text-[11px] opacity-90 line-clamp-1 font-medium">
-              {currentSummary.summaryMessage}
+              {currentSummary
+                ? currentSummary.summaryMessage
+                : "No check-ins yet for this month. Tap an emotion to record today!"}
             </p>
           </div>
 
