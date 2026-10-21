@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type MoodType = "happy" | "angry" | "sleepy" | "bored" | "calm" | "wacky" | "pouty";
 
@@ -81,7 +81,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
   },
 };
 
-// ── SVG Face Vector Renderers ──
+// ── SVG Face Vector Renderers (Authentic Image 2 & 3 Art) ──
 export function HappyFaceSvg({ className = "w-full h-full" }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={className} fill="none">
@@ -231,28 +231,20 @@ const INITIAL_CALENDAR_DAYS: Array<{ id: number; mood: MoodType | null }> = [
   { id: 33, mood: "calm" },
   { id: 34, mood: "sleepy" },
   { id: 35, mood: "happy" },
-  // Row 6
-  { id: 36, mood: "wacky" },
-  { id: 37, mood: null },
-  { id: 38, mood: null },
 ];
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 const SELECTOR_MOODS: MoodType[] = ["happy", "angry", "sleepy", "bored"];
 
 export default function MoodCalendarWidget() {
   const [selectedMood, setSelectedMood] = useState<MoodType>("happy");
   const [calendarDays, setCalendarDays] = useState(INITIAL_CALENDAR_DAYS);
-  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
 
-  // Load persisted mood if available
   useEffect(() => {
     try {
       const saved = localStorage.getItem("skillscatalyst_daily_mood");
       if (saved && (saved in MOODS)) {
         setSelectedMood(saved as MoodType);
-        // update today's slot in the calendar (day 22)
         setCalendarDays((prev) =>
           prev.map((item, idx) => (idx === 21 ? { ...item, mood: saved as MoodType } : item))
         );
@@ -269,8 +261,6 @@ export default function MoodCalendarWidget() {
     } catch {
       // ignore
     }
-
-    // Update today's calendar slot immediately
     setCalendarDays((prev) =>
       prev.map((item, idx) => (idx === 21 ? { ...item, mood } : item))
     );
@@ -279,25 +269,43 @@ export default function MoodCalendarWidget() {
   const currentSummary = MOODS[selectedMood] || MOODS.happy;
 
   return (
-    <div className="w-full bg-white dark:bg-[#181B2B] rounded-[28px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.06)] p-5 sm:p-6 space-y-5 transition-all">
-      {/* ── Section 1: Daily Mood Selector (Image 2 style) ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3.5">
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-[#15192B] dark:text-white tracking-tight">
-              Daily Mood Check-in
-            </h3>
-            <p className="text-xs text-[#7A82A6] dark:text-neutral-400 font-medium">
-              How are you feeling today? Tap to record.
-            </p>
-          </div>
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#5D64D9]/10 text-[#5D64D9] dark:text-indigo-400">
-            Today
-          </span>
+    <div className="w-full bg-white dark:bg-[#181B2B] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.05)] p-3.5 sm:p-4 space-y-3.5 transition-all">
+      {/* ── Header: Title & Month (Compact) ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm sm:text-base font-black text-[#15192B] dark:text-white tracking-tight">
+            Mood Tracker
+          </h3>
+          <p className="text-[11px] text-[#7A82A6] dark:text-neutral-400 font-medium">
+            Daily check-in & calendar
+          </p>
         </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700">
+            Oct 2026
+          </span>
+          <div className="flex items-center text-slate-400">
+            <button
+              type="button"
+              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              aria-label="Next month"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
 
-        {/* 4 Mood Characters in a Row (Image 2) */}
-        <div className="grid grid-cols-4 gap-2.5 sm:gap-3.5 pt-1">
+      {/* ── Section 1: Daily Mood Selector (Image 2 style, Compact) ── */}
+      <div className="bg-[#FAFBFD] dark:bg-[#151828]/60 p-2.5 rounded-2xl border border-slate-100 dark:border-neutral-800/80">
+        <div className="grid grid-cols-4 gap-2">
           {SELECTOR_MOODS.map((mType) => {
             const mood = MOODS[mType];
             const isSelected = selectedMood === mType;
@@ -306,15 +314,15 @@ export default function MoodCalendarWidget() {
                 key={mType}
                 type="button"
                 onClick={() => handleSelectMood(mType)}
-                className="group flex flex-col items-center gap-2.5 transition-all cursor-pointer focus:outline-none"
+                className="group flex flex-col items-center gap-1.5 transition-all cursor-pointer focus:outline-none"
                 aria-label={`Select ${mood.label} mood`}
               >
                 {/* Face Character Container */}
                 <div
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full transition-transform duration-200 group-hover:scale-105 active:scale-95 ${
+                  className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-transform duration-150 group-hover:scale-105 active:scale-95 ${
                     isSelected
-                      ? "ring-3 ring-[#15192B] dark:ring-white ring-offset-2 dark:ring-offset-[#181B2B] shadow-md"
-                      : "opacity-85 hover:opacity-100"
+                      ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-2 dark:ring-offset-[#181B2B] shadow-xs"
+                      : "opacity-80 hover:opacity-100"
                   }`}
                 >
                   {renderMoodSvg(mType, "w-full h-full drop-shadow-xs")}
@@ -322,10 +330,10 @@ export default function MoodCalendarWidget() {
 
                 {/* Pill Button Label matching Image 2 */}
                 <span
-                  className={`w-full py-1 sm:py-1.5 px-2 rounded-xl text-center text-xs font-bold transition-all ${
+                  className={`w-full py-0.5 px-1.5 rounded-lg text-center text-[10px] sm:text-[11px] font-bold transition-all ${
                     isSelected
                       ? "bg-[#15192B] text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-neutral-800 text-[#15192B] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700 hover:border-slate-300"
+                      : "bg-white dark:bg-neutral-800 text-[#15192B] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700 hover:border-slate-300"
                   }`}
                 >
                   {mood.label}
@@ -336,53 +344,22 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      <hr className="border-slate-100 dark:border-neutral-800" />
-
-      {/* ── Section 2: Mood Calendar Grid (Image 3 style) ── */}
-      <div>
-        {/* Calendar Month Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h4 className="text-sm sm:text-base font-bold text-[#15192B] dark:text-white">
-              Mood Calendar
-            </h4>
-            <span className="text-[11px] font-semibold text-[#7A82A6] dark:text-neutral-400">
-              October 2026
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 text-slate-400">
-            <button
-              type="button"
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label="Next month"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
+      {/* ── Section 2: Mood Calendar Grid (Image 3 style, Compact) ── */}
+      <div className="space-y-1">
         {/* Weekday Labels (Sun, Mon, Tue, Wed, Thu, Fri, Sat) */}
-        <div className="grid grid-cols-7 gap-1.5 text-center mb-1.5">
+        <div className="grid grid-cols-7 gap-1 text-center">
           {WEEKDAYS.map((day) => (
             <span
               key={day}
-              className="text-[11px] font-semibold text-[#8A92A6] dark:text-neutral-500 py-0.5"
+              className="text-[10px] font-semibold text-[#8A92A6] dark:text-neutral-500 py-0.5"
             >
               {day}
             </span>
           ))}
         </div>
 
-        {/* Calendar Day Squircles Grid matching Image 3 */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        {/* Calendar Day Squircles Grid */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {calendarDays.map((item, idx) => {
             const isToday = idx === 21;
             const hasMood = Boolean(item.mood);
@@ -390,9 +367,7 @@ export default function MoodCalendarWidget() {
             return (
               <div
                 key={item.id}
-                onMouseEnter={() => setHoveredDay(item.id)}
-                onMouseLeave={() => setHoveredDay(null)}
-                className={`relative aspect-square rounded-[12px] sm:rounded-[14px] flex items-center justify-center transition-all duration-150 ${
+                className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all ${
                   isToday
                     ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#181B2B] shadow-xs"
                     : ""
@@ -410,11 +385,11 @@ export default function MoodCalendarWidget() {
                 }
               >
                 {hasMood ? (
-                  <div className="w-full h-full p-0.5">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 p-0.5">
                     {renderMoodSvg(item.mood, "w-full h-full")}
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-400 dark:text-neutral-500 font-semibold select-none">
+                  <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-semibold select-none">
                     —
                   </span>
                 )}
@@ -424,95 +399,81 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 3: Monthly Mood Summary Card (Image 3 style) ── */}
+      {/* ── Section 3: Monthly Mood Summary Card (Image 3 style, Compact) ── */}
       <div
-        className={`relative overflow-hidden rounded-[24px] p-5 transition-all duration-300 ${currentSummary.summaryBg} shadow-xs`}
+        className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 ${currentSummary.summaryBg} shadow-xs`}
       >
-        <div className="relative z-10 flex items-center justify-between gap-4">
-          <div className="space-y-1 max-w-[280px]">
-            <p className="text-[11px] font-bold uppercase tracking-wider opacity-75">
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="space-y-0.5 max-w-[240px]">
+            <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider opacity-75">
               Monthly Mood Summary
             </p>
-            <h4 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+            <h4 className="text-lg sm:text-xl font-black tracking-tight leading-tight">
               {currentSummary.summaryTitle}
             </h4>
-            <p className="text-xs sm:text-[13px] opacity-90 leading-relaxed font-medium pt-0.5">
+            <p className="text-[11px] opacity-90 line-clamp-1 font-medium">
               {currentSummary.summaryMessage}
             </p>
           </div>
 
-          {/* Large Stylized Smile Face Vector (Image 3 style) */}
+          {/* Stylized Smile Face Vector (Image 3 style) */}
           <div className="shrink-0 text-current opacity-95">
             <svg
               viewBox="0 0 130 90"
-              className="w-24 sm:w-28 h-18 text-current"
+              className="w-16 sm:w-18 h-10 sm:h-11 text-current"
               fill="none"
               stroke="currentColor"
             >
-              {/* Closed smiling eyes */}
-              <path
-                d="M 12 30 Q 32 8 52 30"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-              <path
-                d="M 78 24 Q 98 4 118 24"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-              {/* Wide smile */}
-              <path
-                d="M 22 66 Q 65 96 108 66"
-                strokeWidth="7.5"
-                strokeLinecap="round"
-              />
+              <path d="M 12 30 Q 32 8 52 30" strokeWidth="7" strokeLinecap="round" />
+              <path d="M 78 24 Q 98 4 118 24" strokeWidth="7" strokeLinecap="round" />
+              <path d="M 22 66 Q 65 96 108 66" strokeWidth="7.5" strokeLinecap="round" />
             </svg>
           </div>
         </div>
       </div>
 
-      {/* ── Section 4: 3 Metric Cards (Activity, Therapy, Discipline matching Image 3) ── */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+      {/* ── Section 4: 3 Metric Cards (Activity, Therapy, Discipline, Compact) ── */}
+      <div className="grid grid-cols-3 gap-2">
         {/* Card 1: Activity */}
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#15192B] dark:text-neutral-200">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
+          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
             Activity
           </span>
-          <div className="mt-2">
-            <span className="text-base sm:text-xl font-black text-[#15192B] dark:text-white tracking-tight">
+          <div className="mt-1">
+            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
               101,513
             </span>
-            <p className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium">
+            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
               Steps
             </p>
           </div>
         </div>
 
         {/* Card 2: Therapy */}
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#15192B] dark:text-neutral-200">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
+          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
             Therapy
           </span>
-          <div className="mt-2">
-            <span className="text-base sm:text-xl font-black text-[#15192B] dark:text-white tracking-tight">
+          <div className="mt-1">
+            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
               10/30
             </span>
-            <p className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium">
+            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
               Sessions
             </p>
           </div>
         </div>
 
         {/* Card 3: Discipline */}
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#15192B] dark:text-neutral-200">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-700/60 flex flex-col justify-between">
+          <span className="text-[10px] font-bold text-[#15192B] dark:text-neutral-200">
             Discipline
           </span>
-          <div className="mt-2">
-            <span className="text-base sm:text-xl font-black text-[#15192B] dark:text-white tracking-tight">
+          <div className="mt-1">
+            <span className="text-xs sm:text-sm font-black text-[#15192B] dark:text-white tracking-tight">
               88%
             </span>
-            <p className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium">
+            <p className="text-[9px] text-slate-500 dark:text-neutral-400 font-medium">
               Focus score
             </p>
           </div>
