@@ -153,13 +153,17 @@ async def get_task_metrics(user_id: str = Depends(get_current_user_id)):
             if st == "completed":
                 completed_count += 1
             else:
-                if st == "in_progress":
+                is_overdue_flag = False
+                if st == "past_due":
+                    overdue_count += 1
+                    is_overdue_flag = True
+                elif st == "in_progress":
                     in_progress_count += 1
 
                 if due_str:
                     try:
                         due_dt = datetime.fromisoformat(due_str.replace("Z", "+00:00"))
-                        if due_dt < now:
+                        if due_dt < now and not is_overdue_flag:
                             overdue_count += 1
                         if due_dt.date() == now.date():
                             due_today_count += 1

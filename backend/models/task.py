@@ -13,6 +13,7 @@ class TaskStatus(str, Enum):
     todo = "todo"
     in_progress = "in_progress"
     completed = "completed"
+    past_due = "past_due"
 
 
 class TaskPriority(str, Enum):

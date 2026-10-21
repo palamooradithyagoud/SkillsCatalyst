@@ -7,6 +7,7 @@ import {
   Clock,
   PlayCircle,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { TaskView, TASK_VIEW_LABELS } from "@/types/task";
 
@@ -25,9 +26,10 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: "all", label: TASK_VIEW_LABELS.all, icon: ListTodo },
   { id: "today", label: TASK_VIEW_LABELS.today, icon: Calendar },
-  { id: "upcoming", label: TASK_VIEW_LABELS.upcoming, icon: Clock },
-  { id: "in_progress", label: TASK_VIEW_LABELS.in_progress, icon: PlayCircle },
   { id: "completed", label: TASK_VIEW_LABELS.completed, icon: CheckCircle2 },
+  { id: "upcoming", label: TASK_VIEW_LABELS.upcoming, icon: Clock },
+  { id: "past_due", label: TASK_VIEW_LABELS.past_due, icon: AlertCircle },
+  { id: "in_progress", label: TASK_VIEW_LABELS.in_progress, icon: PlayCircle },
 ];
 
 export default function TaskViewTabs({
@@ -39,7 +41,7 @@ export default function TaskViewTabs({
     <div
       role="tablist"
       aria-label="Task views"
-      className="flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 overflow-x-auto no-scrollbar"
+      className="flex items-center gap-1.5 p-1.5 bg-white/70 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-2xl border border-white/80 dark:border-white/10 shadow-xs overflow-x-auto no-scrollbar"
     >
       {TABS.map((tab) => {
         const Icon = tab.icon;
@@ -57,23 +59,23 @@ export default function TaskViewTabs({
             onClick={() => onSelectView(tab.id)}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
               isActive
-                ? "bg-white dark:bg-neutral-800 text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-neutral-700"
-                : "text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-neutral-800/50"
+                ? "bg-white dark:bg-[#252A42] text-[#15192B] dark:text-white shadow-xs border border-slate-100 dark:border-white/10 font-bold"
+                : "text-[#7A82A6] dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-white hover:bg-white/60 dark:hover:bg-neutral-800/40"
             }`}
           >
             <Icon
               className={`w-4 h-4 ${
                 isActive
-                  ? "text-[#635BFF] dark:text-indigo-400"
-                  : "text-slate-400 dark:text-neutral-500"
+                  ? "text-[#5D64D9] dark:text-indigo-400"
+                  : "text-[#8C93B3] dark:text-neutral-500"
               }`}
             />
             <span>{tab.label}</span>
             <span
-              className={`text-[11px] px-1.5 py-0.5 rounded-full font-bold ${
+              className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
                 isActive
-                  ? "bg-indigo-50 dark:bg-indigo-950/60 text-[#635BFF] dark:text-indigo-400"
-                  : "bg-slate-200/60 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
+                  ? "bg-[#EEF1FE] dark:bg-[#252945] text-[#555E8D] dark:text-[#9AA5D8]"
+                  : "bg-slate-200/60 dark:bg-neutral-800 text-[#8C93B3] dark:text-neutral-400"
               }`}
             >
               {count}

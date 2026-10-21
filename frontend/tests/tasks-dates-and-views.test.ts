@@ -196,6 +196,12 @@ describe('Phase 1: Task Dates, Views, and Metrics Test Suite', () => {
       assert.strictEqual(filtered[0].id, 'task-4');
     });
 
+    it('filters by view: "past_due"', () => {
+      const filtered = filterAndSortTasks(mockTasks, { view: 'past_due' }, refDate);
+      assert.strictEqual(filtered.length, 1);
+      assert.strictEqual(filtered[0].id, 'task-2');
+    });
+
     it('filters by search title case-insensitively', () => {
       const filtered = filterAndSortTasks(mockTasks, { search: 'overdue' }, refDate);
       assert.strictEqual(filtered.length, 1);

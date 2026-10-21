@@ -3,7 +3,7 @@
  * Type definitions and constants for the SkillsCatalyst To-Do List & Task Management system.
  */
 
-export type TaskStatus = "todo" | "in_progress" | "completed";
+export type TaskStatus = "todo" | "in_progress" | "completed" | "past_due";
 
 export type TaskPriority = "low" | "medium" | "high";
 
@@ -21,7 +21,8 @@ export type TaskView =
   | "today"
   | "upcoming"
   | "in_progress"
-  | "completed";
+  | "completed"
+  | "past_due";
 
 export type TaskSortField = "due_date" | "priority" | "created_at";
 export type TaskSortOrder = "asc" | "desc";
@@ -123,12 +124,14 @@ export const TASK_STATUSES: readonly TaskStatus[] = [
   "todo",
   "in_progress",
   "completed",
+  "past_due",
 ] as const;
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "To Do",
   in_progress: "In Progress",
   completed: "Completed",
+  past_due: "Past Due",
 };
 
 export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
@@ -143,4 +146,5 @@ export const TASK_VIEW_LABELS: Record<TaskView, string> = {
   upcoming: "Upcoming",
   in_progress: "In Progress",
   completed: "Completed",
+  past_due: "Past Due",
 };

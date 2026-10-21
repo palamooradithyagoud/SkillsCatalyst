@@ -3,162 +3,146 @@
 import React from "react";
 import {
   Calendar,
-  AlertCircle,
-  PlayCircle,
   CheckCircle2,
+  Clock,
+  AlertCircle,
   ListTodo,
 } from "lucide-react";
-import { TaskMetrics } from "@/types/task";
+import { TaskMetrics, TaskView } from "@/types/task";
 
 interface TaskDashboardOverviewProps {
   metrics: TaskMetrics;
-  onViewChange?: (view: "all" | "today" | "upcoming" | "in_progress" | "completed") => void;
+  upcomingCount?: number;
+  onViewChange?: (view: TaskView) => void;
   activeView?: string;
 }
 
 export default function TaskDashboardOverview({
   metrics,
+  upcomingCount = 0,
   onViewChange,
   activeView = "all",
 }: TaskDashboardOverviewProps) {
   const {
     dueTodayCount,
     overdueCount,
-    inProgressCount,
     completedCount,
     totalCount,
     completionPercentage,
   } = metrics;
 
+  // Format number as 2 digits matching Image 2 (e.g. 15, 05, 04, 12, 00)
+  const formatTwoDigit = (n: number) => {
+    const val = Math.max(0, n);
+    return val < 10 ? `0${val}` : `${val}`;
+  };
+
+  // 1. Today, 2. Completed, 3. Upcoming, 4. Past Due
+  const cards = [
+    {
+      id: "today" as TaskView,
+      title: "Today",
+      count: dueTodayCount,
+      icon: Calendar,
+      isActive: activeView === "today",
+      ariaLabel: `Filter by ${dueTodayCount} tasks due today`,
+    },
+    {
+      id: "completed" as TaskView,
+      title: "Completed",
+      count: completedCount,
+      icon: CheckCircle2,
+      isActive: activeView === "completed",
+      ariaLabel: `Filter by ${completedCount} completed tasks`,
+    },
+    {
+      id: "upcoming" as TaskView,
+      title: "Upcoming",
+      count: upcomingCount,
+      icon: Clock,
+      isActive: activeView === "upcoming",
+      ariaLabel: `Filter by ${upcomingCount} upcoming tasks`,
+    },
+    {
+      id: "past_due" as TaskView,
+      title: "Past Due",
+      count: overdueCount,
+      icon: AlertCircle,
+      isActive: activeView === "past_due",
+      ariaLabel: `Filter by ${overdueCount} past due tasks`,
+    },
+  ];
+
   return (
     <div className="w-full space-y-3.5">
-      {/* ── Metric Cards Row ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* 1. Due Today */}
-        <button
-          type="button"
-          onClick={() => onViewChange?.("today")}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-            activeView === "today"
-              ? "bg-amber-50/80 border-amber-300 dark:bg-amber-950/40 dark:border-amber-500/50 shadow-sm"
-              : "bg-white dark:bg-neutral-900 border-slate-200/80 dark:border-neutral-800 hover:border-amber-300 dark:hover:border-amber-800/60"
-          }`}
-          aria-label={`View ${dueTodayCount} tasks due today`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">
-              Due Today
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {dueTodayCount}
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-              tasks
-            </span>
-          </div>
-        </button>
+      {/* ── 4 Bento Metric Cards (2x2 on Mobile, 4 Columns on Desktop) ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.title}
+              type="button"
+              onClick={() => onViewChange?.(card.id)}
+              aria-label={card.ariaLabel}
+              className={`relative overflow-hidden p-4 sm:p-5 rounded-[24px] sm:rounded-[28px] text-left transition-all duration-200 cursor-pointer group shadow-[0_4px_24px_rgba(93,100,217,0.06)] hover:shadow-md hover:-translate-y-0.5 ${
+                card.isActive
+                  ? "bg-white/95 dark:bg-[#1E2238] ring-2 ring-[#5D64D9] dark:ring-indigo-500"
+                  : "bg-white/80 dark:bg-[#1A1D30]/85 backdrop-blur-md border border-white/80 dark:border-white/10 hover:border-[#5D64D9]/40"
+              }`}
+            >
+              {/* Subtle organic wavy background watermark */}
+              <div
+                aria-hidden="true"
+                className="absolute -right-5 -bottom-5 w-24 h-24 rounded-full bg-[#5D64D9]/5 dark:bg-indigo-500/10 blur-xl pointer-events-none group-hover:scale-125 transition-transform"
+              />
+              <svg
+                aria-hidden="true"
+                className="absolute right-0 bottom-0 w-24 h-20 text-[#5D64D9]/5 dark:text-indigo-400/5 pointer-events-none"
+                viewBox="0 0 100 80"
+                fill="none"
+              >
+                <path
+                  d="M0 50 C 30 20, 70 80, 100 40 L 100 80 L 0 80 Z"
+                  fill="currentColor"
+                />
+              </svg>
 
-        {/* 2. Overdue */}
-        <div
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all ${
-            overdueCount > 0
-              ? "bg-rose-50/80 border-rose-300 dark:bg-rose-950/40 dark:border-rose-500/50"
-              : "bg-white dark:bg-neutral-900 border-slate-200/80 dark:border-neutral-800"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">
-              Overdue
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <AlertCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {overdueCount}
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-              requiring attention
-            </span>
-          </div>
-        </div>
+              {/* Top Row: Circular Icon Badge + Label */}
+              <div className="relative z-10 flex items-center gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-[#252A42] shadow-xs border border-slate-100 dark:border-white/10 flex items-center justify-center text-[#5D64D9] dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+                  <Icon className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-[#1A1D2E] dark:text-white truncate">
+                  {card.title}
+                </span>
+              </div>
 
-        {/* 3. In Progress */}
-        <button
-          type="button"
-          onClick={() => onViewChange?.("in_progress")}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-            activeView === "in_progress"
-              ? "bg-indigo-50/80 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-500/50 shadow-sm"
-              : "bg-white dark:bg-neutral-900 border-slate-200/80 dark:border-neutral-800 hover:border-indigo-300 dark:hover:border-indigo-800/60"
-          }`}
-          aria-label={`View ${inProgressCount} tasks in progress`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">
-              In Progress
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-              <PlayCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {inProgressCount}
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-              active
-            </span>
-          </div>
-        </button>
-
-        {/* 4. Completed */}
-        <button
-          type="button"
-          onClick={() => onViewChange?.("completed")}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-            activeView === "completed"
-              ? "bg-emerald-50/80 border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-500/50 shadow-sm"
-              : "bg-white dark:bg-neutral-900 border-slate-200/80 dark:border-neutral-800 hover:border-emerald-300 dark:hover:border-emerald-800/60"
-          }`}
-          aria-label={`View ${completedCount} completed tasks`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">
-              Completed
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {completedCount}
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-              finished
-            </span>
-          </div>
-        </button>
+              {/* Bottom Row: 2-Digit Metric Number + "Task" */}
+              <div className="relative z-10 mt-4 sm:mt-5 flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-[#15192B] dark:text-white tracking-tight">
+                  {formatTwoDigit(card.count)}
+                </span>
+                <span className="text-xs sm:text-sm text-[#7D85A7] dark:text-neutral-400 font-semibold">
+                  Task
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Completion Progress Bar Card ── */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+      {/* ── Overall Task Completion Bar ── */}
+      <div className="p-3.5 sm:p-4 rounded-[22px] bg-white/75 dark:bg-[#1A1D30]/85 backdrop-blur-md border border-white/80 dark:border-white/10 shadow-[0_4px_20px_rgba(93,100,217,0.04)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-[#635BFF] dark:text-indigo-400 flex items-center justify-center shrink-0">
-            <ListTodo className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-[#5D64D9]/10 text-[#5D64D9] dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <ListTodo className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            <h4 className="text-xs sm:text-sm font-bold text-[#15192B] dark:text-white">
               Overall Task Completion
             </h4>
-            <p className="text-[11px] text-slate-500 dark:text-neutral-400">
+            <p className="text-[11px] text-[#7D85A7] dark:text-neutral-400 font-medium">
               {completedCount} of {totalCount} task{totalCount === 1 ? "" : "s"} completed
             </p>
           </div>
@@ -167,7 +151,7 @@ export default function TaskDashboardOverview({
         <div className="w-full sm:w-64 flex items-center gap-3">
           <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#635BFF] to-emerald-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-[#5D64D9] to-emerald-500 transition-all duration-500"
               style={{ width: `${Math.min(100, Math.max(0, completionPercentage))}%` }}
               role="progressbar"
               aria-valuenow={completionPercentage}
@@ -176,7 +160,7 @@ export default function TaskDashboardOverview({
               aria-label="Overall task completion progress"
             />
           </div>
-          <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-neutral-200 shrink-0 w-11 text-right">
+          <span className="text-xs sm:text-sm font-bold text-[#15192B] dark:text-white shrink-0 w-11 text-right">
             {completionPercentage}%
           </span>
         </div>

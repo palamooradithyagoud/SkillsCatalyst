@@ -41,7 +41,9 @@ export function isOverdue(
   status: TaskStatus,
   refDate: Date = new Date()
 ): boolean {
-  if (status === "completed" || !dueAt) return false;
+  if (status === "completed") return false;
+  if (status === "past_due") return true;
+  if (!dueAt) return false;
   const d = new Date(dueAt);
   if (isNaN(d.getTime())) return false;
 
@@ -220,6 +222,8 @@ export function filterAndSortTasks(
         if (task.status !== "in_progress") return false;
       } else if (view === "completed") {
         if (task.status !== "completed") return false;
+      } else if (view === "past_due") {
+        if (!isOverdue(task.due_at, task.status, refDate)) return false;
       }
 
       // 2. Search query by title (and optionally description)

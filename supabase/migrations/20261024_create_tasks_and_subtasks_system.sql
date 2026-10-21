@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'completed')),
+    status TEXT NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'completed', 'past_due')),
     priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
     category TEXT NOT NULL DEFAULT 'Other' CHECK (category IN ('Study', 'Assignments', 'Projects', 'Hackathons', 'Career', 'Personal', 'Other')),
     due_at TIMESTAMPTZ,

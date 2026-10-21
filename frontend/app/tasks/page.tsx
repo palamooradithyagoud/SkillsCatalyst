@@ -8,7 +8,10 @@ import {
   AlertCircle,
   RotateCcw,
   Search,
-  CheckCircle2,
+  Home,
+  CheckSquare,
+  BarChart3,
+  User,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -33,6 +36,7 @@ import {
   filterAndSortTasks,
   isDueToday,
   isUpcoming,
+  isOverdue,
 } from "@/lib/tasks/dateUtils";
 
 import TaskDashboardOverview from "@/components/tasks/TaskDashboardOverview";
@@ -100,6 +104,9 @@ export default function TasksPage() {
     const completedCount = allTasks.filter(
       (t) => t.status === "completed"
     ).length;
+    const pastDueCount = allTasks.filter(
+      (t) => isOverdue(t.due_at, t.status)
+    ).length;
 
     return {
       all: allTasks.length,
@@ -107,6 +114,7 @@ export default function TasksPage() {
       upcoming: upcomingCount,
       in_progress: inProgressCount,
       completed: completedCount,
+      past_due: pastDueCount,
     };
   }, [allTasks]);
 
@@ -236,160 +244,252 @@ export default function TasksPage() {
     setFilters(DEFAULT_FILTERS);
   };
 
+  // Section title based on active view
+  const sectionTitle = useMemo(() => {
+    if (activeView === "today") return "Today's tasks";
+    if (activeView === "completed") return "Completed tasks";
+    if (activeView === "upcoming") return "Upcoming tasks";
+    if (activeView === "past_due") return "Past Due tasks";
+    if (activeView === "in_progress") return "In Progress tasks";
+    return "Today's tasks";
+  }, [activeView]);
+
   return (
-    <div className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-5 pb-16 sm:pb-24">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] sm:text-xs font-black tracking-widest text-[#5c56df] dark:text-[#818CF8] uppercase">
-              STUDY & CAREER PLANNER
-            </span>
-            <span className="w-4 h-[2px] rounded-full bg-[#5c56df]/50 dark:bg-[#818CF8]/50" />
+    <div className="relative min-h-screen bg-gradient-to-b from-[#CCD5FA]/50 via-[#DDE4FC]/40 to-[#EEF3FE] dark:from-[#0E111E] dark:via-[#111425] dark:to-[#0A0C16] text-[#15192B] dark:text-neutral-100 font-sans pb-28 md:pb-16 selection:bg-[#5D64D9]/20">
+      {/* ── Ambient Background Blur Shapes ── */}
+      <div
+        className="fixed inset-0 pointer-events-none overflow-hidden -z-10"
+        aria-hidden="true"
+      >
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#B8C6F9]/30 dark:bg-[#1D2447]/20 blur-3xl" />
+        <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#D4DCFC]/30 dark:bg-[#1A2040]/20 blur-3xl" />
+      </div>
+
+      <div className="max-w-[1060px] xl:max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-7 space-y-5">
+        {/* ── Top Header Matching Image 2 ── */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl tracking-tight leading-tight">
+              <span className="text-[#5C6488] dark:text-[#9AA5CC] font-medium block sm:inline">
+                Start{" "}
+              </span>
+              <span className="text-[#15192B] dark:text-white font-black">
+                today&apos;s tasks.
+              </span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 font-medium mt-1">
+              Organize study sessions, assignments, coding practice, and project milestones.
+            </p>
           </div>
-          <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            To-Do List
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
-            Organize study sessions, assignments, coding practice, and project milestones.
-          </p>
+
+          {/* Desktop "+ New Task" Button */}
+          <button
+            type="button"
+            onClick={handleOpenCreateModal}
+            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>New Task</span>
+          </button>
         </div>
 
+        {/* ── Action Error Alert ── */}
+        {actionError && (
+          <div
+            role="alert"
+            className="p-3.5 rounded-[20px] bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 shadow-xs"
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="text-xs text-rose-700 hover:text-rose-900 dark:text-rose-300 dark:hover:text-white underline cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* ── 1. Bento Dashboard Overview (Image 2 style) ── */}
+        <TaskDashboardOverview
+          metrics={metrics}
+          upcomingCount={tabCounts.upcoming}
+          activeView={activeView}
+          onViewChange={handleViewChange}
+        />
+
+        {/* ── 2. Section Header: "Today's tasks" & "View All" matching Image 2 ── */}
+        <div className="flex items-center justify-between pt-1">
+          <h2 className="text-base sm:text-lg font-black text-[#15192B] dark:text-white tracking-tight">
+            {sectionTitle}
+          </h2>
+          <button
+            type="button"
+            onClick={() => handleViewChange("all")}
+            className="text-xs sm:text-sm font-bold text-[#5D64D9] dark:text-indigo-400 hover:text-[#4A50BC] hover:underline cursor-pointer transition-colors"
+          >
+            View All
+          </button>
+        </div>
+
+        {/* ── 3. Views Navigation Tabs ── */}
+        <TaskViewTabs
+          activeView={activeView}
+          onSelectView={handleViewChange}
+          counts={tabCounts}
+        />
+
+        {/* ── 4. Search & Filter Bar ── */}
+        <TaskFilters
+          filters={filters}
+          onChange={handleFilterChange}
+          onReset={handleResetFilters}
+        />
+
+        {/* ── 5. Main Tasks Content Area ── */}
+        <div className="space-y-3">
+          {isLoading || isAuthLoading ? (
+            <div className="py-16 text-center space-y-3 bg-white/75 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 shadow-xs">
+              <Loader2 className="w-7 h-7 text-[#5D64D9] animate-spin mx-auto" />
+              <p className="text-xs sm:text-sm font-semibold text-[#7A82A6] dark:text-neutral-400">
+                Loading your tasks...
+              </p>
+            </div>
+          ) : isError ? (
+            <div className="py-12 text-center space-y-3 bg-white/75 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-[28px] border border-rose-200/80 dark:border-rose-950/50 p-6 shadow-xs">
+              <AlertCircle className="w-8 h-8 text-rose-600 dark:text-rose-400 mx-auto" />
+              <h3 className="text-sm sm:text-base font-bold text-[#15192B] dark:text-white">
+                Unable to load tasks
+              </h3>
+              <p className="text-xs text-[#7A82A6] dark:text-neutral-400 max-w-sm mx-auto">
+                {(error as any)?.message || "A database connectivity issue occurred."}
+              </p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Try again</span>
+              </button>
+            </div>
+          ) : allTasks.length === 0 ? (
+            /* Empty Database State */
+            <div className="py-16 text-center space-y-3 bg-white/80 dark:bg-[#1A1D30]/85 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 p-6 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-[#5D64D9]/10 text-[#5D64D9] dark:text-indigo-400 flex items-center justify-center mx-auto">
+                <ListTodo className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[#15192B] dark:text-white">
+                No tasks yet
+              </h3>
+              <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 max-w-md mx-auto">
+                Your to-do list is empty. Create tasks with due dates, priorities, and subtasks to keep your prep on track.
+              </p>
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>Create your first task</span>
+              </button>
+            </div>
+          ) : visibleTasks.length === 0 ? (
+            /* No Search/Filter Results State */
+            <div className="py-12 text-center space-y-3 bg-white/80 dark:bg-[#1A1D30]/85 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 p-6 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#7A82A6] dark:text-neutral-400 flex items-center justify-center mx-auto">
+                <Search className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-[#15192B] dark:text-white">
+                No matching tasks found
+              </h3>
+              <p className="text-xs text-[#7A82A6] dark:text-neutral-400 max-w-sm mx-auto">
+                No tasks match your selected view or active filter parameters.
+              </p>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-indigo-950/50 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset filters</span>
+              </button>
+            </div>
+          ) : (
+            /* Task Cards List */
+            <div className="space-y-3">
+              {visibleTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggleStatus={handleToggleStatus}
+                  onOpenDetails={(t) => setSelectedTask(t)}
+                  onEdit={handleOpenEditModal}
+                  onDelete={(t) => setTaskToDelete(t)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Fixed Mobile Bottom Navigation Bar (Image 2 Style) ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#151828]/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-neutral-800/80 py-2 px-6 flex items-center justify-around md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        {/* 1. Home */}
+        <button
+          type="button"
+          onClick={() => handleViewChange("all")}
+          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
+          aria-label="Home"
+        >
+          <Home className="w-5 h-5 stroke-[2]" />
+          <span className="text-[10px] font-semibold">Home</span>
+        </button>
+
+        {/* 2. Tasks (Active) */}
+        <button
+          type="button"
+          onClick={() => handleViewChange("today")}
+          className="flex flex-col items-center gap-0.5 text-[#5D64D9] dark:text-indigo-400 font-bold cursor-pointer"
+          aria-label="Today Tasks"
+        >
+          <CheckSquare className="w-5 h-5 stroke-[2.2]" />
+          <span className="text-[10px]">Tasks</span>
+        </button>
+
+        {/* 3. Center Floating (+) Action Button matching Image 2 */}
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#5442F6] to-[#635BFF] hover:opacity-95 shadow-md shadow-indigo-500/25 transition-all cursor-pointer shrink-0"
+          className="w-12 h-12 rounded-full bg-[#5D64D9] hover:bg-[#4D54C7] text-white flex items-center justify-center shadow-xl shadow-[#5D64D9]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer -mt-6 border-4 border-[#DCE3FB] dark:border-[#0E111E]"
+          aria-label="Create new task"
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>New Task</span>
+          <Plus className="w-6 h-6 stroke-[3]" />
         </button>
-      </div>
 
-      {/* ── Action Error Alert ── */}
-      {actionError && (
-        <div
-          role="alert"
-          className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3"
+        {/* 4. Progress */}
+        <button
+          type="button"
+          onClick={() => handleViewChange("completed")}
+          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
+          aria-label="Progress"
         >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span>{actionError}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActionError(null)}
-            className="text-xs text-rose-700 hover:text-rose-900 dark:text-rose-300 dark:hover:text-white underline cursor-pointer"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+          <BarChart3 className="w-5 h-5 stroke-[2]" />
+          <span className="text-[10px] font-semibold">Progress</span>
+        </button>
 
-      {/* ── 1. Compact Dashboard Overview ── */}
-      <TaskDashboardOverview
-        metrics={metrics}
-        activeView={activeView}
-        onViewChange={handleViewChange}
-      />
-
-      {/* ── 2. Views Navigation Tabs ── */}
-      <TaskViewTabs
-        activeView={activeView}
-        onSelectView={handleViewChange}
-        counts={tabCounts}
-      />
-
-      {/* ── 3. Filters Bar ── */}
-      <TaskFilters
-        filters={filters}
-        onChange={handleFilterChange}
-        onReset={handleResetFilters}
-      />
-
-      {/* ── 4. Main Tasks Content Area ── */}
-      <div className="space-y-3">
-        {isLoading || isAuthLoading ? (
-          <div className="py-16 text-center space-y-3 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800">
-            <Loader2 className="w-7 h-7 text-[#635BFF] animate-spin mx-auto" />
-            <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-neutral-400">
-              Loading your tasks...
-            </p>
-          </div>
-        ) : isError ? (
-          <div className="py-12 text-center space-y-3 bg-white dark:bg-neutral-900 rounded-3xl border border-rose-200/80 dark:border-rose-950/50 p-6">
-            <AlertCircle className="w-8 h-8 text-rose-600 dark:text-rose-400 mx-auto" />
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              Unable to load tasks
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
-              {(error as any)?.message || "A database connectivity issue occurred."}
-            </p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#635BFF] bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Try again</span>
-            </button>
-          </div>
-        ) : allTasks.length === 0 ? (
-          /* Empty Database State */
-          <div className="py-16 text-center space-y-3 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 p-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-[#635BFF] dark:text-indigo-400 flex items-center justify-center mx-auto">
-              <ListTodo className="w-6 h-6" />
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              No tasks yet
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 max-w-md mx-auto">
-              Your to-do list is empty. Create tasks with due dates, priorities, and subtasks to keep your prep on track.
-            </p>
-            <button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#635BFF] hover:bg-[#5442F6] shadow-sm transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create your first task</span>
-            </button>
-          </div>
-        ) : visibleTasks.length === 0 ? (
-          /* No Search/Filter Results State */
-          <div className="py-12 text-center space-y-3 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 p-6">
-            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-neutral-800 text-slate-400 dark:text-neutral-500 flex items-center justify-center mx-auto">
-              <Search className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              No matching tasks found
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
-              No tasks match your selected view or active filter parameters.
-            </p>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#635BFF] bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 transition-colors cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset filters</span>
-            </button>
-          </div>
-        ) : (
-          /* Task Cards List */
-          <div className="space-y-2.5">
-            {visibleTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggleStatus={handleToggleStatus}
-                onOpenDetails={(t) => setSelectedTask(t)}
-                onEdit={handleOpenEditModal}
-                onDelete={(t) => setTaskToDelete(t)}
-              />
-            ))}
-          </div>
-        )}
+        {/* 5. Profile */}
+        <button
+          type="button"
+          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
+          aria-label="Profile"
+        >
+          <User className="w-5 h-5 stroke-[2]" />
+          <span className="text-[10px] font-semibold">Profile</span>
+        </button>
       </div>
 
       {/* ── Modals & Drawers ── */}
