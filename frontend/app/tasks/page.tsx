@@ -8,10 +8,6 @@ import {
   AlertCircle,
   RotateCcw,
   Search,
-  Home,
-  CheckSquare,
-  BarChart3,
-  User,
   ChevronLeft,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -266,8 +262,8 @@ export default function TasksPage() {
       </div>
 
       <div className="w-full max-w-[1060px] xl:max-w-[1100px] mx-auto px-0.5 sm:px-4 md:px-6 pt-0 sm:pt-3 space-y-3.5 sm:space-y-5">
-        {/* ── Top Bar: Back Button & Mobile Quick Create ── */}
-        <div className="flex items-center justify-between">
+        {/* ── Top Bar: Back Button ── */}
+        <div className="flex items-center">
           <button
             type="button"
             onClick={() => window.history.back()}
@@ -275,17 +271,6 @@ export default function TasksPage() {
             aria-label="Go back"
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.2]" />
-          </button>
-
-          {/* Quick Mobile "+ New Task" in top bar */}
-          <button
-            type="button"
-            onClick={handleOpenCreateModal}
-            className="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 active:scale-95 transition-all cursor-pointer"
-            aria-label="Create new task"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>New Task</span>
           </button>
         </div>
 
@@ -300,7 +285,7 @@ export default function TasksPage() {
             </p>
           </div>
 
-          {/* "+ New Task" Button (Always visible on mobile & desktop) */}
+          {/* "+ New Task" Button (Single prominent button for both mobile and desktop) */}
           <button
             type="button"
             onClick={handleOpenCreateModal}
@@ -446,62 +431,6 @@ export default function TasksPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Fixed Mobile Bottom Navigation Bar (Image 3 Style) ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#151828]/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-neutral-800/80 py-2 px-6 flex items-center justify-around md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        {/* 1. Home */}
-        <button
-          type="button"
-          onClick={() => handleViewChange("all")}
-          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
-          aria-label="Home"
-        >
-          <Home className="w-5 h-5 stroke-[2]" />
-          <span className="text-[10px] font-semibold">Home</span>
-        </button>
-
-        {/* 2. Tasks (Active) */}
-        <button
-          type="button"
-          onClick={() => handleViewChange("all")}
-          className="flex flex-col items-center gap-0.5 text-[#5D64D9] dark:text-indigo-400 font-bold cursor-pointer"
-          aria-label="Tasks"
-        >
-          <CheckSquare className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-[10px]">Tasks</span>
-        </button>
-
-        {/* 3. Center Floating (+) Action Button */}
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className="w-12 h-12 rounded-full bg-[#5D64D9] hover:bg-[#4D54C7] text-white flex items-center justify-center shadow-xl shadow-[#5D64D9]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer -mt-6 border-4 border-[#DCE3FB] dark:border-[#0E111E]"
-          aria-label="Create new task"
-        >
-          <Plus className="w-6 h-6 stroke-[3]" />
-        </button>
-
-        {/* 4. Progress */}
-        <button
-          type="button"
-          onClick={() => handleViewChange("completed")}
-          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
-          aria-label="Progress"
-        >
-          <BarChart3 className="w-5 h-5 stroke-[2]" />
-          <span className="text-[10px] font-semibold">Progress</span>
-        </button>
-
-        {/* 5. Profile */}
-        <button
-          type="button"
-          className="flex flex-col items-center gap-0.5 text-[#8C93B3] hover:text-[#15192B] dark:hover:text-white cursor-pointer"
-          aria-label="Profile"
-        >
-          <User className="w-5 h-5 stroke-[2]" />
-          <span className="text-[10px] font-semibold">Profile</span>
-        </button>
       </div>
 
       {/* ── Modals & Drawers ── */}
