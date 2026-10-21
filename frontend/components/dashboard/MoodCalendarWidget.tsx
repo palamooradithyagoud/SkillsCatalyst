@@ -31,7 +31,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#8AE6A2",
     summaryTitle: "Happy",
     summaryMessage: "You're feeling calm and optimistic. Keep up the good vibes!",
-    summaryBg: "bg-[#D2F5A6] dark:bg-[#253A18] text-[#15192B] dark:text-[#E2F8C8]",
+    summaryBg: "bg-[#D2F5A6] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#8AE6A2]",
   },
   angry: {
     id: "angry",
@@ -40,7 +40,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#F88A58",
     summaryTitle: "Frustrated",
     summaryMessage: "Take a deep breath and give yourself a break. You've got this!",
-    summaryBg: "bg-[#FED5B7] dark:bg-[#3D2316] text-[#15192B] dark:text-[#FEE7D6]",
+    summaryBg: "bg-[#FED5B7] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#F88A58]",
   },
   sleepy: {
     id: "sleepy",
@@ -49,7 +49,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#88B7FA",
     summaryTitle: "Sleepy",
     summaryMessage: "Recharge your mind with good sleep. Tomorrow is a fresh start!",
-    summaryBg: "bg-[#CFE2FE] dark:bg-[#1A2840] text-[#15192B] dark:text-[#E0ECFD]",
+    summaryBg: "bg-[#CFE2FE] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#88B7FA]",
   },
   bored: {
     id: "bored",
@@ -58,7 +58,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#E8A0E8",
     summaryTitle: "Uninspired",
     summaryMessage: "Try exploring something new today or taking a quick walk outside!",
-    summaryBg: "bg-[#F5D6F5] dark:bg-[#381E38] text-[#15192B] dark:text-[#FBEBFB]",
+    summaryBg: "bg-[#F5D6F5] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#E8A0E8]",
   },
   calm: {
     id: "calm",
@@ -67,7 +67,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#FDE278",
     summaryTitle: "Calm & Centered",
     summaryMessage: "Steady progress and peaceful focus. Keep up the gentle rhythm!",
-    summaryBg: "bg-[#FDF1BA] dark:bg-[#3B3416] text-[#15192B] dark:text-[#FDF8D9]",
+    summaryBg: "bg-[#FDF1BA] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#FDE278]",
   },
   wacky: {
     id: "wacky",
@@ -76,7 +76,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#C6A4F9",
     summaryTitle: "Energetic",
     summaryMessage: "High momentum and curiosity driving your creative breakthroughs!",
-    summaryBg: "bg-[#E6D4FC] dark:bg-[#2F1E44] text-[#15192B] dark:text-[#F2E8FD]",
+    summaryBg: "bg-[#E6D4FC] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#C6A4F9]",
   },
   pouty: {
     id: "pouty",
@@ -85,7 +85,7 @@ export const MOODS: Record<MoodType, MoodItem> = {
     bgHex: "#F68F8F",
     summaryTitle: "A Bit Low",
     summaryMessage: "Be kind to yourself today. Small steps still count as progress.",
-    summaryBg: "bg-[#FDCBCB] dark:bg-[#3C1A1A] text-[#15192B] dark:text-[#FDE3E3]",
+    summaryBg: "bg-[#FDCBCB] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-[#F68F8F]",
   },
 };
 
@@ -354,7 +354,7 @@ export default function MoodCalendarWidget() {
   const currentSummary = predominantMood ? MOODS[predominantMood] : null;
 
   return (
-    <div className="w-full bg-white dark:bg-[#181B2B] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.05)] p-3.5 sm:p-4 space-y-3.5 transition-all">
+    <div className="w-full bg-white dark:bg-[#18191F] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none p-3.5 sm:p-4 space-y-3.5 transition-all">
       {/* ── Header: Title & Dynamic Month Navigation ── */}
       <div className="flex items-center justify-between">
         <div>
@@ -396,7 +396,7 @@ export default function MoodCalendarWidget() {
       </div>
 
       {/* ── Section 1: Daily Mood Selector (Image 2 style, Compact) ── */}
-      <div className="bg-[#FAFBFD] dark:bg-[#151828]/60 p-2.5 rounded-2xl border border-slate-100 dark:border-neutral-800/80">
+      <div className="bg-[#FAFBFD] dark:bg-[#121318] p-2.5 rounded-2xl border border-slate-100 dark:border-neutral-800">
         <div className="grid grid-cols-4 gap-2">
           {SELECTOR_MOODS.map((mType) => {
             const mood = MOODS[mType];
@@ -413,7 +413,7 @@ export default function MoodCalendarWidget() {
                 <div
                   className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-transform duration-150 group-hover:scale-105 active:scale-95 ${
                     isSelected
-                      ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-2 dark:ring-offset-[#181B2B] shadow-xs"
+                      ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-2 dark:ring-offset-[#18191F] shadow-xs"
                       : "opacity-80 hover:opacity-100"
                   }`}
                 >
@@ -465,14 +465,14 @@ export default function MoodCalendarWidget() {
                 onClick={() => setSelectedDateStr(cell.dateStr)}
                 className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
                   isSelected
-                    ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-1 dark:ring-offset-[#181B2B] z-10"
+                    ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-1 dark:ring-offset-[#18191F] z-10"
                     : isToday
-                    ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#181B2B]"
+                    ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#18191F]"
                     : ""
                 } ${
                   hasMood
                     ? "hover:scale-105 active:scale-95"
-                    : "bg-slate-100/70 dark:bg-neutral-800/60 hover:bg-slate-200/80 dark:hover:bg-neutral-700/60"
+                    : "bg-slate-100/70 dark:bg-[#121318] hover:bg-slate-200/80 dark:hover:bg-neutral-800 border border-transparent dark:border-neutral-800/60"
                 } ${!cell.isCurrentMonth ? "opacity-30" : "opacity-100"}`}
                 title={
                   isToday
@@ -500,7 +500,7 @@ export default function MoodCalendarWidget() {
         className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 ${
           currentSummary
             ? currentSummary.summaryBg
-            : "bg-[#F3F4F6] dark:bg-[#1E2235] text-[#15192B] dark:text-[#E2E8F0]"
+            : "bg-[#F3F4F6] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-neutral-300"
         } shadow-xs`}
       >
         <div className="relative z-10 flex items-center justify-between gap-3">
