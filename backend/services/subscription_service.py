@@ -183,15 +183,20 @@ class SubscriptionService:
                     s_enum = SubscriptionStatus(cached.get("status", "active"))
                 except Exception:
                     s_enum = SubscriptionStatus.ACTIVE
-                return {
-                    "plan": p_code,
-                    "status": s_enum,
-                    "is_premium": bool(cached.get("is_premium", False)),
-                    "started_at": _parse_timestamp(cached.get("started_at")),
-                    "expires_at": _parse_timestamp(cached.get("expires_at")),
-                    "cancelled_at": _parse_timestamp(cached.get("cancelled_at")),
-                    "raw_sub": None,
-                }
+                cached_exp = _parse_timestamp(cached.get("expires_at"))
+                # If cached subscription has expired, bypass cache to authoritatively check for renewals
+                if cached_exp and cached_exp <= datetime.now(timezone.utc):
+                    logger.debug(f"Cached subscription for {user_id} is expired; bypassing cache to verify renewal in DB.")
+                else:
+                    return {
+                        "plan": p_code,
+                        "status": s_enum,
+                        "is_premium": bool(cached.get("is_premium", False)),
+                        "started_at": _parse_timestamp(cached.get("started_at")),
+                        "expires_at": cached_exp,
+                        "cancelled_at": _parse_timestamp(cached.get("cancelled_at")),
+                        "raw_sub": None,
+                    }
         except Exception as cache_err:
             logger.warning(f"Error reading subscription cache for {user_id}: {cache_err}")
 

@@ -10,6 +10,7 @@
  * Phase: Payments Phase 1 — Subscription + Entitlement Foundation
  */
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import {
@@ -51,9 +52,23 @@ export function useSubscription(): UseSubscriptionResult {
     queryKey: ["subscription", "me", userId ?? "anonymous"],
     queryFn: fetchMySubscription,
     enabled: !authLoading,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 30 * 1000, // 30 seconds cache to reflect purchases immediately
     refetchOnWindowFocus: true,
   });
+
+  // Listen to system-wide subscription updates (e.g. after PhonePe payment or coupon redemption)
+  useEffect(() => {
+    const handleSubscriptionUpdated = () => {
+      refetch();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("subscription-updated", handleSubscriptionUpdated);
+      return () => {
+        window.removeEventListener("subscription-updated", handleSubscriptionUpdated);
+      };
+    }
+  }, [refetch]);
 
   const plan = data?.plan ?? "free";
   const isPremium = Boolean(data?.is_premium);

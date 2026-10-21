@@ -23,6 +23,7 @@ from backend.models.payment import (
     PaymentTransactionDTO,
 )
 from backend.models.subscription import PlanCode
+from backend.services.cache_service import invalidate_user_subscription
 
 logger = logging.getLogger(__name__)
 
@@ -445,6 +446,10 @@ class PaymentService:
                                 f"Payment {merchant_order_id} already provisioned via RPC. "
                                 "Returning idempotent acknowledgement."
                             )
+                            try:
+                                invalidate_user_subscription(str(user_id))
+                            except Exception:
+                                pass
                             return {
                                 "success": True,
                                 "message": rpc_res.data.get("message") or "Payment already processed and provisioned.",
@@ -453,6 +458,11 @@ class PaymentService:
                             }
 
                         if rpc_res.data.get("success") is True:
+                            # Invalidate Redis subscription cache so /me endpoint gets fresh active status immediately
+                            try:
+                                invalidate_user_subscription(str(user_id))
+                            except Exception as inv_err:
+                                logger.warning(f"Error invalidating subscription cache: {inv_err}")
                             # Record coupon redemption if coupon was applied
                             coupon_id = tx.get("coupon_id")
                             if coupon_id:
@@ -518,6 +528,10 @@ class PaymentService:
 
                 if not claimed:
                     logger.info(f"Order {merchant_order_id} could not be claimed (already claimed or completed).")
+                    try:
+                        invalidate_user_subscription(str(user_id))
+                    except Exception:
+                        pass
                     curr = sb.from_("payment_transactions").select("status, subscription_id").eq("merchant_order_id", merchant_order_id).limit(1).execute()
                     c_status = curr.data[0].get("status") if (isinstance(curr.data, list) and len(curr.data) > 0) else "unknown"
                     return {
@@ -695,6 +709,13 @@ class PaymentService:
         plan_rel = tx.get("subscription_plans") or {}
         plan_code = plan_rel.get("code") or "premium_monthly"
 
+        # If payment succeeded, ensure user's subscription cache is invalidated so frontend gets active state instantly
+        if current_status == PaymentStatus.SUCCESS:
+            try:
+                invalidate_user_subscription(str(user_id))
+            except Exception:
+                pass
+
         return PaymentStatusResponse(
             merchant_order_id=merchant_order_id,
             status=current_status,
@@ -755,6 +776,10 @@ class PaymentService:
                             is_internal_sync=True,
                         )
                         any_synced = True
+                        try:
+                            invalidate_user_subscription(str(user_id))
+                        except Exception:
+                            pass
                     except Exception as sync_proc_err:
                         logger.warning(f"Failed to process out-of-band webhook for order {m_order_id}: {sync_proc_err}")
                 elif remote_state in ("FAILED", "CANCELLED"):

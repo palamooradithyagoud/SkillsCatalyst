@@ -55,6 +55,9 @@ export default function DashboardPage() {
               message: "Payment Confirmed: Your Premium access is active across all questions, prep, and roadmaps.",
             });
             try {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("subscription-updated"));
+              }
               await Promise.resolve(refetchSubscription());
             } catch (subErr) {
               console.error("[Dashboard] Subscription refetch failed after verified payment:", subErr);

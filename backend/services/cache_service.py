@@ -365,8 +365,11 @@ def set_cached_user_subscription(
         "cancelled_at": str(data["cancelled_at"]) if data.get("cancelled_at") else None,
     }
 
+    # Non-premium / expired states use a much shorter TTL (60s) so fresh purchases reflect swiftly
+    effective_ttl = min(ttl_seconds, 60) if not minimal["is_premium"] else ttl_seconds
+
     key = make_subscription_cache_key(user_id)
-    success = set_json(key, minimal, ttl_seconds=ttl_seconds)
+    success = set_json(key, minimal, ttl_seconds=effective_ttl)
     if success:
         log_cache_event("user_subscription", "set")
     return success

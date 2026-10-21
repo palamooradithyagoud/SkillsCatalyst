@@ -1050,6 +1050,70 @@ class TestPaymentRecoveryHardening(unittest.TestCase):
             self.assertFalse(resp["success"])
             self.assertEqual(resp["status"], "failed")
 
+    # =========================================================================
+    # SCENARIO 15: Atomic RPC success invalidates user subscription cache
+    # =========================================================================
+    def test_15_atomic_rpc_invalidates_user_subscription_cache(self):
+        """
+        Verify that when claim_and_provision_payment succeeds, invalidate_user_subscription
+        is reliably invoked so frontend reads fresh premium status instead of stale cache.
+        """
+        merchant_order_id = "order_sc_cache_invalidation_test"
+        db_tx = {
+            "id": "tx-cache-inv-1",
+            "user_id": self.student_id,
+            "plan_id": "plan-uuid-3month",
+            "merchant_order_id": merchant_order_id,
+            "amount_in_paise": 2000,
+            "currency": "INR",
+            "status": "pending",
+            "subscription_id": None,
+            "subscription_plans": {"code": "premium_3_month", "duration_days": 90},
+        }
+
+        with patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_USERNAME", self.webhook_user), \
+             patch("backend.services.phonepe_service.PHONEPE_WEBHOOK_PASSWORD", self.webhook_pass), \
+             patch("backend.services.payment_service.get_supabase") as mock_pay_sb, \
+             patch("backend.services.payment_service.invalidate_user_subscription") as mock_inv:
+
+            mock_db = MagicMock()
+            mock_query = MagicMock()
+            mock_query.select.return_value = mock_query
+            mock_query.eq.return_value = mock_query
+            mock_query.execute.return_value = MagicMock(data=[db_tx])
+            mock_db.from_.return_value = mock_query
+
+            mock_rpc_exec = MagicMock()
+            mock_rpc_exec.execute.return_value = MagicMock(data={
+                "success": True,
+                "claimed": True,
+                "already_provisioned": False,
+                "status": "success",
+                "subscription_id": "sub-new-3month",
+                "message": "Payment claimed and subscription provisioned atomically.",
+            })
+            mock_db.rpc.return_value = mock_rpc_exec
+            mock_pay_sb.return_value = mock_db
+
+            payload = {
+                "event": "checkout.order.completed",
+                "payload": {
+                    "merchantOrderId": merchant_order_id,
+                    "orderId": "PP_ORDER_CACHE_001",
+                    "state": "COMPLETED",
+                    "amount": 2000,
+                },
+            }
+
+            resp = PaymentService.process_webhook(
+                authorization_header=self.valid_auth_header,
+                raw_body=json.dumps(payload),
+            )
+
+            self.assertTrue(resp["success"])
+            # Assert cache invalidation was explicitly triggered for the student
+            mock_inv.assert_called_once_with(self.student_id)
+
 
 if __name__ == "__main__":
     unittest.main()
