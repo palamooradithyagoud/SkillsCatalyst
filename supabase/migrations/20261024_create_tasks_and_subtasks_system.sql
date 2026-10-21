@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
     category TEXT NOT NULL DEFAULT 'Other' CHECK (category IN ('Study', 'Assignments', 'Projects', 'Hackathons', 'Career', 'Personal', 'Other')),
     due_at TIMESTAMPTZ,
+    time_range TEXT,
+    collaborators JSONB DEFAULT '[]'::jsonb,
     estimated_minutes INTEGER CHECK (estimated_minutes IS NULL OR (estimated_minutes >= 0 AND estimated_minutes <= 10080)),
     completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

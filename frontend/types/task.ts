@@ -46,6 +46,8 @@ export interface Task {
   priority: TaskPriority;
   category: TaskCategory;
   due_at: string | null;
+  time_range?: string | null;
+  collaborators?: string[];
   estimated_minutes: number | null;
   completed_at: string | null;
   created_at: string;
@@ -60,6 +62,8 @@ export interface CreateTaskPayload {
   priority?: TaskPriority;
   category?: TaskCategory;
   due_at?: string | null;
+  time_range?: string | null;
+  collaborators?: string[];
   estimated_minutes?: number | null;
 }
 
@@ -70,9 +74,27 @@ export interface UpdateTaskPayload {
   priority?: TaskPriority;
   category?: TaskCategory;
   due_at?: string | null;
+  time_range?: string | null;
+  collaborators?: string[];
   estimated_minutes?: number | null;
   completed_at?: string | null;
 }
+
+export interface StudyBuddy {
+  id: string;
+  name: string;
+  initials: string;
+  avatarBg: string;
+  role: string;
+}
+
+export const AVAILABLE_STUDY_BUDDIES: readonly StudyBuddy[] = [
+  { id: "buddy-1", name: "Sarah Jenkins", initials: "SJ", avatarBg: "from-rose-400 to-pink-500", role: "Frontend Peer" },
+  { id: "buddy-2", name: "Alex Chen", initials: "AC", avatarBg: "from-blue-400 to-indigo-500", role: "DSA Partner" },
+  { id: "buddy-3", name: "Liam Vance", initials: "LV", avatarBg: "from-amber-400 to-orange-500", role: "System Design" },
+  { id: "buddy-4", name: "Priya Patel", initials: "PP", avatarBg: "from-emerald-400 to-teal-500", role: "AI Mentor" },
+  { id: "buddy-5", name: "Marcus Wong", initials: "MW", avatarBg: "from-purple-400 to-violet-500", role: "Backend Peer" },
+] as const;
 
 export interface CreateSubtaskPayload {
   task_id: string;

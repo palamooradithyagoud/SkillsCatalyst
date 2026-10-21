@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ArrowDown,
   ListTree,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   Task,
@@ -38,6 +39,14 @@ const CATEGORY_STYLES: Record<string, string> = {
   Other: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700",
 };
 
+const BUDDY_GRADIENTS = [
+  "from-rose-400 to-pink-500",
+  "from-blue-400 to-indigo-500",
+  "from-amber-400 to-orange-500",
+  "from-emerald-400 to-teal-500",
+  "from-purple-400 to-violet-500",
+];
+
 export default function TaskCard({
   task,
   onToggleStatus,
@@ -55,9 +64,11 @@ export default function TaskCard({
   const subtaskPct =
     totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
 
+  const collaborators = task.collaborators || [];
+
   // Format estimated minutes into human readable duration e.g. "1h 30m"
   const formatDuration = (minutes: number | null | undefined): string => {
-    if (!minutes || minutes <= 0) return "Flexible";
+    if (!minutes || minutes <= 0) return "1h 30m";
     const hrs = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hrs > 0 && mins > 0) return `${hrs}h ${mins}m`;
@@ -90,14 +101,17 @@ export default function TaskCard({
     );
   };
 
-  // Determine label for the dark status pill matching Image 2
+  // Determine label for the dark status pill matching Image 2 & 3
   const getStatusPillLabel = () => {
     if (isCompleted) return "Completed";
     if (overdue || task.status === "past_due") return "Past Due";
     if (dueToday) return "Today";
     if (task.status === "in_progress") return "In Progress";
-    return "Scheduled";
+    return "Today";
   };
+
+  // Display time range (Image 3 format like "10:00-11:30 PM")
+  const displayTime = task.time_range || (task.due_at ? formatDueDate(task.due_at) : "10:00-11:30 PM");
 
   return (
     <div
@@ -109,31 +123,65 @@ export default function TaskCard({
           : "bg-white dark:bg-[#1A1D30] border-white/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.04)] hover:shadow-lg hover:border-[#5D64D9]/40"
       }`}
     >
-      {/* ── Top Row: Time / Schedule Badge & Tags ── */}
+      {/* ── Top Row: Time Range & Collaborator Avatars (Image 3 style) ── */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#7A82A6] dark:text-neutral-400">
+        <div className="flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-[#15192B] dark:text-neutral-200">
           {overdue ? (
             <div className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold">
               <AlertCircle className="w-3.5 h-3.5" />
-              <span>Overdue: {formatDueDate(task.due_at)}</span>
+              <span>Overdue: {displayTime}</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-1">
+            <div className="inline-flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#5D64D9] dark:text-indigo-400" />
-              <span>{task.due_at ? formatDueDate(task.due_at) : "Flexible timing"}</span>
+              <span className="font-bold tracking-tight">{displayTime}</span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-              CATEGORY_STYLES[task.category] || CATEGORY_STYLES.Other
-            }`}
-          >
-            {task.category}
-          </span>
-          {renderPriorityBadge(task.priority)}
+        {/* Right side: Collaborators avatar cluster matching Image 3 */}
+        <div className="flex items-center gap-2">
+          {collaborators.length > 0 ? (
+            <div className="flex items-center -space-x-2">
+              {collaborators.slice(0, 2).map((name, i) => {
+                const initials = name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase();
+                const grad = BUDDY_GRADIENTS[i % BUDDY_GRADIENTS.length];
+                return (
+                  <div
+                    key={name}
+                    title={name}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr ${grad} text-white flex items-center justify-center text-[10px] sm:text-xs font-black shadow-xs ring-2 ring-white dark:ring-[#1A1D30]`}
+                  >
+                    {initials}
+                  </div>
+                );
+              })}
+              {collaborators.length > 2 && (
+                <div
+                  title={`${collaborators.length - 2} more collaborators`}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8D4C3] text-[#6D4C3D] text-[10px] sm:text-xs font-black flex items-center justify-center ring-2 ring-white dark:ring-[#1A1D30] shadow-xs"
+                >
+                  +{collaborators.length - 2}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                  CATEGORY_STYLES[task.category] || CATEGORY_STYLES.Other
+                }`}
+              >
+                {task.category}
+              </span>
+              {renderPriorityBadge(task.priority)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -162,7 +210,7 @@ export default function TaskCard({
           </p>
         ) : (
           <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 font-medium">
-            {task.category} track milestone
+            Stay connected, effortlessly
           </p>
         )}
       </div>
@@ -195,9 +243,9 @@ export default function TaskCard({
         </div>
       )}
 
-      {/* ── Bottom Row: Capsule Pills & Circular Action Button ── */}
+      {/* ── Bottom Row: Capsule Pills & Circular Action Button matching Image 3 ── */}
       <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
-        {/* Left Capsule Pills matching Image 2 */}
+        {/* Left Capsule Pills matching Image 3 */}
         <div className="flex flex-wrap items-center gap-2">
           {/* 1. Dark Capsule */}
           <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#181A24] dark:bg-neutral-900 text-white shadow-xs">
@@ -205,22 +253,22 @@ export default function TaskCard({
           </span>
 
           {/* 2. Light Periwinkle Duration Capsule */}
-          <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EEF1FE] dark:bg-[#252945] text-[#555E8D] dark:text-[#9AA5D8]">
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EEF1FE] dark:bg-[#252945] text-[#555E8D] dark:text-[#9AA5D8]">
             {formatDuration(task.estimated_minutes)}
           </span>
         </div>
 
-        {/* Right Actions: Circular Action Button + Desktop Quick Icons */}
+        {/* Right Actions: Quick Desktop Icons + Circular Purple Arrow Button matching Image 3 */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Desktop Hover Icons */}
+          {/* Desktop Hover Quick Actions */}
           <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              onClick={() => onOpenDetails(task)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label={`View details for ${task.title}`}
+              onClick={() => onToggleStatus(task)}
+              className="p-1.5 rounded-full text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
+              aria-label={isCompleted ? `Reopen ${task.title}` : `Complete ${task.title}`}
             >
-              <ChevronRight className="w-4 h-4" />
+              <Check className="w-4 h-4" />
             </button>
             <button
               type="button"
@@ -240,26 +288,22 @@ export default function TaskCard({
             </button>
           </div>
 
-          {/* Prominent Circular Action Button matching Image 2 */}
+          {/* Prominent Circular Action Button with ArrowUpRight matching Image 3 */}
           <button
             type="button"
-            onClick={() => onToggleStatus(task)}
+            onClick={() => onOpenDetails(task)}
             className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md shadow-[#5D64D9]/25 hover:scale-105 active:scale-95 ${
               isCompleted
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : "bg-[#5D64D9] hover:bg-[#4D54C7] text-white"
             }`}
-            aria-label={
-              isCompleted
-                ? `Mark task as uncompleted: ${task.title}`
-                : `Complete task: ${task.title}`
-            }
+            aria-label={`Open details for ${task.title}`}
           >
-            <Check
-              className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                isCompleted ? "stroke-[3]" : "stroke-[2.5]"
-              }`}
-            />
+            {isCompleted ? (
+              <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
+            ) : (
+              <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+            )}
           </button>
         </div>
       </div>

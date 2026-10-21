@@ -39,6 +39,8 @@ class CreateTaskRequest(BaseModel):
     priority: Optional[TaskPriority] = TaskPriority.medium
     category: Optional[TaskCategory] = TaskCategory.Other
     due_at: Optional[datetime] = None
+    time_range: Optional[str] = None
+    collaborators: Optional[List[str]] = []
     estimated_minutes: Optional[int] = Field(default=None, ge=0, le=10080)
 
 
@@ -49,6 +51,8 @@ class UpdateTaskRequest(BaseModel):
     priority: Optional[TaskPriority] = None
     category: Optional[TaskCategory] = None
     due_at: Optional[datetime] = None
+    time_range: Optional[str] = None
+    collaborators: Optional[List[str]] = None
     estimated_minutes: Optional[int] = Field(default=None, ge=0, le=10080)
     completed_at: Optional[datetime] = None
 
@@ -81,6 +85,8 @@ class TaskResponse(BaseModel):
     priority: TaskPriority
     category: TaskCategory
     due_at: Optional[str] = None
+    time_range: Optional[str] = None
+    collaborators: Optional[List[str]] = []
     estimated_minutes: Optional[int] = None
     completed_at: Optional[str] = None
     created_at: str

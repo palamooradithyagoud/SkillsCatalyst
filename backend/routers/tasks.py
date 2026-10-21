@@ -98,6 +98,8 @@ async def list_tasks(
                     priority=row.get("priority") or "medium",
                     category=row.get("category") or "Other",
                     due_at=row.get("due_at"),
+                    time_range=row.get("time_range"),
+                    collaborators=row.get("collaborators") or [],
                     estimated_minutes=row.get("estimated_minutes"),
                     completed_at=row.get("completed_at"),
                     created_at=str(row.get("created_at")),
@@ -214,6 +216,8 @@ async def create_task(
         "priority": payload.priority.value if payload.priority else "medium",
         "category": payload.category.value if payload.category else "Other",
         "due_at": payload.due_at.isoformat() if payload.due_at else None,
+        "time_range": payload.time_range,
+        "collaborators": payload.collaborators or [],
         "estimated_minutes": payload.estimated_minutes,
         "completed_at": completed_at,
     }
@@ -236,6 +240,8 @@ async def create_task(
             priority=created.get("priority") or "medium",
             category=created.get("category") or "Other",
             due_at=created.get("due_at"),
+            time_range=created.get("time_range"),
+            collaborators=created.get("collaborators") or [],
             estimated_minutes=created.get("estimated_minutes"),
             completed_at=created.get("completed_at"),
             created_at=str(created.get("created_at")),
@@ -287,6 +293,8 @@ async def get_task(
             priority=row.get("priority") or "medium",
             category=row.get("category") or "Other",
             due_at=row.get("due_at"),
+            time_range=row.get("time_range"),
+            collaborators=row.get("collaborators") or [],
             estimated_minutes=row.get("estimated_minutes"),
             completed_at=row.get("completed_at"),
             created_at=str(row.get("created_at")),
@@ -342,6 +350,10 @@ async def update_task(
         update_data["category"] = payload.category.value
     if payload.due_at is not None:
         update_data["due_at"] = payload.due_at.isoformat()
+    if payload.time_range is not None:
+        update_data["time_range"] = payload.time_range
+    if payload.collaborators is not None:
+        update_data["collaborators"] = payload.collaborators
     if payload.estimated_minutes is not None:
         update_data["estimated_minutes"] = payload.estimated_minutes
 
@@ -385,6 +397,8 @@ async def update_task(
             priority=row.get("priority") or "medium",
             category=row.get("category") or "Other",
             due_at=row.get("due_at"),
+            time_range=row.get("time_range"),
+            collaborators=row.get("collaborators") or [],
             estimated_minutes=row.get("estimated_minutes"),
             completed_at=row.get("completed_at"),
             created_at=str(row.get("created_at")),

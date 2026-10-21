@@ -12,6 +12,7 @@ import {
   CheckSquare,
   BarChart3,
   User,
+  ChevronLeft,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -41,7 +42,6 @@ import {
 
 import TaskDashboardOverview from "@/components/tasks/TaskDashboardOverview";
 import TaskViewTabs from "@/components/tasks/TaskViewTabs";
-import TaskFilters from "@/components/tasks/TaskFilters";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskModal from "@/components/tasks/TaskModal";
 import TaskDetailDrawer from "@/components/tasks/TaskDetailDrawer";
@@ -251,7 +251,7 @@ export default function TasksPage() {
     if (activeView === "upcoming") return "Upcoming tasks";
     if (activeView === "past_due") return "Past Due tasks";
     if (activeView === "in_progress") return "In Progress tasks";
-    return "Today's tasks";
+    return "All tasks";
   }, [activeView]);
 
   return (
@@ -265,17 +265,24 @@ export default function TasksPage() {
         <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#D4DCFC]/30 dark:bg-[#1A2040]/20 blur-3xl" />
       </div>
 
-      <div className="max-w-[1060px] xl:max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-7 space-y-5">
-        {/* ── Top Header Matching Image 2 ── */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="max-w-[1060px] xl:max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-5">
+        {/* ── Top Bar: Back Button ── */}
+        <div className="flex items-center">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1D30] border border-white/80 dark:border-neutral-800 shadow-xs flex items-center justify-center text-[#15192B] dark:text-white hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5 stroke-[2.2]" />
+          </button>
+        </div>
+
+        {/* ── Headline: "Your tasks" matching Image 3 ── */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-1">
           <div>
-            <h1 className="text-3xl sm:text-4xl tracking-tight leading-tight">
-              <span className="text-[#5C6488] dark:text-[#9AA5CC] font-medium block sm:inline">
-                Start{" "}
-              </span>
-              <span className="text-[#15192B] dark:text-white font-black">
-                today&apos;s tasks.
-              </span>
+            <h1 className="text-3xl sm:text-4xl font-black text-[#15192B] dark:text-white tracking-tight">
+              Your tasks
             </h1>
             <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 font-medium mt-1">
               Organize study sessions, assignments, coding practice, and project milestones.
@@ -286,7 +293,7 @@ export default function TasksPage() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>New Task</span>
@@ -313,7 +320,7 @@ export default function TasksPage() {
           </div>
         )}
 
-        {/* ── 1. Bento Dashboard Overview (Image 2 style) ── */}
+        {/* ── 1. Bento Dashboard Overview (Today, Completed, Upcoming, Past Due) ── */}
         <TaskDashboardOverview
           metrics={metrics}
           upcomingCount={tabCounts.upcoming}
@@ -321,7 +328,14 @@ export default function TasksPage() {
           onViewChange={handleViewChange}
         />
 
-        {/* ── 2. Section Header: "Today's tasks" & "View All" matching Image 2 ── */}
+        {/* ── 2. Filter Pills Tabs Matching Image 3 (All Tasks, In Progress, Completed, etc.) ── */}
+        <TaskViewTabs
+          activeView={activeView}
+          onSelectView={handleViewChange}
+          counts={tabCounts}
+        />
+
+        {/* ── 3. Section Header: Active View Name & "View All" ── */}
         <div className="flex items-center justify-between pt-1">
           <h2 className="text-base sm:text-lg font-black text-[#15192B] dark:text-white tracking-tight">
             {sectionTitle}
@@ -335,21 +349,7 @@ export default function TasksPage() {
           </button>
         </div>
 
-        {/* ── 3. Views Navigation Tabs ── */}
-        <TaskViewTabs
-          activeView={activeView}
-          onSelectView={handleViewChange}
-          counts={tabCounts}
-        />
-
-        {/* ── 4. Search & Filter Bar ── */}
-        <TaskFilters
-          filters={filters}
-          onChange={handleFilterChange}
-          onReset={handleResetFilters}
-        />
-
-        {/* ── 5. Main Tasks Content Area ── */}
+        {/* ── 4. Main Tasks Content Area ── */}
         <div className="space-y-3">
           {isLoading || isAuthLoading ? (
             <div className="py-16 text-center space-y-3 bg-white/75 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 shadow-xs">
@@ -386,7 +386,7 @@ export default function TasksPage() {
                 No tasks yet
               </h3>
               <p className="text-xs sm:text-sm text-[#7A82A6] dark:text-neutral-400 max-w-md mx-auto">
-                Your to-do list is empty. Create tasks with due dates, priorities, and subtasks to keep your prep on track.
+                Your to-do list is empty. Create tasks with due dates, priorities, time ranges, and study buddies to keep your prep on track.
               </p>
               <button
                 type="button"
@@ -419,7 +419,7 @@ export default function TasksPage() {
               </button>
             </div>
           ) : (
-            /* Task Cards List */
+            /* Task Cards List (Image 3 design with time ranges, avatars, and arrow action) */
             <div className="space-y-3">
               {visibleTasks.map((task) => (
                 <TaskCard
@@ -436,7 +436,7 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* ── Fixed Mobile Bottom Navigation Bar (Image 2 Style) ── */}
+      {/* ── Fixed Mobile Bottom Navigation Bar (Image 3 Style) ── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#151828]/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-neutral-800/80 py-2 px-6 flex items-center justify-around md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
         {/* 1. Home */}
         <button
@@ -452,15 +452,15 @@ export default function TasksPage() {
         {/* 2. Tasks (Active) */}
         <button
           type="button"
-          onClick={() => handleViewChange("today")}
+          onClick={() => handleViewChange("all")}
           className="flex flex-col items-center gap-0.5 text-[#5D64D9] dark:text-indigo-400 font-bold cursor-pointer"
-          aria-label="Today Tasks"
+          aria-label="Tasks"
         >
           <CheckSquare className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[10px]">Tasks</span>
         </button>
 
-        {/* 3. Center Floating (+) Action Button matching Image 2 */}
+        {/* 3. Center Floating (+) Action Button */}
         <button
           type="button"
           onClick={handleOpenCreateModal}
