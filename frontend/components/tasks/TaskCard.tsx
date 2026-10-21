@@ -117,10 +117,10 @@ export default function TaskCard({
     <div
       className={`group relative p-4 sm:p-5 rounded-[26px] sm:rounded-[30px] border transition-all duration-200 ${
         isCompleted
-          ? "bg-white/60 dark:bg-[#161826]/70 border-slate-200/50 dark:border-neutral-800/50 opacity-85"
+          ? "bg-white/60 dark:bg-[#14151B]/90 border-slate-200/50 dark:border-neutral-800/60 opacity-80"
           : overdue
-          ? "bg-white dark:bg-[#1A1D30] border-rose-300/80 dark:border-rose-900/50 shadow-[0_4px_24px_rgba(244,63,94,0.06)]"
-          : "bg-white dark:bg-[#1A1D30] border-white/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.04)] hover:shadow-lg hover:border-[#5D64D9]/40"
+          ? "bg-white dark:bg-[#18191F] border-rose-300/80 dark:border-rose-900/50 shadow-[0_4px_24px_rgba(244,63,94,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+          : "bg-white dark:bg-[#18191F] border-white/90 dark:border-neutral-800 shadow-[0_4px_24px_rgba(93,100,217,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] hover:shadow-lg hover:border-[#5D64D9]/40 hover:dark:border-[#B892FF]/40 hover:dark:shadow-[0_4px_24px_rgba(184,146,255,0.08)]"
       }`}
     >
       {/* ── Top Row: Time Range & Collaborator Avatars (Image 3 style) ── */}
@@ -133,7 +133,7 @@ export default function TaskCard({
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#5D64D9] dark:text-indigo-400" />
+              <Clock className="w-3.5 h-3.5 text-[#5D64D9] dark:text-[#C4A1FF]" />
               <span className="font-bold tracking-tight">{displayTime}</span>
             </div>
           )}
@@ -155,7 +155,7 @@ export default function TaskCard({
                   <div
                     key={name}
                     title={name}
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr ${grad} text-white flex items-center justify-center text-[10px] sm:text-xs font-black shadow-xs ring-2 ring-white dark:ring-[#1A1D30]`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr ${grad} text-white flex items-center justify-center text-[10px] sm:text-xs font-black shadow-xs ring-2 ring-white dark:ring-[#18191F]`}
                   >
                     {initials}
                   </div>
@@ -164,7 +164,7 @@ export default function TaskCard({
               {collaborators.length > 2 && (
                 <div
                   title={`${collaborators.length - 2} more collaborators`}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8D4C3] text-[#6D4C3D] text-[10px] sm:text-xs font-black flex items-center justify-center ring-2 ring-white dark:ring-[#1A1D30] shadow-xs"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8D4C3] text-[#6D4C3D] text-[10px] sm:text-xs font-black flex items-center justify-center ring-2 ring-white dark:ring-[#18191F] shadow-xs"
                 >
                   +{collaborators.length - 2}
                 </div>
@@ -190,7 +190,7 @@ export default function TaskCard({
         <button
           type="button"
           onClick={() => onOpenDetails(task)}
-          className="text-left w-full cursor-pointer group-hover:text-[#5D64D9] transition-colors"
+          className="text-left w-full cursor-pointer group-hover:text-[#5D64D9] dark:group-hover:text-[#C4A1FF] transition-colors"
           aria-label={`Open details for task: ${task.title}`}
         >
           <h3
@@ -218,7 +218,7 @@ export default function TaskCard({
       {/* ── Subtasks Progress Bar (if subtasks exist) ── */}
       {totalSubtasks > 0 && (
         <div
-          className="mt-3 flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-neutral-800/50 p-2 rounded-xl"
+          className="mt-3 flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-[#121318] dark:border dark:border-neutral-800/70 p-2 rounded-xl"
           onClick={() => onOpenDetails(task)}
           role="button"
           tabIndex={0}
@@ -230,42 +230,42 @@ export default function TaskCard({
           }}
           aria-label={`Subtasks progress: ${completedSubtasks} of ${totalSubtasks} completed.`}
         >
-          <ListTree className="w-3.5 h-3.5 text-[#5D64D9] dark:text-indigo-400 shrink-0" />
-          <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-neutral-700 overflow-hidden">
+          <ListTree className="w-3.5 h-3.5 text-[#5D64D9] dark:text-[#C4A1FF] shrink-0" />
+          <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-neutral-800 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#5D64D9] to-emerald-500 rounded-full transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#5D64D9] to-emerald-500 dark:from-[#B892FF] dark:via-[#C4A1FF] dark:to-[#D8B4FE] rounded-full transition-all duration-300"
               style={{ width: `${subtaskPct}%` }}
             />
           </div>
-          <span className="text-[11px] font-bold text-[#15192B] dark:text-white shrink-0">
+          <span className="text-[11px] font-bold text-[#15192B] dark:text-[#E9D5FF] shrink-0">
             {completedSubtasks}/{totalSubtasks}
           </span>
         </div>
       )}
 
       {/* ── Bottom Row: Capsule Pills & Circular Action Button matching Image 3 ── */}
-      <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
+      <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between gap-3">
         {/* Left Capsule Pills matching Image 3 */}
         <div className="flex flex-wrap items-center gap-2">
           {/* 1. Dark Capsule */}
-          <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#181A24] dark:bg-neutral-900 text-white shadow-xs">
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#181A24] dark:bg-[#121318] dark:border dark:border-neutral-800 dark:text-neutral-200 text-white shadow-xs">
             {getStatusPillLabel()}
           </span>
 
-          {/* 2. Light Periwinkle Duration Capsule */}
-          <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EEF1FE] dark:bg-[#252945] text-[#555E8D] dark:text-[#9AA5D8]">
+          {/* 2. Light Periwinkle / Dark Lilac Duration Capsule */}
+          <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EEF1FE] dark:bg-[#B892FF]/15 dark:border dark:border-[#B892FF]/30 text-[#555E8D] dark:text-[#E9D5FF]">
             {formatDuration(task.estimated_minutes)}
           </span>
         </div>
 
-        {/* Right Actions: Quick Desktop Icons + Circular Purple Arrow Button matching Image 3 */}
+        {/* Right Actions: Quick Desktop Icons + Circular Purple/Lilac Arrow Button matching Image 3 */}
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Desktop Hover Quick Actions */}
           <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={() => onToggleStatus(task)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
+              className="p-1.5 rounded-full text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#121318] transition-colors cursor-pointer"
               aria-label={isCompleted ? `Reopen ${task.title}` : `Complete ${task.title}`}
             >
               <Check className="w-4 h-4" />
@@ -273,7 +273,7 @@ export default function TaskCard({
             <button
               type="button"
               onClick={() => onEdit(task)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors cursor-pointer"
+              className="p-1.5 rounded-full text-slate-400 hover:text-[#5D64D9] dark:hover:text-[#C4A1FF] hover:bg-indigo-50 dark:hover:bg-[#121318] transition-colors cursor-pointer"
               aria-label={`Edit ${task.title}`}
             >
               <Edit3 className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function TaskCard({
             <button
               type="button"
               onClick={() => onDelete(task)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+              className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
               aria-label={`Delete ${task.title}`}
             >
               <Trash2 className="w-4 h-4" />
@@ -292,10 +292,10 @@ export default function TaskCard({
           <button
             type="button"
             onClick={() => onOpenDetails(task)}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md shadow-[#5D64D9]/25 hover:scale-105 active:scale-95 ${
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 ${
               isCompleted
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                : "bg-[#5D64D9] hover:bg-[#4D54C7] text-white"
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-[#0F0A1C]"
+                : "bg-[#5D64D9] hover:bg-[#4D54C7] text-white shadow-[#5D64D9]/25 dark:bg-[#B892FF] dark:hover:bg-[#A87FFF] dark:text-[#0F0A1C] dark:shadow-[0_4px_16px_rgba(184,146,255,0.35)]"
             }`}
             aria-label={`Open details for ${task.title}`}
           >

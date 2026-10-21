@@ -251,14 +251,14 @@ export default function TasksPage() {
   }, [activeView]);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#CCD5FA]/50 via-[#DDE4FC]/40 to-[#EEF3FE] dark:from-[#0E111E] dark:via-[#111425] dark:to-[#0A0C16] text-[#15192B] dark:text-neutral-100 font-sans pb-28 md:pb-16 selection:bg-[#5D64D9]/20">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#CCD5FA]/50 via-[#DDE4FC]/40 to-[#EEF3FE] dark:bg-black dark:from-black dark:via-black dark:to-black text-[#15192B] dark:text-neutral-100 font-sans pb-28 md:pb-16 selection:bg-[#5D64D9]/20 dark:selection:bg-[#B892FF]/30">
       {/* ── Ambient Background Blur Shapes ── */}
       <div
         className="fixed inset-0 pointer-events-none overflow-hidden -z-10"
         aria-hidden="true"
       >
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#B8C6F9]/30 dark:bg-[#1D2447]/20 blur-3xl" />
-        <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#D4DCFC]/30 dark:bg-[#1A2040]/20 blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#B8C6F9]/30 dark:bg-[#B892FF]/5 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#D4DCFC]/30 dark:bg-[#C4A1FF]/5 blur-3xl pointer-events-none" />
       </div>
 
       <div className="w-full max-w-[1060px] xl:max-w-[1100px] mx-auto px-0.5 sm:px-4 md:px-6 pt-0 sm:pt-3 space-y-3.5 sm:space-y-5">
@@ -267,7 +267,7 @@ export default function TasksPage() {
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#1A1D30] border border-white/80 dark:border-neutral-800 shadow-xs flex items-center justify-center text-[#15192B] dark:text-white hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#18191F] border border-white/80 dark:border-neutral-800 shadow-xs flex items-center justify-center text-[#15192B] dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-[#202128] dark:hover:border-[#B892FF]/40 dark:hover:text-[#C4A1FF] transition-all cursor-pointer"
             aria-label="Go back"
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.2]" />
@@ -289,7 +289,7 @@ export default function TasksPage() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-lg shadow-[#5D64D9]/25 dark:bg-[#B892FF] dark:hover:bg-[#A87FFF] dark:text-[#0F0A1C] dark:font-black dark:shadow-[0_4px_24px_rgba(184,146,255,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
             aria-label="Create new task"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
@@ -301,7 +301,7 @@ export default function TasksPage() {
         {actionError && (
           <div
             role="alert"
-            className="p-3.5 rounded-[20px] bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 shadow-xs"
+            className="p-3.5 rounded-[20px] bg-rose-50 border border-rose-200 text-rose-800 dark:bg-[#18191F] dark:border-rose-900/60 dark:text-rose-200 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 shadow-xs"
           >
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
@@ -340,7 +340,7 @@ export default function TasksPage() {
           <button
             type="button"
             onClick={() => handleViewChange("all")}
-            className="text-xs sm:text-sm font-bold text-[#5D64D9] dark:text-indigo-400 hover:text-[#4A50BC] hover:underline cursor-pointer transition-colors"
+            className="text-xs sm:text-sm font-bold text-[#5D64D9] dark:text-[#C4A1FF] hover:text-[#4A50BC] dark:hover:text-[#D8B4FE] hover:underline cursor-pointer transition-colors"
           >
             View All
           </button>
@@ -349,14 +349,14 @@ export default function TasksPage() {
         {/* ── 4. Main Tasks Content Area ── */}
         <div className="space-y-3">
           {isLoading || isAuthLoading ? (
-            <div className="py-16 text-center space-y-3 bg-white/75 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 shadow-xs">
-              <Loader2 className="w-7 h-7 text-[#5D64D9] animate-spin mx-auto" />
+            <div className="py-16 text-center space-y-3 bg-white/75 dark:bg-[#18191F] backdrop-blur-md rounded-[28px] border border-white/80 dark:border-neutral-800 shadow-xs">
+              <Loader2 className="w-7 h-7 text-[#5D64D9] dark:text-[#C4A1FF] animate-spin mx-auto" />
               <p className="text-xs sm:text-sm font-semibold text-[#7A82A6] dark:text-neutral-400">
                 Loading your tasks...
               </p>
             </div>
           ) : isError ? (
-            <div className="py-12 text-center space-y-3 bg-white/75 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-[28px] border border-rose-200/80 dark:border-rose-950/50 p-6 shadow-xs">
+            <div className="py-12 text-center space-y-3 bg-white/75 dark:bg-[#18191F] backdrop-blur-md rounded-[28px] border border-rose-200/80 dark:border-rose-900/50 p-6 shadow-xs">
               <AlertCircle className="w-8 h-8 text-rose-600 dark:text-rose-400 mx-auto" />
               <h3 className="text-sm sm:text-base font-bold text-[#15192B] dark:text-white">
                 Unable to load tasks
@@ -367,7 +367,7 @@ export default function TasksPage() {
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-[#121318] dark:border dark:border-[#B892FF]/30 dark:text-[#C4A1FF] dark:hover:bg-[#B892FF]/15 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Try again</span>
@@ -375,8 +375,8 @@ export default function TasksPage() {
             </div>
           ) : allTasks.length === 0 ? (
             /* Empty Database State */
-            <div className="py-16 text-center space-y-3 bg-white/80 dark:bg-[#1A1D30]/85 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 p-6 shadow-xs">
-              <div className="w-12 h-12 rounded-full bg-[#5D64D9]/10 text-[#5D64D9] dark:text-indigo-400 flex items-center justify-center mx-auto">
+            <div className="py-16 text-center space-y-3 bg-white/80 dark:bg-[#18191F] backdrop-blur-md rounded-[28px] border border-white/80 dark:border-neutral-800 p-6 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-[#5D64D9]/10 text-[#5D64D9] dark:bg-[#121318] dark:border dark:border-neutral-800 dark:text-[#C4A1FF] flex items-center justify-center mx-auto">
                 <ListTodo className="w-6 h-6 stroke-[2.2]" />
               </div>
               <h3 className="text-base sm:text-lg font-bold text-[#15192B] dark:text-white">
@@ -388,7 +388,7 @@ export default function TasksPage() {
               <button
                 type="button"
                 onClick={handleOpenCreateModal}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 dark:bg-[#B892FF] dark:hover:bg-[#A87FFF] dark:text-[#0F0A1C] dark:font-black dark:shadow-[0_4px_24px_rgba(184,146,255,0.35)] transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Create your first task</span>
@@ -396,8 +396,8 @@ export default function TasksPage() {
             </div>
           ) : visibleTasks.length === 0 ? (
             /* No Search/Filter Results State */
-            <div className="py-12 text-center space-y-3 bg-white/80 dark:bg-[#1A1D30]/85 backdrop-blur-md rounded-[28px] border border-white/80 dark:border-white/10 p-6 shadow-xs">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#7A82A6] dark:text-neutral-400 flex items-center justify-center mx-auto">
+            <div className="py-12 text-center space-y-3 bg-white/80 dark:bg-[#18191F] backdrop-blur-md rounded-[28px] border border-white/80 dark:border-neutral-800 p-6 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#7A82A6] dark:text-neutral-400 flex items-center justify-center mx-auto">
                 <Search className="w-5 h-5 stroke-[2.2]" />
               </div>
               <h3 className="text-sm sm:text-base font-bold text-[#15192B] dark:text-white">
@@ -409,7 +409,7 @@ export default function TasksPage() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-indigo-950/50 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#5D64D9] bg-[#EEF1FE] hover:bg-[#DDE4FC] dark:bg-[#121318] dark:border dark:border-[#B892FF]/30 dark:text-[#C4A1FF] dark:hover:bg-[#B892FF]/15 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset filters</span>

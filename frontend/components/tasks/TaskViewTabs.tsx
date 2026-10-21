@@ -41,7 +41,7 @@ export default function TaskViewTabs({
     <div
       role="tablist"
       aria-label="Task views"
-      className="flex items-center gap-1.5 p-1 sm:p-1.5 bg-white/70 dark:bg-[#1A1D30]/80 backdrop-blur-md rounded-2xl border border-white/80 dark:border-white/10 shadow-xs overflow-x-auto no-scrollbar overscroll-contain"
+      className="flex items-center gap-1.5 p-1 sm:p-1.5 bg-white/70 dark:bg-[#18191F] backdrop-blur-md rounded-2xl border border-white/80 dark:border-neutral-800 shadow-xs dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] overflow-x-auto no-scrollbar overscroll-contain"
     >
       {TABS.map((tab) => {
         const Icon = tab.icon;
@@ -59,14 +59,14 @@ export default function TaskViewTabs({
             onClick={() => onSelectView(tab.id)}
             className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 cursor-pointer ${
               isActive
-                ? "bg-white dark:bg-[#252A42] text-[#15192B] dark:text-white shadow-xs border border-slate-100 dark:border-white/10 font-bold"
-                : "text-[#7A82A6] dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-white hover:bg-white/60 dark:hover:bg-neutral-800/40"
+                ? "bg-white dark:bg-[#121318] text-[#15192B] dark:text-[#F3E8FF] shadow-xs border border-slate-100 dark:border-[#B892FF]/40 font-bold dark:shadow-[0_0_12px_rgba(184,146,255,0.12)]"
+                : "text-[#7A82A6] dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-[#F3E8FF] hover:bg-white/60 dark:hover:bg-[#121318]/70"
             }`}
           >
             <Icon
               className={`w-4 h-4 ${
                 isActive
-                  ? "text-[#5D64D9] dark:text-indigo-400"
+                  ? "text-[#5D64D9] dark:text-[#C4A1FF]"
                   : "text-[#8C93B3] dark:text-neutral-500"
               }`}
             />
@@ -74,8 +74,8 @@ export default function TaskViewTabs({
             <span
               className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
                 isActive
-                  ? "bg-[#EEF1FE] dark:bg-[#252945] text-[#555E8D] dark:text-[#9AA5D8]"
-                  : "bg-slate-200/60 dark:bg-neutral-800 text-[#8C93B3] dark:text-neutral-400"
+                  ? "bg-[#EEF1FE] dark:bg-[#B892FF]/20 text-[#555E8D] dark:text-[#E9D5FF] dark:border dark:border-[#B892FF]/30"
+                  : "bg-slate-200/60 dark:bg-[#121318] text-[#8C93B3] dark:text-neutral-400 dark:border dark:border-neutral-800"
               }`}
             >
               {count}

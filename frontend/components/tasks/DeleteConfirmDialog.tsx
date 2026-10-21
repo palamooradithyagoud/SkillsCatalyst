@@ -48,7 +48,7 @@ export default function DeleteConfirmDialog({
       aria-labelledby="delete-dialog-title"
       aria-describedby="delete-dialog-description"
     >
-      <div className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 p-5 sm:p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-sm bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200/80 dark:border-neutral-800 p-5 sm:p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-5 h-5" />
@@ -79,7 +79,7 @@ export default function DeleteConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#121318] transition-colors cursor-pointer"
           >
             Cancel
           </button>

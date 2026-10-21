@@ -150,14 +150,14 @@ export default function TaskModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="task-modal-title"
     >
-      <div className="relative w-full max-w-2xl bg-white dark:bg-[#181B2B] rounded-[28px] border border-slate-200/80 dark:border-neutral-800 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#18191F] rounded-[28px] border border-slate-200/80 dark:border-neutral-800 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col">
         {/* ── Fixed Sticky Modal Header ── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-[#181B2B]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-[#18191F]">
           <div>
             <h2
               id="task-modal-title"
@@ -175,7 +175,7 @@ export default function TaskModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:text-neutral-400 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-600 dark:text-neutral-400 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-[#121318] transition-colors cursor-pointer"
             aria-label="Close task modal"
           >
             <X className="w-5 h-5" />
@@ -219,11 +219,11 @@ export default function TaskModal({
                   setTitle(e.target.value);
                   if (errors.title) setErrors((prev) => ({ ...prev, title: "" }));
                 }}
-                className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-slate-50 dark:bg-neutral-800/80 border ${
+                className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-slate-50 dark:bg-[#121318] border ${
                   errors.title
                     ? "border-rose-400 focus:border-rose-500"
-                    : "border-slate-200/80 dark:border-neutral-700 focus:border-[#5D64D9]"
-                } text-[#15192B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/20 transition-all`}
+                    : "border-slate-200/80 dark:border-neutral-800 focus:border-[#5D64D9] dark:focus:border-[#B892FF]"
+                } text-[#15192B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/20 dark:focus:ring-[#B892FF]/20 transition-all`}
               />
               {errors.title && (
                 <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 font-medium">
@@ -247,18 +247,18 @@ export default function TaskModal({
                 placeholder=""
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-slate-50 dark:bg-neutral-800/80 border border-slate-200/80 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/20 focus:border-[#5D64D9] transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/20 dark:focus:ring-[#B892FF]/20 focus:border-[#5D64D9] dark:focus:border-[#B892FF] transition-all"
               />
             </div>
 
             {/* ── Time Range / Schedule ── */}
-            <div className="p-3.5 rounded-2xl bg-[#EEF1FE]/40 dark:bg-[#1E2238]/60 border border-[#5D64D9]/20 space-y-2">
+            <div className="p-3.5 rounded-2xl bg-[#EEF1FE]/40 dark:bg-[#121318] border border-[#5D64D9]/20 dark:border-[#B892FF]/20 space-y-2">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="task-time-range-input"
                   className="text-xs font-bold text-[#15192B] dark:text-white flex items-center gap-1.5"
                 >
-                  <Clock className="w-3.5 h-3.5 text-[#5D64D9] dark:text-indigo-400" />
+                  <Clock className="w-3.5 h-3.5 text-[#5D64D9] dark:text-[#C4A1FF]" />
                   <span>Time Range / Schedule</span>
                 </label>
                 <span className="text-[10px] text-[#7A82A6] dark:text-neutral-400">
@@ -272,7 +272,7 @@ export default function TaskModal({
                 placeholder="10:00-11:30 PM"
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9]"
+                className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF]"
               />
 
               {/* Presets */}
@@ -287,8 +287,8 @@ export default function TaskModal({
                     onClick={() => setTimeRange(preset)}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
                       timeRange === preset
-                        ? "bg-[#5D64D9] text-white"
-                        : "bg-white dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700 hover:border-[#5D64D9]"
+                        ? "bg-[#5D64D9] text-white dark:bg-[#B892FF] dark:text-[#0F0A1C] dark:font-bold"
+                        : "bg-white dark:bg-[#18191F] text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-800 hover:border-[#5D64D9] dark:hover:border-[#B892FF]/50"
                     }`}
                   >
                     {preset}
@@ -298,10 +298,10 @@ export default function TaskModal({
             </div>
 
             {/* ── Study Buddies / Collaborators (Locked & Coming Soon) ── */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#1A1D30]/60 border border-slate-200/80 dark:border-neutral-700/80 shadow-xs space-y-2.5">
+            <div className="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-[#5D64D9] dark:text-indigo-400" />
+                  <Users className="w-3.5 h-3.5 text-[#5D64D9] dark:text-[#C4A1FF]" />
                   <span className="text-xs font-bold text-[#15192B] dark:text-white">
                     Study Buddies / Collaborators
                   </span>
@@ -317,7 +317,7 @@ export default function TaskModal({
                 {AVAILABLE_STUDY_BUDDIES.map((buddy) => (
                   <div
                     key={buddy.id}
-                    className="flex items-center gap-2 p-2 rounded-xl border border-slate-200/80 dark:border-neutral-700 bg-white/80 dark:bg-[#181B2B]/80 text-left"
+                    className="flex items-center gap-2 p-2 rounded-xl border border-slate-200/80 dark:border-neutral-800 bg-white/80 dark:bg-[#18191F] text-left"
                   >
                     <div
                       className={`w-7 h-7 rounded-full bg-gradient-to-tr ${buddy.avatarBg} text-white flex items-center justify-center text-[10px] font-black shrink-0`}
@@ -343,12 +343,12 @@ export default function TaskModal({
                   type="text"
                   disabled
                   placeholder="Study buddy collaboration coming soon..."
-                  className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-neutral-800 border border-slate-200/90 dark:border-neutral-700 text-slate-400 dark:text-neutral-500 cursor-not-allowed"
+                  className="flex-1 px-3 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 cursor-not-allowed"
                 />
                 <button
                   type="button"
                   disabled
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-neutral-700 text-slate-400 dark:text-neutral-500 cursor-not-allowed flex items-center gap-1 shrink-0"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-[#18191F] border dark:border-neutral-800 text-slate-400 dark:text-neutral-500 cursor-not-allowed flex items-center gap-1 shrink-0"
                 >
                   <Lock className="w-3 h-3" />
                   <span>Add</span>
@@ -369,7 +369,7 @@ export default function TaskModal({
                   id="task-category-select"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as TaskCategory)}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
                 >
                   {TASK_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -390,7 +390,7 @@ export default function TaskModal({
                   id="task-priority-select"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
                 >
                   {TASK_PRIORITIES.map((pr) => (
                     <option key={pr} value={pr}>
@@ -418,7 +418,7 @@ export default function TaskModal({
                     setDueAt(e.target.value);
                     if (errors.due_at) setErrors((prev) => ({ ...prev, due_at: "" }));
                   }}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
                 />
               </div>
 
@@ -439,7 +439,7 @@ export default function TaskModal({
                     placeholder="Minutes"
                     value={estimatedMinutes}
                     onChange={(e) => setEstimatedMinutes(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9]"
+                    className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF]"
                   />
                 </div>
 
@@ -455,7 +455,7 @@ export default function TaskModal({
                       id="task-status-select"
                       value={status}
                       onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                      className="w-full px-2.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+                      className="w-full px-2.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
                     >
                       {TASK_STATUSES.map((st) => (
                         <option key={st} value={st}>
@@ -470,19 +470,19 @@ export default function TaskModal({
           </div>
 
           {/* ── Fixed Sticky Modal Footer ── */}
-          <div className="flex items-center justify-end gap-3 px-6 py-3.5 border-t border-slate-100 dark:border-neutral-800 shrink-0 bg-white/95 dark:bg-[#181B2B]/95 backdrop-blur-md">
+          <div className="flex items-center justify-end gap-3 px-6 py-3.5 border-t border-slate-100 dark:border-neutral-800 shrink-0 bg-white/95 dark:bg-[#18191F]/95 backdrop-blur-md">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 hover:text-[#15192B] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#121318] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#5D64D9] hover:bg-[#4D54C7] shadow-md shadow-[#5D64D9]/25 dark:bg-[#B892FF] dark:hover:bg-[#A87FFF] dark:text-[#0F0A1C] dark:font-bold dark:shadow-[0_4px_20px_rgba(184,146,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{isEditing ? "Save Changes" : "Create Task"}</span>

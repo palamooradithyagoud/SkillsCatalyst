@@ -42,7 +42,7 @@ export default function TaskFilters({
   );
 
   return (
-    <div className="w-full space-y-2.5 bg-white/75 dark:bg-[#1A1D30]/85 backdrop-blur-md p-3.5 sm:p-4 rounded-[24px] border border-white/80 dark:border-white/10 shadow-xs">
+    <div className="w-full space-y-2.5 bg-white/75 dark:bg-[#18191F] backdrop-blur-md p-3.5 sm:p-4 rounded-[24px] border border-white/80 dark:border-neutral-800 shadow-xs dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
       {/* ── Top Bar: Search Input + Toggle Advanced + Reset ── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
         <div className="relative flex-1">
@@ -54,7 +54,7 @@ export default function TaskFilters({
             onChange={(e) => onChange({ search: e.target.value })}
             placeholder="Search tasks by title..."
             aria-label="Search tasks by title"
-            className="w-full pl-9 pr-9 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-neutral-800/80 border border-slate-200/70 dark:border-neutral-700 text-[#15192B] dark:text-white placeholder-[#8C93B3] dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/30 focus:border-[#5D64D9] transition-all"
+            className="w-full pl-9 pr-9 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-[#121318] border border-slate-200/70 dark:border-neutral-800 text-[#15192B] dark:text-white placeholder-[#8C93B3] dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#5D64D9]/30 dark:focus:ring-[#B892FF]/20 focus:border-[#5D64D9] dark:focus:border-[#B892FF] transition-all"
           />
           {filters.search && (
             <button
@@ -74,8 +74,8 @@ export default function TaskFilters({
             onClick={() => setShowAdvanced(!showAdvanced)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
               showAdvanced || hasActiveFilters
-                ? "bg-[#EEF1FE] text-[#5D64D9] border-[#5D64D9]/30 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800"
-                : "bg-white dark:bg-neutral-800 border-slate-200/80 dark:border-neutral-700 text-[#7A82A6] hover:text-[#15192B] dark:hover:text-white"
+                ? "bg-[#EEF1FE] text-[#5D64D9] border-[#5D64D9]/30 dark:bg-[#B892FF]/15 dark:text-[#E9D5FF] dark:border-[#B892FF]/40"
+                : "bg-white dark:bg-[#121318] border-slate-200/80 dark:border-neutral-800 text-[#7A82A6] hover:text-[#15192B] dark:hover:text-white"
             }`}
             aria-label="Toggle advanced filters"
           >
@@ -92,7 +92,7 @@ export default function TaskFilters({
             <button
               type="button"
               onClick={onReset}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 dark:bg-[#121318] transition-colors cursor-pointer"
               aria-label="Reset all filters"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -104,7 +104,7 @@ export default function TaskFilters({
 
       {/* ── Collapsible Advanced Filters Row ── */}
       {showAdvanced && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-100 dark:border-neutral-800/80">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-100 dark:border-neutral-800">
           {/* Status Filter */}
           <div>
             <label
@@ -120,7 +120,7 @@ export default function TaskFilters({
                 onChange({ status: e.target.value as "all" | any })
               }
               aria-label="Filter tasks by status"
-              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
             >
               <option value="all">All Statuses</option>
               {TASK_STATUSES.map((st) => (
@@ -146,7 +146,7 @@ export default function TaskFilters({
                 onChange({ priority: e.target.value as "all" | any })
               }
               aria-label="Filter tasks by priority"
-              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
             >
               <option value="all">All Priorities</option>
               {TASK_PRIORITIES.map((pr) => (
@@ -172,7 +172,7 @@ export default function TaskFilters({
                 onChange({ category: e.target.value as "all" | any })
               }
               aria-label="Filter tasks by category"
-              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+              className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
             >
               <option value="all">All Categories</option>
               {TASK_CATEGORIES.map((cat) => (
@@ -199,7 +199,7 @@ export default function TaskFilters({
                   onChange({ sortBy: e.target.value as any })
                 }
                 aria-label="Sort tasks by field"
-                className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] cursor-pointer"
+                className="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#15192B] dark:text-white focus:outline-none focus:border-[#5D64D9] dark:focus:border-[#B892FF] cursor-pointer"
               >
                 <option value="created_at">Date Created</option>
                 <option value="due_date">Due Date</option>
@@ -213,7 +213,7 @@ export default function TaskFilters({
                     sortOrder: filters.sortOrder === "asc" ? "desc" : "asc",
                   })
                 }
-                className="p-1.5 rounded-lg bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 text-[#7A82A6] hover:text-[#15192B] dark:hover:text-white transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg bg-white dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-[#7A82A6] hover:text-[#15192B] dark:hover:text-[#C4A1FF] transition-colors cursor-pointer shrink-0"
                 aria-label={`Current sort order: ${filters.sortOrder}. Click to toggle.`}
               >
                 <ArrowUpDown className="w-3.5 h-3.5" />
