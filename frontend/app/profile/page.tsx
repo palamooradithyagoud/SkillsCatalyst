@@ -21,7 +21,13 @@ import {
   Briefcase,
   FolderGit2,
   FileText,
+  Compass,
   Plus,
+  ArrowDownLeft,
+  MessageSquareWarning,
+  MoreHorizontal,
+  IndianRupee,
+  Clock,
   Trash2,
   Edit3,
   Eye,
@@ -377,6 +383,12 @@ export default function ProfilePage() {
 
   const displayName = personalForm.full_name || session?.name || (session?.email ? session.email.split("@")[0] : "Student Profile");
   const userHandle = personalForm.username ? `@${personalForm.username}` : "";
+  const favGoal =
+    careerPrefsForm.target_roles?.[0] ||
+    personalForm.headline ||
+    profileData.career_preferences?.target_roles?.[0] ||
+    profileData.academic?.target_role ||
+    "DevOps";
 
   // Categorized skills helper
   const SKILL_CATEGORIES = [
@@ -487,184 +499,113 @@ export default function ProfilePage() {
       />
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. TOP BENTO GRID: 3 MINI CARDS LEFT (col-span-5) & PROFILE RIGHT (col-span-7) */}
+      {/* 1. HEADER CARD (EMPTY FULL-WIDTH LILAC CARD WITH BOWL CURVE)        */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-3.5 items-stretch">
-        {/* Left Column: 3 Mini Cards (Resume, Courses, Projects) */}
-        <div className="col-span-5 flex flex-col gap-1.5 sm:gap-3 justify-between">
-          {/* Card 1: Resume */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="Resume card. Click or press Enter to preview or upload resume."
-            onClick={() => {
-              if (profileData.resume?.filename || resumePreviewUrl) {
-                setActiveModal("resume_preview");
-              } else {
-                fileInputRef.current?.click();
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
+      <div className="relative -mx-3 sm:-mx-4 -mt-4 sm:-mt-6 overflow-visible">
+        {/* Full-width lilac card: ~38% screen height, square top corners, empty */}
+        <div className="w-full h-[32vh] sm:h-[38vh] min-h-[220px] bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6]" />
+
+        {/* Downward Bowl Curve SVG: smooth downward arc (middle lowest, sides higher) */}
+        <div className="relative -mt-0.5 w-full overflow-hidden leading-none z-10 pointer-events-none">
+          <svg
+            viewBox="0 0 1000 100"
+            preserveAspectRatio="none"
+            className="w-full h-16 sm:h-24 fill-[#7C5CD6] block"
+          >
+            <path d="M 0,0 L 1000,0 Q 500,100 0,0 Z" />
+          </svg>
+        </div>
+
+        {/* ───────────────────────────────────────────────────────────────── */}
+        {/* 2. ICONS HALF OUTSIDE THE CARD (CENTERED ON THE CURVED BOTTOM)    */}
+        {/* ───────────────────────────────────────────────────────────────── */}
+        <div className="absolute left-0 right-0 z-30 bottom-0 pointer-events-auto">
+          <div className="max-w-md mx-auto px-4 sm:px-6 flex items-center justify-between">
+            {/* Button 1: Plus (Half on lilac card, half on white background) */}
+            <button
+              type="button"
+              onClick={() => {
                 if (profileData.resume?.filename || resumePreviewUrl) {
                   setActiveModal("resume_preview");
                 } else {
                   fileInputRef.current?.click();
                 }
-              }
-            }}
-            className="flex-1 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-          >
-            <div className="min-w-0 flex-1">
-              <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate">Resume</h3>
-              {profileData.resume?.filename || resumePreviewUrl ? (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] sm:text-xs font-bold text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 flex items-center gap-0.5">
-                    <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                    Preview
-                  </span>
-                  <span className="text-[9px] text-slate-300 dark:text-neutral-600">•</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                    className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-200 cursor-pointer focus:outline-none focus:underline"
-                    aria-label="Upload replacement resume"
-                  >
-                    Update
-                  </button>
-                </div>
-              ) : (
-                <p className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 mt-0.5 truncate">
-                  Upload resume
-                </p>
-              )}
-            </div>
-            <img
-              src="/images/profile/resume_3d.jpg"
-              alt="Resume"
-              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
-            />
-          </div>
+              }}
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              style={{
+                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
+                transform: "translateY(50%)",
+              }}
+              aria-label="Plus"
+              title="Plus"
+            >
+              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+            </button>
 
-          {/* Card 2: Roadmaps */}
-          <Link
-            href="/roadmaps"
-            className="flex-1 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 group"
-          >
-            <div className="min-w-0 flex-1">
-              <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate">Roadmaps</h3>
-              <p className="text-[9px] sm:text-xs font-semibold text-slate-400 dark:text-neutral-400 mt-0.5 truncate">Explore paths</p>
-            </div>
-            <img
-              src="/images/profile/courses_3d.jpg"
-              alt="Roadmaps"
-              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
-            />
-          </Link>
+            {/* Button 2: Down-Left Arrow (Dips lower along curve to stay half on, half out) */}
+            <a
+              href="#proof-of-work"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              style={{
+                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
+                transform: "translateY(88%)",
+              }}
+              aria-label="Down-left arrow"
+              title="Down-left arrow"
+            >
+              <ArrowDownLeft className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+            </a>
 
-          {/* Card 3: Projects */}
-          <a
-            href="#proof-of-work"
-            className="flex-1 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-2 sm:p-4 lg:p-5 border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-xs transition-all flex items-center justify-between gap-1.5 group"
-          >
-            <div className="min-w-0 flex-1">
-              <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white truncate">Projects</h3>
-              <p className="text-xs sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">
-                {profileData.projects.length || 0}
-              </p>
-            </div>
-            <img
-              src="/images/profile/projects_3d.jpg"
-              alt="Projects"
-              className="w-7 h-7 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-lg sm:rounded-2xl group-hover:scale-105 transition-transform shrink-0"
-            />
-          </a>
-        </div>
+            {/* Button 3: Chat bubble with exclamation mark (Dips lower along curve to stay half on, half out) */}
+            <Link
+              href="/roadmaps"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              style={{
+                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
+                transform: "translateY(88%)",
+              }}
+              aria-label="Chat bubble with exclamation mark"
+              title="Chat bubble with exclamation mark"
+            >
+              <MessageSquareWarning className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+            </Link>
 
-        {/* Right Card: Vibrant Deep Purple/Violet Monogram Profile */}
-        <div className="col-span-7 bg-gradient-to-br from-[#1E084E] via-[#3B0E7E] to-[#6A1EB0] rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-6 text-white shadow-md border border-purple-400/20 relative overflow-hidden flex flex-col justify-between min-h-[240px] sm:min-h-[320px] lg:min-h-[350px] group">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute -top-16 -right-16 w-56 h-56 bg-purple-400/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Center Monogram Initials / Big Profile Picture */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label="Change photo or avatar"
-            className="flex-1 flex items-center justify-center my-auto py-2 sm:py-3 relative z-10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/60 focus:ring-offset-2 rounded-2xl"
-            onClick={() => setActiveModal("avatar")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setActiveModal("avatar");
-              }
-            }}
-            title="Change photo or avatar"
-          >
-            {personalForm.avatar_url ? (
-              <img
-                src={personalForm.avatar_url}
-                alt={displayName}
-                className="w-28 h-28 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-56 lg:h-56 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/30 shadow-2xl group-hover:scale-[1.03] transition-all duration-300"
-              />
-            ) : (
-              <span className="text-5xl sm:text-8xl lg:text-9xl font-black text-white/95 tracking-tight select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-105">
-                {getInitials(displayName)}
-              </span>
-            )}
-          </div>
-
-          {/* Bottom Profile Details */}
-          <div className="relative z-10 space-y-0.5 mt-2">
-            {personalForm.username ? (
-              <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-purple-200/90 truncate">
-                @{personalForm.username}
-              </p>
-            ) : (
-              <Link
-                href="/settings/edit?tab=personal"
-                className="inline-block text-[10px] sm:text-xs font-semibold text-purple-200/80 hover:text-white transition-colors truncate"
-              >
-                Set unique username &rarr;
-              </Link>
-            )}
-            <h2 className="text-xs sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight truncate">
-              {displayName}
-            </h2>
-            <p className="text-[9px] sm:text-xs font-medium text-purple-200/80 truncate">
-              {personalForm.headline || "Student"}
-            </p>
+            {/* Button 4: Three dots (Half on lilac card, half on white background) */}
+            <Link
+              href="/settings/edit"
+              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+              style={{
+                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
+                transform: "translateY(50%)",
+              }}
+              aria-label="Three dots"
+              title="Three dots"
+            >
+              <MoreHorizontal className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
+            </Link>
           </div>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 2. SUB-BENTO BAR: FOLLOWERS PILL (col-span-5) & EDIT PROFILE (col-span-7) */}
+      {/* 3. BELOW THE CURVE: Two empty rounded cards side by side (White bg) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-3.5 items-stretch">
-        {/* Left Pill: Under Left Cards */}
-        <div className="col-span-5 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-full border border-slate-200/80 dark:border-neutral-800 px-2 sm:px-4 lg:px-6 py-2.5 sm:py-3.5 flex items-center justify-center gap-2 sm:gap-4 shadow-xs">
-          <div className="text-[11px] sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 truncate">
-            <span className="font-black text-slate-900 dark:text-white">0</span> Following
+      <div className="pt-16 sm:pt-20">
+        <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+          {/* Card 1: Rupee on light lilac circle */}
+          <div className="rounded-[26px] bg-[#F1EEF8] dark:bg-[#1A1824] border border-[#E3DEEE] dark:border-neutral-800 p-4 h-32 sm:h-40 flex flex-col justify-between shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-[#E0D5FA] dark:bg-[#342752] flex items-center justify-center text-[#4A2D99] dark:text-[#C5B4FA] shadow-xs">
+              <IndianRupee className="w-4 h-4 stroke-[2]" />
+            </div>
           </div>
-          <div className="w-px h-3 sm:h-4 bg-slate-200 dark:bg-neutral-800 shrink-0" />
-          <div className="text-[11px] sm:text-sm font-semibold text-slate-600 dark:text-neutral-400 truncate">
-            <span className="font-black text-slate-900 dark:text-white">0</span> Followers
+
+          {/* Card 2: Clock on light orange circle */}
+          <div className="rounded-[26px] bg-[#F1EEF8] dark:bg-[#1A1824] border border-[#E3DEEE] dark:border-neutral-800 p-4 h-32 sm:h-40 flex flex-col justify-between shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-[#FCE7D5] dark:bg-[#4A2E1A] flex items-center justify-center text-[#D96B27] dark:text-[#FBBF87] shadow-xs">
+              <Clock className="w-4 h-4 stroke-[2]" />
+            </div>
           </div>
         </div>
-
-        <Link
-          href="/settings/edit"
-          className="col-span-7 bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-full border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50/40 dark:hover:bg-[#20222A] px-2 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-bold text-slate-800 dark:text-white transition-all shadow-xs cursor-pointer"
-        >
-          <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-neutral-400 shrink-0" />
-          <span className="truncate">Edit Profile & Settings</span>
-        </Link>
       </div>
 
       {resumeMsg && (
