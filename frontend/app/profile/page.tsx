@@ -493,12 +493,12 @@ export default function ProfilePage() {
       />
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. HEADER CARD (LILAC CARD WITH BOWL CURVE & USER PROFILE DETAILS)  */}
+      {/* 1. HEADER CARD (TALL LILAC CARD DRAGGED DOWN WITH BOWL CURVE)       */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="relative -mx-3 sm:-mx-4 -mt-4 sm:-mt-6 overflow-visible">
-        {/* Lilac card body: photo on left, name/ID/followers on right */}
-        <div className="w-full bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6] pt-6 sm:pt-8 px-5 sm:px-8 pb-4 sm:pb-6 text-white">
-          <div className="max-w-md mx-auto flex items-center gap-4 sm:gap-5">
+        {/* Tall Lilac card body: photo on left, name/ID/role/followers on right */}
+        <div className="w-full bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6] min-h-[250px] sm:min-h-[300px] pt-8 sm:pt-12 px-5 sm:px-8 pb-10 sm:pb-14 text-white flex flex-col justify-center">
+          <div className="max-w-md mx-auto w-full flex items-center gap-4 sm:gap-6">
             {/* Left Side: User Photo */}
             <div
               role="button"
@@ -518,10 +518,10 @@ export default function ProfilePage() {
                 <img
                   src={personalForm.avatar_url}
                   alt={displayName}
-                  className="w-22 h-22 sm:w-28 sm:h-28 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/85 shadow-lg group-hover/avatar:scale-[1.03] transition-all duration-300"
+                  className="w-24 h-24 sm:w-30 sm:h-30 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/90 shadow-xl group-hover/avatar:scale-[1.03] transition-all duration-300"
                 />
               ) : (
-                <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/85 bg-white/20 backdrop-blur-md shadow-lg flex items-center justify-center group-hover/avatar:scale-[1.03] transition-all duration-300">
+                <div className="w-24 h-24 sm:w-30 sm:h-30 rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/90 bg-white/20 backdrop-blur-md shadow-xl flex items-center justify-center group-hover/avatar:scale-[1.03] transition-all duration-300">
                   <span className="text-3xl sm:text-4xl font-black text-white select-none drop-shadow-sm">
                     {getInitials(displayName)}
                   </span>
@@ -529,8 +529,8 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Right Side: Name (top), ID, and Followers/Following downside */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center space-y-1">
+            {/* Right Side: Name (top), ID, Role tag, and Followers/Following */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center space-y-1.5 sm:space-y-2">
               {/* Name (Top Right) */}
               <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight truncate drop-shadow-xs">
                 {displayName}
@@ -550,6 +550,14 @@ export default function ProfilePage() {
                 </Link>
               )}
 
+              {/* Fav Goal / Role Tag */}
+              {favGoal && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-semibold text-white/95 border border-white/25 w-fit truncate">
+                  <Target className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{favGoal}</span>
+                </div>
+              )}
+
               {/* Followers & Following Downside */}
               <div className="flex items-center gap-3.5 pt-1.5 border-t border-white/20 text-white">
                 <div className="flex items-baseline gap-1">
@@ -566,88 +574,87 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Downward Bowl Curve SVG: smooth downward arc (middle lowest, sides higher) */}
-        <div className="relative -mt-0.5 w-full overflow-hidden leading-none z-10 pointer-events-none">
+        {/* Downward Bowl Curve & Floating Buttons: Buttons centered on the curved bottom edge */}
+        <div className="relative -mt-0.5 w-full leading-none overflow-visible">
+          {/* Smooth Downward Arc SVG */}
           <svg
             viewBox="0 0 1000 100"
             preserveAspectRatio="none"
-            className="w-full h-16 sm:h-24 fill-[#7C5CD6] block"
+            className="w-full h-20 fill-[#7C5CD6] block"
           >
-            <path d="M 0,0 L 1000,0 Q 500,100 0,0 Z" />
+            <path d="M 0,0 L 1000,0 Q 500,200 0,0 Z" />
           </svg>
-        </div>
 
-        {/* ───────────────────────────────────────────────────────────────── */}
-        {/* 2. ICONS HALF OUTSIDE THE CARD (CENTERED ON THE CURVED BOTTOM)    */}
-        {/* ───────────────────────────────────────────────────────────────── */}
-        <div className="absolute left-0 right-0 z-30 bottom-0 pointer-events-auto">
-          <div className="max-w-md mx-auto px-4 sm:px-6 flex items-center justify-between">
-            {/* 1st Button: Resume */}
-            <button
-              type="button"
-              onClick={() => {
-                if (profileData.resume?.filename || resumePreviewUrl) {
-                  setActiveModal("resume_preview");
-                } else {
-                  fileInputRef.current?.click();
-                }
-              }}
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
-              style={{
-                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
-                transform: "translateY(50%)",
-              }}
-              aria-label="Resume"
-              title="Resume (Preview / Upload)"
-            >
-              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
-            </button>
+          {/* 4 Floating Circular Buttons: half on the lilac card, half outside */}
+          <div className="absolute inset-x-0 top-0 z-30 pointer-events-none">
+            <div className="max-w-md mx-auto px-5 sm:px-7 flex items-center justify-between">
+              {/* 1st Button: Resume */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (profileData.resume?.filename || resumePreviewUrl) {
+                    setActiveModal("resume_preview");
+                  } else {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                className="pointer-events-auto w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#E7DCFE] to-[#D5C2FA] hover:from-white hover:to-[#E3D8FB] border-2 border-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+                style={{
+                  boxShadow: "0 10px 24px rgba(76, 29, 149, 0.22)",
+                  transform: "translateY(calc(39px - 50%))",
+                }}
+                aria-label="Resume"
+                title="Resume (Preview / Upload)"
+              >
+                <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-slate-900 stroke-[1.75]" />
+              </button>
 
-            {/* 2nd Button: Projects (Dips lower along curve to stay half on, half out) */}
-            <a
-              href="#proof-of-work"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
-              style={{
-                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
-                transform: "translateY(88%)",
-              }}
-              aria-label="Projects"
-              title="Projects"
-            >
-              <Briefcase className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
-            </a>
+              {/* 2nd Button: Projects (Dips lower along curve to stay half on, half out) */}
+              <a
+                href="#proof-of-work"
+                className="pointer-events-auto w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#E7DCFE] to-[#D5C2FA] hover:from-white hover:to-[#E3D8FB] border-2 border-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+                style={{
+                  boxShadow: "0 10px 24px rgba(76, 29, 149, 0.22)",
+                  transform: "translateY(calc(74px - 50%))",
+                }}
+                aria-label="Projects"
+                title="Projects"
+              >
+                <Briefcase className="w-7 h-7 sm:w-8 sm:h-8 text-slate-900 stroke-[1.75]" />
+              </a>
 
-            {/* 3rd Button: Roadmap Following (Dips lower along curve to stay half on, half out) */}
-            <Link
-              href="/roadmaps"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
-              style={{
-                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
-                transform: "translateY(88%)",
-              }}
-              aria-label="Roadmap Following"
-              title="Roadmap Following"
-            >
-              <Compass className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
-            </Link>
+              {/* 3rd Button: Roadmap Following (Dips lower along curve to stay half on, half out) */}
+              <Link
+                href="/roadmaps"
+                className="pointer-events-auto w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#E7DCFE] to-[#D5C2FA] hover:from-white hover:to-[#E3D8FB] border-2 border-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+                style={{
+                  boxShadow: "0 10px 24px rgba(76, 29, 149, 0.22)",
+                  transform: "translateY(calc(74px - 50%))",
+                }}
+                aria-label="Roadmap Following"
+                title="Roadmap Following"
+              >
+                <Compass className="w-7 h-7 sm:w-8 sm:h-8 text-slate-900 stroke-[1.75]" />
+              </Link>
 
-            {/* 4th Button: Edit */}
-            <Link
-              href="/settings/edit"
-              className="w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#B79CF5] to-[#E3D8FB] hover:from-white hover:to-[#E3D8FB] border border-[#D6C4F9] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
-              style={{
-                boxShadow: "0 10px 22px rgba(110, 70, 200, 0.22)",
-                transform: "translateY(50%)",
-              }}
-              aria-label="Edit Profile & Settings"
-              title="Edit Profile & Settings"
-            >
-              <Edit3 className="w-7 h-7 sm:w-8 sm:h-8 text-black stroke-[1.5]" />
-            </Link>
+              {/* 4th Button: Edit */}
+              <Link
+                href="/settings/edit"
+                className="pointer-events-auto w-16 h-16 sm:w-[74px] sm:h-[74px] rounded-full bg-gradient-to-b from-[#E7DCFE] to-[#D5C2FA] hover:from-white hover:to-[#E3D8FB] border-2 border-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0"
+                style={{
+                  boxShadow: "0 10px 24px rgba(76, 29, 149, 0.22)",
+                  transform: "translateY(calc(39px - 50%))",
+                }}
+                aria-label="Edit Profile & Settings"
+                title="Edit Profile & Settings"
+              >
+                <Edit3 className="w-7 h-7 sm:w-8 sm:h-8 text-slate-900 stroke-[1.75]" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-      <div className="h-14 sm:h-18" />
+      <div className="h-16 sm:h-20" />
 
       {resumeMsg && (
         <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/50 text-purple-900 dark:text-purple-200 text-xs font-bold flex items-center gap-2">
