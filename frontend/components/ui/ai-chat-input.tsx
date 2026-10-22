@@ -56,31 +56,50 @@ function MorphingText({ text }: { text: string }) {
 }
 
 function ModelIcon({ model, className }: { model: string; className?: string }) {
-  const icons: Record<string, string> = {
-    "Composer 2.5":
-      "https://cdn.21st.dev/assets/mirror/7d/7dc00bc09f225fcda46cbc9c6b669c69c025a231877d6c17baa6a003f04f02b2.svg",
-    "Gemini 3.5 Flash":
-      "https://cdn.21st.dev/assets/mirror/cd/cda2df6631d5fa227de3fa04ed78cf354f910ba92a9f086e7455655c10ad9d09.svg",
-    "GPT 5.5":
-      "https://cdn.21st.dev/assets/mirror/b9/b93fa7942be639a1dae60194ff12141145d7d9fd59581582d6ff23335755f19c.svg",
-    "Opus 4.8":
-      "https://cdn.21st.dev/assets/mirror/5d/5de1221c77cc91e748066fd642ad0eee1c1fa65328814f5178166f901e599709.svg",
-    "GLM 5.2":
-      "https://cdn.21st.dev/assets/mirror/b2/b2a6c0ff63efd8a555edf8a174ea6fcfeca120ac1595a2d461ca11d3ae89276c.svg",
-  };
+  const norm = model.toLowerCase();
+  if (norm.includes("groq")) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className={cn("size-3.5 shrink-0 rounded-xs", className)}
+        aria-hidden="true"
+      >
+        <rect width="24" height="24" rx="5" fill="#F55036" />
+        <path
+          d="M7 8.5C7 7.67 7.67 7 8.5 7H15.5C16.33 7 17 7.67 17 8.5V10.5H11V13.5H15.5V17H8.5C7.67 17 7 16.33 7 15.5V8.5Z"
+          fill="white"
+        />
+      </svg>
+    );
+  }
 
-  const filters: Record<string, string> = {
-    "GPT 5.5": "dark:invert",
-  };
-
+  // Kimi K3 / Moonshot AI
   return (
-    <img
-      src={icons[model] || icons["GPT 5.5"]}
-      alt={model}
-      className={cn("object-contain", filters[model], className)}
-    />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={cn("size-3.5 shrink-0 rounded-xs", className)}
+      aria-hidden="true"
+    >
+      <rect width="24" height="24" rx="5" fill="#7C3AED" />
+      <path
+        d="M8 6V18M16 6L8 12L16 18"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
+
+const MODEL_IDENTIFIERS: Record<string, string> = {
+  "Groq": "llama-3.3-70b-versatile",
+  "Kimi K3": "moonshotai/kimi-k3",
+  "kimi-k3": "moonshotai/kimi-k3",
+  "Kimi-k3": "moonshotai/kimi-k3",
+};
 
 function ArrowUpIcon() {
   return (
@@ -412,7 +431,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
       onSubmit,
       placeholder = "Ask anything",
       className,
-      models = ["GPT 5.5", "Opus 4.8", "Gemini 3.5 Flash", "Composer 2.5", "GLM 5.2"],
+      models = ["Groq", "Kimi K3"],
       efforts = ["Low", "Medium", "Max Effort"],
       defaultValue = "",
       value: controlledValue,
@@ -746,7 +765,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
       if (value.trim() === "" && !hasAttachments) return;
       setIsSmoothResize(false);
       onSubmit?.(value, {
-        model: selectedModel,
+        model: MODEL_IDENTIFIERS[selectedModel] || selectedModel,
         effort: efforts[effortIndex],
         attachments: attachments.map((a) => a.file),
       });

@@ -619,12 +619,16 @@ async def chat_mentor(
                     prompt=prompt_text,
                     system_prompt=effective_system_prompt,
                     messages=llm_messages,
+                    model=req.model,
+                    effort=req.effort,
                 )
             except TypeError:
                 response = await run_bounded_ai_call(
                     chat_with_groq,
                     prompt_text,
                     system_prompt=effective_system_prompt,
+                    model=req.model,
+                    effort=req.effort,
                 )
         except AIProviderError as prov_err:
             logger.warning(f"AI provider error in student chat_mentor: {prov_err.code} - {prov_err.message}")

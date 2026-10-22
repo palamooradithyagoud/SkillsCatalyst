@@ -103,6 +103,8 @@ export class AIMentorError extends Error {
 export async function sendMentorMessage(
   prompt: string,
   conversationId?: string,
+  model?: string,
+  effort?: string,
 ): Promise<{ reply: string; conversation_id?: string; message_id?: string; action_proposals?: TaskActionProposal[] }> {
   const authHeaders = await getAuthHeaders();
   const body: Record<string, any> = {
@@ -113,6 +115,12 @@ export async function sendMentorMessage(
   };
   if (conversationId) {
     body.conversation_id = conversationId;
+  }
+  if (model) {
+    body.model = model;
+  }
+  if (effort) {
+    body.effort = effort;
   }
 
   let res: Response;

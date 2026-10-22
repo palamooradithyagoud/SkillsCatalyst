@@ -631,7 +631,12 @@ export default function AIMentorPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const res = await sendMentorMessage(text, activeConversationId || undefined);
+      const res = await sendMentorMessage(
+        text,
+        activeConversationId || undefined,
+        meta?.model,
+        meta?.effort
+      );
 
       if (res.conversation_id && !activeConversationId) {
         setActiveConversationId(res.conversation_id);
@@ -1140,6 +1145,7 @@ export default function AIMentorPage() {
           <PromptInput
             onSubmit={(query, meta) => handleSendMessage(query, meta)}
             placeholder="Ask AI Catalyst..."
+            models={["Groq", "Kimi K3"]}
             className="w-full"
           />
         </div>

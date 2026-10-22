@@ -276,27 +276,63 @@ FALLBACK_MODELS = [
 FALLBACK_MODELS = [m for m in FALLBACK_MODELS if m]
 
 
+def is_nvidia_model(m: Optional[str]) -> bool:
+    """Returns True if the requested model targets the NVIDIA Integrate API."""
+    if not m:
+        return False
+    norm = str(m).strip().lower()
+    return (
+        norm.startswith("moonshotai/")
+        or norm.startswith("nvidia/")
+        or "kimi" in norm
+        or "nvidia" in norm
+    )
+
+
 def chat_with_groq(
     prompt: Optional[str] = None,
     system_prompt: str = "You are SkillsCatalyst AI Mentor, an expert career coach and tech interviewer.",
     messages: Optional[list] = None,
+    model: Optional[str] = None,
+    effort: Optional[str] = None,
 ) -> str:
     """
-    Sends a prompt or structured message list to the Groq LLM and returns the text response.
-    Attempts candidate models in order until one succeeds within the 25.0s total chain ceiling.
-
-    Failure behaviour:
-      - Connection timeout (3s): moves to next model, logs warning.
-      - Read timeout (min(12s, remaining budget)): moves to next model, logs warning.
-      - Rate-limit (429): moves to next model, logs warning.
-      - Hard ceiling (25s): halts fallback loop before reverse proxy timeout.
-      - All models fail: raises structured AIProviderError subclass.
-
-    Observability:
-      - record_ai_call(success=True, model=..., latency_ms=...) on success.
-      - record_ai_call(success=False, model=..., error_category=..., timed_out=...) on each failure.
+    Sends a prompt or structured message list to the active LLM provider with
+    seamless model switching and automatic cross-provider fallback.
+    Supports Groq models, NVIDIA Integrate models (Moonshot AI Kimi K3, etc.),
+    and multi-tier fallback cascade.
     """
+    # 1. Direct routing if the user explicitly selected an NVIDIA model
+    if is_nvidia_model(model):
+        try:
+            logger.info(f"Routing to requested NVIDIA model '{model}' (effort={effort})...")
+            from backend.services.nvidia_service import chat_with_nvidia
+            return chat_with_nvidia(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                messages=messages,
+                model=model,
+                reasoning_effort=effort or "max",
+            )
+        except Exception as nv_err:
+            logger.warning(
+                f"Requested NVIDIA model '{model}' encountered error [{type(nv_err).__name__}: {nv_err}]. "
+                f"Engaging automatic fallback cascade to backup models..."
+            )
+            # Proceed directly to Groq fallback cascade below
+
     if not groq_client:
+        logger.warning("Groq client is not initialised; checking NVIDIA Integrate fallback...")
+        try:
+            from backend.services.nvidia_service import chat_with_nvidia
+            return chat_with_nvidia(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                messages=messages,
+                reasoning_effort=effort or "medium",
+            )
+        except Exception:
+            pass
         logger.error("Groq client is not initialised. Cannot process prompt.")
         record_ai_call(success=False, provider="groq", error_category="client_uninitialized")
         raise AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
@@ -305,7 +341,14 @@ def chat_with_groq(
     last_exception: Optional[AIProviderError] = None
     t_start = time.monotonic()
 
-    for model_name in FALLBACK_MODELS:
+    # Prioritize requested Groq model if provided
+    candidate_models = list(FALLBACK_MODELS)
+    if model and not is_nvidia_model(model):
+        if model in candidate_models:
+            candidate_models.remove(model)
+        candidate_models.insert(0, model)
+
+    for model_name in candidate_models:
         # Check hard ceiling and compute remaining budget before making next attempt
         elapsed_so_far = time.monotonic() - t_start
         remaining_budget = _GROQ_HARD_CEILING - elapsed_so_far
@@ -548,12 +591,31 @@ def chat_with_groq(
     # All models exhausted or hard ceiling reached
     total_latency_ms = round((time.monotonic() - t_start) * 1000, 1)
     logger.error(
-        f"All {len(FALLBACK_MODELS)} Groq models failed after {total_latency_ms}ms. "
+        f"All {len(candidate_models)} Groq models failed after {total_latency_ms}ms. "
         f"Last failure category: '{last_error_category}'."
     )
+
+    # Cross-provider fallback: attempt NVIDIA Integrate API before raising error
+    try:
+        from backend.config import NVIDIA_API_KEY
+        if NVIDIA_API_KEY:
+            logger.info("Attempting cross-provider fallback to NVIDIA Integrate API...")
+            from backend.services.nvidia_service import chat_with_nvidia
+            return chat_with_nvidia(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                messages=messages,
+                reasoning_effort=effort or "medium",
+            )
+    except Exception as nv_fallback_err:
+        logger.warning(f"Cross-provider fallback to NVIDIA also failed: {nv_fallback_err}")
 
     if last_exception is not None:
         raise last_exception
 
     raise AIProviderUnavailableError("AI provider service is temporarily unavailable. Please try again shortly.")
+
+
+# Re-export alias for unified LLM invocations
+chat_with_llm = chat_with_groq
 

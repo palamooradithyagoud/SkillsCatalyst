@@ -66,6 +66,8 @@ class MentorChatRequest(BaseModel):
     conversation_id: Optional[str] = Field(None, description="Optional existing conversation UUID")
     client_timezone: Optional[str] = Field(None, description="User's local timezone (e.g. Asia/Kolkata)")
     client_now: Optional[str] = Field(None, description="User's local current datetime in ISO format")
+    model: Optional[str] = Field(None, description="Selected AI model (e.g. moonshotai/kimi-k3)")
+    effort: Optional[str] = Field(None, description="Reasoning effort level (e.g. max, medium, low)")
 
     @field_validator("message", "prompt")
     @classmethod
