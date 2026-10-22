@@ -49,6 +49,33 @@ from backend.services.ai_mentor.conversation_service import (
 from backend.services.ai_mentor.prompt_builder import (
     build_mentor_llm_messages,
 )
+from backend.services.ai_mentor.task_service import (
+    fetch_authenticated_user_tasks,
+    format_tasks_for_mentor_prompt,
+    find_matching_tasks,
+    extract_and_validate_proposals,
+    execute_approved_task_action,
+)
+from backend.services.ai_mentor.approval_service import (
+    acquire_action_reservation,
+    release_action_reservation,
+    is_action_consumed,
+    mark_action_consumed,
+    get_idempotent_result,
+    store_idempotent_result,
+)
+from backend.services.ai_mentor.task_prompts import (
+    TASK_INTEGRATION_SYSTEM_INSTRUCTIONS,
+)
+from backend.models.ai_mentor_tasks import (
+    MAX_BATCH_TASKS_LIMIT,
+    TaskActionType,
+    ProposedTaskItem,
+    TaskActionProposal,
+    ExecuteTaskActionRequest,
+    ExecuteTaskActionResponse,
+    CancelTaskActionRequest,
+)
 
 __all__ = [
     # Phase 1: Context Aggregator
@@ -86,4 +113,25 @@ __all__ = [
     "save_message",
     "get_recent_messages",
     "build_mentor_llm_messages",
+    # Phase 2A: Tasks & To-Do List Integration
+    "fetch_authenticated_user_tasks",
+    "format_tasks_for_mentor_prompt",
+    "find_matching_tasks",
+    "extract_and_validate_proposals",
+    "execute_approved_task_action",
+    "acquire_action_reservation",
+    "release_action_reservation",
+    "is_action_consumed",
+    "mark_action_consumed",
+    "get_idempotent_result",
+    "store_idempotent_result",
+    "TASK_INTEGRATION_SYSTEM_INSTRUCTIONS",
+    "MAX_BATCH_TASKS_LIMIT",
+    "TaskActionType",
+    "ProposedTaskItem",
+    "TaskActionProposal",
+    "ExecuteTaskActionRequest",
+    "ExecuteTaskActionResponse",
+    "CancelTaskActionRequest",
 ]
+

@@ -16,6 +16,9 @@ import {
   RotateCw,
   AlertCircle,
   ExternalLink,
+  Sparkles,
+  Compass,
+  Rocket,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
@@ -28,25 +31,26 @@ import {
 } from "@/lib/api/career";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { RecessedMorphingSearch } from "@/components/ui/recessed-morphing-search";
+import { TaskActionCard } from "@/components/ai-mentor/TaskActionCard";
 
 // ----------------------------------------------------------------------
 // Curated High-Value SkillsCatalyst Prompts (Authentic Platform Context)
 // ----------------------------------------------------------------------
 const PLATFORM_PROMPTS = [
   {
-    icon: "✨",
+    icon: Sparkles,
     label: "Explore SkillsCatalyst",
     prompt:
       "Can you give me an overview of SkillsCatalyst? What roadmaps, SkillBits, practice tests, and career tools are available to help me grow?",
   },
   {
-    icon: "🧭",
+    icon: Compass,
     label: "Know where you are",
     prompt:
       "Help me evaluate where I currently stand in my tech journey: assess my current skill set, strengths, and areas to improve.",
   },
   {
-    icon: "🚀",
+    icon: Rocket,
     label: "What to next",
     prompt:
       "Based on where I am right now, what concrete steps and topics should I focus on next to progress faster?",
@@ -589,6 +593,7 @@ export default function AIMentorPage() {
         role: "assistant",
         content: res.reply,
         created_at: new Date().toISOString(),
+        action_proposals: res.action_proposals,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -890,17 +895,20 @@ export default function AIMentorPage() {
 
                 {/* High-Value SkillsCatalyst Context Prompt Pills */}
                 <div className="flex flex-col items-start gap-2.5 w-full max-w-full">
-                  {PLATFORM_PROMPTS.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSendMessage(item.prompt)}
-                      className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-neutral-800/90 text-neutral-900 dark:text-white text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
-                    >
-                      <span className="text-sm select-none shrink-0">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
-                    </button>
-                  ))}
+                  {PLATFORM_PROMPTS.map((item, idx) => {
+                    const IconComp = item.icon;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSendMessage(item.prompt)}
+                        className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-neutral-800/90 text-neutral-900 dark:text-white text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
+                      >
+                        <IconComp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -944,6 +952,48 @@ export default function AIMentorPage() {
                       /* Assistant Reply: WITHOUT CARD FORMAT (FREE-FLOWING LIKE CHATGPT) */
                       <div className="flex-1 min-w-0 max-w-full text-neutral-950 dark:text-white leading-relaxed break-words overflow-x-hidden">
                         <MessageContent content={msg.content} />
+
+                        {/* Interactive Task Action Proposals (Phase 2A) */}
+                        {msg.action_proposals && msg.action_proposals.length > 0 && (
+                          <div className="mt-3 space-y-3">
+                            {msg.action_proposals.map((prop) => (
+                              <TaskActionCard
+                                key={prop.action_id}
+                                proposal={prop}
+                                onActionComplete={(actionId, resultMsg) => {
+                                  setMessages((prev) =>
+                                    prev.map((m) => {
+                                      if (!m.action_proposals) return m;
+                                      return {
+                                        ...m,
+                                        action_proposals: m.action_proposals.map((p) =>
+                                          p.action_id === actionId
+                                            ? { ...p, status: "completed", result_message: resultMsg }
+                                            : p
+                                        ),
+                                      };
+                                    })
+                                  );
+                                }}
+                                onActionCancel={(actionId) => {
+                                  setMessages((prev) =>
+                                    prev.map((m) => {
+                                      if (!m.action_proposals) return m;
+                                      return {
+                                        ...m,
+                                        action_proposals: m.action_proposals.map((p) =>
+                                          p.action_id === actionId
+                                            ? { ...p, status: "canceled" }
+                                            : p
+                                        ),
+                                      };
+                                    })
+                                  );
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

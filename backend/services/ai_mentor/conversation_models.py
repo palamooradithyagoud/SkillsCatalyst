@@ -52,6 +52,9 @@ class ConversationListResponse(BaseModel):
     offset: int
 
 
+from backend.models.ai_mentor_tasks import TaskActionProposal
+
+
 class ConversationDetailResponse(BaseModel):
     conversation: ConversationResponse
     messages: List[MessageResponse]
@@ -61,6 +64,8 @@ class MentorChatRequest(BaseModel):
     message: Optional[str] = Field(None, description="The user's chat message")
     prompt: Optional[str] = Field(None, description="Legacy parameter for backward compatibility with Phase 1")
     conversation_id: Optional[str] = Field(None, description="Optional existing conversation UUID")
+    client_timezone: Optional[str] = Field(None, description="User's local timezone (e.g. Asia/Kolkata)")
+    client_now: Optional[str] = Field(None, description="User's local current datetime in ISO format")
 
     @field_validator("message", "prompt")
     @classmethod
@@ -89,4 +94,6 @@ class MentorChatResponse(BaseModel):
     reply: str
     conversation_id: Optional[str] = None
     message_id: Optional[str] = None
+    action_proposals: Optional[List[TaskActionProposal]] = None
+
 

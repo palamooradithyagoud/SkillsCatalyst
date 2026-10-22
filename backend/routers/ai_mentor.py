@@ -17,6 +17,7 @@ from backend.services.groq_service import (
 )
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_AI_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
+import datetime
 from backend.dependencies.subscription import require_entitlement
 from backend.services.ai_mentor import (
     MentorContext,
@@ -36,6 +37,18 @@ from backend.services.ai_mentor import (
     get_recent_messages,
     derive_conversation_title,
     build_mentor_llm_messages,
+    fetch_authenticated_user_tasks,
+    format_tasks_for_mentor_prompt,
+    extract_and_validate_proposals,
+    execute_approved_task_action,
+    TASK_INTEGRATION_SYSTEM_INSTRUCTIONS,
+    ExecuteTaskActionRequest,
+    ExecuteTaskActionResponse,
+    CancelTaskActionRequest,
+)
+from backend.services.ai_mentor.approval_service import (
+    verify_approval_token,
+    mark_action_consumed,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,7 +109,8 @@ _SKILL_PATTERNS = re.compile(
     r"git|github|ci.?cd|linux|bash|shell|"
     r"c\+\+|golang|rust|kotlin|swift|flutter|dart|"
     r"cybersecurity|networking|os|operating.?system|"
-    r"project|portfolio|startup|tech|software|engineer|developer|programmer"
+    r"project|portfolio|startup|tech|software|engineer|developer|programmer|"
+    r"task|tasks|todo|todos|assignment|assignments|deadline|deadlines|due|overdue|priority|subtask|subtasks|reschedule|schedule"
     r")\b",
     re.IGNORECASE,
 )
@@ -528,7 +542,7 @@ async def chat_mentor(
             # Retrieve bounded recent history (excluding the current user message just inserted)
             prior_messages = await asyncio.to_thread(get_recent_messages, current_user_id, conv_id, limit=15)
 
-        # 2. Enrich system prompt with Phase 1 authenticated student context
+        # 2. Enrich system prompt with Phase 1 authenticated student context + Phase 2A task awareness
         effective_system_prompt = _SKILLS_SYSTEM_PROMPT
         try:
             formatted_context = await get_formatted_student_context_for_mentor(current_user_id)
@@ -536,6 +550,25 @@ async def chat_mentor(
                 effective_system_prompt = f"{_SKILLS_SYSTEM_PROMPT}\n\n{formatted_context}"
         except Exception as ctx_err:
             logger.warning(f"Error fetching student context for mentor chat: {ctx_err}")
+
+        # Fetch authentic tasks for the current user and append task engine instructions
+        user_tasks = []
+        try:
+            user_tasks = await asyncio.to_thread(fetch_authenticated_user_tasks, current_user_id, None, 40)
+            client_tz = req.client_timezone or "UTC"
+            now_dt = datetime.datetime.now(datetime.timezone.utc)
+            if req.client_now:
+                try:
+                    now_dt = datetime.datetime.fromisoformat(req.client_now.replace("Z", "+00:00"))
+                except Exception:
+                    pass
+            ref_time_str = now_dt.strftime("%A, %d %B %Y, %H:%M:%S")
+            task_context_block = format_tasks_for_mentor_prompt(user_tasks, ref_time_str, client_tz)
+            effective_system_prompt = (
+                f"{effective_system_prompt}\n\n{TASK_INTEGRATION_SYSTEM_INSTRUCTIONS}\n\n{task_context_block}"
+            )
+        except Exception as task_err:
+            logger.warning(f"Error preparing task context for mentor chat: {task_err}")
 
         # 3. Assemble bounded multi-turn LLM message structure
         current_msg_id = user_msg.get("id") if user_msg else None
@@ -620,13 +653,27 @@ async def chat_mentor(
             logger.warning("LLM replied with potentially off-topic content — overriding with redirect.")
             response = _OFFTOPIC_REPLY
 
-        # 7. Persist assistant response to database
+        # Extract structured task proposals and clean machine tags from reply
+        proposals = []
+        clean_reply = response
+        if response and response != _OFFTOPIC_REPLY:
+            try:
+                clean_reply, proposals = extract_and_validate_proposals(response, current_user_id, user_tasks)
+            except Exception as prop_err:
+                logger.warning(f"Error extracting task proposals: {prop_err}")
+
+        # 7. Persist assistant response to database (using clean text, without raw machine tags)
         asst_msg_id = None
         if conv_id and response != _OFFTOPIC_REPLY:
-            asst_msg = await asyncio.to_thread(save_message, current_user_id, conv_id, "assistant", response)
+            asst_msg = await asyncio.to_thread(save_message, current_user_id, conv_id, "assistant", clean_reply)
             asst_msg_id = asst_msg.get("id") if asst_msg else None
 
-        return MentorChatResponse(reply=response, conversation_id=conv_id, message_id=asst_msg_id)
+        return MentorChatResponse(
+            reply=clean_reply,
+            conversation_id=conv_id,
+            message_id=asst_msg_id,
+            action_proposals=proposals if proposals else None,
+        )
 
     # -----------------------------------------------------------------------
     # Guest Path: Stateless fallback without persistence
@@ -954,3 +1001,90 @@ STRICT RULES:
         overall_score=overall_score,
         scoring_status=scoring_status,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 2A: Task Approval & Execution Endpoints
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/tasks/execute-action",
+    response_model=ExecuteTaskActionResponse,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def execute_task_action_endpoint(
+    req: ExecuteTaskActionRequest,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Executes an approved task action on behalf of the authenticated student.
+    Enforces cryptographic approval token verification, expiration, anti-replay, and idempotency.
+    """
+    try:
+        result = await asyncio.to_thread(execute_approved_task_action, current_user_id, req)
+        return result
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "code": "INVALID_ACTION", "message": str(ve)},
+        )
+    except RuntimeError as re_err:
+        err_msg = str(re_err)
+        if any(term in err_msg.lower() for term in ["unavailable", "redis", "distributed locking", "replay protection"]):
+            logger.warning(f"Rejecting task mutation due to unavailable distributed storage: {err_msg}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"success": False, "code": "SERVICE_UNAVAILABLE", "message": err_msg},
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "EXECUTION_ERROR", "message": err_msg},
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error executing task action {req.action_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "SERVER_ERROR", "message": "Failed to execute approved action."},
+        )
+
+
+@router.post(
+    "/tasks/cancel-action",
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def cancel_task_action_endpoint(
+    req: CancelTaskActionRequest,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Cancels a pending task action approval.
+    Marks the action ID as consumed so it cannot be executed subsequently.
+    """
+    is_valid, err, payload = verify_approval_token(
+        token=req.approval_token,
+        authenticated_user_id=current_user_id,
+        expected_action_id=req.action_id,
+    )
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "code": "INVALID_TOKEN", "message": err or "Invalid approval token."},
+        )
+
+    try:
+        mark_action_consumed(req.action_id)
+    except RuntimeError as re_err:
+        err_msg = str(re_err)
+        if any(term in err_msg.lower() for term in ["unavailable", "redis", "replay protection"]):
+            logger.warning(f"Rejecting cancellation due to unavailable distributed storage: {err_msg}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"success": False, "code": "SERVICE_UNAVAILABLE", "message": err_msg},
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "EXECUTION_ERROR", "message": err_msg},
+        )
+
+    return {"success": True, "message": "Task action canceled successfully."}
+

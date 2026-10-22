@@ -1,5 +1,6 @@
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
 import { ResumeReviewResponse } from "@/types/career";
+import { TaskActionProposal } from "@/types/ai-mentor-tasks";
 
 export interface MentorConversation {
   id: string;
@@ -17,6 +18,7 @@ export interface MentorMessage {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  action_proposals?: TaskActionProposal[];
 }
 
 export async function fetchMentorConversations(
@@ -101,9 +103,14 @@ export class AIMentorError extends Error {
 export async function sendMentorMessage(
   prompt: string,
   conversationId?: string,
-): Promise<{ reply: string; conversation_id?: string; message_id?: string }> {
+): Promise<{ reply: string; conversation_id?: string; message_id?: string; action_proposals?: TaskActionProposal[] }> {
   const authHeaders = await getAuthHeaders();
-  const body: Record<string, any> = { message: prompt, prompt };
+  const body: Record<string, any> = {
+    message: prompt,
+    prompt,
+    client_timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC",
+    client_now: new Date().toISOString(),
+  };
   if (conversationId) {
     body.conversation_id = conversationId;
   }
