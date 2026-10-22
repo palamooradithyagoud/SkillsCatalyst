@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Layers } from "lucide-react";
 import { BEGINNER_TREE_DATA } from "@/data/practice/dsaTreeData";
@@ -15,27 +15,35 @@ export function BeginnerDSATree({
   drawerSolved,
   onSelectTopic,
 }: BeginnerDSATreeProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Filter categories when user selects a specific category tab on mobile
+  const displayedCategories = useMemo(() => {
+    if (selectedCategory === "all") return BEGINNER_TREE_DATA;
+    return BEGINNER_TREE_DATA.filter((cat) => cat.id === selectedCategory);
+  }, [selectedCategory]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-[28px] p-6 sm:p-10 bg-white dark:bg-[#18191F] border border-slate-100 dark:border-neutral-800 shadow-xs overflow-hidden min-h-[620px] transition-colors [--node-bg:#ffffff] dark:[--node-bg:#14151C]"
+      className="relative rounded-[24px] sm:rounded-[28px] p-4 sm:p-6 lg:p-10 bg-white dark:bg-[#18191F] border border-slate-100 dark:border-neutral-800 shadow-xs overflow-hidden min-h-[580px] transition-colors [--node-bg:#ffffff] dark:[--node-bg:#14151C]"
     >
       {/* Ambient Glow Aura behind Foundation */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/15 dark:bg-purple-500/15 blur-3xl rounded-full pointer-events-none" />
 
       {/* Top Foundation Root Node & Branching Tree Structure */}
-      <div className="flex flex-col items-center justify-center relative z-10 mb-8">
+      <div className="flex flex-col items-center justify-center relative z-10 mb-6 sm:mb-8">
         <motion.div
           whileHover={{ scale: 1.05, y: -2 }}
-          className="px-8 py-3.5 rounded-full text-white font-black text-lg flex items-center gap-2.5 shadow-lg bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] dark:from-[#241738] dark:via-[#1c122c] dark:to-[#160e22] border border-emerald-400/40 dark:border-purple-500/50 cursor-pointer relative z-20"
+          className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full text-white font-black text-base sm:text-lg flex items-center gap-2.5 shadow-lg bg-gradient-to-r from-[#173e32] via-[#12362b] to-[#0d2a21] dark:from-[#241738] dark:via-[#1c122c] dark:to-[#160e22] border border-emerald-400/40 dark:border-purple-500/50 cursor-pointer relative z-20"
         >
           <Layers className="w-5 h-5 text-emerald-300 dark:text-[#C084FC]" />
           <span>Foundation</span>
         </motion.div>
 
         {/* Vertical trunk line below Foundation */}
-        <div className="w-0.5 h-8 bg-emerald-700 dark:bg-purple-600" />
+        <div className="w-0.5 h-5 sm:h-7 bg-emerald-700 dark:bg-purple-600" />
 
         {/* Horizontal Branch Bar spreading across 4 columns (Desktop) */}
         <div className="hidden lg:block w-[75%] h-0.5 bg-gradient-to-r from-emerald-500 via-purple-500 to-sky-500 dark:from-emerald-400 dark:via-purple-400 dark:to-sky-400 relative">
@@ -51,38 +59,90 @@ export function BeginnerDSATree({
           <div className="absolute right-0 top-0 w-0.5 h-7 bg-sky-500" />
           <div className="absolute right-0 top-7 translate-x-1/2 w-2.5 h-2.5 rounded-full bg-sky-500 shadow-xs" />
         </div>
+
+        {/* Mobile & Tablet Category Filter Tabs */}
+        <div className="lg:hidden w-full max-w-lg mt-1 px-1">
+          <div className="flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar mobile-touch-scroll">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("all")}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all border ${
+                selectedCategory === "all"
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs"
+                  : "bg-slate-50 dark:bg-neutral-800/90 text-slate-600 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-slate-100 dark:hover:bg-neutral-800"
+              }`}
+            >
+              <span>All Topics</span>
+            </button>
+            {BEGINNER_TREE_DATA.map((cat) => {
+              const CatIcon = cat.icon;
+              const isSelected = selectedCategory === cat.id;
+
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all border ${
+                    isSelected
+                      ? "text-white shadow-xs"
+                      : "bg-slate-50 dark:bg-neutral-800/90 text-slate-700 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-slate-100 dark:hover:bg-neutral-800"
+                  }`}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: cat.color,
+                          borderColor: cat.color,
+                          boxShadow: `0 2px 10px ${cat.color}40`,
+                        }
+                      : undefined
+                  }
+                >
+                  <CatIcon className="w-3.5 h-3.5" />
+                  <span>{cat.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* 4 Category Columns Grid (Side-by-Side on Smartphones) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8 relative z-10 pt-4">
-        {BEGINNER_TREE_DATA.map((cat, cIdx) => {
+      {/* Category Columns: 1 column on mobile (full width without cramped squishing), 2 on sm, 4 on lg */}
+      <div
+        className={`grid gap-4 sm:gap-6 lg:gap-8 relative z-10 ${
+          selectedCategory !== "all"
+            ? "grid-cols-1 max-w-xl mx-auto"
+            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        }`}
+      >
+        {displayedCategories.map((cat, cIdx) => {
           const CategoryIcon = cat.icon;
 
           return (
             <motion.div
               key={cat.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: cIdx * 0.1, duration: 0.4 }}
-              className="space-y-4 flex flex-col items-center relative"
+              transition={{ delay: cIdx * 0.08, duration: 0.35 }}
+              className="space-y-3 sm:space-y-4 flex flex-col items-center relative"
             >
               {/* Category Header Node */}
               <motion.div
-                whileHover={{ scale: 1.04, y: -2 }}
-                className={`w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r ${cat.gradient} text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer relative z-10 border border-white/20`}
+                whileHover={{ scale: 1.02, y: -1 }}
+                className={`w-full py-3 sm:py-3.5 px-4 sm:px-5 rounded-2xl bg-gradient-to-r ${cat.gradient} text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer relative z-10 border border-white/20`}
               >
                 <CategoryIcon className="w-4.5 h-4.5 text-white" />
                 <span>{cat.title}</span>
               </motion.div>
 
               {/* Vertical Connector Line under Category Header */}
-              <div className="flex flex-col items-center my-1 relative z-10">
-                <div className="w-0.5 h-4" style={{ backgroundColor: cat.color }} />
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+              <div className="flex flex-col items-center my-0.5 relative z-10">
+                <div className="w-0.5 h-3.5 sm:h-4" style={{ backgroundColor: cat.color }} />
+                <div className="w-2 h-2 rounded-full shadow-xs" style={{ backgroundColor: cat.color }} />
               </div>
 
               {/* Sub-nodes Vertical Flow */}
-              <div className="w-full space-y-3 relative z-10">
+              <div className="w-full space-y-2.5 sm:space-y-3 relative z-10">
                 {cat.nodes.map((node, nIdx) => {
                   const NodeIcon = node.icon;
                   const { solved, total, pct } = calculateNodeProgress(node.id, drawerSolved);
@@ -90,24 +150,24 @@ export function BeginnerDSATree({
                   return (
                     <React.Fragment key={node.id}>
                       {nIdx > 0 && (
-                        <div className="flex flex-col items-center my-1">
-                          <div className="w-0.5 h-3" style={{ backgroundColor: `${cat.color}60` }} />
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                          <div className="w-0.5 h-3" style={{ backgroundColor: `${cat.color}60` }} />
+                        <div className="flex flex-col items-center my-0.5 relative z-10">
+                          <div className="w-0.5 h-2.5" style={{ backgroundColor: `${cat.color}60` }} />
+                          <div className="w-1.5 h-1.5 rounded-full shadow-xs" style={{ backgroundColor: cat.color }} />
+                          <div className="w-0.5 h-2.5" style={{ backgroundColor: `${cat.color}60` }} />
                         </div>
                       )}
 
-                      {/* Node Button — vibrant card styling */}
+                      {/* Node Button — spacious, unclipped card styling */}
                       <motion.button
-                        whileHover={{ scale: 1.03, y: -1 }}
+                        whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onSelectTopic(node.title)}
-                        className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold border transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md relative overflow-hidden text-slate-900 dark:text-white cursor-pointer group"
+                        className="w-full py-3 sm:py-3.5 px-3.5 sm:px-4 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 flex items-center gap-2.5 sm:gap-3 shadow-xs hover:shadow-md relative overflow-hidden text-slate-900 dark:text-white cursor-pointer group"
                         style={{
-                          background: `linear-gradient(135deg, ${cat.color}18 0%, var(--node-bg, #ffffff) 85%)`,
-                          borderTopColor: `${cat.color}45`,
-                          borderRightColor: `${cat.color}45`,
-                          borderBottomColor: `${cat.color}45`,
+                          background: `linear-gradient(135deg, ${cat.color}15 0%, var(--node-bg, #ffffff) 85%)`,
+                          borderTopColor: `${cat.color}40`,
+                          borderRightColor: `${cat.color}40`,
+                          borderBottomColor: `${cat.color}40`,
                           borderLeftColor: cat.color,
                           borderLeftWidth: "4px",
                         }}
@@ -120,31 +180,34 @@ export function BeginnerDSATree({
                             animate={{ width: `${pct}%` }}
                             transition={{ duration: 0.7, ease: "easeOut" }}
                             style={{
-                              background: `${cat.color}25`,
+                              background: `${cat.color}22`,
                             }}
                           />
                         )}
 
                         {/* Solid Brand Icon Badge */}
                         <div
-                          className="w-7 h-7 rounded-xl flex items-center justify-center relative z-10 transition-transform group-hover:scale-110 shrink-0"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center relative z-10 transition-transform group-hover:scale-110 shrink-0"
                           style={{
                             background: `linear-gradient(135deg, ${cat.color}, ${cat.color}dd)`,
                             color: "#ffffff",
-                            boxShadow: `0 3px 10px ${cat.color}40`,
+                            boxShadow: `0 3px 10px ${cat.color}35`,
                           }}
                         >
-                          <NodeIcon className="w-3.5 h-3.5 text-white" />
+                          <NodeIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                         </div>
 
-                        <span className="flex-1 text-left relative z-10 text-slate-900 dark:text-white font-extrabold group-hover:text-slate-950 dark:group-hover:text-purple-200 text-xs transition-colors">
-                          {node.title}
-                        </span>
+                        {/* Title text with min-w-0 to prevent flex blowout & clipping */}
+                        <div className="flex-1 min-w-0 text-left relative z-10">
+                          <span className="block truncate text-slate-900 dark:text-white font-extrabold group-hover:text-slate-950 dark:group-hover:text-purple-200 text-xs sm:text-sm transition-colors">
+                            {node.title}
+                          </span>
+                        </div>
 
-                        {/* Progress counter badge */}
+                        {/* Progress counter badge: shrink-0 guaranteed to never clip */}
                         {total > 0 && (
                           <span
-                            className={`text-[10px] font-black px-2.5 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums border ${
+                            className={`text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full relative z-10 shrink-0 tabular-nums border ${
                               pct > 0
                                 ? "text-white"
                                 : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border-slate-200 dark:border-neutral-700"

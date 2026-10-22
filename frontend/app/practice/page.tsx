@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
-import FloatingCTA from "@/components/mobile/FloatingCTA";
 import {
   fetchPracticeCompanies,
   fetchCompanyQuestions,
@@ -472,14 +471,6 @@ function PracticeContent() {
         onToggleSolved={toggleDrawerProblem}
       />
 
-      {/* Native Smartphone Floating Action Button */}
-      {selectedMode !== "index" && (
-        <FloatingCTA
-          onClick={() => setSelectedMode("index")}
-          icon={<ArrowLeft className="w-5 h-5 text-white" />}
-          label="Practice Modes"
-        />
-      )}
     </motion.div>
   );
 }
