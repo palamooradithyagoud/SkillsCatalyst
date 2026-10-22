@@ -516,6 +516,7 @@ export default function AIMentorPage() {
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const skipNextHistoryFetchRef = useRef<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -540,8 +541,17 @@ export default function AIMentorPage() {
 
   // Load message detail when active conversation changes
   useEffect(() => {
-    if (!activeConversationId || !userId) {
-      setMessages([]);
+    if (!activeConversationId) {
+      return;
+    }
+
+    // Skip re-fetching history if this conversation ID was just assigned by the current message submission
+    if (skipNextHistoryFetchRef.current === activeConversationId) {
+      skipNextHistoryFetchRef.current = null;
+      return;
+    }
+
+    if (!userId) {
       return;
     }
 
@@ -639,6 +649,7 @@ export default function AIMentorPage() {
       );
 
       if (res.conversation_id && !activeConversationId) {
+        skipNextHistoryFetchRef.current = res.conversation_id;
         setActiveConversationId(res.conversation_id);
         loadConversations();
       }
@@ -1145,7 +1156,7 @@ export default function AIMentorPage() {
           <PromptInput
             onSubmit={(query, meta) => handleSendMessage(query, meta)}
             placeholder="Ask AI Catalyst..."
-            models={["Groq", "Kimi K3"]}
+            models={["Groq", "Nemotron Ultra", "Kimi K3"]}
             className="w-full"
           />
         </div>

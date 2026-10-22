@@ -71,8 +71,13 @@ def chat_with_nvidia(
         "seed": 0,
         "stream": stream,
         "temperature": temperature,
-        "reasoning_effort": effort_val,
+        "top_p": 0.95,
     }
+
+    if "nemotron" in target_model.lower():
+        payload["chat_template_kwargs"] = {"enable_thinking": True}
+    else:
+        payload["reasoning_effort"] = effort_val
 
     headers = {
         "Authorization": f"Bearer {NVIDIA_API_KEY}",
@@ -93,6 +98,7 @@ def chat_with_nvidia(
             if stream:
                 # Handle SSE stream if requested
                 reply_parts: List[str] = []
+                reasoning_parts: List[str] = []
                 with client.stream("POST", invoke_url, headers=headers, json=payload) as response:
                     status_code = response.status_code
                     if status_code == 410:
@@ -119,12 +125,17 @@ def chat_with_nvidia(
                                 chunk = json.loads(data_str)
                                 delta = chunk.get("choices", [{}])[0].get("delta", {})
                                 content = delta.get("content")
+                                reasoning = delta.get("reasoning_content")
                                 if content:
                                     reply_parts.append(content)
+                                if reasoning:
+                                    reasoning_parts.append(reasoning)
                             except Exception:
                                 continue
 
                 reply = "".join(reply_parts).strip()
+                if not reply and reasoning_parts:
+                    reply = "".join(reasoning_parts).strip()
             else:
                 # Standard JSON completion request
                 response = client.post(invoke_url, headers=headers, json=payload)
@@ -148,7 +159,10 @@ def chat_with_nvidia(
                 if not choices:
                     raise AIProviderInvalidResponseError("Received empty choices list from NVIDIA API.")
 
-                reply = choices[0].get("message", {}).get("content", "").strip()
+                message_obj = choices[0].get("message", {})
+                reply = (message_obj.get("content") or "").strip()
+                if not reply and message_obj.get("reasoning_content"):
+                    reply = (message_obj.get("reasoning_content") or "").strip()
 
             if not reply:
                 raise AIProviderInvalidResponseError("Received empty reply text from NVIDIA API.")

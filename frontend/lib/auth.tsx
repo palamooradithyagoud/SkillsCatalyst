@@ -337,7 +337,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/cookie") ||
       pathname.startsWith("/support");
     const isResetPasswordPage = pathname === "/reset-password";
-    const isPublicPage = isLoginPage || isLandingPage || isVerifyPage || isPreviewPage || isResumeBuilderPage || isLegalPage || isResetPasswordPage;
+    const isAiMentorPage = pathname.startsWith("/ai-mentor");
+    const isPublicPage =
+      isLoginPage ||
+      isLandingPage ||
+      isVerifyPage ||
+      isPreviewPage ||
+      isResumeBuilderPage ||
+      isLegalPage ||
+      isResetPasswordPage ||
+      isAiMentorPage;
 
     const hasRecoveryCookie = typeof document !== "undefined" && document.cookie.includes("sc_recovery_flow=true");
     const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;

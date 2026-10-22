@@ -74,6 +74,26 @@ function ModelIcon({ model, className }: { model: string; className?: string }) 
     );
   }
 
+  if (norm.includes("nemotron") || norm.includes("nvidia")) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className={cn("size-3.5 shrink-0 rounded-xs", className)}
+        aria-hidden="true"
+      >
+        <rect width="24" height="24" rx="5" fill="#76B900" />
+        <path
+          d="M6 12C6 9 8.5 7 12 7C14.5 7 16.5 8.2 17.5 10M17.5 14C16.5 15.8 14.5 17 12 17C8.5 17 6 15 6 12"
+          stroke="black"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+        <circle cx="12" cy="12" r="2" fill="black" />
+      </svg>
+    );
+  }
+
   // Kimi K3 / Moonshot AI
   return (
     <svg
@@ -96,6 +116,8 @@ function ModelIcon({ model, className }: { model: string; className?: string }) 
 
 const MODEL_IDENTIFIERS: Record<string, string> = {
   "Groq": "llama-3.3-70b-versatile",
+  "Nemotron Ultra": "nvidia/nemotron-3-ultra-550b-a55b",
+  "Nemotron 3": "nvidia/nemotron-3-ultra-550b-a55b",
   "Kimi K3": "moonshotai/kimi-k3",
   "kimi-k3": "moonshotai/kimi-k3",
   "Kimi-k3": "moonshotai/kimi-k3",
@@ -431,7 +453,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
       onSubmit,
       placeholder = "Ask anything",
       className,
-      models = ["Groq", "Kimi K3"],
+      models = ["Groq", "Nemotron Ultra", "Kimi K3"],
       efforts = ["Low", "Medium", "Max Effort"],
       defaultValue = "",
       value: controlledValue,

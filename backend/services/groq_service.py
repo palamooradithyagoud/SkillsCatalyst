@@ -286,6 +286,7 @@ def is_nvidia_model(m: Optional[str]) -> bool:
         or norm.startswith("nvidia/")
         or "kimi" in norm
         or "nvidia" in norm
+        or "nemotron" in norm
     )
 
 

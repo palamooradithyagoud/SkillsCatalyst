@@ -13,6 +13,8 @@ from backend.services.groq_service import AIProviderUnavailableError
 def test_is_nvidia_model_detection():
     assert is_nvidia_model("moonshotai/kimi-k3") is True
     assert is_nvidia_model("kimi-k3") is True
+    assert is_nvidia_model("nvidia/nemotron-3-ultra-550b-a55b") is True
+    assert is_nvidia_model("Nemotron Ultra") is True
     assert is_nvidia_model("nvidia/llama-3.1-nemotron-70b-instruct") is True
     assert is_nvidia_model("llama-3.3-70b-versatile") is False
     assert is_nvidia_model("openai/gpt-oss-120b") is False
