@@ -665,17 +665,17 @@ export function PersonalizationDrawer({
                           key={stage.stage_index}
                           className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden"
                         >
-                          <div className="p-3 bg-neutral-100/70 dark:bg-neutral-850/50 border-b border-neutral-200 dark:border-neutral-800">
-                            <h4 className="text-xs font-semibold text-neutral-900 dark:text-white">
+                          <div className="p-3.5 bg-neutral-100/90 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+                            <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
                               {stage.title}
                             </h4>
                             {stage.description && (
-                              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                              <p className="text-[11px] text-neutral-600 dark:text-neutral-400 mt-0.5">
                                 {stage.description}
                               </p>
                             )}
                           </div>
-                          <div className="divide-y divide-neutral-100 dark:divide-neutral-855">
+                          <div className="divide-y divide-neutral-200/60 dark:divide-neutral-800/80">
                             {stage.milestones.map((milestone) => {
                               const isChecked = selectedMilestoneIds.includes(milestone.id);
                               return (

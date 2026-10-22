@@ -754,7 +754,7 @@ export function TaskActionCard({
       </div>
 
       {/* Action Footer Buttons */}
-      <div className="px-4 py-3 border-t border-neutral-100 dark:border-neutral-850 bg-neutral-50/50 dark:bg-neutral-900/30 flex items-center justify-end gap-2">
+      <div className="px-4 py-3 border-t border-neutral-200/60 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={handleCancel}
