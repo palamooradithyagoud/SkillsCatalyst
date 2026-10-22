@@ -415,7 +415,7 @@ export default function ResumeWorkspacePage() {
               {/* Playful Handwritten Annotation & Curved Arrow (Anchored to card top-right) */}
               <div className="absolute -top-3.5 -right-0.5 sm:-top-5 sm:right-2 flex flex-col items-end z-20 pointer-events-none">
                 <span
-                  style={{ fontFamily: "'Caveat', cursive" }}
+                  style={{ fontFamily: "var(--font-caveat), 'Caveat', cursive" }}
                   className="text-purple-600 font-bold text-xs sm:text-base tracking-wide -rotate-6"
                 >
                   From résumé

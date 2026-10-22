@@ -172,7 +172,7 @@ export function RecessedMorphingSearch({
       {/* ── Background Nearby the Searchbar (Solid Black Housing on Click) ── */}
       <motion.div
         animate={{
-          backgroundColor: isExpanded ? "#0a0b0f" : "transparent",
+          backgroundColor: isExpanded ? "#0a0b0f" : "rgba(10, 11, 15, 0)",
           borderRadius: isExpanded ? 24 : 16,
           boxShadow: isExpanded
             ? "0 16px 45px -8px rgba(0,0,0,0.4), 0 4px 16px -2px rgba(0,0,0,0.2)"

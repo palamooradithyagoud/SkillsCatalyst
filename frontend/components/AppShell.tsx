@@ -56,12 +56,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <PricingModalProvider>
       <NotificationProvider>
         <div className="flex flex-col min-h-screen w-full relative bg-white dark:bg-black text-[#18191F] dark:text-white">
-        {/* Subtle ambient orbs in background (disabled on full-screen SkillBits) */}
+        {/* Subtle ambient orbs in background (hardware-accelerated, zero scroll paint cost) */}
         {!isSkillBits && (
-          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/8 dark:bg-purple-950/20 blur-[120px]" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-900/6 dark:bg-purple-950/15 blur-[120px]" />
-            <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-purple-950/5 dark:bg-purple-950/10 blur-[100px]" />
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none transform-gpu will-change-transform"
+            style={{ contain: "strict" }}
+          >
+            <div
+              className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full transform-gpu"
+              style={{
+                background: "radial-gradient(circle, rgba(147, 51, 234, 0.08) 0%, rgba(147, 51, 234, 0.03) 45%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full transform-gpu"
+              style={{
+                background: "radial-gradient(circle, rgba(88, 28, 135, 0.06) 0%, rgba(88, 28, 135, 0.02) 45%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full transform-gpu"
+              style={{
+                background: "radial-gradient(circle, rgba(59, 7, 100, 0.05) 0%, rgba(59, 7, 100, 0.01) 45%, transparent 70%)",
+              }}
+            />
           </div>
         )}
 
@@ -74,6 +93,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 min-h-0 relative">
           <Sidebar />
           <main
+            style={{ WebkitOverflowScrolling: "touch" }}
             className={`relative z-10 flex-1 bg-white dark:bg-black ${
               isSkillBits
                 ? "p-0 overflow-hidden h-[100dvh] md:h-[calc(100dvh-3.5rem)]"

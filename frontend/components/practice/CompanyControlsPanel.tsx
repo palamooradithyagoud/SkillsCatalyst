@@ -33,6 +33,13 @@ export function CompanyControlsPanel({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const displayedCompanies = React.useMemo(() => {
+    if (companySearchInput.trim()) {
+      return filteredCompaniesDropdown;
+    }
+    return filteredCompaniesDropdown.slice(0, 80);
+  }, [filteredCompaniesDropdown, companySearchInput]);
+
   return (
     <div className="bg-white dark:bg-[#18191F] p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4 relative overflow-visible">
       <div className="absolute -top-10 -right-10 w-44 h-44 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -72,7 +79,7 @@ export function CompanyControlsPanel({
             {isDropdownOpen && (
               <div className="absolute left-0 top-full mt-1.5 w-full bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1 max-h-72 flex flex-col animate-in fade-in zoom-in-95 duration-150">
                 <div className="overflow-y-auto max-h-72 divide-y divide-slate-100 dark:divide-neutral-800 scrollbar-thin">
-                  {filteredCompaniesDropdown.map((comp) => {
+                  {displayedCompanies.map((comp) => {
                     const isSelected = selectedCompany === comp;
                     return (
                       <button
@@ -106,6 +113,11 @@ export function CompanyControlsPanel({
                       </button>
                     );
                   })}
+                  {!companySearchInput.trim() && filteredCompaniesDropdown.length > 80 && (
+                    <div className="p-2 text-center text-[11px] font-semibold text-slate-400 dark:text-neutral-500 bg-slate-50 dark:bg-[#14151a]">
+                      Use the search bar on the right to filter across all {filteredCompaniesDropdown.length} companies
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -737,7 +737,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-family: var(--font-caveat), 'Caveat', 'Segoe Print', cursive;
   font-size: clamp(0.78rem, 2.6vw, 0.94rem);
   line-height: 1.05;
   color: #c7d2fe;
@@ -1113,7 +1113,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-family: var(--font-caveat), 'Caveat', 'Segoe Print', cursive;
   font-size: clamp(0.86rem, 2.8vw, 1.02rem);
   line-height: 1.05;
   color: #e2e8f0;
