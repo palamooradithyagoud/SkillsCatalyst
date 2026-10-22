@@ -77,14 +77,14 @@ function renderInlineMarkdown(text: string): React.ReactNode {
     }
     if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
       return (
-        <strong key={i} className="font-semibold text-neutral-900 dark:text-neutral-100">
+        <strong key={i} className="font-bold text-neutral-950 dark:text-white">
           {renderInlineMarkdown(part.slice(2, -2))}
         </strong>
       );
     }
     if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
       return (
-        <em key={i} className="italic text-neutral-800 dark:text-neutral-200">
+        <em key={i} className="italic text-neutral-950 dark:text-white">
           {part.slice(1, -1)}
         </em>
       );
@@ -179,7 +179,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
       nodes.push(
         <h4
           key={`h4-${i}`}
-          className="text-xs md:text-sm font-semibold text-neutral-900 dark:text-neutral-100 mt-2.5 mb-1"
+          className="text-xs md:text-sm font-semibold text-neutral-950 dark:text-white mt-2.5 mb-1"
         >
           {renderInlineMarkdown(trimmed.slice(5).trim())}
         </h4>
@@ -220,14 +220,17 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
       nodes.push(
         <div
           key={`table-${tableStartIndex}`}
-          className="my-3.5 overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/60 shadow-2xs"
+          className="my-3 w-full max-w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/60 shadow-2xs"
         >
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full min-w-full text-left text-[11px] sm:text-xs border-collapse table-auto break-words">
             {headerRow && (
               <thead>
-                <tr className="bg-neutral-100/90 dark:bg-neutral-800/80 text-neutral-900 dark:text-neutral-100 border-b border-neutral-200 dark:border-neutral-800 font-semibold">
+                <tr className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white border-b border-neutral-200 dark:border-neutral-800 font-bold">
                   {headerRow.map((cell, ci) => (
-                    <th key={ci} className="px-3.5 py-2.5 whitespace-nowrap">
+                    <th
+                      key={ci}
+                      className="px-2 sm:px-3.5 py-1.5 sm:py-2.5 align-top break-words leading-tight sm:leading-snug"
+                    >
                       {renderInlineMarkdown(cell)}
                     </th>
                   ))}
@@ -243,7 +246,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
                   {row.map((cell, ci) => (
                     <td
                       key={ci}
-                      className="px-3.5 py-2.5 text-neutral-800 dark:text-neutral-200 align-top leading-relaxed"
+                      className="px-2 sm:px-3.5 py-1.5 sm:py-2.5 text-neutral-900 dark:text-white align-top leading-tight sm:leading-relaxed break-words"
                     >
                       {renderInlineMarkdown(cell)}
                     </td>
@@ -268,7 +271,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
       nodes.push(
         <blockquote
           key={`quote-${quoteStartIndex}`}
-          className="my-2.5 pl-3.5 border-l-2 border-purple-500 bg-purple-50/40 dark:bg-purple-950/20 py-2 rounded-r-lg text-neutral-700 dark:text-neutral-300 italic text-xs leading-relaxed"
+          className="my-2.5 pl-3.5 border-l-2 border-purple-500 bg-purple-50/40 dark:bg-purple-950/20 py-2 rounded-r-lg text-neutral-900 dark:text-white italic text-xs leading-relaxed"
         >
           {quoteLines.map((ql, qIdx) => (
             <p key={qIdx}>{renderInlineMarkdown(ql)}</p>
@@ -291,7 +294,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
           {listItems.map((item, liIdx) => (
             <li
               key={liIdx}
-              className="flex items-start gap-2 text-neutral-800 dark:text-neutral-200 text-xs md:text-[13px] leading-relaxed"
+              className="flex items-start gap-2 text-neutral-950 dark:text-white text-xs md:text-[13.5px] leading-relaxed"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0" />
               <span className="flex-1 min-w-0">{renderInlineMarkdown(item)}</span>
@@ -315,7 +318,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
           {listItems.map((item, liIdx) => (
             <li
               key={liIdx}
-              className="flex items-start gap-2 text-neutral-800 dark:text-neutral-200 text-xs md:text-[13px] leading-relaxed"
+              className="flex items-start gap-2 text-neutral-950 dark:text-white text-xs md:text-[13.5px] leading-relaxed"
             >
               <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 mt-0.5 shrink-0 min-w-4 select-none">
                 {liIdx + 1}.
@@ -351,7 +354,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
       nodes.push(
         <p
           key={`p-${pStartIndex}`}
-          className="text-neutral-800 dark:text-neutral-200 leading-relaxed text-xs md:text-[13.5px] my-1.5"
+          className="text-neutral-950 dark:text-white leading-relaxed text-xs md:text-[14px] my-1.5"
         >
           {pLines.map((pl, pIdx) => (
             <React.Fragment key={pIdx}>
@@ -382,7 +385,7 @@ function MessageContent({ content }: { content: string }) {
   const parts = content.split(/(```[\s\S]*?```)/g);
 
   return (
-    <div className="space-y-2 leading-relaxed text-[13.5px]">
+    <div className="w-full max-w-full min-w-0 space-y-2.5 leading-relaxed text-[13.5px] sm:text-[14px] text-neutral-950 dark:text-white break-words">
       {parts.map((part, index) => {
         if (part.startsWith("```") && part.endsWith("```")) {
           const lines = part.slice(3, -3).trim().split("\n");
@@ -394,7 +397,7 @@ function MessageContent({ content }: { content: string }) {
           return (
             <div
               key={index}
-              className="my-3 overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xs"
+              className="my-3 w-full max-w-full overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-950 text-neutral-100 shadow-xs"
             >
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-neutral-800 bg-neutral-900/90 text-[11px] text-neutral-400 font-mono">
                 <span>{language}</span>
@@ -417,14 +420,18 @@ function MessageContent({ content }: { content: string }) {
                   )}
                 </button>
               </div>
-              <pre className="p-3.5 overflow-x-auto text-xs font-mono text-neutral-200 leading-normal selection:bg-neutral-800">
+              <pre className="p-3 sm:p-3.5 overflow-x-auto text-xs font-mono text-neutral-200 leading-normal selection:bg-neutral-800 max-w-full">
                 <code>{codeBody}</code>
               </pre>
             </div>
           );
         }
 
-        return <div key={index}>{renderMarkdownBlocks(part)}</div>;
+        return (
+          <div key={index} className="w-full max-w-full min-w-0 break-words">
+            {renderMarkdownBlocks(part)}
+          </div>
+        );
       })}
     </div>
   );
@@ -816,10 +823,10 @@ export default function AIMentorPage() {
       </aside>
 
       {/* ── Main Chat Area ── */}
-      <main className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#0c0d10] relative w-full">
+      <main className="flex-1 flex flex-col h-full min-w-0 max-w-full bg-white dark:bg-[#0c0d10] relative w-full overflow-x-hidden">
         {/* Top Header - Floating Circular Action Buttons (Image 2) */}
         <header
-          className={`h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 bg-transparent z-10 ${
+          className={`h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-transparent z-10 ${
             isSidebarOpen ? "hidden md:hidden" : "flex"
           }`}
         >
@@ -827,7 +834,7 @@ export default function AIMentorPage() {
             {/* Back Button */}
             <Link
               href="/dashboard"
-              className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               title="Back to Dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -836,7 +843,7 @@ export default function AIMentorPage() {
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
               title="Open sidebar"
               aria-label="Open sidebar"
             >
@@ -848,7 +855,7 @@ export default function AIMentorPage() {
           <button
             type="button"
             onClick={handleStartNewConversation}
-            className="size-9 sm:size-10 rounded-full bg-white text-neutral-700 hover:text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+            className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
             title="Start new chat"
             aria-label="Start new chat"
           >
@@ -857,38 +864,38 @@ export default function AIMentorPage() {
         </header>
 
         {/* Content Body: Empty State Hero (Image 2) OR Message History */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-12 lg:px-16 py-3 md:py-6 flex flex-col">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 md:px-12 lg:px-16 py-3 md:py-6 flex flex-col w-full max-w-full">
           {isLoadingHistory ? (
             <div className="flex items-center justify-center my-auto text-neutral-400 dark:text-neutral-500 text-xs gap-2">
               <RotateCw className="h-4 w-4 animate-spin text-purple-600" />
               Loading chat history...
             </div>
           ) : messages.length === 0 ? (
-            /* EMPTY STATE HERO MATCHING IMAGE 2 (WHITE + DARK SHADOW) */
-            <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col justify-between pt-1 md:pt-2">
+            /* EMPTY STATE HERO (WHITE IN BRIGHT MODE, DARK IN DARK MODE) */
+            <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col justify-between pt-1 md:pt-2 min-w-0">
               {/* Top Left: Glowing Orb + Greeting Headline + 3 Prompt Pills */}
-              <div className="flex flex-col items-start text-left">
+              <div className="flex flex-col items-start text-left w-full max-w-full">
                 {/* Luminous Glowing Orb at Top Left */}
-                <div className="size-9 sm:size-10 rounded-full overflow-hidden mb-3 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)] p-0.5 flex items-center justify-center">
+                <div className="size-9 sm:size-10 rounded-full overflow-hidden mb-3 bg-white dark:bg-neutral-800 shadow-[0_4px_16px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 p-0.5 flex items-center justify-center">
                   <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                 </div>
 
                 {/* Greeting Headline */}
-                <p className="text-xs sm:text-sm text-neutral-500 font-normal leading-tight text-left">
+                <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-normal leading-tight text-left">
                   Hi {displayName}
                 </p>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-neutral-950 mt-1 mb-4 leading-snug text-left">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white mt-1 mb-4 leading-snug text-left">
                   What can AI Catalyst help you with?
                 </h1>
 
-                {/* High-Value SkillsCatalyst Context Prompt Pills (White with Dark Shadow) */}
-                <div className="flex flex-col items-start gap-2.5 w-full">
+                {/* High-Value SkillsCatalyst Context Prompt Pills */}
+                <div className="flex flex-col items-start gap-2.5 w-full max-w-full">
                   {PLATFORM_PROMPTS.map((item, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => handleSendMessage(item.prompt)}
-                      className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white text-neutral-900 text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
+                      className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-neutral-800/90 text-neutral-900 dark:text-white text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
                     >
                       <span className="text-sm select-none shrink-0">{item.icon}</span>
                       <span className="truncate">{item.label}</span>
@@ -900,62 +907,60 @@ export default function AIMentorPage() {
 
             </div>
           ) : (
-            /* Render Active Message History */
-            <div className="max-w-3xl w-full mx-auto space-y-6 pb-4">
+            /* Render Active Message History (ChatGPT Style - No Card on Assistant Reply) */
+            <div className="max-w-3xl w-full mx-auto space-y-6 sm:space-y-7 pb-6 min-w-0">
               {messages.map((msg) => {
                 const isUser = msg.role === "user";
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3.5 ${
-                      isUser ? "max-w-xl ml-auto justify-end" : "w-full max-w-3xl mr-auto justify-start"
-                    }`}
+                    className={`w-full max-w-full flex gap-1.5 sm:gap-3.5 ${
+                      isUser ? "justify-end" : "justify-start"
+                    } min-w-0`}
                   >
-                    {/* Assistant Avatar in Purple Ring */}
+                    {/* Assistant Avatar */}
                     {!isUser && (
-                      <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+                      <div className="size-5 sm:size-8 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
                         <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                       </div>
                     )}
 
-                    {/* Bubble (White with Dark Shadow) */}
-                    <div
-                      className={`px-4.5 py-3 leading-relaxed break-words shadow-[0_4px_16px_rgba(0,0,0,0.08)] ${
-                        isUser
-                          ? "rounded-2xl rounded-tr-none bg-white text-neutral-900 font-normal"
-                          : "flex-1 min-w-0 rounded-2xl rounded-tl-none bg-white text-neutral-900"
-                      }`}
-                    >
-                      {isUser ? (
-                        <div className="whitespace-pre-wrap break-words text-neutral-900 text-[13.5px] leading-relaxed">
-                          {msg.content}
+                    {/* Message Content */}
+                    {isUser ? (
+                      <div className="flex items-start gap-2 max-w-[85%] sm:max-w-xl min-w-0">
+                        {/* User bubble: distinct, compact right-aligned bubble */}
+                        <div className="rounded-2xl rounded-tr-sm px-3.5 sm:px-4 py-2 sm:py-2.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs border border-neutral-200/70 dark:border-neutral-700/70 min-w-0 break-words">
+                          <div className="whitespace-pre-wrap break-words text-neutral-950 dark:text-white text-xs sm:text-[14px] leading-relaxed">
+                            {msg.content}
+                          </div>
                         </div>
-                      ) : (
-                        <MessageContent content={msg.content} />
-                      )}
-                    </div>
 
-                    {/* User Avatar */}
-                    {isUser && (
-                      <div className="size-7 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 mt-0.5 text-xs font-semibold shadow-xs">
-                        {displayName.slice(0, 1).toUpperCase()}
+                        {/* User Avatar */}
+                        <div className="size-6 sm:size-7 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 mt-0.5 text-[11px] sm:text-xs font-bold shadow-xs">
+                          {displayName.slice(0, 1).toUpperCase()}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Assistant Reply: WITHOUT CARD FORMAT (FREE-FLOWING LIKE CHATGPT) */
+                      <div className="flex-1 min-w-0 max-w-full text-neutral-950 dark:text-white leading-relaxed break-words overflow-x-hidden">
+                        <MessageContent content={msg.content} />
                       </div>
                     )}
                   </div>
                 );
               })}
 
-              {/* Thinking State */}
+              {/* Thinking State: Free-flowing without Card Format */}
               {isLoading && (
-                <div className="flex gap-3 mr-auto justify-start">
-                  <div className="size-7 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+                <div className="w-full max-w-full flex gap-1.5 sm:gap-3.5 justify-start min-w-0">
+                  <div className="size-5 sm:size-8 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
                     <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                   </div>
-                  <div className="rounded-2xl px-4 py-3 text-xs bg-white text-neutral-500 flex items-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.18s]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.36s]" />
-                    <span className="text-[11px] text-neutral-500 ml-1">
+                  <div className="flex items-center gap-2 py-1.5 text-neutral-500 dark:text-neutral-400 text-xs">
+                    <span className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
+                    <span className="h-2 w-2 rounded-full bg-purple-500 animate-bounce [animation-delay:0.18s]" />
+                    <span className="h-2 w-2 rounded-full bg-purple-500 animate-bounce [animation-delay:0.36s]" />
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 font-medium">
                       Thinking...
                     </span>
                   </div>
@@ -964,7 +969,7 @@ export default function AIMentorPage() {
 
               {/* Error Message */}
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-red-200 text-red-700 text-xs flex items-center gap-2.5">
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs flex items-center gap-2.5">
                   <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
                   <span className="flex-1">{errorMsg}</span>
                   <button
@@ -986,7 +991,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* ── Bottom Dedicated Animated Recessed Morphing Search Bar (Inspired by Mockup) ── */}
-        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full flex flex-col items-center shrink-0 z-20">
+        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full max-w-full overflow-hidden flex flex-col items-center shrink-0 z-20">
           <RecessedMorphingSearch
             onSendMessage={(query) => handleSendMessage(query)}
             isLoading={isLoading}
