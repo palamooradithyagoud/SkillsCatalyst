@@ -1134,7 +1134,7 @@ async def cancel_task_action_endpoint(
     dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
 )
 async def get_learning_profile_endpoint(
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Retrieves the authenticated student's learning profile.
@@ -1158,7 +1158,7 @@ async def get_learning_profile_endpoint(
 )
 async def update_learning_profile_endpoint(
     req: UpdateLearningProfileRequest,
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Creates or updates the authenticated student's persistent learning profile.
@@ -1185,7 +1185,7 @@ async def update_learning_profile_endpoint(
     dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
 )
 async def reset_learning_profile_endpoint(
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Resets the authenticated student's learning profile to default settings.
@@ -1215,7 +1215,7 @@ async def reset_learning_profile_endpoint(
     dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
 )
 async def list_roadmaps_endpoint(
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Lists all saved learning roadmaps for the authenticated student.
@@ -1239,7 +1239,7 @@ async def list_roadmaps_endpoint(
 )
 async def generate_roadmap_endpoint(
     req: GenerateRoadmapRequest,
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Generates a personalized, stage-based learning roadmap based on career goal and level.
@@ -1269,7 +1269,7 @@ async def generate_roadmap_endpoint(
 )
 async def get_roadmap_endpoint(
     roadmap_id: str,
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Retrieves a specific learning roadmap by ID.
@@ -1299,7 +1299,7 @@ async def get_roadmap_endpoint(
 )
 async def delete_roadmap_endpoint(
     roadmap_id: str,
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Deletes a specific roadmap owned by the authenticated student.
@@ -1335,7 +1335,7 @@ async def delete_roadmap_endpoint(
 async def convert_milestones_to_tasks_endpoint(
     roadmap_id: str,
     req: ConvertMilestonesToTasksRequest,
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Converts selected roadmap milestones into a Phase 2A task proposal (batch_create_tasks)
@@ -1372,7 +1372,7 @@ async def convert_milestones_to_tasks_endpoint(
 )
 async def skill_gap_analysis_endpoint(
     target_role: Optional[str] = Query(None, description="Optional override for target role analysis"),
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Performs transparent, evidence-aware skill gap analysis.
@@ -1397,7 +1397,7 @@ async def skill_gap_analysis_endpoint(
 )
 async def weekly_review_endpoint(
     timezone: Optional[str] = Query("UTC", description="Client timezone"),
-    current_user_id: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_session_or_user_id),
 ):
     """
     Generates an evidence-backed weekly progress review from authentic task records.
