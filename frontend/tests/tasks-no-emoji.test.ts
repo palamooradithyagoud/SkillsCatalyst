@@ -29,6 +29,7 @@ describe('Phase 1: Strict Zero-Emoji Rule Verification', () => {
     'lib/api/ai-mentor-personalization.ts',
     'types/ai-mentor-tasks.ts',
     'types/ai-mentor-personalization.ts',
+    'components/ui/ai-chat-input.tsx',
   ];
 
   for (const relativePath of targetFiles) {

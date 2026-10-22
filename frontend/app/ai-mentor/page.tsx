@@ -34,7 +34,7 @@ import {
   sendMentorMessage,
 } from "@/lib/api/career";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
-import { RecessedMorphingSearch } from "@/components/ui/recessed-morphing-search";
+import { PromptInput } from "@/components/ui/ai-chat-input";
 import { TaskActionCard } from "@/components/ai-mentor/TaskActionCard";
 import {
   PersonalizationDrawer,
@@ -1135,12 +1135,12 @@ export default function AIMentorPage() {
           )}
         </div>
 
-        {/* ── Bottom Dedicated Animated Recessed Morphing Search Bar (Inspired by Mockup) ── */}
-        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full max-w-full overflow-hidden flex flex-col items-center shrink-0 z-20">
-          <RecessedMorphingSearch
-            onSendMessage={(query) => handleSendMessage(query)}
-            isLoading={isLoading}
+        {/* ── Bottom Dedicated Prompt Input ── */}
+        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full max-w-3xl mx-auto overflow-visible flex flex-col items-center shrink-0 z-20">
+          <PromptInput
+            onSubmit={(query, meta) => handleSendMessage(query, meta)}
             placeholder="Ask AI Catalyst..."
+            className="w-full"
           />
         </div>
       </main>
