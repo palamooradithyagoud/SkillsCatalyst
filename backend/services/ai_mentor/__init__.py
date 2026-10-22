@@ -67,14 +67,54 @@ from backend.services.ai_mentor.approval_service import (
 from backend.services.ai_mentor.task_prompts import (
     TASK_INTEGRATION_SYSTEM_INSTRUCTIONS,
 )
+from backend.services.ai_mentor.smart_planner import (
+    prioritize_user_tasks,
+    analyze_schedule_conflicts,
+    distribute_tasks_across_days,
+    format_smart_planner_context,
+)
 from backend.models.ai_mentor_tasks import (
     MAX_BATCH_TASKS_LIMIT,
     TaskActionType,
     ProposedTaskItem,
+    ScheduledPlanItem,
+    SchedulePlanData,
     TaskActionProposal,
     ExecuteTaskActionRequest,
     ExecuteTaskActionResponse,
     CancelTaskActionRequest,
+)
+
+from backend.models.ai_mentor_personalization import (
+    ExperienceLevel,
+    RoadmapStatus,
+    MilestoneStatus,
+    SkillStatus,
+    StudentLearningProfile,
+    UpdateLearningProfileRequest,
+    RoadmapMilestone,
+    RoadmapStage,
+    StudentLearningRoadmap,
+    GenerateRoadmapRequest,
+    ConvertMilestonesToTasksRequest,
+    SkillGapItem,
+    SkillGapAnalysisResult,
+    WeeklyProgressReviewResult,
+)
+from backend.services.ai_mentor.personalization_service import (
+    get_student_learning_profile,
+    save_student_learning_profile,
+    reset_student_learning_profile,
+    get_student_learning_progress_state,
+    analyze_skill_gaps,
+    generate_student_roadmap,
+    save_student_roadmap,
+    get_student_roadmaps,
+    get_student_roadmap_by_id,
+    delete_student_roadmap,
+    convert_roadmap_milestones_to_task_proposals,
+    generate_weekly_progress_review,
+    format_personalization_context_for_prompt,
 )
 
 __all__ = [
@@ -113,7 +153,7 @@ __all__ = [
     "save_message",
     "get_recent_messages",
     "build_mentor_llm_messages",
-    # Phase 2A: Tasks & To-Do List Integration
+    # Phase 2A & 2B: Tasks & Smart Planning Integration
     "fetch_authenticated_user_tasks",
     "format_tasks_for_mentor_prompt",
     "find_matching_tasks",
@@ -129,9 +169,43 @@ __all__ = [
     "MAX_BATCH_TASKS_LIMIT",
     "TaskActionType",
     "ProposedTaskItem",
+    "ScheduledPlanItem",
+    "SchedulePlanData",
     "TaskActionProposal",
     "ExecuteTaskActionRequest",
     "ExecuteTaskActionResponse",
     "CancelTaskActionRequest",
+    "prioritize_user_tasks",
+    "analyze_schedule_conflicts",
+    "distribute_tasks_across_days",
+    "format_smart_planner_context",
+    # Phase 2C: Personalized AI Mentor
+    "ExperienceLevel",
+    "RoadmapStatus",
+    "MilestoneStatus",
+    "SkillStatus",
+    "StudentLearningProfile",
+    "UpdateLearningProfileRequest",
+    "RoadmapMilestone",
+    "RoadmapStage",
+    "StudentLearningRoadmap",
+    "GenerateRoadmapRequest",
+    "ConvertMilestonesToTasksRequest",
+    "SkillGapItem",
+    "SkillGapAnalysisResult",
+    "WeeklyProgressReviewResult",
+    "get_student_learning_profile",
+    "save_student_learning_profile",
+    "reset_student_learning_profile",
+    "get_student_learning_progress_state",
+    "analyze_skill_gaps",
+    "generate_student_roadmap",
+    "save_student_roadmap",
+    "get_student_roadmaps",
+    "get_student_roadmap_by_id",
+    "delete_student_roadmap",
+    "convert_roadmap_milestones_to_task_proposals",
+    "generate_weekly_progress_review",
+    "format_personalization_context_for_prompt",
 ]
 

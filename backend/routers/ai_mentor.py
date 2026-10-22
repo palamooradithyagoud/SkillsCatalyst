@@ -39,12 +39,32 @@ from backend.services.ai_mentor import (
     build_mentor_llm_messages,
     fetch_authenticated_user_tasks,
     format_tasks_for_mentor_prompt,
+    format_smart_planner_context,
     extract_and_validate_proposals,
     execute_approved_task_action,
     TASK_INTEGRATION_SYSTEM_INSTRUCTIONS,
     ExecuteTaskActionRequest,
     ExecuteTaskActionResponse,
     CancelTaskActionRequest,
+    StudentLearningProfile,
+    UpdateLearningProfileRequest,
+    StudentLearningRoadmap,
+    GenerateRoadmapRequest,
+    ConvertMilestonesToTasksRequest,
+    SkillGapAnalysisResult,
+    WeeklyProgressReviewResult,
+    get_student_learning_profile,
+    save_student_learning_profile,
+    reset_student_learning_profile,
+    get_student_roadmaps,
+    get_student_roadmap_by_id,
+    delete_student_roadmap,
+    generate_student_roadmap,
+    save_student_roadmap,
+    convert_roadmap_milestones_to_task_proposals,
+    analyze_skill_gaps,
+    generate_weekly_progress_review,
+    format_personalization_context_for_prompt,
 )
 from backend.services.ai_mentor.approval_service import (
     verify_approval_token,
@@ -564,11 +584,22 @@ async def chat_mentor(
                     pass
             ref_time_str = now_dt.strftime("%A, %d %B %Y, %H:%M:%S")
             task_context_block = format_tasks_for_mentor_prompt(user_tasks, ref_time_str, client_tz)
+            smart_planner_block = format_smart_planner_context(user_tasks, now_dt, client_tz)
             effective_system_prompt = (
-                f"{effective_system_prompt}\n\n{TASK_INTEGRATION_SYSTEM_INSTRUCTIONS}\n\n{task_context_block}"
+                f"{effective_system_prompt}\n\n{TASK_INTEGRATION_SYSTEM_INSTRUCTIONS}\n\n{task_context_block}\n\n{smart_planner_block}"
             )
         except Exception as task_err:
             logger.warning(f"Error preparing task context for mentor chat: {task_err}")
+
+        # Phase 2C Personalization context: profile, active roadmaps, skill gaps, progress evidence
+        try:
+            personalization_block = await asyncio.to_thread(
+                format_personalization_context_for_prompt, current_user_id, user_tasks, client_tz
+            )
+            if personalization_block:
+                effective_system_prompt = f"{effective_system_prompt}\n\n{personalization_block}"
+        except Exception as p_err:
+            logger.warning(f"Error preparing personalization context for mentor chat: {p_err}")
 
         # 3. Assemble bounded multi-turn LLM message structure
         current_msg_id = user_msg.get("id") if user_msg else None
@@ -1087,4 +1118,295 @@ async def cancel_task_action_endpoint(
         )
 
     return {"success": True, "message": "Task action canceled successfully."}
+
+
+# ---------------------------------------------------------------------------
+# Phase 2C: Personalized AI Mentor Endpoints
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/learning-profile",
+    response_model=StudentLearningProfile,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def get_learning_profile_endpoint(
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Retrieves the authenticated student's learning profile.
+    Uses sensible defaults and fallbacks if no persistent profile exists yet.
+    """
+    try:
+        profile = await asyncio.to_thread(get_student_learning_profile, current_user_id)
+        return profile
+    except Exception as e:
+        logger.error(f"Error retrieving learning profile for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "PROFILE_ERROR", "message": "Failed to retrieve student profile."},
+        )
+
+
+@router.put(
+    "/learning-profile",
+    response_model=StudentLearningProfile,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def update_learning_profile_endpoint(
+    req: UpdateLearningProfileRequest,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Creates or updates the authenticated student's persistent learning profile.
+    Validates all inputs and prevents cross-user modification.
+    """
+    try:
+        updated = await asyncio.to_thread(save_student_learning_profile, current_user_id, req)
+        return updated
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "code": "VALIDATION_ERROR", "message": str(ve)},
+        )
+    except Exception as e:
+        logger.error(f"Error saving learning profile for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "PROFILE_ERROR", "message": "Failed to save student profile."},
+        )
+
+
+@router.delete(
+    "/learning-profile",
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def reset_learning_profile_endpoint(
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Resets the authenticated student's learning profile to default settings.
+    Purges cached profile context immediately.
+    """
+    try:
+        success = await asyncio.to_thread(reset_student_learning_profile, current_user_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"success": False, "code": "RESET_FAILED", "message": "Failed to reset profile."},
+            )
+        return {"success": True, "message": "Student learning profile reset successfully."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting learning profile for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "RESET_ERROR", "message": "Failed to reset student profile."},
+        )
+
+
+@router.get(
+    "/roadmaps",
+    response_model=list[StudentLearningRoadmap],
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def list_roadmaps_endpoint(
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Lists all saved learning roadmaps for the authenticated student.
+    Strictly isolated to current_user_id.
+    """
+    try:
+        roadmaps = await asyncio.to_thread(get_student_roadmaps, current_user_id)
+        return roadmaps
+    except Exception as e:
+        logger.error(f"Error retrieving roadmaps for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "ROADMAP_ERROR", "message": "Failed to retrieve learning roadmaps."},
+        )
+
+
+@router.post(
+    "/roadmaps",
+    response_model=StudentLearningRoadmap,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def generate_roadmap_endpoint(
+    req: GenerateRoadmapRequest,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Generates a personalized, stage-based learning roadmap based on career goal and level.
+    Persists to database and returns the roadmap.
+    """
+    try:
+        roadmap = await asyncio.to_thread(generate_student_roadmap, current_user_id, req)
+        saved = await asyncio.to_thread(save_student_roadmap, current_user_id, roadmap)
+        return saved
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "code": "VALIDATION_ERROR", "message": str(ve)},
+        )
+    except Exception as e:
+        logger.error(f"Error generating roadmap for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "ROADMAP_ERROR", "message": "Failed to generate learning roadmap."},
+        )
+
+
+@router.get(
+    "/roadmaps/{roadmap_id}",
+    response_model=StudentLearningRoadmap,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def get_roadmap_endpoint(
+    roadmap_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Retrieves a specific learning roadmap by ID.
+    Enforces user ownership (cross-user access returns 404).
+    """
+    try:
+        roadmap = await asyncio.to_thread(get_student_roadmap_by_id, current_user_id, roadmap_id)
+        if not roadmap:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"success": False, "code": "NOT_FOUND", "message": "Roadmap not found."},
+            )
+        return roadmap
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving roadmap {roadmap_id} for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "ROADMAP_ERROR", "message": "Failed to retrieve roadmap."},
+        )
+
+
+@router.delete(
+    "/roadmaps/{roadmap_id}",
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def delete_roadmap_endpoint(
+    roadmap_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Deletes a specific roadmap owned by the authenticated student.
+    """
+    try:
+        existing = await asyncio.to_thread(get_student_roadmap_by_id, current_user_id, roadmap_id)
+        if not existing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"success": False, "code": "NOT_FOUND", "message": "Roadmap not found."},
+            )
+        success = await asyncio.to_thread(delete_student_roadmap, current_user_id, roadmap_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"success": False, "code": "DELETE_FAILED", "message": "Failed to delete roadmap."},
+            )
+        return {"success": True, "message": "Roadmap deleted successfully."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting roadmap {roadmap_id} for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "ROADMAP_ERROR", "message": "Failed to delete roadmap."},
+        )
+
+
+@router.post(
+    "/roadmaps/{roadmap_id}/convert-to-tasks",
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def convert_milestones_to_tasks_endpoint(
+    roadmap_id: str,
+    req: ConvertMilestonesToTasksRequest,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Converts selected roadmap milestones into a Phase 2A task proposal (batch_create_tasks)
+    with a signed HMAC approval token. Does NOT create tasks directly in the database.
+    The client receives the proposal and must present it for user approval.
+    """
+    try:
+        proposal = await asyncio.to_thread(
+            convert_roadmap_milestones_to_task_proposals,
+            current_user_id,
+            roadmap_id,
+            req.milestone_ids,
+        )
+        if not proposal:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"success": False, "code": "CONVERSION_FAILED", "message": "Invalid roadmap or milestone IDs."},
+            )
+        return {"success": True, "proposal": proposal}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error converting milestones to tasks for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "PROPOSAL_ERROR", "message": "Failed to propose tasks from roadmap."},
+        )
+
+
+@router.get(
+    "/skill-gap-analysis",
+    response_model=SkillGapAnalysisResult,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def skill_gap_analysis_endpoint(
+    target_role: Optional[str] = Query(None, description="Optional override for target role analysis"),
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Performs transparent, evidence-aware skill gap analysis.
+    Distinguishes confirmed skills, self-reported skills, target skills, confirmed gaps, and unevaluated areas.
+    Never fabricates mastery scores.
+    """
+    try:
+        analysis = await asyncio.to_thread(analyze_skill_gaps, current_user_id, target_role)
+        return analysis
+    except Exception as e:
+        logger.error(f"Error analyzing skill gaps for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "ANALYSIS_ERROR", "message": "Failed to perform skill gap analysis."},
+        )
+
+
+@router.get(
+    "/weekly-review",
+    response_model=WeeklyProgressReviewResult,
+    dependencies=[Depends(enforce_rate_limit(max_requests=RATE_LIMIT_AI_RPM))],
+)
+async def weekly_review_endpoint(
+    timezone: Optional[str] = Query("UTC", description="Client timezone"),
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Generates an evidence-backed weekly progress review from authentic task records.
+    Respects student timezone and distinguishes measured facts from planning suggestions.
+    """
+    try:
+        review = await asyncio.to_thread(generate_weekly_progress_review, current_user_id, timezone or "UTC")
+        return review
+    except Exception as e:
+        logger.error(f"Error generating weekly review for user {current_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "code": "REVIEW_ERROR", "message": "Failed to generate weekly review."},
+        )
+
 

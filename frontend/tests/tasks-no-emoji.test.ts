@@ -24,8 +24,11 @@ describe('Phase 1: Strict Zero-Emoji Rule Verification', () => {
     'types/task.ts',
     'app/ai-mentor/page.tsx',
     'components/ai-mentor/TaskActionCard.tsx',
+    'components/ai-mentor/PersonalizationDrawer.tsx',
     'lib/api/ai-mentor-tasks.ts',
+    'lib/api/ai-mentor-personalization.ts',
     'types/ai-mentor-tasks.ts',
+    'types/ai-mentor-personalization.ts',
   ];
 
   for (const relativePath of targetFiles) {

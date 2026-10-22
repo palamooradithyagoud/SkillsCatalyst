@@ -19,6 +19,10 @@ import {
   Sparkles,
   Compass,
   Rocket,
+  User,
+  Layers,
+  Calendar,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
@@ -32,10 +36,35 @@ import {
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { RecessedMorphingSearch } from "@/components/ui/recessed-morphing-search";
 import { TaskActionCard } from "@/components/ai-mentor/TaskActionCard";
+import {
+  PersonalizationDrawer,
+  PersonalizationTab,
+} from "@/components/ai-mentor/PersonalizationDrawer";
+import { TaskActionProposal } from "@/types/ai-mentor-tasks";
 
 // ----------------------------------------------------------------------
 // Curated High-Value SkillsCatalyst Prompts (Authentic Platform Context)
 // ----------------------------------------------------------------------
+const PERSONALIZATION_PROMPTS = [
+  {
+    icon: Layers,
+    label: "Generate Learning Roadmap",
+    prompt:
+      "Create a structured, stage-by-stage learning roadmap based on my career goals and current skill level.",
+  },
+  {
+    icon: BookOpen,
+    label: "Analyze Skill Gaps",
+    prompt:
+      "Analyze my skill gaps for my target role. Which skills should I prioritize developing first?",
+  },
+  {
+    icon: Calendar,
+    label: "Weekly Progress Review",
+    prompt:
+      "Review my learning progress this week. Summarize completed tasks, pending items, and suggest priorities for next week.",
+  },
+];
 const PLATFORM_PROMPTS = [
   {
     icon: Sparkles,
@@ -463,6 +492,29 @@ export default function AIMentorPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Phase 2C Personalization Studio drawer state
+  const [isPersonalizationOpen, setIsPersonalizationOpen] = useState(false);
+  const [personalizationTab, setPersonalizationTab] = useState<PersonalizationTab>("profile");
+
+  const handleOpenPersonalization = (tab: PersonalizationTab = "profile") => {
+    setPersonalizationTab(tab);
+    setIsPersonalizationOpen(true);
+  };
+
+  const handleProposeTasksFromRoadmap = (proposal: TaskActionProposal, contextMsg: string) => {
+    const assistantMsg: MentorMessage = {
+      id: `asst-${Date.now()}`,
+      conversation_id: activeConversationId || "temp",
+      user_id: userId || "guest",
+      role: "assistant",
+      content: contextMsg,
+      created_at: new Date().toISOString(),
+      action_proposals: [proposal],
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+    setIsPersonalizationOpen(false);
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -670,7 +722,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* Start New Chat Action Button */}
-        <div className="p-3.5 pb-2 min-w-[240px]">
+        <div className="p-3.5 pb-2 min-w-[240px] space-y-1.5">
           <button
             type="button"
             onClick={handleStartNewConversation}
@@ -678,6 +730,19 @@ export default function AIMentorPage() {
           >
             <Plus className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:rotate-90 transition-transform duration-200" />
             <span>Start new chat</span>
+          </button>
+
+          {/* Personalization Studio Quick Launcher */}
+          <button
+            type="button"
+            onClick={() => handleOpenPersonalization("profile")}
+            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-neutral-100/70 dark:bg-neutral-850/60 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer border border-neutral-200/60 dark:border-neutral-800"
+          >
+            <div className="flex items-center gap-2">
+              <Compass className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+              <span>Personalization Studio</span>
+            </div>
+            <ChevronRight className="h-3 w-3 text-neutral-400" />
           </button>
         </div>
 
@@ -829,12 +894,8 @@ export default function AIMentorPage() {
 
       {/* ── Main Chat Area ── */}
       <main className="flex-1 flex flex-col h-full min-w-0 max-w-full bg-white dark:bg-[#0c0d10] relative w-full overflow-x-hidden">
-        {/* Top Header - Floating Circular Action Buttons (Image 2) */}
-        <header
-          className={`h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-transparent z-10 ${
-            isSidebarOpen ? "hidden md:hidden" : "flex"
-          }`}
-        >
+        {/* Top Header - Floating Action Buttons */}
+        <header className="h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-transparent z-10">
           <div className="flex items-center gap-2.5">
             {/* Back Button */}
             <Link
@@ -844,28 +905,43 @@ export default function AIMentorPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            {/* Sidebar Toggle Button (Circle with Dark Shadow) */}
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(true)}
-              className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-              title="Open sidebar"
-              aria-label="Open sidebar"
-            >
-              <PanelLeft className="h-4 w-4" />
-            </button>
+            {/* Sidebar Toggle Button (when collapsed) */}
+            {!isSidebarOpen && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                title="Open sidebar"
+                aria-label="Open sidebar"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
-          {/* New Chat Button (Circle with Dark Shadow on Top-Right - Image 2) */}
-          <button
-            type="button"
-            onClick={handleStartNewConversation}
-            className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-            title="Start new chat"
-            aria-label="Start new chat"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Personalization Studio Button */}
+            <button
+              type="button"
+              onClick={() => handleOpenPersonalization("profile")}
+              className="h-9 sm:h-10 px-3.5 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center gap-1.5 text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+              title="Open Personalization Studio"
+            >
+              <Compass className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span>Studio</span>
+            </button>
+
+            {/* New Chat Button */}
+            <button
+              type="button"
+              onClick={handleStartNewConversation}
+              className="size-9 sm:size-10 rounded-full bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white shadow-[0_4px_14px_rgba(0,0,0,0.10)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              title="Start new chat"
+              aria-label="Start new chat"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         {/* Content Body: Empty State Hero (Image 2) OR Message History */}
@@ -893,22 +969,41 @@ export default function AIMentorPage() {
                   What can AI Catalyst help you with?
                 </h1>
 
-                {/* High-Value SkillsCatalyst Context Prompt Pills */}
+                {/* High-Value Context Prompt Pills */}
                 <div className="flex flex-col items-start gap-2.5 w-full max-w-full">
-                  {PLATFORM_PROMPTS.map((item, idx) => {
-                    const IconComp = item.icon;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSendMessage(item.prompt)}
-                        className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-neutral-800/90 text-neutral-900 dark:text-white text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
-                      >
-                        <IconComp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                        <span className="truncate">{item.label}</span>
-                      </button>
-                    );
-                  })}
+                  <div className="flex flex-wrap gap-2">
+                    {PERSONALIZATION_PROMPTS.map((item, idx) => {
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={`p-${idx}`}
+                          type="button"
+                          onClick={() => handleSendMessage(item.prompt)}
+                          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-medium border border-purple-200/60 dark:border-purple-800/50 hover:bg-purple-100 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
+                        >
+                          <IconComp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex flex-col items-start gap-2 w-full max-w-full pt-1">
+                    {PLATFORM_PROMPTS.map((item, idx) => {
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSendMessage(item.prompt)}
+                          className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-neutral-800/90 text-neutral-900 dark:text-white text-xs font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-neutral-200/80 dark:border-neutral-700/80 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.98] text-left max-w-full"
+                        >
+                          <IconComp className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1049,6 +1144,19 @@ export default function AIMentorPage() {
           />
         </div>
       </main>
+
+      {/* Phase 2C Personalization Studio Drawer */}
+      <PersonalizationDrawer
+        isOpen={isPersonalizationOpen}
+        onClose={() => setIsPersonalizationOpen(false)}
+        activeTab={personalizationTab}
+        onTabChange={(tab) => setPersonalizationTab(tab)}
+        onProposeTasks={handleProposeTasksFromRoadmap}
+        onSendMessage={(text) => {
+          setIsPersonalizationOpen(false);
+          handleSendMessage(text);
+        }}
+      />
     </div>
   );
 }

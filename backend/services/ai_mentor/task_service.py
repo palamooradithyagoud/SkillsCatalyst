@@ -20,6 +20,8 @@ from backend.models.ai_mentor_tasks import (
     MAX_BATCH_TASKS_LIMIT,
     TaskActionType,
     ProposedTaskItem,
+    ScheduledPlanItem,
+    SchedulePlanData,
     TaskActionProposal,
     ExecuteTaskActionRequest,
     ExecuteTaskActionResponse,
@@ -41,6 +43,7 @@ from backend.services.ai_mentor.approval_service import (
     get_idempotent_result,
     store_idempotent_result,
 )
+from backend.services.ai_mentor.smart_planner import analyze_schedule_conflicts
 from backend.services.supabase_service import get_supabase
 
 logger = logging.getLogger(__name__)
@@ -413,6 +416,89 @@ def extract_and_validate_proposals(
                     description=f"Delete task: {matched_task.get('title')}",
                 )
             )
+
+        # Case G: APPLY_SCHEDULE_PLAN (Phase 2B Smart Planning)
+        elif action_type == TaskActionType.APPLY_SCHEDULE_PLAN:
+            raw_items = item.get("items") or []
+            if not isinstance(raw_items, list) or len(raw_items) == 0:
+                continue
+
+            scheduled_items: List[ScheduledPlanItem] = []
+            for s_idx, s_raw in enumerate(raw_items[:30]):
+                if not isinstance(s_raw, dict):
+                    continue
+                tid = s_raw.get("task_id")
+                # Match against user tasks for authoritative id and title
+                matched = find_matching_tasks(str(tid or s_raw.get("title") or ""), user_tasks)
+                resolved_task_id = str(matched[0]["id"]) if matched else (str(tid) if tid else str(uuid.uuid4()))
+                resolved_title = matched[0].get("title") if matched else str(s_raw.get("title") or "Task")
+
+                st_time = _sanitize_due_at(s_raw.get("start_time"))
+                end_time = _sanitize_due_at(s_raw.get("end_time"))
+                due_at = _sanitize_due_at(s_raw.get("due_at")) or (matched[0].get("due_at") if matched else None)
+                pri_str = _sanitize_priority(s_raw.get("priority") or (matched[0].get("priority") if matched else "medium"))
+                est_m = _sanitize_est_minutes(s_raw.get("estimated_minutes")) or (matched[0].get("estimated_minutes") if matched else 60)
+                reason = str(s_raw.get("reason") or "Scheduled task")[:500]
+
+                time_range = s_raw.get("time_range")
+                if not time_range and st_time and end_time:
+                    try:
+                        s_dt = datetime.datetime.fromisoformat(st_time)
+                        e_dt = datetime.datetime.fromisoformat(end_time)
+                        time_range = f"{s_dt.strftime('%I:%M %p')} - {e_dt.strftime('%I:%M %p')}"
+                    except Exception:
+                        pass
+
+                scheduled_items.append(
+                    ScheduledPlanItem(
+                        task_id=resolved_task_id,
+                        title=resolved_title[:255],
+                        start_time=st_time,
+                        end_time=end_time,
+                        time_range=time_range,
+                        due_at=due_at,
+                        priority=TaskPriority(pri_str),
+                        estimated_minutes=est_m,
+                        reason=reason,
+                        warnings=[],
+                        is_conflict=False,
+                    )
+                )
+
+            if scheduled_items:
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
+                validated_items, detected_conflicts, global_warnings = analyze_schedule_conflicts(
+                    scheduled_items,
+                    reference_now=now_utc,
+                )
+
+                total_mins = sum((it.estimated_minutes or 0) for it in validated_items)
+                plan_period = str(item.get("plan_period") or "daily")[:50]
+                target_date = str(item.get("target_date") or now_utc.strftime("%Y-%m-%d"))[:50]
+                overload_warning = str(item.get("overload_warning") or "").strip() or None
+
+                plan_data = SchedulePlanData(
+                    plan_period=plan_period,
+                    target_date=target_date,
+                    total_allocated_minutes=total_mins,
+                    conflicts_detected=detected_conflicts,
+                    warnings=global_warnings,
+                    items=validated_items,
+                    overload_warning=overload_warning,
+                )
+
+                token, expires_at = generate_approval_token(user_id, action_id, action_type.value)
+                proposals.append(
+                    TaskActionProposal(
+                        action_id=action_id,
+                        action_type=action_type,
+                        schedule_plan=plan_data,
+                        approval_token=token,
+                        expires_at=expires_at,
+                        status="pending",
+                        description=f"Apply schedule plan ({len(validated_items)} tasks)",
+                    )
+                )
 
     return cleaned_reply, proposals
 
@@ -931,6 +1017,56 @@ def execute_approved_task_action(
                 action_type=action_type,
                 message=f"Task '{title}' deleted permanently.",
                 deleted_task_id=target_task_id,
+            )
+
+        # -------------------------------------------------------------------
+        # Action: APPLY_SCHEDULE_PLAN (Phase 2B Smart Planning)
+        # -------------------------------------------------------------------
+        elif action_type == TaskActionType.APPLY_SCHEDULE_PLAN.value:
+            plan = req.edited_plan
+            if not plan or not plan.items:
+                raise ValueError("No schedule plan items provided for execution.")
+
+            updated_tasks = []
+            for item in plan.items:
+                t_id = item.task_id
+                if not t_id:
+                    continue
+
+                # Verify ownership
+                existing = sb.from_("tasks").select("id, user_id, title").eq("id", t_id).eq("user_id", user_id).execute()
+                if not existing.data or len(existing.data) == 0:
+                    logger.warning(f"Task {t_id} not found or unauthorized during schedule execution; skipping.")
+                    continue
+
+                update_dict: Dict[str, Any] = {"updated_at": now_iso}
+                if item.time_range:
+                    update_dict["time_range"] = item.time_range
+                elif item.start_time and item.end_time:
+                    try:
+                        s_dt = datetime.datetime.fromisoformat(item.start_time)
+                        e_dt = datetime.datetime.fromisoformat(item.end_time)
+                        update_dict["time_range"] = f"{s_dt.strftime('%I:%M %p')} - {e_dt.strftime('%I:%M %p')}"
+                    except Exception:
+                        pass
+
+                if item.due_at:
+                    update_dict["due_at"] = _sanitize_due_at(item.due_at)
+                if item.priority:
+                    update_dict["priority"] = _sanitize_priority(item.priority.value if hasattr(item.priority, "value") else item.priority)
+                if item.estimated_minutes is not None:
+                    update_dict["estimated_minutes"] = _sanitize_est_minutes(item.estimated_minutes)
+
+                res = sb.from_("tasks").update(update_dict).eq("id", t_id).eq("user_id", user_id).select().execute()
+                if res.data and len(res.data) > 0:
+                    updated_tasks.append(res.data[0])
+
+            result_response = ExecuteTaskActionResponse(
+                success=True,
+                action_id=req.action_id,
+                action_type=action_type,
+                message=f"Schedule plan applied successfully to {len(updated_tasks)} task(s).",
+                created_tasks=updated_tasks,
             )
 
         else:

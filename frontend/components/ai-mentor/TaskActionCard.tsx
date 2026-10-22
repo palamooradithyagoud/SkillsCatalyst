@@ -19,6 +19,8 @@ import {
 import {
   TaskActionProposal,
   ProposedTaskItem,
+  ScheduledPlanItem,
+  SchedulePlanData,
 } from "@/types/ai-mentor-tasks";
 import {
   TASK_CATEGORIES,
@@ -91,6 +93,14 @@ export function TaskActionCard({
     proposal.proposed_tasks || []
   );
 
+  // Editable schedule plan proposals
+  const [schedulePlan] = useState<SchedulePlanData | undefined>(
+    proposal.schedule_plan
+  );
+  const [planItems, setPlanItems] = useState<ScheduledPlanItem[]>(
+    proposal.schedule_plan?.items || []
+  );
+
   // Stable client-side idempotency key generated once per card instance
   const [idempotencyKey] = useState<string>(() => {
     return `idemp_${proposal.action_id}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -155,6 +165,7 @@ export function TaskActionCard({
     try {
       let editedData: Record<string, unknown> | undefined = undefined;
       let editedTasksPayload: ProposedTaskItem[] | undefined = undefined;
+      let editedPlanPayload: SchedulePlanData | undefined = undefined;
 
       if (
         proposal.action_type === "create_task" ||
@@ -173,6 +184,14 @@ export function TaskActionCard({
           throw new Error("No tasks selected to create.");
         }
         editedTasksPayload = batchTasks;
+      } else if (proposal.action_type === "apply_schedule_plan") {
+        if (planItems.length === 0) {
+          throw new Error("No tasks remaining in the schedule plan.");
+        }
+        editedPlanPayload = {
+          ...schedulePlan,
+          items: planItems,
+        };
       }
 
       const res = await executeTaskAction({
@@ -181,6 +200,7 @@ export function TaskActionCard({
         idempotency_key: idempotencyKey,
         edited_data: editedData,
         edited_tasks: editedTasksPayload,
+        edited_plan: editedPlanPayload,
       });
 
       setCardStatus("completed");
@@ -211,6 +231,10 @@ export function TaskActionCard({
 
   const handleRemoveBatchItem = (index: number) => {
     setBatchTasks((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemovePlanItem = (index: number) => {
+    setPlanItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const formatIsoDate = (isoStr?: string | null): string => {
@@ -304,6 +328,9 @@ export function TaskActionCard({
           {proposal.action_type === "delete_task" && (
             <Trash2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
           )}
+          {proposal.action_type === "apply_schedule_plan" && (
+            <Calendar className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+          )}
           <span className="text-[11.5px] font-semibold text-purple-900 dark:text-purple-200 uppercase tracking-wider">
             {proposal.action_type === "create_task" && "Proposed Task Creation"}
             {proposal.action_type === "batch_create_tasks" && `Proposed Batch (${batchTasks.length} Tasks)`}
@@ -311,6 +338,7 @@ export function TaskActionCard({
             {proposal.action_type === "complete_task" && "Confirm Task Completion"}
             {proposal.action_type === "reopen_task" && "Confirm Task Reopening"}
             {proposal.action_type === "delete_task" && "Confirm Task Deletion"}
+            {proposal.action_type === "apply_schedule_plan" && `Proposed Schedule (${planItems.length} Tasks)`}
           </span>
         </div>
 
@@ -600,6 +628,129 @@ export function TaskActionCard({
             </p>
           </div>
         )}
+
+        {/* 6. SMART SCHEDULE PLAN PREVIEW */}
+        {proposal.action_type === "apply_schedule_plan" && schedulePlan && (
+          <div className="space-y-3">
+            {/* Plan Header Meta */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 text-[11px] text-purple-950 dark:text-purple-200">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold uppercase tracking-wider text-[10px] px-1.5 py-0.5 rounded bg-purple-200/60 dark:bg-purple-800/60">
+                  {schedulePlan.plan_period || "Daily Plan"}
+                </span>
+                {schedulePlan.target_date && (
+                  <span className="flex items-center gap-1 font-medium">
+                    <Calendar className="h-3 w-3 text-purple-500" />
+                    <span>{schedulePlan.target_date}</span>
+                  </span>
+                )}
+              </div>
+              {schedulePlan.total_allocated_minutes != null && schedulePlan.total_allocated_minutes > 0 && (
+                <span className="flex items-center gap-1 font-medium text-neutral-600 dark:text-neutral-400">
+                  <Clock className="h-3 w-3 text-neutral-400" />
+                  <span>{schedulePlan.total_allocated_minutes} mins allocated</span>
+                </span>
+              )}
+            </div>
+
+            {/* Overload Warning Callout */}
+            {schedulePlan.overload_warning && (
+              <div className="p-2.5 rounded-lg bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <div className="space-y-0.5">
+                  <span className="font-semibold">Workload Advisory:</span>
+                  <p className="leading-relaxed">{schedulePlan.overload_warning}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Global Schedule Warnings */}
+            {schedulePlan.warnings && schedulePlan.warnings.length > 0 && (
+              <div className="p-2.5 rounded-lg bg-neutral-100/70 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-[11px] space-y-1">
+                <span className="font-semibold block text-neutral-800 dark:text-neutral-200">Schedule Notes:</span>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  {schedulePlan.warnings.map((w, idx) => (
+                    <li key={idx} className="leading-relaxed">{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Scheduled Tasks Timeline */}
+            <div className="space-y-2">
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
+                Planned Time Blocks ({planItems.length} tasks):
+              </p>
+
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {planItems.map((item, idx) => {
+                  const hasConflict = item.is_conflict || (item.warnings && item.warnings.length > 0);
+                  return (
+                    <div
+                      key={item.task_id || idx}
+                      className={`p-3 rounded-xl border transition-all ${
+                        hasConflict
+                          ? "border-amber-300/80 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/15"
+                          : "border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {(item.time_range || item.start_time) && (
+                              <span className="px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40">
+                                {item.time_range || (item.start_time ? formatIsoDate(item.start_time) : "")}
+                              </span>
+                            )}
+                            <span className={`capitalize text-[10px] px-1.5 py-0.5 rounded font-medium ${getPriorityBadgeClass(String(item.priority || "medium"))}`}>
+                              {String(item.priority || "medium")}
+                            </span>
+                            {item.estimated_minutes != null && (
+                              <span className="text-[10.5px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{item.estimated_minutes}m</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <h5 className="font-semibold text-xs text-neutral-900 dark:text-white truncate pt-0.5">
+                            {item.title}
+                          </h5>
+
+                          {item.reason && (
+                            <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                              {item.reason}
+                            </p>
+                          )}
+
+                          {item.warnings && item.warnings.length > 0 && (
+                            <div className="pt-1 space-y-0.5">
+                              {item.warnings.map((w, wIdx) => (
+                                <div key={wIdx} className="flex items-center gap-1.5 text-[10.5px] text-amber-700 dark:text-amber-400">
+                                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                                  <span>{w}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePlanItem(idx)}
+                          className="p-1 text-neutral-400 hover:text-rose-500 transition-colors cursor-pointer shrink-0"
+                          title="Remove from plan"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Footer Buttons */}
@@ -616,7 +767,11 @@ export function TaskActionCard({
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={cardStatus === "submitting" || (proposal.action_type === "batch_create_tasks" && batchTasks.length === 0)}
+          disabled={
+            cardStatus === "submitting" ||
+            (proposal.action_type === "batch_create_tasks" && batchTasks.length === 0) ||
+            (proposal.action_type === "apply_schedule_plan" && planItems.length === 0)
+          }
           className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50 ${
             proposal.action_type === "delete_task"
               ? "bg-rose-600 hover:bg-rose-700 text-white"
@@ -638,6 +793,7 @@ export function TaskActionCard({
                 {proposal.action_type === "complete_task" && "Confirm Complete"}
                 {proposal.action_type === "reopen_task" && "Confirm Reopen"}
                 {proposal.action_type === "delete_task" && "Confirm Deletion"}
+                {proposal.action_type === "apply_schedule_plan" && `Confirm Schedule (${planItems.length})`}
               </span>
             </>
           )}
