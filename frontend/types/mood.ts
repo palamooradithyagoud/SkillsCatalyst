@@ -24,6 +24,15 @@ export interface MonthlyMoodSummary {
   mood_counts: Record<string, number>;
 }
 
+export interface WeeklyMoodSummary {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  logs: MoodLog[];
+  predominant_mood: MoodType | null;
+  total_logged: number;
+  mood_counts: Record<string, number>;
+}
+
 export interface LogMoodPayload {
   mood: MoodType;
   log_date?: string; // YYYY-MM-DD (defaults to today)

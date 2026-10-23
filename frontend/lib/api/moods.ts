@@ -5,7 +5,7 @@
  */
 
 import { supabase } from "@/lib/supabase";
-import { MoodLog, MonthlyMoodSummary, LogMoodPayload, MoodType } from "@/types/mood";
+import { MoodLog, MonthlyMoodSummary, WeeklyMoodSummary, LogMoodPayload, MoodType } from "@/types/mood";
 
 const LOCAL_MOODS_KEY_PREFIX = "sc_user_moods_";
 
@@ -111,6 +111,57 @@ export function computeCalendarGrid(year: number, month: number): CalendarCell[]
 }
 
 /**
+ * Returns the Sunday Date corresponding to the start of the week for any given Date.
+ */
+export function getSundayOfWeek(date: Date): Date {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = d.getDay(); // 0 is Sunday
+  d.setDate(d.getDate() - day);
+  return d;
+}
+
+export interface WeekCell {
+  dateStr: string; // YYYY-MM-DD
+  dayNumber: number;
+  dayName: string; // Sun, Mon, etc.
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isFuture: boolean;
+  date: Date;
+}
+
+/**
+ * Computes 7 days for the week starting at sunday.
+ */
+export function computeWeekRow(sunday: Date): WeekCell[] {
+  const todayStr = getTodayDateString();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate());
+  const cells: WeekCell[] = [];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  for (let i = 0; i < 7; i++) {
+    const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const dateStr = formatLocalDate(cur);
+    const cellDate = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate());
+
+    cells.push({
+      dateStr,
+      dayNumber: cur.getDate(),
+      dayName: dayNames[i],
+      isCurrentMonth: true,
+      isToday: dateStr === todayStr,
+      isFuture: cellDate.getTime() > today.getTime(),
+      date: cur,
+    });
+  }
+
+  return cells;
+}
+
+/**
  * Calculates dominant mood and mood counts from a list of logs
  */
 export function summarizeMoods(year: number, month: number, logs: MoodLog[]): MonthlyMoodSummary {
@@ -182,6 +233,78 @@ export async function fetchMonthlyMoods(
     (l) => l.log_date >= startDate && l.log_date <= endDate
   );
   return summarizeMoods(year, month, localLogs);
+}
+
+/**
+  * Calculates dominant mood and mood counts for a 7-day week
+  */
+export function summarizeWeeklyMoods(
+  startDate: string,
+  endDate: string,
+  logs: MoodLog[]
+): WeeklyMoodSummary {
+  const counts: Record<string, number> = {};
+  for (const log of logs) {
+    if (log.mood && log.log_date >= startDate && log.log_date <= endDate) {
+      counts[log.mood] = (counts[log.mood] || 0) + 1;
+    }
+  }
+
+  let predominant: MoodType | null = null;
+  let maxCount = 0;
+
+  for (const [mood, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      predominant = mood as MoodType;
+    }
+  }
+
+  const weekLogs = logs.filter((l) => l.log_date >= startDate && l.log_date <= endDate);
+
+  return {
+    startDate,
+    endDate,
+    logs: weekLogs,
+    predominant_mood: predominant,
+    total_logged: weekLogs.length,
+    mood_counts: counts,
+  };
+}
+
+/**
+ * Fetches mood logs for a user for a specified date range (e.g. 7-day week)
+ */
+export async function fetchWeeklyMoods(
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<WeeklyMoodSummary> {
+  try {
+    const { data, error } = await supabase
+      .from("user_daily_mood_logs")
+      .select("id, user_id, log_date, mood, note, created_at, updated_at")
+      .eq("user_id", userId)
+      .gte("log_date", startDate)
+      .lte("log_date", endDate)
+      .order("log_date", { ascending: true });
+
+    if (!error && data) {
+      const logs = data as MoodLog[];
+      const local = getLocalMoods(userId);
+      const filteredLocal = local.filter((l) => l.log_date < startDate || l.log_date > endDate);
+      saveLocalMoods(userId, [...filteredLocal, ...logs]);
+
+      return summarizeWeeklyMoods(startDate, endDate, logs);
+    }
+  } catch (err) {
+    console.warn("Supabase weekly fetch failed, falling back to local cache:", err);
+  }
+
+  const localLogs = getLocalMoods(userId).filter(
+    (l) => l.log_date >= startDate && l.log_date <= endDate
+  );
+  return summarizeWeeklyMoods(startDate, endDate, localLogs);
 }
 
 /**

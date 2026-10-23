@@ -4,7 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   computeCalendarGrid,
+  computeWeekRow,
+  getSundayOfWeek,
   summarizeMoods,
+  summarizeWeeklyMoods,
   formatLocalDate,
 } from '../lib/api/moods';
 import { MoodLog } from '../types/mood';
@@ -83,6 +86,51 @@ describe('Mood Aggregation & Statistical Summary', () => {
     assert.strictEqual(summary.predominant_mood, null);
     assert.strictEqual(summary.total_logged, 0);
     assert.deepStrictEqual(summary.mood_counts, {});
+  });
+
+  it('summarizes weekly moods correctly within date boundaries', () => {
+    const sampleLogs: MoodLog[] = [
+      { id: '1', user_id: 'u1', log_date: '2026-10-18', mood: 'happy' },
+      { id: '2', user_id: 'u1', log_date: '2026-10-20', mood: 'bored' },
+      { id: '3', user_id: 'u1', log_date: '2026-10-21', mood: 'bored' },
+      { id: '4', user_id: 'u1', log_date: '2026-10-23', mood: 'happy' },
+      { id: '5', user_id: 'u1', log_date: '2026-10-30', mood: 'angry' }, // Outside week
+    ];
+
+    const weekly = summarizeWeeklyMoods('2026-10-18', '2026-10-24', sampleLogs);
+    assert.strictEqual(weekly.total_logged, 4);
+    assert.strictEqual(weekly.startDate, '2026-10-18');
+    assert.strictEqual(weekly.endDate, '2026-10-24');
+    assert.strictEqual(weekly.mood_counts['happy'], 2);
+    assert.strictEqual(weekly.mood_counts['bored'], 2);
+    assert.strictEqual(weekly.mood_counts['angry'], undefined);
+  });
+});
+
+describe('Weekly Mood Strip Math and Navigation', () => {
+  it('identifies Sunday as start of week for Friday Oct 23, 2026', () => {
+    const oct23 = new Date(2026, 9, 23); // Friday
+    const sunday = getSundayOfWeek(oct23);
+    assert.strictEqual(formatLocalDate(sunday), '2026-10-18');
+  });
+
+  it('computes 7 consecutive days starting Sunday', () => {
+    const sunday = new Date(2026, 9, 18);
+    const week = computeWeekRow(sunday);
+    assert.strictEqual(week.length, 7);
+    assert.strictEqual(week[0].dayName, 'Sun');
+    assert.strictEqual(week[0].dateStr, '2026-10-18');
+    assert.strictEqual(week[6].dayName, 'Sat');
+    assert.strictEqual(week[6].dateStr, '2026-10-24');
+  });
+
+  it('supports navigating to older week by subtracting 7 days', () => {
+    const sunday = new Date(2026, 9, 18);
+    const olderSunday = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() - 7);
+    const olderWeek = computeWeekRow(olderSunday);
+    assert.strictEqual(olderWeek.length, 7);
+    assert.strictEqual(olderWeek[0].dateStr, '2026-10-11');
+    assert.strictEqual(olderWeek[6].dateStr, '2026-10-17');
   });
 });
 

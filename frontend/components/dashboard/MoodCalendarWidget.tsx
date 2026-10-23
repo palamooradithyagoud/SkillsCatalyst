@@ -5,13 +5,14 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-reac
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  computeCalendarGrid,
-  fetchMonthlyMoods,
+  getSundayOfWeek,
+  computeWeekRow,
+  fetchWeeklyMoods,
   logUserDailyMood,
   getTodayDateString,
-  CalendarCell,
+  WeekCell,
 } from "@/lib/api/moods";
-import { MoodType, MonthlyMoodSummary } from "@/types/mood";
+import { MoodType, WeeklyMoodSummary } from "@/types/mood";
 
 interface MoodItem {
   id: MoodType;
@@ -247,21 +248,50 @@ export default function MoodCalendarWidget() {
   const queryClient = useQueryClient();
 
   const todayStr = useMemo(() => getTodayDateString(), []);
+  const today = useMemo(() => new Date(), []);
+  const thisWeekSunday = useMemo(() => getSundayOfWeek(today), [today]);
 
-  // ── Month Navigation State ──
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+  // ── Week Navigation State (Browses Week-by-Week) ──
+  const [currentSunday, setCurrentSunday] = useState<Date>(() => getSundayOfWeek(new Date()));
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => getTodayDateString());
   const [activeMood, setActiveMood] = useState<MoodType | null>(null);
 
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1; // 1-12
+  // Compute 7-day week row starting Sunday
+  const weekCells = useMemo(() => {
+    return computeWeekRow(currentSunday);
+  }, [currentSunday]);
 
-  // Month & Year header label (e.g. "Oct 2026", "Nov 2026")
-  const monthHeaderLabel = useMemo(() => {
-    return new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(currentDate);
-  }, [currentDate]);
+  const startDateStr = weekCells[0]?.dateStr || "";
+  const endDateStr = weekCells[6]?.dateStr || "";
 
-  // Selected date human label
+  // Is current week or older week?
+  const isCurrentWeek = useMemo(() => {
+    return currentSunday.getTime() >= thisWeekSunday.getTime();
+  }, [currentSunday, thisWeekSunday]);
+
+  // Dynamic Week Header Label (e.g. "Oct 18 – 24", "Oct 25 – Nov 1")
+  const weekHeaderLabel = useMemo(() => {
+    if (weekCells.length < 7) return "";
+    const first = weekCells[0].date;
+    const last = weekCells[6].date;
+    const sameYear = first.getFullYear() === last.getFullYear();
+    const sameMonth = first.getMonth() === last.getMonth();
+
+    if (sameMonth && sameYear) {
+      const month = new Intl.DateTimeFormat("en-US", { month: "short" }).format(first);
+      return `${month} ${first.getDate()} – ${last.getDate()}`;
+    } else if (sameYear) {
+      const m1 = new Intl.DateTimeFormat("en-US", { month: "short" }).format(first);
+      const m2 = new Intl.DateTimeFormat("en-US", { month: "short" }).format(last);
+      return `${m1} ${first.getDate()} – ${m2} ${last.getDate()}`;
+    } else {
+      const m1 = new Intl.DateTimeFormat("en-US", { month: "short" }).format(first);
+      const m2 = new Intl.DateTimeFormat("en-US", { month: "short" }).format(last);
+      return `${m1} ${first.getDate()} – ${m2} ${last.getDate()}`;
+    }
+  }, [weekCells]);
+
+  // Selected date human readable label
   const selectedDateLabel = useMemo(() => {
     if (selectedDateStr === todayStr) return "Today";
     try {
@@ -273,30 +303,25 @@ export default function MoodCalendarWidget() {
     }
   }, [selectedDateStr, todayStr]);
 
-  // Dynamic Calendar Grid Cells
-  const calendarCells = useMemo(() => {
-    return computeCalendarGrid(currentYear, currentMonth);
-  }, [currentYear, currentMonth]);
-
-  // ── Database Query ──
-  const { data: monthlyData, isLoading } = useQuery<MonthlyMoodSummary>({
-    queryKey: ["monthly-moods", userId, currentYear, currentMonth],
-    queryFn: () => fetchMonthlyMoods(userId, currentYear, currentMonth),
+  // ── Database Query (Weekly range) ──
+  const { data: weeklyData } = useQuery<WeeklyMoodSummary>({
+    queryKey: ["weekly-moods", userId, startDateStr, endDateStr],
+    queryFn: () => fetchWeeklyMoods(userId, startDateStr, endDateStr),
     staleTime: 1000 * 60 * 5, // 5 mins
   });
 
   // Map of dateStr -> mood
   const moodMap = useMemo(() => {
     const map = new Map<string, MoodType>();
-    if (monthlyData?.logs) {
-      for (const log of monthlyData.logs) {
+    if (weeklyData?.logs) {
+      for (const log of weeklyData.logs) {
         if (log.mood) {
           map.set(log.log_date, log.mood);
         }
       }
     }
     return map;
-  }, [monthlyData?.logs]);
+  }, [weeklyData?.logs]);
 
   // Current mood for selected date
   const selectedDateMood = moodMap.get(selectedDateStr) || null;
@@ -308,13 +333,13 @@ export default function MoodCalendarWidget() {
     onMutate: async (newMood: MoodType) => {
       // Optimistic update
       await queryClient.cancelQueries({
-        queryKey: ["monthly-moods", userId, currentYear, currentMonth],
+        queryKey: ["weekly-moods", userId, startDateStr, endDateStr],
       });
-      const previous = queryClient.getQueryData<MonthlyMoodSummary>([
-        "monthly-moods",
+      const previous = queryClient.getQueryData<WeeklyMoodSummary>([
+        "weekly-moods",
         userId,
-        currentYear,
-        currentMonth,
+        startDateStr,
+        endDateStr,
       ]);
 
       if (previous) {
@@ -331,7 +356,7 @@ export default function MoodCalendarWidget() {
           });
         }
 
-        // Recompute dominant
+        // Recompute dominant mood
         const counts: Record<string, number> = {};
         for (const l of updatedLogs) counts[l.mood] = (counts[l.mood] || 0) + 1;
         let dominant: MoodType | null = null;
@@ -343,8 +368,8 @@ export default function MoodCalendarWidget() {
           }
         }
 
-        queryClient.setQueryData<MonthlyMoodSummary>(
-          ["monthly-moods", userId, currentYear, currentMonth],
+        queryClient.setQueryData<WeeklyMoodSummary>(
+          ["weekly-moods", userId, startDateStr, endDateStr],
           {
             ...previous,
             logs: updatedLogs,
@@ -360,14 +385,14 @@ export default function MoodCalendarWidget() {
     onError: (_err, _newMood, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
-          ["monthly-moods", userId, currentYear, currentMonth],
+          ["weekly-moods", userId, startDateStr, endDateStr],
           context.previous
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["monthly-moods", userId, currentYear, currentMonth],
+        queryKey: ["weekly-moods", userId],
       });
     },
   });
@@ -377,29 +402,30 @@ export default function MoodCalendarWidget() {
     logMutation.mutate(mood);
   };
 
-  // ── Month Navigation Handlers ──
-  const handlePrevMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  // ── Week Navigation Handlers ──
+  const handlePrevWeek = () => {
+    setCurrentSunday((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7));
   };
 
-  const handleNextMonth = () => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  const handleNextWeek = () => {
+    if (isCurrentWeek) return;
+    setCurrentSunday((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7));
   };
 
   const handleJumpToToday = () => {
-    const now = new Date();
-    setCurrentDate(now);
+    setCurrentSunday(getSundayOfWeek(new Date()));
     setSelectedDateStr(getTodayDateString());
+    setActiveMood(null);
   };
 
-  // ── Mood Summary Card Content (reacts immediately to mood changes) ──
-  const predominantMood = monthlyData?.predominant_mood;
+  // ── Mood Summary Content ──
+  const predominantMood = weeklyData?.predominant_mood;
   const displayMood: MoodType = activeMood || selectedDateMood || predominantMood || "happy";
   const currentSummary = MOODS[displayMood];
 
   return (
-    <div className="w-full bg-white dark:bg-[#18191F] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none p-3.5 sm:p-4 space-y-3.5 transition-all">
-      {/* ── Header: Title & Dynamic Month Navigation ── */}
+    <div className="w-full bg-white dark:bg-[#18191F] rounded-[24px] border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-none p-3.5 sm:p-4 space-y-3 transition-all">
+      {/* ── Header: Title & Dynamic Week Navigation ── */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm sm:text-base font-black text-[#15192B] dark:text-white tracking-tight">
@@ -413,25 +439,36 @@ export default function MoodCalendarWidget() {
           <button
             type="button"
             onClick={handleJumpToToday}
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border border-slate-200/80 dark:border-neutral-700 hover:border-slate-300 hover:text-indigo-600 transition-colors cursor-pointer"
-            title="Click to jump to current month"
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
+              !isCurrentWeek
+                ? "bg-indigo-50 dark:bg-indigo-950/60 text-[#5D64D9] dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100"
+                : "bg-slate-100 dark:bg-neutral-800 text-[#555E8D] dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700 hover:border-slate-300"
+            }`}
+            title={!isCurrentWeek ? "Click to jump to current week" : "Current week"}
           >
-            {monthHeaderLabel}
+            {weekHeaderLabel}
           </button>
           <div className="flex items-center text-slate-400">
             <button
               type="button"
-              onClick={handlePrevMonth}
+              onClick={handlePrevWeek}
               className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label="Previous month"
+              aria-label="Previous week"
+              title="View previous week"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
-              onClick={handleNextMonth}
-              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              aria-label="Next month"
+              onClick={handleNextWeek}
+              disabled={isCurrentWeek}
+              className={`p-1 rounded-md transition-colors ${
+                isCurrentWeek
+                  ? "opacity-30 cursor-not-allowed text-slate-300 dark:text-neutral-600"
+                  : "hover:bg-slate-100 dark:hover:bg-neutral-800 cursor-pointer text-slate-600 dark:text-neutral-300"
+              }`}
+              aria-label="Next week"
+              title={isCurrentWeek ? "Current week" : "View next week"}
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -439,7 +476,7 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 1: Daily Mood Selector (Image 2 style, Compact) ── */}
+      {/* ── Section 1: Daily Mood Selector ── */}
       <div className="bg-[#FAFBFD] dark:bg-[#121318] p-2.5 rounded-2xl border border-slate-100 dark:border-neutral-800">
         <div className="grid grid-cols-4 gap-2">
           {SELECTOR_MOODS.map((mType) => {
@@ -464,7 +501,7 @@ export default function MoodCalendarWidget() {
                   {renderMoodSvg(mType, "w-full h-full drop-shadow-xs")}
                 </div>
 
-                {/* Pill Button Label matching Image 2 */}
+                {/* Pill Button Label */}
                 <span
                   className={`w-full py-0.5 px-1.5 rounded-lg text-center text-[10px] sm:text-[11px] font-bold transition-all ${
                     isSelected
@@ -480,23 +517,23 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 2: Mood Calendar Grid (Image 3 style, Dynamic) ── */}
+      {/* ── Section 2: Weekly Mood Calendar Row (Compact Single Row) ── */}
       <div className="space-y-1">
         {/* Weekday Labels (Sun, Mon, Tue, Wed, Thu, Fri, Sat) */}
         <div className="grid grid-cols-7 gap-1 text-center">
           {WEEKDAYS.map((day) => (
             <span
               key={day}
-              className="text-[10px] font-semibold text-[#8A92A6] dark:text-neutral-500 py-0.5"
+              className="text-[10px] sm:text-[11px] font-semibold text-[#8A92A6] dark:text-neutral-500 py-0.5"
             >
               {day}
             </span>
           ))}
         </div>
 
-        {/* Dynamic Calendar Day Cells */}
+        {/* Dynamic 7-day Week Cells */}
         <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-          {calendarCells.map((cell: CalendarCell) => {
+          {weekCells.map((cell: WeekCell) => {
             const cellMood = moodMap.get(cell.dateStr) || null;
             const hasMood = Boolean(cellMood);
             const isSelected = selectedDateStr === cell.dateStr;
@@ -512,29 +549,35 @@ export default function MoodCalendarWidget() {
                     setActiveMood(cellMood);
                   }
                 }}
-                className={`relative h-6.5 sm:h-7.5 rounded-[9px] sm:rounded-[10px] flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
+                className={`relative h-8 sm:h-9 rounded-[10px] sm:rounded-xl flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
                   isSelected
                     ? "ring-2 ring-[#15192B] dark:ring-white ring-offset-1 dark:ring-offset-[#18191F] z-10"
                     : isToday
-                    ? "ring-2 ring-[#5D64D9] dark:ring-indigo-400 ring-offset-1 dark:ring-offset-[#18191F]"
-                    : ""
+                    ? "border-2 border-[#15192B] dark:border-white shadow-xs"
+                    : "border border-transparent"
                 } ${
                   hasMood
                     ? "hover:scale-105 active:scale-95"
-                    : "bg-slate-100/70 dark:bg-[#121318] hover:bg-slate-200/80 dark:hover:bg-neutral-800 border border-transparent dark:border-neutral-800/60"
-                } ${!cell.isCurrentMonth ? "opacity-30" : "opacity-100"}`}
+                    : "bg-[#F8F9FD] dark:bg-[#121318] hover:bg-slate-100 dark:hover:bg-neutral-800"
+                } ${cell.isFuture ? "opacity-40" : "opacity-100"}`}
                 title={
                   isToday
                     ? `Today (${cell.dateStr}): ${cellMood || "No check-in"}`
-                    : `Day ${cell.dayNumber} (${cell.dateStr}): ${cellMood || "No check-in"}`
+                    : `${cell.dayName} ${cell.dayNumber} (${cell.dateStr}): ${cellMood || "No check-in"}`
                 }
               >
                 {hasMood ? (
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 p-0.5">
+                  <div className="w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 p-0.5">
                     {renderMoodSvg(cellMood, "w-full h-full")}
                   </div>
                 ) : (
-                  <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-semibold select-none">
+                  <span
+                    className={`text-[11px] select-none ${
+                      isToday
+                        ? "font-black text-[#15192B] dark:text-white"
+                        : "font-semibold text-slate-500 dark:text-neutral-400"
+                    }`}
+                  >
                     {cell.dayNumber}
                   </span>
                 )}
@@ -544,30 +587,30 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 3: Monthly Mood Summary Card (Image 3 style, Dynamic) ── */}
+      {/* ── Section 3: Weekly Mood Summary Card ── */}
       <div
         className={`relative overflow-hidden rounded-2xl p-3 transition-all duration-300 ${
           currentSummary
             ? currentSummary.summaryBg
-            : "bg-[#F3F4F6] dark:bg-[#121318] dark:border dark:border-neutral-800 text-[#15192B] dark:text-neutral-300"
+            : "bg-[#8AE6A2] text-[#15192B]"
         } shadow-xs`}
       >
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="space-y-0.5 max-w-[240px]">
             <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider opacity-75">
-              Monthly Mood Summary
+              Weekly Mood Summary
             </p>
             <h4 className="text-lg sm:text-xl font-black tracking-tight leading-tight">
-              {currentSummary ? currentSummary.summaryTitle : "Fresh Month Ahead"}
+              {currentSummary ? currentSummary.summaryTitle : "Happy"}
             </h4>
             <p className="text-[11px] opacity-90 line-clamp-1 font-medium">
               {currentSummary
                 ? currentSummary.summaryMessage
-                : "No check-ins yet for this month. Tap an emotion to record today!"}
+                : "No check-ins yet for this week. Tap an emotion to record today!"}
             </p>
           </div>
 
-          {/* Dynamic Mood Vector (matches active mood expression) */}
+          {/* Dynamic Mood Vector */}
           <div className="shrink-0 text-current opacity-95">
             {renderSummarySvg(displayMood)}
           </div>
