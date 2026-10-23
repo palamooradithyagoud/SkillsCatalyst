@@ -28,8 +28,8 @@ export const MOODS: Record<MoodType, MoodItem> = {
   happy: {
     id: "happy",
     label: "Happy",
-    color: "#D8F353",
-    bgHex: "#D8F353",
+    color: "#7844E3",
+    bgHex: "#EFE7FD",
     summaryTitle: "Happy",
     summaryMessage: "You're feeling calm and optimistic. Keep up the good vibes!",
     summaryBg: "bg-[#D8F353] text-[#15192B]",
@@ -38,55 +38,55 @@ export const MOODS: Record<MoodType, MoodItem> = {
     id: "angry",
     label: "Angry",
     color: "#F88A58",
-    bgHex: "#F88A58",
+    bgHex: "#FFE4D6",
     summaryTitle: "Frustrated",
     summaryMessage: "Take a deep breath and give yourself a break. You've got this!",
-    summaryBg: "bg-[#F88A58] dark:bg-[#F88A58] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#F88A58] text-[#15192B] dark:bg-[#FFA07A]",
   },
   sleepy: {
     id: "sleepy",
     label: "Sleepy",
     color: "#88B7FA",
-    bgHex: "#88B7FA",
+    bgHex: "#E1EEFE",
     summaryTitle: "Sleepy",
     summaryMessage: "Recharge your mind with good sleep. Tomorrow is a fresh start!",
-    summaryBg: "bg-[#88B7FA] dark:bg-[#88B7FA] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#88B7FA] text-[#15192B]",
   },
   bored: {
     id: "bored",
     label: "Bored",
     color: "#E8A0E8",
-    bgHex: "#E8A0E8",
+    bgHex: "#FBE6FB",
     summaryTitle: "Uninspired",
     summaryMessage: "Try exploring something new today or taking a quick walk outside!",
-    summaryBg: "bg-[#E8A0E8] dark:bg-[#E8A0E8] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#E8A0E8] text-[#15192B]",
   },
   calm: {
     id: "calm",
     label: "Calm",
-    color: "#FDE278",
-    bgHex: "#FDE278",
+    color: "#FFE785",
+    bgHex: "#FFF7D4",
     summaryTitle: "Calm & Centered",
     summaryMessage: "Steady progress and peaceful focus. Keep up the gentle rhythm!",
-    summaryBg: "bg-[#FDE278] dark:bg-[#FDE278] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#FDE278] text-[#15192B] dark:bg-[#FFE785]",
   },
   wacky: {
     id: "wacky",
     label: "Energetic",
-    color: "#C6A4F9",
-    bgHex: "#C6A4F9",
+    color: "#D6BAFF",
+    bgHex: "#EDE0FF",
     summaryTitle: "Energetic",
     summaryMessage: "High momentum and curiosity driving your creative breakthroughs!",
-    summaryBg: "bg-[#C6A4F9] dark:bg-[#C6A4F9] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#C6A4F9] text-[#15192B] dark:bg-[#D6BAFF]",
   },
   pouty: {
     id: "pouty",
     label: "Tired",
-    color: "#F68F8F",
-    bgHex: "#F68F8F",
+    color: "#FFA8A8",
+    bgHex: "#FFE4E4",
     summaryTitle: "A Bit Low",
     summaryMessage: "Be kind to yourself today. Small steps still count as progress.",
-    summaryBg: "bg-[#F68F8F] dark:bg-[#F68F8F] text-[#15192B] dark:text-[#15192B]",
+    summaryBg: "bg-[#F68F8F] text-[#15192B] dark:bg-[#FFA8A8]",
   },
 };
 
@@ -241,6 +241,16 @@ export function renderSummarySvg(type: MoodType, className = "w-16 sm:w-18 h-10 
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SELECTOR_MOODS: MoodType[] = ["happy", "angry", "sleepy", "bored"];
+
+const MOOD_ACTIVE_CLASSES: Record<MoodType, string> = {
+  happy: "bg-[#D8F353] text-[#15192B]",
+  angry: "bg-[#F88A58] text-[#15192B] dark:bg-[#FFA07A]",
+  sleepy: "bg-[#88B7FA] text-[#15192B]",
+  bored: "bg-[#E8A0E8] text-[#15192B]",
+  calm: "bg-[#FDE278] text-[#15192B] dark:bg-[#FFE785]",
+  wacky: "bg-[#C6A4F9] text-[#15192B] dark:bg-[#D6BAFF]",
+  pouty: "bg-[#F68F8F] text-[#15192B] dark:bg-[#FFA8A8]",
+};
 
 export default function MoodCalendarWidget() {
   const { session } = useAuth();
@@ -427,7 +437,7 @@ export default function MoodCalendarWidget() {
   const currentSummary = MOODS[displayMood];
 
   return (
-    <div className="w-full bg-[#18191E] rounded-[22px] border border-white/10 shadow-lg p-3 sm:p-3.5 space-y-2.5 transition-all text-white">
+    <div className="w-full bg-white dark:bg-[#18191E] rounded-[22px] border border-[#E8DFF8] dark:border-white/10 shadow-[0_8px_30px_rgba(120,68,227,0.06)] dark:shadow-lg p-3 sm:p-3.5 space-y-2.5 transition-all text-[#221738] dark:text-white">
       {/* ── Header: Month Title & Peanut Pill Navigation ── */}
       <div className="flex items-center justify-between">
         <div>
@@ -438,27 +448,27 @@ export default function MoodCalendarWidget() {
             title={!isCurrentWeek ? "Click to return to today" : undefined}
           >
             <div className="flex items-center gap-1.5">
-              <h3 className="text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-[#D8F353] transition-colors leading-tight">
+              <h3 className="text-base sm:text-lg font-bold tracking-tight text-[#221738] dark:text-white group-hover:text-[#7844E3] dark:group-hover:text-[#D8F353] transition-colors leading-tight">
                 {monthHeaderLabel}
               </h3>
               {!isCurrentWeek && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/15 text-white group-hover:bg-[#D8F353] group-hover:text-black transition-all">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#F3ECFF] text-[#7844E3] group-hover:bg-[#7844E3] group-hover:text-white dark:bg-white/15 dark:text-white dark:group-hover:bg-[#D8F353] dark:group-hover:text-black transition-all">
                   Today
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-neutral-400 font-medium leading-tight">
-              Daily check-in for <span className="font-semibold text-[#D8F353]">{selectedDateLabel}</span>
+            <p className="text-[10px] text-[#756A8F] dark:text-neutral-400 font-medium leading-tight">
+              Daily check-in for <span className="font-semibold text-[#7844E3] dark:text-[#D8F353]">{selectedDateLabel}</span>
             </p>
           </button>
         </div>
 
-        {/* ── Top-Right White Peanut Pill Navigation ── */}
-        <div className="flex items-center bg-white text-black rounded-full px-2 py-0.5 gap-1.5 shadow-sm shrink-0">
+        {/* ── Top-Right Peanut Pill Navigation ── */}
+        <div className="flex items-center bg-white dark:bg-white text-[#7844E3] dark:text-black rounded-full px-2 py-0.5 gap-1.5 shadow-xs border border-[#E6DEF7] dark:border-transparent shrink-0">
           <button
             type="button"
             onClick={handlePrevWeek}
-            className="p-0.5 rounded-full hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer"
+            className="p-0.5 rounded-full hover:bg-[#F3ECFF] dark:hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer"
             aria-label="Previous week"
             title="View previous week"
           >
@@ -470,8 +480,8 @@ export default function MoodCalendarWidget() {
             disabled={isCurrentWeek}
             className={`p-0.5 rounded-full transition-all ${
               isCurrentWeek
-                ? "opacity-25 cursor-not-allowed text-neutral-400"
-                : "hover:bg-neutral-200 active:scale-95 cursor-pointer text-black"
+                ? "opacity-25 cursor-not-allowed text-[#B2A7D1] dark:text-neutral-400"
+                : "hover:bg-[#F3ECFF] dark:hover:bg-neutral-200 active:scale-95 cursor-pointer text-[#7844E3] dark:text-black"
             }`}
             aria-label="Next week"
             title={isCurrentWeek ? "Current week" : "View next week"}
@@ -481,8 +491,8 @@ export default function MoodCalendarWidget() {
         </div>
       </div>
 
-      {/* ── Section 1: Daily Mood Selector (Compact) ── */}
-      <div className="bg-[#202127] p-1.5 sm:p-2 rounded-xl border border-white/5">
+      {/* ── Section 1: Daily Mood Selector ── */}
+      <div className="bg-[#F8F4FF] dark:bg-[#202127] p-1.5 sm:p-2 rounded-xl border border-[#EDE4FC] dark:border-white/5">
         <div className="grid grid-cols-4 gap-1.5">
           {SELECTOR_MOODS.map((mType) => {
             const mood = MOODS[mType];
@@ -499,7 +509,7 @@ export default function MoodCalendarWidget() {
                 <div
                   className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-transform duration-150 group-hover:scale-105 active:scale-95 ${
                     isSelected
-                      ? "ring-2 ring-white ring-offset-1 ring-offset-[#202127] shadow-sm scale-105"
+                      ? "ring-2 ring-[#7844E3] dark:ring-white ring-offset-1 ring-offset-[#F8F4FF] dark:ring-offset-[#202127] shadow-xs scale-105"
                       : "opacity-80 hover:opacity-100"
                   }`}
                 >
@@ -510,8 +520,8 @@ export default function MoodCalendarWidget() {
                 <span
                   className={`w-full py-0.5 px-1 rounded-md text-center text-[9px] sm:text-[10px] font-bold transition-all leading-tight ${
                     isSelected
-                      ? "bg-white text-black shadow-xs"
-                      : "bg-white/10 text-neutral-300 border border-white/5 hover:bg-white/20 hover:text-white"
+                      ? "bg-[#7844E3] text-white shadow-xs dark:bg-white dark:text-black"
+                      : "bg-white text-[#564B74] border border-[#E9E0F8] hover:border-[#D6C5F3] hover:text-[#221738] dark:bg-white/10 dark:text-neutral-300 dark:border-white/5 dark:hover:bg-white/20 dark:hover:text-white"
                   }`}
                 >
                   {mood.label}
@@ -529,7 +539,7 @@ export default function MoodCalendarWidget() {
           {WEEKDAYS.map((day) => (
             <span
               key={day}
-              className="text-[10px] sm:text-[11px] font-semibold text-neutral-400 py-0.5"
+              className="text-[10px] sm:text-[11px] font-semibold text-[#80759B] dark:text-neutral-400 py-0.5"
             >
               {day}
             </span>
@@ -556,10 +566,10 @@ export default function MoodCalendarWidget() {
                   }}
                   className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all cursor-pointer focus:outline-none ${
                     isSelected
-                      ? "bg-[#D8F353] text-[#15192B] font-black shadow-sm scale-105 z-10"
+                      ? `${MOOD_ACTIVE_CLASSES[displayMood] || "bg-[#D8F353] text-[#15192B]"} font-black shadow-sm z-20`
                       : isToday
-                      ? "ring-1.5 ring-white/60 text-white font-bold bg-white/5 hover:bg-white/15"
-                      : "text-white font-medium hover:bg-white/10 text-xs sm:text-sm"
+                      ? "ring-1.5 ring-[#7844E3] text-[#7844E3] font-bold bg-[#F4EEFF] dark:ring-white/60 dark:text-white dark:bg-white/5 hover:bg-[#ECE3FE] dark:hover:bg-white/15"
+                      : "text-[#2A2045] dark:text-white font-medium hover:bg-[#F3EDFD] dark:hover:bg-white/10 text-xs sm:text-sm"
                   } ${hasMood && !isSelected ? "hover:scale-105" : ""} ${
                     cell.isFuture ? "opacity-35" : "opacity-100"
                   }`}
@@ -587,7 +597,7 @@ export default function MoodCalendarWidget() {
 
       {/* ── Section 3: Weekly Mood Summary Card with Connected Notch Cutout ── */}
       <div
-        className={`relative overflow-hidden rounded-[20px] p-3 sm:p-3.5 transition-all duration-300 ${
+        className={`relative overflow-hidden rounded-[20px] p-3 sm:p-3.5 -mt-1.5 transition-all duration-300 border-0 ${
           currentSummary
             ? currentSummary.summaryBg
             : "bg-[#D8F353] text-[#15192B]"
@@ -596,27 +606,27 @@ export default function MoodCalendarWidget() {
         {/* Curved Scoop Notch aligned directly under the active day column */}
         {selectedColIndex >= 0 && (
           <svg
-            viewBox="0 0 44 14"
-            className="absolute -top-[1px] w-9 h-2.5 fill-[#18191E] pointer-events-none transition-all duration-300 z-10"
+            viewBox="0 0 64 22"
+            className="absolute -top-[2px] w-14 sm:w-16 h-4.5 sm:h-5 fill-white dark:fill-[#18191E] pointer-events-none transition-all duration-300 z-10"
             style={{
               left: `calc((100% / 7) * ${selectedColIndex} + (100% / 14))`,
               transform: "translateX(-50%)",
             }}
             aria-hidden="true"
           >
-            <path d="M 0 0 C 8 0 12 12 22 12 C 32 12 36 0 44 0 Z" />
+            <path d="M 0 0 L 0 2 C 14 2 18 21 32 21 C 46 21 50 2 64 2 L 64 0 Z" />
           </svg>
         )}
 
         <div className="relative z-10 flex items-center justify-between gap-2.5 pt-0.5">
           <div className="space-y-0.5 max-w-[260px]">
-            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider opacity-60">
+            <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider opacity-65 text-inherit">
               Weekly Mood Summary
             </p>
-            <h4 className="text-base sm:text-lg font-black tracking-tight leading-tight">
+            <h4 className="text-base sm:text-lg font-black tracking-tight leading-tight text-inherit">
               {currentSummary ? currentSummary.summaryTitle : "Happy"}
             </h4>
-            <p className="text-[10px] sm:text-[11px] font-medium opacity-85 line-clamp-1 leading-tight">
+            <p className="text-[10px] sm:text-[11px] font-medium opacity-85 text-inherit line-clamp-1 leading-tight">
               {currentSummary
                 ? currentSummary.summaryMessage
                 : "No check-ins yet for this week. Tap an emotion above to record today!"}
