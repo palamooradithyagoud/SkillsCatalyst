@@ -34,7 +34,7 @@ export default function QuickHubNav() {
   return (
     <div className="w-full select-none space-y-3 sm:space-y-4">
       {/* ── Top Tier: Hero Careerpath Card (Square on Mobile) + Beside it Stacked Courses & Projects ── */}
-      <div className="grid grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3.5 items-stretch relative z-20">
+      <div className="grid grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3.5 items-stretch relative">
         {/* 1. Hero Card: Careerpath (PLAN) - Square proportion on mobile, full width hero on desktop */}
         <motion.div
           whileHover={isCareerTransitionActive ? {} : { y: -3, scale: 1.012 }}
@@ -61,9 +61,9 @@ export default function QuickHubNav() {
               }
             }}
             style={{
-              boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+              boxShadow: "0 12px 20px 0px rgba(0, 0, 0, 0.12), 0 6px 10px 0px rgba(0, 0, 0, 0.08), 0 2px 4px 0px rgba(0, 0, 0, 0.05), 0 1px 2px 0px rgba(0, 0, 0, 0.04)",
             }}
-            className="group flex-1 bg-white dark:bg-[#18191F] rounded-[22px] sm:rounded-[26px] p-3.5 sm:p-5 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
+            className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
             <div className="relative z-10 max-w-[65%] sm:max-w-[54%] flex flex-col justify-between h-full">
@@ -85,7 +85,7 @@ export default function QuickHubNav() {
 
               {/* Action Button */}
               <div className="mt-2.5 sm:mt-5">
-                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#5442F6] via-[#635BFF] to-[#7B73FF] text-white flex items-center justify-center shadow-md shadow-indigo-500/35 group-hover:scale-110 group-hover:shadow-indigo-500/50 transition-all">
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#5442F6] via-[#635BFF] to-[#7B73FF] text-white flex items-center justify-center shadow-sm shadow-indigo-500/25 group-hover:scale-110 group-hover:shadow-indigo-500/40 transition-all">
                   <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                 </div>
               </div>
@@ -117,9 +117,9 @@ export default function QuickHubNav() {
             <Link
               href="/learning"
               style={{
-                boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+                boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[18px] sm:rounded-[22px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
@@ -133,7 +133,7 @@ export default function QuickHubNav() {
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {/* Shining Circular Pod matching Image 2 reference */}
                 <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
-                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_6px_rgba(0,0,0,0.22)]">
                     <Image
                       src="/images/hub/courses.png"
                       alt="Learning 3D Cap"
@@ -159,9 +159,9 @@ export default function QuickHubNav() {
             <Link
               href="/practice"
               style={{
-                boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+                boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[18px] sm:rounded-[22px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-[#e11d48] dark:group-hover:text-rose-400 transition-colors truncate">
@@ -175,7 +175,7 @@ export default function QuickHubNav() {
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {/* Shining Circular Pod matching Image 2 reference */}
                 <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
-                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_6px_rgba(0,0,0,0.22)]">
                     <Image
                       src="/images/hub/projects.png"
                       alt="Practice 3D Code"
