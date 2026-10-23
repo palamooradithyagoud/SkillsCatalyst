@@ -250,19 +250,27 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
         bodyRows = rows;
       }
 
+      const colCount = headerRow ? headerRow.length : (bodyRows[0]?.length || 1);
+      const minWidthClass =
+        colCount >= 4
+          ? "min-w-[520px] sm:min-w-full"
+          : colCount === 3
+          ? "min-w-[440px] sm:min-w-full"
+          : "min-w-full";
+
       nodes.push(
         <div
           key={`table-${tableStartIndex}`}
-          className="my-3 w-full max-w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/60 shadow-2xs"
+          className="my-3 w-full max-w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/60 shadow-2xs overscroll-x-contain touch-pan-x"
         >
-          <table className="w-full min-w-full text-left text-[11px] sm:text-xs border-collapse table-auto break-words">
+          <table className={`w-full text-left text-[11px] sm:text-xs border-collapse table-auto break-words ${minWidthClass}`}>
             {headerRow && (
               <thead>
                 <tr className="bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white border-b border-neutral-200 dark:border-neutral-800 font-bold">
                   {headerRow.map((cell, ci) => (
                     <th
                       key={ci}
-                      className="px-2 sm:px-3.5 py-1.5 sm:py-2.5 align-top break-words leading-tight sm:leading-snug"
+                      className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 align-top break-words leading-tight sm:leading-snug whitespace-normal"
                     >
                       {renderInlineMarkdown(cell)}
                     </th>
@@ -279,7 +287,7 @@ function renderMarkdownBlocks(content: string): React.ReactNode {
                   {row.map((cell, ci) => (
                     <td
                       key={ci}
-                      className="px-2 sm:px-3.5 py-1.5 sm:py-2.5 text-neutral-900 dark:text-white align-top leading-tight sm:leading-relaxed break-words"
+                      className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 text-neutral-900 dark:text-white align-top leading-tight sm:leading-relaxed break-words whitespace-normal"
                     >
                       {renderInlineMarkdown(cell)}
                     </td>
@@ -567,7 +575,7 @@ function StreamingAssistantMessage({
   };
 
   return (
-    <div className="flex-1 min-w-0 max-w-full text-neutral-950 dark:text-white leading-relaxed break-words overflow-x-hidden">
+    <div className="flex-1 min-w-0 max-w-full w-full text-neutral-950 dark:text-white leading-relaxed break-words">
       <div onClick={!isDone ? handleSkip : undefined} className={!isDone ? "cursor-pointer" : undefined}>
         <MessageContent content={visibleContent} />
       </div>
@@ -1113,7 +1121,7 @@ export default function AIMentorPage() {
         {/* Content Body: Empty State Hero (Image 2) OR Message History */}
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden px-2 sm:px-6 md:px-12 lg:px-16 py-3 md:py-6 flex flex-col w-full max-w-full"
+          className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-6 md:px-12 lg:px-16 py-3.5 md:py-6 flex flex-col w-full max-w-full"
         >
           {isLoadingHistory ? (
             <div className="flex items-center justify-center my-auto text-neutral-400 dark:text-neutral-500 text-xs gap-2">
@@ -1180,19 +1188,19 @@ export default function AIMentorPage() {
             </div>
           ) : (
             /* Render Active Message History (ChatGPT Style - No Card on Assistant Reply) */
-            <div className="max-w-3xl w-full mx-auto space-y-6 sm:space-y-7 pb-6 min-w-0">
+            <div className="max-w-3xl w-full mx-auto space-y-5 sm:space-y-7 pb-6 min-w-0">
               {messages.map((msg) => {
                 const isUser = msg.role === "user";
                 return (
                   <div
                     key={msg.id}
-                    className={`w-full max-w-full flex gap-1.5 sm:gap-3.5 ${
-                      isUser ? "justify-end" : "justify-start"
+                    className={`w-full max-w-full flex ${
+                      isUser ? "justify-end gap-2" : "justify-start gap-0 sm:gap-3.5"
                     } min-w-0`}
                   >
-                    {/* Assistant Avatar */}
+                    {/* Assistant Avatar: Hidden on mobile (<640px) to maximize message width & align flush left */}
                     {!isUser && (
-                      <div className="size-5 sm:size-8 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
+                      <div className="hidden sm:flex size-7 sm:size-8 rounded-full overflow-hidden shrink-0 mt-0.5 relative items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
                         <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                       </div>
                     )}
@@ -1255,10 +1263,10 @@ export default function AIMentorPage() {
                 );
               })}
 
-              {/* Thinking State: Free-flowing without Card Format */}
+              {/* Thinking State: Free-flowing without Card Format (Avatar hidden on mobile) */}
               {isLoading && (
-                <div className="w-full max-w-full flex gap-1.5 sm:gap-3.5 justify-start min-w-0">
-                  <div className="size-5 sm:size-8 rounded-full overflow-hidden shrink-0 mt-0.5 relative flex items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
+                <div className="w-full max-w-full flex items-center gap-0 sm:gap-3.5 justify-start min-w-0">
+                  <div className="hidden sm:flex size-7 sm:size-8 rounded-full overflow-hidden shrink-0 relative items-center justify-center bg-white dark:bg-neutral-900 shadow-2xs border border-neutral-200 dark:border-neutral-800">
                     <VoicePoweredOrb className="w-full h-full scale-125" enableVoiceControl={false} innerRadius={0.05} />
                   </div>
                   <div className="flex items-center gap-2 py-1.5 text-neutral-500 dark:text-neutral-400 text-xs">
@@ -1296,7 +1304,7 @@ export default function AIMentorPage() {
         </div>
 
         {/* ── Bottom Dedicated Prompt Input ── */}
-        <div className="p-2 sm:p-4 pb-4 sm:pb-6 w-full max-w-3xl mx-auto overflow-visible flex flex-col items-center shrink-0 z-20">
+        <div className="px-3 sm:px-4 py-2 sm:py-3 pb-3 sm:pb-6 w-full max-w-3xl mx-auto overflow-visible flex flex-col items-center shrink-0 z-20">
           <PromptInput
             onSubmit={(query, meta) => handleSendMessage(query, meta)}
             placeholder="Ask AI Catalyst..."
