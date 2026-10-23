@@ -160,7 +160,7 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels) ── */}
       {!pathname.startsWith("/skillbits") && (
-        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/40 dark:bg-slate-950/40 border-b border-black/[0.04] dark:border-white/[0.06] backdrop-blur-2xl backdrop-saturate-180 text-slate-900 dark:text-white transition-colors duration-200 shadow-xs">
+        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/20 dark:bg-black/30 border-b border-white/35 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 text-slate-900 dark:text-white transition-all duration-200 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center">
               <SkillsCatalystLogo size="sm" showText={false} animated />
@@ -181,7 +181,7 @@ function MobileNavContent() {
                 className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
                   isNotificationOpen
                     ? "bg-[#5227FF]/15 text-[#5227FF] border-[#5227FF]/30 dark:bg-[#5227FF]/25 dark:text-purple-300"
-                    : "bg-white/40 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/15 border-black/[0.06] dark:border-white/[0.1] text-slate-800 dark:text-slate-200"
+                    : "bg-white/20 hover:bg-white/35 dark:bg-white/10 dark:hover:bg-white/15 border-white/40 dark:border-white/15 text-slate-800 dark:text-slate-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
                 }`}
               >
                 <Bell size={18} strokeWidth={2.2} className="transition-transform active:rotate-12" />
@@ -204,7 +204,7 @@ function MobileNavContent() {
               type="button"
               onClick={() => router.push("/profile")}
               aria-label="User Profile"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/35 dark:border-purple-400/20 backdrop-blur-xl flex items-center justify-center text-purple-600 dark:text-purple-300 font-black text-xs sm:text-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] transition-all active:scale-95 cursor-pointer"
             >
               <span>{userInitial}</span>
             </button>
@@ -217,7 +217,7 @@ function MobileNavContent() {
                 setIsNotificationOpen(false);
               }}
               aria-label="Toggle Menu"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/40 hover:bg-white/60 dark:bg-white/10 dark:hover:bg-white/15 border border-black/[0.06] dark:border-white/[0.1] backdrop-blur-xl flex items-center justify-center text-slate-800 dark:text-slate-200 shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 hover:bg-white/35 dark:bg-white/10 dark:hover:bg-white/15 border border-white/40 dark:border-white/15 backdrop-blur-xl flex items-center justify-center text-slate-800 dark:text-slate-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all active:scale-95 cursor-pointer"
             >
               {drawerOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
             </button>
