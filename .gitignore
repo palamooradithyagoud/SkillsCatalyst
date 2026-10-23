@@ -1,9 +1,18 @@
 # ── SkillsCatalyst .gitignore ──────────────────────────────────────────────────
 
-# Environment variables — NEVER commit these
+# Environment variables & secrets — NEVER commit these
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+service_account*.json
 
 # Python
 __pycache__/
