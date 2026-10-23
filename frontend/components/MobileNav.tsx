@@ -160,7 +160,7 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels) ── */}
       {!pathname.startsWith("/skillbits") && (
-        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/20 dark:bg-black/30 border-b border-white/35 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 text-slate-900 dark:text-white transition-all duration-200 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/15 dark:bg-black/25 border-b border-white/30 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 text-slate-900 dark:text-white transition-all duration-200 shadow-[inset_0_-1px_1px_rgba(255,255,255,0.4),0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_-1px_1px_rgba(255,255,255,0.1),0_4px_30px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center">
               <SkillsCatalystLogo size="sm" showText={false} animated />

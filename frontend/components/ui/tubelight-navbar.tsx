@@ -51,9 +51,9 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
       aria-label="Mobile Navigation"
       className={cn(
         "fixed bottom-0 inset-x-0 z-40 w-full",
-        "bg-white/20 dark:bg-black/30 backdrop-blur-xl backdrop-saturate-160",
-        "border-t border-white/35 dark:border-white/10",
-        "shadow-[0_-4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)]",
+        "bg-white/15 dark:bg-black/25 backdrop-blur-xl backdrop-saturate-160",
+        "border-t border-white/30 dark:border-white/10",
+        "shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_-4px_24px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_-4px_24px_rgba(0,0,0,0.3)]",
         "pb-[env(safe-area-inset-bottom,0px)]",
         className
       )}
