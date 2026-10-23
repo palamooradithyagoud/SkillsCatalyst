@@ -63,10 +63,10 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 12px 20px 0px rgba(0, 0, 0, 0.12), 0 6px 10px 0px rgba(0, 0, 0, 0.08), 0 2px 4px 0px rgba(0, 0, 0, 0.05), 0 1px 2px 0px rgba(0, 0, 0, 0.04)",
             }}
-            className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[155px] sm:min-h-[195px]"
+            className="group flex-1 bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[160px] sm:min-h-[195px]"
           >
             {/* Left/Top Content */}
-            <div className="relative z-10 max-w-[65%] sm:max-w-[54%] flex flex-col justify-between h-full">
+            <div className="relative z-10 max-w-[62%] sm:max-w-[54%] flex flex-col justify-between h-full">
               <div>
                 <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
                   <span className="text-[9px] sm:text-[11px] font-black tracking-widest text-[#5c56df] dark:text-[#818CF8] uppercase">
@@ -92,8 +92,8 @@ export default function QuickHubNav() {
             </div>
 
             {/* Right 3D Illustration - Transparent PNG seamlessly floating on card */}
-            <div className="absolute right-0 bottom-0 top-auto sm:top-0 w-[54%] h-[78%] sm:w-[50%] sm:h-full flex items-end justify-end pointer-events-none select-none overflow-hidden">
-              <div className="relative w-full h-full min-h-[110px] sm:min-h-[160px] flex items-end justify-end group-hover:scale-104 transition-transform duration-500">
+            <div className="absolute right-0 bottom-0 top-auto sm:top-0 w-[58%] h-[84%] sm:w-[50%] sm:h-full flex items-end justify-end pointer-events-none select-none overflow-hidden">
+              <div className="relative w-full h-full min-h-[118px] sm:min-h-[160px] flex items-end justify-end group-hover:scale-105 transition-transform duration-500 dark:drop-shadow-[0_8px_22px_rgba(99,91,255,0.3)]">
                 <Image
                   src="/images/hub/careerpath_hero.png"
                   alt="Careerpath 3D Stairs"
@@ -119,7 +119,7 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
@@ -131,19 +131,19 @@ export default function QuickHubNav() {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {/* Shining Circular Pod matching Image 2 reference */}
-                <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
-                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_6px_rgba(0,0,0,0.22)]">
+                {/* 3D Circular Pod */}
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#EEF2F6] dark:bg-blue-500/[0.12] dark:border dark:border-blue-400/25 dark:shadow-[0_0_16px_rgba(59,130,246,0.22)] flex items-center justify-center shrink-0 p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                  <div className="relative w-full h-full flex items-center justify-center">
                     <Image
                       src="/images/hub/courses.png"
                       alt="Learning 3D Cap"
                       fill
-                      className="object-contain"
+                      className="object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-[#e11d48] dark:group-hover:text-rose-400 transition-colors truncate">
@@ -173,19 +173,19 @@ export default function QuickHubNav() {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {/* Shining Circular Pod matching Image 2 reference */}
-                <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center shrink-0 p-1 group-hover:scale-108 transition-all duration-300 overflow-hidden">
-                  <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_2px_6px_rgba(0,0,0,0.22)]">
+                {/* 3D Circular Pod */}
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#EEF2F6] dark:bg-rose-500/[0.12] dark:border dark:border-rose-400/25 dark:shadow-[0_0_16px_rgba(244,63,94,0.22)] flex items-center justify-center shrink-0 p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                  <div className="relative w-full h-full flex items-center justify-center">
                     <Image
                       src="/images/hub/projects.png"
                       alt="Practice 3D Code"
                       fill
-                      className="object-contain"
+                      className="object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 </div>
 
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
                 </div>
               </div>
@@ -207,28 +207,28 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Shining Circular Pod */}
-            <div className="w-full h-15 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
-              <div className="w-13 h-13 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center p-2 overflow-hidden group-hover:scale-108 transition-all duration-300">
-                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_3px_8px_rgba(0,0,0,0.25)]">
+            <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-amber-500/[0.12] dark:border dark:border-amber-400/25 dark:shadow-[0_0_20px_rgba(245,158,11,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <Image
                     src="/images/hub/scholarships.png"
                     alt="Scholarships 3D Graduation"
                     fill
-                    className="object-contain"
+                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-1 gap-1 min-w-0">
-              <span className="text-[10px] sm:text-[11px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Scholarships
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                 <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
               </div>
             </div>
@@ -246,28 +246,28 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Shining Circular Pod */}
-            <div className="w-full h-15 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
-              <div className="w-13 h-13 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center p-2 overflow-hidden group-hover:scale-108 transition-all duration-300">
-                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_3px_8px_rgba(0,0,0,0.25)]">
+            <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-yellow-500/[0.12] dark:border dark:border-yellow-400/25 dark:shadow-[0_0_20px_rgba(234,179,8,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <Image
                     src="/images/hub/competition.png"
                     alt="Competitions 3D Trophy"
                     fill
-                    className="object-contain"
+                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-1 gap-1 min-w-0">
-              <span className="text-[10px] sm:text-[11px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Competitions
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                 <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
               </div>
             </div>
@@ -285,28 +285,28 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Shining Circular Pod */}
-            <div className="w-full h-15 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
-              <div className="w-13 h-13 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center p-2 overflow-hidden group-hover:scale-108 transition-all duration-300">
-                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_3px_8px_rgba(0,0,0,0.25)]">
+            <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-indigo-500/[0.12] dark:border dark:border-indigo-400/25 dark:shadow-[0_0_20px_rgba(99,102,241,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <Image
                     src="/images/hub/mock.png"
                     alt="DSA Sheets 3D Checklist"
                     fill
-                    className="object-contain"
+                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-1 gap-1 min-w-0">
-              <span className="text-[10px] sm:text-[11px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 DSA Sheets
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                 <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
               </div>
             </div>
@@ -324,28 +324,28 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="group block bg-white dark:bg-[#18191F] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Shining Circular Pod */}
-            <div className="w-full h-15 sm:h-20 md:h-22 flex items-center justify-center p-1 sm:p-1.5">
-              <div className="w-13 h-13 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-full bg-[#EEF2F6] dark:bg-neutral-800 flex items-center justify-center p-2 overflow-hidden group-hover:scale-108 transition-all duration-300">
-                <div className="relative w-full h-full rounded-full overflow-hidden drop-shadow-[0_3px_8px_rgba(0,0,0,0.25)]">
+            <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-sky-500/[0.12] dark:border dark:border-sky-400/25 dark:shadow-[0_0_20px_rgba(14,165,233,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <Image
                     src="/images/hub/interview.png"
                     alt="Career Goals 3D"
                     fill
-                    className="object-contain"
+                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
             </div>
 
             {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-1 gap-1 min-w-0">
-              <span className="text-[10px] sm:text-[11px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
                 Career
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-neutral-800 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
                 <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
               </div>
             </div>
