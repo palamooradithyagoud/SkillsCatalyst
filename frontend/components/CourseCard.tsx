@@ -6,6 +6,8 @@ export interface CourseCardProps {
   title?: string;
   duration?: string;
   module?: string;
+  completed?: string | number;
+  pending?: string | number;
   progressLabel?: string;
   outerBackground?: string;
   cardBackground?: string;
@@ -17,8 +19,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   progress = 42,
   instructorImage: _instructorImage, // Strictly no images or external assets
   title = "UX Research Basics",
-  duration = "35 Min",
-  module = "Module 5",
+  duration,
+  module,
+  completed,
+  pending,
   progressLabel = "Progress",
   outerBackground = "transparent",
   cardBackground = "#E0CBFD",
@@ -28,11 +32,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   // Clamp progress between 0 and 100
   const clampedProgress = Math.min(100, Math.max(0, progress));
 
-  // Circular progress dial geometry positioned inside the cut top-left corner
-  const dialCenterX = 48;
-  const dialCenterY = 48;
-  const dialRadius = 36;
-  const arcRadius = 24;
+  // Circular progress dial geometry positioned inside the cut top-left corner (enlarged & bold)
+  const dialCenterX = 54;
+  const dialCenterY = 54;
+  const dialRadius = 46;
+  const arcRadius = 31;
   const circumference = 2 * Math.PI * arcRadius;
   const strokeDashoffset = circumference - (clampedProgress / 100) * circumference;
 
@@ -42,9 +46,28 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   const titleFontSize =
     displayTitle.length > 28 ? 23 : displayTitle.length > 20 ? 26 : 30;
 
-  // Smooth notched path cutting out the top-left corner:
-  // Starts at top edge (110, 0), wraps card perimeter,
-  // then scoops seamlessly around the (48, 48) progress circle with inverted corner fillets.
+  // Format completed & pending labels
+  const displayCompleted =
+    completed !== undefined
+      ? typeof completed === "number"
+        ? `${completed} Completed`
+        : completed
+      : duration
+      ? duration
+      : "5 Completed";
+
+  const displayPending =
+    pending !== undefined
+      ? typeof pending === "number"
+        ? `${pending} Pending`
+        : pending
+      : module
+      ? module
+      : "7 Pending";
+
+  // Seamless round circular scoop cutting out the top-left corner around the enlarged progress circle:
+  // Circular arc (radius 58 centered at 54, 54) with smooth C1-continuous tangent fillets (radius 12)
+  // blending into the top edge at (110, 0) and left edge at (0, 110).
   const cardPath =
     "M 110 0 " +
     "L 562 0 " +
@@ -54,11 +77,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     "L 32 251 " +
     "A 32 32 0 0 1 0 219 " +
     "L 0 110 " +
-    "A 14 14 0 0 1 14 96 " +
-    "L 80 96 " +
-    "A 16 16 0 0 0 96 80 " +
-    "L 96 14 " +
-    "A 14 14 0 0 1 110 0 " +
+    "A 12 12 0 0 1 19.2 100.4 " +
+    "A 58 58 0 0 0 100.4 19.2 " +
+    "A 12 12 0 0 1 110 0 " +
     "Z";
 
   return (
@@ -72,9 +93,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       onClick={onClick}
     >
       <defs>
-        {/* Subtle soft shadow for the circular progress dial */}
+        {/* Subtle soft shadow for the enlarged circular progress dial */}
         <filter id="dialShadow" x="-25%" y="-25%" width="150%" height="150%">
-          <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="#1E1135" floodOpacity="0.08" />
+          <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#1E1135" floodOpacity="0.10" />
         </filter>
       </defs>
 
@@ -83,14 +104,14 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         <rect width="594" height="251" fill={outerBackground} />
       )}
 
-      {/* Main Card — Top-left corner cut out with smooth inverted scoop fillets; zero border/outline color */}
+      {/* Main Card — Top-left corner cut out in a smooth round circular shape; zero border/outline color */}
       <path
         d={cardPath}
         fill={cardBackground}
       />
 
-      {/* ── Progress Circle Dial (Floats cleanly inside the cut top-left corner) ── */}
-      {/* Pure White Circular Badge with zero outer border/outline */}
+      {/* ── Progress Circle Dial (Floats cleanly inside the round cut corner) ── */}
+      {/* Pure White Circular Badge (Enlarged) with zero outer border/outline */}
       <circle
         cx={dialCenterX}
         cy={dialCenterY}
@@ -106,48 +127,105 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         r={arcRadius}
         fill="none"
         stroke="#E9D5FF"
-        strokeWidth="4.5"
+        strokeWidth="6.5"
       />
 
-      {/* Active Progress Arc */}
+      {/* Active Bold Black Progress Arc */}
       <circle
         cx={dialCenterX}
         cy={dialCenterY}
         r={arcRadius}
         fill="none"
-        stroke="#1E1135"
-        strokeWidth="4.5"
+        stroke="#000000"
+        strokeWidth="6.5"
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={strokeDashoffset}
         transform={`rotate(-90 ${dialCenterX} ${dialCenterY})`}
       />
 
-      {/* Progress percentage label */}
+      {/* Bold Black Progress percentage label */}
       <text
         x={dialCenterX}
         y={dialCenterY + 1}
         textAnchor="middle"
         dominantBaseline="central"
-        fill="#1E1135"
-        fontSize="14"
+        fill="#000000"
+        fontSize="17"
         fontFamily="Arial, Helvetica, sans-serif"
-        fontWeight="bold"
+        fontWeight="900"
       >
         {`${Math.round(clampedProgress)}%`}
       </text>
 
-      {/* ── Right-Side Content (Clean & Borderless) ── */}
+      {/* ── Left-Side Metadata: Completed & Pending (Dark & Bold) ── */}
+      {/* Completed Check Icon & Text */}
+      <circle
+        cx={54}
+        cy={160}
+        r={9}
+        fill="none"
+        stroke="#000000"
+        strokeWidth="2.6"
+      />
+      <path
+        d="M50 160.5 L53 163.5 L58 157"
+        fill="none"
+        stroke="#000000"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <text
+        x={72}
+        y={166}
+        fill="#000000"
+        fontSize="17"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="900"
+      >
+        {displayCompleted}
+      </text>
+
+      {/* Pending Clock Icon & Text */}
+      <circle
+        cx={54}
+        cy={198}
+        r={9}
+        fill="none"
+        stroke="#000000"
+        strokeWidth="2.6"
+      />
+      <path
+        d="M54 193.5 V198 H58"
+        fill="none"
+        stroke="#000000"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <text
+        x={72}
+        y={204}
+        fill="#000000"
+        fontSize="17"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="900"
+      >
+        {displayPending}
+      </text>
+
+      {/* ── Right-Side Content (Dark Colour & Bold) ── */}
       {/* "Progress" Section Label */}
       <text
         x="546"
         y="78"
         textAnchor="end"
-        fill="#3B2063"
+        fill="#000000"
         fontSize="18"
         fontFamily="Arial, Helvetica, sans-serif"
-        fontWeight="bold"
-        letterSpacing="0.5px"
+        fontWeight="900"
+        letterSpacing="0.6px"
       >
         {progressLabel}
       </text>
@@ -157,72 +235,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         x="546"
         y="124"
         textAnchor="end"
-        fill="#1E1135"
+        fill="#000000"
         fontSize={titleFontSize}
         letterSpacing="-0.5px"
         fontFamily="Arial, Helvetica, sans-serif"
-        fontWeight="bold"
+        fontWeight="900"
       >
         {displayTitle}
-      </text>
-
-      {/* ── Course Metadata Groups ── */}
-      {/* Clock Icon */}
-      <circle
-        cx="348"
-        cy="168"
-        r="8"
-        fill="none"
-        stroke="#1E1135"
-        strokeWidth="2.2"
-      />
-      <path
-        d="M348 163.5 V168 H352"
-        fill="none"
-        stroke="#1E1135"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Duration Text */}
-      <text
-        x="364"
-        y="174"
-        fill="#1E1135"
-        fontSize="18"
-        fontFamily="Arial, Helvetica, sans-serif"
-        fontWeight="bold"
-      >
-        {duration}
-      </text>
-
-      {/* Video Module Camera Icon */}
-      <rect
-        x="456"
-        y="160.5"
-        width="17"
-        height="15"
-        rx="2"
-        fill="none"
-        stroke="#1E1135"
-        strokeWidth="2.2"
-      />
-      <polygon
-        points="473,164.5 479,161.5 479,174.5 473,171.5"
-        fill="#1E1135"
-      />
-
-      {/* Module Text */}
-      <text
-        x="488"
-        y="174"
-        fill="#1E1135"
-        fontSize="18"
-        fontFamily="Arial, Helvetica, sans-serif"
-        fontWeight="bold"
-      >
-        {module}
       </text>
     </svg>
   );

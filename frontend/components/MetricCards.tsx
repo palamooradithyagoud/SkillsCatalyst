@@ -467,8 +467,8 @@ export default function MetricCards({
                     <CourseCard
                       progress={course.progressPct}
                       title={course.title}
-                      duration={`${Math.max(15, (course.totalVideos - course.completedVideos) * 8 || 35)} Min`}
-                      module={course.isUnavailable ? "Syncing..." : `Module ${Math.max(1, course.completedVideos || 1)}`}
+                      completed={course.isUnavailable ? "Syncing..." : `${course.completedVideos || 0} Completed`}
+                      pending={course.isUnavailable ? "Syncing..." : `${Math.max(0, (course.totalVideos || 0) - (course.completedVideos || 0))} Pending`}
                       outerBackground="transparent"
                     />
                   </motion.div>
