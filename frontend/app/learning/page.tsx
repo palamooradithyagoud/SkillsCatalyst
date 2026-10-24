@@ -32,15 +32,12 @@ import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
-import { UsageLimitIndicator } from "@/components/premium";
 
 export default function LearningPage() {
   const { session } = useAuth();
   const userId = session?.user_id;
   const qc = useQueryClient();
-  const { isPremium, getLimit } = useSubscription();
   const { openPricingModal } = usePricingModal();
-  const savedLimit = isPremium ? null : (getLimit("saved_videos") ?? 1);
 
   const [activeCard, setActiveCard] = useState<ActiveCard>("explore");
   const [notification, setNotification] = useState<{
@@ -421,126 +418,6 @@ export default function LearningPage() {
             transition={{ duration: 0.25 }}
             className="space-y-4"
           >
-            {/* ── Stats header matching user screenshot ── */}
-            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-[#A478D8]/40 shadow-[0_8px_30px_rgba(164,120,216,0.25)] p-4 sm:p-7 md:p-8 bg-gradient-to-br from-[#5B2A82] via-[#481E6A] to-[#2E1047] text-white flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
-              {/* Background ambient orbs & luminous lilac aura */}
-              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-purple-400/20 blur-3xl pointer-events-none" />
-              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-violet-400/20 blur-2xl pointer-events-none" />
-
-              {/* Left Content */}
-              <div className="space-y-2 max-w-lg z-10">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-white/15 border border-white/25 text-pink-100 text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-2xs backdrop-blur-xs">
-                    <svg
-                      className="w-3.5 h-3.5 text-pink-200"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m12 3-8 4.5v9L12 21l8-4.5v-9L12 3z" />
-                    </svg>
-                    <span>LEARNING TRACKS</span>
-                  </span>
-                  {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-pink-200" />}
-                </div>
-
-                <h2 className="text-xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
-                  Saved Playlists &amp;{" "}
-                  <span className="bg-gradient-to-r from-pink-200 via-rose-100 to-amber-200 bg-clip-text text-transparent">
-                    Progress
-                  </span>
-                </h2>
-
-                <p className="text-xs sm:text-sm text-pink-100/85 font-medium leading-relaxed">
-                  Watch your saved video playlists, track real video completion progress, and resume learning anytime.
-                </p>
-              </div>
-
-              {/* Center Floating 3D Player Card Graphic */}
-              <div className="hidden md:flex items-center justify-center relative z-10 shrink-0 mx-auto lg:mx-0">
-                {/* Ambient Sparkles */}
-                <span className="absolute -top-3 left-4 text-pink-200/90 text-xl font-bold select-none animate-pulse">
-                  ✦
-                </span>
-                <span
-                  className="absolute top-8 -right-4 text-pink-200/90 text-2xl font-bold select-none animate-pulse"
-                  style={{ animationDelay: "1s" }}
-                >
-                  ✦
-                </span>
-
-                {/* Floating Tilted 3D Glass Card */}
-                <div
-                  className="relative w-36 h-28 sm:w-44 sm:h-34 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-2xl shadow-black/25 flex flex-col items-center justify-center p-3 transition-transform duration-500 hover:scale-105"
-                  style={{
-                    transform: "perspective(700px) rotateY(-10deg) rotateX(6deg) rotate(-14deg)",
-                  }}
-                >
-                  {/* Subtle inner glass reflection */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/20 to-white/40 pointer-events-none" />
-
-                  {/* Play triangle */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center">
-                    <svg className="w-9 h-9 drop-shadow-sm" viewBox="0 0 24 24" fill="#ffffff">
-                      <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
-                    </svg>
-                  </div>
-
-                  {/* Bottom progress bar line */}
-                  <div className="w-full mt-4 px-2">
-                    <div className="w-full h-1.5 rounded-full bg-white/25 overflow-hidden">
-                      <div className="h-full w-2/5 rounded-full bg-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Stats Card with Dynamic Real User Data - Balanced for Mobile and Desktop */}
-              <div className="relative z-10 w-full lg:w-auto grid grid-cols-2 divide-x divide-white/10 bg-black/20 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/15 shadow-inner p-3 sm:px-6 sm:py-4 shrink-0">
-                {/* Column 1: Saved Tracks */}
-                <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pr-2 sm:pr-6 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-pink-200 shrink-0 shadow-2xs">
-                    <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-pink-200" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] sm:text-xs font-semibold text-pink-100/80 whitespace-nowrap">
-                      Saved Tracks
-                    </div>
-                    <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                      {savedList.length}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Column 2: Videos Watched */}
-                <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 pl-3 sm:pl-6 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-[#C084FC] shrink-0 shadow-2xs">
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C084FC]" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] sm:text-xs font-semibold text-pink-100/80 whitespace-nowrap">
-                      Videos Watched
-                    </div>
-                    <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                      {completedSavedVideosCount}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Usage Limit Banner */}
-            <UsageLimitIndicator
-              used={savedList.length}
-              limit={savedLimit}
-              unitName="Saved Playlists"
-              isPremium={isPremium}
-              theme="boysenberry"
-            />
-
             {/* ── Playlist rows */}
             {savedList.length === 0 ? (
               <motion.div
