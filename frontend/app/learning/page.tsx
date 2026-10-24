@@ -28,7 +28,6 @@ import { SelectDropdown } from "@/components/learning/SelectDropdown";
 import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
-import { LearningProgressCard } from "@/components/learning/LearningProgressCard";
 import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -323,24 +322,13 @@ export default function LearningPage() {
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            {/* ── Your Learning Progress Hero Card (Explore Only) ── */}
-            <LearningProgressCard
-              dashboardData={dashboardData}
-              videoProgressData={videoProgressData}
-              userProgressData={userProgressData}
-              savedList={savedList}
-              onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
-              onOpenSavedTab={() => setActiveCard("saved")}
-              onExploreClick={() => setActiveCard("explore")}
-            />
-
             {/* Search bar matching Image 2 */}
             <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-4 sm:p-6 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-3 sm:space-y-4">
               <div className="flex flex-col gap-3">
                 {/* 1. Full-width Search Bar */}
                 <div className="relative w-full">
                   <Search
-                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#8b0b52] dark:text-pink-400 pointer-events-none"
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#A478D8] dark:text-[#C4A3F0] pointer-events-none"
                   />
                   <input
                     type="text"
@@ -351,7 +339,7 @@ export default function LearningPage() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#8b0b52] dark:focus:border-purple-400 focus:ring-2 focus:ring-[#8b0b52]/20 dark:focus:ring-purple-400/20 focus:outline-none transition-all shadow-2xs ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#A478D8] dark:focus:border-[#C4A3F0] focus:ring-2 focus:ring-[#A478D8]/20 dark:focus:ring-[#C4A3F0]/20 focus:outline-none transition-all shadow-2xs ${
                       queryError ? "border-rose-500" : ""
                     }`}
                   />
@@ -367,7 +355,7 @@ export default function LearningPage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSearch()}
                     disabled={searching || !query.trim()}
-                    className="flex-1 sm:flex-initial sm:px-8 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 whitespace-nowrap bg-[#8b0b52] hover:bg-[#730944] active:bg-[#5e0737] shadow-md shadow-[#8b0b52]/25 transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 sm:flex-initial sm:px-8 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 whitespace-nowrap bg-[#A478D8] hover:bg-[#9364CB] active:bg-[#8352BE] shadow-md shadow-[#A478D8]/25 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {searching ? (
                       <>
@@ -434,10 +422,10 @@ export default function LearningPage() {
             className="space-y-4"
           >
             {/* ── Stats header matching user screenshot ── */}
-            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-[#b3126a]/40 shadow-[0_8px_30px_rgba(139,11,82,0.28)] p-4 sm:p-7 md:p-8 bg-gradient-to-br from-[#8b0b52] via-[#7a0947] to-[#5e0535] text-white flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
-              {/* Background ambient orbs & luminous berry aura */}
-              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-pink-400/20 blur-3xl pointer-events-none" />
-              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-rose-500/20 blur-2xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-[22px] sm:rounded-[32px] border border-[#A478D8]/40 shadow-[0_8px_30px_rgba(164,120,216,0.25)] p-4 sm:p-7 md:p-8 bg-gradient-to-br from-[#5B2A82] via-[#481E6A] to-[#2E1047] text-white flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-6">
+              {/* Background ambient orbs & luminous lilac aura */}
+              <div className="absolute -right-12 -top-12 w-80 h-80 rounded-full bg-purple-400/20 blur-3xl pointer-events-none" />
+              <div className="absolute right-1/4 -bottom-10 w-72 h-72 rounded-full bg-violet-400/20 blur-2xl pointer-events-none" />
 
               {/* Left Content */}
               <div className="space-y-2 max-w-lg z-10">

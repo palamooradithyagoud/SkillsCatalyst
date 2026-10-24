@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 
-// ── 100% Authentic Vector Icons Matching Image 2 ────────────────────────────
+// ── 100% Authentic Vector Icons (Preserved for compatibility) ───────────────
 
 export function PythonSkillIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -129,7 +129,20 @@ export function SystemDesignSkillIcon({ className = "w-4 h-4" }: { className?: s
   );
 }
 
-// ── The 7 Canonical Popular Items (Exact Match to Image 2) ───────────────────
+// ── The Canonical Topics (Matching Image 1: All Courses, UI Design, UX Research + Core Skills) ──
+
+export const TOPICS = [
+  { id: "all", name: "All Courses", query: "" },
+  { id: "ui-design", name: "UI Design", query: "UI Design" },
+  { id: "ux-research", name: "UX Research", query: "UX Research" },
+  { id: "python", name: "Python", query: "Python" },
+  { id: "react", name: "React", query: "React" },
+  { id: "dsa", name: "DSA", query: "DSA" },
+  { id: "machine-learning", name: "Machine Learning", query: "Machine Learning" },
+  { id: "sql", name: "SQL", query: "SQL" },
+  { id: "system-design", name: "System Design", query: "System Design" },
+  { id: "java", name: "Java", query: "Java" },
+];
 
 export const POPULAR_SKILLS = [
   { name: "Python", icon: PythonSkillIcon },
@@ -147,31 +160,112 @@ interface PopularSkillPillsProps {
 }
 
 export function PopularSkillPills({ onSelectSkill, activeSkill }: PopularSkillPillsProps) {
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full min-w-0 scroll-smooth">
-      <span className="text-slate-500 dark:text-neutral-400 font-semibold text-xs sm:text-sm shrink-0 select-none mr-1">
-        Popular:
-      </span>
+  const [showAll, setShowAll] = useState(false);
 
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        {POPULAR_SKILLS.map((skill) => {
-          const Icon = skill.icon;
-          const isSelected = activeSkill?.toLowerCase() === skill.name.toLowerCase();
+  // Check if "All Courses" is selected
+  const isAllSelected =
+    !activeSkill ||
+    activeSkill.trim() === "" ||
+    activeSkill.toLowerCase() === "all" ||
+    activeSkill.toLowerCase() === "all courses";
+
+  return (
+    <div className="w-full pt-1 pb-0.5 space-y-3">
+      {/* ── Top Header matching Image 1: "Topics" + "See All" ── */}
+      <div className="flex items-center justify-between w-full">
+        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">
+          Topics
+        </h3>
+        <button
+          type="button"
+          onClick={() => setShowAll(!showAll)}
+          className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full border border-slate-300 dark:border-neutral-700/80 hover:border-slate-400 dark:hover:border-neutral-500 text-slate-700 dark:text-neutral-300 hover:text-slate-950 dark:hover:text-white text-xs sm:text-sm font-medium transition-all active:scale-95 cursor-pointer select-none"
+        >
+          <span>{showAll ? "Show Less" : "See All"}</span>
+        </button>
+      </div>
+
+      {/* ── Segmented Pill Track matching Image 1 ── */}
+      <div
+        className={`w-full overflow-x-auto no-scrollbar scroll-smooth py-1 ${
+          showAll ? "flex flex-wrap gap-2" : "flex items-center min-w-0"
+        }`}
+      >
+        {TOPICS.map((topic, index) => {
+          const isSelected =
+            topic.id === "all"
+              ? isAllSelected
+              : activeSkill?.toLowerCase() === topic.query.toLowerCase() ||
+                activeSkill?.toLowerCase() === topic.name.toLowerCase();
+
+          const isFirst = index === 0;
+          const isLast = index === TOPICS.length - 1;
+
+          if (showAll) {
+            return (
+              <button
+                key={topic.id}
+                type="button"
+                onClick={() => onSelectSkill(topic.query)}
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer border select-none ${
+                  isSelected
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-sm font-bold scale-[1.02]"
+                    : "bg-slate-100 dark:bg-[#141518] text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-700/80 hover:bg-slate-200 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {topic.name}
+              </button>
+            );
+          }
 
           return (
-            <button
-              key={skill.name}
-              type="button"
-              onClick={() => onSelectSkill(skill.name)}
-              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer select-none shrink-0 ${
-                isSelected
-                  ? "bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-600 ring-2 ring-purple-500/20 shadow-xs scale-102"
-                  : "bg-slate-100/80 dark:bg-neutral-900/80 hover:bg-slate-200/70 dark:hover:bg-neutral-800 border border-slate-200/50 dark:border-neutral-700/80 text-slate-700 dark:text-neutral-200 hover:text-slate-900 dark:hover:text-white active:scale-97"
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span>{skill.name}</span>
-            </button>
+            <React.Fragment key={topic.id}>
+              {/* Waist connector between adjacent segmented items */}
+              {!isFirst && (
+                <svg
+                  className="w-3.5 h-11 shrink-0 -mx-[1px] pointer-events-none select-none z-0"
+                  viewBox="0 0 14 44"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M 0 0 C 4.5 0 7 7 7 7 C 7 7 9.5 0 14 0 L 14 44 C 9.5 44 7 37 7 37 C 7 37 4.5 44 0 44 Z"
+                    className="fill-slate-100 dark:fill-[#121316]"
+                  />
+                  <path
+                    d="M 0 0.75 C 4.5 0.75 7 7.5 7 7.5 C 7 7.5 9.5 0.75 14 0.75"
+                    className="stroke-slate-300 dark:stroke-neutral-700/80"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                  <path
+                    d="M 0 43.25 C 4.5 43.25 7 36.5 7 36.5 C 7 36.5 9.5 43.25 14 43.25"
+                    className="stroke-slate-300 dark:stroke-neutral-700/80"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+                </svg>
+              )}
+
+              {/* Slot */}
+              <div
+                className={`h-11 shrink-0 flex items-center justify-center border-t-[1.5px] border-b-[1.5px] border-slate-300 dark:border-neutral-700/80 bg-slate-100 dark:bg-[#121316] px-1 sm:px-1.5 transition-colors ${
+                  isFirst ? "rounded-l-full border-l-[1.5px] pl-2 sm:pl-2.5" : ""
+                } ${isLast ? "rounded-r-full border-r-[1.5px] pr-2 sm:pr-2.5" : ""}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onSelectSkill(topic.query)}
+                  className={`relative px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer select-none ${
+                    isSelected
+                      ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold shadow-xs scale-[1.02]"
+                      : "text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-200/50 dark:hover:bg-white/5 active:scale-97"
+                  }`}
+                >
+                  {topic.name}
+                </button>
+              </div>
+            </React.Fragment>
           );
         })}
       </div>

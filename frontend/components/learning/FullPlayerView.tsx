@@ -205,7 +205,7 @@ export function FullPlayerView({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-gradient-to-r from-[#8b0b52] via-[#7a0947] to-[#5e0535] text-white border border-[#b3126a]/40"
+            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-gradient-to-r from-[#5B2A82] via-[#481E6A] to-[#2E1047] text-white border border-[#A478D8]/40"
           >
             <motion.div
               initial={{ rotate: -20, scale: 0 }}
@@ -225,7 +225,7 @@ export function FullPlayerView({
       </AnimatePresence>
 
       {/* ── Course Header Banner (Matches Screenshot) */}
-      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-br from-[#8b0b52] via-[#7a0947] to-[#5e0535] p-3.5 sm:p-8 text-white shadow-xl border border-[#b3126a]/40">
+      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-br from-[#5B2A82] via-[#481E6A] to-[#2E1047] p-3.5 sm:p-8 text-white shadow-xl border border-[#A478D8]/40">
         <div className="absolute -right-12 -top-12 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
           <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-purple-400 to-rose-400 blur-2xl" />
@@ -318,7 +318,7 @@ export function FullPlayerView({
                 <button
                   onClick={goNext}
                   disabled={currentIdx >= videos.length - 1}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#8b0b52] hover:bg-[#730944] active:bg-[#5e0737] shadow-sm shadow-[#8b0b52]/25 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#A478D8] hover:bg-[#9364CB] active:bg-[#8352BE] shadow-sm shadow-[#A478D8]/25 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
                 >
                   Next <ChevronRight className="w-4 h-4" />
                 </button>
@@ -329,11 +329,11 @@ export function FullPlayerView({
                   onClick={() => markMut.mutate({ videoId: currentVideo.videoId, watched: !isCompleted(currentVideo.videoId) })}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                     isCompleted(currentVideo.videoId)
-                      ? "bg-[#8b0b52] text-[#C084FC] border-[#8b0b52] shadow-xs"
-                      : "bg-slate-100 dark:bg-neutral-800/90 text-slate-700 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-[#8b0b52]/10 dark:hover:bg-purple-950/40 hover:text-[#8b0b52] dark:hover:text-[#C084FC]"
+                      ? "bg-[#A478D8] text-white border-[#A478D8] shadow-xs"
+                      : "bg-slate-100 dark:bg-neutral-800/90 text-slate-700 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-[#A478D8]/10 dark:hover:bg-purple-950/40 hover:text-[#A478D8] dark:hover:text-[#C084FC]"
                   }`}
                 >
-                  <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted(currentVideo.videoId) ? "text-[#C084FC]" : "text-purple-600 dark:text-[#C084FC]"}`} />
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted(currentVideo.videoId) ? "text-white" : "text-purple-600 dark:text-[#C084FC]"}`} />
                   {isCompleted(currentVideo.videoId) ? "Completed ✓" : "Mark Complete"}
                 </button>
               )}
@@ -349,7 +349,7 @@ export function FullPlayerView({
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     activeTab === tab
-                      ? "bg-[#8b0b52] text-white shadow-sm border border-[#b3126a]/30"
+                      ? "bg-[#A478D8] text-white shadow-sm border border-[#A478D8]/30"
                       : "text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800/80"
                   }`}
                 >
