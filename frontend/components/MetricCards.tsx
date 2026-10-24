@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BookOpen, GraduationCap, FileText, ChevronRight, Plus,
-  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2, Sparkles, TrendingUp
+  Video, CheckCircle2, Bookmark, ArrowUpRight, Play, Loader2, Code2, Sparkles, TrendingUp, Clock
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { fetchSavedPlaylists, fetchPlaylistsStats, cleanPlaylistId, Playlist, Pl
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import PricingModal from "@/components/PricingModal";
 import EventHeroCard from "@/components/EventHeroCard";
+import CourseCard from "@/components/CourseCard";
 import { getTrialDaysRemaining, isUserTrialClaimed } from "@/lib/trial";
 
 export interface MetricsData {
@@ -410,7 +411,7 @@ export default function MetricCards({
         <>
           {/* ── Your Learning Progress Section ── */}
           <div className="space-y-2.5 sm:space-y-3">
-            <div className="w-full max-w-[540px] flex items-center justify-between">
+            <div className="w-full max-w-[760px] flex items-center justify-between">
               <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
                 Your Learning Progress
               </h3>
@@ -424,13 +425,13 @@ export default function MetricCards({
             </div>
 
             {loading ? (
-              <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
+              <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
                 <Loader2 className="w-4 h-4 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
                 <span className="text-xs font-semibold">Loading learning progress...</span>
               </div>
             ) : savedPlaylists.length === 0 ? (
               /* Empty State when user has zero saved YouTube playlists */
-              <div className="w-full max-w-[540px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
+              <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
                 <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-[#A855F7] dark:text-[#C084FC] flex items-center justify-center mx-auto">
                   <Video className="w-5 h-5" />
                 </div>
@@ -452,93 +453,49 @@ export default function MetricCards({
                 </div>
               </div>
             ) : (
-              /* Compact Grid of Saved Playlists showing exact video completion count */
-              <div className="w-full max-w-[540px] grid grid-cols-2 gap-2 sm:gap-2.5">
-            {savedPlaylists.slice(0, 2).map((course, idx) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.05 * idx }}
-                onClick={() => router.push(course.href)}
-                className="playlist-card card-morph bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[18px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex flex-col justify-between group min-h-[148px] sm:min-h-[162px]"
+              /* Exact SVG-based CourseCard side-by-side with less size and responsive layout */
+              <div className="w-full max-w-[760px] grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {savedPlaylists.slice(0, 2).map((course, idx) => (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.05 * idx }}
+                    onClick={() => router.push(course.href)}
+                    className="cursor-pointer transition-transform duration-200 hover:scale-[1.015] active:scale-[0.985] drop-shadow-[0_4px_16px_rgba(168,85,247,0.08)] hover:drop-shadow-[0_6px_22px_rgba(168,85,247,0.16)] select-none"
+                  >
+                    <CourseCard
+                      progress={course.progressPct}
+                      title={course.title}
+                      duration={`${Math.max(15, (course.totalVideos - course.completedVideos) * 8 || 35)} Min`}
+                      module={course.isUnavailable ? "Syncing..." : `Module ${Math.max(1, course.completedVideos || 1)}`}
+                      outerBackground="transparent"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Trending Skills Section (Below Learning Progress) ── */}
+          <div className="space-y-2.5 sm:space-y-3 pt-1">
+            <div className="w-full max-w-[760px] flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-[#7c3aed] dark:text-purple-400" />
+                <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
+                  Trending Skills
+                </h3>
+              </div>
+              <Link
+                href="/learning"
+                className="text-[11px] sm:text-xs font-bold text-[#7c3aed] dark:text-purple-400 hover:text-[#6d28d9] dark:hover:text-purple-300 flex items-center gap-0.5 transition-colors"
               >
-                <div>
-                  {/* 3D Clay Image Thumbnail (Compact) */}
-                  <div className="relative w-11 h-11 sm:w-13 sm:h-13 mx-auto mb-1.5 overflow-hidden rounded-xl bg-slate-50/80 dark:bg-[#22232a] shrink-0 flex items-center justify-center">
-                    <Image
-                      src={course.image}
-                      alt={course.title}
-                      fill
-                      unoptimized={course.image.startsWith("http")}
-                      className="object-contain transform group-hover:scale-105 transition-transform"
-                    />
-                  </div>
+                <span>View All</span>
+                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </Link>
+            </div>
 
-                  {course.progressPct === 100 && (
-                    <div className="flex items-center justify-end mb-1">
-                      <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#A855F7] dark:text-[#C084FC] shrink-0" />
-                    </div>
-                  )}
-
-                  <h4 className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-[#A855F7] dark:group-hover:text-[#C084FC] transition-colors line-clamp-1 leading-snug">
-                    {course.title}
-                  </h4>
-
-                  <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
-                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-[#A855F7] dark:text-[#C084FC] fill-[#A855F7] dark:fill-[#C084FC] shrink-0" />
-                    {course.isUnavailable ? (
-                      <span className="text-amber-500 dark:text-amber-400">Progress syncing...</span>
-                    ) : (
-                      <span>{course.completedVideos}/{course.totalVideos} videos completed</span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Exact Progress Bar & Percentage */}
-                <div className="space-y-1 mt-1.5">
-                  <div className="w-full bg-slate-100 dark:bg-neutral-900 h-1 sm:h-1.5 rounded-full overflow-hidden flex gap-0.5 p-0.2">
-                    <div
-                      className="bg-gradient-to-r from-[#A855F7] to-[#C084FC] dark:from-[#A855F7] dark:to-[#C084FC] h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(192,132,252,0.4)]"
-                      style={{ width: `${course.progressPct}%` }}
-                    />
-                    <div className="bg-slate-200 dark:bg-neutral-800 h-full rounded-full flex-1" />
-                  </div>
-                  <div className="flex items-center justify-between text-[8.5px] sm:text-[9.5px]">
-                    <span className="font-bold text-slate-700 dark:text-neutral-300">
-                      {course.progressPct}% complete
-                    </span>
-                    <span className="text-[8.5px] font-semibold text-slate-400 dark:text-neutral-500 group-hover:text-[#A855F7] dark:group-hover:text-[#C084FC] transition-colors inline-flex items-center gap-0.5">
-                      <span>Watch</span>
-                      <ArrowUpRight className="w-2.5 h-2.5" />
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Trending Skills Section (Below Learning Progress) ── */}
-      <div className="space-y-2.5 sm:space-y-3 pt-1">
-        <div className="w-full max-w-[540px] flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-[#7c3aed] dark:text-purple-400" />
-            <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
-              Trending Skills
-            </h3>
-          </div>
-          <Link
-            href="/learning"
-            className="text-[11px] sm:text-xs font-bold text-[#7c3aed] dark:text-purple-400 hover:text-[#6d28d9] dark:hover:text-purple-300 flex items-center gap-0.5 transition-colors"
-          >
-            <span>View All</span>
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </Link>
-        </div>
-
-        <div className="w-full max-w-[540px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+            <div className="w-full max-w-[760px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             {/* 1. Python */}
           <motion.div
             whileHover={{ y: -2, scale: 1.02 }}
