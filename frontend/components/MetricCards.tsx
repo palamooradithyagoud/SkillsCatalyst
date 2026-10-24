@@ -295,12 +295,12 @@ export default function MetricCards({
   return (
     <div className="space-y-3.5 sm:space-y-4 select-none">
       {/* ── Top Hero Event Banner with Moving Events & Get PRO Trigger ── */}
-      {!hideEventCard && showOnly !== "learning-and-skills" && (
+      {!hideEventCard && (showOnly === "all" || showOnly === "metrics") && (
         <EventHeroCard onOpenPricing={() => setIsPricingModalOpen(true)} />
       )}
 
       {/* ── 3 Compact Metric Cards (Aligned to Left, Matching Event Card Width) ── */}
-      {showOnly !== "learning-and-skills" && (
+      {(showOnly === "all" || showOnly === "metrics") && (
         <div className="w-full max-w-[540px] grid grid-cols-3 gap-2 sm:gap-2.5">
         {/* Card 1: Mustard/Yellow - Saved Playlists */}
         <motion.div
