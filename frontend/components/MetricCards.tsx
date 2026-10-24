@@ -72,7 +72,7 @@ export default function MetricCards({
 }: {
   metrics?: MetricsData;
   hideEventCard?: boolean;
-  showOnly?: "all" | "metrics" | "learning-and-skills";
+  showOnly?: "all" | "metrics" | "learning-and-skills" | "learning-progress" | "trending-skills";
 }) {
   const router = useRouter();
 
@@ -406,96 +406,100 @@ export default function MetricCards({
         </div>
       )}
 
-      {/* ── Your Learning Progress & Trending Skills Section ── */}
-      {showOnly !== "metrics" && (
-        <>
-          {/* ── Your Learning Progress Section ── */}
-          <div className="space-y-2.5 sm:space-y-3">
-            <div className="w-full max-w-[760px] flex items-center justify-between">
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
-                Your Learning Progress
-              </h3>
-              <Link
-                href="/learning"
-                className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-neutral-400 dark:hover:text-white flex items-center gap-0.5 transition-colors"
-              >
-                <span>Browse & Save</span>
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400">
-                <Loader2 className="w-4 h-4 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
-                <span className="text-xs font-semibold">Loading learning progress...</span>
-              </div>
-            ) : savedPlaylists.length === 0 ? (
-              /* Empty State when user has zero saved YouTube playlists */
-              <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[18px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-[#A855F7] dark:text-[#C084FC] flex items-center justify-center mx-auto">
-                  <Video className="w-5 h-5" />
-                </div>
-                <div className="space-y-1 max-w-xs mx-auto">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                    No Learning Progress Yet
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium leading-relaxed">
-                    Save playlists on the Learning page to track your real video completion progress here!
-                  </p>
-                </div>
-                <div className="pt-0.5">
-                  <button
-                    onClick={() => router.push("/learning")}
-                    className="px-4 py-2 rounded-full bg-[#A855F7] text-white text-[11px] font-bold hover:bg-[#9333EA] shadow-sm transition-all active:scale-95 cursor-pointer"
-                  >
-                    + Browse & Save Playlists
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Exact SVG-based CourseCard side-by-side with less size and responsive layout */
-              <div className="w-full max-w-[760px] grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {savedPlaylists.slice(0, 2).map((course, idx) => (
-                  <motion.div
-                    key={course.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.05 * idx }}
-                    onClick={() => router.push(course.href)}
-                    className="cursor-pointer transition-transform duration-200 hover:scale-[1.015] active:scale-[0.985] drop-shadow-[0_4px_16px_rgba(168,85,247,0.08)] hover:drop-shadow-[0_6px_22px_rgba(168,85,247,0.16)] select-none"
-                  >
-                    <CourseCard
-                      progress={course.progressPct}
-                      title={course.title}
-                      completed={course.isUnavailable ? "Syncing..." : `${course.completedVideos || 0} Completed`}
-                      pending={course.isUnavailable ? "Syncing..." : `${Math.max(0, (course.totalVideos || 0) - (course.completedVideos || 0))} Pending`}
-                      outerBackground="transparent"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            )}
+      {/* ── Your Learning Progress Section ── */}
+      {(showOnly === "all" || showOnly === "learning-and-skills" || showOnly === "learning-progress") && (
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="w-full max-w-[760px] flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
+              Your Learning Progress
+            </h3>
+            <Link
+              href="/learning"
+              className="text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-neutral-400 dark:hover:text-white flex items-center gap-0.5 transition-colors"
+            >
+              <span>Browse & Save</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </Link>
           </div>
 
-          {/* ── Trending Skills Section (Below Learning Progress) ── */}
-          <div className="space-y-2.5 sm:space-y-3 pt-1">
-            <div className="w-full max-w-[760px] flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-[#7c3aed] dark:text-purple-400" />
-                <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
-                  Trending Skills
-                </h3>
-              </div>
-              <Link
-                href="/learning"
-                className="text-[11px] sm:text-xs font-bold text-[#7c3aed] dark:text-purple-400 hover:text-[#6d28d9] dark:hover:text-purple-300 flex items-center gap-0.5 transition-colors"
-              >
-                <span>View All</span>
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </Link>
+          {loading ? (
+            <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-6 border border-slate-100 dark:border-neutral-800 shadow-sm flex items-center justify-center space-x-3 text-slate-400 dark:text-neutral-400 min-h-[160px] sm:min-h-[195px]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
+              <span className="text-xs font-semibold">Loading learning progress...</span>
             </div>
+          ) : savedPlaylists.length === 0 ? (
+            /* Empty State when user has zero saved YouTube playlists */
+            <div className="w-full max-w-[760px] bg-white dark:bg-[#18191F] rounded-[20px] sm:rounded-[24px] p-6 border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-2.5 shadow-xs min-h-[160px] sm:min-h-[195px] flex flex-col justify-center">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-[#A855F7] dark:text-[#C084FC] flex items-center justify-center mx-auto">
+                <Video className="w-5 h-5" />
+              </div>
+              <div className="space-y-1 max-w-xs mx-auto">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                  No Learning Progress Yet
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium leading-relaxed">
+                  Save playlists on the Learning page to track your real video completion progress here!
+                </p>
+              </div>
+              <div className="pt-0.5">
+                <button
+                  onClick={() => router.push("/learning")}
+                  className="px-4 py-2 rounded-full bg-[#A855F7] text-white text-[11px] font-bold hover:bg-[#9333EA] shadow-sm transition-all active:scale-95 cursor-pointer"
+                >
+                  + Browse & Save Playlists
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Exact Careerpath Dimensions (min-h-[160px] sm:min-h-[195px], rounded-[20px] sm:rounded-[24px]) */
+            <div className="w-full max-w-[760px] grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5">
+              {savedPlaylists.slice(0, 2).map((course, idx) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.05 * idx }}
+                  onClick={() => router.push(course.href)}
+                  style={{
+                    boxShadow: "0 12px 20px 0px rgba(0, 0, 0, 0.12), 0 6px 10px 0px rgba(0, 0, 0, 0.08), 0 2px 4px 0px rgba(0, 0, 0, 0.05), 0 1px 2px 0px rgba(0, 0, 0, 0.04)",
+                  }}
+                  className="cursor-pointer transition-transform duration-200 hover:scale-[1.015] active:scale-[0.985] rounded-[20px] sm:rounded-[24px] overflow-hidden flex min-h-[160px] sm:min-h-[195px]"
+                >
+                  <CourseCard
+                    progress={course.progressPct}
+                    title={course.title}
+                    completed={course.isUnavailable ? "Syncing..." : `${course.completedVideos || 0} Completed`}
+                    pending={course.isUnavailable ? "Syncing..." : `${Math.max(0, (course.totalVideos || 0) - (course.completedVideos || 0))} Pending`}
+                    outerBackground="transparent"
+                    className="w-full h-full"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-            <div className="w-full max-w-[760px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+      {/* ── Trending Skills Section (Below Learning Progress) ── */}
+      {(showOnly === "all" || showOnly === "learning-and-skills" || showOnly === "trending-skills") && (
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="w-full max-w-[760px] flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-[#7c3aed] dark:text-purple-400" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight">
+                Trending Skills
+              </h3>
+            </div>
+            <Link
+              href="/learning"
+              className="text-[11px] sm:text-xs font-bold text-[#7c3aed] dark:text-purple-400 hover:text-[#6d28d9] dark:hover:text-purple-300 flex items-center gap-0.5 transition-colors"
+            >
+              <span>View All</span>
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </Link>
+          </div>
+
+          <div className="w-full max-w-[760px] grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             {/* 1. Python */}
           <motion.div
             whileHover={{ y: -2, scale: 1.02 }}
@@ -618,9 +622,8 @@ export default function MetricCards({
               </p>
             </div>
           </motion.div>
+          </div>
         </div>
-      </div>
-        </>
       )}
 
       {/* ── 3-Card Retro Pricing Modal ── */}

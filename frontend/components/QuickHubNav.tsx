@@ -1,110 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronRight } from "lucide-react";
-import { CareerPathKatanaSequence, preloadKatanaFrames } from "@/components/career/katana";
+import { ChevronRight } from "lucide-react";
+import LearningPathCarousel from "@/components/LearningPathCarousel";
 
 export default function QuickHubNav() {
-  const router = useRouter();
-  const [isCareerTransitionActive, setIsCareerTransitionActive] = useState(false);
-
-  // Katana anime sequence feature toggle (turned off for now, preserved for later)
-  const ENABLE_KATANA_ANIMATION = false;
-
-  useEffect(() => {
-    if (ENABLE_KATANA_ANIMATION) {
-      preloadKatanaFrames();
-    }
-  }, []);
-
-  const handleCareerPathClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (ENABLE_KATANA_ANIMATION) {
-      if (isCareerTransitionActive) return;
-      setIsCareerTransitionActive(true);
-    } else {
-      router.push("/roadmaps");
-    }
-  };
-
   return (
     <div className="w-full select-none space-y-3 sm:space-y-4">
-      {/* ── Top Tier: Hero Careerpath Card (Square on Mobile) + Beside it Stacked Courses & Projects ── */}
+      {/* ── Top Tier: Auto-Swiping Learning Path Deck + Beside it Stacked Courses & Projects ── */}
       <div className="grid grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3.5 items-stretch relative">
-        {/* 1. Hero Card: Careerpath (PLAN) - Square proportion on mobile, full width hero on desktop */}
-        <motion.div
-          whileHover={isCareerTransitionActive ? {} : { y: -3, scale: 1.012 }}
-          animate={
-            isCareerTransitionActive
-              ? {
-                  scale: 0.965,
-                  filter: "brightness(1.15) contrast(1.1)",
-                  boxShadow: "0 0 35px rgba(245,158,11,0.45)",
-                }
-              : {}
-          }
-          transition={{ type: "spring", stiffness: 350, damping: 24 }}
-          className="col-span-1 md:col-span-7 flex"
-        >
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={handleCareerPathClick}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleCareerPathClick(e as unknown as React.MouseEvent);
-              }
-            }}
-            style={{
-              boxShadow: "0 12px 20px 0px rgba(0, 0, 0, 0.12), 0 6px 10px 0px rgba(0, 0, 0, 0.08), 0 2px 4px 0px rgba(0, 0, 0, 0.05), 0 1px 2px 0px rgba(0, 0, 0, 0.04)",
-            }}
-            className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-5 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[160px] sm:min-h-[195px]"
-          >
-            {/* Left/Top Content */}
-            <div className="relative z-10 max-w-[62%] sm:max-w-[54%] flex flex-col justify-between h-full">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1 sm:mb-1.5">
-                  <span className="text-[9px] sm:text-[11px] font-black tracking-widest text-[#5c56df] dark:text-[#818CF8] uppercase">
-                    PLAN
-                  </span>
-                  <span className="w-4 sm:w-5 h-[2px] rounded-full bg-[#5c56df]/50 dark:bg-[#818CF8]/50" />
-                </div>
-                <h3 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                  Career
-                  <span className="text-[#635BFF] dark:text-[#818CF8]">path</span>
-                </h3>
-                <p className="text-[10px] sm:text-[12.5px] text-slate-500 dark:text-neutral-400 font-medium leading-tight sm:leading-snug mt-1 hidden xs:block line-clamp-2 max-w-[190px]">
-                  Get a personalized roadmap to your dream career.
-                </p>
-              </div>
-
-              {/* Action Button */}
-              <div className="mt-2.5 sm:mt-5">
-                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#5442F6] via-[#635BFF] to-[#7B73FF] text-white flex items-center justify-center shadow-sm shadow-indigo-500/25 group-hover:scale-110 group-hover:shadow-indigo-500/40 transition-all">
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
-                </div>
-              </div>
-            </div>
-
-            {/* Right 3D Illustration - Transparent PNG seamlessly floating on card */}
-            <div className="absolute right-0 bottom-0 top-auto sm:top-0 w-[58%] h-[84%] sm:w-[50%] sm:h-full flex items-end justify-end pointer-events-none select-none overflow-hidden">
-              <div className="relative w-full h-full min-h-[118px] sm:min-h-[160px] flex items-end justify-end group-hover:scale-105 transition-transform duration-500 dark:drop-shadow-[0_8px_22px_rgba(99,91,255,0.3)]">
-                <Image
-                  src="/images/hub/careerpath_hero.png"
-                  alt="Careerpath 3D Stairs"
-                  fill
-                  className="object-contain object-bottom-right"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        {/* 1. Hero Card: Auto-Swiping Learning Path Deck */}
+        <div className="col-span-1 md:col-span-7 flex">
+          <LearningPathCarousel />
+        </div>
 
         {/* 2. Right Stack: Courses (LEARN) & Projects (BUILD) - Beside Careerpath on mobile */}
         <div className="col-span-1 md:col-span-5 flex flex-col gap-2.5 sm:gap-3.5 justify-between">
@@ -352,19 +263,6 @@ export default function QuickHubNav() {
           </Link>
         </motion.div>
       </div>
-
-
-      {/* ── 5-Frame Cinematic Anime Katana Unsheathing CareerPath Transition (Turned off via flag) ── */}
-      {ENABLE_KATANA_ANIMATION && (
-        <CareerPathKatanaSequence
-          isActive={isCareerTransitionActive}
-          onComplete={() => {
-            router.push("/roadmaps");
-            setTimeout(() => setIsCareerTransitionActive(false), 500);
-          }}
-          onCancel={() => setIsCareerTransitionActive(false)}
-        />
-      )}
     </div>
   );
 }

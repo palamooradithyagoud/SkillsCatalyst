@@ -214,7 +214,7 @@ export default function DashboardPage() {
 
       {/* ── Main Content Grid: Balanced Side-by-Side Dashboard ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-        {/* Left Main Area: Event Hero Banner + Tech Stories + Quick Hub + Metric Cards */}
+        {/* Left Main Area: Event Hero Banner + Tech Stories + Learning Progress + Quick Hub (Careerpath) + Metric Cards */}
         <motion.div
           variants={itemVariants}
           className="w-full space-y-3.5 sm:space-y-4"
@@ -222,17 +222,18 @@ export default function DashboardPage() {
           <EventHeroCard onOpenPricing={openPricingModal} />
           {/* Tech News Stories */}
           <TechNewsStories />
+          {/* Quick Hub Navigation with Auto-Swiping Learning Path Deck */}
           <QuickHubNav />
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
-        {/* Right / Middle Area: Mood Calendar, Learning Progress & Trending Skills */}
+        {/* Right / Middle Area: Mood Calendar & Trending Skills */}
         <motion.div
           variants={itemVariants}
           className="w-full space-y-3.5 sm:space-y-4"
         >
           <MoodCalendarWidget />
-          <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="learning-and-skills" />
+          <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="trending-skills" />
         </motion.div>
       </div>
     </motion.div>
