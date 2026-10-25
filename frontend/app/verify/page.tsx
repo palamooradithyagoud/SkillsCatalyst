@@ -61,7 +61,7 @@ export default function VerifyPortalPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <Image
-              src="/logo_white.png"
+              src="/logo_white_v2.png"
               alt="SkillsCatalyst"
               width={34}
               height={34}

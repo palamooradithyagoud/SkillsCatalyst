@@ -722,7 +722,7 @@ export default function LoginPage() {
 
           {/* SkillsCatalyst Official Brand Header */}
           <div className="flex justify-center mb-1">
-            <SkillsCatalystLogo size="md" showText={false} />
+            <SkillsCatalystLogo size="md" showText={false} theme="light" />
           </div>
 
           {/* Heading & Subtitle */}

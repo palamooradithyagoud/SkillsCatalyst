@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { PricingModalProvider } from "@/contexts/PricingModalContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
+import MobileAppOpeningSplash from "@/components/MobileAppOpeningSplash";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,9 +29,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div
             className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
               isLandingPage
-                ? "bg-[#06070d] text-white"
+                ? "dark bg-[#06070d] text-white"
                 : isAdminPage
-                ? "bg-[#0B0D17] text-white"
+                ? "dark bg-[#0B0D17] text-white"
                 : isAIMentorPage
                 ? "bg-white dark:bg-black text-neutral-900 dark:text-neutral-100"
                 : isLegalPage
@@ -38,6 +39,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 : "bg-white dark:bg-black text-[#18191F] dark:text-white"
             }`}
           >
+            <MobileAppOpeningSplash />
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
@@ -55,6 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PricingModalProvider>
       <NotificationProvider>
+        <MobileAppOpeningSplash />
         <div className="flex flex-col min-h-screen w-full relative bg-white dark:bg-black text-[#18191F] dark:text-white">
         {/* Subtle ambient orbs in background (hardware-accelerated, zero scroll paint cost) */}
         {!isSkillBits && (

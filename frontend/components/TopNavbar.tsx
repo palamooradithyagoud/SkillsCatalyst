@@ -73,13 +73,21 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
             className="flex items-center gap-2.5 px-1.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors group cursor-pointer"
           >
             {/* Official SkillsCatalyst Logo */}
-            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-black border border-transparent dark:border-neutral-800 flex items-center justify-center p-1 shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 flex items-center justify-center p-1 shadow-xs shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
               <Image
-                src="/logo.png"
+                src="/logo_black_v2.png"
                 alt="SkillsCatalyst"
                 width={28}
                 height={28}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain dark:hidden"
+                priority
+              />
+              <Image
+                src="/logo_white_v2.png"
+                alt="SkillsCatalyst"
+                width={28}
+                height={28}
+                className="w-full h-full object-contain hidden dark:block"
                 priority
               />
             </div>

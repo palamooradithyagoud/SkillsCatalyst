@@ -99,7 +99,7 @@ export default function NotificationPermissionBanner() {
           {/* Official brand logo emblem with lilac pulse indicator */}
           <div className="relative w-11 h-11 rounded-xl bg-black dark:bg-[#121217] flex items-center justify-center p-2 border border-[#C8B6FF]/40 shadow-md shrink-0">
             <Image
-              src="/logo_white.png"
+              src="/logo_white_v2.png"
               alt="SkillsCatalyst"
               width={32}
               height={32}

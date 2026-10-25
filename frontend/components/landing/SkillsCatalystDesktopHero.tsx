@@ -144,7 +144,7 @@ export default function SkillsCatalystDesktopHero() {
               {/* Full Brand Logo & Title (Top View) */}
               <div className={`scBrandFull ${isScrolled ? "scBrandFullHidden" : ""}`}>
                 <Image
-                  src="/logo_black.png"
+                  src="/logo_black_v2.png"
                   alt="SkillsCatalyst Logo"
                   width={40}
                   height={40}
@@ -158,7 +158,7 @@ export default function SkillsCatalystDesktopHero() {
               <div className={`scBrandCompact ${isScrolled ? "scBrandCompactVisible" : ""}`}>
                 <div className="scCompactLogoSquare">
                   <Image
-                    src="/logo_white.png"
+                    src="/logo_white_v2.png"
                     alt="SkillsCatalyst Logo Icon"
                     width={24}
                     height={24}

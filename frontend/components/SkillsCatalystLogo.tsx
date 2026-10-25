@@ -17,6 +17,7 @@ interface SkillsCatalystLogoProps {
   strokeColor?: string;
   fillColor?: string;
   strokeWidth?: number;
+  theme?: "auto" | "light" | "dark";
   onClick?: () => void;
 }
 
@@ -31,6 +32,7 @@ export default function SkillsCatalystLogo({
   strokeColor,
   fillColor,
   strokeWidth,
+  theme = "auto",
   onClick,
 }: SkillsCatalystLogoProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -118,14 +120,44 @@ export default function SkillsCatalystLogo({
         transition={{ type: "spring", stiffness: 350, damping: 20 }}
         className={`relative shrink-0 flex items-center justify-center`}
       >
-        <Image
-          src="/logo.png"
-          alt="SkillsCatalyst Official Logo"
-          width={config.dimension}
-          height={config.dimension}
-          className={`${config.imgClass} object-contain drop-shadow-sm transition-all duration-300`}
-          priority
-        />
+        {theme === "dark" ? (
+          <Image
+            src="/logo_white_v2.png"
+            alt="SkillsCatalyst Official Logo"
+            width={config.dimension}
+            height={config.dimension}
+            className={`${config.imgClass} object-contain drop-shadow-sm transition-all duration-300`}
+            priority
+          />
+        ) : theme === "light" ? (
+          <Image
+            src="/logo_black_v2.png"
+            alt="SkillsCatalyst Official Logo"
+            width={config.dimension}
+            height={config.dimension}
+            className={`${config.imgClass} object-contain drop-shadow-sm transition-all duration-300`}
+            priority
+          />
+        ) : (
+          <>
+            <Image
+              src="/logo_black_v2.png"
+              alt="SkillsCatalyst Official Logo"
+              width={config.dimension}
+              height={config.dimension}
+              className={`${config.imgClass} object-contain drop-shadow-sm transition-all duration-300 dark:hidden`}
+              priority
+            />
+            <Image
+              src="/logo_white_v2.png"
+              alt="SkillsCatalyst Official Logo"
+              width={config.dimension}
+              height={config.dimension}
+              className={`${config.imgClass} object-contain drop-shadow-sm transition-all duration-300 hidden dark:block`}
+              priority
+            />
+          </>
+        )}
       </motion.div>
 
       {/* ── Brand Typography: SkillsCatalyst / Accelerated Learning ── */}

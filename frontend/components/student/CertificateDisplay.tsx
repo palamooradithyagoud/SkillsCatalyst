@@ -291,7 +291,7 @@ export default function CertificateDisplay({
               <div className="flex flex-col items-center -mt-1">
                 <div className="relative w-20 h-20">
                   <Image
-                    src="/logo_black.png"
+                    src="/logo_black_v2.png"
                     alt="Skills Catalyst Official Logo"
                     fill
                     sizes="80px"

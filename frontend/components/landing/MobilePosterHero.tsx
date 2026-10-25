@@ -130,7 +130,7 @@ export default function MobilePosterHero() {
           <div className="scMobileBrand">
             <div className="scMobileLogoWrap">
               <Image
-                src="/logo_white.png"
+                src="/logo_white_v2.png"
                 alt="Skills Catalyst Logo"
                 width={84}
                 height={84}

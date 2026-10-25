@@ -213,7 +213,7 @@ export default function AdminPage() {
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center p-1.5 shadow-md shadow-purple-500/20">
             <Image
-              src="/logo.png"
+              src="/logo_white_v2.png"
               alt="SkillsCatalyst"
               width={26}
               height={26}

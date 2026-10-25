@@ -388,7 +388,7 @@ export default function StructuredCareerPathSection() {
                 transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
                 className="relative my-2 w-14 h-14 flex items-center justify-center drop-shadow-[0_0_18px_rgba(236,72,153,0.7)]"
               >
-                <SkillsCatalystLogo size="md" showText={false} animated={true} />
+                <SkillsCatalystLogo size="md" showText={false} animated={true} theme="dark" />
               </motion.div>
 
               {/* Brand Title */}
@@ -653,7 +653,7 @@ export default function StructuredCareerPathSection() {
           {/* Center Card on Mobile */}
           <div className="w-full p-5 rounded-2xl bg-[#090a14] border-2 border-fuchsia-500/70 text-center shadow-xl flex flex-col items-center">
             <div className="w-12 h-12 flex items-center justify-center mb-1">
-              <SkillsCatalystLogo size="sm" showText={false} animated={true} />
+              <SkillsCatalystLogo size="sm" showText={false} animated={true} theme="dark" />
             </div>
             <h4 className="text-lg font-black text-white">SkillsCatalyst</h4>
             <p className="text-xs text-slate-300 mt-1">Your structured path from learning to career readiness.</p>
