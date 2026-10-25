@@ -698,7 +698,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
           <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.045] mix-blend-multiply">
             <Image
-              src="/logo.png"
+              src="/logo_black_v2.png"
               alt="SkillsCatalyst Watermark"
               fill
               sizes="(max-width: 640px) 340px, (max-width: 1024px) 460px, 540px"

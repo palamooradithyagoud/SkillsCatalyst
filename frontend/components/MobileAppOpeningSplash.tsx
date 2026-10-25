@@ -4,19 +4,32 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
+const SPLASH_SESSION_KEY = "sc_mobile_splash_shown";
+
 /**
  * MobileAppOpeningSplash
  * 
  * Cinematic mobile opening splash screen displaying the official horizontal
  * brand logo (Penguin 'S' + KILLSCATALYST) on mobile application opening.
  * Fully responsive to bright mode (light theme) and dark mode (dark theme).
+ * Protected by session storage so it fires only once per app session.
  */
 export default function MobileAppOpeningSplash() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [isVisible, setIsVisible] = useState<boolean>(true);
-  const [hasChecked, setHasChecked] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Check if splash has already been shown in this browser session
+    try {
+      if (sessionStorage.getItem(SPLASH_SESSION_KEY) === "true") {
+        return;
+      }
+    } catch {
+      // Ignore storage exceptions in restricted environments
+    }
+
     // Determine if running on a mobile viewport, mobile device, or standalone PWA
     const checkIsMobile = () => {
       const isMobileWidth = window.innerWidth < 768;
@@ -31,18 +44,21 @@ export default function MobileAppOpeningSplash() {
     };
 
     const mobileDetected = checkIsMobile();
-    setIsMobile(mobileDetected);
-    setHasChecked(true);
-
     if (!mobileDetected) {
-      setIsVisible(false);
       return;
     }
 
-    // Auto-dismiss after 1.5 seconds with silky fade out
+    setIsMobile(true);
+    setIsVisible(true);
+
+    try {
+      sessionStorage.setItem(SPLASH_SESSION_KEY, "true");
+    } catch {}
+
+    // Auto-dismiss after 1.2 seconds with silky fade out
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 1500);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
@@ -53,7 +69,7 @@ export default function MobileAppOpeningSplash() {
   };
 
   // Do not render anything on desktop or after dismissal
-  if (!hasChecked || !isMobile) {
+  if (!isMobile || !isVisible) {
     return null;
   }
 

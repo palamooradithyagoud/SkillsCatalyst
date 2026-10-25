@@ -22,10 +22,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/terms") ||
     pathname.startsWith("/cookie");
 
-  if (isAuthPage || isLandingPage || isAdminPage || isAIMentorPage || isLegalPage) {
-    return (
-      <PricingModalProvider>
-        <NotificationProvider>
+  const isEditProfile = pathname.startsWith("/settings/edit") || pathname.startsWith("/profile/edit");
+  const isSkillBits = pathname.startsWith("/skillbits");
+  const isCareer = pathname.startsWith("/career");
+
+  return (
+    <PricingModalProvider>
+      <NotificationProvider>
+        {/* Placed ONCE at the root of AppShell so route transitions never unmount and remount it */}
+        <MobileAppOpeningSplash />
+
+        {isAuthPage || isLandingPage || isAdminPage || isAIMentorPage || isLegalPage ? (
           <div
             className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
               isLandingPage
@@ -39,26 +46,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 : "bg-white dark:bg-black text-[#18191F] dark:text-white"
             }`}
           >
-            <MobileAppOpeningSplash />
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
             <NotificationPermissionBanner />
           </div>
-        </NotificationProvider>
-      </PricingModalProvider>
-    );
-  }
-
-  const isEditProfile = pathname.startsWith("/settings/edit") || pathname.startsWith("/profile/edit");
-  const isSkillBits = pathname.startsWith("/skillbits");
-  const isCareer = pathname.startsWith("/career");
-
-  return (
-    <PricingModalProvider>
-      <NotificationProvider>
-        <MobileAppOpeningSplash />
-        <div className="flex flex-col min-h-screen w-full relative bg-white dark:bg-black text-[#18191F] dark:text-white">
+        ) : (
+          <div className="flex flex-col min-h-screen w-full relative bg-white dark:bg-black text-[#18191F] dark:text-white">
         {/* Subtle ambient orbs in background (hardware-accelerated, zero scroll paint cost) */}
         {!isSkillBits && (
           <div
@@ -110,6 +104,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <NotificationPermissionBanner />
       </div>
+      )}
       </NotificationProvider>
     </PricingModalProvider>
   );

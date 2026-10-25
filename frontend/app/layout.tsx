@@ -64,7 +64,7 @@ export const metadata: Metadata = {
       "Pick a career goal. Get the exact roadmap. Practise until you're interview-ready — with an AI mentor checking your code and resume.",
     images: [
       {
-        url: "/logo.png",
+        url: "/logo_full_black_v2.png",
         width: 1200,
         height: 630,
         alt: "SkillsCatalyst — Placement Preparation Platform",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     title: "SkillsCatalyst — Targeted Career Roadmaps & Placement Prep",
     description:
       "Pick a career goal. Get the exact roadmap. Practise until you're interview-ready.",
-    images: ["/logo.png"],
+    images: ["/logo_full_black_v2.png"],
   },
   robots: {
     index: true,
