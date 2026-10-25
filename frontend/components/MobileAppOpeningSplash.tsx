@@ -15,8 +15,7 @@ const SPLASH_SESSION_KEY = "sc_mobile_splash_shown";
  * Protected by session storage so it fires only once per app session.
  */
 export default function MobileAppOpeningSplash() {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -24,6 +23,7 @@ export default function MobileAppOpeningSplash() {
     // Check if splash has already been shown in this browser session
     try {
       if (sessionStorage.getItem(SPLASH_SESSION_KEY) === "true") {
+        setIsVisible(false);
         return;
       }
     } catch {
@@ -45,11 +45,9 @@ export default function MobileAppOpeningSplash() {
 
     const mobileDetected = checkIsMobile();
     if (!mobileDetected) {
+      setIsVisible(false);
       return;
     }
-
-    setIsMobile(true);
-    setIsVisible(true);
 
     try {
       sessionStorage.setItem(SPLASH_SESSION_KEY, "true");
@@ -68,8 +66,8 @@ export default function MobileAppOpeningSplash() {
     setIsVisible(false);
   };
 
-  // Do not render anything on desktop or after dismissal
-  if (!isMobile || !isVisible) {
+  // Do not render after dismissal
+  if (!isVisible) {
     return null;
   }
 
@@ -77,6 +75,7 @@ export default function MobileAppOpeningSplash() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
+          id="mobile-app-opening-splash"
           key="mobile-app-opening-splash"
           initial={{ opacity: 1 }}
           exit={{
@@ -85,7 +84,7 @@ export default function MobileAppOpeningSplash() {
             transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
           }}
           onClick={handleDismiss}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-between select-none touch-none cursor-pointer bg-white dark:bg-black transition-colors duration-200"
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-between select-none touch-none cursor-pointer bg-white dark:bg-black transition-colors duration-200 md:hidden"
           style={{ height: "100dvh", width: "100vw" }}
           aria-label="SkillsCatalyst is loading"
         >

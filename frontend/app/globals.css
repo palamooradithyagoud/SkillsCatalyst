@@ -22,6 +22,11 @@
   --color-card: var(--card);
 }
 
+/* Mobile Opening Splash session suppression */
+html.sc-splash-done #mobile-app-opening-splash {
+  display: none !important;
+}
+
 :root {
   /* Kinetic Navigation Tokens */
   --color-primary: #6366f1;
