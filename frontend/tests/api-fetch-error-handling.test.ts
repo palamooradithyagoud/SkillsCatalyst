@@ -16,6 +16,7 @@ const localStorageMock = {
 (globalThis as any).localStorage = localStorageMock;
 
 import { apiFetch } from '@/lib/api';
+import { setClientInstance, resetClientInstance } from '@/lib/supabase';
 
 describe('apiFetch & Error Handling Characterization', () => {
   const originalFetch = globalThis.fetch;
@@ -94,5 +95,52 @@ describe('apiFetch & Error Handling Characterization', () => {
     const res = await apiFetch('https://api.example.com/failing');
     assert.strictEqual(res.status, 500);
     assert.strictEqual(storage.get('skillscatalyst_user_session'), 'valid_session');
+  });
+
+  it('refreshes session and retries request on transient 401 without purging session', async () => {
+    storage.set('skillscatalyst_user_session', 'active_session');
+    storage.set('sb-auth-token', 'valid_cookie');
+
+    let fetchCount = 0;
+    let authHeaderOnRetry = '';
+
+    globalThis.fetch = async (input, init) => {
+      fetchCount++;
+      if (fetchCount === 1) {
+        return new Response(JSON.stringify({ detail: 'Token not yet valid (clock skew)' }), {
+          status: 401,
+        });
+      }
+      const headers = init?.headers as Headers;
+      authHeaderOnRetry = headers?.get ? headers.get('Authorization') || '' : '';
+      return new Response(JSON.stringify({ ok: true, data: 'recovered' }), {
+        status: 200,
+      });
+    };
+
+    setClientInstance({
+      auth: {
+        refreshSession: async () => ({
+          data: { session: { access_token: 'new_refreshed_access_token' } },
+          error: null,
+        }),
+        getSession: async () => ({
+          data: { session: { access_token: 'new_refreshed_access_token' } },
+          error: null,
+        }),
+        signOut: async () => ({ error: null }),
+      },
+    } as any);
+
+    try {
+      const res = await apiFetch('https://api.example.com/data');
+      assert.strictEqual(res.status, 200, 'Should return retried successful response');
+      assert.strictEqual(fetchCount, 2, 'Should have retried the request once');
+      assert.strictEqual(authHeaderOnRetry, 'Bearer new_refreshed_access_token', 'Retry should carry refreshed token');
+      assert.strictEqual(storage.get('skillscatalyst_user_session'), 'active_session', 'Session must NOT be purged');
+      assert.strictEqual(storage.get('sb-auth-token'), 'valid_cookie', 'sb-* tokens must NOT be purged');
+    } finally {
+      resetClientInstance();
+    }
   });
 });

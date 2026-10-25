@@ -94,7 +94,7 @@ def test_expired_token_strictly_rejected():
         "sub": USER_ID,
         "aud": "authenticated",
         "email": "student@example.com",
-        "exp": now - 60,  # Expired 60s ago
+        "exp": now - 120,  # Expired 120s ago (exceeds 60s leeway)
     }
     expired_token = _make_hs256_token(payload)
 
@@ -103,6 +103,57 @@ def test_expired_token_strictly_rejected():
 
     assert exc_info.value.status_code == 401
     assert "expired" in exc_info.value.detail.lower()
+
+
+def test_clock_skew_future_iat_within_leeway_accepted():
+    """Verify tokens with future iat (up to 60s due to clock skew) are accepted locally."""
+    now = int(time.time())
+    payload = {
+        "sub": USER_ID,
+        "aud": "authenticated",
+        "email": "student@example.com",
+        "iat": now + 15,  # 15s in the future (typical NTP drift)
+        "exp": now + 3600,
+        "iss": f"{SUPABASE_URL}/auth/v1",
+    }
+    skewed_token = _make_hs256_token(payload)
+
+    with patch("backend.services.supabase_service.get_supabase") as mock_sb:
+        decoded = verify_jwt_token(skewed_token)
+        mock_sb.assert_not_called()
+
+    assert decoded["sub"] == USER_ID
+    assert decoded["email"] == "student@example.com"
+
+
+def test_clock_skew_future_iat_beyond_leeway_falls_back_to_remote():
+    """Verify tokens with future iat beyond local leeway fall back to remote Supabase verification."""
+    now = int(time.time())
+    payload = {
+        "sub": USER_ID,
+        "aud": "authenticated",
+        "email": "student@example.com",
+        "iat": now + 300,  # 5 minutes in the future (extreme skew)
+        "exp": now + 3600,
+        "iss": f"{SUPABASE_URL}/auth/v1",
+    }
+    extreme_skew_token = _make_hs256_token(payload)
+
+    mock_user = MagicMock()
+    mock_user.id = USER_ID
+    mock_user.email = "student@example.com"
+    mock_user.user_metadata = {"role": "student"}
+    mock_user.app_metadata = {}
+
+    mock_sb_client = MagicMock()
+    mock_sb_client.auth.get_user.return_value = MagicMock(user=mock_user)
+
+    with patch("backend.services.auth_service.get_supabase", return_value=mock_sb_client):
+        decoded = verify_jwt_token(extreme_skew_token)
+
+    assert decoded["sub"] == USER_ID
+    assert decoded["email"] == "student@example.com"
+    mock_sb_client.auth.get_user.assert_called_once_with(jwt=extreme_skew_token)
 
 
 def test_malformed_token_strictly_rejected():

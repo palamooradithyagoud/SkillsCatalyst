@@ -150,6 +150,7 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
                         clean_token,
                         key,
                         algorithms=[alg],
+                        leeway=60,
                         options={
                             "verify_signature": True,
                             "verify_exp": True,
@@ -174,12 +175,22 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
                         detail="Malformed authentication token.",
                         headers={"WWW-Authenticate": "Bearer"},
                     )
+                except jwt.ImmatureSignatureError:
+                    # Token iat is slightly in the future beyond local leeway;
+                    # log and fall through to authoritative remote Supabase verification
+                    logger.warning("Token iat in future beyond local leeway; falling back to remote Supabase verification")
+                    decoded = None
                 except jwt.InvalidTokenError as ite:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail=f"Invalid authentication token: {ite}",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+                    err_str = str(ite).lower()
+                    if "not yet valid" in err_str or "immature" in err_str or "future" in err_str:
+                        logger.warning(f"Token timing skew detected: {ite}; falling back to remote Supabase verification")
+                        decoded = None
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f"Invalid authentication token: {ite}",
+                            headers={"WWW-Authenticate": "Bearer"},
+                        )
 
     # Fallback to remote Supabase Auth verification if local key could not be resolved
     if decoded is None:

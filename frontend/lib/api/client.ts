@@ -72,14 +72,78 @@ export function handleGuestTokenFromResponse(res: Response | XMLHttpRequest | nu
   } catch {}
 }
 
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
+ * Attempts a debounced session refresh with Supabase auth.
+ * Concurrent 401s share a single refresh attempt to prevent token stampedes.
+ */
+async function attemptSessionRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (!error && data?.session?.access_token) {
+        return true;
+      }
+    } catch {}
+    return false;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
+/**
+ * Purges local session tokens and signs out of Supabase when an auth session is definitively invalid.
+ */
+export function purgeUnauthenticatedSession(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem("skillscatalyst_user_session");
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_") || key.startsWith("sb-"))) {
+        localStorage.removeItem(key);
+      }
+    }
+    supabase.auth.signOut().catch(() => {});
+  } catch {}
+}
+
 /**
  * Centralized fetch wrapper for FastAPI backend API calls.
- * Automatically captures X-Guest-Session-Token and handles 401 unauthenticated cleanup.
+ * Automatically captures X-Guest-Session-Token and handles resilient 401 auth refresh & retry.
  */
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, init);
   handleGuestTokenFromResponse(res);
-  handleUnauthenticated(res);
+
+  // Resilient 401 handling:
+  // Instead of instantly destroying the session on transient clock skew or expiration,
+  // attempt to refresh the session and retry the request once.
+  if (res.status === 401 && typeof window !== "undefined") {
+    const refreshed = await attemptSessionRefresh();
+    if (refreshed) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const newToken = data.session?.access_token;
+        if (newToken) {
+          const headers = new Headers(init?.headers);
+          headers.set("Authorization", `Bearer ${newToken}`);
+          const retryRes = await fetch(input, { ...init, headers });
+          handleGuestTokenFromResponse(retryRes);
+          if (retryRes.status !== 401) {
+            return retryRes;
+          }
+        }
+      } catch {}
+    }
+
+    // If refresh failed or retried request still returned 401, purge stale session
+    purgeUnauthenticatedSession();
+  }
+
   return res;
 }
 
@@ -93,14 +157,15 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 
     // Auto-refresh token if expired or expiring within 30 seconds
     if (session && session.expires_at) {
-      const isExpiringSoon = Date.now() / 1000 >= session.expires_at - 30;
+      const nowSec = Date.now() / 1000;
+      const isExpiringSoon = nowSec >= session.expires_at - 30;
       if (isExpiringSoon) {
         const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
         if (!refreshErr && refreshed.session) {
           session = refreshed.session;
-        } else {
+        } else if (nowSec >= session.expires_at) {
+          // Only invalidate local session pointer if the token is strictly past expiry
           session = null;
-          await supabase.auth.signOut().catch(() => {});
         }
       }
     }
@@ -111,22 +176,4 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
     }
   } catch {}
   return headers;
-}
-
-function handleUnauthenticated(res: Response) {
-  // Only trigger session cleanup on 401 Unauthorized (invalid/expired session).
-  // 403 Forbidden means the user is authenticated but lacks permission for that specific resource;
-  // they must NEVER be logged out of their session.
-  if (res.status === 401 && typeof window !== "undefined") {
-    try {
-      localStorage.removeItem("skillscatalyst_user_session");
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith("skillscatalyst_") || key.startsWith("sc_") || key.startsWith("sb-"))) {
-          localStorage.removeItem(key);
-        }
-      }
-      supabase.auth.signOut().catch(() => {});
-    } catch {}
-  }
 }
