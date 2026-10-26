@@ -120,8 +120,9 @@ export function CareerPathCard({ onClick }: { onClick?: () => void }) {
             src="/images/hub/careerpath_hero.png"
             alt="Careerpath 3D Stairs"
             fill
-            className="object-contain object-bottom-right"
+            sizes="(max-width: 640px) 200px, 280px"
             priority
+            className="object-contain object-bottom-right"
           />
         </div>
       </div>

@@ -48,8 +48,10 @@ export default function QuickHubNav() {
                     <Image
                       src="/images/hub/courses.png"
                       alt="Learning 3D Cap"
-                      fill
-                      className="object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
+                      width={48}
+                      height={48}
+                      priority
+                      className="w-full h-full object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 </div>
@@ -90,8 +92,10 @@ export default function QuickHubNav() {
                     <Image
                       src="/images/hub/projects.png"
                       alt="Practice 3D Code"
-                      fill
-                      className="object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
+                      width={48}
+                      height={48}
+                      priority
+                      className="w-full h-full object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 </div>
@@ -127,8 +131,10 @@ export default function QuickHubNav() {
                   <Image
                     src="/images/hub/scholarships.png"
                     alt="Scholarships 3D Graduation"
-                    fill
-                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
+                    width={72}
+                    height={72}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
@@ -166,8 +172,10 @@ export default function QuickHubNav() {
                   <Image
                     src="/images/hub/competition.png"
                     alt="Competitions 3D Trophy"
-                    fill
-                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
+                    width={72}
+                    height={72}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
@@ -205,8 +213,10 @@ export default function QuickHubNav() {
                   <Image
                     src="/images/hub/mock.png"
                     alt="DSA Sheets 3D Checklist"
-                    fill
-                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
+                    width={72}
+                    height={72}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
@@ -244,8 +254,10 @@ export default function QuickHubNav() {
                   <Image
                     src="/images/hub/interview.png"
                     alt="Career Goals 3D"
-                    fill
-                    className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
+                    width={72}
+                    height={72}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
               </div>
