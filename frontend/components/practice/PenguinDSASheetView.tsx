@@ -9,7 +9,6 @@ import {
   ChevronUp,
   Bookmark,
   Layers,
-  Sparkles,
   ArrowRight,
   Filter,
   Check,

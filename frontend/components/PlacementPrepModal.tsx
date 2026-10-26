@@ -23,7 +23,6 @@ import {
   Zap,
   Grid,
   LayoutGrid,
-  Sparkles,
   Search,
   Shuffle,
   Bookmark,
@@ -1215,8 +1214,7 @@ export default function PlacementPrepModal({
                                               </span>
                                             ) : null}
                                             {!hasPlacementAccess ? (
-                                              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-1 shadow-2xs">
-                                                <Sparkles className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center shadow-2xs">
                                                 3 Free Questions
                                               </span>
                                             ) : null}
@@ -1355,8 +1353,7 @@ export default function PlacementPrepModal({
                               <div className="flex items-center gap-2">
                                 <span>Question {currentIndex + 1} of {totalQuestions}</span>
                                 {!hasPlacementAccess && (
-                                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-1 shadow-2xs">
-                                    <Sparkles className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center shadow-2xs">
                                     3 Free Questions
                                   </span>
                                 )}
@@ -1425,8 +1422,7 @@ export default function PlacementPrepModal({
                                 <Lock className="w-8 h-8" />
                               </div>
                               <div className="space-y-2 max-w-lg mx-auto">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-500/30">
-                                  <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-500/30">
                                   <span>3 of {totalQuestions} Questions Unlocked (Sample)</span>
                                 </div>
                                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">

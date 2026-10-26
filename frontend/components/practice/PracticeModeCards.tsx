@@ -7,7 +7,7 @@ import {
   Building2,
   Filter,
   CheckCircle2,
-  Sparkles,
+  TrendingUp,
   Lock,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -338,7 +338,7 @@ export function PracticeModeCards({
                 <span className="truncate">30-Day &amp; All-Time</span>
               </div>
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white text-[9px] sm:text-[10px] font-semibold">
-                <Sparkles className="w-2.5 h-2.5 text-pink-300 shrink-0" />
+                <TrendingUp className="w-2.5 h-2.5 text-pink-300 shrink-0" />
                 <span className="truncate">Real Frequencies</span>
               </div>
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white text-[9px] sm:text-[10px] font-semibold">

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Building2, Loader2, Filter, Plus, Sparkles, Lock, ArrowRight } from "lucide-react";
+import { Building2, Loader2, Filter, Plus, Lock, ArrowRight } from "lucide-react";
 import { PracticeQuestion } from "@/lib/api";
 import { formatCompanyName } from "@/lib/practice/practiceHelpers";
 import { QuestionRow } from "./QuestionRow";
@@ -89,21 +89,16 @@ export function QuestionListTable({
       {/* Freemium Teaser Hook Banner */}
       {!loadingQuestions && hasLockedQuestions && (
         <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-900/10 via-amber-500/10 to-indigo-900/10 border border-amber-500/30 dark:border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Free Preview: First 3 Questions Unlocked</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                  Sample + Lock
-                </span>
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium mt-0.5">
-                Solve the first 3 questions free! Upgrade to PRO to unlock the remaining {Math.max(0, totalCount - unlockedCount)} questions, verified LeetCode links, and frequency filters.
-              </p>
-            </div>
+          <div>
+            <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>Free Preview: First 3 Questions Unlocked</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                Sample + Lock
+              </span>
+            </h4>
+            <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium mt-0.5">
+              Solve the first 3 questions free! Upgrade to PRO to unlock the remaining {Math.max(0, totalCount - unlockedCount)} questions, verified LeetCode links, and frequency filters.
+            </p>
           </div>
           <button
             type="button"
