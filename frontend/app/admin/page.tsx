@@ -104,7 +104,11 @@ export default function AdminPage() {
 
     (async () => {
       try {
-        setPermsLoading(true);
+        // Only show blocking full-page loader on initial cold load before callerPerms is populated
+        setCallerPerms((current) => {
+          if (!current) setPermsLoading(true);
+          return current;
+        });
         const perms = await fetchMyPermissions();
         if (active) {
           setCallerPerms(perms);
@@ -121,7 +125,7 @@ export default function AdminPage() {
     return () => {
       active = false;
     };
-  }, [session]);
+  }, [session?.user_id]);
 
   const isAuthoritativeOwner = callerPerms?.is_owner ?? isOwner;
   const userPermissions = useMemo(() => callerPerms?.permissions || [], [callerPerms]);
@@ -191,7 +195,7 @@ export default function AdminPage() {
     return () => {
       active = false;
     };
-  }, [session, isOwner, isAdmin]);
+  }, [session?.user_id, isOwner, isAdmin]);
 
   // Dynamic Navigation Tabs filtered strictly by caller's authoritative permissions
   const tabs = useMemo(() => {
@@ -262,8 +266,8 @@ export default function AdminPage() {
     }
   }, [tabs, activeTab]);
 
-  // Loading state while credentials and permissions are verified
-  if (isLoading || permsLoading) {
+  // Loading state while credentials and permissions are verified (only on initial cold load)
+  if (isLoading || (permsLoading && !callerPerms)) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 text-white p-6">
         <div className="flex flex-col items-center gap-3">

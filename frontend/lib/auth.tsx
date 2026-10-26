@@ -149,27 +149,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       forceSignup: boolean = false,
       role: UserRole = "student"
     ) => {
-      const newSession: UserSession = {
-        email,
-        user_id: userId,
-        name: name || email.split("@")[0],
-        loggedInAt: new Date().toISOString(),
-        emailConfirmed: confirmed,
-        role,
-      };
+      const resolvedName = name || email.split("@")[0];
 
-      setSession(newSession);
+      // Preserve referential equality if session payload has not changed
+      setSession((prev) => {
+        if (
+          prev &&
+          prev.user_id === userId &&
+          prev.email === email &&
+          prev.role === role &&
+          prev.name === resolvedName &&
+          prev.emailConfirmed === confirmed
+        ) {
+          return prev;
+        }
+        return {
+          email,
+          user_id: userId,
+          name: resolvedName,
+          loggedInAt: prev?.loggedInAt || new Date().toISOString(),
+          emailConfirmed: confirmed,
+          role,
+        };
+      });
+
       setUnverifiedEmailState(null);
 
       if (role === "owner" || role === "admin") {
         const savedMode = typeof window !== "undefined" ? localStorage.getItem("sc_owner_mode") : null;
         if (savedMode === "admin" || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"))) {
-          setAppModeState("admin");
+          setAppModeState((prev) => (prev === "admin" ? prev : "admin"));
         } else {
-          setAppModeState("student");
+          setAppModeState((prev) => (prev === "student" ? prev : "student"));
         }
       } else {
-        setAppModeState("student");
+        setAppModeState((prev) => (prev === "student" ? prev : "student"));
       }
 
       // Async database storage & new-user welcome email dispatch

@@ -45,6 +45,8 @@ const EVENT_ASPECT_OPTIONS: AspectRatioOption[] = [
   { id: "free", label: "Original", ratio: null },
 ];
 
+const EVENT_DRAFT_KEY = "sc_admin_event_create_draft";
+
 interface AdminEventsCMSProps {
   onEventCountChange?: () => void;
 }
@@ -135,12 +137,66 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
     loadEvents();
   }, [loadEvents]);
 
+  // Auto-save event creation draft so data is never lost if user leaves or refreshes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isModalOpen && !editingEventId) {
+      const hasContent =
+        form.event_name.trim() ||
+        form.conducted_by_college.trim() ||
+        form.event_link.trim() ||
+        form.banner_url.trim() ||
+        form.description.trim();
+      if (hasContent) {
+        try {
+          sessionStorage.setItem(EVENT_DRAFT_KEY, JSON.stringify(form));
+        } catch {}
+      }
+    }
+  }, [form, isModalOpen, editingEventId]);
+
+  // Restore draft if one was previously in progress
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = sessionStorage.getItem(EVENT_DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object" && (parsed.event_name || parsed.conducted_by_college || parsed.event_link)) {
+          setForm((prev) => ({ ...prev, ...parsed }));
+          setIsModalOpen(true);
+        }
+      }
+    } catch {}
+  }, []);
+
   // Open create modal
   const handleOpenCreate = () => {
     setEditingEventId(null);
+    try {
+      const saved = sessionStorage.getItem(EVENT_DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setForm((prev) => ({ ...prev, ...parsed }));
+          setFormErrors({});
+          setIsModalOpen(true);
+          return;
+        }
+      }
+    } catch {}
     setForm(INITIAL_FORM_STATE);
     setFormErrors({});
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    if (!editingEventId) {
+      try {
+        sessionStorage.removeItem(EVENT_DRAFT_KEY);
+      } catch {}
+    }
   };
 
   // Open edit modal
@@ -289,6 +345,9 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
       } else {
         await createAdminEvent(payload);
         setSuccessMsg(`Event "${form.event_name}" created successfully as ${targetStatus}.`);
+        try {
+          sessionStorage.removeItem(EVENT_DRAFT_KEY);
+        } catch {}
       }
       setIsModalOpen(false);
       loadEvents();
@@ -615,7 +674,7 @@ export default function AdminEventsCMS({ onEventCountChange }: AdminEventsCMSPro
                 </p>
               </div>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={handleCloseModal}
                 className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
