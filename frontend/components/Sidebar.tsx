@@ -216,7 +216,7 @@ export default function Sidebar() {
         className={`group relative flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors select-none ${
           isActive
             ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
-            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-slate-50 dark:hover:bg-neutral-900/60 hover:text-slate-900 dark:hover:text-white"
+            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#B8A1E3] dark:hover:bg-[#3B1F5A] hover:text-slate-950 dark:hover:text-white active:bg-[#ECEEF2] dark:active:bg-neutral-900"
         }`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
