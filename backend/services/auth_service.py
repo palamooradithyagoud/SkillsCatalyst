@@ -9,7 +9,15 @@ from jwt import PyJWKClient
 from typing import Optional, Tuple, Any, Dict
 from fastapi import Header, HTTPException, status, Depends
 from backend.services.supabase_service import get_supabase
-from backend.config import SECRET_KEY, OWNER_EMAIL, SUPABASE_JWT_SECRET, SUPABASE_URL, METRICS_SECRET_KEY
+from backend.config import (
+    SECRET_KEY,
+    OWNER_EMAIL,
+    OWNER_USERNAME,
+    OWNER_USER_ID,
+    SUPABASE_JWT_SECRET,
+    SUPABASE_URL,
+    METRICS_SECRET_KEY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +33,37 @@ def is_valid_uuid(val: Any) -> bool:
     return bool(_UUID_REGEX.match(str(val).strip()))
 
 
+def is_authoritative_owner(user_id: Optional[str]) -> bool:
+    """
+    Cryptographically verified immutable platform owner check.
+    Matches caller's authenticated user ID against trusted server-side OWNER_USER_ID.
+    Never trusts client-supplied username, email, or role claims.
+    """
+    if not user_id or not OWNER_USER_ID:
+        return False
+    return str(user_id).strip().lower() == str(OWNER_USER_ID).strip().lower()
+
+
 def get_user_role(user_id: str, supa_user: Any = None) -> str:
     """
     Authoritative Role Resolution:
-    1. Reads server-controlled app_metadata.role from Supabase Auth (encoded in JWT).
-    2. Fallback: reads public.profiles.role if populated.
-    3. Server-side bootstrap safeguard: if user email matches configured OWNER_EMAIL,
-       ensures role is promoted in Supabase Auth & profiles, returning 'owner'.
-    4. Defaults strictly to 'student'.
+    1. If user_id matches configured OWNER_USER_ID -> returns 'owner'.
+    2. Reads server-controlled app_metadata.role from Supabase Auth (encoded in JWT).
+    3. Fallback: reads public.profiles.role if populated.
+    4. Anti-Privilege Escalation:
+       If an account that does NOT match OWNER_USER_ID has 'owner' string in profile or app_metadata,
+       it is strictly rejected and downgraded to 'student'.
+    5. Defaults strictly to 'student'.
     """
+    if not user_id:
+        return "student"
+
+    # Single authoritative check for Platform Owner
+    if is_authoritative_owner(user_id):
+        return "owner"
+
+    resolved_role = "student"
+
     # 1. Authoritative check: app_metadata.role in Supabase Auth JWT
     if supa_user:
         if isinstance(supa_user, dict):
@@ -41,33 +71,28 @@ def get_user_role(user_id: str, supa_user: Any = None) -> str:
         else:
             app_meta = getattr(supa_user, "app_metadata", None) or {}
         if isinstance(app_meta, dict) and app_meta.get("role"):
-            return str(app_meta["role"]).strip().lower()
+            resolved_role = str(app_meta["role"]).strip().lower()
 
-    sb = get_supabase()
-    if sb and user_id:
-        # 2. Check public.profiles.role
-        try:
-            res = sb.from_("profiles").select("role, email").eq("id", user_id).execute()
-            if res.data and len(res.data) > 0:
-                p_row = res.data[0]
-                db_role = p_row.get("role")
-                if db_role and str(db_role).strip():
-                    return str(db_role).strip().lower()
-                # Server-side bootstrap safeguard for configured owner
-                if p_row.get("email") and p_row.get("email").strip().lower() == OWNER_EMAIL:
-                    try:
-                        sb.auth.admin.update_user_by_id(user_id, {"app_metadata": {"role": "owner"}})
-                    except Exception:
-                        pass
-                    return "owner"
-        except Exception as e:
-            logger.debug(f"profiles role query notice: {e}")
+    # 2. Check public.profiles.role if JWT does not specify role
+    if resolved_role == "student":
+        sb = get_supabase()
+        if sb and user_id:
+            try:
+                res = sb.from_("profiles").select("role").eq("id", user_id).execute()
+                if res.data and len(res.data) > 0:
+                    db_role = res.data[0].get("role")
+                    if db_role and str(db_role).strip():
+                        resolved_role = str(db_role).strip().lower()
+            except Exception as e:
+                logger.debug(f"profiles role query notice: {e}")
 
-    # Fallback check against configured OWNER_EMAIL on supa_user object or dict
-    if supa_user:
-        u_email = (supa_user.get("email") if isinstance(supa_user, dict) else getattr(supa_user, "email", None)) or ""
-        if u_email and str(u_email).strip().lower() == OWNER_EMAIL:
-            return "owner"
+    # Anti-Privilege Escalation: Non-owner IDs cannot claim owner status
+    if resolved_role == "owner" and not is_authoritative_owner(user_id):
+        logger.warning(f"SECURITY_ALERT: Unauthorized user '{user_id}' claimed owner role. Enforcing downgrade to student.")
+        return "student"
+
+    if resolved_role in ("admin", "editor", "moderator"):
+        return resolved_role
 
     return "student"
 
@@ -285,12 +310,22 @@ def require_authenticated_user(
                 or (u_email.split("@")[0] if u_email else "Learner")
             )
             role = get_user_role(u_id, decoded)
+            is_owner = is_authoritative_owner(u_id)
+            if is_owner:
+                role = "owner"
+
+            # Lazy import to avoid circular dependency
+            from backend.services.permission_service import get_user_permissions
+            perms = get_user_permissions(u_id)
+
             return {
                 "user_id": u_id,
                 "email": u_email,
                 "name": u_name,
                 "role": role,
-                "is_owner": (role == "owner"),
+                "is_owner": is_owner,
+                "is_admin": is_owner or (role in ("admin", "editor")),
+                "permissions": perms,
             }
 
     raise HTTPException(
@@ -305,10 +340,12 @@ def require_owner(
 ) -> Dict[str, Any]:
     """
     Strict Owner Authorization Dependency.
-    Enforces that the authenticated user possesses authoritative 'owner' role.
+    Enforces that the authenticated user possesses authoritative 'owner' role
+    AND matches the immutable server-configured OWNER_USER_ID.
     Raises HTTP 403 Forbidden if the user is a normal student or unauthorized.
     """
-    if current_user.get("role") != "owner":
+    user_id = current_user.get("user_id")
+    if not is_authoritative_owner(user_id) or current_user.get("role") != "owner":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: Platform Owner privileges required.",
@@ -325,12 +362,14 @@ def require_admin(
     'owner', 'admin', or 'editor'.
     Raises HTTP 403 Forbidden if the user is a normal student or unauthorized.
     """
-    if current_user.get("role") not in ("owner", "admin", "editor"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Admin or content manager privileges required.",
-        )
-    return current_user
+    user_id = current_user.get("user_id")
+    role = current_user.get("role")
+    if is_authoritative_owner(user_id) or current_user.get("is_owner") or role in ("owner", "admin", "editor"):
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Forbidden: Admin or content manager privileges required.",
+    )
 
 
 def require_metrics_access(

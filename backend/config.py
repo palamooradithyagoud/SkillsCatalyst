@@ -41,6 +41,8 @@ else:
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://www.skillscatalyst.in").strip().rstrip("/")
 OWNER_EMAIL = os.getenv("OWNER_EMAIL", "palamooradithyagoud@gmail.com").strip().lower()
+OWNER_USERNAME = os.getenv("OWNER_USERNAME", "palamooradithyagoud").strip().lower()
+OWNER_USER_ID = os.getenv("OWNER_USER_ID", "4113d832-6ac1-402a-bd00-1fd7f2b7ab26").strip()
 MAX_CONCURRENT_AI_REQUESTS = int(os.getenv("MAX_CONCURRENT_AI_REQUESTS", "6"))
 METRICS_SECRET_KEY = os.getenv("METRICS_SECRET_KEY", "").strip()
 

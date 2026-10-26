@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -23,9 +24,11 @@ import {
   Tag,
   IndianRupee,
   CalendarCheck,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { apiFetch, getAuthHeaders, API_BASE } from "@/lib/api/client";
+import { fetchMyPermissions, CallerPermissionsResponse } from "@/lib/api/permissions";
 import AdminEventsCMS from "@/components/admin/AdminEventsCMS";
 import AdminScholarshipsCMS from "@/components/admin/AdminScholarshipsCMS";
 import AdminTechNewsCMS from "@/components/admin/AdminTechNewsCMS";
@@ -34,6 +37,7 @@ import AdminPlansCMS from "@/components/admin/AdminPlansCMS";
 import AdminCouponsCMS from "@/components/admin/AdminCouponsCMS";
 import AdminPaymentsCMS from "@/components/admin/AdminPaymentsCMS";
 import AdminSubscriptionsCMS from "@/components/admin/AdminSubscriptionsCMS";
+import AdminUserGovernance from "@/components/admin/AdminUserGovernance";
 
 type AdminTab =
   | "overview"
@@ -68,57 +72,73 @@ interface AdminOverviewData {
   };
 }
 
-interface UserItem {
-  id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  created_at?: string;
-}
-
 export default function AdminPage() {
   const router = useRouter();
-  const { session, isLoading, isOwner, setAppMode, logout } = useAuth();
+  const { session, isLoading, isOwner, isAdmin, setAppMode, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [overviewData, setOverviewData] = useState<AdminOverviewData | null>(null);
-  const [usersList, setUsersList] = useState<UserItem[]>([]);
+  const [callerPerms, setCallerPerms] = useState<CallerPermissionsResponse | null>(null);
+  const [permsLoading, setPermsLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Client-side UX authorization guard
+  // Client-side UX authorization guard: only owner and admin can access /admin
   useEffect(() => {
     if (!isLoading) {
       if (!session) {
         router.replace("/login?next=/admin");
-      } else if (!isOwner) {
+      } else if (!isOwner && !isAdmin) {
         router.replace("/dashboard");
       }
     }
-  }, [session, isLoading, isOwner, router]);
+  }, [session, isLoading, isOwner, isAdmin, router]);
+
+  // Fetch verified caller permissions from backend
+  useEffect(() => {
+    let active = true;
+    if (!session) {
+      setPermsLoading(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        setPermsLoading(true);
+        const perms = await fetchMyPermissions();
+        if (active) {
+          setCallerPerms(perms);
+        }
+      } catch (err: unknown) {
+        console.warn("Notice: caller permissions verification:", err);
+      } finally {
+        if (active) {
+          setPermsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
+  const isAuthoritativeOwner = callerPerms?.is_owner ?? isOwner;
+  const userPermissions = useMemo(() => callerPerms?.permissions || [], [callerPerms]);
 
   // Fetch admin telemetry
   const refreshAdminData = useCallback(async () => {
-    if (!isOwner) return;
     setDataLoading(true);
     setErrorMsg(null);
     try {
       const headers = await getAuthHeaders();
-      const [ovRes, usrRes] = await Promise.all([
-        apiFetch(`${API_BASE}/api/admin/overview`, { headers }),
-        apiFetch(`${API_BASE}/api/admin/users?limit=25`, { headers }),
-      ]);
+      const ovRes = await apiFetch(`${API_BASE}/api/admin/overview`, { headers });
 
       if (ovRes.ok) {
         const ovJson = await ovRes.json();
         setOverviewData(ovJson);
       } else if (ovRes.status === 403) {
-        setErrorMsg("Access Denied: Platform Owner role required by backend authorization.");
-      }
-
-      if (usrRes.ok) {
-        const usrJson = await usrRes.json();
-        setUsersList(usrJson.users || []);
+        setErrorMsg("Access Denied: Administrative permissions required by backend authorization.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load admin telemetry.";
@@ -126,31 +146,36 @@ export default function AdminPage() {
     } finally {
       setDataLoading(false);
     }
-  }, [isOwner]);
+  }, []);
+
+  const handleUserCountChange = useCallback((cnt: number) => {
+    setOverviewData((prev) => {
+      if (!prev || prev.stats.total_users === cnt) return prev;
+      return {
+        ...prev,
+        stats: {
+          ...prev.stats,
+          total_users: cnt,
+        },
+      };
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;
-    if (!isOwner) return;
+    if (!session || (!isOwner && !isAdmin)) return;
 
     void (async () => {
       try {
         const headers = await getAuthHeaders();
-        const [ovRes, usrRes] = await Promise.all([
-          apiFetch(`${API_BASE}/api/admin/overview`, { headers }),
-          apiFetch(`${API_BASE}/api/admin/users?limit=25`, { headers }),
-        ]);
+        const ovRes = await apiFetch(`${API_BASE}/api/admin/overview`, { headers });
 
         if (!active) return;
         if (ovRes.ok) {
           const ovJson = await ovRes.json();
           setOverviewData(ovJson);
         } else if (ovRes.status === 403) {
-          setErrorMsg("Access Denied: Platform Owner role required by backend authorization.");
-        }
-
-        if (usrRes.ok) {
-          const usrJson = await usrRes.json();
-          setUsersList(usrJson.users || []);
+          setErrorMsg("Access Denied: Administrative permissions required by backend authorization.");
         }
       } catch (err: unknown) {
         if (!active) return;
@@ -166,10 +191,91 @@ export default function AdminPage() {
     return () => {
       active = false;
     };
-  }, [isOwner]);
+  }, [session, isOwner, isAdmin]);
 
-  // If loading or unauthorized
-  if (isLoading || !session || !isOwner) {
+  // Dynamic Navigation Tabs filtered strictly by caller's authoritative permissions
+  const tabs = useMemo(() => {
+    const allTabs: {
+      id: AdminTab;
+      label: string;
+      icon: React.ElementType;
+      badge?: number;
+      ownerOnly?: boolean;
+      requiredSection?: string;
+    }[] = [
+      { id: "overview", label: "Overview", icon: Activity },
+      { id: "payments", label: "Payments & Revenue", icon: IndianRupee, ownerOnly: true },
+      { id: "subscriptions", label: "Subscriptions", icon: CalendarCheck, ownerOnly: true },
+      {
+        id: "hackathons",
+        label: "Events & Hackathons",
+        icon: Trophy,
+        badge: overviewData?.stats.cms_modules.hackathons,
+        requiredSection: "events",
+      },
+      {
+        id: "scholarships",
+        label: "Scholarships",
+        icon: Award,
+        badge: overviewData?.stats.cms_modules.scholarships,
+        requiredSection: "scholarships",
+      },
+      {
+        id: "news",
+        label: "Curated News",
+        icon: Newspaper,
+        badge: overviewData?.stats.cms_modules.news_updates,
+        requiredSection: "tech_news",
+      },
+      { id: "community", label: "Community", icon: MessageSquare, badge: overviewData?.stats.cms_modules.community_threads, ownerOnly: true },
+      { id: "users", label: "User Governance", icon: Users, badge: overviewData?.stats.total_users, ownerOnly: true },
+      { id: "skillbits", label: "SkillBits", icon: Sparkles, ownerOnly: true },
+      { id: "plans", label: "Plans & Pricing", icon: CreditCard, ownerOnly: true },
+      { id: "coupons", label: "Coupons & Discounts", icon: Tag, ownerOnly: true },
+    ];
+
+    if (isAuthoritativeOwner) {
+      return allTabs;
+    }
+
+    // Delegated Admins only receive explicitly permitted content sections
+    return allTabs.filter((tab) => {
+      if (tab.ownerOnly) return false;
+      if (tab.id === "overview") return true;
+      if (tab.id === "hackathons") {
+        return userPermissions.some((p) => p.startsWith("events.") || p.startsWith("hackathons."));
+      }
+      if (tab.id === "scholarships") {
+        return userPermissions.some((p) => p.startsWith("scholarships."));
+      }
+      if (tab.id === "news") {
+        return userPermissions.some((p) => p.startsWith("tech_news."));
+      }
+      return false;
+    });
+  }, [isAuthoritativeOwner, userPermissions, overviewData]);
+
+  // Ensure active tab is valid for current caller permissions
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
+
+  // Loading state while credentials and permissions are verified
+  if (isLoading || permsLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 text-white p-6">
+        <div className="flex flex-col items-center gap-3">
+          <RefreshCw className="w-8 h-8 animate-spin text-purple-400" />
+          <p className="text-sm font-semibold text-slate-300">Verifying administrative credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If unauthenticated or unauthorized role
+  if (!session || (!isOwner && !isAdmin)) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 text-white p-6">
         <div className="max-w-md w-full bg-slate-800/90 border border-slate-700/80 rounded-2xl p-8 text-center shadow-2xl backdrop-blur-md">
@@ -178,7 +284,7 @@ export default function AdminPage() {
           </div>
           <h2 className="text-xl font-bold mb-2">Restricted Access</h2>
           <p className="text-sm text-slate-400 mb-6">
-            This administration console is strictly restricted to authenticated platform owners.
+            This administration console is strictly restricted to authenticated platform owners and delegated administrators.
           </p>
           <button
             onClick={() => router.replace("/dashboard")}
@@ -190,20 +296,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number }[] = [
-    { id: "overview", label: "Overview", icon: Activity },
-    { id: "payments", label: "Payments & Revenue", icon: IndianRupee },
-    { id: "subscriptions", label: "Subscriptions", icon: CalendarCheck },
-    { id: "hackathons", label: "Events & Hackathons", icon: Trophy, badge: overviewData?.stats.cms_modules.hackathons },
-    { id: "scholarships", label: "Scholarships", icon: Award, badge: overviewData?.stats.cms_modules.scholarships },
-    { id: "news", label: "Curated News", icon: Newspaper, badge: overviewData?.stats.cms_modules.news_updates },
-    { id: "community", label: "Community", icon: MessageSquare, badge: overviewData?.stats.cms_modules.community_threads },
-    { id: "users", label: "User Governance", icon: Users, badge: overviewData?.stats.total_users },
-    { id: "skillbits", label: "SkillBits", icon: Sparkles },
-    { id: "plans", label: "Plans & Pricing", icon: CreditCard },
-    { id: "coupons", label: "Coupons & Discounts", icon: Tag },
-  ];
 
   return (
     <div className="min-h-screen w-full bg-[#0B0D17] text-slate-100 flex flex-col font-sans">
@@ -275,7 +367,14 @@ export default function AdminPage() {
           <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           <span>
             Authenticated as <strong>{session.email}</strong> &bull; Database Role:{" "}
-            <span className="text-emerald-400 uppercase font-mono font-bold">owner</span>
+            <span className="text-emerald-400 uppercase font-mono font-bold">
+              {isAuthoritativeOwner ? "owner" : "admin"}
+            </span>
+            {!isAuthoritativeOwner && (
+              <span className="text-purple-300 ml-1.5 font-medium">
+                ({userPermissions.length} Active Permissions)
+              </span>
+            )}
           </span>
         </div>
         <button
@@ -505,65 +604,17 @@ export default function AdminPage() {
 
           {/* TAB 6: USERS */}
           {activeTab === "users" && (
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">User Directory &amp; Governance</h3>
-                  <p className="text-xs text-slate-400">Authoritative list of accounts and their database roles.</p>
-                </div>
-                <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  {usersList.length} Verified Users
-                </span>
+            isAuthoritativeOwner ? (
+              <AdminUserGovernance onUserCountChange={handleUserCountChange} />
+            ) : (
+              <div className="p-8 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
+                <ShieldAlert className="w-8 h-8 text-rose-400 mx-auto mb-2" />
+                <h3 className="text-base font-bold text-white">Access Denied</h3>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+                  User governance and role management is strictly restricted to the verified platform owner.
+                </p>
               </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider text-[10px]">
-                    <tr>
-                      <th className="py-3 px-4 rounded-l-xl">User / Email</th>
-                      <th className="py-3 px-4">Full Name</th>
-                      <th className="py-3 px-4">Role</th>
-                      <th className="py-3 px-4 rounded-r-xl">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {usersList.map((u) => {
-                      const isUserOwner = u.role === "owner";
-                      return (
-                        <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="py-3 px-4 font-mono text-[11px] text-white">
-                            {u.email}
-                          </td>
-                          <td className="py-3 px-4 font-semibold text-slate-200">
-                            {u.full_name}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                isUserOwner
-                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                                  : "bg-slate-800 text-slate-400 border border-slate-700"
-                              }`}
-                            >
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-slate-400">
-                            {isUserOwner ? (
-                              <span className="text-[11px] font-semibold text-emerald-400">
-                                Primary Owner
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-slate-500">Standard Student</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            )
           )}
 
           {/* TAB 7: SKILLBITS CMS & VIDEO PIPELINE */}

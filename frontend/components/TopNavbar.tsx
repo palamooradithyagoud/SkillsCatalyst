@@ -24,7 +24,7 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   const router = useRouter();
-  const { session, logout, isOwner, appMode, setAppMode } = useAuth();
+  const { session, logout, isOwner, isAdmin, appMode, setAppMode } = useAuth();
   const { unreadCount } = useNotifications();
 
   const [activeWorkspace, setActiveWorkspace] = useState("SkillsCatalyst");
@@ -138,8 +138,8 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
 
       {/* ── Right Section: Icons, Badges & Profile ── */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Owner Quick Mode Switcher (Visible strictly to authenticated Platform Owner) */}
-        {isOwner && (
+        {/* Privileged Mode Switcher (Visible to authenticated Platform Owner and Admin) */}
+        {(isOwner || isAdmin) && (
           <button
             onClick={() => setAppMode(appMode === "admin" ? "student" : "admin")}
             title={appMode === "admin" ? "Switch to Student Mode" : "Switch to Admin Mode"}
@@ -240,15 +240,15 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
                   <p className="text-[11px] text-slate-500 dark:text-neutral-400 truncate">{session?.email || "learner@skillscatalyst.in"}</p>
                 </div>
 
-                {/* Owner Mode Switcher Segment (Strictly for Platform Owner) */}
-                {isOwner && (
+                {/* Workspace Mode Switcher Segment (Strictly for Owner and Admin) */}
+                {(isOwner || isAdmin) && (
                   <div className="px-3 py-2.5 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">
                         Workspace Mode
                       </span>
                       <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                        Owner
+                        {isOwner ? "Owner" : "Admin"}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-200/80 dark:bg-neutral-900 rounded-lg">

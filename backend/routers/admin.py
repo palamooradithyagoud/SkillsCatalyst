@@ -8,10 +8,21 @@ Students and unauthenticated callers are rejected with 403 Forbidden or 401 Unau
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, BackgroundTasks, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, BackgroundTasks, Response, Request
 from pydantic import BaseModel, Field
 
-from backend.services.auth_service import require_owner, require_admin
+from backend.services.auth_service import require_owner, require_admin, require_authenticated_user
+from backend.services.permission_service import (
+    require_permission,
+    require_any_permission,
+    get_user_permissions,
+    grant_admin_access,
+    revoke_admin_access,
+    update_admin_permissions,
+    get_audit_logs,
+    ALL_VALID_PERMISSIONS,
+    SECTION_PERMISSIONS_MAP,
+)
 from backend.services.supabase_service import get_supabase
 from backend.services.notification_service import notify_new_event, notify_new_scholarship
 
@@ -105,24 +116,70 @@ class AssignRoleRequest(BaseModel):
     new_role: str = Field(..., description="Role to assign: 'student', 'admin', 'editor', 'moderator'")
 
 
-@router.get("/overview", status_code=status.HTTP_200_OK)
-def get_admin_overview(
-    owner: Dict[str, Any] = Depends(require_owner)
+class GrantAdminRequest(BaseModel):
+    permissions: List[str] = Field(default_factory=list, description="List of granular permissions to assign")
+    reason: Optional[str] = Field(None, description="Audit reason for granting admin")
+
+
+class RevokeAdminRequest(BaseModel):
+    reason: Optional[str] = Field(None, description="Audit reason for revoking admin")
+
+
+class UpdatePermissionsRequest(BaseModel):
+    permissions: List[str] = Field(..., description="Complete set of permissions to assign")
+    reason: Optional[str] = Field(None, description="Audit reason for updating permissions")
+
+
+@router.get("/me/permissions", status_code=status.HTTP_200_OK)
+def get_my_admin_permissions(
+    current_user: Dict[str, Any] = Depends(require_authenticated_user)
 ) -> Dict[str, Any]:
     """
-    Platform Owner High-Level Overview & Telemetry.
-    Returns aggregated counts of learners, active streaks, CMS content indicators, and services.
+    Returns current authenticated user's role, owner status, and verified administrative permissions.
+    """
+    return {
+        "user_id": current_user["user_id"],
+        "email": current_user["email"],
+        "name": current_user["name"],
+        "role": current_user["role"],
+        "is_owner": current_user["is_owner"],
+        "is_admin": current_user.get("is_admin", False),
+        "permissions": current_user.get("permissions", []),
+    }
+
+
+@router.get("/permissions-catalog", status_code=status.HTTP_200_OK)
+def get_permissions_catalog(
+    current_user: Dict[str, Any] = Depends(require_authenticated_user)
+) -> Dict[str, Any]:
+    """
+    Returns complete catalog of supported granular permissions and their section groupings.
+    """
+    return {
+        "all_permissions": sorted(list(ALL_VALID_PERMISSIONS)),
+        "sections": SECTION_PERMISSIONS_MAP,
+    }
+
+
+@router.get("/overview", status_code=status.HTTP_200_OK)
+def get_admin_overview(
+    admin_user: Dict[str, Any] = Depends(require_admin)
+) -> Dict[str, Any]:
+    """
+    Administrative High-Level Overview & Telemetry.
+    Returns aggregated counts of learners (for owner), CMS content indicators, and platform status.
     """
     sb = get_supabase()
     total_users = 0
     total_students = 0
     total_owners = 0
     total_academic_profiles = 0
-    total_coding_profiles = 0
 
-    if sb:
+    is_owner = admin_user.get("is_owner", False)
+
+    if sb and is_owner:
         try:
-            # Count registered users from profiles table
+            # Count registered users from profiles table (only visible to owner)
             prof_res = sb.from_("profiles").select("id, role", count="exact").execute()
             if prof_res:
                 total_users = prof_res.count if prof_res.count is not None else len(prof_res.data or [])
@@ -150,15 +207,17 @@ def get_admin_overview(
     return {
         "status": "operational",
         "caller": {
-            "user_id": owner["user_id"],
-            "email": owner["email"],
-            "role": owner["role"],
+            "user_id": admin_user["user_id"],
+            "email": admin_user["email"],
+            "role": admin_user["role"],
+            "is_owner": is_owner,
+            "permissions": admin_user.get("permissions", []),
         },
         "stats": {
-            "total_users": max(total_users, 1),
-            "total_students": max(total_students, 0),
-            "total_owners": max(total_owners, 1),
-            "academic_profiles_active": total_academic_profiles,
+            "total_users": max(total_users, 1) if is_owner else 0,
+            "total_students": max(total_students, 0) if is_owner else 0,
+            "total_owners": max(total_owners, 1) if is_owner else 0,
+            "academic_profiles_active": total_academic_profiles if is_owner else 0,
             "cms_modules": {
                 "hackathons": live_hackathons_count,
                 "scholarships": live_scholarships_count,
@@ -167,7 +226,7 @@ def get_admin_overview(
             },
         },
         "platform_status": {
-            "mode": "owner_admin_cms",
+            "mode": "owner_admin_cms" if is_owner else "admin_restricted",
             "security_tier": "tier_1_isolated",
             "rbac_enforced": True,
         }
@@ -176,41 +235,150 @@ def get_admin_overview(
 
 @router.get("/users", status_code=status.HTTP_200_OK)
 def list_users(
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    search: Optional[str] = Query(None, description="Search by email, name, or username"),
     owner: Dict[str, Any] = Depends(require_owner)
 ) -> Dict[str, Any]:
     """
-    Owner-exclusive directory of platform users and their roles.
+    Owner-exclusive directory of platform users with their roles and granular administrative permissions.
     """
     sb = get_supabase()
     users: List[Dict[str, Any]] = []
+    total_count = 0
 
     if sb:
         try:
-            res = sb.from_("profiles").select("id, email, full_name, role, created_at, updated_at").limit(limit).execute()
-            if res.data:
-                for row in res.data:
+            query = sb.from_("profiles").select("id, email, full_name, username, role, created_at, updated_at", count="exact")
+            if search and search.strip():
+                clean_q = f"%{search.strip()}%"
+                query = query.or_(f"email.ilike.{clean_q},full_name.ilike.{clean_q},username.ilike.{clean_q}")
+            
+            res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+            if res:
+                total_count = res.count if res.count is not None else len(res.data or [])
+                for row in res.data or []:
+                    u_id = row.get("id")
+                    u_role = row.get("role") or "student"
+                    u_perms = get_user_permissions(u_id) if u_role in ("admin", "owner") else []
                     users.append({
-                        "id": row.get("id"),
+                        "id": u_id,
                         "email": row.get("email") or "learner@skillscatalyst.in",
                         "full_name": row.get("full_name") or "Learner",
-                        "role": row.get("role") or "student",
+                        "username": row.get("username") or "",
+                        "role": u_role,
+                        "permissions": u_perms,
                         "created_at": row.get("created_at"),
                         "updated_at": row.get("updated_at"),
                     })
         except Exception as e:
             logger.warning(f"Failed to query users directory: {e}")
-            # Fallback if role column not in profiles: return owner representation
             users = [{
                 "id": owner["user_id"],
                 "email": owner["email"],
                 "full_name": owner["name"],
                 "role": owner["role"],
+                "permissions": sorted(list(ALL_VALID_PERMISSIONS)),
             }]
+            total_count = 1
 
     return {
-        "total": len(users),
+        "total": total_count,
         "users": users,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@router.post("/users/{target_user_id}/grant-admin", status_code=status.HTTP_200_OK)
+def grant_admin_endpoint(
+    target_user_id: str,
+    payload: GrantAdminRequest,
+    request: Request,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Owner-exclusive endpoint to grant Admin access and granular permissions to an eligible user.
+    """
+    client_ip = request.client.host if request.client else None
+    return grant_admin_access(
+        actor_id=owner["user_id"],
+        target_id=target_user_id,
+        permissions=payload.permissions,
+        reason=payload.reason,
+        ip_address=client_ip,
+    )
+
+
+@router.post("/users/{target_user_id}/revoke-admin", status_code=status.HTTP_200_OK)
+def revoke_admin_endpoint(
+    target_user_id: str,
+    payload: RevokeAdminRequest,
+    request: Request,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Owner-exclusive endpoint to revoke Admin access, resetting the user to student role.
+    """
+    client_ip = request.client.host if request.client else None
+    return revoke_admin_access(
+        actor_id=owner["user_id"],
+        target_id=target_user_id,
+        reason=payload.reason,
+        ip_address=client_ip,
+    )
+
+
+@router.put("/users/{target_user_id}/permissions", status_code=status.HTTP_200_OK)
+def update_admin_permissions_endpoint(
+    target_user_id: str,
+    payload: UpdatePermissionsRequest,
+    request: Request,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Owner-exclusive endpoint to update an Admin's permitted sections and operations.
+    """
+    client_ip = request.client.host if request.client else None
+    return update_admin_permissions(
+        actor_id=owner["user_id"],
+        target_id=target_user_id,
+        permissions=payload.permissions,
+        reason=payload.reason,
+        ip_address=client_ip,
+    )
+
+
+@router.get("/users/{target_user_id}/permissions", status_code=status.HTTP_200_OK)
+def get_user_permissions_endpoint(
+    target_user_id: str,
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Owner-exclusive endpoint to inspect an Admin user's active granular permissions.
+    """
+    perms = get_user_permissions(target_user_id)
+    return {
+        "user_id": target_user_id,
+        "permissions": perms,
+    }
+
+
+@router.get("/audit-logs", status_code=status.HTTP_200_OK)
+def get_audit_logs_endpoint(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    owner: Dict[str, Any] = Depends(require_owner),
+) -> Dict[str, Any]:
+    """
+    Owner-exclusive endpoint to review administrative privilege change history and audit trail.
+    """
+    logs = get_audit_logs(actor_id=owner["user_id"], limit=limit, offset=offset)
+    return {
+        "total": len(logs),
+        "audit_logs": logs,
+        "limit": limit,
+        "offset": offset,
     }
 
 
@@ -256,9 +424,9 @@ def list_admin_events(
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by status: 'draft', 'published', 'archived', or 'all'"),
     is_hackathon: Optional[bool] = Query(None, description="Filter by hackathon flag"),
     search: Optional[str] = Query(None, description="Keyword search in event name, college, or location"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.read")),
 ) -> Dict[str, Any]:
-    """Owner directory: returns all events with optional filters."""
+    """Administrative directory: returns all events with optional filters."""
     events = get_admin_events(
         status_filter=status_filter,
         is_hackathon=is_hackathon,
@@ -273,7 +441,7 @@ def list_admin_events(
 @router.get("/events/{event_id}", status_code=status.HTTP_200_OK)
 def get_admin_event(
     event_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.read")),
 ) -> Dict[str, Any]:
     """Fetches any single event for inspection or editing in the Admin panel."""
     event = get_admin_event_by_id(event_id)
@@ -290,13 +458,13 @@ def create_admin_event(
     payload: CreateEventRequest,
     background_tasks: BackgroundTasks,
     send_notification: bool = Query(default=True, description="Send Web Push and in-app notification if published"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.create")),
 ) -> Dict[str, Any]:
     """
     Creates a new event or hackathon.
-    Authoritative created_by is assigned strictly from the authenticated owner's user_id.
+    Authoritative created_by is assigned strictly from the authenticated caller's user_id.
     """
-    created = create_event(data=payload, user_id=owner["user_id"])
+    created = create_event(data=payload, user_id=current_user["user_id"])
     if send_notification and created.get("status") == "published":
         background_tasks.add_task(
             notify_new_event,
@@ -315,7 +483,7 @@ def create_admin_event(
 def update_admin_event(
     event_id: str,
     payload: UpdateEventRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.update")),
 ) -> Dict[str, Any]:
     """Partially updates an existing event's details, dates, hackathon properties, or visibility."""
     updated = update_event(event_id=event_id, data=payload)
@@ -331,7 +499,7 @@ def publish_admin_event(
     event_id: str,
     background_tasks: BackgroundTasks,
     send_notification: bool = Query(default=True, description="Send Web Push and in-app notification to users"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.publish")),
 ) -> Dict[str, Any]:
     """Publishes an event to become student-visible within its visibility window."""
     published = set_event_status(event_id=event_id, new_status=EventStatus.PUBLISHED)
@@ -352,7 +520,7 @@ def publish_admin_event(
 @router.post("/events/{event_id}/archive", status_code=status.HTTP_200_OK)
 def archive_admin_event(
     event_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.update")),
 ) -> Dict[str, Any]:
     """Archives an event, removing it from student visibility while retaining data."""
     archived = set_event_status(event_id=event_id, new_status=EventStatus.ARCHIVED)
@@ -366,7 +534,7 @@ def archive_admin_event(
 @router.delete("/events/{event_id}", status_code=status.HTTP_200_OK)
 def delete_admin_event(
     event_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("events.delete")),
 ) -> Dict[str, Any]:
     """Deletes an event permanently."""
     deleted = delete_event(event_id=event_id)
@@ -379,13 +547,13 @@ def delete_admin_event(
 @router.post("/events/upload-banner", status_code=status.HTTP_200_OK)
 async def upload_event_banner(
     file: UploadFile = File(...),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_any_permission("events.create", "events.update")),
 ) -> Dict[str, Any]:
     """
     Uploads an event poster / banner image.
     Validates file type (JPG/PNG/WebP/GIF) and 5MB limit, returning an accessible public URL.
     """
-    public_url = await upload_banner_image(file=file, user_id=owner["user_id"])
+    public_url = await upload_banner_image(file=file, user_id=current_user["user_id"])
     return {
         "success": True,
         "banner_url": public_url,
@@ -401,9 +569,9 @@ def list_admin_scholarships(
     search: Optional[str] = Query(None, description="Keyword search in name, provider, or qualification"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.read")),
 ) -> Dict[str, Any]:
-    """Owner directory: returns all scholarships with optional status and search filters."""
+    """Administrative directory: returns all scholarships with optional status and search filters."""
     resolved_status = status or status_filter
     scholarships, total_count = get_admin_scholarships(
         status_filter=resolved_status,
@@ -420,7 +588,7 @@ def list_admin_scholarships(
 @router.get("/scholarships/{scholarship_id}", status_code=status.HTTP_200_OK)
 def get_admin_scholarship(
     scholarship_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.read")),
 ) -> Dict[str, Any]:
     """Fetches any single scholarship (including draft/archived) for Admin inspection or editing."""
     scholarship = get_admin_scholarship_by_id(scholarship_id)
@@ -437,13 +605,13 @@ def create_admin_scholarship(
     payload: CreateScholarshipRequest,
     background_tasks: BackgroundTasks,
     send_notification: bool = Query(default=True, description="Send Web Push and in-app notification if published"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.create")),
 ) -> Dict[str, Any]:
     """
     Creates a new scholarship in draft or published status.
-    Authoritative created_by is assigned strictly from the authenticated owner's user_id.
+    Authoritative created_by is assigned strictly from the authenticated caller's user_id.
     """
-    created = create_scholarship(data=payload, user_id=owner["user_id"])
+    created = create_scholarship(data=payload, user_id=current_user["user_id"])
     if send_notification and created.get("status") == "published":
         background_tasks.add_task(
             notify_new_scholarship,
@@ -462,7 +630,7 @@ def create_admin_scholarship(
 def update_admin_scholarship(
     scholarship_id: str,
     payload: UpdateScholarshipRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.update")),
 ) -> Dict[str, Any]:
     """Partially updates an existing scholarship's content or visibility."""
     updated = update_scholarship(scholarship_id=scholarship_id, data=payload)
@@ -478,7 +646,7 @@ def publish_admin_scholarship(
     scholarship_id: str,
     background_tasks: BackgroundTasks,
     send_notification: bool = Query(default=True, description="Send Web Push and in-app notification to users"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.publish")),
 ) -> Dict[str, Any]:
     """Publishes a scholarship to become student-visible within its visibility window."""
     published = set_scholarship_status(scholarship_id=scholarship_id, new_status=ScholarshipStatus.PUBLISHED)
@@ -499,7 +667,7 @@ def publish_admin_scholarship(
 @router.post("/scholarships/{scholarship_id}/archive", status_code=status.HTTP_200_OK)
 def archive_admin_scholarship(
     scholarship_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.update")),
 ) -> Dict[str, Any]:
     """Archives a scholarship, removing it from student visibility while retaining records."""
     archived = set_scholarship_status(scholarship_id=scholarship_id, new_status=ScholarshipStatus.ARCHIVED)
@@ -513,7 +681,7 @@ def archive_admin_scholarship(
 @router.delete("/scholarships/{scholarship_id}", status_code=status.HTTP_200_OK)
 def delete_admin_scholarship(
     scholarship_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("scholarships.delete")),
 ) -> Dict[str, Any]:
     """Permanently deletes a scholarship record."""
     delete_scholarship(scholarship_id=scholarship_id)
@@ -528,14 +696,14 @@ def delete_admin_scholarship(
 async def upload_admin_scholarship_image(
     file: UploadFile = File(...),
     scholarship_id: Optional[str] = None,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_any_permission("scholarships.create", "scholarships.update")),
 ) -> Dict[str, Any]:
     """
     Uploads a scholarship poster / banner image to Supabase Storage 'scholarship-banners'.
     Validates file type (JPEG/PNG/WebP) and 5MB limit.
     Optionally associates the uploaded URL with an existing scholarship if scholarship_id is supplied.
     """
-    public_url = await upload_scholarship_image(file=file, user_id=owner["user_id"])
+    public_url = await upload_scholarship_image(file=file, user_id=current_user["user_id"])
 
     if scholarship_id:
         try:
@@ -553,12 +721,16 @@ async def upload_admin_scholarship_image(
 # TECH NEWS SOURCES (COMPANIES / PUBLISHERS) CMS ENDPOINTS
 # ============================================================================
 
+# ============================================================================
+# TECH NEWS SOURCES (COMPANIES / PUBLISHERS) CMS ENDPOINTS
+# ============================================================================
+
 @router.get("/tech-news/sources", status_code=status.HTTP_200_OK)
 def list_admin_tech_news_sources(
     search: Optional[str] = Query(None, description="Search company name or description"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.read")),
 ) -> Dict[str, Any]:
-    """Owner directory: returns all company sources with active story counts."""
+    """Administrative directory: returns all company sources with active story counts."""
     sources = get_admin_sources(search=search)
     return {
         "total": len(sources),
@@ -569,7 +741,7 @@ def list_admin_tech_news_sources(
 @router.get("/tech-news/sources/{source_id}", status_code=status.HTTP_200_OK)
 def get_admin_tech_news_source(
     source_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.read")),
 ) -> Dict[str, Any]:
     """Fetches a single tech news company source."""
     source = get_admin_source_by_id(source_id)
@@ -584,7 +756,7 @@ def get_admin_tech_news_source(
 @router.post("/tech-news/sources", status_code=status.HTTP_201_CREATED)
 def create_admin_tech_news_source(
     payload: CreateTechNewsSourceRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.create")),
 ) -> Dict[str, Any]:
     """Creates a new tech news publisher/company source."""
     created = create_source(data=payload)
@@ -599,7 +771,7 @@ def create_admin_tech_news_source(
 def update_admin_tech_news_source(
     source_id: str,
     payload: UpdateTechNewsSourceRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.update")),
 ) -> Dict[str, Any]:
     """Updates an existing tech news source."""
     updated = update_source(source_id=source_id, data=payload)
@@ -613,7 +785,7 @@ def update_admin_tech_news_source(
 @router.delete("/tech-news/sources/{source_id}", status_code=status.HTTP_200_OK)
 def delete_admin_tech_news_source(
     source_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.delete")),
 ) -> Dict[str, Any]:
     """Permanently deletes a company source and its stories."""
     delete_source(source_id=source_id)
@@ -628,10 +800,10 @@ def delete_admin_tech_news_source(
 async def upload_admin_source_logo(
     file: UploadFile = File(...),
     source_id: Optional[str] = None,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_any_permission("tech_news.create", "tech_news.update")),
 ) -> Dict[str, Any]:
     """Uploads a company logo to Supabase Storage 'tech-news-logos'."""
-    public_url = await upload_source_logo(file=file, user_id=owner["user_id"])
+    public_url = await upload_source_logo(file=file, user_id=current_user["user_id"])
     if source_id:
         try:
             update_source(source_id=source_id, data=UpdateTechNewsSourceRequest(logo_url=public_url))
@@ -653,9 +825,9 @@ def list_admin_tech_news_stories(
     source_id: Optional[str] = Query(None, description="Filter stories by company source ID"),
     status_filter: Optional[str] = Query(None, description="Filter by status: draft, published, archived"),
     search: Optional[str] = Query(None, description="Search keyword in title, summary, content"),
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.read")),
 ) -> Dict[str, Any]:
-    """Owner directory: returns all stories with 48h active status indicators."""
+    """Administrative directory: returns all stories with 48h active status indicators."""
     stories = get_admin_stories(
         source_id=source_id,
         status_filter=status_filter,
@@ -670,7 +842,7 @@ def list_admin_tech_news_stories(
 @router.get("/tech-news/stories/{story_id}", status_code=status.HTTP_200_OK)
 def get_admin_tech_news_story(
     story_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.read")),
 ) -> Dict[str, Any]:
     """Fetches any single story (including draft/expired/archived)."""
     story = get_admin_story_by_id(story_id)
@@ -685,10 +857,10 @@ def get_admin_tech_news_story(
 @router.post("/tech-news/stories", status_code=status.HTTP_201_CREATED)
 def create_admin_tech_news_story(
     payload: CreateTechNewsRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.create")),
 ) -> Dict[str, Any]:
     """Creates a new tech news story in draft or published status."""
-    created = create_story(data=payload, user_id=owner["user_id"])
+    created = create_story(data=payload, user_id=current_user["user_id"])
     return {
         "success": True,
         "message": f"Story '{created.get('headline')}' created successfully.",
@@ -700,7 +872,7 @@ def create_admin_tech_news_story(
 def update_admin_tech_news_story(
     story_id: str,
     payload: UpdateTechNewsRequest,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.update")),
 ) -> Dict[str, Any]:
     """Partially updates an existing story."""
     updated = update_story(story_id=story_id, data=payload)
@@ -714,7 +886,7 @@ def update_admin_tech_news_story(
 @router.post("/tech-news/stories/{story_id}/publish", status_code=status.HTTP_200_OK)
 def publish_admin_tech_news_story(
     story_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.publish")),
 ) -> Dict[str, Any]:
     """
     Publishes a story with authoritative 48-Hour visibility:
@@ -731,7 +903,7 @@ def publish_admin_tech_news_story(
 @router.post("/tech-news/stories/{story_id}/archive", status_code=status.HTTP_200_OK)
 def archive_admin_tech_news_story(
     story_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.update")),
 ) -> Dict[str, Any]:
     """Archives a story, hiding it from students while retaining records."""
     archived = archive_story(story_id=story_id)
@@ -745,7 +917,7 @@ def archive_admin_tech_news_story(
 @router.delete("/tech-news/stories/{story_id}", status_code=status.HTTP_200_OK)
 def delete_admin_tech_news_story(
     story_id: str,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_permission("tech_news.delete")),
 ) -> Dict[str, Any]:
     """Permanently deletes a story record."""
     delete_story(story_id=story_id)
@@ -760,10 +932,10 @@ def delete_admin_tech_news_story(
 async def upload_admin_story_cover(
     file: UploadFile = File(...),
     story_id: Optional[str] = None,
-    owner: Dict[str, Any] = Depends(require_owner),
+    current_user: Dict[str, Any] = Depends(require_any_permission("tech_news.create", "tech_news.update")),
 ) -> Dict[str, Any]:
     """Uploads a story cover image to Supabase Storage 'tech-news-covers'."""
-    public_url = await upload_story_cover(file=file, user_id=owner["user_id"])
+    public_url = await upload_story_cover(file=file, user_id=current_user["user_id"])
     if story_id:
         try:
             update_story(story_id=story_id, data=UpdateTechNewsRequest(cover_image_url=public_url))
@@ -778,13 +950,13 @@ async def upload_admin_story_cover(
 
 # ============================================================================
 # SKILLBITS (EDUCATIONAL REELS FOUNDATION) CMS ENDPOINTS
-# Protected by Depends(require_admin) - allows owner, admin, editor
+# Protected by Depends(require_owner) - sensitive media governance
 # ============================================================================
 
 @router.post("/skillbits", status_code=status.HTTP_201_CREATED, response_model=AdminSkillBitResponse)
 def create_admin_skillbit(
     payload: CreateSkillBitRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Creates a new SkillBit in draft or published status."""
     created = create_skillbit(data=payload, user_id=admin["user_id"])
@@ -803,7 +975,7 @@ def list_admin_skillbits(
     page_size: int = Query(20, ge=1, le=100, description="Page size"),
     limit: Optional[int] = Query(None, ge=1, le=100),
     offset: Optional[int] = Query(None, ge=0),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitsListResponse:
     """Lists all SkillBits for CMS management with optional filters, whitelisted sorting, and server-side pagination."""
     resolved_status = status_filter or status
@@ -830,7 +1002,7 @@ def list_admin_skillbits(
 @router.get("/skillbits/{skillbit_id}", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
 def get_admin_skillbit(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Fetches a single SkillBit for CMS administration (any status)."""
     record = get_admin_skillbit_by_id(skillbit_id=skillbit_id)
@@ -846,7 +1018,7 @@ def get_admin_skillbit(
 def update_admin_skillbit(
     skillbit_id: str,
     payload: UpdateSkillBitRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Partially updates a SkillBit record and validates publish rules if transitioning to published."""
     updated = update_skillbit(skillbit_id=skillbit_id, data=payload)
@@ -856,7 +1028,7 @@ def update_admin_skillbit(
 @router.post("/skillbits/{skillbit_id}/publish", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
 def publish_admin_skillbit(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Validates readiness (video_status MUST be READY) and publishes a SkillBit to students."""
     published = publish_skillbit(skillbit_id=skillbit_id)
@@ -866,7 +1038,7 @@ def publish_admin_skillbit(
 @router.post("/skillbits/{skillbit_id}/unpublish", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
 def unpublish_admin_skillbit(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Transitions a published SkillBit back to draft status, removing it from student feed."""
     unpublished = unpublish_skillbit(skillbit_id=skillbit_id)
@@ -876,7 +1048,7 @@ def unpublish_admin_skillbit(
 @router.post("/skillbits/{skillbit_id}/archive", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
 def archive_admin_skillbit(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Archives a SkillBit, hiding it from the student feed while preserving historical data."""
     archived = archive_skillbit(skillbit_id=skillbit_id)
@@ -886,7 +1058,7 @@ def archive_admin_skillbit(
 @router.post("/skillbits/{skillbit_id}/restore", status_code=status.HTTP_200_OK, response_model=AdminSkillBitResponse)
 def restore_admin_skillbit(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSkillBitResponse:
     """Restores an archived SkillBit back to draft status so it can be revised or re-published."""
     restored = restore_skillbit(skillbit_id=skillbit_id)
@@ -897,7 +1069,7 @@ def restore_admin_skillbit(
 async def create_skillbit_direct_upload(
     skillbit_id: str,
     payload: Optional[DirectUploadRequest] = None,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> DirectUploadResponse:
     """Initiates a Mux Direct Upload session for video ingestion without proxying media bytes."""
     cors = payload.cors_origin if payload else None
@@ -908,7 +1080,7 @@ async def create_skillbit_direct_upload(
 @router.get("/skillbits/{skillbit_id}/video-status", status_code=status.HTTP_200_OK, response_model=VideoStatusResponse)
 async def check_skillbit_video_status(
     skillbit_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> VideoStatusResponse:
     """Synchronizes and returns the current Mux video ingestion status, duration, and playback ID."""
     status_info = await sync_video_status(skillbit_id=skillbit_id)
@@ -940,7 +1112,7 @@ from backend.services.certificate_service import (
     response_model=List[CertificateTemplateResponse],
 )
 def list_admin_certificate_templates_endpoint(
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> List[CertificateTemplateResponse]:
     """Lists all certificate templates including inactive for admin management."""
     templates = list_certificate_templates(include_inactive=True)
@@ -954,7 +1126,7 @@ def list_admin_certificate_templates_endpoint(
 )
 def create_admin_certificate_template_endpoint(
     payload: CertificateTemplateCreate,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CertificateTemplateResponse:
     """Creates a new certificate template design."""
     created = create_certificate_template(data=payload, user_id=admin["user_id"])
@@ -968,7 +1140,7 @@ def create_admin_certificate_template_endpoint(
 )
 def get_admin_certificate_template_endpoint(
     template_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CertificateTemplateResponse:
     """Retrieves a certificate template by ID."""
     t = get_certificate_template(template_id=template_id)
@@ -983,7 +1155,7 @@ def get_admin_certificate_template_endpoint(
 def update_admin_certificate_template_endpoint(
     template_id: str,
     payload: CertificateTemplateUpdate,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CertificateTemplateResponse:
     """Updates an existing certificate template."""
     updated = update_certificate_template(template_id=template_id, data=payload, user_id=admin["user_id"])
@@ -996,7 +1168,7 @@ def update_admin_certificate_template_endpoint(
 )
 def delete_admin_certificate_template_endpoint(
     template_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """Safely archives or deletes a certificate template."""
     return delete_certificate_template(template_id=template_id, user_id=admin["user_id"])
@@ -1005,7 +1177,7 @@ def delete_admin_certificate_template_endpoint(
 @router.post("/certificate-templates/upload-background", status_code=status.HTTP_200_OK)
 async def upload_admin_certificate_background_endpoint(
     file: UploadFile = File(...),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> Dict[str, Any]:
     """Validates and uploads a certificate background image to Supabase Storage."""
     public_url = await upload_certificate_background(file=file, user_id=admin["user_id"])
@@ -1032,7 +1204,7 @@ from backend.services.plan_admin_service import PlanAdminService
     description="Returns all active and inactive subscription plans for administrative management.",
 )
 def get_admin_plans(
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> List[SubscriptionPlanAdminDTO]:
     """Protected Admin endpoint returning full subscription plan catalog."""
     return PlanAdminService.get_all_plans_admin()
@@ -1047,7 +1219,7 @@ def get_admin_plans(
 )
 def create_admin_plan(
     payload: CreatePlanRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> SubscriptionPlanAdminDTO:
     """Protected Admin endpoint to create a new commercial subscription plan."""
     return PlanAdminService.create_plan(payload)
@@ -1063,7 +1235,7 @@ def create_admin_plan(
 def update_admin_plan(
     plan_id: str,
     payload: UpdatePlanRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> SubscriptionPlanAdminDTO:
     """Protected Admin endpoint to update commercial plan terms."""
     return PlanAdminService.update_plan(plan_id, payload)
@@ -1079,7 +1251,7 @@ def update_admin_plan(
 def set_admin_plan_status(
     plan_id: str,
     payload: SetPlanStatusRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> SubscriptionPlanAdminDTO:
     """Protected Admin endpoint to activate or deactivate a plan."""
     return PlanAdminService.set_plan_status(plan_id, payload.is_active)
@@ -1105,7 +1277,7 @@ from backend.services.coupon_service import CouponService
     description="Returns all active, inactive, and expired promotional coupons for Admin CMS.",
 )
 def get_admin_coupons(
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> List[CouponAdminDTO]:
     """Protected Admin endpoint returning full promotional coupon catalog."""
     return CouponService.get_all_coupons_admin()
@@ -1120,7 +1292,7 @@ def get_admin_coupons(
 )
 def create_admin_coupon(
     payload: CreateCouponRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CouponAdminDTO:
     """Protected Admin endpoint to create a promotional coupon."""
     return CouponService.create_coupon(payload)
@@ -1135,7 +1307,7 @@ def create_admin_coupon(
 )
 def get_admin_coupon_by_id(
     coupon_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CouponAdminDTO:
     """Protected Admin endpoint to get a single coupon."""
     return CouponService.get_coupon_by_id(coupon_id)
@@ -1151,7 +1323,7 @@ def get_admin_coupon_by_id(
 def update_admin_coupon(
     coupon_id: str,
     payload: UpdateCouponRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CouponAdminDTO:
     """Protected Admin endpoint to update an existing coupon."""
     return CouponService.update_coupon(coupon_id, payload)
@@ -1167,7 +1339,7 @@ def update_admin_coupon(
 def set_admin_coupon_status(
     coupon_id: str,
     payload: SetCouponStatusRequest,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CouponAdminDTO:
     """Protected Admin endpoint to activate or deactivate a coupon."""
     return CouponService.set_coupon_status(coupon_id, payload.is_active)
@@ -1182,7 +1354,7 @@ def set_admin_coupon_status(
 )
 def expire_admin_coupon(
     coupon_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> CouponAdminDTO:
     """Protected Admin endpoint to expire a coupon immediately."""
     return CouponService.expire_coupon(coupon_id)
@@ -1212,7 +1384,7 @@ def get_admin_payment_metrics(
     preset: Optional[str] = Query(None, description="Preset date range: 'today', '7d', '30d', or 'all'"),
     start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
     end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminPaymentMetricsDTO:
     """Protected Admin endpoint returning authoritative platform payment telemetry."""
     return AdminPaymentService.get_payment_dashboard_metrics(
@@ -1238,7 +1410,7 @@ def get_admin_transactions_ledger(
     search: Optional[str] = Query(None, description="Search by merchant order reference, user ID, or user email"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminTransactionsListResponse:
     """Protected Admin endpoint returning paginated payment transactions ledger."""
     return AdminPaymentService.get_transactions_ledger(
@@ -1268,7 +1440,7 @@ def get_admin_subscriptions_ledger(
     expires_after: Optional[str] = Query(None, description="Filter subscriptions expiring after date"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page (max 100)"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminSubscriptionsListResponse:
     """Protected Admin endpoint returning paginated user subscriptions."""
     return AdminPaymentService.get_subscriptions_ledger(
@@ -1292,7 +1464,7 @@ def get_admin_subscriptions_ledger(
 def cancel_admin_subscription(
     subscription_id: str,
     payload: AdminCancelSubscriptionRequest = AdminCancelSubscriptionRequest(),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminCancelSubscriptionResponse:
     """Protected Admin endpoint to safely cancel subscription renewal."""
     return AdminPaymentService.cancel_user_subscription(
@@ -1324,7 +1496,7 @@ from backend.services.reconciliation_service import ReconciliationService
 )
 def get_admin_payment_receipt(
     merchant_order_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> PaymentReceiptDTO:
     """Protected Admin endpoint returning verified payment receipt."""
     return ReportingService.get_payment_receipt(
@@ -1345,7 +1517,7 @@ def get_financial_report(
     preset: Optional[str] = Query("30d", description="Preset date range: 'today', '7d', '30d', or 'all'"),
     start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
     end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> AdminPaymentMetricsDTO:
     """Protected Admin endpoint returning authoritative financial metrics."""
     return AdminPaymentService.get_payment_dashboard_metrics(
@@ -1370,7 +1542,7 @@ def export_transactions_csv(
     coupon_code: Optional[str] = Query(None, description="Filter by coupon code"),
     search: Optional[str] = Query(None, description="Search by merchant order reference, user ID, or email"),
     limit: int = Query(5000, ge=1, le=10000, description="Max rows to export"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> Response:
     """Protected Admin endpoint for secure CSV export of transactions."""
     csv_content = ReportingService.export_transactions_csv(
@@ -1406,7 +1578,7 @@ def export_revenue_summary_csv(
     preset: Optional[str] = Query("30d", description="Preset date range: 'today', '7d', '30d', or 'all'"),
     start_date: Optional[str] = Query(None, description="Optional ISO start datetime (UTC)"),
     end_date: Optional[str] = Query(None, description="Optional ISO end datetime (UTC)"),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> Response:
     """Protected Admin endpoint for secure CSV export of revenue summary."""
     csv_content = ReportingService.export_revenue_summary_csv(
@@ -1436,7 +1608,7 @@ def export_revenue_summary_csv(
 )
 def run_reconciliation(
     payload: RunReconciliationRequest = RunReconciliationRequest(),
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> ReconciliationSummaryDTO:
     """Protected Admin endpoint executing bounded payment reconciliation."""
     return ReconciliationService.run_reconciliation_batch(
@@ -1456,7 +1628,7 @@ def run_reconciliation(
 )
 def reconcile_single_transaction(
     merchant_order_id: str,
-    admin: Dict[str, Any] = Depends(require_admin),
+    admin: Dict[str, Any] = Depends(require_owner),
 ) -> SingleReconciliationResponse:
     """Protected Admin endpoint reconciling a single transaction with PhonePe."""
     return ReconciliationService.reconcile_single_order(

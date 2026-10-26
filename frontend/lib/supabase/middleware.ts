@@ -91,9 +91,10 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const isOwner = (user.app_metadata?.role === "owner");
-    if (!isOwner) {
-      // Authenticated student or non-owner attempting /admin: redirect to student dashboard (NEVER log out)
+    const userRole = (user.app_metadata?.role || "").toString().toLowerCase();
+    const isAuthorized = userRole === "owner" || userRole === "admin";
+    if (!isAuthorized) {
+      // Authenticated student or non-admin attempting /admin: redirect to student dashboard (NEVER log out)
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);

@@ -9,7 +9,7 @@ import { sendWelcomeEmail, syncDailyLoginStreak } from "@/lib/api";
 
 const SESSION_KEY = "skillscatalyst_user_session";
 
-export type UserRole = "owner" | "student";
+export type UserRole = "owner" | "admin" | "student";
 export type AppMode = "student" | "admin";
 
 export interface UserSession {
@@ -27,6 +27,7 @@ interface AuthContextValue {
   unverifiedEmail: string | null;
   role: UserRole;
   isOwner: boolean;
+  isAdmin: boolean;
   appMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   login: (email: string, userId: string, name?: string, role?: UserRole) => void;
@@ -41,6 +42,7 @@ const AuthContext = createContext<AuthContextValue>({
   unverifiedEmail: null,
   role: "student",
   isOwner: false,
+  isAdmin: false,
   appMode: "student",
   setAppMode: () => {},
   login: () => {},
@@ -159,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(newSession);
       setUnverifiedEmailState(null);
 
-      if (role === "owner") {
+      if (role === "owner" || role === "admin") {
         const savedMode = typeof window !== "undefined" ? localStorage.getItem("sc_owner_mode") : null;
         if (savedMode === "admin" || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"))) {
           setAppModeState("admin");
@@ -241,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Extract authoritative role from Supabase Auth app_metadata
           const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
-          const role: UserRole = rawRole === "owner" ? "owner" : "student";
+          const role: UserRole = rawRole === "owner" ? "owner" : rawRole === "admin" ? "admin" : "student";
 
           await setAndStoreSession(
             userEmail,
@@ -296,7 +298,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Extract authoritative role from Supabase Auth app_metadata
         const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
-        const role: UserRole = rawRole === "owner" ? "owner" : "student";
+        const role: UserRole = rawRole === "owner" ? "owner" : rawRole === "admin" ? "admin" : "student";
 
         await setAndStoreSession(
           userEmail,
@@ -362,9 +364,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     } else if (session && isLoginPage) {
       if (!isRecoveryReset) {
-        router.replace(session.role === "owner" && appMode === "admin" ? "/admin" : "/dashboard");
+        router.replace((session.role === "owner" || session.role === "admin") && appMode === "admin" ? "/admin" : "/dashboard");
       }
-    } else if (session && isAdminPage && session.role !== "owner") {
+    } else if (session && isAdminPage && session.role !== "owner" && session.role !== "admin") {
       // Normal students can NEVER access admin routes
       router.replace("/dashboard");
     }
@@ -372,8 +374,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setAppMode = useCallback(
     (newMode: AppMode) => {
-      // Authorization safeguard: only authenticated platform owner can toggle Admin Mode
-      if (session?.role !== "owner") {
+      // Authorization safeguard: only authenticated platform owner or admin can toggle Admin Mode
+      if (session?.role !== "owner" && session?.role !== "admin") {
         setAppModeState("student");
         return;
       }
@@ -421,6 +423,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isOwner = session?.role === "owner";
+  const isAdmin = session?.role === "admin" || session?.role === "owner";
 
   const contextValue: AuthContextValue = {
     session,
@@ -428,6 +431,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     unverifiedEmail,
     role: session?.role || "student",
     isOwner,
+    isAdmin,
     appMode,
     setAppMode,
     login,
