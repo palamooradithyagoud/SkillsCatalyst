@@ -181,45 +181,46 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all flex flex-col justify-between p-4 sm:p-5"
+        style={{ aspectRatio: "2.55 / 1" }}
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] aspect-[2.55/1] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-slate-800 select-none group bg-slate-950 transition-all flex flex-col justify-between p-3 sm:p-5"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-purple-950/40 pointer-events-none" />
 
         {/* ── Top-Left Metadata Pill ── */}
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
+          <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-white/90 border border-slate-200/60 shadow-xs backdrop-blur-md">
             <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 leading-none">Upcoming 2026</span>
+            <span className="text-[8.5px] sm:text-[10px] font-medium text-slate-800 leading-none">Upcoming 2026</span>
           </div>
         </div>
 
         {/* ── Main Content Hierarchy ── */}
         <div className="relative z-10 space-y-0.5 sm:space-y-1">
-          <h3 className="text-sm sm:base md:text-[17px] font-extrabold text-purple-400 tracking-tight leading-snug">
+          <h3 className="text-xs sm:text-base md:text-[17px] font-extrabold text-purple-400 tracking-tight leading-snug">
             Campus Hackathons &amp; Tech Sprints
           </h3>
-          <p className="text-[11px] sm:text-xs text-purple-300 font-medium line-clamp-1">
+          <p className="text-[10px] sm:text-xs text-purple-300 font-medium line-clamp-1">
             Verified collegiate hackathons, competitions, and technical sprints will be published here.
           </p>
         </div>
 
         {/* ── Bottom Actions (Register only) ── */}
-        <div className="relative z-10 flex items-center justify-between pt-1">
+        <div className="relative z-10 flex items-center justify-between pt-0.5 sm:pt-1">
           <button
             type="button"
-            className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-[11px] sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
             <span>Register</span>
-            <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
 
           {isPremium ? (
             <span
               data-testid="event-hero-pro-badge"
-              className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[10px] sm:text-xs font-semibold shadow-xs"
+              className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[9px] sm:text-xs font-semibold shadow-xs"
             >
-              <Crown className="w-3 h-3 text-purple-600 shrink-0" />
+              <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
               <span>PRO User</span>
             </span>
           ) : (
@@ -227,9 +228,9 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               type="button"
               onClick={handleOpenPricing}
               data-testid="event-hero-get-pro-btn"
-              className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
+              className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[9px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
             >
-              <Crown className="w-3 h-3 text-purple-600 shrink-0" />
+              <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
               <span>Get PRO</span>
             </button>
           )}
@@ -242,7 +243,10 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
   const currentEvent = events[currentIndex] || events[0];
   if (!currentEvent) {
     return (
-      <div className="w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] rounded-2xl sm:rounded-3xl bg-slate-900/80 animate-pulse" />
+      <div
+        style={{ aspectRatio: "2.55 / 1" }}
+        className="w-full max-w-[540px] aspect-[2.55/1] rounded-2xl sm:rounded-3xl bg-slate-900/80 animate-pulse"
+      />
     );
   }
 
@@ -260,8 +264,8 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         touchStartY.current = null;
         setIsPaused(false);
       }}
-      style={{ touchAction: "pan-y" }}
-      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] h-[190px] sm:h-[205px] md:h-[215px] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-neutral-800 select-none group bg-slate-950 dark:bg-black transition-all cursor-grab active:cursor-grabbing"
+      style={{ touchAction: "pan-y", aspectRatio: "2.55 / 1" }}
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl w-full max-w-[540px] aspect-[2.55/1] shadow-sm hover:shadow-md border border-slate-200/70 dark:border-neutral-800 select-none group bg-slate-950 dark:bg-black transition-all cursor-grab active:cursor-grabbing"
     >
       {/* ── Background Event Banner with Tactile Drag & Swipe Animation ── */}
       <AnimatePresence initial={false} custom={direction}>
@@ -304,7 +308,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
       </AnimatePresence>
 
       {/* ── Top-Left Bar: Date Metadata Pill ── */}
-      <div className="absolute top-2.5 sm:top-3 left-3.5 sm:left-4 z-20 pointer-events-none">
+      <div className="absolute top-2 sm:top-3 left-2.5 sm:left-4 z-20 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentEvent.id}
@@ -312,10 +316,10 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 3 }}
             transition={{ duration: 0.2 }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-black/90 border border-slate-200/60 dark:border-neutral-800 shadow-xs backdrop-blur-md"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-black/90 border border-slate-200/60 dark:border-neutral-800 shadow-xs backdrop-blur-md"
           >
             <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">
+            <span className="text-[8.5px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">
               {startDateStr}
             </span>
           </motion.div>
@@ -353,7 +357,7 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
 
       {/* ── Downside Area: Primary CTA (Register) & PRO Badge ── */}
       <div
-        className="absolute bottom-3 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-4 sm:px-5"
+        className="absolute bottom-2 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-2.5 sm:px-5"
         style={{ left: 0, right: 0 }}
       >
         {/* Primary CTA: Register only */}
@@ -368,20 +372,20 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               e.stopPropagation();
             }
           }}
-          className="pointer-events-auto group/btn inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-xs sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-[11px] sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+          <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
           <span>Register</span>
-          <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
         </a>
 
         {/* Secondary Status Badge (PRO User vs Get PRO) */}
         {isPremium ? (
           <span
             data-testid="event-hero-pro-badge"
-            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 dark:bg-black/90 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 text-slate-800 dark:text-white text-[10px] sm:text-xs font-semibold shadow-xs"
+            className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 dark:bg-black/90 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 text-slate-800 dark:text-white text-[9px] sm:text-xs font-semibold shadow-xs"
           >
-            <Crown className="w-3 h-3 text-purple-600 shrink-0" />
+            <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
             <span>PRO User</span>
           </span>
         ) : (
@@ -389,9 +393,9 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
             type="button"
             onClick={handleOpenPricing}
             data-testid="event-hero-get-pro-btn"
-            className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white/90 dark:bg-black/90 hover:bg-purple-50/90 dark:hover:bg-neutral-900 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 hover:border-purple-300 text-slate-800 dark:text-white hover:text-purple-700 text-[10px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
+            className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 dark:bg-black/90 hover:bg-purple-50/90 dark:hover:bg-neutral-900 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 hover:border-purple-300 text-slate-800 dark:text-white hover:text-purple-700 text-[9px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
           >
-            <Crown className="w-3 h-3 text-purple-600 shrink-0" />
+            <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
             <span>Get PRO</span>
           </button>
         )}
