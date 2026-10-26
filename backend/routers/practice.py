@@ -130,20 +130,14 @@ async def get_company_questions(
             detail=f"Company '{company}' not found. Use GET /api/practice/companies to list all available companies.",
         )
 
-    # Entitlement enforcement for company_interview_questions
+    # Entitlement evaluation for company_interview_questions:
+    # Free users can preview the first 3 questions per company; PRO users have unlimited access.
     from backend.services.subscription_service import SubscriptionService
     from backend.models.subscription import AccessLevel
     entitlements = SubscriptionService.get_user_entitlements(user_id)
     ent = entitlements.get(FeatureKey.COMPANY_INTERVIEW_QUESTIONS.value)
-    if not ent or ent.access == AccessLevel.NONE:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "code": "PREMIUM_REQUIRED",
-                "feature": FeatureKey.COMPANY_INTERVIEW_QUESTIONS.value,
-                "message": "Premium subscription required",
-            },
-        )
+    is_premium = bool(ent and ent.access != AccessLevel.NONE)
+    FREE_PREVIEW_LIMIT = 3
 
     csv_path = _csv_path(company_slug, period)
 
@@ -175,8 +169,17 @@ async def get_company_questions(
     limit_val = limit if isinstance(limit, int) else 100
     paginated = questions[offset_val: offset_val + limit_val]
 
+    formatted_questions = []
+    for idx, q in enumerate(paginated):
+        is_locked = not is_premium and (offset_val + idx >= FREE_PREVIEW_LIMIT)
+        q_copy = dict(q)
+        q_copy["is_locked"] = is_locked
+        if is_locked:
+            q_copy["url"] = ""  # Redact direct solver URL for locked questions
+        formatted_questions.append(q_copy)
+
     logger.info(
-        f"Company '{company_slug}' period='{period}': returned {len(paginated)}/{total} questions."
+        f"Company '{company_slug}' period='{period}': returned {len(formatted_questions)}/{total} questions (is_premium={is_premium})."
     )
 
     return {
@@ -185,13 +188,14 @@ async def get_company_questions(
         "total": total,
         "offset": offset_val,
         "limit": limit_val,
-        "questions": paginated,
+        "is_premium": is_premium,
+        "free_preview_limit": FREE_PREVIEW_LIMIT,
+        "questions": formatted_questions,
     }
 
 
 @router.get(
     "/aptitude/{topic_slug}",
-    dependencies=[Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value))],
 )
 def get_aptitude_questions(topic_slug: str):
     """Return placement prep questions for a specific quantitative aptitude topic."""
@@ -225,6 +229,7 @@ def get_aptitude_questions(topic_slug: str):
             "topic": meta["topic"],
             "slug": slug_norm,
             "total": meta["total"],
+            "free_preview_limit": 3,
             "default_timer_seconds": 60,
             "status": "ready"
         }
@@ -232,6 +237,7 @@ def get_aptitude_questions(topic_slug: str):
         "topic": topic_slug.capitalize(),
         "slug": slug_norm,
         "total": 0,
+        "free_preview_limit": 0,
         "default_timer_seconds": 60,
         "status": "coming_soon"
     }
@@ -251,7 +257,6 @@ class AptitudeAttemptRequest(BaseModel):
     dependencies=[
         Depends(enforce_rate_limit(max_requests=120, window_seconds=60)),
         Depends(require_authenticated_user),
-        Depends(require_entitlement(FeatureKey.PLACEMENT_PREP.value)),
     ],
 )
 def record_aptitude_attempt(
@@ -264,7 +269,7 @@ def record_aptitude_attempt(
     - Determines correctness server-side by comparing selected_option_index to correct_index.
     - Enforces ownership: attempt is strictly bound to authenticated user's ID.
     - Persists attempt metadata into `user_aptitude_attempts`.
-    - Protected by rate limiting, authentication, and premium entitlement.
+    - Protected by rate limiting, authentication, and freemium preview limits.
     """
     authenticated_user_id = str(current_user.get("user_id") or "").strip()
     if not authenticated_user_id:
@@ -278,6 +283,24 @@ def record_aptitude_attempt(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: Cannot record attempt for another user."
+        )
+
+    # Entitlement evaluation: Freemium model allows attempts on preview questions (<= 3).
+    # Questions beyond 3 require active PLACEMENT_PREP entitlement.
+    from backend.services.subscription_service import SubscriptionService
+    from backend.models.subscription import AccessLevel
+    entitlements = SubscriptionService.get_user_entitlements(authenticated_user_id)
+    ent = entitlements.get(FeatureKey.PLACEMENT_PREP.value)
+    is_premium = bool(ent and ent.access != AccessLevel.NONE)
+    FREE_PREVIEW_LIMIT = 3
+    if not is_premium and attempt.question_id > FREE_PREVIEW_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "PREMIUM_REQUIRED",
+                "feature": FeatureKey.PLACEMENT_PREP.value,
+                "message": "Premium subscription required to attempt questions beyond the free preview.",
+            },
         )
 
     # Validate question identifier

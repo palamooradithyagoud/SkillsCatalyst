@@ -28,12 +28,14 @@ import {
   Shuffle,
   Bookmark,
   RotateCw,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 // Sourced securely via Supabase RPC get_topic_questions & submit_question_attempt
 import { supabase } from "@/lib/supabase";
 import { getAuthHeaders, apiFetch, API_BASE } from "@/lib/api";
 import { useSubscription } from "@/hooks/useSubscription";
+import { usePricingModal } from "@/contexts/PricingModalContext";
 import { PremiumLockCard } from "@/components/premium";
 import {
   getUserTopicBookmarks,
@@ -323,6 +325,7 @@ export default function PlacementPrepModal({
   hasPlacementAccessOverride,
 }: PlacementPrepModalProps) {
   const { canAccess } = useSubscription();
+  const { openPricingModal } = usePricingModal();
   const hasPlacementAccess = hasPlacementAccessOverride ?? canAccess("placement_prep");
   const [activeTab, setActiveTab] = useState<"aptitude" | "mockTests">("aptitude");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -935,25 +938,8 @@ export default function PlacementPrepModal({
             </div>
           )}
 
-          {!hasPlacementAccess ? (
-            <div className="p-6 md:p-12 flex items-center justify-center flex-1 bg-white dark:bg-black overflow-y-auto">
-              <PremiumLockCard
-                title="Placement Preparation Suite"
-                description="Master recruitment assessments with complete Quantitative Aptitude, Logical Reasoning, Verbal Ability question banks and timed full-length company mock tests (TCS NQT, Infosys, and top product firms)."
-                benefits={[
-                  "15+ comprehensive aptitude, reasoning & verbal topic banks",
-                  "Detailed step-by-step solutions with shortcuts & formulas",
-                  "Full-length company mock test simulations with timed metrics",
-                  "AI performance analytics & weakness breakdown",
-                ]}
-                secondaryAction={{
-                  label: "Close",
-                  onClick: onClose,
-                }}
-              />
-            </div>
-          ) : (
-            <>
+          {/* Topic Selection & Practice Flow */}
+          <>
               {/* Main Topic Selection View */}
               {!selectedTopic && (
                 <>
@@ -1228,6 +1214,12 @@ export default function PlacementPrepModal({
                                                 {item.solvedCount}/{item.questionCount} Solved
                                               </span>
                                             ) : null}
+                                            {!hasPlacementAccess ? (
+                                              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-1 shadow-2xs">
+                                                <Sparkles className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                                3 Free Questions
+                                              </span>
+                                            ) : null}
                                           </div>
                                         </div>
 
@@ -1250,7 +1242,7 @@ export default function PlacementPrepModal({
                                             onClick={() => startTopicQuiz(item.name, 0)}
                                             className="bg-[#0F172A] hover:bg-[#1E293B] dark:bg-[#121318] dark:hover:bg-[#20222A] dark:border dark:border-neutral-700 text-white font-extrabold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
                                           >
-                                            Solve
+                                            {hasPlacementAccess ? "Solve" : "Try Free"}
                                           </button>
                                         </div>
                                       </div>
@@ -1296,19 +1288,33 @@ export default function PlacementPrepModal({
                               {section.tests.map((test) => (
                                 <div
                                   key={test.name}
+                                  onClick={() => {
+                                    if (!hasPlacementAccess) {
+                                      openPricingModal();
+                                    }
+                                  }}
                                   className={`p-3.5 rounded-2xl bg-white dark:bg-[#18191F] border ${section.itemBorder} dark:border-neutral-800 transition-all space-y-1.5 group cursor-pointer shadow-2xs hover:shadow-md`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-sky-700 dark:group-hover:text-sky-400">
                                       {test.name}
                                     </span>
-                                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${section.badgeColor}`}>
-                                      {test.duration}
-                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                      {!hasPlacementAccess && (
+                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+                                          <Lock className="w-2.5 h-2.5" /> PRO
+                                        </span>
+                                      )}
+                                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${section.badgeColor}`}>
+                                        {test.duration}
+                                      </span>
+                                    </div>
                                   </div>
                                   <div className="text-[11px] text-slate-500 dark:text-neutral-400 font-semibold flex items-center justify-between">
                                     <span>{test.count}</span>
-                                    <span className={`${section.footerColor} font-extrabold group-hover:underline`}>Start Test →</span>
+                                    <span className={`${section.footerColor} font-extrabold group-hover:underline`}>
+                                      {hasPlacementAccess ? "Start Test →" : "Unlock with PRO →"}
+                                    </span>
                                   </div>
                                 </div>
                               ))}
@@ -1335,7 +1341,10 @@ export default function PlacementPrepModal({
               {!quizFinished && (
                 <>
                   {/* Mode A: Single Question Interactive View */}
-                  {practiceViewMode === "card" && currentQ && (
+                  {practiceViewMode === "card" && currentQ && (() => {
+                    const isCurrentLocked = !hasPlacementAccess && currentIndex >= 3;
+
+                    return (
                     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                       {/* Left Main Question Column */}
                       <div className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col justify-between space-y-6 bg-[#f4f6f3] dark:bg-black">
@@ -1343,7 +1352,15 @@ export default function PlacementPrepModal({
                           {/* Top Practice Progress Bar & Stopwatch */}
                           <div className="space-y-2.5 mb-6">
                             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-slate-700 dark:text-neutral-300">
-                              <span>Question {currentIndex + 1} of {totalQuestions}</span>
+                              <div className="flex items-center gap-2">
+                                <span>Question {currentIndex + 1} of {totalQuestions}</span>
+                                {!hasPlacementAccess && (
+                                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-1 shadow-2xs">
+                                    <Sparkles className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                    3 Free Questions
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 sm:gap-3">
                                 <span className="flex items-center gap-1.5 text-amber-900 bg-amber-100/90 dark:bg-amber-950/40 dark:text-amber-300 px-3 py-1 rounded-full border border-amber-300/80 dark:border-amber-800/60 font-black text-[11px] sm:text-xs shadow-2xs">
                                   <Clock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
@@ -1373,12 +1390,15 @@ export default function PlacementPrepModal({
                                 <span>All ({totalQuestions})</span>
                               </button>
                               {questionsList.map((q, idx) => {
+                                const isLocked = !hasPlacementAccess && idx >= 3;
                                 const hasAns = userAnswers[q.id] !== undefined;
                                 const isCorr = revealedSolutions[q.id]?.isCorrect;
                                 const isCur = idx === currentIndex;
 
-                                let chipStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold";
-                                if (hasAns) {
+                                let chipStyle = isLocked
+                                  ? "bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300/60 dark:border-amber-800/50 font-bold"
+                                  : "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold";
+                                if (!isLocked && hasAns) {
                                   chipStyle = isCorr ? "bg-emerald-500 text-white border-emerald-600 font-black" : "bg-rose-500 text-white border-rose-600 font-black";
                                 }
 
@@ -1387,169 +1407,231 @@ export default function PlacementPrepModal({
                                     key={q.id}
                                     onClick={() => setCurrentIndex(idx)}
                                     className={`w-8 h-8 rounded-xl text-xs border shrink-0 transition-all flex items-center justify-center cursor-pointer ${chipStyle} ${
-                                      isCur ? "ring-2 ring-indigo-600 ring-offset-1 scale-105" : ""
+                                      isCur ? (isLocked ? "ring-2 ring-amber-500 ring-offset-1 scale-105" : "ring-2 ring-indigo-600 ring-offset-1 scale-105") : ""
                                     }`}
+                                    title={isLocked ? `Question ${q.id} (PRO Locked)` : `Question ${q.id}`}
                                   >
-                                    {q.id}
+                                    {isLocked ? <Lock className="w-3 h-3 text-amber-600 dark:text-amber-400" /> : q.id}
                                   </button>
                                 );
                               })}
                             </div>
                           </div>
 
-                          {/* Question Text Box */}
-                          <div className="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-neutral-800 mb-6 bg-white dark:bg-[#18191F] shadow-md relative">
-                            <div className="absolute -top-3.5 left-6 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white tracking-wider uppercase shadow-xs">
-                              Practice Problem #{currentIndex + 1}
-                            </div>
-                            <h3 className="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white leading-relaxed pt-2">
-                              {currentQ.question}
-                            </h3>
-                          </div>
-
-                          {/* Options Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
-                            {currentQ.options.map((opt, optIdx) => {
-                              const hasAnswered = userAnswers[currentQ.id] !== undefined;
-                              const solutionData = revealedSolutions[currentQ.id];
-                              const isSelected = userAnswers[currentQ.id] === optIdx;
-                              const isCorrect = solutionData ? optIdx === solutionData.correctIndex : false;
-
-                              let optionStyles = "bg-white dark:bg-[#18191F] border-slate-200/90 dark:border-neutral-800 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] text-slate-900 dark:text-white font-extrabold shadow-2xs hover:shadow-md cursor-pointer";
-                              if (hasAnswered) {
-                                if (solutionData) {
-                                  if (isSelected && solutionData.isCorrect) {
-                                    optionStyles = "bg-emerald-500 border-emerald-600 text-white font-black shadow-md cursor-not-allowed";
-                                  } else if (isSelected && !solutionData.isCorrect) {
-                                    optionStyles = "bg-rose-500 border-rose-600 text-white font-black shadow-md cursor-not-allowed";
-                                  } else if (!isSelected && optIdx === solutionData.correctIndex) {
-                                    optionStyles = "bg-emerald-500/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold cursor-not-allowed";
-                                  } else {
-                                    optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
-                                  }
-                                } else {
-                                  if (isSelected) {
-                                    optionStyles = "bg-indigo-500/20 border-indigo-500 text-indigo-800 dark:text-indigo-300 font-bold animate-pulse cursor-not-allowed";
-                                  } else {
-                                    optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
-                                  }
-                                }
-                              }
-
-                              return (
-                                <button
-                                  key={optIdx}
-                                  disabled={hasAnswered}
-                                  onClick={() => handleSelectOption(currentQ.id, optIdx)}
-                                  className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between text-xs sm:text-sm ${optionStyles}`}
-                                >
-                                  <span>{opt}</span>
-                                  {hasAnswered && isSelected && solutionData?.isCorrect && (
-                                    <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
-                                  )}
-                                  {hasAnswered && isSelected && solutionData && !solutionData.isCorrect && (
-                                    <XCircle className="w-5 h-5 text-white shrink-0" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Action Bar when Answered: Feedback & Retry Button */}
-                          {userAnswers[currentQ.id] !== undefined && (
-                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm mb-6">
-                              <div className="flex items-center gap-2 text-xs sm:text-sm font-black">
-                                {revealedSolutions[currentQ.id] ? (
-                                  revealedSolutions[currentQ.id].isCorrect ? (
-                                    <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Correct Answer! Great Job 🎉
-                                    </span>
-                                  ) : (
-                                    <span className="text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                                      <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Incorrect Answer!
-                                    </span>
-                                  )
-                                ) : (
-                                  <span className="text-slate-600 dark:text-neutral-400 flex items-center gap-1.5">
-                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" /> Verifying answer with server...
-                                  </span>
-                                )}
+                          {/* In-Flow Content: Locked Teaser Card vs Unlocked Question Box & Options */}
+                          {isCurrentLocked ? (
+                            <div className="p-8 sm:p-10 rounded-3xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 via-purple-500/5 to-white dark:to-[#18191F] text-center space-y-6 shadow-md mb-6">
+                              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center mx-auto shadow-md">
+                                <Lock className="w-8 h-8" />
+                              </div>
+                              <div className="space-y-2 max-w-lg mx-auto">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-500/30">
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                  <span>3 of {totalQuestions} Questions Unlocked (Sample)</span>
+                                </div>
+                                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                  Practice Question #{currentIndex + 1} is a PRO Feature
+                                </h3>
+                                <p className="text-xs sm:text-sm text-slate-600 dark:text-neutral-300 font-medium leading-relaxed">
+                                  You have completed your free preview of <strong>{selectedTopic}</strong>! Upgrade to SkillsCatalyst PRO to unlock the remaining {Math.max(0, totalQuestions - 3)} questions, step-by-step solutions, formulas, and timed company mock tests.
+                                </p>
                               </div>
 
-                              <button
-                                onClick={() => handleRetryQuestion(currentQ.id)}
-                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/25 cursor-pointer"
-                              >
-                                <RefreshCw className="w-3.5 h-3.5" />
-                                <span>Retry Question 🔄</span>
-                              </button>
-                            </div>
-                          )}
-
-                          {/* Two Solution Steps: Step 1 (Show Correct Option) & Step 2 (Show Step-by-Step Solution) */}
-                          {userAnswers[currentQ.id] !== undefined && revealedSolutions[currentQ.id] && (
-                            <div className="space-y-3">
-                              <div className="flex flex-wrap items-center gap-3">
-                                {/* Step 1 Toggle */}
-                                <button
-                                  onClick={() => toggleCorrectOption(currentQ.id)}
-                                  className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-950/60 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
-                                >
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                  <span>
-                                    {showCorrectOptionMap[currentQ.id] ? "Hide Correct Option" : "Step 1: Show Correct Option 🎯"}
-                                  </span>
-                                </button>
-
-                                {/* Step 2 Toggle */}
-                                <button
-                                  onClick={() => toggleSolution(currentQ.id)}
-                                  className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-950/60 text-xs font-extrabold text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
-                                >
-                                  <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                  <span>
-                                    {showSolutionMap[currentQ.id] ? "Hide Solution" : "Step 2: Show Step-by-Step Solution 💡"}
-                                  </span>
-                                </button>
+                              {/* Value Highlights Grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto text-left">
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span>All {totalQuestions} topic practice questions</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span>Detailed step-by-step solutions & formulas</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span>Timed company mock tests (TCS, Infosys, etc.)</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span>AI Mentor personalized weakness analysis</span>
+                                </div>
                               </div>
 
-                              {/* Display Step 1: Correct Option Card */}
-                              <AnimatePresence>
-                                {showCorrectOptionMap[currentQ.id] && (
-                                  <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 font-extrabold flex items-center gap-2 shadow-2xs"
-                                  >
-                                    <span>🎯 Correct Option:</span>
-                                    <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg border border-emerald-700 font-black">
-                                      {revealedSolutions[currentQ.id]?.correctIndex !== undefined ? currentQ.options[revealedSolutions[currentQ.id].correctIndex!] : ""}
-                                    </span>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                              {/* Action Buttons */}
+                              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={openPricingModal}
+                                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-slate-950 font-black text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                  <Lock className="w-4 h-4" />
+                                  <span>Upgrade to PRO — Instant Access</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCurrentIndex(0)}
+                                  className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white dark:bg-[#121318] hover:bg-slate-100 dark:hover:bg-[#20222A] text-slate-800 dark:text-white border border-slate-200 dark:border-neutral-700 font-extrabold text-sm transition-all cursor-pointer shadow-xs"
+                                >
+                                  <span>Review Free Questions (1–3)</span>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {/* Question Text Box */}
+                              <div className="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-neutral-800 mb-6 bg-white dark:bg-[#18191F] shadow-md relative">
+                                <div className="absolute -top-3.5 left-6 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white tracking-wider uppercase shadow-xs">
+                                  Practice Problem #{currentIndex + 1}
+                                </div>
+                                <h3 className="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white leading-relaxed pt-2">
+                                  {currentQ.question}
+                                </h3>
+                              </div>
 
-                              {/* Display Step 2: Step-by-Step Solution Card */}
-                              <AnimatePresence>
-                                {showSolutionMap[currentQ.id] && (
-                                  <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="p-5 rounded-3xl bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-white space-y-2 overflow-hidden shadow-md"
+                              {/* Options Grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
+                                {currentQ.options.map((opt, optIdx) => {
+                                  const hasAnswered = userAnswers[currentQ.id] !== undefined;
+                                  const solutionData = revealedSolutions[currentQ.id];
+                                  const isSelected = userAnswers[currentQ.id] === optIdx;
+
+                                  let optionStyles = "bg-white dark:bg-[#18191F] border-slate-200/90 dark:border-neutral-800 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-[#20222A] text-slate-900 dark:text-white font-extrabold shadow-2xs hover:shadow-md cursor-pointer";
+                                  if (hasAnswered) {
+                                    if (solutionData) {
+                                      if (isSelected && solutionData.isCorrect) {
+                                        optionStyles = "bg-emerald-500 border-emerald-600 text-white font-black shadow-md cursor-not-allowed";
+                                      } else if (isSelected && !solutionData.isCorrect) {
+                                        optionStyles = "bg-rose-500 border-rose-600 text-white font-black shadow-md cursor-not-allowed";
+                                      } else if (!isSelected && optIdx === solutionData.correctIndex) {
+                                        optionStyles = "bg-emerald-500/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold cursor-not-allowed";
+                                      } else {
+                                        optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
+                                      }
+                                    } else {
+                                      if (isSelected) {
+                                        optionStyles = "bg-indigo-500/20 border-indigo-500 text-indigo-800 dark:text-indigo-300 font-bold animate-pulse cursor-not-allowed";
+                                      } else {
+                                        optionStyles = "bg-slate-100/90 dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-400 dark:text-neutral-500 font-semibold cursor-not-allowed opacity-50";
+                                      }
+                                    }
+                                  }
+
+                                  return (
+                                    <button
+                                      key={optIdx}
+                                      disabled={hasAnswered}
+                                      onClick={() => handleSelectOption(currentQ.id, optIdx)}
+                                      className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between text-xs sm:text-sm ${optionStyles}`}
+                                    >
+                                      <span>{opt}</span>
+                                      {hasAnswered && isSelected && solutionData?.isCorrect && (
+                                        <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+                                      )}
+                                      {hasAnswered && isSelected && solutionData && !solutionData.isCorrect && (
+                                        <XCircle className="w-5 h-5 text-white shrink-0" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Action Bar when Answered: Feedback & Retry Button */}
+                              {userAnswers[currentQ.id] !== undefined && (
+                                <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm mb-6">
+                                  <div className="flex items-center gap-2 text-xs sm:text-sm font-black">
+                                    {revealedSolutions[currentQ.id] ? (
+                                      revealedSolutions[currentQ.id].isCorrect ? (
+                                        <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Correct Answer! Great Job 🎉
+                                        </span>
+                                      ) : (
+                                        <span className="text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                                          <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" /> Incorrect Answer!
+                                        </span>
+                                      )
+                                    ) : (
+                                      <span className="text-slate-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" /> Verifying answer with server...
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleRetryQuestion(currentQ.id)}
+                                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/25 cursor-pointer"
                                   >
-                                    <div className="font-black text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    <span>Retry Question 🔄</span>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Two Solution Steps: Step 1 (Show Correct Option) & Step 2 (Show Step-by-Step Solution) */}
+                              {userAnswers[currentQ.id] !== undefined && revealedSolutions[currentQ.id] && (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    {/* Step 1 Toggle */}
+                                    <button
+                                      onClick={() => toggleCorrectOption(currentQ.id)}
+                                      className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-950/60 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                      <span>
+                                        {showCorrectOptionMap[currentQ.id] ? "Hide Correct Option" : "Step 1: Show Correct Option 🎯"}
+                                      </span>
+                                    </button>
+
+                                    {/* Step 2 Toggle */}
+                                    <button
+                                      onClick={() => toggleSolution(currentQ.id)}
+                                      className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-950/60 text-xs font-extrabold text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60 flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                                    >
                                       <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                      <span>💡 Step-by-Step Solution:</span>
-                                    </div>
-                                    <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1">
-                                      {revealedSolutions[currentQ.id]?.solution || "No detailed solution recorded."}
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
+                                      <span>
+                                        {showSolutionMap[currentQ.id] ? "Hide Solution" : "Step 2: Show Step-by-Step Solution 💡"}
+                                      </span>
+                                    </button>
+                                  </div>
+
+                                  {/* Display Step 1: Correct Option Card */}
+                                  <AnimatePresence>
+                                    {showCorrectOptionMap[currentQ.id] && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 font-extrabold flex items-center gap-2 shadow-2xs"
+                                      >
+                                        <span>🎯 Correct Option:</span>
+                                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg border border-emerald-700 font-black">
+                                          {revealedSolutions[currentQ.id]?.correctIndex !== undefined ? currentQ.options[revealedSolutions[currentQ.id].correctIndex!] : ""}
+                                        </span>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+
+                                  {/* Display Step 2: Step-by-Step Solution Card */}
+                                  <AnimatePresence>
+                                    {showSolutionMap[currentQ.id] && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="p-5 rounded-3xl bg-white dark:bg-[#18191F] border border-purple-200/90 dark:border-neutral-800 text-xs leading-relaxed text-slate-800 dark:text-white space-y-2 overflow-hidden shadow-md"
+                                      >
+                                        <div className="font-black text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                                          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                          <span>💡 Step-by-Step Solution:</span>
+                                        </div>
+                                        <div className="whitespace-pre-line text-slate-700 dark:text-neutral-300 font-semibold pt-1">
+                                          {revealedSolutions[currentQ.id]?.solution || "No detailed solution recorded."}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
 
@@ -1597,12 +1679,15 @@ export default function PlacementPrepModal({
                           {/* Question Grid Numbers */}
                           <div className="grid grid-cols-4 gap-2">
                             {questionsList.map((q, idx) => {
+                              const isLocked = !hasPlacementAccess && idx >= 3;
                               const hasAns = userAnswers[q.id] !== undefined;
                               const isCorr = revealedSolutions[q.id]?.isCorrect;
                               const isCur = idx === currentIndex;
 
-                              let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
-                              if (hasAns) {
+                              let gridStyle = isLocked
+                                ? "bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300/60 dark:border-amber-800/50 font-bold hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                                : "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200/90 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
+                              if (!isLocked && hasAns) {
                                 gridStyle = isCorr
                                   ? "bg-emerald-500 text-white border-emerald-600 font-black shadow-2xs"
                                   : "bg-rose-500 text-white border-rose-600 font-black shadow-2xs";
@@ -1613,10 +1698,18 @@ export default function PlacementPrepModal({
                                   key={q.id}
                                   onClick={() => setCurrentIndex(idx)}
                                   className={`h-9 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer ${gridStyle} ${
-                                    isCur ? "ring-2 ring-indigo-600 ring-offset-1 scale-105" : ""
+                                    isCur ? (isLocked ? "ring-2 ring-amber-500 ring-offset-1 scale-105" : "ring-2 ring-indigo-600 ring-offset-1 scale-105") : ""
                                   }`}
+                                  title={isLocked ? `Question ${q.id} (PRO Locked)` : `Question ${q.id}`}
                                 >
-                                  {q.id}
+                                  {isLocked ? (
+                                    <span className="flex items-center gap-1">
+                                      <span>{q.id}</span>
+                                      <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                    </span>
+                                  ) : (
+                                    q.id
+                                  )}
                                 </button>
                               );
                             })}
@@ -1666,12 +1759,15 @@ export default function PlacementPrepModal({
 
                               <div className="grid grid-cols-6 gap-2 mb-6">
                                 {questionsList.map((q, idx) => {
+                                  const isLocked = !hasPlacementAccess && idx >= 3;
                                   const hasAns = userAnswers[q.id] !== undefined;
                                   const isCorr = revealedSolutions[q.id]?.isCorrect;
                                   const isCur = idx === currentIndex;
 
-                                  let gridStyle = "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
-                                  if (hasAns) {
+                                  let gridStyle = isLocked
+                                    ? "bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300/60 dark:border-amber-800/50 font-bold hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                                    : "bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-800 font-extrabold hover:bg-slate-200 dark:hover:bg-[#20222A]";
+                                  if (!isLocked && hasAns) {
                                     gridStyle = isCorr
                                       ? "bg-emerald-500 text-white border-emerald-600 font-black shadow-xs"
                                       : "bg-rose-500 text-white border-rose-600 font-black shadow-xs";
@@ -1685,10 +1781,18 @@ export default function PlacementPrepModal({
                                         setMobileGridOpen(false);
                                       }}
                                       className={`h-10 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer ${gridStyle} ${
-                                        isCur ? "ring-2 ring-indigo-600 ring-offset-1 scale-105" : ""
+                                        isCur ? (isLocked ? "ring-2 ring-amber-500 ring-offset-1 scale-105" : "ring-2 ring-indigo-600 ring-offset-1 scale-105") : ""
                                       }`}
+                                      title={isLocked ? `Question ${q.id} (PRO Locked)` : `Question ${q.id}`}
                                     >
-                                      {q.id}
+                                      {isLocked ? (
+                                        <span className="flex items-center gap-1">
+                                          <span>{q.id}</span>
+                                          <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                        </span>
+                                      ) : (
+                                        q.id
+                                      )}
                                     </button>
                                   );
                                 })}
@@ -1708,7 +1812,8 @@ export default function PlacementPrepModal({
                         )}
                       </AnimatePresence>
                     </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Mode B: Full Practice Sheet (Scrollable List of All Questions) */}
                   {practiceViewMode === "sheet" && (
@@ -1735,9 +1840,45 @@ export default function PlacementPrepModal({
 
                       <div className="space-y-6">
                         {questionsList.map((q, idx) => {
+                          const isLocked = !hasPlacementAccess && idx >= 3;
                           const userAnsIdx = userAnswers[q.id];
                           const isCorrect = revealedSolutions[q.id]?.isCorrect ?? false;
                           const hasAnswered = userAnsIdx !== undefined;
+
+                          if (isLocked) {
+                            return (
+                              <div
+                                key={q.id}
+                                className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-amber-50/70 via-purple-50/30 to-white dark:from-[#18191F] dark:to-[#121318] border border-amber-300/70 dark:border-amber-800/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
+                              >
+                                <div className="space-y-1.5 max-w-xl">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-3 py-1 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 text-xs font-black border border-purple-200/80 dark:border-purple-800 shadow-2xs">
+                                      Problem #{idx + 1}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-300/80 dark:border-amber-700/80">
+                                      <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
+                                      PRO Locked
+                                    </span>
+                                  </div>
+                                  <h4 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-neutral-200">
+                                    {q.question}
+                                  </h4>
+                                  <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">
+                                    Options, real-time verification, and full step-by-step solutions are available with SkillsCatalyst PRO.
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={openPricingModal}
+                                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-slate-950 font-black text-xs shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 shrink-0"
+                                >
+                                  <Lock className="w-3.5 h-3.5" />
+                                  <span>Unlock with PRO</span>
+                                </button>
+                              </div>
+                            );
+                          }
 
                           return (
                             <div key={q.id} className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all space-y-4">
@@ -1947,7 +2088,6 @@ export default function PlacementPrepModal({
             </div>
           )}
             </>
-          )}
         </motion.div>
       </div>
     </AnimatePresence>

@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Building2, Loader2, Filter, Plus } from "lucide-react";
+import { Building2, Loader2, Filter, Plus, Sparkles, Lock, ArrowRight } from "lucide-react";
 import { PracticeQuestion } from "@/lib/api";
 import { formatCompanyName } from "@/lib/practice/practiceHelpers";
 import { QuestionRow } from "./QuestionRow";
+import { usePricingModal } from "@/contexts/PricingModalContext";
 
 interface QuestionListTableProps {
   company: string;
@@ -39,6 +40,10 @@ export function QuestionListTable({
   onToggleSolved,
   onLoadMore,
 }: QuestionListTableProps) {
+  const { openPricingModal } = usePricingModal();
+  const hasLockedQuestions = filteredQuestions.some((q) => q.is_locked);
+  const unlockedCount = filteredQuestions.filter((q) => !q.is_locked).length;
+
   return (
     <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-6 border border-slate-100 dark:border-neutral-800 shadow-xs space-y-4">
       {/* Table Header */}
@@ -65,12 +70,51 @@ export function QuestionListTable({
             </div>
           ) : (
             <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700">
-              Showing <strong className="text-slate-900 dark:text-white">{filteredQuestions.length}</strong> of{" "}
-              <strong className="text-purple-600 dark:text-[#C084FC]">{totalCount}</strong> questions
+              {hasLockedQuestions ? (
+                <>
+                  <strong className="text-amber-600 dark:text-amber-400 font-black">{unlockedCount} Unlocked</strong> of{" "}
+                  <strong className="text-slate-900 dark:text-white">{totalCount}</strong> questions
+                </>
+              ) : (
+                <>
+                  Showing <strong className="text-slate-900 dark:text-white">{filteredQuestions.length}</strong> of{" "}
+                  <strong className="text-purple-600 dark:text-[#C084FC]">{totalCount}</strong> questions
+                </>
+              )}
             </span>
           )}
         </div>
       </div>
+
+      {/* Freemium Teaser Hook Banner */}
+      {!loadingQuestions && hasLockedQuestions && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-900/10 via-amber-500/10 to-indigo-900/10 border border-amber-500/30 dark:border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Free Preview: First 3 Questions Unlocked</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                  Sample + Lock
+                </span>
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium mt-0.5">
+                Solve the first 3 questions free! Upgrade to PRO to unlock the remaining {Math.max(0, totalCount - unlockedCount)} questions, verified LeetCode links, and frequency filters.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={openPricingModal}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs transition-all shadow-md hover:shadow-lg active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Unlock All {totalCount} Questions</span>
+          </button>
+        </div>
+      )}
 
       {/* Questions Table Body */}
       {loadingQuestions ? (
@@ -105,6 +149,31 @@ export function QuestionListTable({
               />
             );
           })}
+        </div>
+      )}
+
+      {/* Bottom Freemium Teaser Card */}
+      {!loadingQuestions && hasLockedQuestions && filteredQuestions.length > 0 && (
+        <div className="mt-4 p-5 rounded-2xl border border-dashed border-amber-500/40 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-950/20 text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-slate-900 dark:text-white">
+              Unlock the Remaining {Math.max(0, totalCount - unlockedCount)} Questions for {formatCompanyName(company)}
+            </h4>
+            <p className="text-xs text-slate-600 dark:text-neutral-400 max-w-md mx-auto font-medium mt-1">
+              Join thousands of successful candidates cracking technical interviews. Get complete question sets, frequency breakdowns, and verified solutions with SkillsCatalyst PRO.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openPricingModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-extrabold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <span>Upgrade to PRO Now</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

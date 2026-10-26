@@ -7,6 +7,7 @@ export interface PracticeQuestion {
   difficulty: "Easy" | "Medium" | "Hard" | string;
   acceptance: string;
   frequency: string;
+  is_locked?: boolean;
 }
 
 export interface CompanyQuestionsResult {
@@ -15,6 +16,8 @@ export interface CompanyQuestionsResult {
   total: number;
   offset: number;
   limit: number;
+  is_premium?: boolean;
+  free_preview_limit?: number;
   questions: PracticeQuestion[];
 }
 

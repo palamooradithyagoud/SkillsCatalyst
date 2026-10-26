@@ -203,10 +203,10 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
             self.assertEqual(save_resp.status_code, 200)
 
     # =========================================================================
-    # SCENARIO 4: Free User - Company Questions Blocked (403 PREMIUM_REQUIRED)
+    # SCENARIO 4: Free User - Company Questions Freemium Teaser (200 OK + Locked 4+)
     # =========================================================================
-    def test_04_free_company_interview_questions_blocked_403(self):
-        """Free user requesting interview questions receives 403 PREMIUM_REQUIRED."""
+    def test_04_free_company_interview_questions_freemium_teaser(self):
+        """Free user requesting interview questions receives 200 OK with first 3 unlocked and 4+ locked."""
         with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None):
 
@@ -218,17 +218,29 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
                 "/api/practice/questions/google",
                 headers={"Authorization": "Bearer free-token"},
             )
-            self.assertEqual(resp.status_code, 403)
-            data = resp.json()["detail"]
-            self.assertEqual(data["code"], "PREMIUM_REQUIRED")
-            self.assertEqual(data["feature"], "company_interview_questions")
-            self.assertIn("Premium subscription required", data["message"])
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertEqual(data["company"], "google")
+            self.assertFalse(data.get("is_premium"))
+            self.assertEqual(data.get("free_preview_limit"), 3)
+            questions = data.get("questions", [])
+            self.assertGreater(len(questions), 3)
+
+            # First 3 questions are unlocked with valid LeetCode URLs
+            for q in questions[:3]:
+                self.assertFalse(q.get("is_locked"))
+                self.assertTrue(q.get("url"))
+
+            # Questions 4+ are locked with redacted URLs to prevent data leakage
+            for q in questions[3:]:
+                self.assertTrue(q.get("is_locked"))
+                self.assertEqual(q.get("url"), "")
 
     # =========================================================================
-    # SCENARIO 5: Free User - Placement Prep Aptitude Topic Blocked (403)
+    # SCENARIO 5: Free User - Placement Prep Aptitude Topic Freemium Preview (200 OK)
     # =========================================================================
-    def test_05_free_placement_prep_aptitude_topic_blocked_403(self):
-        """Free user requesting placement prep aptitude questions receives 403 PREMIUM_REQUIRED."""
+    def test_05_free_placement_prep_aptitude_topic_freemium_preview(self):
+        """Free user requesting placement prep aptitude questions receives 200 OK with preview metadata."""
         with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None):
 
@@ -240,10 +252,27 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
                 "/api/practice/aptitude/percentages",
                 headers={"Authorization": "Bearer free-token"},
             )
-            self.assertEqual(resp.status_code, 403)
-            data = resp.json()["detail"]
-            self.assertEqual(data["code"], "PREMIUM_REQUIRED")
-            self.assertEqual(data["feature"], "placement_prep")
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertEqual(data["topic"], "Percentages")
+            self.assertEqual(data.get("free_preview_limit"), 3)
+            self.assertGreater(data.get("total", 0), 0)
+
+            # Submitting attempt for a free preview question (question_id <= 3) succeeds (200 OK)
+            preview_attempt = {
+                "topic_id": 1,
+                "question_id": 2,
+                "selected_option_index": 1,
+                "is_correct": True,
+                "time_taken_seconds": 20,
+            }
+            att_resp = client.post(
+                "/api/practice/aptitude/attempt",
+                json=preview_attempt,
+                headers={"Authorization": "Bearer free-token"},
+            )
+            self.assertEqual(att_resp.status_code, 200)
+            self.assertEqual(att_resp.json()["status"], "success")
 
     # =========================================================================
     # SCENARIO 6: Free User - Placement Prep Aptitude Attempt Blocked (403)
@@ -712,19 +741,37 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
             self.assertEqual(me_data["plan"], "free")
             self.assertFalse(me_data["is_premium"])
 
-            # Practice company questions are immediately blocked
+            # Practice company questions immediately revert to freemium teaser preview (locked past 3, url redacted)
             prac_resp = client.get(
                 "/api/practice/questions/google",
                 headers={"Authorization": "Bearer token"},
             )
-            self.assertEqual(prac_resp.status_code, 403)
-            self.assertEqual(prac_resp.json()["detail"]["code"], "PREMIUM_REQUIRED")
+            self.assertEqual(prac_resp.status_code, 200)
+            self.assertFalse(prac_resp.json().get("is_premium"))
+            self.assertEqual(prac_resp.json().get("free_preview_limit"), 3)
+            self.assertTrue(prac_resp.json()["questions"][3].get("is_locked"))
+            self.assertEqual(prac_resp.json()["questions"][3].get("url"), "")
+
+            # Placement prep attempt past preview limit (question_id > 3) is blocked with 403
+            att_resp = client.post(
+                "/api/practice/aptitude/attempt",
+                json={
+                    "topic_id": 1,
+                    "question_id": 50,
+                    "selected_option_index": 2,
+                    "is_correct": True,
+                    "time_taken_seconds": 15,
+                },
+                headers={"Authorization": "Bearer token"},
+            )
+            self.assertEqual(att_resp.status_code, 403)
+            self.assertEqual(att_resp.json()["detail"]["code"], "PREMIUM_REQUIRED")
 
     # =========================================================================
     # SCENARIO 20: Tamper Resistance & Content Leakage Prevention
     # =========================================================================
     def test_20_tamper_resistance_and_zero_content_leakage(self):
-        """Client-supplied spoof headers are ignored; 403 errors leak no protected data."""
+        """Client-supplied spoof headers are ignored; locked resources leak zero URLs or protected attempts."""
         with patch("backend.services.auth_service.get_supabase") as mock_auth_sb, \
              patch.object(SubscriptionService, "get_user_subscription_record", return_value=None):
 
@@ -740,14 +787,30 @@ class TestEntitlementEnforcementPhase3(unittest.TestCase):
                 "x-user-role": "admin",
                 "role": "premium",
             }
+            # Company questions route verifies real subscription, returns freemium preview
             resp = client.get("/api/practice/questions/google", headers=tamper_headers)
-            self.assertEqual(resp.status_code, 403)
+            self.assertEqual(resp.status_code, 200)
+            data = resp.json()
+            self.assertFalse(data.get("is_premium"))
+            self.assertEqual(data.get("free_preview_limit"), 3)
+            # Question 4+ external URL is strictly redacted — zero leakage of protected resources
+            self.assertTrue(data["questions"][3].get("is_locked"))
+            self.assertEqual(data["questions"][3].get("url"), "")
 
-            err = resp.json()["detail"]
-            self.assertEqual(err["code"], "PREMIUM_REQUIRED")
-            self.assertNotIn("questions", resp.json())
-            self.assertNotIn("leetcode", resp.text.lower())
-            self.assertNotIn("acceptance", resp.text.lower())
+            # Attempting question > 3 with forged headers still fails with 403 PREMIUM_REQUIRED
+            att_resp = client.post(
+                "/api/practice/aptitude/attempt",
+                json={
+                    "topic_id": 1,
+                    "question_id": 10,
+                    "selected_option_index": 0,
+                    "is_correct": True,
+                    "time_taken_seconds": 12,
+                },
+                headers=tamper_headers,
+            )
+            self.assertEqual(att_resp.status_code, 403)
+            self.assertEqual(att_resp.json()["detail"]["code"], "PREMIUM_REQUIRED")
 
     # =========================================================================
     # SCENARIO 21: Alternate Route Bypass Blocked (sync_saved_playlists)
