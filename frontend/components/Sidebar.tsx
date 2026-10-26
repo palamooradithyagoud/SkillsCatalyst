@@ -216,7 +216,7 @@ export default function Sidebar() {
         className={`group relative flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors select-none ${
           isActive
             ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
-            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#B8A1E3] dark:hover:bg-[#3B1F5A] hover:text-slate-950 dark:hover:text-white active:bg-[#ECEEF2] dark:active:bg-neutral-900"
+            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#7C3AED] dark:hover:bg-[#7C3AED] hover:text-white dark:hover:text-white active:bg-[#ECEEF2] dark:active:bg-neutral-900"
         }`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
@@ -229,7 +229,7 @@ export default function Sidebar() {
             className={`w-[18px] h-[18px] shrink-0 transition-colors ${
               isActive
                 ? "text-slate-900 dark:text-white"
-                : "text-slate-800 dark:text-neutral-400 group-hover:text-slate-900 dark:group-hover:text-white"
+                : "text-slate-800 dark:text-neutral-400 group-hover:text-white dark:group-hover:text-white"
             }`}
             strokeWidth={isActive ? 2 : 1.8}
           />
@@ -239,10 +239,10 @@ export default function Sidebar() {
 
         {item.badge && (
           <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider ${
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider transition-colors ${
               item.badge === "AI"
                 ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
-                : "bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300"
+                : "bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 group-hover:bg-white/20 group-hover:text-white"
             }`}
           >
             {item.badge}
