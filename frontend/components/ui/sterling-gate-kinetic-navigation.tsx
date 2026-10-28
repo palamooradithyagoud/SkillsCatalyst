@@ -660,9 +660,7 @@ export function Component({
                   <span className="text-xs font-semibold text-slate-700 dark:text-purple-200">
                     Theme Mode
                   </span>
-                  <div style={{ transform: "scale(0.72)", transformOrigin: "right center" }}>
-                    <ThemeSwitch />
-                  </div>
+                  <ThemeSwitch size={32} />
                 </div>
               </div>
 
