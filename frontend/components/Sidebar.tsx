@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Film,
@@ -22,6 +23,7 @@ import {
   ListTodo,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export type NavItemData = {
   id: string;
@@ -42,6 +44,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { session, isLoading, logout } = useAuth();
 
+  const [open, setOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -207,13 +210,14 @@ export default function Sidebar() {
       <Link
         key={item.id}
         href={item.href}
+        title={!open ? item.title : undefined}
         onClick={(e) => {
           if (item.onClick) {
             e.preventDefault();
             item.onClick();
           }
         }}
-        className={`group relative flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors select-none ${
+        className={`group relative flex items-center justify-between px-[21px] py-2.5 text-[14px] transition-colors select-none ${
           isActive
             ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
             : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#7C3AED] dark:hover:bg-[#7C3AED] hover:text-white dark:hover:text-white active:bg-[#ECEEF2] dark:active:bg-neutral-900"
@@ -234,11 +238,25 @@ export default function Sidebar() {
             strokeWidth={isActive ? 2 : 1.8}
           />
 
-          <span className="truncate tracking-[-0.01em]">{item.title}</span>
+          <motion.span
+            animate={{
+              display: open ? "inline-block" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.15 }}
+            className="truncate tracking-[-0.01em] whitespace-nowrap"
+          >
+            {item.title}
+          </motion.span>
         </div>
 
         {item.badge && (
-          <span
+          <motion.span
+            animate={{
+              display: open ? "inline-block" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.15 }}
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider transition-colors ${
               item.badge === "AI"
                 ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
@@ -246,32 +264,47 @@ export default function Sidebar() {
             }`}
           >
             {item.badge}
-          </span>
+          </motion.span>
         )}
       </Link>
     );
   };
 
   return (
-    <>
-      <aside
-        className="hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 w-[240px] bg-white dark:bg-black border-r border-slate-200/90 dark:border-neutral-800 select-none"
+    <SidebarProvider open={open} setOpen={setOpen} animate={true}>
+      <motion.aside
+        className="hidden md:flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 z-30 shrink-0 bg-white dark:bg-black border-r border-slate-200/90 dark:border-neutral-800 select-none overflow-x-hidden"
+        animate={{
+          width: open ? "240px" : "60px",
+        }}
+        transition={{
+          duration: 0.25,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
       >
-
         {/* ── Scrollable Navigation Items List (no scrollbars visible) ── */}
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-1 flex flex-col">
-          {/* Main Top Items: Dashboard, SkillBits, Learning, Roadmaps, Practice, Explore */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-1 flex flex-col">
+          {/* Main Top Items: Dashboard, To-Do List, SkillBits, Learning, Roadmaps, Practice, Explore */}
           <div className="flex flex-col">
             {mainItems.map((item) => renderNavItem(item))}
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-4 border-b border-slate-200 dark:border-neutral-800" />
+          <div className="my-2 mx-3 border-b border-slate-200 dark:border-neutral-800" />
 
-          {/* CAREER & TOOLS Section Header */}
-          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase">
+          {/* CAREER & INTELLIGENCE Section Header */}
+          <motion.div
+            animate={{
+              display: open ? "block" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.15 }}
+            className="px-[21px] pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase whitespace-nowrap"
+          >
             CAREER & INTELLIGENCE
-          </div>
+          </motion.div>
 
           {/* Career Items: Career Goals, AI Mentor, Analytics */}
           <div className="flex flex-col">
@@ -279,19 +312,26 @@ export default function Sidebar() {
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-4 border-b border-slate-200 dark:border-neutral-800" />
+          <div className="my-2 mx-3 border-b border-slate-200 dark:border-neutral-800" />
 
           {/* ACCOUNT Section Header */}
-          <div className="px-4 pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase">
+          <motion.div
+            animate={{
+              display: open ? "block" : "none",
+              opacity: open ? 1 : 0,
+            }}
+            transition={{ duration: 0.15 }}
+            className="px-[21px] pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase whitespace-nowrap"
+          >
             ACCOUNT
-          </div>
+          </motion.div>
 
           {/* Account Items: My Profile, Support Desk, Sign Out */}
           <div className="flex flex-col pb-3">
             {accountItems.map((item) => renderNavItem(item))}
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ── Quick Search Modal (Command + K) ── */}
       {isSearchOpen && (
@@ -360,6 +400,6 @@ export default function Sidebar() {
           </div>
         </div>
       )}
-    </>
+    </SidebarProvider>
   );
 }
