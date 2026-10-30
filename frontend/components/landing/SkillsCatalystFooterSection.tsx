@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 
 /**
  * Sticker Slap Footer — SkillsCatalyst Edition
@@ -8,6 +9,10 @@ import * as React from "react"
  * panel with three columns (explore paths, platform, contact), crisp white
  * typography, and a giant fat white script wordmark ("skillscatalyst") sinking
  * into the bottom edge with die-cut stickers slapped all over it.
+ *
+ * Extended downside with:
+ * - 5-Column Platform Directory (Image 1)
+ * - Sub-Footer Legal & Copyright Bar (Image 2)
  */
 
 // #region slap
@@ -187,6 +192,11 @@ export type Social = { kind: SocialKind; href: string; label?: string }
 export type Job = { title: string; href?: string }
 export type Credit = { role: string; name: string }
 
+export interface FeaturePillar {
+  title: string
+  links: { label: string; href: string }[]
+}
+
 export interface StickerSlapFooterProps {
   /** The giant script wordmark. Letters a–z, `!` and `.`; anything else is a space. */
   wordmark?: string
@@ -216,8 +226,6 @@ export interface StickerSlapFooterProps {
   stickers?: StickerSpec[]
   /** `[]` hides the credits pill. */
   credits?: Credit[]
-  /** Minimum height. Any definite CSS length. */
-  height?: string
   /** Caps the wordmark's height so short words don't get enormous. */
   wordmarkMaxHeight?: string
   /** The frame. */
@@ -277,6 +285,58 @@ const DEFAULT_SKILLSCATALYST_CREDITS: Credit[] = [
   { role: "stickers", name: "drawn in code, peel freely" },
 ]
 
+// ── 5-Column Extended Directory (Image 1) ──
+const DIRECTORY_PILLARS: FeaturePillar[] = [
+  {
+    title: "CAREER ROADMAPS",
+    links: [
+      { label: "Full-Stack Web Development", href: "/roadmaps" },
+      { label: "Python & Backend Engineering", href: "/roadmaps" },
+      { label: "AI, ML & Generative AI", href: "/roadmaps" },
+      { label: "Data Structures & Algorithms", href: "/roadmaps" },
+      { label: "Cloud & DevOps Architecture", href: "/roadmaps" },
+    ],
+  },
+  {
+    title: "LEARN & PRACTICE",
+    links: [
+      { label: "Daily SkillBits Microlearning", href: "/skillbits" },
+      { label: "DSA Problem Arena", href: "/practice" },
+      { label: "Interactive Code Sandbox", href: "/practice" },
+      { label: "Structured Learning Tracks", href: "/learning" },
+      { label: "Topic-wise Coding Challenges", href: "/practice" },
+    ],
+  },
+  {
+    title: "CAREER READINESS",
+    links: [
+      { label: "AI Mock Technical Interviews", href: "/ai-mentor" },
+      { label: "ATS Resume Reviewer & Score", href: "/resume-review" },
+      { label: "Placement Readiness Analytics", href: "/dashboard" },
+      { label: "Interview Question Bank", href: "/practice" },
+    ],
+  },
+  {
+    title: "OPPORTUNITIES",
+    links: [
+      { label: "Verified Scholarships Hub", href: "/scholarships" },
+      { label: "Student Tech News & Radar", href: "/tech-news" },
+      { label: "Upcoming Hackathon Alerts", href: "/scholarships" },
+      { label: "Skill Badges & Milestones", href: "/dashboard" },
+    ],
+  },
+  {
+    title: "TRUST & SUPPORT",
+    links: [
+      { label: "Plans & Student Pricing", href: "/pricing" },
+      { label: "Verify Certificates (/verify)", href: "/verify" },
+      { label: "Help & Student Support", href: "/support" },
+      { label: "Frequently Asked Questions", href: "/support" },
+      { label: "Official Support Desk", href: "mailto:support@skillscatalyst.in" },
+    ],
+  },
+]
+
 const LABELS: Record<StickerKind, string> = {
   burst: "Wow burst sticker",
   smiley: "Smiley sticker",
@@ -325,7 +385,7 @@ const ICONS: Record<SocialKind, React.ReactNode> = {
 }
 
 const CSS =
-  ".ssf{position:relative;isolation:isolate;overflow:hidden;overflow:clip;container-type:inline-size;display:flex;flex-direction:column;width:100%;box-sizing:border-box;padding:0 clamp(6px,.9cqw,12px) clamp(6px,.9cqw,12px);background:var(--ssf-paper);color:var(--ssf-ink);font-family:var(--ssf-sans);font-weight:500;-webkit-font-smoothing:antialiased}" +
+  ".ssf{position:relative;isolation:isolate;overflow:hidden;overflow:clip;container-type:inline-size;display:flex;flex-direction:column;width:100%;box-sizing:border-box;padding:0 clamp(6px,.9cqw,12px) clamp(16px,2cqw,28px);background:var(--ssf-paper);color:var(--ssf-ink);font-family:var(--ssf-sans);font-weight:500;-webkit-font-smoothing:antialiased}" +
   ":where(.ssf) *,:where(.ssf) *::before,:where(.ssf) *::after{box-sizing:border-box}" +
   ":where(.ssf) button{appearance:none;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer}" +
   ":where(.ssf) a{color:inherit;text-decoration:none}" +
@@ -347,7 +407,7 @@ const CSS =
   ".ssf-chat svg{width:24px;height:24px}" +
   ".ssf-chat:hover{transform:rotate(-14deg) scale(1.12)}" +
   // panel (dreamy lilac-lavender background, radiant white typography)
-  ".ssf-panel{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;overflow:hidden;overflow:clip;border-radius:clamp(14px,1.8cqw,24px);background:var(--ssf-panel);color:#ffffff;transform-origin:50% 100%}" +
+  ".ssf-panel{position:relative;z-index:1;min-height:clamp(520px,68svh,820px);display:flex;flex-direction:column;overflow:hidden;overflow:clip;border-radius:clamp(14px,1.8cqw,24px);background:var(--ssf-panel);color:#ffffff;transform-origin:50% 100%}" +
   ".ssf-cols{position:relative;z-index:2;display:grid;grid-template-columns:repeat(var(--ssf-n,3),minmax(0,1fr));gap:clamp(22px,3cqw,44px) clamp(16px,2.4cqw,36px);padding:clamp(26px,5.4cqw,72px) clamp(18px,1.8cqw,26px) clamp(20px,3cqw,40px)}" +
   ".ssf-col{display:flex;flex-direction:column;align-items:flex-start;min-width:0}" +
   ".ssf-tag{display:inline-block;margin-bottom:clamp(14px,1.6cqw,22px);padding:.32em .8em .36em;border-radius:999px;background:#ffffff;color:#1e0938;font-size:clamp(12px,1.05cqw,14px);font-weight:700;line-height:1.2;letter-spacing:-.005em;box-shadow:0 2px 6px rgba(30,8,55,0.12)}" +
@@ -435,7 +495,24 @@ const CSS =
   "@keyframes ssf-rise{from{opacity:1;transform:translateY(110%)}to{opacity:1;transform:none}}" +
   "@keyframes ssf-fade{from{opacity:0;transform:translateY(8px)}}" +
   "@keyframes ssf-slap{0%{opacity:0;transform:scale(2.1) rotate(24deg) translateY(-30%);filter:blur(1.5px)}55%{opacity:1;transform:scale(.9) rotate(-3deg);filter:none}78%{transform:scale(1.05) rotate(1deg)}100%{opacity:1;transform:none}}" +
-  "@keyframes ssf-ring{0%{opacity:0;transform:scale(.3)}40%{opacity:.75}100%{opacity:0;transform:scale(1)}}"
+  "@keyframes ssf-ring{0%{opacity:0;transform:scale(.3)}40%{opacity:.75}100%{opacity:0;transform:scale(1)}}" +
+  // ── Extended Directory & Legal Bar (Image 1 & Image 2) ──
+  ".ssf-extended-wrap{position:relative;z-index:2;width:100%;max-width:1440px;margin:0 auto;padding:clamp(32px,4.5cqw,56px) clamp(16px,2cqw,32px) clamp(18px,2.5cqw,28px)}" +
+  ".ssf-dir-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(22px,2.8cqw,40px) clamp(16px,2.2cqw,30px);margin-bottom:clamp(36px,4.5cqw,54px)}" +
+  ".ssf-dir-col{display:flex;flex-direction:column}" +
+  ".ssf-dir-head{font-size:clamp(11px,.88cqw,12.5px);font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--ssf-ink);margin-bottom:clamp(14px,1.8cqw,20px)}" +
+  ".ssf-dir-list{display:flex;flex-direction:column;gap:clamp(9px,1.1cqw,13px);margin:0;padding:0;list-style:none}" +
+  ".ssf-dir-link{display:inline-block;font-size:clamp(12px,.95cqw,13.5px);font-weight:600;color:color-mix(in oklab,var(--ssf-ink) 80%,transparent);text-decoration:none;transition:color .2s,transform .2s}" +
+  ".ssf-dir-link:hover{color:var(--ssf-ink);transform:translateX(3px)}" +
+  ".ssf-legal-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding-top:clamp(20px,2.4cqw,28px);border-top:1px solid color-mix(in oklab,var(--ssf-ink) 14%,transparent);font-size:clamp(11px,.85cqw,12px);font-weight:700;letter-spacing:.03em}" +
+  ".ssf-legal-links{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(14px,2cqw,26px);text-transform:uppercase}" +
+  ".ssf-legal-link{color:color-mix(in oklab,var(--ssf-ink) 78%,transparent);text-decoration:none;transition:color .2s}" +
+  ".ssf-legal-link:hover{color:var(--ssf-ink)}" +
+  ".ssf-link-pricing{color:#581c87 !important;font-weight:900}" +
+  ".ssf-link-verify{color:#065f46 !important;font-weight:900}" +
+  ".ssf-legal-copy{color:color-mix(in oklab,var(--ssf-ink) 72%,transparent);font-weight:700}" +
+  "@container (max-width: 960px){.ssf-dir-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}" +
+  "@container (max-width: 600px){.ssf-dir-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ssf-legal-bar{flex-direction:column;align-items:flex-start}}"
 
 /** Stamps each path's real length into --l, for the draw-in. */
 const useStrokeLengths = (ref: React.RefObject<Element | null>, key: string) =>
@@ -632,7 +709,6 @@ export default function StickerSlapFooter({
   socials = DEFAULT_SKILLSCATALYST_SOCIALS,
   stickers = DEFAULT_SKILLSCATALYST_STICKERS,
   credits = DEFAULT_SKILLSCATALYST_CREDITS,
-  height = "min(100svh, 920px)",
   wordmarkMaxHeight = "48svh",
   // Lilac lavender theme: airy lavender panel (#a076e6) with radiant white text
   paper = "#f6f1fc",
@@ -868,7 +944,6 @@ export default function StickerSlapFooter({
     "--ssf-sans": fontSans,
     "--ssf-wmh": wordmarkMaxHeight,
     "--ssf-ar": String(round(vbW / cutH)),
-    minHeight: height,
   } as React.CSSProperties
 
   const onPointer = (e: React.PointerEvent<HTMLElement>) => {
@@ -970,6 +1045,7 @@ export default function StickerSlapFooter({
     >
       <style>{CSS}</style>
 
+      {/* ── Top Bar ── */}
       <div className="ssf-top">
         {navLabel ? (
           <a className="ssf-nav" {...linkProps(navHref)}>
@@ -998,6 +1074,7 @@ export default function StickerSlapFooter({
         )}
       </div>
 
+      {/* ── Main Sticker Slap Panel ── */}
       <div className="ssf-panel">
         {cols.length > 0 && (
           <div className="ssf-cols" style={{ "--ssf-n": cols.length } as React.CSSProperties}>
@@ -1080,6 +1157,52 @@ export default function StickerSlapFooter({
             </button>
           </div>
         )}
+      </div>
+
+      {/* ── Extended Directory & Legal Section (Image 1 & Image 2) ── */}
+      <div className="ssf-extended-wrap">
+        {/* 5-Column Platform Directory (Image 1) */}
+        <div className="ssf-dir-grid">
+          {DIRECTORY_PILLARS.map((pillar) => (
+            <div key={pillar.title} className="ssf-dir-col">
+              <h4 className="ssf-dir-head">{pillar.title}</h4>
+              <ul className="ssf-dir-list">
+                {pillar.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="ssf-dir-link">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Sub-Footer Legal & Copyright Bar (Image 2) */}
+        <div className="ssf-legal-bar">
+          <div className="ssf-legal-links">
+            <Link href="/pricing" className="ssf-legal-link ssf-link-pricing">
+              Pricing
+            </Link>
+            <Link href="/verify" className="ssf-legal-link ssf-link-verify">
+              Verify
+            </Link>
+            <Link href="/privacy-policy" className="ssf-legal-link">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-conditions" className="ssf-legal-link">
+              Terms &amp; Conditions
+            </Link>
+            <Link href="/cookie-policy" className="ssf-legal-link">
+              Cookie Policy
+            </Link>
+          </div>
+
+          <div className="ssf-legal-copy">
+            &copy; 2026 SkillsCatalyst. All Rights Reserved.
+          </div>
+        </div>
       </div>
     </footer>
   )
