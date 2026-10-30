@@ -460,7 +460,43 @@ const CSS =
   ".ssf-pop li+li{border-top:1.5px dashed rgba(30,8,55,0.18)}" +
   ".ssf-pop b{font-size:11px;font-weight:600;opacity:.6;text-transform:lowercase}" +
   ".ssf-pop strong{font-weight:800;letter-spacing:-.01em}" +
-  "@container (max-width: 760px){.ssf-cols{grid-template-columns:minmax(0,1fr)}.ssf-top{padding-bottom:24px}.ssf-stage{width:min(165%,calc(var(--ssf-wmh) * var(--ssf-ar)));max-width:none;margin-left:-6%}}" +
+  // Mobile responsive layout (max-width: 760px container & screen)
+  "@container (max-width: 760px){" +
+  ".ssf{padding:0 clamp(4px,1.5cqw,8px) clamp(14px,3cqw,20px)}" +
+  ".ssf-panel{min-height:auto;border-radius:18px}" +
+  ".ssf-top{padding:12px 8px 16px}" +
+  ".ssf-nav{width:54px;height:38px;font-size:13.5px}" +
+  ".ssf-logo svg{height:22px}" +
+  ".ssf-chat{width:30px;height:30px}" +
+  ".ssf-cols{grid-template-columns:minmax(0,1fr);gap:18px;padding:20px 16px 16px}" +
+  ".ssf-tag{margin-bottom:8px;font-size:11.5px;padding:.28em .7em .32em}" +
+  ".ssf-big{font-size:clamp(16px,4.5cqw,21px);line-height:1.24}" +
+  ".ssf-note{margin-top:8px;font-size:11px;line-height:1.35}" +
+  ".ssf-socials{margin-top:12px;gap:8px}" +
+  ".ssf-soc{width:36px;height:36px;border-radius:10px}" +
+  ".ssf-stage{width:100% !important;max-width:100% !important;margin:0 auto !important;padding:0 clamp(6px,2cqw,12px) !important;box-sizing:border-box !important}" +
+  ".ssf-stage-in{width:100% !important;margin-bottom:-5% !important}" +
+  ".ssf-wm{width:100% !important;height:auto !important}" +
+  ".ssf-st{max-width:32px;max-height:32px}" +
+  ".ssf-credits{top:14px;bottom:auto;right:14px}" +
+  ".ssf-pop{top:calc(100% + 8px);bottom:auto;transform-origin:90% 0}" +
+  "}" +
+  "@media (max-width: 768px){" +
+  ".ssf{padding:0 clamp(4px,1.5vw,8px) clamp(14px,3vw,20px)}" +
+  ".ssf-panel{min-height:auto;border-radius:18px}" +
+  ".ssf-top{padding:12px 8px 16px}" +
+  ".ssf-cols{grid-template-columns:minmax(0,1fr);gap:18px;padding:20px 16px 16px}" +
+  ".ssf-tag{margin-bottom:8px;font-size:11.5px;padding:.28em .7em .32em}" +
+  ".ssf-big{font-size:clamp(16px,4.5vw,21px);line-height:1.24}" +
+  ".ssf-note{margin-top:8px;font-size:11px;line-height:1.35}" +
+  ".ssf-socials{margin-top:12px;gap:8px}" +
+  ".ssf-stage{width:100% !important;max-width:100% !important;margin:0 auto !important;padding:0 clamp(6px,2vw,12px) !important;box-sizing:border-box !important}" +
+  ".ssf-stage-in{width:100% !important;margin-bottom:-5% !important}" +
+  ".ssf-wm{width:100% !important;height:auto !important}" +
+  ".ssf-st{max-width:32px;max-height:32px}" +
+  ".ssf-credits{top:14px;bottom:auto;right:14px}" +
+  ".ssf-pop{top:calc(100% + 8px);bottom:auto;transform-origin:90% 0}" +
+  "}" +
   "@keyframes ssf-popin{from{opacity:0;transform:translateY(10px) scale(.7) rotate(4deg)}}" +
   // the storyboard: everything above is the finished state; motion only adds the way in
   "@media (prefers-reduced-motion: no-preference){" +
@@ -512,7 +548,9 @@ const CSS =
   ".ssf-link-verify{color:#065f46 !important;font-weight:900}" +
   ".ssf-legal-copy{color:color-mix(in oklab,var(--ssf-ink) 72%,transparent);font-weight:700}" +
   "@container (max-width: 960px){.ssf-dir-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}" +
-  "@container (max-width: 600px){.ssf-dir-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ssf-legal-bar{flex-direction:column;align-items:flex-start}}"
+  "@container (max-width: 600px){.ssf-extended-wrap{padding:26px 14px 20px}.ssf-dir-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:20px 14px;margin-bottom:28px}.ssf-legal-bar{flex-direction:column;align-items:flex-start;gap:14px}.ssf-legal-links{gap:10px 16px}}" +
+  "@media (max-width: 960px){.ssf-dir-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}" +
+  "@media (max-width: 600px){.ssf-extended-wrap{padding:26px 14px 20px}.ssf-dir-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:20px 14px;margin-bottom:28px}.ssf-legal-bar{flex-direction:column;align-items:flex-start;gap:14px}.ssf-legal-links{gap:10px 16px}}"
 
 /** Stamps each path's real length into --l, for the draw-in. */
 const useStrokeLengths = (ref: React.RefObject<Element | null>, key: string) =>
@@ -1105,7 +1143,7 @@ export default function StickerSlapFooter({
                   {
                     left: s.at.x + "%",
                     top: s.at.y + "%",
-                    width: "max(" + round(s.size) + "cqw, 46px)",
+                    width: "clamp(26px, " + round(s.size * 1.25) + "cqw, 76px)",
                     zIndex: 3 + Math.max(0, order.indexOf(s.i) + 1),
                     "--r": s.rotate + "deg",
                     "--d": s.depth,
