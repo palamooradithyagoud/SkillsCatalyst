@@ -270,16 +270,6 @@ export default function SkillsCatalystDesktopHero() {
 
           {/* Hero Central Typography & Actions */}
           <div className="scDesktopHeroContent">
-            {/* Student College Attribution Badge */}
-            <motion.div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-semibold mb-4 shadow-lg backdrop-blur-sm"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Built by students at Vardhaman College of Engineering, Hyderabad</span>
-            </motion.div>
 
             {/* Giant Bold Headline */}
             <motion.h1
