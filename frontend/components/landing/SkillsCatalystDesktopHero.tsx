@@ -15,6 +15,7 @@ import StructuredCareerPathSection from "./StructuredCareerPathSection";
 import { EcosystemOrbitingSection } from "@/components/ui/orbiting-circles";
 import FeaturesWithPanel from "@/components/ui/features-with-panel";
 import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
+import LandingKineticMobileNav from "./LandingKineticMobileNav";
 
 interface NavDropdownItem {
   title: string;
@@ -257,99 +258,13 @@ export default function SkillsCatalystDesktopHero() {
         </div>
       </nav>
 
-      {/* Mobile Navigation Drawer / Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <div className="scMobileDrawerOverlay fixed inset-0 z-[999999] flex flex-col justify-start">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md"
-            />
-
-            {/* Drawer Panel */}
-            <motion.div
-              initial={{ y: "-100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "-100%" }}
-              transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              className="relative z-10 w-full bg-white shadow-2xl rounded-b-3xl px-6 py-6 border-b border-slate-200"
-            >
-              {/* Header inside Drawer */}
-              <div className="flex items-center justify-between pb-5 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-md">
-                    <Image
-                      src="/logo_white_v2.png"
-                      alt="SkillsCatalyst"
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
-                  </div>
-                  <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                    SkillsCatalyst
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors"
-                  aria-label="Close navigation menu"
-                >
-                  <X size={20} strokeWidth={2.5} />
-                </button>
-              </div>
-
-              {/* Navigation Links */}
-              <div className="py-4 space-y-1">
-                {NAV_ITEMS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      if (item.id === "pricing") router.push("/pricing");
-                      else handleNavigateToLogin();
-                    }}
-                    className="w-full text-left py-3 px-3 rounded-xl hover:bg-slate-50 flex items-center justify-between font-semibold text-slate-800 text-base transition-colors"
-                  >
-                    <span>{item.label}</span>
-                    <ChevronRight size={18} className="text-slate-400" />
-                  </button>
-                ))}
-              </div>
-
-              {/* Action Buttons in Drawer */}
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    handleNavigateToLogin();
-                  }}
-                  className="w-full py-3.5 rounded-full bg-[#683594] hover:bg-[#54287a] text-white font-bold text-center shadow-lg shadow-purple-900/25 transition-all text-base"
-                >
-                  Login to SkillsCatalyst
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    router.push("/pricing");
-                  }}
-                  className="w-full py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-center text-sm transition-colors"
-                >
-                  View Student Pass (₹99)
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Mobile Top-to-Down Kinetic Navigation (GSAP Staggered Layer Cascade) */}
+      <LandingKineticMobileNav
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        onNavigateToLogin={handleNavigateToLogin}
+        onNavigateToPricing={() => router.push("/pricing")}
+      />
 
       {/* ── Main Desktop Layout: 3-Segment Notch + Grand Hero Card ── */}
       <div className="scDesktopNotchWrapper">
