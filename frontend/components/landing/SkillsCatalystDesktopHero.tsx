@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
   ChevronDown,
   X,
   ChevronRight,
@@ -346,22 +346,20 @@ export default function SkillsCatalystDesktopHero() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <button
-                id="desktop-hero-get-started"
-                type="button"
-                onClick={handleNavigateToLogin}
-                className="scPrimaryCTA"
+              <Link
+                id="desktop-hero-start-learning"
+                href="/login?mode=signup"
+                className="scPrimaryCTA cursor-pointer"
               >
-                <span>Get Started Free</span>
-                <ArrowRight size={18} strokeWidth={2.6} />
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/pricing")}
-                className="scSecondaryCTA"
+                <span>Start learning for free</span>
+              </Link>
+              <Link
+                id="desktop-hero-explore-pro"
+                href="/pricing"
+                className="scSecondaryCTA cursor-pointer"
               >
-                <span>View Pricing (₹99)</span>
-              </button>
+                <span>Explore pro benefits</span>
+              </Link>
             </motion.div>
           </div>
         </section>

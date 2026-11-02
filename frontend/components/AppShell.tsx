@@ -15,6 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname === "/login" || pathname === "/reset-password";
   const isLandingPage = pathname === "/";
+  const isPricingPage = pathname === "/pricing" || pathname.startsWith("/pricing/");
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAIMentorPage = pathname === "/ai-mentor" || pathname.startsWith("/ai-mentor");
   const isLegalPage =
@@ -32,11 +33,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Placed ONCE at the root of AppShell so route transitions never unmount and remount it */}
         <MobileAppOpeningSplash />
 
-        {isAuthPage || isLandingPage || isAdminPage || isAIMentorPage || isLegalPage ? (
+        {isAuthPage || isLandingPage || isPricingPage || isAdminPage || isAIMentorPage || isLegalPage ? (
           <div
             className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${
               isLandingPage
                 ? "dark bg-[#06070d] text-white"
+                : isPricingPage
+                ? "bg-white text-slate-900"
                 : isAdminPage
                 ? "dark bg-[#0B0D17] text-white"
                 : isAIMentorPage

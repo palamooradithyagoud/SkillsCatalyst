@@ -354,9 +354,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/support");
     const isResetPasswordPage = pathname === "/reset-password";
     const isAiMentorPage = pathname.startsWith("/ai-mentor");
+    const isPricingPage = pathname === "/pricing" || pathname.startsWith("/pricing/");
     const isPublicPage =
       isLoginPage ||
       isLandingPage ||
+      isPricingPage ||
       isVerifyPage ||
       isPreviewPage ||
       isResumeBuilderPage ||
@@ -454,10 +456,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnverifiedEmail,
   };
 
-  // On /login, / landing page, /career/resume-builder, and legal pages: ALWAYS render children immediately
+  // On /login, / landing page, /pricing, /career/resume-builder, and legal pages: ALWAYS render children immediately
   if (
     pathname === "/login" ||
     pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname.startsWith("/pricing/") ||
     pathname.startsWith("/career/resume-builder") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
