@@ -107,6 +107,10 @@ export default function SkillsCatalystDesktopHero() {
     router.push("/login");
   };
 
+  const handleNavigateToSignUp = () => {
+    router.push("/login?mode=signup");
+  };
+
   const handleNavPillClick = (item: NavItem) => {
     if (item.id === "pricing") {
       router.push("/pricing");
@@ -238,7 +242,15 @@ export default function SkillsCatalystDesktopHero() {
                 onClick={handleNavigateToLogin}
                 className={isScrolled ? "scNavLoginBtn scNavLoginBtnScrolled" : "scNavLoginBtn"}
               >
-                Login
+                Log In
+              </button>
+              <button
+                id="desktop-nav-signup"
+                type="button"
+                onClick={handleNavigateToSignUp}
+                className={isScrolled ? "scNavSignUpBtn scNavSignUpBtnScrolled" : "scNavSignUpBtn"}
+              >
+                Sign Up
               </button>
             </div>
 
@@ -263,6 +275,7 @@ export default function SkillsCatalystDesktopHero() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         onNavigateToLogin={handleNavigateToLogin}
+        onNavigateToSignUp={handleNavigateToSignUp}
         onNavigateToPricing={() => router.push("/pricing")}
       />
 

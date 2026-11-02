@@ -16,6 +16,7 @@ export interface LandingKineticMobileNavProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateToLogin: () => void;
+  onNavigateToSignUp?: () => void;
   onNavigateToPricing: () => void;
 }
 
@@ -56,6 +57,7 @@ export default function LandingKineticMobileNav({
   isOpen,
   onClose,
   onNavigateToLogin,
+  onNavigateToSignUp,
   onNavigateToPricing,
 }: LandingKineticMobileNavProps) {
   const router = useRouter();
@@ -380,27 +382,30 @@ export default function LandingKineticMobileNav({
               ))}
             </ul>
 
-            {/* Bottom Actions Row */}
-            <div className="pt-3.5 mt-2 border-t border-slate-100 flex flex-col gap-2.5" data-menu-fade>
+            {/* Bottom Actions Row: Side-by-Side Log In & Sign Up (Matching Desktop Hero) */}
+            <div className="scKineticNavActions" data-menu-fade>
               <button
+                id="mobile-kinetic-login"
                 type="button"
                 onClick={() => {
                   onClose();
                   onNavigateToLogin();
                 }}
-                className="w-full py-3 rounded-full bg-[#683594] hover:bg-[#54287a] active:scale-[0.98] text-white font-bold text-center shadow-lg shadow-purple-900/30 transition-all text-sm"
+                className="scNavLoginBtn"
               >
-                Login to SkillsCatalyst
+                Log In
               </button>
               <button
+                id="mobile-kinetic-signup"
                 type="button"
                 onClick={() => {
                   onClose();
-                  onNavigateToPricing();
+                  if (onNavigateToSignUp) onNavigateToSignUp();
+                  else onNavigateToLogin();
                 }}
-                className="w-full py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-800 font-semibold text-center text-xs transition-colors"
+                className="scNavSignUpBtn"
               >
-                Student Pass: ₹99
+                Sign Up
               </button>
             </div>
           </div>
