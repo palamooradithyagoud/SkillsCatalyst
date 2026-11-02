@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
-import { EcosystemOrbitingSection } from "@/components/ui/orbiting-circles";
-import FeaturesWithPanel from "@/components/ui/features-with-panel";
+
+
 import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
 import LandingKineticMobileNav from "./LandingKineticMobileNav";
 
@@ -301,18 +301,29 @@ export default function SkillsCatalystDesktopHero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <span className="scHeadlineWhite">Learn anything.</span>
-              <span className="scHeadlineGradient">Go further.</span>
+              <span className="block text-white" style={{ color: "#FFFFFF" }}>
+                India&apos;s <span className="whitespace-nowrap">Next-Generation</span>
+              </span>
+              <span className="block mt-1 sm:mt-2 text-white" style={{ color: "#FFFFFF" }}>
+                <span className="whitespace-nowrap">AI-Powered</span> Career
+              </span>
+              <span
+                className="block mt-1 sm:mt-2 font-black text-[#C8A2FF] drop-shadow-[0_0_35px_rgba(200,162,255,0.55)]"
+                style={{ color: "#C8A2FF" }}
+              >
+                Platform
+              </span>
             </motion.h1>
 
             {/* Hero Subtitle */}
             <motion.p
-              className="text-slate-200 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed mb-8 px-4"
+              className="scHeroSubtitle text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed mb-8 px-4"
+              style={{ color: "#D1CDD8" }}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Pick a career goal. Get the exact roadmap. Practise until you&apos;re interview-ready — with an AI mentor checking your resume on the way.
+              One platform. Every opportunity. Your entire career journey.
             </motion.p>
 
             {/* CTA Row */}
@@ -343,11 +354,11 @@ export default function SkillsCatalystDesktopHero() {
         </section>
       </div>
 
-      {/* ── Section 2: Ecosystem Orbiting Circles (5 cards and round orbit effect) ── */}
-      <EcosystemOrbitingSection />
 
-      {/* ── Section 3: Features with Side Panel (SkillBits, Scholarships/Events, Learning & Roadmaps) ── */}
-      <FeaturesWithPanel />
+
+
+
+
 
       {/* ── Section 4: Animated Structured Career Path ── */}
       <StructuredCareerPathSection />

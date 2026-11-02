@@ -163,11 +163,11 @@ export default function LandingKineticMobileNav({
         tl.set(navWrap, { display: "block" })
           .set(menu, { yPercent: 0 }, "<")
           .fromTo(overlay, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35 }, "<")
-          // Kinetic Top-to-Down Cascading Layers
+          // Kinetic Top-to-Down Cascading Layers (1: Black -> 2: Lilac -> 3: White)
           .fromTo(
             bgPanels,
             { yPercent: -101 },
-            { yPercent: 0, stagger: 0.1, duration: 0.55, ease: "main" },
+            { yPercent: 0, stagger: 0.12, duration: 0.58, ease: "main" },
             "<"
           )
           // Menu links roll into place
@@ -175,7 +175,7 @@ export default function LandingKineticMobileNav({
             menuLinks,
             { yPercent: 70, opacity: 0, rotate: 4 },
             { yPercent: 0, opacity: 1, rotate: 0, stagger: 0.045, ease: "main" },
-            "<+=0.28"
+            "<+=0.30"
           )
           .fromTo(closeBtnIcon, { rotate: -90, scale: 0.8 }, { rotate: 0, scale: 1, duration: 0.4 }, "<");
 

@@ -40,31 +40,7 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 860px) {
-  .scNavCenterBar {
-    display: none !important;
-  }
-  .scNavBrandArea {
-    width: auto !important;
-  }
-  .scNavRightActions {
-    width: auto !important;
-    padding-right: 0 !important;
-  }
-  .scNotchRow {
-    display: none !important;
-  }
-  .scDesktopHeroCard {
-    width: 96% !important;
-    min-height: 82vh !important;
-    border-radius: 32px !important;
-    padding: 5.5rem 1rem 2rem 1rem !important;
-  }
-  .scHeadline {
-    font-size: clamp(2.2rem, 9vw, 3.2rem) !important;
-    margin-bottom: 0.75rem !important;
-  }
-}
+
 
 /* ── Fixed Floating Top Navigation Bar ── */
 .scDesktopNavFixed {
@@ -1411,19 +1387,120 @@
     border-radius: 9999px !important;
   }
 
-  /* Hero Card spacing so content is positioned cleanly */
+  /* ── Precision Mobile Screen Fit (Matching Image 2 Reference) ── */
+  .scDesktopView {
+    padding-top: 0 !important;
+    background-color: transparent !important;
+  }
+
+  .scDesktopNotchWrapper {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
   .scDesktopHeroCard {
-    width: 96% !important;
-    min-height: 85vh !important;
-    border-radius: 32px !important;
-    padding: 6rem 1rem 2.5rem 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    padding: calc(4.85rem + env(safe-area-inset-top, 0px)) 1.25rem calc(2.5rem + env(safe-area-inset-bottom, 0px)) 1.25rem !important;
     box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: radial-gradient(135% 85% at 50% -5%, #8b5cf6 0%, #6d28d9 26%, #3b0764 56%, #0f051d 86%, #030008 100%) !important;
+    overflow: hidden !important;
+  }
+
+  .scDesktopHeroWallpaper {
+    display: none !important;
+  }
+
+  .scDesktopHeroContent {
+    width: 100% !important;
+    max-width: 380px !important;
+    margin: auto 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    flex: 1 !important;
   }
 
   .scHeadline {
-    font-size: clamp(2rem, 8.5vw, 2.75rem) !important;
-    line-height: 1.15 !important;
-    margin-bottom: 0.85rem !important;
+    font-size: clamp(1.85rem, 7.2vw, 2.35rem) !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.03em !important;
+    font-weight: 900 !important;
+    margin-bottom: 1.25rem !important;
+    word-break: normal !important;
+    hyphens: none !important;
+    text-align: center !important;
+  }
+
+  .scHeroSubtitle {
+    color: #D1CDD8 !important;
+    font-size: clamp(0.92rem, 3.8vw, 1.02rem) !important;
+    line-height: 1.5 !important;
+    max-width: 310px !important;
+    margin: 0 auto 2.25rem auto !important;
+    text-align: center !important;
+    font-weight: 400 !important;
+    padding: 0 0.5rem !important;
+  }
+
+  /* CTAs: Full-width stacked pills matching Image 2 */
+  .scCTARow {
+    width: 100% !important;
+    max-width: 330px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.85rem !important;
+    padding: 0 !important;
+  }
+
+  .scPrimaryCTA {
+    width: 100% !important;
+    height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0 1.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    border-radius: 9999px !important;
+    background-color: #ffffff !important;
+    color: #0c0d14 !important;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+    border: none !important;
+    text-decoration: none !important;
+  }
+
+  .scSecondaryCTA {
+    width: 100% !important;
+    height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 1.5rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    backdrop-filter: blur(12px) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
   }
 }
 
@@ -1471,7 +1548,7 @@
   border-right: none;
   border-top: none;
   z-index: 2;
-  background: #ffffff;
+  background: transparent;
   overflow: hidden;
   will-change: transform;
 }
@@ -1498,15 +1575,18 @@
 }
 
 .landing-top-down-menu .backdrop-layer.first {
-  background: #ede9fe; /* Soft lavender kinetic curtain */
+  background: #000000; /* 1st kinetic curtain: Solid Black */
+  z-index: 1;
 }
 
 .landing-top-down-menu .backdrop-layer.second {
-  background: #e0e7ff; /* Soft indigo kinetic curtain */
+  background: #C8A2FF; /* 2nd kinetic curtain: Brand Lilac */
+  z-index: 2;
 }
 
 .landing-top-down-menu .backdrop-layer:not(.first):not(.second) {
-  background: #ffffff; /* Primary crisp white panel */
+  background: #ffffff; /* 3rd kinetic curtain: Crisp White */
+  z-index: 3;
 }
 
 .landing-top-down-menu .ambient-background-shapes {
