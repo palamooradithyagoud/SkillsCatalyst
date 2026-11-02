@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ChevronDown,
+  X,
+  ChevronRight,
 } from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
@@ -81,6 +83,7 @@ export default function SkillsCatalystDesktopHero() {
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,7 +127,7 @@ export default function SkillsCatalystDesktopHero() {
   return (
     <div className="scDesktopView">
       {/* ── Fixed Floating Top Navigation Bar (Morphs into unified pill on scroll) ── */}
-      <nav className="scDesktopNavFixed">
+      <nav className={`scDesktopNavFixed ${isScrolled ? "scNavFixedScrolled" : ""}`}>
         <div className={`scDesktopNavContainer ${isScrolled ? "scNavContainerScrolled" : ""}`}>
           {/* White pill backdrop that smoothly fades in upon scrolling */}
           <div
@@ -133,10 +136,10 @@ export default function SkillsCatalystDesktopHero() {
           />
 
           {/* Navigation Items Row */}
-          <div className="scNavbarContentRow">
+          <div className={`scNavbarContentRow ${isScrolled ? "scNavbarContentRowScrolled" : ""}`}>
             {/* Left: Brand Logo Area (Switches to compact square icon on scroll) */}
             <div
-              className="scNavBrandArea"
+              className={`scNavBrandArea ${isScrolled ? "scNavBrandAreaScrolled" : ""}`}
               onClick={() => router.push("/")}
               role="button"
               tabIndex={0}
@@ -226,20 +229,127 @@ export default function SkillsCatalystDesktopHero() {
               })}
             </div>
 
-            {/* Right: Login Button */}
-            <div className="scNavRightActions">
+            {/* Right: Login Button (Desktop only) */}
+            <div className={`scNavRightActions ${isScrolled ? "scNavRightActionsScrolled" : ""}`}>
               <button
                 id="desktop-nav-login"
                 type="button"
                 onClick={handleNavigateToLogin}
-                className="scNavLoginBtn"
+                className={isScrolled ? "scNavLoginBtn scNavLoginBtnScrolled" : "scNavLoginBtn"}
               >
                 Login
               </button>
             </div>
+
+            {/* Mobile 3-Lines Hamburger Button (Matching Image 2 & Image 3) */}
+            <button
+              id="mobile-nav-hamburger"
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="scMobileMenuBtn"
+              aria-label="Open mobile navigation menu"
+            >
+              <span className="scMobileMenuLine" />
+              <span className="scMobileMenuLine" />
+              <span className="scMobileMenuLine" />
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Navigation Drawer / Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="scMobileDrawerOverlay fixed inset-0 z-[999999] flex flex-col justify-start">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md"
+            />
+
+            {/* Drawer Panel */}
+            <motion.div
+              initial={{ y: "-100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              className="relative z-10 w-full bg-white shadow-2xl rounded-b-3xl px-6 py-6 border-b border-slate-200"
+            >
+              {/* Header inside Drawer */}
+              <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shadow-md">
+                    <Image
+                      src="/logo_white_v2.png"
+                      alt="SkillsCatalyst"
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="font-extrabold text-xl tracking-tight text-slate-900">
+                    SkillsCatalyst
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors"
+                  aria-label="Close navigation menu"
+                >
+                  <X size={20} strokeWidth={2.5} />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <div className="py-4 space-y-1">
+                {NAV_ITEMS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      if (item.id === "pricing") router.push("/pricing");
+                      else handleNavigateToLogin();
+                    }}
+                    className="w-full text-left py-3 px-3 rounded-xl hover:bg-slate-50 flex items-center justify-between font-semibold text-slate-800 text-base transition-colors"
+                  >
+                    <span>{item.label}</span>
+                    <ChevronRight size={18} className="text-slate-400" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Action Buttons in Drawer */}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleNavigateToLogin();
+                  }}
+                  className="w-full py-3.5 rounded-full bg-[#683594] hover:bg-[#54287a] text-white font-bold text-center shadow-lg shadow-purple-900/25 transition-all text-base"
+                >
+                  Login to SkillsCatalyst
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    router.push("/pricing");
+                  }}
+                  className="w-full py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-center text-sm transition-colors"
+                >
+                  View Student Pass (₹99)
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── Main Desktop Layout: 3-Segment Notch + Grand Hero Card ── */}
       <div className="scDesktopNotchWrapper">
@@ -256,16 +366,14 @@ export default function SkillsCatalystDesktopHero() {
 
         {/* Grand Framed Hero Card Connected directly to the Notch */}
         <section className="scDesktopHeroCard">
-          {/* 16:9 Panoramic Wallpaper of Explorer Penguin at Mountain Summit */}
+          {/* Background Pattern (Replacing Penguin Image while preserving exact framed card shape) */}
           <div className="scDesktopHeroWallpaper">
-            <Image
-              src="/images/penguin_desktop_hero.jpg"
-              alt="SkillsCatalyst Explorer Penguin Summit Hero"
-              fill
-              priority
-              sizes="(max-width: 1600px) 100vw, 1600px"
-              className="scDesktopHeroImg"
-            />
+            <div className="absolute inset-0">
+              <div
+                className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]"
+                style={{ background: "radial-gradient(125% 125% at 50% 10%, #000 40%, #63e 100%)" }}
+              />
+            </div>
           </div>
 
           {/* Hero Central Typography & Actions */}
