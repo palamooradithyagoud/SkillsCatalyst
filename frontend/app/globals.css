@@ -1043,15 +1043,18 @@ input:-webkit-autofill:active {
 }
 
 .backdrop-layer.first {
-  background: #ede9fe; /* Soft lavender kinetic curtain */
+  background: #000000 !important; /* 1st kinetic curtain: Solid Black */
+  z-index: 1;
 }
 
 .backdrop-layer.second {
-  background: #e0e7ff; /* Soft indigo kinetic curtain */
+  background: #C8A2FF !important; /* 2nd kinetic curtain: Brand Lilac */
+  z-index: 2;
 }
 
 .backdrop-layer:not(.first):not(.second) {
   background: #ffffff; /* Primary crisp white background */
+  z-index: 3;
 }
 
 .ambient-background-shapes {
@@ -1195,15 +1198,18 @@ input:-webkit-autofill:active {
 }
 
 .dark .backdrop-layer.first {
-  background: #18191f; /* Dark charcoal curtain */
+  background: #000000 !important; /* 1st kinetic curtain: Solid Black */
+  z-index: 1;
 }
 
 .dark .backdrop-layer.second {
-  background: #14151a; /* Dark charcoal curtain */
+  background: #C8A2FF !important; /* 2nd kinetic curtain: Brand Lilac */
+  z-index: 2;
 }
 
 .dark .backdrop-layer:not(.first):not(.second) {
   background: #111217; /* Primary black charcoal background */
+  z-index: 3;
 }
 
 .dark .nav-link-text {
