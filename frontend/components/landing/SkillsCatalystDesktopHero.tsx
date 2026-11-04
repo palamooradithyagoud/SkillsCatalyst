@@ -16,6 +16,7 @@ import StructuredCareerPathSection from "./StructuredCareerPathSection";
 
 import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
 import LandingKineticMobileNav from "./LandingKineticMobileNav";
+import GlowHorizonFM from "@/components/ui/glow-horizon";
 
 interface NavDropdownItem {
   title: string;
@@ -294,13 +295,16 @@ export default function SkillsCatalystDesktopHero() {
 
         {/* Grand Framed Hero Card Connected directly to the Notch */}
         <section className="scDesktopHeroCard">
-          {/* Background Pattern (Replacing Penguin Image while preserving exact framed card shape) */}
-          <div className="scDesktopHeroWallpaper">
-            <div className="absolute inset-0">
-              <div
-                className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]"
-                style={{ background: "radial-gradient(125% 125% at 50% 10%, #000 40%, #63e 100%)" }}
-              />
+          {/* Glowing Horizon Background (Turned 180 degrees upside down, responsive mobile & desktop) */}
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[220%] sm:w-[150%] md:w-full h-[55%] sm:h-[70%] md:h-full pointer-events-none overflow-hidden z-0 select-none"
+            aria-hidden="true"
+          >
+            <div
+              className="w-full h-full"
+              style={{ transform: "rotate(180deg)", transformOrigin: "center center" }}
+            >
+              <GlowHorizonFM variant="top" />
             </div>
           </div>
 
@@ -321,8 +325,8 @@ export default function SkillsCatalystDesktopHero() {
                 <span className="whitespace-nowrap">AI-Powered</span> Career
               </span>
               <span
-                className="block mt-1 sm:mt-2 font-black text-[#C8A2FF] drop-shadow-[0_0_35px_rgba(200,162,255,0.55)]"
-                style={{ color: "#C8A2FF" }}
+                className="block mt-1 sm:mt-2 font-black text-[#A47DAB] drop-shadow-[0_0_35px_rgba(164,125,171,0.55)]"
+                style={{ color: "#A47DAB" }}
               >
                 Platform
               </span>

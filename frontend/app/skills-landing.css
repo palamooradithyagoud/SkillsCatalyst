@@ -328,27 +328,27 @@
   font-weight: 700;
   color: #000000;
   background: transparent;
-  border: 1.5px solid #8837ef;
+  border: 1.5px solid #A47DAB;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 4px rgba(136, 55, 239, 0.08);
+  box-shadow: 0 1px 4px rgba(164, 125, 171, 0.08);
 }
 
 .scNavLoginBtn:hover {
-  background: #8837ef;
-  border-color: #8837ef;
+  background: #A47DAB;
+  border-color: #A47DAB;
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.35);
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35);
 }
 
 .scNavLoginBtn:active {
   transform: scale(0.97);
 }
 
-/* 2. Sign Up Button: Solid Filled Pill Style in Solid Lilac #8837ef (No Gradient) */
+/* 2. Sign Up Button: Solid Filled Pill Style in Solid Lilac #A47DAB (No Gradient) */
 .scNavSignUpBtn {
   display: inline-flex;
   align-items: center;
@@ -357,21 +357,21 @@
   font-size: 0.88rem;
   font-weight: 700;
   color: #ffffff;
-  background: #8837ef;
-  border: 1.5px solid #8837ef;
+  background: #A47DAB;
+  border: 1.5px solid #A47DAB;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.35);
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .scNavSignUpBtn:hover {
   background: transparent;
-  border-color: #8837ef;
+  border-color: #A47DAB;
   color: #000000;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.18);
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.18);
 }
 
 .scNavSignUpBtn:active {
@@ -577,7 +577,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
-  background-color: #8837ef;
+  background-color: #A47DAB;
   border-radius: 14px;
   border: none;
   cursor: pointer;
@@ -587,7 +587,7 @@
 }
 
 .scPrimaryCTA:hover {
-  background-color: #792ee0;
+  background-color: #936b9a;
   transform: translateY(-1px);
   box-shadow: none;
 }
@@ -1261,17 +1261,17 @@
     font-weight: 700 !important;
     color: #000000 !important;
     background: transparent !important;
-    border: 1.5px solid #8837ef !important;
+    border: 1.5px solid #A47DAB !important;
     border-radius: 9999px !important;
     box-shadow: none !important;
     transition: all 0.22s ease !important;
   }
 
   .scNavLoginBtnScrolled:hover {
-    background: #8837ef !important;
-    border-color: #8837ef !important;
+    background: #A47DAB !important;
+    border-color: #A47DAB !important;
     color: #ffffff !important;
-    box-shadow: 0 3px 10px rgba(136, 55, 239, 0.35) !important;
+    box-shadow: 0 3px 10px rgba(164, 125, 171, 0.35) !important;
   }
 
   .scNavSignUpBtnScrolled {
@@ -1279,18 +1279,18 @@
     font-size: 0.82rem !important;
     font-weight: 700 !important;
     color: #ffffff !important;
-    background: #8837ef !important;
-    border: 1.5px solid #8837ef !important;
+    background: #A47DAB !important;
+    border: 1.5px solid #A47DAB !important;
     border-radius: 9999px !important;
-    box-shadow: 0 3px 10px rgba(136, 55, 239, 0.35) !important;
+    box-shadow: 0 3px 10px rgba(164, 125, 171, 0.35) !important;
     transition: all 0.22s ease !important;
   }
 
   .scNavSignUpBtnScrolled:hover {
     background: transparent !important;
-    border-color: #8837ef !important;
+    border-color: #A47DAB !important;
     color: #000000 !important;
-    box-shadow: 0 2px 8px rgba(136, 55, 239, 0.18) !important;
+    box-shadow: 0 2px 8px rgba(164, 125, 171, 0.18) !important;
   }
 }
 
@@ -1466,7 +1466,7 @@
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
-    background: radial-gradient(135% 85% at 50% -5%, #8b5cf6 0%, #6d28d9 26%, #3b0764 56%, #0f051d 86%, #030008 100%) !important;
+    background: #000000 !important;
     overflow: hidden !important;
   }
 
@@ -1531,7 +1531,7 @@
     font-size: 1rem !important;
     font-weight: 700 !important;
     border-radius: 14px !important;
-    background-color: #8837ef !important;
+    background-color: #A47DAB !important;
     color: #ffffff !important;
     box-shadow: none !important;
     border: none !important;
@@ -1541,7 +1541,7 @@
 
   .scPrimaryCTA:hover,
   .scPrimaryCTA:focus {
-    background-color: #792ee0 !important;
+    background-color: #936b9a !important;
     box-shadow: none !important;
     transform: translateY(-1px) !important;
   }
@@ -1786,18 +1786,18 @@
 /* Explicit style enforcement matching Desktop Landing Page */
 .scKineticNavActions .scNavLoginBtn {
   background: transparent !important;
-  border: 1.5px solid #8837ef !important;
+  border: 1.5px solid #A47DAB !important;
   color: #000000 !important;
-  box-shadow: 0 1px 4px rgba(136, 55, 239, 0.08) !important;
+  box-shadow: 0 1px 4px rgba(164, 125, 171, 0.08) !important;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .scKineticNavActions .scNavLoginBtn:hover,
 .scKineticNavActions .scNavLoginBtn:focus {
-  background: #8837ef !important;
-  border-color: #8837ef !important;
+  background: #A47DAB !important;
+  border-color: #A47DAB !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35) !important;
 }
 
 .scKineticNavActions .scNavLoginBtn:active {
@@ -1805,19 +1805,19 @@
 }
 
 .scKineticNavActions .scNavSignUpBtn {
-  background: #8837ef !important;
-  border: 1.5px solid #8837ef !important;
+  background: #A47DAB !important;
+  border: 1.5px solid #A47DAB !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35) !important;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .scKineticNavActions .scNavSignUpBtn:hover,
 .scKineticNavActions .scNavSignUpBtn:focus {
   background: transparent !important;
-  border-color: #8837ef !important;
+  border-color: #A47DAB !important;
   color: #000000 !important;
-  box-shadow: 0 4px 14px rgba(136, 55, 239, 0.18) !important;
+  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.18) !important;
 }
 
 .scKineticNavActions .scNavSignUpBtn:active {
