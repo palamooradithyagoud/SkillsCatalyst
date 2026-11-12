@@ -84,6 +84,29 @@ const exploreBottomBarItems = [
   { id: "community", name: "Guilds", icon: Users },
 ];
 
+// Pale light pastel palette (Blue, Yellow, Pink) — zero glass, zero purple
+function getPaleAvatarTheme(initial: string) {
+  const code = (initial || "U").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const palettes = [
+    {
+      bg: "bg-[#FEF9C3] hover:bg-[#FEF08A]",
+      text: "text-[#854D0E]",
+      border: "border-[#FDE047]/80",
+    }, // Pale Yellow
+    {
+      bg: "bg-[#E0F2FE] hover:bg-[#BAE6FD]",
+      text: "text-[#0369A1]",
+      border: "border-[#BAE6FD]",
+    }, // Pale Blue
+    {
+      bg: "bg-[#FCE7F3] hover:bg-[#FBCFE8]",
+      text: "text-[#9D174D]",
+      border: "border-[#FBCFE8]",
+    }, // Pale Pink
+  ];
+  return palettes[code % palettes.length];
+}
+
 function MobileNavContent() {
   const pathname = usePathname();
   const router = useRouter();
@@ -144,6 +167,7 @@ function MobileNavContent() {
 
   const userEmail = session?.email || "Guest User";
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+  const avatarTheme = getPaleAvatarTheme(userInitial);
 
   // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, edit profile page, SkillBits reels, or career page
   const isHideBottomBar =
@@ -180,7 +204,7 @@ function MobileNavContent() {
                 aria-label="Open notifications"
                 className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
                   isNotificationOpen
-                    ? "bg-[#5227FF]/15 text-[#5227FF] border-[#5227FF]/30 dark:bg-[#5227FF]/25 dark:text-purple-300"
+                    ? "bg-[#D5FF38]/20 text-black dark:text-[#D5FF38] border-[#D5FF38]/40"
                     : "bg-white/20 hover:bg-white/35 dark:bg-white/10 dark:hover:bg-white/15 border-white/40 dark:border-white/15 text-slate-800 dark:text-slate-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
                 }`}
               >
@@ -199,12 +223,12 @@ function MobileNavContent() {
               />
             </div>
 
-            {/* User's Profile Avatar (Transparent Background with Purple Initials) */}
+            {/* User's Profile Avatar (Solid Pale Colored Icon: Blue, Yellow, Pink - Zero Glass, Zero Purple) */}
             <button
               type="button"
               onClick={() => router.push("/profile")}
               aria-label="User Profile"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/35 dark:border-purple-400/20 backdrop-blur-xl flex items-center justify-center text-purple-600 dark:text-purple-300 font-black text-xs sm:text-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] transition-all active:scale-95 cursor-pointer"
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer`}
             >
               <span>{userInitial}</span>
             </button>
