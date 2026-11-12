@@ -214,7 +214,7 @@ export default function DashboardPage() {
 
       {/* ── Main Content Grid: Balanced Side-by-Side Dashboard ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-        {/* Left Main Area: Event Hero Banner + Tech Stories + Learning Progress + Quick Hub (Careerpath) + Metric Cards */}
+        {/* Left Main Area: Event Hero Banner + Tech Stories + Quick Hub (Careerpath) */}
         <motion.div
           variants={itemVariants}
           className="w-full space-y-3.5 sm:space-y-4"
@@ -224,7 +224,6 @@ export default function DashboardPage() {
           <TechNewsStories />
           {/* Quick Hub Navigation with Auto-Swiping Learning Path Deck */}
           <QuickHubNav />
-          <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="metrics" />
         </motion.div>
 
         {/* Right / Middle Area: Mood Calendar & Trending Skills */}
