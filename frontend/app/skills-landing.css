@@ -365,12 +365,12 @@
 }
 
 .scNavLoginBtn:hover {
-  background: #252830;
-  color: #ffffff;
+  background: #d5ff38 !important;
+  color: #000000 !important;
   border: none !important;
   outline: none !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px rgba(213, 255, 56, 0.3);
 }
 
 .scNavLoginBtn:active {
@@ -399,7 +399,7 @@
 
 .scNavSignUpBtn:hover,
 .scNavSignUpBtn:focus-visible {
-  background: #000000 !important;
+  background: #18191E !important;
   border: none !important;
   outline: none !important;
   color: #ffffff !important;
@@ -1332,11 +1332,11 @@
   }
 
   .scNavLoginBtnScrolled:hover {
-    background: #252830 !important;
-    color: #ffffff !important;
+    background: #d5ff38 !important;
+    color: #000000 !important;
     border: none !important;
     outline: none !important;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 3px 10px rgba(213, 255, 56, 0.3) !important;
   }
 
   .scNavSignUpBtnScrolled {
@@ -1354,7 +1354,7 @@
 
   .scNavSignUpBtnScrolled:hover,
   .scNavSignUpBtnScrolled:focus-visible {
-    background: #000000 !important;
+    background: #18191E !important;
     border: none !important;
     outline: none !important;
     color: #ffffff !important;
@@ -1867,11 +1867,11 @@
 
 .scKineticNavActions .scNavLoginBtn:hover,
 .scKineticNavActions .scNavLoginBtn:focus {
-  background: #252830 !important;
+  background: #d5ff38 !important;
   border: none !important;
   outline: none !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 14px rgba(213, 255, 56, 0.3) !important;
 }
 
 .scKineticNavActions .scNavLoginBtn:active {
@@ -1891,7 +1891,7 @@
 
 .scKineticNavActions .scNavSignUpBtn:hover,
 .scKineticNavActions .scNavSignUpBtn:focus {
-  background: #000000 !important;
+  background: #18191E !important;
   border: none !important;
   outline: none !important;
   color: #ffffff !important;
