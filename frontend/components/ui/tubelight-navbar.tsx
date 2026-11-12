@@ -83,8 +83,8 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
                   className={cn(
                     "w-7 h-7 rounded-full flex items-center justify-center text-[10.5px] font-black transition-all",
                     isActive
-                      ? "ring-2 ring-purple-600 dark:ring-purple-400 ring-offset-2 ring-offset-white dark:ring-offset-[#07090e] bg-purple-600 text-white shadow-xs shadow-purple-600/40"
-                      : "bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800/80 hover:border-purple-400"
+                      ? "ring-2 ring-[#D5FF38] ring-offset-2 ring-offset-black dark:ring-offset-[#10110E] bg-[#D5FF38] text-black shadow-xs shadow-[#D5FF38]/40"
+                      : "bg-[#18191E] text-neutral-300 border border-[#24271F] hover:border-[#D5FF38]"
                   )}
                 >
                   <span>{userInitial}</span>
@@ -98,27 +98,25 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
                     className={cn(
                       "transition-all duration-200",
                       isActive
-                        ? item.url === "/dashboard"
-                          ? "fill-purple-600 dark:fill-purple-400 text-purple-600 dark:text-purple-400"
-                          : "text-purple-600 dark:text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.35)]"
-                        : "text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300"
+                        ? "fill-[#10110E] text-[#D5FF38] drop-shadow-[0_0_8px_rgba(213,255,56,0.35)]"
+                        : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
                     )}
                   />
 
                   {/* Optional notification / activity badge */}
                   {item.badge && (
-                    <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-purple-600 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#07090e] shadow-xs">
+                    <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#D5FF38] text-black text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#10110E] shadow-xs">
                       {item.badge}
                     </span>
                   )}
                 </div>
               )}
 
-              {/* ── Active Gliding Indicator Dot (Lilac Glow) ── */}
+              {/* ── Active Gliding Indicator Dot (Acid Lime Glow) ── */}
               {isActive && (
                 <motion.div
                   layoutId="instagramActiveDot"
-                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-purple-600 dark:bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.7)]"
+                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-[#D5FF38] shadow-[0_0_6px_rgba(213,255,56,0.8)]"
                   transition={{
                     type: "spring",
                     stiffness: 450,
