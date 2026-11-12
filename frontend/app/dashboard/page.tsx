@@ -235,6 +235,20 @@ export default function DashboardPage() {
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="trending-skills" />
         </motion.div>
       </div>
+
+      {/* ── Downside Brand Signature (Mobile View Reference: Img 2) ── */}
+      <motion.div
+        variants={itemVariants}
+        className="pt-6 sm:pt-8 pb-4 flex flex-col items-center justify-center text-center select-none"
+      >
+        <p className="text-xs sm:text-sm font-medium text-neutral-400 dark:text-neutral-500 tracking-tight">
+          Built for students. Made for their dreams.
+        </p>
+        <div className="w-20 h-px bg-neutral-300 dark:bg-neutral-800 my-2.5" />
+        <p className="text-[11px] sm:text-xs font-semibold tracking-wider text-neutral-400 dark:text-neutral-500 lowercase">
+          skillscatalyst
+        </p>
+      </motion.div>
     </motion.div>
   );
 }
