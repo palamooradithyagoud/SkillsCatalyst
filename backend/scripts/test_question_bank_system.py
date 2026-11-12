@@ -17,6 +17,7 @@ Verifies:
 
 import os
 import sys
+import secrets
 from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client
@@ -186,9 +187,9 @@ def run_tests():
 
     # Test 10: Option ownership & input validation in submit_question_attempt
     def test_rpc_validation_and_isolation():
-        email_a = "audit_suite_user_a@skillscatalyst.test"
-        email_b = "audit_suite_user_b@skillscatalyst.test"
-        pwd = "AuditSuitePassword123!"
+        email_a = f"audit_suite_a_{secrets.token_hex(4)}@skillscatalyst.test"
+        email_b = f"audit_suite_b_{secrets.token_hex(4)}@skillscatalyst.test"
+        pwd = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
 
         for email in [email_a, email_b]:
             try:

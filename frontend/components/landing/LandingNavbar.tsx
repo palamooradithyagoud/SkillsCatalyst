@@ -5,8 +5,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import LandingKineticMobileNav from "./LandingKineticMobileNav";
+
+function NavChevronIcon({ isOpen, className = "" }: { isOpen?: boolean; className?: string }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <polyline points="3.5 5 7 8.5 10.5 5" />
+    </svg>
+  );
+}
 
 interface NavDropdownItem {
   title: string;
@@ -54,10 +72,10 @@ const NAV_ITEMS: NavItem[] = [
     id: "resources",
     label: "Resources",
     items: [
+      { title: "About SkillsCatalyst", description: "Our campus origin, team, and engineering mission" },
+      { title: "Contact & Community", description: "Direct student support, grievance desk & community" },
       { title: "Developer Cheat Sheets", description: "Instant syntax, algorithms & CLI commands" },
       { title: "System Design Playbook", description: "Scalable architecture guides & interview decks" },
-      { title: "ATS Resume Templates", description: "Battle-tested templates optimized for recruiter screeners" },
-      { title: "Starter Repositories", description: "Production-ready boilerplates and architectures" },
     ],
   },
   {
@@ -115,7 +133,13 @@ export default function LandingNavbar({ solid = false }: LandingNavbarProps) {
   };
 
   const handleDropdownItemClick = (itemId: string, subItemTitle: string) => {
-    if (itemId === "pricing") {
+    if (subItemTitle === "About SkillsCatalyst") {
+      router.push("/about");
+      setActiveDropdown(null);
+    } else if (subItemTitle === "Contact & Community") {
+      router.push("/contact");
+      setActiveDropdown(null);
+    } else if (itemId === "pricing") {
       router.push("/pricing");
       setActiveDropdown(null);
     } else {
@@ -146,7 +170,7 @@ export default function LandingNavbar({ solid = false }: LandingNavbarProps) {
               {/* Full Brand Logo & Title (Top View) */}
               <div className={`scBrandFull ${effectiveScrolled ? "scBrandFullHidden" : ""}`}>
                 <Image
-                  src="/logo_black_v2.png"
+                  src="/logo_white_v2.png"
                   alt="SkillsCatalyst Logo"
                   width={40}
                   height={40}
@@ -193,9 +217,8 @@ export default function LandingNavbar({ solid = false }: LandingNavbarProps) {
                       aria-expanded={isOpen}
                     >
                       <span>{item.label}</span>
-                      <ChevronDown
-                        size={14}
-                        strokeWidth={2.6}
+                      <NavChevronIcon
+                        isOpen={isOpen}
                         className={`scNavChevron ${isOpen ? "scNavChevronOpen" : ""}`}
                       />
                     </button>

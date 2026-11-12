@@ -30,6 +30,7 @@ Invariants Verified:
 
 import os
 import uuid
+import secrets
 import pytest
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
@@ -126,7 +127,7 @@ def setup_phase7_env():
     assert sb is not None, "Supabase client required"
 
     unique_suffix = uuid.uuid4().hex[:8]
-    password = "TestCertPassword123!#"
+    password = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
 
     # 1. Admin
     admin_email = f"p7_admin_{unique_suffix}@skillscatalyst.internal"

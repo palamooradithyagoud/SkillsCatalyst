@@ -25,6 +25,7 @@ Full Lifecycle & Invariants Verified:
 
 import os
 import uuid
+import secrets
 import pytest
 from dotenv import load_dotenv
 from supabase import create_client
@@ -69,7 +70,7 @@ def setup_users():
     assert sb is not None, "Supabase client required"
 
     unique_suffix = uuid.uuid4().hex[:8]
-    password = "TestSecurePassword123!#"
+    password = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
 
     # Admin User
     admin_email = f"phase5_admin_{unique_suffix}@skillscatalyst.internal"

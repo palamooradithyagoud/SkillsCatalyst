@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Bell, X, CheckCircle2 } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useAuth } from "@/lib/auth";
 
 export default function NotificationPermissionBanner() {
+  const { session, isLoading: isAuthLoading } = useAuth();
+  const pathname = usePathname();
+
   const {
     isPushSupported,
     isPushSubscribed,
@@ -17,8 +22,17 @@ export default function NotificationPermissionBanner() {
   const [isSubscribing, setIsSubscribing] = useState<boolean>(false);
   const [justSubscribed, setJustSubscribed] = useState<boolean>(false);
 
+  // Notifications must only be requested after the user logs in, never on the public landing page or auth routes
+  const isExcludedRoute = pathname === "/" || pathname === "/login" || pathname === "/reset-password";
+
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Do not show for unauthenticated visitors, while checking auth, or on public/landing pages
+    if (!session || isAuthLoading || isExcludedRoute) {
+      setIsDismissed(true);
+      return;
+    }
 
     // Check if dismissed recently (cooldown: 7 days)
     const dismissedTime = localStorage.getItem("skillscatalyst_notif_banner_dismissed");
@@ -36,7 +50,7 @@ export default function NotificationPermissionBanner() {
     } else {
       setIsDismissed(true);
     }
-  }, [isPushSupported, isPushSubscribed, pushPermission]);
+  }, [session, isAuthLoading, isExcludedRoute, isPushSupported, isPushSubscribed, pushPermission]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -67,19 +81,19 @@ export default function NotificationPermissionBanner() {
     }
   };
 
-  if (isDismissed || !isPushSupported || isPushSubscribed) {
+  if (!session || isAuthLoading || isExcludedRoute || isDismissed || !isPushSupported || isPushSubscribed) {
     return null;
   }
 
   if (justSubscribed) {
     return (
-      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-sm w-[calc(100vw-2rem)] bg-white/95 dark:bg-[#0A0A0C]/95 border border-[#C8B6FF]/50 dark:border-[#C8B6FF]/35 backdrop-blur-xl rounded-2xl p-4 shadow-2xl shadow-[#C8B6FF]/15 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
-        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shrink-0 border border-[#C8B6FF]/40 shadow-xs">
-          <CheckCircle2 className="w-5 h-5 text-[#C8B6FF]" />
+      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-sm w-[calc(100vw-2rem)] bg-[#10110E]/95 border border-[#24271F] backdrop-blur-xl rounded-2xl p-4 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shrink-0 border border-[#d5ff38]/40 shadow-xs">
+          <CheckCircle2 className="w-5 h-5 text-[#d5ff38]" />
         </div>
         <div>
-          <p className="text-sm font-bold text-black dark:text-white">Notifications Enabled</p>
-          <p className="text-xs text-zinc-600 dark:text-zinc-300">You will receive streak alerts and new updates.</p>
+          <p className="text-sm font-bold text-white">Notifications Enabled</p>
+          <p className="text-xs text-zinc-400">You will receive streak alerts and new updates.</p>
         </div>
       </div>
     );
@@ -89,15 +103,15 @@ export default function NotificationPermissionBanner() {
     <div
       role="region"
       aria-label="Notification Permission"
-      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-md w-[calc(100vw-2rem)] bg-white/95 dark:bg-[#0A0A0C]/95 border border-[#C8B6FF]/40 dark:border-[#C8B6FF]/30 backdrop-blur-xl rounded-2xl p-4 sm:p-5 shadow-[0_12px_40px_-10px_rgba(200,182,255,0.22),_0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_45px_-10px_rgba(200,182,255,0.18),_0_6px_25px_rgba(0,0,0,0.7)] flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden relative"
+      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-md w-[calc(100vw-2rem)] bg-white/95 dark:bg-[#10110E]/95 border border-zinc-200 dark:border-[#24271F] backdrop-blur-xl rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden relative"
     >
-      {/* Top delicate lilac accent line */}
-      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-[#C8B6FF] to-transparent opacity-70" />
+      {/* Top delicate acid lime accent line */}
+      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-[#d5ff38]/60 to-transparent" />
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3.5">
-          {/* Official brand logo emblem with lilac pulse indicator */}
-          <div className="relative w-11 h-11 rounded-xl bg-black dark:bg-[#121217] flex items-center justify-center p-2 border border-[#C8B6FF]/40 shadow-md shrink-0">
+          {/* Official brand logo emblem with acid lime indicator */}
+          <div className="relative w-11 h-11 rounded-xl bg-black dark:bg-[#18191E] flex items-center justify-center p-2 border border-[#24271F] shadow-md shrink-0">
             <Image
               src="/logo_white_v2.png"
               alt="SkillsCatalyst"
@@ -106,10 +120,10 @@ export default function NotificationPermissionBanner() {
               className="w-full h-full object-contain"
               priority
             />
-            {/* Lilac live notification indicator */}
+            {/* Acid lime live notification indicator */}
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C8B6FF] opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C8B6FF] border-2 border-white dark:border-[#0A0A0C]" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d5ff38] opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#d5ff38] border-2 border-white dark:border-[#10110E]" />
             </span>
           </div>
 
@@ -118,7 +132,7 @@ export default function NotificationPermissionBanner() {
               <h4 className="text-sm font-bold text-black dark:text-white tracking-tight">
                 Stay updated
               </h4>
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C8B6FF]/20 text-[#6D28D9] dark:text-[#C8B6FF] border border-[#C8B6FF]/35">
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#d5ff38]/15 text-[#10110E] dark:text-[#d5ff38] border border-[#d5ff38]/30">
                 Updates
               </span>
             </div>
@@ -144,7 +158,7 @@ export default function NotificationPermissionBanner() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
+      <div className="flex items-center justify-end gap-2 pt-1 border-t border-zinc-100 dark:border-[#24271F]">
         <button
           type="button"
           onClick={handleDismiss}
@@ -156,7 +170,7 @@ export default function NotificationPermissionBanner() {
           type="button"
           onClick={handleEnable}
           disabled={isSubscribing}
-          className="px-4 py-2 text-xs font-semibold text-[#0A0A0C] bg-[#C8B6FF] hover:bg-[#D4C5FF] active:scale-[0.98] rounded-xl shadow-[0_2px_12px_rgba(200,182,255,0.32)] hover:shadow-[0_4px_18px_rgba(200,182,255,0.48)] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="px-4 py-2 text-xs font-bold text-black bg-[#d5ff38] hover:bg-[#c4ec32] active:scale-[0.98] rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           {isSubscribing ? (
             <>
@@ -165,7 +179,7 @@ export default function NotificationPermissionBanner() {
             </>
           ) : (
             <>
-              <Bell className="w-3.5 h-3.5 text-[#0A0A0C]" strokeWidth={2.2} />
+              <Bell className="w-3.5 h-3.5 text-black" strokeWidth={2.2} />
               <span>Enable Notifications</span>
             </>
           )}

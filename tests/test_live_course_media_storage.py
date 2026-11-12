@@ -20,6 +20,7 @@ Verifies:
 import os
 import io
 import uuid
+import secrets
 import pytest
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -60,7 +61,7 @@ def create_test_png_bytes(color: str = "green") -> bytes:
 def admin_user():
     """Finds or creates an admin test user in auth.users."""
     email = f"media_admin_{uuid.uuid4().hex[:8]}@skillscatalyst.internal"
-    pwd = "AdminSecurePassword123!#"
+    pwd = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
     user_resp = admin_client.auth.admin.create_user({
         "email": email,
         "password": pwd,

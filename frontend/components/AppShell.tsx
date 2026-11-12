@@ -52,7 +52,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
-            <NotificationPermissionBanner />
+            {!isLandingPage && !isAuthPage && !isPricingPage && !isLegalPage && (
+              <NotificationPermissionBanner />
+            )}
           </div>
         ) : (
           <div className="flex flex-col min-h-screen w-full relative bg-white dark:bg-black text-[#18191F] dark:text-white">

@@ -565,7 +565,7 @@ export function Component({
             {/* Menu Content Wrapper */}
             <div className="menu-content-wrapper">
               {/* Drawer Top Bar */}
-              <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 dark:border-purple-900/30 shrink-0 gap-2">
+              <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 dark:border-[#24271F] shrink-0 gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <SkillsCatalystLogo size="sm" showText animated />
                 </div>
@@ -618,7 +618,7 @@ export function Component({
                           className="nav-link w-inline-block group"
                         >
                           <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0">
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-50 dark:bg-white/10 border border-purple-100/80 dark:border-white/10 flex items-center justify-center text-purple-600 dark:text-neutral-200 group-hover:scale-105 group-hover:bg-purple-600 dark:group-hover:bg-white/20 group-hover:text-white dark:group-hover:text-white transition-all shrink-0 shadow-xs">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-[#24271F] flex items-center justify-center text-slate-700 dark:text-neutral-200 group-hover:scale-105 group-hover:bg-[#d5ff38] group-hover:text-black dark:group-hover:bg-[#d5ff38] dark:group-hover:text-black group-hover:border-[#d5ff38] transition-all shrink-0 shadow-xs">
                               <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={2.2} />
                             </div>
                             <div className="min-w-0">
@@ -627,7 +627,7 @@ export function Component({
                                 {item.badge && (
                                   <span
                                     data-menu-fade
-                                    className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 dark:bg-white/15 text-purple-700 dark:text-neutral-200 border border-purple-200/80 dark:border-white/20 shrink-0"
+                                    className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#d5ff38]/10 text-slate-700 dark:text-[#d5ff38] border border-slate-200/80 dark:border-[#d5ff38]/30 shrink-0"
                                   >
                                     {item.badge}
                                   </span>
@@ -644,7 +644,7 @@ export function Component({
 
                           <div className="nav-link-hover-bg" />
                           <ChevronRight
-                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-neutral-500 group-hover:text-purple-600 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 shrink-0"
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-neutral-500 group-hover:text-[#d5ff38] dark:group-hover:text-[#d5ff38] transition-all group-hover:translate-x-0.5 shrink-0"
                             data-menu-fade
                           />
                         </Link>
@@ -656,8 +656,8 @@ export function Component({
 
               {/* Drawer Theme Mode */}
               <div data-menu-fade className="pt-2 pb-1 shrink-0">
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-purple-950/40 border border-slate-200/80 dark:border-purple-800/50">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-purple-200">
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-[#18191E] border border-slate-200/80 dark:border-[#24271F]">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-neutral-200">
                     Theme Mode
                   </span>
                   <ThemeSwitch size={32} />
@@ -665,27 +665,27 @@ export function Component({
               </div>
 
               {/* Drawer Bottom Bar: User Info & Support */}
-              <div data-menu-fade className="pt-3 border-t border-slate-100 dark:border-purple-900/30 shrink-0 flex items-center justify-between gap-2">
+              <div data-menu-fade className="pt-3 border-t border-slate-100 dark:border-[#24271F] shrink-0 flex items-center justify-between gap-2">
                 <div
                   onClick={() => handleNavigate("/profile")}
-                  className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-purple-950/30 transition-colors min-w-0"
+                  className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-[#18191E] transition-colors min-w-0"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/60 border border-purple-200 dark:border-purple-700/60 flex items-center justify-center text-purple-700 dark:text-purple-300 font-bold text-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#d5ff38]/15 dark:bg-[#d5ff38]/15 border border-[#d5ff38]/30 dark:border-[#d5ff38]/30 flex items-center justify-center text-[#24271F] dark:text-[#d5ff38] font-bold text-xs shrink-0">
                     {userInitial}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-slate-900 dark:text-purple-100 truncate max-w-[130px] sm:max-w-[170px]">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-[170px]">
                       {userEmail}
                     </p>
                     {isPremium ? (
                       <div className="flex flex-col mt-0.5">
-                        <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-300 flex items-center gap-1 leading-tight">
+                        <span className="text-[10px] font-semibold text-[#d5ff38] flex items-center gap-1 leading-tight">
                           Pro Explorer
-                          <Crown className="w-2.5 h-2.5 text-purple-600 dark:text-purple-300 shrink-0" />
+                          <Crown className="w-2.5 h-2.5 text-[#d5ff38] shrink-0" />
                         </span>
                         {formattedExpiry && (
-                          <span className="text-[9.5px] font-medium text-purple-500/90 dark:text-purple-400 flex items-center gap-1 mt-0.5 leading-tight">
-                            <Calendar className="w-2.5 h-2.5 text-purple-500/80 dark:text-purple-400/80 shrink-0" />
+                          <span className="text-[9.5px] font-medium text-slate-400 flex items-center gap-1 mt-0.5 leading-tight">
+                            <Calendar className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                             Renews {formattedExpiry}
                           </span>
                         )}
@@ -706,9 +706,9 @@ export function Component({
                               window.dispatchEvent(new CustomEvent("open-pricing-modal"));
                             }
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/80 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-bold text-[9.5px] shadow-2xs transition-all active:scale-95 cursor-pointer leading-tight"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#d5ff38] hover:bg-[#c4ec32] border border-[#d5ff38] text-black font-bold text-[9.5px] shadow-2xs transition-all active:scale-95 cursor-pointer leading-tight"
                         >
-                          <Crown className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                          <Crown className="w-2.5 h-2.5 text-black shrink-0" />
                           <span>Buy PRO</span>
                         </button>
                       </div>
@@ -724,7 +724,7 @@ export function Component({
                       handleNavigate("/support");
                     }}
                     aria-label="Support desk"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-purple-950/50 hover:bg-slate-200 dark:hover:bg-purple-900/60 text-slate-700 dark:text-purple-300 hover:text-slate-900 dark:hover:text-purple-100 transition-colors border border-slate-200/60 dark:border-purple-800/50"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-[#18191E] hover:bg-slate-200 dark:hover:bg-[#24262E] text-slate-700 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-200/60 dark:border-[#24271F]"
                   >
                     <LifeBuoy className="w-4 h-4" />
                   </Link>
@@ -737,7 +737,7 @@ export function Component({
                       router.push("/login");
                     }}
                     aria-label="Sign out"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-purple-950/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-slate-700 dark:text-purple-300 hover:text-red-600 dark:hover:text-red-400 transition-colors border border-slate-200/60 dark:border-purple-800/50 hover:border-red-200 dark:hover:border-red-800/50"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-[#18191E] hover:bg-red-50 dark:hover:bg-red-950/50 text-slate-700 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 transition-colors border border-slate-200/60 dark:border-[#24271F] hover:border-red-200 dark:hover:border-red-800/50"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>

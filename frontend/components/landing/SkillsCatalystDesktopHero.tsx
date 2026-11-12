@@ -5,13 +5,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronDown,
-  X,
-  ChevronRight,
-} from "lucide-react";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
+
+// Bespoke minimal chevron icon (Zero stock lucide-react dependency)
+function NavChevronIcon({ isOpen, className = "" }: { isOpen?: boolean; className?: string }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <polyline points="3.5 5 7 8.5 10.5 5" />
+    </svg>
+  );
+}
 
 
 import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
@@ -64,10 +79,10 @@ const NAV_ITEMS: NavItem[] = [
     id: "resources",
     label: "Resources",
     items: [
+      { title: "About SkillsCatalyst", description: "Our campus origin, team, and engineering mission" },
+      { title: "Contact & Community", description: "Direct student support, grievance desk & community" },
       { title: "Developer Cheat Sheets", description: "Instant syntax, algorithms & CLI commands" },
       { title: "System Design Playbook", description: "Scalable architecture guides & interview decks" },
-      { title: "ATS Resume Templates", description: "Battle-tested templates optimized for recruiter screeners" },
-      { title: "Starter Repositories", description: "Production-ready boilerplates and architectures" },
     ],
   },
   {
@@ -122,7 +137,13 @@ export default function SkillsCatalystDesktopHero() {
   };
 
   const handleDropdownItemClick = (itemId: string, subItemTitle: string) => {
-    if (itemId === "pricing") {
+    if (subItemTitle === "About SkillsCatalyst") {
+      router.push("/about");
+      setActiveDropdown(null);
+    } else if (subItemTitle === "Contact & Community") {
+      router.push("/contact");
+      setActiveDropdown(null);
+    } else if (itemId === "pricing") {
       router.push("/pricing");
       setActiveDropdown(null);
     } else {
@@ -153,7 +174,7 @@ export default function SkillsCatalystDesktopHero() {
               {/* Full Brand Logo & Title (Top View) */}
               <div className={`scBrandFull ${isScrolled ? "scBrandFullHidden" : ""}`}>
                 <Image
-                  src="/logo_black_v2.png"
+                  src="/logo_white_v2.png"
                   alt="SkillsCatalyst Logo"
                   width={40}
                   height={40}
@@ -200,9 +221,8 @@ export default function SkillsCatalystDesktopHero() {
                       aria-expanded={isOpen}
                     >
                       <span>{item.label}</span>
-                      <ChevronDown
-                        size={14}
-                        strokeWidth={2.6}
+                      <NavChevronIcon
+                        isOpen={isOpen}
                         className={`scNavChevron ${isOpen ? "scNavChevronOpen" : ""}`}
                       />
                     </button>
@@ -297,7 +317,7 @@ export default function SkillsCatalystDesktopHero() {
         <section className="scDesktopHeroCard">
           {/* Glowing Horizon Background (Turned 180 degrees upside down, responsive mobile & desktop) */}
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[220%] sm:w-[150%] md:w-full h-[55%] sm:h-[70%] md:h-full pointer-events-none overflow-hidden z-0 select-none"
+            className="absolute top-[6%] md:top-0 left-1/2 -translate-x-1/2 w-[260%] sm:w-[170%] md:w-full h-full pointer-events-none overflow-hidden z-0 select-none"
             aria-hidden="true"
           >
             <div
@@ -325,8 +345,8 @@ export default function SkillsCatalystDesktopHero() {
                 <span className="whitespace-nowrap">AI-Powered</span> Career
               </span>
               <span
-                className="block mt-1 sm:mt-2 font-black text-[#A47DAB] drop-shadow-[0_0_35px_rgba(164,125,171,0.55)]"
-                style={{ color: "#A47DAB" }}
+                className="block mt-1 sm:mt-2 font-black text-[#d5ff38] drop-shadow-[0_0_35px_rgba(213,255,56,0.55)]"
+                style={{ color: "#d5ff38" }}
               >
                 Platform
               </span>

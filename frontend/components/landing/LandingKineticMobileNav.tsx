@@ -5,7 +5,23 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
-import { X, ChevronRight } from "lucide-react";
+
+function MobileCloseIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className={className} aria-hidden="true">
+      <line x1="3" y1="3" x2="15" y2="15" />
+      <line x1="15" y1="3" x2="3" y2="15" />
+    </svg>
+  );
+}
+
+function MobileChevronRightIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <polyline points="6 3 12 9 6 15" />
+    </svg>
+  );
+}
 
 // Register GSAP CustomEase safely on client
 if (typeof window !== "undefined") {
@@ -50,6 +66,18 @@ const MENU_ITEMS = [
     label: "Pricing",
     subtitle: "Student Pass (₹99) & Catalyst Pro",
     shapeIndex: "5",
+  },
+  {
+    id: "about",
+    label: "About Us",
+    subtitle: "Our campus origin, team & vision",
+    shapeIndex: "1",
+  },
+  {
+    id: "contact",
+    label: "Contact & Support",
+    subtitle: "Student helpdesk, WhatsApp & grievance",
+    shapeIndex: "2",
   },
 ];
 
@@ -165,11 +193,21 @@ export default function LandingKineticMobileNav({
         tl.set(navWrap, { display: "block" })
           .set(menu, { yPercent: 0 }, "<")
           .fromTo(overlay, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35 }, "<")
-          // Kinetic Top-to-Down Cascading Layers (1: Black -> 2: Lilac -> 3: White)
+          // Kinetic Top-to-Down Cascading Layers (1: Black -> 2: Acid Lime -> 3: Obsidian)
           .fromTo(
             bgPanels,
             { yPercent: -101 },
-            { yPercent: 0, stagger: 0.12, duration: 0.58, ease: "main" },
+            {
+              yPercent: 0,
+              stagger: 0.12,
+              duration: 0.58,
+              ease: "main",
+              onComplete: () => {
+                // Hide intermediate acid lime curtain so it doesn't bleed through bottom rounded corner antialiasing
+                const second = containerRef.current?.querySelector(".backdrop-layer.second") as HTMLElement | null;
+                if (second) second.style.opacity = "0";
+              },
+            },
             "<"
           )
           // Menu links roll into place
@@ -195,6 +233,9 @@ export default function LandingKineticMobileNav({
 
         // CLOSE: Cascade back UP to the TOP
         if (navWrap) navWrap.setAttribute("data-nav", "closed");
+
+        const second = containerRef.current?.querySelector(".backdrop-layer.second") as HTMLElement | null;
+        if (second) second.style.opacity = "1";
 
         tl.to(overlay, { autoAlpha: 0, duration: 0.3 })
           .to(
@@ -227,7 +268,11 @@ export default function LandingKineticMobileNav({
 
   const handleItemClick = (id: string) => {
     onClose();
-    if (id === "pricing") {
+    if (id === "about") {
+      router.push("/about");
+    } else if (id === "contact") {
+      router.push("/contact");
+    } else if (id === "pricing") {
       onNavigateToPricing();
     } else {
       onNavigateToLogin();
@@ -252,10 +297,10 @@ export default function LandingKineticMobileNav({
             <div className="ambient-background-shapes">
               {/* Shape 1: Floating circles */}
               <svg className="bg-shape bg-shape-1" viewBox="0 0 400 400" fill="none">
-                <circle className="shape-element" cx="80" cy="120" r="40" fill="rgba(104,53,148,0.18)" />
-                <circle className="shape-element" cx="300" cy="80" r="60" fill="rgba(139,92,246,0.15)" />
-                <circle className="shape-element" cx="200" cy="300" r="80" fill="rgba(236,72,153,0.12)" />
-                <circle className="shape-element" cx="350" cy="280" r="30" fill="rgba(104,53,148,0.16)" />
+                <circle className="shape-element" cx="80" cy="120" r="40" fill="rgba(213,255,56,0.12)" />
+                <circle className="shape-element" cx="300" cy="80" r="60" fill="rgba(213,255,56,0.08)" />
+                <circle className="shape-element" cx="200" cy="300" r="80" fill="rgba(100,116,139,0.12)" />
+                <circle className="shape-element" cx="350" cy="280" r="30" fill="rgba(213,255,56,0.1)" />
               </svg>
 
               {/* Shape 2: Wave pattern */}
@@ -263,14 +308,14 @@ export default function LandingKineticMobileNav({
                 <path
                   className="shape-element"
                   d="M0 200 Q100 100, 200 200 T 400 200"
-                  stroke="rgba(104,53,148,0.22)"
+                  stroke="rgba(213,255,56,0.14)"
                   strokeWidth="50"
                   fill="none"
                 />
                 <path
                   className="shape-element"
                   d="M0 280 Q100 180, 200 280 T 400 280"
-                  stroke="rgba(168,85,247,0.18)"
+                  stroke="rgba(213,255,56,0.1)"
                   strokeWidth="35"
                   fill="none"
                 />
@@ -278,28 +323,28 @@ export default function LandingKineticMobileNav({
 
               {/* Shape 3: Grid dots */}
               <svg className="bg-shape bg-shape-3" viewBox="0 0 400 400" fill="none">
-                <circle className="shape-element" cx="60" cy="60" r="8" fill="rgba(104,53,148,0.3)" />
-                <circle className="shape-element" cx="160" cy="60" r="8" fill="rgba(139,92,246,0.3)" />
-                <circle className="shape-element" cx="260" cy="60" r="8" fill="rgba(236,72,153,0.3)" />
-                <circle className="shape-element" cx="100" cy="160" r="12" fill="rgba(139,92,246,0.25)" />
-                <circle className="shape-element" cx="200" cy="160" r="12" fill="rgba(236,72,153,0.25)" />
-                <circle className="shape-element" cx="300" cy="160" r="12" fill="rgba(104,53,148,0.25)" />
-                <circle className="shape-element" cx="60" cy="260" r="10" fill="rgba(236,72,153,0.3)" />
-                <circle className="shape-element" cx="160" cy="260" r="10" fill="rgba(104,53,148,0.3)" />
-                <circle className="shape-element" cx="260" cy="260" r="10" fill="rgba(139,92,246,0.3)" />
+                <circle className="shape-element" cx="60" cy="60" r="8" fill="rgba(213,255,56,0.18)" />
+                <circle className="shape-element" cx="160" cy="60" r="8" fill="rgba(213,255,56,0.18)" />
+                <circle className="shape-element" cx="260" cy="60" r="8" fill="rgba(100,116,139,0.25)" />
+                <circle className="shape-element" cx="100" cy="160" r="12" fill="rgba(213,255,56,0.14)" />
+                <circle className="shape-element" cx="200" cy="160" r="12" fill="rgba(100,116,139,0.2)" />
+                <circle className="shape-element" cx="300" cy="160" r="12" fill="rgba(213,255,56,0.14)" />
+                <circle className="shape-element" cx="60" cy="260" r="10" fill="rgba(100,116,139,0.25)" />
+                <circle className="shape-element" cx="160" cy="260" r="10" fill="rgba(213,255,56,0.18)" />
+                <circle className="shape-element" cx="260" cy="260" r="10" fill="rgba(213,255,56,0.18)" />
               </svg>
 
-              {/* Shape 4: Organic blobs */}
+              {/* Shape 4: Subtle geometry */}
               <svg className="bg-shape bg-shape-4" viewBox="0 0 400 400" fill="none">
                 <path
                   className="shape-element"
                   d="M100 100 Q150 50, 200 100 Q250 150, 200 200 Q150 250, 100 200 Q50 150, 100 100"
-                  fill="rgba(104,53,148,0.14)"
+                  fill="rgba(213,255,56,0.08)"
                 />
                 <path
                   className="shape-element"
                   d="M250 200 Q300 150, 350 200 Q400 250, 350 300 Q300 350, 250 300 Q200 250, 250 200"
-                  fill="rgba(236,72,153,0.12)"
+                  fill="rgba(100,116,139,0.1)"
                 />
               </svg>
 
@@ -311,7 +356,7 @@ export default function LandingKineticMobileNav({
                   y1="100"
                   x2="300"
                   y2="400"
-                  stroke="rgba(104,53,148,0.18)"
+                  stroke="rgba(213,255,56,0.1)"
                   strokeWidth="25"
                 />
                 <line
@@ -320,7 +365,7 @@ export default function LandingKineticMobileNav({
                   y1="0"
                   x2="400"
                   y2="300"
-                  stroke="rgba(168,85,247,0.14)"
+                  stroke="rgba(100,116,139,0.12)"
                   strokeWidth="20"
                 />
               </svg>
@@ -330,9 +375,9 @@ export default function LandingKineticMobileNav({
           {/* Menu Content Wrapper */}
           <div className="menu-content-wrapper">
             {/* Top Bar inside Menu Header */}
-            <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-black border border-white/[0.1] flex items-center justify-center shadow-md">
                   <Image
                     src="/logo_white_v2.png"
                     alt="SkillsCatalyst Logo"
@@ -341,19 +386,19 @@ export default function LandingKineticMobileNav({
                     className="object-contain"
                   />
                 </div>
-                <span className="font-extrabold text-lg tracking-tight text-slate-900">
+                <span className="font-extrabold text-lg tracking-tight text-white">
                   SkillsCatalyst
                 </span>
               </div>
 
-              {/* Close Button with crisp rotation */}
+              {/* Close Button with crisp dark glass aesthetic */}
               <button
                 type="button"
                 onClick={onClose}
-                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 flex items-center justify-center text-slate-800 transition-all shadow-sm"
+                className="w-10 h-10 rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 flex items-center justify-center text-white border border-white/[0.12] transition-all shadow-sm cursor-pointer"
                 aria-label="Close navigation menu"
               >
-                <X size={20} strokeWidth={2.6} className="nav-close-btn-icon" />
+                <MobileCloseIcon className="nav-close-btn-icon" />
               </button>
             </div>
 
@@ -368,14 +413,14 @@ export default function LandingKineticMobileNav({
                 >
                   <div className="nav-link cursor-pointer">
                     <div className="flex flex-col">
-                      <span className="font-bold text-base text-slate-900 leading-snug">
+                      <span className="font-bold text-base text-white leading-snug">
                         {item.label}
                       </span>
-                      <span className="text-xs text-slate-500 font-normal">
+                      <span className="text-xs text-slate-400 font-normal mt-0.5">
                         {item.subtitle}
                       </span>
                     </div>
-                    <ChevronRight size={18} className="text-slate-400 shrink-0" />
+                    <MobileChevronRightIcon className="text-slate-400 shrink-0" />
                     <div className="nav-link-hover-bg" />
                   </div>
                 </li>

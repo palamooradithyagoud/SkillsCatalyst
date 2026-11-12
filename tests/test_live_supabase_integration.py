@@ -4,6 +4,7 @@ Runs against the actual live Supabase database zzjxprhapptjoziwdcro.
 """
 import os
 import uuid
+import secrets
 import pytest
 from datetime import date
 from dotenv import load_dotenv
@@ -28,7 +29,7 @@ def setup_test_users():
     """Create two real test users via Supabase Admin API and clean them up after tests."""
     email_a = f"audit_a_{uuid.uuid4().hex[:8]}@skillscatalyst.internal"
     email_b = f"audit_b_{uuid.uuid4().hex[:8]}@skillscatalyst.internal"
-    password = "AuditSecurePassword123!#"
+    password = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
 
     # Create User A
     user_a_resp = admin_client.auth.admin.create_user({

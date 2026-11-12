@@ -17,7 +17,7 @@
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: #000000;
+  background-color: #10110E;
   color: var(--sc-text);
   overflow-x: clip;
   user-select: none;
@@ -34,7 +34,7 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #10110E;
   position: relative;
   padding-top: 0.75rem;
   box-sizing: border-box;
@@ -77,15 +77,17 @@
   }
 }
 
-/* White Pill Backdrop that smoothly fades in on scroll */
+/* Obsidian Pill Backdrop that smoothly fades in on scroll */
 .scNavScrolledBackdrop {
   pointer-events: none;
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background-color: #ffffff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background-color: rgba(16, 17, 14, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 1px solid #24271F;
   opacity: 0;
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -144,7 +146,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.025em;
-  color: #000000;
+  color: #ffffff;
   white-space: nowrap;
 }
 
@@ -173,7 +175,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.025em;
-  color: #000000;
+  color: #ffffff;
   white-space: nowrap;
 }
 
@@ -193,29 +195,31 @@
   object-fit: contain;
 }
 
-/* ── Center White Navigation Pill Bar ── */
+/* ── Center Black Navigation Pill Bar ── */
 .scNavCenterBar {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   width: 65%;
-  background: #ffffff;
+  background: #000000;
+  border: 1px solid #24271F;
   padding: 0.45rem 1rem;
   border-radius: 9999px;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   transition: all 0.35s ease;
 }
 
 .scNavCenterBarScrolled {
   box-shadow: none;
   background: transparent;
+  border: none;
 }
 
 .scNavItemWrapper {
   position: relative;
 }
 
-/* Individual Pill Button inside Center Bar */
+/* Individual Pill Button inside Center Bar: Dark Charcoal */
 .scNavPillBtn {
   position: relative;
   display: inline-flex;
@@ -223,33 +227,54 @@
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
   font-size: 0.88rem;
-  font-weight: 500;
-  color: #000000;
-  background: #ffffff;
+  font-weight: 600;
+  color: #ffffff;
+  background: #18191E;
   border-radius: 9999px;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
 }
 
-.scNavPillBtn:hover {
-  background: #f9fafb;
+.scNavPillBtn:hover,
+.scNavPillBtn:focus-visible,
+.scNavItemWrapper:hover .scNavPillBtn,
+.scNavPillBtn[aria-expanded="true"] {
+  background: #d5ff38 !important;
+  border-color: #d5ff38 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.scNavPillBtn:hover span,
+.scNavPillBtn:focus-visible span,
+.scNavItemWrapper:hover .scNavPillBtn span,
+.scNavPillBtn[aria-expanded="true"] span {
+  color: #000000 !important;
 }
 
 .scNavChevron {
   width: 14px;
   height: 14px;
-  color: #000000;
-  transition: transform 0.2s ease;
+  color: #94a3b8;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.scNavPillBtn:hover .scNavChevron,
+.scNavPillBtn:focus-visible .scNavChevron,
+.scNavItemWrapper:hover .scNavPillBtn .scNavChevron,
+.scNavPillBtn[aria-expanded="true"] .scNavChevron {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 .scNavChevronOpen {
   transform: rotate(180deg);
+  color: #000000 !important;
 }
 
 /* Dropdown Menu on hover/active */
@@ -259,11 +284,13 @@
   left: 50%;
   transform: translateX(-50%);
   width: 290px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #121318;
+  border: 1px solid #24271F;
   border-radius: 18px;
   padding: 0.65rem;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 150;
   display: flex;
   flex-direction: column;
@@ -286,23 +313,23 @@
 }
 
 .scDropdownItem:hover {
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .scDropdownItemTitle {
   font-size: 0.84rem;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
 }
 
 .scDropdownItem:hover .scDropdownItemTitle {
-  color: #7c3aed;
+  color: #d5ff38;
 }
 
 .scDropdownItemDesc {
   font-size: 0.72rem;
   font-weight: 400;
-  color: #6b7280;
+  color: #94a3b8;
   line-height: 1.3;
 }
 
@@ -318,7 +345,7 @@
   padding-right: 0.65rem;
 }
 
-/* 1. Log In Button: Outline Pill Style with Black Text & Solid Lilac Fill on Hover */
+/* 1. Log In Button: Outline Pill Style with White Text & Acid Lime #d5ff38 Fill on Hover */
 .scNavLoginBtn {
   display: inline-flex;
   align-items: center;
@@ -326,56 +353,59 @@
   padding: 0.5rem 1.4rem;
   font-size: 0.88rem;
   font-weight: 700;
-  color: #000000;
+  color: #ffffff;
   background: transparent;
-  border: 1.5px solid #A47DAB;
+  border: 1.5px solid #d5ff38;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 4px rgba(164, 125, 171, 0.08);
+  box-shadow: none;
 }
 
 .scNavLoginBtn:hover {
-  background: #A47DAB;
-  border-color: #A47DAB;
-  color: #ffffff;
+  background: #d5ff38;
+  border-color: #d5ff38;
+  color: #000000;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35);
+  box-shadow: none;
 }
 
 .scNavLoginBtn:active {
   transform: scale(0.97);
+  box-shadow: none;
 }
 
-/* 2. Sign Up Button: Solid Filled Pill Style in Solid Lilac #A47DAB (No Gradient) */
+/* 2. Sign Up Button: Solid Filled Pill Style in Acid Lime #d5ff38 */
 .scNavSignUpBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.5rem 1.5rem;
   font-size: 0.88rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: #A47DAB;
-  border: 1.5px solid #A47DAB;
+  font-weight: 800;
+  color: #000000;
+  background: #d5ff38;
+  border: 1.5px solid #d5ff38;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35);
+  box-shadow: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.scNavSignUpBtn:hover {
-  background: transparent;
-  border-color: #A47DAB;
-  color: #000000;
+.scNavSignUpBtn:hover,
+.scNavSignUpBtn:focus-visible {
+  background: #000000 !important;
+  border-color: #d5ff38 !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.18);
+  box-shadow: none !important;
 }
 
 .scNavSignUpBtn:active {
   transform: scale(0.97);
+  box-shadow: none;
 }
 
 /* ── Precision 3-Segment Notch Header ── */
@@ -416,7 +446,7 @@
 }
 
 .scNotchLeftCutout {
-  background-color: #ffffff;
+  background-color: #10110E;
   width: 100%;
   height: 64px;
   border-bottom-right-radius: 34px;
@@ -437,7 +467,7 @@
 }
 
 .scNotchRightCutout {
-  background-color: #ffffff;
+  background-color: #10110E;
   width: 100%;
   height: 64px;
   border-bottom-left-radius: 34px;
@@ -450,7 +480,7 @@
   min-height: 92vh;
   margin: 0 auto 2.5rem auto;
   border-radius: 48px 48px 16px 16px;
-  border: 4px solid rgba(255, 255, 255, 0.12);
+  border: 2px solid #24271F;
   border-top: none;
   background-color: #000000;
   overflow: hidden;
@@ -575,9 +605,9 @@
   justify-content: center;
   padding: 0.95rem 2.25rem;
   font-size: 1.05rem;
-  font-weight: 700;
-  color: #ffffff;
-  background-color: #A47DAB;
+  font-weight: 800;
+  color: #000000;
+  background-color: #d5ff38;
   border-radius: 14px;
   border: none;
   cursor: pointer;
@@ -587,13 +617,15 @@
 }
 
 .scPrimaryCTA:hover {
-  background-color: #936b9a;
+  background-color: #c4ec32;
+  color: #000000;
   transform: translateY(-1px);
   box-shadow: none;
 }
 
 .scPrimaryCTA:active {
   transform: scale(0.98);
+  box-shadow: none;
 }
 
 .scSecondaryCTA {
@@ -1214,7 +1246,7 @@
   .scNavBrandAreaScrolled .scNavBrandTitleScrolled {
     font-size: 1.15rem !important;
     font-weight: 800 !important;
-    color: #000000 !important;
+    color: #ffffff !important;
   }
 
   .scNavBrandAreaScrolled .scCompactLogoSquare {
@@ -1238,10 +1270,35 @@
   .scNavCenterBarScrolled .scNavPillBtn {
     padding: 0.42rem 0.82rem !important;
     font-size: 0.84rem !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    background: #ffffff !important;
-    color: #1e293b !important;
+    box-shadow: none !important;
+    border: 1px solid #24271F !important;
+    background: #18191E !important;
+    color: #ffffff !important;
+  }
+
+  .scNavCenterBarScrolled .scNavPillBtn:hover,
+  .scNavCenterBarScrolled .scNavPillBtn:focus-visible,
+  .scNavCenterBarScrolled .scNavItemWrapper:hover .scNavPillBtn,
+  .scNavCenterBarScrolled .scNavPillBtn[aria-expanded="true"] {
+    background: #d5ff38 !important;
+    border-color: #d5ff38 !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .scNavCenterBarScrolled .scNavPillBtn:hover span,
+  .scNavCenterBarScrolled .scNavPillBtn:focus-visible span,
+  .scNavCenterBarScrolled .scNavItemWrapper:hover .scNavPillBtn span,
+  .scNavCenterBarScrolled .scNavPillBtn[aria-expanded="true"] span {
+    color: #000000 !important;
+  }
+
+  .scNavCenterBarScrolled .scNavPillBtn:hover .scNavChevron,
+  .scNavCenterBarScrolled .scNavPillBtn:focus-visible .scNavChevron,
+  .scNavCenterBarScrolled .scNavItemWrapper:hover .scNavPillBtn .scNavChevron,
+  .scNavCenterBarScrolled .scNavPillBtn[aria-expanded="true"] .scNavChevron {
+    color: #000000 !important;
+    stroke: #000000 !important;
   }
 
   .scNavRightActionsScrolled {
@@ -1259,38 +1316,39 @@
     padding: 0.38rem 1.15rem !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
-    color: #000000 !important;
+    color: #ffffff !important;
     background: transparent !important;
-    border: 1.5px solid #A47DAB !important;
+    border: 1.5px solid #d5ff38 !important;
     border-radius: 9999px !important;
     box-shadow: none !important;
     transition: all 0.22s ease !important;
   }
 
   .scNavLoginBtnScrolled:hover {
-    background: #A47DAB !important;
-    border-color: #A47DAB !important;
-    color: #ffffff !important;
-    box-shadow: 0 3px 10px rgba(164, 125, 171, 0.35) !important;
+    background: #d5ff38 !important;
+    border-color: #d5ff38 !important;
+    color: #000000 !important;
+    box-shadow: none !important;
   }
 
   .scNavSignUpBtnScrolled {
     padding: 0.38rem 1.25rem !important;
     font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    background: #A47DAB !important;
-    border: 1.5px solid #A47DAB !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    background: #d5ff38 !important;
+    border: 1.5px solid #d5ff38 !important;
     border-radius: 9999px !important;
-    box-shadow: 0 3px 10px rgba(164, 125, 171, 0.35) !important;
+    box-shadow: none !important;
     transition: all 0.22s ease !important;
   }
 
-  .scNavSignUpBtnScrolled:hover {
-    background: transparent !important;
-    border-color: #A47DAB !important;
-    color: #000000 !important;
-    box-shadow: 0 2px 8px rgba(164, 125, 171, 0.18) !important;
+  .scNavSignUpBtnScrolled:hover,
+  .scNavSignUpBtnScrolled:focus-visible {
+    background: #000000 !important;
+    border-color: #d5ff38 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
   }
 }
 
@@ -1529,10 +1587,10 @@
     justify-content: center !important;
     padding: 0 1.5rem !important;
     font-size: 1rem !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     border-radius: 14px !important;
-    background-color: #A47DAB !important;
-    color: #ffffff !important;
+    background-color: #d5ff38 !important;
+    color: #000000 !important;
     box-shadow: none !important;
     border: none !important;
     text-decoration: none !important;
@@ -1541,7 +1599,8 @@
 
   .scPrimaryCTA:hover,
   .scPrimaryCTA:focus {
-    background-color: #936b9a !important;
+    background-color: #c4ec32 !important;
+    color: #000000 !important;
     box-shadow: none !important;
     transform: translateY(-1px) !important;
   }
@@ -1604,19 +1663,20 @@
   top: 0;
   left: 0;
   right: 0;
+  bottom: auto !important;
   width: 100%;
   max-width: 100%;
-  max-height: 90vh;
-  max-height: 90dvh;
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  height: auto !important;
+  max-height: calc(100dvh - 2.5rem) !important;
+  border-bottom-left-radius: 1.75rem !important;
+  border-bottom-right-radius: 1.75rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85) !important;
+  border-bottom: 1.5px solid #24271F !important;
+  border-left: 1px solid #24271F !important;
+  border-right: 1px solid #24271F !important;
+  border-top: none !important;
   z-index: 2;
-  background: transparent;
+  background: #10110E !important;
   overflow: hidden;
   will-change: transform;
 }
@@ -1628,8 +1688,8 @@
   height: 100%;
   overflow: hidden;
   z-index: 0;
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
+  border-bottom-left-radius: 1.75rem;
+  border-bottom-right-radius: 1.75rem;
 }
 
 .landing-top-down-menu .backdrop-layer {
@@ -1638,8 +1698,8 @@
   width: 100%;
   height: 100%;
   will-change: transform;
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
+  border-bottom-left-radius: 1.75rem;
+  border-bottom-right-radius: 1.75rem;
 }
 
 .landing-top-down-menu .backdrop-layer.first {
@@ -1648,13 +1708,15 @@
 }
 
 .landing-top-down-menu .backdrop-layer.second {
-  background: #C8A2FF; /* 2nd kinetic curtain: Brand Lilac */
+  background: #d5ff38; /* 2nd kinetic curtain: Acid Lime #d5ff38 */
   z-index: 2;
+  bottom: 8px; /* Stops short of the bottom edge so it never bleeds past the 3rd dark layer */
 }
 
 .landing-top-down-menu .backdrop-layer:not(.first):not(.second) {
-  background: #ffffff; /* 3rd kinetic curtain: Crisp White */
+  background: #10110E; /* 3rd kinetic curtain: Obsidian #10110E */
   z-index: 3;
+  border-bottom: 1.5px solid #24271F;
 }
 
 .landing-top-down-menu .ambient-background-shapes {
@@ -1688,12 +1750,11 @@
 .landing-top-down-menu .menu-content-wrapper {
   position: relative;
   z-index: 10;
-  height: auto;
-  max-height: 90vh;
-  max-height: 90dvh;
+  height: auto !important;
+  max-height: calc(100dvh - 2.5rem) !important;
   display: flex;
   flex-direction: column;
-  padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  padding: 1.15rem 1.25rem 1.35rem !important;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -1722,21 +1783,21 @@
   border-radius: 0.875rem;
   text-decoration: none;
   overflow: hidden;
-  color: #0f172a;
+  color: #ffffff;
   border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
 .landing-top-down-menu .nav-link:hover,
 .landing-top-down-menu .nav-link:active {
-  border-color: rgba(104, 53, 148, 0.2);
-  background: rgba(104, 53, 148, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .landing-top-down-menu .nav-link-hover-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(104, 53, 148, 0.08), rgba(168, 85, 247, 0.1));
+  background: linear-gradient(90deg, rgba(213, 255, 56, 0.08), rgba(213, 255, 56, 0.14));
   border-radius: inherit;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -1759,9 +1820,10 @@
   justify-content: space-between !important;
   gap: 0.75rem !important;
   width: 100% !important;
-  padding-top: 1rem !important;
-  margin-top: 0.5rem !important;
-  border-top: 1px solid #f1f5f9 !important;
+  padding-top: 0.85rem !important;
+  margin-top: 0.4rem !important;
+  margin-bottom: 0.15rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .scKineticNavActions .scNavLoginBtn,
@@ -1786,42 +1848,45 @@
 /* Explicit style enforcement matching Desktop Landing Page */
 .scKineticNavActions .scNavLoginBtn {
   background: transparent !important;
-  border: 1.5px solid #A47DAB !important;
-  color: #000000 !important;
-  box-shadow: 0 1px 4px rgba(164, 125, 171, 0.08) !important;
+  border: 1.5px solid #d5ff38 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .scKineticNavActions .scNavLoginBtn:hover,
 .scKineticNavActions .scNavLoginBtn:focus {
-  background: #A47DAB !important;
-  border-color: #A47DAB !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35) !important;
+  background: #d5ff38 !important;
+  border-color: #d5ff38 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
 }
 
 .scKineticNavActions .scNavLoginBtn:active {
   transform: scale(0.97) !important;
+  box-shadow: none !important;
 }
 
 .scKineticNavActions .scNavSignUpBtn {
-  background: #A47DAB !important;
-  border: 1.5px solid #A47DAB !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.35) !important;
+  background: #d5ff38 !important;
+  border: 1.5px solid #d5ff38 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .scKineticNavActions .scNavSignUpBtn:hover,
 .scKineticNavActions .scNavSignUpBtn:focus {
-  background: transparent !important;
-  border-color: #A47DAB !important;
-  color: #000000 !important;
-  box-shadow: 0 4px 14px rgba(164, 125, 171, 0.18) !important;
+  background: #000000 !important;
+  border-color: #d5ff38 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 .scKineticNavActions .scNavSignUpBtn:active {
   transform: scale(0.97) !important;
+  box-shadow: none !important;
 }
 
 

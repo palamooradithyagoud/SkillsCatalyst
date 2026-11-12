@@ -68,13 +68,13 @@ describe('Password Recovery Test Suite', () => {
     });
 
     it('9. identifies mismatched confirmation passwords', () => {
-      const pass = 'Secret123!';
-      const confirmPass = 'Secret1234!';
+      const pass = 'mock_valid_pass_a_123';
+      const confirmPass = 'mock_valid_pass_b_456';
       assert.notStrictEqual(pass, confirmPass);
     });
 
     it('10. accepts valid matching passwords (>= 6 characters)', () => {
-      const validPasswords = ['123456', 'securePassword', 'SuperSecret!123'];
+      const validPasswords = ['mock_len_6', 'mock_secure_phrase', 'mock_complex_val_123'];
       for (const p of validPasswords) {
         const res = validatePassword(p);
         assert.strictEqual(res.isValid, true, `Expected valid for: ${p}`);
@@ -216,7 +216,7 @@ describe('Password Recovery Test Suite', () => {
     });
 
     it('11. password update method receives the intended new password', async () => {
-      const newPass = 'FreshPassword2026';
+      const newPass = 'mock_fresh_password_token';
       const { data, error } = await mockSupabase.auth.updateUser({ password: newPass });
 
       assert.strictEqual(error, null);
@@ -246,7 +246,7 @@ describe('Password Recovery Test Suite', () => {
     });
 
     it('18. successful reset signs out user and prepares login redirect', async () => {
-      const { error } = await mockSupabase.auth.updateUser({ password: 'newValidPassword' });
+      const { error } = await mockSupabase.auth.updateUser({ password: 'mock_valid_password_token' });
       assert.strictEqual(error, null);
 
       await mockSupabase.auth.signOut();
@@ -262,7 +262,7 @@ describe('Password Recovery Test Suite', () => {
       let successMessage = '';
       let errorMessage = '';
 
-      const { error } = await mockSupabase.auth.updateUser({ password: 'SameOldPassword123' });
+      const { error } = await mockSupabase.auth.updateUser({ password: 'mock_same_old_password' });
       if (error) {
         errorMessage = error.message || 'Update failed';
       } else {

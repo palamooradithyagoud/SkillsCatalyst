@@ -23,6 +23,7 @@ Full Lifecycle:
 import os
 import io
 import uuid
+import secrets
 import pytest
 from PIL import Image
 from fastapi.testclient import TestClient
@@ -75,7 +76,7 @@ def admin_user():
     """Finds or creates an admin test user in auth.users."""
     sb = get_supabase()
     email = f"phase4_admin_{uuid.uuid4().hex[:8]}@skillscatalyst.internal"
-    pwd = "AdminSecurePassword123!#"
+    pwd = os.getenv("TEST_USER_PASSWORD") or f"Test_{secrets.token_urlsafe(16)}!1Aa"
     user_resp = sb.auth.admin.create_user({
         "email": email,
         "password": pwd,

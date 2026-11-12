@@ -18,13 +18,13 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white text-slate-900 selection:bg-[#8837ef] selection:text-white flex flex-col justify-between">
-      {/* ── Exact Radial Gradient Atmosphere spanning from top: 0 behind the floating navbar ── */}
+    <div className="min-h-screen relative overflow-hidden bg-white text-slate-900 selection:bg-[#d5ff38] selection:text-black flex flex-col justify-between">
+      {/* ── Refined Atmosphere with Brand Acid Lime Tint (No electric blue AI blobs) ── */}
       <div
-        className="absolute inset-x-0 top-0 h-[1000px] pointer-events-none z-0"
+        className="absolute inset-x-0 top-0 h-[500px] pointer-events-none z-0"
         style={{
           background:
-            "radial-gradient(125% 125% at 50% 90%, #fff 40%, #2529f8 100%)",
+            "radial-gradient(100% 100% at 50% 0%, rgba(213, 255, 56, 0.08) 0%, rgba(255, 255, 255, 0) 75%)",
         }}
       />
 

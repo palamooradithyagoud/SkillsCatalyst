@@ -32,8 +32,8 @@ export default function GlowHorizonFM({
   className,
   style,
   variant = "top",
-  color1 = "#A558FB",
-  color2 = "#4922E5",
+  color1 = "#d5ff38",
+  color2 = "#263d03",
 }: GlowHorizonProps) {
   const { axis, scaleAxis, enterPct, restPct } = VARIANTS[variant];
 
@@ -41,14 +41,14 @@ export default function GlowHorizonFM({
     <motion.div
       className={"absolute w-full h-full " + (className ?? "")}
       style={{ isolation: "isolate", ...style }}
-      initial={{ [axis]: enterPct, [scaleAxis]: 1.5, opacity: 0, filter: "blur(15px)" }}
+      initial={{ [axis]: enterPct, [scaleAxis]: 1.5, opacity: 0, filter: "blur(12px)" }}
       animate={{ [axis]: restPct,  [scaleAxis]: 1,   opacity: 1, filter: "blur(0px)"  }}
       transition={{ duration: DURATION, ease: EASE }}
     >
-      <Arc variant={variant} color="#FFFFFF" size="132%" boxShadow="0px -4px 23px 0px #ffffffb5" delay={1.2} />
-      <Arc variant={variant} color={color1}  size="120%" initialOffset="10%" blur={31} delay={0.6} />
-      <Arc variant={variant} color={color2}  size="124%" initialOffset="10%" blur={21} delay={0}   />
-      <Arc variant={variant} color="#000"    size="120%" initialOffset="10%" blur={51} delay={0}   />
+      <Arc variant={variant} color="#FFFFFF" size="132%" boxShadow="0px -4px 20px 0px rgba(213,255,56,0.3)" delay={1.2} />
+      <Arc variant={variant} color={color1}  size="120%" initialOffset="10%" blur={32} delay={0.6} />
+      <Arc variant={variant} color={color2}  size="124%" initialOffset="10%" blur={24} delay={0}   />
+      <Arc variant={variant} color="#050608" size="120%" initialOffset="10%" blur={48} delay={0}   />
     </motion.div>
   );
 }
