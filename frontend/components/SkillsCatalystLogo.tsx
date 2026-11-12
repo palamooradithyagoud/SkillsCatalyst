@@ -167,8 +167,8 @@ export default function SkillsCatalystLogo({
             <div className="flex items-center -ml-0.5" title="SkillsCatalyst">
               <StrokeText
                 text="SkillsCatalyst"
-                strokeColor={strokeColor || "#A855F7"}
-                fillColor={fillColor || "currentColor"}
+                strokeColor={strokeColor || "#A7B77A"}
+                fillColor={fillColor || "#A7B77A"}
                 strokeWidth={strokeWidth ?? config.defaultStrokeWidth}
                 drawDuration={1.2}
                 fillDelay={0.15}
@@ -180,12 +180,12 @@ export default function SkillsCatalystLogo({
                 fontWeight={900}
                 letterSpacing={-2.5}
                 replayTrigger={isHovered}
-                className={`${config.strokeHeight} w-auto ${textColor || "text-purple-600 dark:text-purple-400"}`}
+                className={`${config.strokeHeight} w-auto ${textColor || "text-[#A7B77A]"}`}
               />
             </div>
           ) : (
             <span
-              className={`leading-none font-black tracking-tight ${config.title} ${textColor || "text-purple-600 dark:text-purple-400"} transition-colors`}
+              className={`leading-none font-black tracking-tight ${config.title} ${textColor || "text-[#A7B77A]"} transition-colors`}
             >
               SkillsCatalyst
             </span>

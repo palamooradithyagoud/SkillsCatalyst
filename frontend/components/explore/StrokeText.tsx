@@ -43,8 +43,8 @@ const getApproxCharWidth = (char: string, fSize: number, lSpacing: number) => {
 
 export default function StrokeText({
   text,
-  strokeColor = "#A78BFA",
-  fillColor = "#A855F7",
+  strokeColor = "#A7B77A",
+  fillColor = "#A7B77A",
   strokeWidth = 1.4,
   drawDuration = 1.6,
   fillDelay = 0.2,

@@ -383,7 +383,13 @@ export function Component({
             <div className="container is--full">
               <nav className="nav-row">
                 <a href="/dashboard" aria-label="home" className="nav-logo-row w-inline-block">
-                  <SkillsCatalystLogo size="sm" showText animated />
+                  <SkillsCatalystLogo
+                    size="sm"
+                    showText
+                    animated
+                    strokeColor="#A7B77A"
+                    textColor="text-[#A7B77A]"
+                  />
                 </a>
                 <div className="nav-row__right">
                   {/* Clean Menu Indicator */}
@@ -473,93 +479,8 @@ export function Component({
               <div className="backdrop-layer second" />
               <div className="backdrop-layer" />
 
-              {/* Ambient Background Shapes Container */}
-              <div className="ambient-background-shapes">
-                {/* Shape 1: Dashboard - Orbiting Spheres */}
-                <svg className="bg-shape bg-shape-1" viewBox="0 0 400 400" fill="none">
-                  <circle className="shape-element" cx="80" cy="120" r="45" fill="rgba(99,102,241,0.25)" />
-                  <circle className="shape-element" cx="300" cy="90" r="65" fill="rgba(168,85,247,0.22)" />
-                  <circle className="shape-element" cx="220" cy="280" r="85" fill="rgba(236,72,153,0.18)" />
-                  <circle className="shape-element" cx="340" cy="310" r="32" fill="rgba(99,102,241,0.25)" />
-                </svg>
-
-                {/* Shape 2: Learning - Harmonic Waves */}
-                <svg className="bg-shape bg-shape-2" viewBox="0 0 400 400" fill="none">
-                  <path
-                    className="shape-element"
-                    d="M0 180 Q100 80, 200 180 T 400 180"
-                    stroke="rgba(168,85,247,0.3)"
-                    strokeWidth="50"
-                    fill="none"
-                  />
-                  <path
-                    className="shape-element"
-                    d="M0 270 Q100 170, 200 270 T 400 270"
-                    stroke="rgba(99,102,241,0.24)"
-                    strokeWidth="35"
-                    fill="none"
-                  />
-                </svg>
-
-                {/* Shape 3: Roadmaps - Tech Matrix Dots */}
-                <svg className="bg-shape bg-shape-3" viewBox="0 0 400 400" fill="none">
-                  <circle className="shape-element" cx="50" cy="60" r="8" fill="rgba(59,130,246,0.35)" />
-                  <circle className="shape-element" cx="150" cy="60" r="8" fill="rgba(99,102,241,0.35)" />
-                  <circle className="shape-element" cx="250" cy="60" r="8" fill="rgba(147,51,234,0.35)" />
-                  <circle className="shape-element" cx="350" cy="60" r="8" fill="rgba(59,130,246,0.35)" />
-                  <circle className="shape-element" cx="100" cy="160" r="14" fill="rgba(59,130,246,0.3)" />
-                  <circle className="shape-element" cx="200" cy="160" r="14" fill="rgba(168,85,247,0.3)" />
-                  <circle className="shape-element" cx="300" cy="160" r="14" fill="rgba(99,102,241,0.3)" />
-                  <circle className="shape-element" cx="60" cy="260" r="10" fill="rgba(147,51,234,0.35)" />
-                  <circle className="shape-element" cx="160" cy="260" r="10" fill="rgba(59,130,246,0.35)" />
-                  <circle className="shape-element" cx="260" cy="260" r="10" fill="rgba(99,102,241,0.35)" />
-                  <circle className="shape-element" cx="360" cy="260" r="10" fill="rgba(147,51,234,0.35)" />
-                </svg>
-
-                {/* Shape 4: Practice - Morphing Coding Nodes */}
-                <svg className="bg-shape bg-shape-4" viewBox="0 0 400 400" fill="none">
-                  <path
-                    className="shape-element"
-                    d="M90 110 Q140 40, 210 110 Q280 180, 210 250 Q140 320, 90 250 Q40 180, 90 110"
-                    fill="rgba(236,72,153,0.2)"
-                  />
-                  <path
-                    className="shape-element"
-                    d="M240 210 Q290 140, 360 210 Q410 270, 360 330 Q300 370, 240 330 Q190 270, 240 210"
-                    fill="rgba(168,85,247,0.18)"
-                  />
-                </svg>
-
-                {/* Shape 5: Career - Velocity Diagonal Lines */}
-                <svg className="bg-shape bg-shape-5" viewBox="0 0 400 400" fill="none">
-                  <line className="shape-element" x1="0" y1="90" x2="320" y2="410" stroke="rgba(234,179,8,0.25)" strokeWidth="32" />
-                  <line className="shape-element" x1="90" y1="0" x2="410" y2="320" stroke="rgba(245,158,11,0.22)" strokeWidth="24" />
-                  <line className="shape-element" x1="190" y1="0" x2="410" y2="220" stroke="rgba(251,191,36,0.18)" strokeWidth="18" />
-                </svg>
-
-                {/* Shape 6: Explore - Radar Rings & Horizon */}
-                <svg className="bg-shape bg-shape-6" viewBox="0 0 400 400" fill="none">
-                  <circle className="shape-element" cx="200" cy="200" r="140" stroke="rgba(16,185,129,0.25)" strokeWidth="3" strokeDasharray="8 8" />
-                  <circle className="shape-element" cx="200" cy="200" r="90" stroke="rgba(52,211,153,0.3)" strokeWidth="4" />
-                  <circle className="shape-element" cx="200" cy="200" r="35" fill="rgba(16,185,129,0.24)" />
-                </svg>
-
-                {/* Shape 7: Analytics - Frequency Bars */}
-                <svg className="bg-shape bg-shape-7" viewBox="0 0 400 400" fill="none">
-                  <rect className="shape-element" x="50" y="160" width="24" height="180" rx="8" fill="rgba(139,92,246,0.25)" />
-                  <rect className="shape-element" x="110" y="100" width="24" height="240" rx="8" fill="rgba(99,102,241,0.3)" />
-                  <rect className="shape-element" x="170" y="140" width="24" height="200" rx="8" fill="rgba(168,85,247,0.25)" />
-                  <rect className="shape-element" x="230" y="70" width="24" height="270" rx="8" fill="rgba(139,92,246,0.35)" />
-                  <rect className="shape-element" x="290" y="120" width="24" height="220" rx="8" fill="rgba(99,102,241,0.28)" />
-                </svg>
-
-                {/* Shape 8: Settings - Concentric Dials */}
-                <svg className="bg-shape bg-shape-8" viewBox="0 0 400 400" fill="none">
-                  <circle className="shape-element" cx="200" cy="200" r="130" stroke="rgba(99,102,241,0.25)" strokeWidth="8" strokeDasharray="16 12" />
-                  <circle className="shape-element" cx="200" cy="200" r="75" stroke="rgba(168,85,247,0.3)" strokeWidth="6" />
-                  <circle className="shape-element" cx="200" cy="200" r="28" fill="rgba(99,102,241,0.3)" />
-                </svg>
-              </div>
+              {/* Ambient Background Shapes Container (Glass shapes removed) */}
+              <div className="ambient-background-shapes" />
             </div>
 
             {/* Menu Content Wrapper */}
@@ -567,7 +488,13 @@ export function Component({
               {/* Drawer Top Bar */}
               <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 dark:border-[#24271F] shrink-0 gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <SkillsCatalystLogo size="sm" showText animated />
+                  <SkillsCatalystLogo
+                    size="sm"
+                    showText
+                    animated
+                    strokeColor="#A7B77A"
+                    textColor="text-[#A7B77A]"
+                  />
                 </div>
 
                 {/* Kinetic Close Button */}
@@ -618,7 +545,7 @@ export function Component({
                           className="nav-link w-inline-block group"
                         >
                           <div className="flex items-center gap-2.5 sm:gap-3 relative z-10 min-w-0">
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-[#24271F] flex items-center justify-center text-slate-700 dark:text-neutral-200 group-hover:scale-105 group-hover:bg-[#d5ff38] group-hover:text-black dark:group-hover:bg-[#d5ff38] dark:group-hover:text-black group-hover:border-[#d5ff38] transition-all shrink-0 shadow-xs">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-[#18191E] border border-slate-200/80 dark:border-[#24271F] flex items-center justify-center text-slate-700 dark:text-neutral-200 group-hover:scale-105 group-hover:bg-[#d5ff38] group-hover:text-black dark:group-hover:bg-[#d5ff38] dark:group-hover:text-black group-hover:border-[#d5ff38] transition-all shrink-0 shadow-xs">
                               <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={2.2} />
                             </div>
                             <div className="min-w-0">
