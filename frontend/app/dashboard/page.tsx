@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, X, Loader2, Clock, AlertCircle } from "lucide-react";
 import { fetchPaymentStatus } from "@/lib/api/payment";
 import MoodCalendarWidget from "@/components/dashboard/MoodCalendarWidget";
+import DashboardHeroCards from "@/components/dashboard/DashboardHeroCards";
 
 interface PaymentBannerState {
   type: "verifying" | "success" | "pending" | "failed" | "error";
@@ -226,12 +227,16 @@ export default function DashboardPage() {
           <QuickHubNav />
         </motion.div>
 
-        {/* Right / Middle Area: Mood Calendar & Trending Skills */}
+        {/* Right / Middle Area: 3 Cards at Top, Mood Calendar & Trending Skills Moved Down */}
         <motion.div
           variants={itemVariants}
           className="w-full space-y-3.5 sm:space-y-4"
         >
+          {/* 3 Visual Cards (Simple & best, zero text, matching desktop dimensions) */}
+          <DashboardHeroCards />
+          {/* Mood Calendar Widget (Moved down) */}
           <MoodCalendarWidget />
+          {/* Trending Skills (Moved down) */}
           <MetricCards metrics={data?.metrics} hideEventCard={true} showOnly="trending-skills" />
         </motion.div>
       </div>
