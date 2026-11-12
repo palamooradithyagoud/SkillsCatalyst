@@ -236,16 +236,24 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* ── Downside Brand Signature (Mobile View Reference: Img 2) ── */}
+      {/* ── Downside Brand Signature (Techsnap-Style Mobile Footer) ── */}
       <motion.div
         variants={itemVariants}
-        className="pt-6 sm:pt-8 pb-4 flex flex-col items-center justify-center text-center select-none"
+        className="pt-10 sm:pt-14 pb-8 sm:pb-12 select-none"
       >
-        <p className="text-xs sm:text-sm font-medium text-neutral-400 dark:text-neutral-500 tracking-tight">
-          Built for students. Made for their dreams.
-        </p>
-        <div className="w-20 h-px bg-neutral-300 dark:bg-neutral-800 my-2.5" />
-        <p className="text-[11px] sm:text-xs font-semibold tracking-wider text-neutral-400 dark:text-neutral-500 lowercase">
+        <div className="flex flex-col items-start text-left">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#3A3C46] dark:text-[#4A4D58] leading-[1.2]">
+            Built for students.
+          </h2>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#3A3C46] dark:text-[#4A4D58] leading-[1.2] flex items-center gap-1.5 mt-0.5">
+            <span>Made for their dreams</span>
+            <span className="text-xl sm:text-2xl leading-none">💖</span>
+          </h2>
+        </div>
+
+        <div className="w-full h-px bg-slate-200 dark:bg-[#1E2028] my-4" />
+
+        <p className="text-xs sm:text-sm font-medium text-neutral-400 dark:text-[#525562] tracking-wide">
           skillscatalyst
         </p>
       </motion.div>
