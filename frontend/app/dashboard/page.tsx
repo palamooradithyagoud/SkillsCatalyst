@@ -227,13 +227,13 @@ export default function DashboardPage() {
           <QuickHubNav />
         </motion.div>
 
-        {/* Right / Middle Area: 3 Cards at Top, Mood Calendar & Trending Skills Moved Down */}
+        {/* Right / Middle Area: Two Cards Side-by-Side at Top, Mood Calendar & Trending Skills Moved Down */}
         <motion.div
           variants={itemVariants}
           className="w-full space-y-3.5 sm:space-y-4"
         >
-          {/* 3 Visual Cards (Simple & best, zero text, matching desktop dimensions) */}
-          <DashboardHeroCards />
+          {/* Two Visual Cards: Left Minimalist Dark Charcoal, Right Pro Mascot Card */}
+          <DashboardHeroCards onOpenPricing={openPricingModal} />
           {/* Mood Calendar Widget (Moved down) */}
           <MoodCalendarWidget />
           {/* Trending Skills (Moved down) */}
