@@ -100,7 +100,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${caveat.variable}`}
+      className={`${inter.variable} ${caveat.variable} dark`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
@@ -112,12 +112,12 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem("sc_mobile_splash_shown")==="true"){document.documentElement.classList.add("sc-splash-done");}}catch(e){}`,
+            __html: `try{document.documentElement.classList.add("dark");localStorage.setItem("theme","dark");if(sessionStorage.getItem("sc_mobile_splash_shown")==="true"){document.documentElement.classList.add("sc-splash-done");}}catch(e){}`,
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased flex flex-col min-h-screen`} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <body className={`${inter.className} antialiased flex flex-col min-h-screen bg-[#10110E] dark:bg-[#10110E] text-white`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
           <QueryProvider>
             <TransitionProvider>
               <AuthProvider>

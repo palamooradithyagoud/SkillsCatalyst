@@ -97,10 +97,6 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
       <div className="flex items-center justify-between mb-2 px-1">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600" />
-            </span>
             <h3 className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               Tech Stories
             </h3>
@@ -117,7 +113,7 @@ export const TechNewsStories: React.FC<TechNewsStoriesProps> = ({ className = ""
             aria-label="Refresh Stories"
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin text-purple-600" : ""}`} />
+            <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin text-[#D5FF38]" : ""}`} />
           </button>
         </div>
       </div>

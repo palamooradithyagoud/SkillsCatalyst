@@ -211,10 +211,7 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
           />
         </div>
 
-        {/* 3. Theme Toggle Switch */}
-        <ThemeSwitch />
-
-        {/* 4. User Initials Avatar */}
+        {/* 3. User Initials Avatar */}
         <div className="relative">
           <button
             onClick={() => {

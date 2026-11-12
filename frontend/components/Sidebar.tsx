@@ -220,20 +220,20 @@ export default function Sidebar() {
         className={`group relative flex items-center justify-between px-[21px] py-2.5 text-[14px] transition-colors select-none ${
           isActive
             ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
-            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#7C3AED] dark:hover:bg-[#7C3AED] hover:text-white dark:hover:text-white active:bg-[#ECEEF2] dark:active:bg-neutral-900"
+            : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#D5FF38] dark:hover:bg-[#D5FF38] hover:text-black dark:hover:text-black active:bg-[#D5FF38]/20 dark:active:bg-[#D5FF38]/20"
         }`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
-          {/* PURPLE active stripe indicator on left edge (no pink) */}
+          {/* ACID LIME active stripe indicator on left edge */}
           {isActive && (
-            <span className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-[#7E22CE] dark:bg-purple-500" />
+            <span className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-[#D5FF38] dark:bg-[#D5FF38]" />
           )}
 
           <IconComponent
             className={`w-[18px] h-[18px] shrink-0 transition-colors ${
               isActive
                 ? "text-slate-900 dark:text-white"
-                : "text-slate-800 dark:text-neutral-400 group-hover:text-white dark:group-hover:text-white"
+                : "text-slate-800 dark:text-neutral-400 group-hover:text-black dark:group-hover:text-black"
             }`}
             strokeWidth={isActive ? 2 : 1.8}
           />
@@ -259,8 +259,8 @@ export default function Sidebar() {
             transition={{ duration: 0.15 }}
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-wider transition-colors ${
               item.badge === "AI"
-                ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
-                : "bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 group-hover:bg-white/20 group-hover:text-white"
+                ? "bg-[#D5FF38]/20 text-[#D5FF38] border border-[#D5FF38]/40"
+                : "bg-slate-200/80 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 group-hover:bg-black/10 group-hover:text-black dark:group-hover:bg-black/20 dark:group-hover:text-black"
             }`}
           >
             {item.badge}
@@ -382,7 +382,7 @@ export default function Sidebar() {
                           router.push(item.href);
                         }
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-purple-50 dark:hover:bg-neutral-900 hover:text-purple-700 dark:hover:text-purple-300 text-left text-sm font-medium text-slate-700 dark:text-neutral-300 transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#D5FF38]/15 dark:hover:bg-[#D5FF38]/15 hover:text-black dark:hover:text-[#D5FF38] text-left text-sm font-medium text-slate-700 dark:text-neutral-300 transition-colors"
                     >
                       <Icon className="w-4 h-4 text-slate-500" />
                       <span>{item.title}</span>

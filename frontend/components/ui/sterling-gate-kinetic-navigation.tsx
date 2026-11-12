@@ -654,16 +654,6 @@ export function Component({
                 </ul>
               </div>
 
-              {/* Drawer Theme Mode */}
-              <div data-menu-fade className="pt-2 pb-1 shrink-0">
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-[#18191E] border border-slate-200/80 dark:border-[#24271F]">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-neutral-200">
-                    Theme Mode
-                  </span>
-                  <ThemeSwitch size={32} />
-                </div>
-              </div>
-
               {/* Drawer Bottom Bar: User Info & Support */}
               <div data-menu-fade className="pt-3 border-t border-slate-100 dark:border-[#24271F] shrink-0 flex items-center justify-between gap-2">
                 <div

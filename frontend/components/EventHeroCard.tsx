@@ -204,36 +204,16 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
           </p>
         </div>
 
-        {/* ── Bottom Actions (Register only) ── */}
-        <div className="relative z-10 flex items-center justify-between pt-0.5 sm:pt-1">
+        {/* ── Bottom Actions (Register only in Acid Lime) ── */}
+        <div className="relative z-10 flex items-center justify-start pt-0.5 sm:pt-1">
           <button
             type="button"
-            className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-[11px] sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-[#D5FF38] hover:bg-[#c6f228] active:bg-[#b0d825] text-black font-bold text-[11px] sm:text-[13px] shadow-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
             <span>Register</span>
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black/80 group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
-
-          {isPremium ? (
-            <span
-              data-testid="event-hero-pro-badge"
-              className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 backdrop-blur-md border border-slate-200/60 text-slate-800 text-[9px] sm:text-xs font-semibold shadow-xs"
-            >
-              <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-              <span>PRO User</span>
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={handleOpenPricing}
-              data-testid="event-hero-get-pro-btn"
-              className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 hover:bg-purple-50/90 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 hover:border-purple-300 text-slate-800 hover:text-purple-700 text-[9px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
-            >
-              <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-              <span>Get PRO</span>
-            </button>
-          )}
         </div>
       </motion.div>
     );
@@ -307,26 +287,6 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Top-Left Bar: Date Metadata Pill ── */}
-      <div className="absolute top-2 sm:top-3 left-2.5 sm:left-4 z-20 pointer-events-none">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentEvent.id}
-            initial={{ opacity: 0, y: -3 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 3 }}
-            transition={{ duration: 0.2 }}
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/95 dark:bg-black/90 border border-slate-200/60 dark:border-neutral-800 shadow-xs backdrop-blur-md"
-          >
-            <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span className="text-[8.5px] sm:text-[10px] font-medium text-slate-800 dark:text-slate-200 leading-none">
-              {startDateStr}
-            </span>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-
       {/* ── Desktop Hover Chevron Buttons (Left & Right) ── */}
       {events.length > 1 && (
         <>
@@ -355,12 +315,12 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
         </>
       )}
 
-      {/* ── Downside Area: Primary CTA (Register) & PRO Badge ── */}
+      {/* ── Downside Area: Primary CTA (Register only in Acid Lime) ── */}
       <div
-        className="absolute bottom-2 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-between pointer-events-none px-2.5 sm:px-5"
+        className="absolute bottom-2 sm:bottom-3.5 inset-x-0 z-20 flex items-center justify-start pointer-events-none px-2.5 sm:px-5"
         style={{ left: 0, right: 0 }}
       >
-        {/* Primary CTA: Register only */}
+        {/* Primary CTA: Register only in Acid Lime */}
         <a
           href={currentEvent.event_link || "#"}
           target="_blank"
@@ -372,33 +332,12 @@ export default function EventHeroCard({ onOpenPricing }: EventHeroCardProps) {
               e.stopPropagation();
             }
           }}
-          className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold text-[11px] sm:text-[13px] shadow-sm shadow-purple-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          className="pointer-events-auto group/btn inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-[#D5FF38] hover:bg-[#c6f228] active:bg-[#b0d825] text-black font-bold text-[11px] sm:text-[13px] shadow-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/90 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+          <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
           <span>Register</span>
-          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/70 group-hover/btn:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black/80 group-hover/btn:translate-x-0.5 transition-transform" />
         </a>
-
-        {/* Secondary Status Badge (PRO User vs Get PRO) */}
-        {isPremium ? (
-          <span
-            data-testid="event-hero-pro-badge"
-            className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 dark:bg-black/90 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 text-slate-800 dark:text-white text-[9px] sm:text-xs font-semibold shadow-xs"
-          >
-            <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-            <span>PRO User</span>
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={handleOpenPricing}
-            data-testid="event-hero-get-pro-btn"
-            className="pointer-events-auto inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg bg-white/90 dark:bg-black/90 hover:bg-purple-50/90 dark:hover:bg-neutral-900 active:bg-purple-100 backdrop-blur-md border border-slate-200/60 dark:border-neutral-800 hover:border-purple-300 text-slate-800 dark:text-white hover:text-purple-700 text-[9px] sm:text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer active:scale-95"
-          >
-            <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 shrink-0" />
-            <span>Get PRO</span>
-          </button>
-        )}
       </div>
     </div>
   );
