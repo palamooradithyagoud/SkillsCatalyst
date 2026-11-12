@@ -85,7 +85,6 @@ export default function Sidebar() {
       title: "SkillBits",
       href: "/skillbits",
       icon: Film,
-      badge: "New",
     },
     {
       id: "learning",

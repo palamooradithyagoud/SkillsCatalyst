@@ -34,6 +34,29 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(CustomEase);
 }
 
+// Pale light pastel palette (Blue, Yellow, Pink) — zero glass, zero purple
+function getPaleAvatarTheme(initial: string) {
+  const code = (initial || "U").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const palettes = [
+    {
+      bg: "bg-[#FEF9C3] hover:bg-[#FEF08A]",
+      text: "text-[#854D0E]",
+      border: "border-[#FDE047]/80",
+    }, // Pale Yellow
+    {
+      bg: "bg-[#E0F2FE] hover:bg-[#BAE6FD]",
+      text: "text-[#0369A1]",
+      border: "border-[#BAE6FD]",
+    }, // Pale Blue
+    {
+      bg: "bg-[#FCE7F3] hover:bg-[#FBCFE8]",
+      text: "text-[#9D174D]",
+      border: "border-[#FBCFE8]",
+    }, // Pale Pink
+  ];
+  return palettes[code % palettes.length];
+}
+
 export interface NavFeatureItem {
   id: string;
   shapeIndex: number;
@@ -71,7 +94,6 @@ const defaultFeatures: NavFeatureItem[] = [
     subtitle: "Bite-Sized Video Reels",
     href: "/skillbits",
     icon: Film,
-    badge: "New",
     accentColor: "rgba(168, 85, 247, 0.2)",
   },
   {
@@ -90,7 +112,6 @@ const defaultFeatures: NavFeatureItem[] = [
     subtitle: "Interactive Career Tracks",
     href: "/roadmaps",
     icon: Map,
-    badge: "AI Powered",
     accentColor: "rgba(59, 130, 246, 0.2)",
   },
   {
@@ -109,7 +130,6 @@ const defaultFeatures: NavFeatureItem[] = [
     subtitle: "AI Resume & ATS Review",
     href: "/career",
     icon: Briefcase,
-    badge: "94% Match",
     accentColor: "rgba(234, 179, 8, 0.2)",
   },
   {
@@ -371,8 +391,9 @@ export function Component({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isMenuOpen]);
 
-  const userEmail = session?.email || "Learner";
-  const userInitial = (session?.name?.charAt(0) || userEmail.split("@")[0].substring(0, 2)).toUpperCase() || "SC";
+  const userEmail = session?.email || "Guest User";
+  const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+  const avatarTheme = getPaleAvatarTheme(userInitial);
 
   return (
     <div ref={containerRef}>
@@ -587,8 +608,10 @@ export function Component({
                   onClick={() => handleNavigate("/profile")}
                   className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-[#18191E] transition-colors min-w-0"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-[#d5ff38]/15 dark:bg-[#d5ff38]/15 border border-[#d5ff38]/30 dark:border-[#d5ff38]/30 flex items-center justify-center text-[#24271F] dark:text-[#d5ff38] font-bold text-xs shrink-0">
-                    {userInitial}
+                  <div
+                    className={`w-9 h-9 rounded-2xl ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs shrink-0 select-none`}
+                  >
+                    <span>{userInitial}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-[170px]">
