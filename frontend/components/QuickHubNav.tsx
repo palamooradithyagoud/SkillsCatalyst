@@ -117,23 +117,23 @@ export default function QuickHubNav() {
             }}
             className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
           >
-            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[104px] xs:min-h-[114px]">
               {/* Option A: Scholarships */}
               <Link
                 href="/explore?tab=scholarships"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/scholarships_certificate.png"
                     alt="Scholarships 3D Graduation"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Scholarships
                 </span>
               </Link>
@@ -143,17 +143,17 @@ export default function QuickHubNav() {
                 href="/explore?tab=events"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/gold_trophy.png"
                     alt="Competitions 3D Trophy"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Competitions
                 </span>
               </Link>
@@ -207,23 +207,23 @@ export default function QuickHubNav() {
             }}
             className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
           >
-            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[104px] xs:min-h-[114px]">
               {/* Option A: DSA Sheets */}
               <Link
                 href="/practice?section=dsa-sheets#dsa-sheets"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/dsa_sheets_3d.png"
                     alt="DSA Sheets 3D Checklist"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   DSA Sheets
                 </span>
               </Link>
@@ -233,17 +233,17 @@ export default function QuickHubNav() {
                 href="/career?prep=aptitude#placement-prep"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/aptitude_3d.png"
                     alt="Aptitude 3D Calculator and Chart"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Aptitude
                 </span>
               </Link>
@@ -297,23 +297,23 @@ export default function QuickHubNav() {
             }}
             className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
           >
-            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[104px] xs:min-h-[114px]">
               {/* Option A: Reasoning */}
               <Link
                 href="/career?prep=reasoning#placement-prep"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/reasoning_3d.png"
                     alt="Reasoning 3D Brain and Puzzle"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Reasoning
                 </span>
               </Link>
@@ -323,17 +323,17 @@ export default function QuickHubNav() {
                 href="/career?prep=verbal#placement-prep"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/verbal_3d.png"
                     alt="Verbal Ability 3D Book and Audio"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[9.5px] xs:text-[10.5px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[9.5px] xs:text-[10.5px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Verbal Ability
                 </span>
               </Link>
@@ -387,23 +387,23 @@ export default function QuickHubNav() {
             }}
             className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
           >
-            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[104px] xs:min-h-[114px]">
               {/* Option A: Career */}
               <Link
                 href="/career"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/career_consultant.png"
                     alt="Career Goals 3D"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Career
                 </span>
               </Link>
@@ -413,17 +413,17 @@ export default function QuickHubNav() {
                 href="/resume-review"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
-                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
                     src="/images/hub/resume_builder_3d.png"
                     alt="Resume Build 3D"
-                    width={40}
-                    height={40}
+                    width={54}
+                    height={54}
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
                 </div>
-                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1.5 text-center truncate max-w-full">
                   Resume Build
                 </span>
               </Link>
