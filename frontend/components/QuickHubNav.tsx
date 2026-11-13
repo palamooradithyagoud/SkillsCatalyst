@@ -31,9 +31,10 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
             >
-              <div className="min-w-0 flex-1">
+              {/* Left/Middle Content */}
+              <div className="relative z-10 max-w-[58%] sm:max-w-[62%] flex flex-col justify-center">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug truncate">
                   Learn
                 </h4>
@@ -42,25 +43,18 @@ export default function QuickHubNav() {
                 </p>
               </div>
 
-              <div className="flex items-center shrink-0">
-                {/* 3D Icon with click & tap animation */}
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: -2 }}
-                  whileTap={{ scale: 0.88, rotate: -8 }}
-                  transition={{ type: "spring", stiffness: 450, damping: 20 }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 cursor-pointer"
-                >
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <Image
-                      src="/images/hub/learning_deck.png"
-                      alt="Learning Playlists 3D Deck"
-                      width={52}
-                      height={52}
-                      priority
-                      className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-200"
-                    />
-                  </div>
-                </motion.div>
+              {/* Bottom-Right Corner 3D Illustration */}
+              <div className="absolute right-1 sm:right-2 bottom-0 pointer-events-none select-none flex items-end justify-end w-[46%] sm:w-[42%] h-[86%] sm:h-[92%]">
+                <div className="relative w-full h-full flex items-end justify-end group-hover:scale-108 group-hover:-rotate-2 group-active:scale-92 transition-all duration-300">
+                  <Image
+                    src="/images/hub/learning_deck.png"
+                    alt="Learning Playlists 3D Deck"
+                    fill
+                    sizes="(max-width: 640px) 110px, 160px"
+                    priority
+                    className="object-contain object-right-bottom drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+                  />
+                </div>
               </div>
             </Link>
           </motion.div>
@@ -77,9 +71,10 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
+              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
             >
-              <div className="min-w-0 flex-1">
+              {/* Left/Middle Content */}
+              <div className="relative z-10 max-w-[58%] sm:max-w-[62%] flex flex-col justify-center">
                 <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug truncate">
                   Practice
                 </h4>
@@ -88,25 +83,18 @@ export default function QuickHubNav() {
                 </p>
               </div>
 
-              <div className="flex items-center shrink-0">
-                {/* 3D Icon with click & tap animation */}
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 2 }}
-                  whileTap={{ scale: 0.88, rotate: 6 }}
-                  transition={{ type: "spring", stiffness: 450, damping: 20 }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 cursor-pointer"
-                >
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <Image
-                      src="/images/hub/practice_checklist.png"
-                      alt="Practice 3D Checklist"
-                      width={52}
-                      height={52}
-                      priority
-                      className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-200"
-                    />
-                  </div>
-                </motion.div>
+              {/* Bottom-Right Corner 3D Illustration */}
+              <div className="absolute right-1 sm:right-2 bottom-0 pointer-events-none select-none flex items-end justify-end w-[46%] sm:w-[42%] h-[86%] sm:h-[92%]">
+                <div className="relative w-full h-full flex items-end justify-end group-hover:scale-108 group-hover:rotate-2 group-active:scale-92 transition-all duration-300">
+                  <Image
+                    src="/images/hub/practice_checklist.png"
+                    alt="Practice 3D Checklist"
+                    fill
+                    sizes="(max-width: 640px) 110px, 160px"
+                    priority
+                    className="object-contain object-right-bottom drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+                  />
+                </div>
               </div>
             </Link>
           </motion.div>
