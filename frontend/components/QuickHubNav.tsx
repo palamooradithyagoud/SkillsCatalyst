@@ -4,9 +4,9 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
 import LearningPathCarousel from "@/components/LearningPathCarousel";
 
+// QuickHubNav with white text on hover
 export default function QuickHubNav() {
   return (
     <div className="w-full select-none space-y-3 sm:space-y-4">
@@ -22,7 +22,8 @@ export default function QuickHubNav() {
           {/* Card A: Learn */}
           <motion.div
             whileHover={{ y: -2, scale: 1.015 }}
-            transition={{ type: "spring", stiffness: 350, damping: 24 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 400, damping: 24 }}
             className="flex-1 flex"
           >
             <Link
@@ -33,7 +34,7 @@ export default function QuickHubNav() {
               className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug truncate">
                   Learn
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 dark:text-neutral-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
@@ -41,24 +42,25 @@ export default function QuickHubNav() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {/* 3D Circular Pod */}
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#EEF2F6] dark:bg-blue-500/[0.12] dark:border dark:border-blue-400/25 dark:shadow-[0_0_16px_rgba(59,130,246,0.22)] flex items-center justify-center shrink-0 p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="flex items-center shrink-0">
+                {/* 3D Icon with click & tap animation */}
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: -2 }}
+                  whileTap={{ scale: 0.88, rotate: -8 }}
+                  transition={{ type: "spring", stiffness: 450, damping: 20 }}
+                  className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 cursor-pointer"
+                >
                   <div className="relative w-full h-full flex items-center justify-center">
                     <Image
-                      src="/images/hub/courses.png"
-                      alt="Learning 3D Cap"
-                      width={48}
-                      height={48}
+                      src="/images/hub/learning_deck.png"
+                      alt="Learning Playlists 3D Deck"
+                      width={52}
+                      height={52}
                       priority
-                      className="w-full h-full object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-200"
                     />
                   </div>
-                </div>
-
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-                </div>
+                </motion.div>
               </div>
             </Link>
           </motion.div>
@@ -66,6 +68,7 @@ export default function QuickHubNav() {
           {/* Card B: Practice */}
           <motion.div
             whileHover={{ y: -2, scale: 1.015 }}
+            whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 350, damping: 24 }}
             className="flex-1 flex"
           >
@@ -77,7 +80,7 @@ export default function QuickHubNav() {
               className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] px-3 py-2.5 sm:px-4 sm:py-3.5 hub-card-shadow transition-all flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer relative overflow-hidden"
             >
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-[#e11d48] dark:group-hover:text-rose-400 transition-colors truncate">
+                <h4 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug truncate">
                   Practice
                 </h4>
                 <p className="text-[9.5px] sm:text-[11.5px] text-slate-400 dark:text-neutral-400 font-medium mt-0.5 leading-tight truncate hidden xs:block">
@@ -85,24 +88,25 @@ export default function QuickHubNav() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {/* 3D Circular Pod */}
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#EEF2F6] dark:bg-rose-500/[0.12] dark:border dark:border-rose-400/25 dark:shadow-[0_0_16px_rgba(244,63,94,0.22)] flex items-center justify-center shrink-0 p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="flex items-center shrink-0">
+                {/* 3D Icon with click & tap animation */}
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 2 }}
+                  whileTap={{ scale: 0.88, rotate: 6 }}
+                  transition={{ type: "spring", stiffness: 450, damping: 20 }}
+                  className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 cursor-pointer"
+                >
                   <div className="relative w-full h-full flex items-center justify-center">
                     <Image
-                      src="/images/hub/projects.png"
-                      alt="Practice 3D Code"
-                      width={48}
-                      height={48}
+                      src="/images/hub/practice_checklist.png"
+                      alt="Practice 3D Checklist"
+                      width={52}
+                      height={52}
                       priority
-                      className="w-full h-full object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.3)] transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-200"
                     />
                   </div>
-                </div>
-
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-                </div>
+                </motion.div>
               </div>
             </Link>
           </motion.div>
@@ -114,6 +118,7 @@ export default function QuickHubNav() {
         {/* Card 1: Scholarships */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
+          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -124,12 +129,12 @@ export default function QuickHubNav() {
             }}
             className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
-            {/* 3D Shining Circular Pod */}
+            {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
-              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-amber-500/[0.12] dark:border dark:border-amber-400/25 dark:shadow-[0_0_20px_rgba(245,158,11,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center group-hover:scale-108 transition-all duration-300">
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/hub/scholarships.png"
+                    src="/images/hub/scholarships_certificate.png"
                     alt="Scholarships 3D Graduation"
                     width={72}
                     height={72}
@@ -140,14 +145,11 @@ export default function QuickHubNav() {
               </div>
             </div>
 
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
-              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            {/* Bottom Label */}
+            <div className="flex items-center mt-1 sm:mt-1.5 px-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
                 Scholarships
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-              </div>
             </div>
           </Link>
         </motion.div>
@@ -155,6 +157,7 @@ export default function QuickHubNav() {
         {/* Card 2: Competitions */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
+          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -165,12 +168,12 @@ export default function QuickHubNav() {
             }}
             className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
-            {/* 3D Shining Circular Pod */}
+            {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
-              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-yellow-500/[0.12] dark:border dark:border-yellow-400/25 dark:shadow-[0_0_20px_rgba(234,179,8,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center group-hover:scale-108 transition-all duration-300">
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/hub/competition.png"
+                    src="/images/hub/gold_trophy.png"
                     alt="Competitions 3D Trophy"
                     width={72}
                     height={72}
@@ -181,14 +184,11 @@ export default function QuickHubNav() {
               </div>
             </div>
 
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
-              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            {/* Bottom Label */}
+            <div className="flex items-center mt-1 sm:mt-1.5 px-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
                 Competitions
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-              </div>
             </div>
           </Link>
         </motion.div>
@@ -196,6 +196,7 @@ export default function QuickHubNav() {
         {/* Card 3: DSA Sheets */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
+          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -206,12 +207,12 @@ export default function QuickHubNav() {
             }}
             className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
-            {/* 3D Shining Circular Pod */}
+            {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
-              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-indigo-500/[0.12] dark:border dark:border-indigo-400/25 dark:shadow-[0_0_20px_rgba(99,102,241,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center group-hover:scale-108 transition-all duration-300">
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/hub/mock.png"
+                    src="/images/hub/dsa_sheets_3d.png"
                     alt="DSA Sheets 3D Checklist"
                     width={72}
                     height={72}
@@ -222,14 +223,11 @@ export default function QuickHubNav() {
               </div>
             </div>
 
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
-              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            {/* Bottom Label */}
+            <div className="flex items-center mt-1 sm:mt-1.5 px-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
                 DSA Sheets
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-              </div>
             </div>
           </Link>
         </motion.div>
@@ -237,6 +235,7 @@ export default function QuickHubNav() {
         {/* Card 4: Career */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
+          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -247,12 +246,12 @@ export default function QuickHubNav() {
             }}
             className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
-            {/* 3D Shining Circular Pod */}
+            {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
-              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-full bg-[#EEF2F6] dark:bg-sky-500/[0.12] dark:border dark:border-sky-400/25 dark:shadow-[0_0_20px_rgba(14,165,233,0.22)] flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-108 transition-all duration-300">
+              <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center group-hover:scale-108 transition-all duration-300">
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/hub/interview.png"
+                    src="/images/hub/career_consultant.png"
                     alt="Career Goals 3D"
                     width={72}
                     height={72}
@@ -263,14 +262,11 @@ export default function QuickHubNav() {
               </div>
             </div>
 
-            {/* Bottom Label & Chevron */}
-            <div className="flex items-center justify-between mt-1 sm:mt-1.5 px-1 gap-1 min-w-0">
-              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            {/* Bottom Label */}
+            <div className="flex items-center mt-1 sm:mt-1.5 px-1 min-w-0">
+              <span className="text-[10.5px] sm:text-[11.5px] md:text-[12px] font-bold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
                 Career
               </span>
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 dark:bg-white/[0.08] dark:border dark:border-white/[0.06] group-hover:bg-slate-200 dark:group-hover:bg-white/[0.14] flex items-center justify-center text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-all shrink-0">
-                <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-              </div>
             </div>
           </Link>
         </motion.div>
