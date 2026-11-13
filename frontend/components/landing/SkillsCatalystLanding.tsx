@@ -2,7 +2,6 @@
 
 import React from "react";
 import SkillsCatalystDesktopHero from "./SkillsCatalystDesktopHero";
-import MobilePosterHero from "./MobilePosterHero";
 import "@/app/skills-landing.css";
 
 export default function SkillsCatalystLanding() {

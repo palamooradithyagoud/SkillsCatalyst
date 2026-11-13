@@ -31,7 +31,6 @@ function NavChevronIcon({ isOpen, className = "" }: { isOpen?: boolean; classNam
 
 import SkillsCatalystFooterSection from "./SkillsCatalystFooterSection";
 import LandingKineticMobileNav from "./LandingKineticMobileNav";
-import GlowHorizonFM from "@/components/ui/glow-horizon";
 
 interface NavDropdownItem {
   title: string;
@@ -98,9 +97,16 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function SkillsCatalystDesktopHero() {
   const router = useRouter();
+  const videoRef = React.useRef<HTMLVideoElement>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -255,13 +261,13 @@ export default function SkillsCatalystDesktopHero() {
               })}
             </div>
 
-            {/* Right: Login Button (Desktop only) */}
+            {/* Right: Login & Sign Up Actions (Desktop only) */}
             <div className={`scNavRightActions ${isScrolled ? "scNavRightActionsScrolled" : ""}`}>
               <button
                 id="desktop-nav-login"
                 type="button"
                 onClick={handleNavigateToLogin}
-                className={isScrolled ? "scNavLoginBtn scNavLoginBtnScrolled" : "scNavLoginBtn"}
+                className={`scNavLoginBtn liquid-glass ${isScrolled ? "scNavLoginBtnScrolled" : ""} hover:scale-[1.03] transition-transform`}
               >
                 Log In
               </button>
@@ -269,7 +275,7 @@ export default function SkillsCatalystDesktopHero() {
                 id="desktop-nav-signup"
                 type="button"
                 onClick={handleNavigateToSignUp}
-                className={isScrolled ? "scNavSignUpBtn scNavSignUpBtnScrolled" : "scNavSignUpBtn"}
+                className={`scNavSignUpBtn ${isScrolled ? "scNavSignUpBtnScrolled" : ""} hover:scale-[1.03] transition-transform`}
               >
                 Sign Up
               </button>
@@ -315,29 +321,26 @@ export default function SkillsCatalystDesktopHero() {
 
         {/* Grand Framed Hero Card Connected directly to the Notch */}
         <section className="scDesktopHeroCard">
-          {/* Glowing Horizon Background (Turned 180 degrees upside down, responsive mobile & desktop) */}
-          <div
-            className="absolute top-[6%] md:top-0 left-1/2 -translate-x-1/2 w-[260%] sm:w-[170%] md:w-full h-full pointer-events-none overflow-hidden z-0 select-none"
-            aria-hidden="true"
+          {/* Looping Fullscreen Cinematic Video Background */}
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
           >
-            <div
-              className="w-full h-full"
-              style={{ transform: "rotate(180deg)", transformOrigin: "center center" }}
-            >
-              <GlowHorizonFM variant="top" />
-            </div>
-          </div>
+            <source
+              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"
+              type="video/mp4"
+            />
+          </video>
 
           {/* Hero Central Typography & Actions */}
           <div className="scDesktopHeroContent">
-
-            {/* Giant Bold Headline */}
-            <motion.h1
-              className="scHeadline"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
+            {/* Giant Bold Headline with Fade-Rise Animation */}
+            <h1 className="scHeadline animate-fade-rise">
               <span className="block text-white" style={{ color: "#FFFFFF" }}>
                 India&apos;s <span className="whitespace-nowrap">Next-Generation</span>
               </span>
@@ -350,41 +353,33 @@ export default function SkillsCatalystDesktopHero() {
               >
                 Platform
               </span>
-            </motion.h1>
+            </h1>
 
-            {/* Hero Subtitle */}
-            <motion.p
-              className="scHeroSubtitle text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed mb-8 px-4"
+            {/* Hero Subtitle with Fade-Rise Delay */}
+            <p
+              className="scHeroSubtitle animate-fade-rise-delay text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed mb-8 px-4"
               style={{ color: "#D1CDD8" }}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
             >
               One platform. Every opportunity. Your entire career journey.
-            </motion.p>
+            </p>
 
-            {/* CTA Row */}
-            <motion.div
-              className="scCTARow flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
+            {/* CTA Row with Fade-Rise Delay 2 & Liquid Glass Styling */}
+            <div className="scCTARow animate-fade-rise-delay-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Link
                 id="desktop-hero-start-learning"
                 href="/login?mode=signup"
-                className="scPrimaryCTA cursor-pointer"
+                className="scPrimaryCTA cursor-pointer hover:scale-[1.03] transition-transform"
               >
                 <span>Start learning for free</span>
               </Link>
               <Link
                 id="desktop-hero-explore-pro"
                 href="/pricing"
-                className="scSecondaryCTA cursor-pointer"
+                className="scSecondaryCTA liquid-glass cursor-pointer hover:scale-[1.03] transition-transform"
               >
                 <span>Explore pro benefits</span>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </section>
       </div>
