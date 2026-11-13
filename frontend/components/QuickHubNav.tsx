@@ -193,14 +193,14 @@ export default function QuickHubNav() {
           </Link>
         </motion.div>
 
-        {/* Card 2: Competitions (On mobile: 2-in-1 layout with Competitions + DSA Sheets) */}
+        {/* Card 2: Competitions (On mobile: 2-in-1 layout with DSA Sheets + Aptitude) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
-          {/* ── Mobile View: 2-in-1 layout (DSA Sheets + Competitions) ── */}
+          {/* ── Mobile View: 2-in-1 layout (DSA Sheets + Aptitude) ── */}
           <div
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
@@ -228,15 +228,15 @@ export default function QuickHubNav() {
                 </span>
               </Link>
 
-              {/* Option B: Competitions */}
+              {/* Option B: Aptitude */}
               <Link
-                href="/explore?tab=events"
+                href="/practice"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
                 <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
-                    src="/images/hub/gold_trophy.png"
-                    alt="Competitions 3D Trophy"
+                    src="/images/hub/aptitude_3d.png"
+                    alt="Aptitude 3D Calculator and Chart"
                     width={40}
                     height={40}
                     priority
@@ -244,7 +244,7 @@ export default function QuickHubNav() {
                   />
                 </div>
                 <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
-                  Competitions
+                  Aptitude
                 </span>
               </Link>
             </div>
