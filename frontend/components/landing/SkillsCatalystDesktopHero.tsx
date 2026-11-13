@@ -306,21 +306,8 @@ export default function SkillsCatalystDesktopHero() {
         onNavigateToPricing={() => router.push("/pricing")}
       />
 
-      {/* ── Main Desktop Layout: 3-Segment Notch + Grand Hero Card ── */}
-      <div className="scDesktopNotchWrapper">
-        {/* Precision 3-Segment Notch Header */}
-        <div className="scNotchRow">
-          <div className="scNotchLeftWing">
-            <div className="scNotchLeftCutout" />
-          </div>
-          <div className="scNotchCenterTab" />
-          <div className="scNotchRightWing">
-            <div className="scNotchRightCutout" />
-          </div>
-        </div>
-
-        {/* Grand Framed Hero Card Connected directly to the Notch */}
-        <section className="scDesktopHeroCard">
+      {/* ── Grand Framed Hero Section with Looping Video Background Extending Behind Navbar ── */}
+      <section className="scDesktopHeroCard">
           {/* Looping Fullscreen Cinematic Video Background */}
           <video
             ref={videoRef}
@@ -382,13 +369,6 @@ export default function SkillsCatalystDesktopHero() {
             </div>
           </div>
         </section>
-      </div>
-
-
-
-
-
-
 
       {/* ── Section 4: Animated Structured Career Path ── */}
       <StructuredCareerPathSection />

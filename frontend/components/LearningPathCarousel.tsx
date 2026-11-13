@@ -339,7 +339,7 @@ export default function LearningPathCarousel() {
               opacity: { duration: 0.28 },
               scale: { duration: 0.28 },
             }}
-            className="transform-gpu will-change-transform w-full h-full flex items-center justify-center"
+            className="transform-gpu will-change-transform w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.25}
@@ -363,7 +363,6 @@ export default function LearningPathCarousel() {
               }, 60);
             }}
             onClick={handleCardClick}
-            className="w-full h-full cursor-grab active:cursor-grabbing"
           >
             {currentSlide.type === "course" ? (
               <CourseCard

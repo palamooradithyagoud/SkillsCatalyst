@@ -103,9 +103,9 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
-  background-color: #10110E;
+  background-color: #000000;
   position: relative;
-  padding-top: 0.75rem;
+  padding-top: 0;
   box-sizing: border-box;
 }
 
@@ -264,17 +264,20 @@
   object-fit: contain;
 }
 
-/* ── Center Dark Charcoal Navigation Pill Bar ── */
+/* ── Center Glassmorphic Navigation Pill Bar ── */
 .scNavCenterBar {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  width: 65%;
-  background: #18191E;
-  border: none;
-  padding: 0.45rem 0.85rem;
+  width: auto;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   transition: all 0.35s ease;
 }
 
@@ -288,20 +291,19 @@
   position: relative;
 }
 
-/* Individual Pill Button inside Center Bar: Dark Charcoal, No Outline */
+/* Individual Pill Button inside Center Bar: Translucent Glass, Smooth Hover */
 .scNavPillBtn {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.55rem 1.15rem;
+  padding: 0.48rem 1rem;
   font-size: 0.88rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: #22242B;
+  font-weight: 500;
+  color: #cbd5e1;
+  background: transparent;
   border-radius: 9999px;
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -312,18 +314,17 @@
 .scNavPillBtn:focus-visible,
 .scNavItemWrapper:hover .scNavPillBtn,
 .scNavPillBtn[aria-expanded="true"] {
-  background: #d5ff38 !important;
-  border: none !important;
-  color: #000000 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
+  box-shadow: none !important;
 }
 
 .scNavPillBtn:hover span,
 .scNavPillBtn:focus-visible span,
 .scNavItemWrapper:hover .scNavPillBtn span,
 .scNavPillBtn[aria-expanded="true"] span {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 .scNavChevron {
@@ -546,35 +547,35 @@
   border-bottom-left-radius: 34px;
 }
 
-/* ── Grand Black Hero Card ── */
+/* ── Grand Fullscreen Hero Section (Video flows behind top navbar) ── */
 .scDesktopHeroCard {
   position: relative;
-  width: 98%;
-  min-height: 92vh;
-  margin: 0 auto 2.5rem auto;
-  border-radius: 48px 48px 16px 16px;
-  border: 2px solid #24271F;
-  border-top: none;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 0 2.5rem 0;
+  border-radius: 0 0 32px 32px;
+  border: none;
   background-color: #000000;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6.5rem 2rem 2.5rem 2rem;
+  padding: calc(7rem + env(safe-area-inset-top, 0px)) 2rem calc(3.5rem + env(safe-area-inset-bottom, 0px)) 2rem;
   box-shadow: 0 35px 90px -20px rgba(0, 0, 0, 0.95);
   box-sizing: border-box;
 }
 
 @media (min-width: 1280px) {
   .scDesktopHeroCard {
-    padding-top: 7.5rem;
+    padding-top: calc(8rem + env(safe-area-inset-top, 0px));
   }
 }
 
 @media (min-width: 1440px) {
   .scDesktopHeroCard {
-    padding-top: 8.5rem;
+    padding-top: calc(8.5rem + env(safe-area-inset-top, 0px));
   }
 }
 
