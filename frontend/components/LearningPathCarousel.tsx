@@ -247,15 +247,42 @@ export default function LearningPathCarousel() {
     setCurrentIndex(idx);
   };
 
-  // ── Auto-Swipe Timer (every 3.6s when multiple slides exist and not paused) ──
+  // ── Auto-Swipe Timer (every 3.6s when multiple slides exist, not paused, and tab is visible) ──
   useEffect(() => {
     if (isPaused || slides.length <= 1) return;
 
-    const interval = setInterval(() => {
-      paginate(1);
-    }, 3600);
+    let interval: NodeJS.Timeout | null = null;
 
-    return () => clearInterval(interval);
+    const startTimer = () => {
+      if (interval) clearInterval(interval);
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        interval = setInterval(() => {
+          paginate(1);
+        }, 3600);
+      }
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== "undefined") {
+        if (document.visibilityState === "hidden") {
+          if (interval) clearInterval(interval);
+        } else {
+          startTimer();
+        }
+      }
+    };
+
+    startTimer();
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibility);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
+    };
   }, [isPaused, slides.length, paginate]);
 
   // If user didn't save any videos: keep ONLY the Careerpath card!
@@ -312,6 +339,7 @@ export default function LearningPathCarousel() {
               opacity: { duration: 0.28 },
               scale: { duration: 0.28 },
             }}
+            className="transform-gpu will-change-transform w-full h-full flex items-center justify-center"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.25}

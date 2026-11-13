@@ -40,19 +40,18 @@ export default function Header({ userName = "Palamoor" }: HeaderProps) {
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.94 }}
-          className="relative w-9 h-9 sm:w-11 sm:h-11 bg-white rounded-full border border-slate-200/80 shadow-xs flex items-center justify-center text-slate-700 hover:text-[#5227FF] hover:border-[#5227FF]/40 hover:shadow-md transition-all cursor-pointer group"
+          className="relative w-9 h-9 sm:w-11 sm:h-11 bg-white rounded-full border border-slate-200/80 shadow-xs flex items-center justify-center text-slate-700 hover:text-[#5227FF] hover:border-[#5227FF]/40 hover:shadow-md transition-[box-shadow,border-color,color] duration-200 cursor-pointer group"
           title="Notifications"
         >
           <motion.div
             animate={{ rotate: [0, -14, 14, -8, 8, 0] }}
-            transition={{ repeat: Infinity, repeatDelay: 4, duration: 1.2, ease: "easeInOut" }}
+            transition={{ repeat: Infinity, repeatDelay: 5, duration: 1.2, ease: "easeInOut" }}
+            className="transform-gpu will-change-transform"
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2] group-hover:text-[#5227FF] transition-colors" />
           </motion.div>
-          <motion.span
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#EAB308] rounded-full ring-2 ring-white shadow-xs"
+          <span
+            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#EAB308] rounded-full ring-2 ring-white shadow-xs animate-pulse"
           />
         </motion.button>
       </motion.div>

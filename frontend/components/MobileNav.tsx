@@ -146,7 +146,21 @@ function MobileNavContent() {
       }
     };
     checkAttributes();
-    const interval = setInterval(checkAttributes, 150);
+
+    // Use zero-polling MutationObserver instead of a continuous 150ms setInterval
+    let observer: MutationObserver | null = null;
+    if (typeof MutationObserver !== "undefined" && typeof document !== "undefined") {
+      observer = new MutationObserver(checkAttributes);
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: [
+          "data-practice-subview",
+          "data-learning-player",
+          "data-hide-bottombar",
+          "data-explore-tab",
+        ],
+      });
+    }
 
     const handleExploreTabChange = (e: any) => {
       if (e.detail && typeof e.detail === "string") {
@@ -156,7 +170,7 @@ function MobileNavContent() {
     window.addEventListener("explore-tab-change", handleExploreTabChange);
 
     return () => {
-      clearInterval(interval);
+      if (observer) observer.disconnect();
       window.removeEventListener("explore-tab-change", handleExploreTabChange);
     };
   }, [pathname, exploreTab]);

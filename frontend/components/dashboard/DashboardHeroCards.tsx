@@ -129,7 +129,7 @@ export default function DashboardHeroCards({
         transition={{ duration: 0.35, delay: 0.05 }}
         whileHover={{ y: -3, scale: 1.015 }}
         whileTap={{ scale: 0.985 }}
-        className="group relative flex items-center justify-center w-full h-[155px] sm:h-[185px] lg:h-[212px] rounded-[22px] sm:rounded-[26px] bg-[#1D1D1D] dark:bg-[#1D1D1D] border border-white/10 dark:border-white/[0.08] shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        className="group relative flex items-center justify-center w-full h-[155px] sm:h-[185px] lg:h-[212px] rounded-[22px] sm:rounded-[26px] bg-[#1D1D1D] dark:bg-[#1D1D1D] border border-white/10 dark:border-white/[0.08] shadow-sm hover:shadow-xl transition-[box-shadow,border-color] duration-300 overflow-hidden select-none cursor-grab active:cursor-grabbing"
       >
         {/* Draggable Slide Image */}
         <AnimatePresence initial={false} mode="wait">
@@ -240,7 +240,7 @@ export default function DashboardHeroCards({
         whileHover={{ y: -3, scale: 1.015 }}
         whileTap={{ scale: 0.985 }}
         onClick={handleProAction}
-        className="group relative flex flex-col justify-between w-full h-[155px] sm:h-[185px] lg:h-[212px] rounded-[22px] sm:rounded-[26px] bg-[#1D1D1D] dark:bg-[#1D1D1D] border border-white/10 dark:border-white/[0.08] shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer p-3 sm:p-4 select-none"
+        className="group relative flex flex-col justify-between w-full h-[155px] sm:h-[185px] lg:h-[212px] rounded-[22px] sm:rounded-[26px] bg-[#1D1D1D] dark:bg-[#1D1D1D] border border-white/10 dark:border-white/[0.08] shadow-sm hover:shadow-xl transition-[box-shadow,border-color] duration-300 overflow-hidden cursor-pointer p-3 sm:p-4 select-none"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.04),transparent_70%)] pointer-events-none" />
 
@@ -317,7 +317,7 @@ export default function DashboardHeroCards({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="relative w-full h-full flex items-end justify-center"
+            className="relative w-full h-full flex items-end justify-center transform-gpu will-change-transform"
           >
             {/* Open Eyes Mascot Body Image */}
             <Image
@@ -326,7 +326,7 @@ export default function DashboardHeroCards({
               width={791}
               height={979}
               priority
-              className={`w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-all duration-150 ${
+              className={`w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-opacity duration-150 ${
                 isBlinking ? "opacity-0" : "opacity-100"
               }`}
             />
@@ -337,7 +337,7 @@ export default function DashboardHeroCards({
               alt="Pro Mascot Blinking"
               width={791}
               height={979}
-              className={`absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-all duration-150 ${
+              className={`absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-opacity duration-150 ${
                 isBlinking ? "opacity-100" : "opacity-0"
               }`}
             />
@@ -362,7 +362,7 @@ export default function DashboardHeroCards({
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="z-20 pointer-events-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+              className="z-20 pointer-events-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)] transform-gpu will-change-transform"
             >
               <Image
                 src="/images/dashboard/penguin_flipper_joint.png"

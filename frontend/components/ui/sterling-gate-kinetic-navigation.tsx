@@ -175,6 +175,7 @@ export function Component({
   features = defaultFeatures,
 }: SterlingGateKineticNavigationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const arrowTlRef = useRef<gsap.core.Timeline | null>(null);
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const router = useRouter();
   const { session, logout } = useAuth();
@@ -233,7 +234,8 @@ export function Component({
       if (arrowLine) {
         const pathLength = (arrowLine as SVGPathElement).getTotalLength();
         gsap.set(arrowLine, { strokeDasharray: pathLength, strokeDashoffset: pathLength });
-        const arrowTl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 });
+        const arrowTl = gsap.timeline({ repeat: -1, repeatDelay: 0.8, paused: !isMenuOpen });
+        arrowTlRef.current = arrowTl;
         arrowTl
           .to(arrowLine, { strokeDashoffset: 0, duration: 1, ease: "power2.out" })
           .to({}, { duration: 1.2 })
@@ -291,6 +293,7 @@ export function Component({
 
     return () => {
       ctx.revert();
+      arrowTlRef.current?.kill();
       if (containerRef.current) {
         const items = containerRef.current.querySelectorAll(".menu-list-item[data-shape]");
         items.forEach((item: any) => item._cleanup && item._cleanup());
@@ -324,6 +327,9 @@ export function Component({
       const tl = gsap.timeline();
 
       if (isMenuOpen) {
+        // Resume arrow timeline when drawer opens
+        arrowTlRef.current?.play();
+
         // OPEN KINETIC TIMELINE
         if (navWrap) navWrap.setAttribute("data-nav", "open");
 
@@ -355,6 +361,9 @@ export function Component({
           );
         }
       } else {
+        // Pause arrow timeline when drawer closes to free CPU / RAF
+        arrowTlRef.current?.pause();
+
         // CLOSE TIMELINE
         if (navWrap) navWrap.setAttribute("data-nav", "closed");
 

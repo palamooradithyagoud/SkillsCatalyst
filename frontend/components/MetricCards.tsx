@@ -307,7 +307,7 @@ export default function MetricCards({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.05 }}
-          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#eab308] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-all"
+          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#eab308] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-[filter,box-shadow] duration-200"
           onClick={() => router.push("/learning")}
         >
           <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-white">
@@ -334,7 +334,7 @@ export default function MetricCards({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#3b82f6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-all"
+          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#3b82f6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer hover:brightness-105 active:scale-98 transition-[filter,box-shadow] duration-200"
           onClick={() => router.push("/learning")}
         >
           <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-white">
@@ -361,7 +361,7 @@ export default function MetricCards({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
-          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#8b5cf6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer group hover:brightness-105 active:scale-98 transition-all"
+          className="metric-card card-morph rounded-[14px] sm:rounded-[16px] bg-[#8b5cf6] p-2 sm:p-2.5 text-white flex flex-col justify-between min-h-[84px] sm:min-h-[96px] shadow-sm cursor-pointer group hover:brightness-105 active:scale-98 transition-[filter,box-shadow] duration-200"
           onClick={() => {
             if (!isLeetcodeConfigured) {
               router.push("/settings/edit?tab=coding");
@@ -505,7 +505,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=Python")}
-            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-[box-shadow,border-color] duration-200 group min-w-0"
           >
             {/* Exact Official Python Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -542,7 +542,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=React")}
-            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-[box-shadow,border-color] duration-200 group min-w-0"
           >
             {/* Exact Official React Atom Logo */}
             <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -569,7 +569,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=AI")}
-            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-[box-shadow,border-color] duration-200 group min-w-0"
           >
             {/* Exact Icon provided by user for Generative AI */}
             <div className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 relative flex items-center justify-center">
@@ -600,7 +600,7 @@ export default function MetricCards({
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/learning?query=UI%2FUX")}
-            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-all group min-w-0"
+            className="bg-white dark:bg-[#18191F] rounded-[14px] sm:rounded-[16px] p-2.5 sm:p-3 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md hover:border-slate-200 dark:hover:border-neutral-700 cursor-pointer flex items-center gap-2 sm:gap-2.5 transition-[box-shadow,border-color] duration-200 group min-w-0"
           >
             {/* Exact Official Figma Logo */}
             <svg className="w-5 h-6 sm:w-5.5 sm:h-7 shrink-0" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">

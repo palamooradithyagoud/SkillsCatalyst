@@ -31,7 +31,7 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
+              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-[box-shadow,border-color] duration-200 relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
             >
               {/* Left/Middle Content */}
               <div className="relative z-10 max-w-[58%] sm:max-w-[62%] flex flex-col justify-center">
@@ -71,7 +71,7 @@ export default function QuickHubNav() {
               style={{
                 boxShadow: "0 10px 18px 0px rgba(0, 0, 0, 0.10), 0 5px 10px 0px rgba(0, 0, 0, 0.06), 0 2px 4px 0px rgba(0, 0, 0, 0.04), 0 1px 2px 0px rgba(0, 0, 0, 0.03)",
               }}
-              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-all relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
+              className="group flex-1 bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-3 sm:p-4 hub-card-shadow transition-[box-shadow,border-color] duration-200 relative overflow-hidden flex flex-col justify-center cursor-pointer min-h-[76px] sm:min-h-[92px]"
             >
               {/* Left/Middle Content */}
               <div className="relative z-10 max-w-[58%] sm:max-w-[62%] flex flex-col justify-center">
@@ -106,7 +106,6 @@ export default function QuickHubNav() {
         {/* Card 1: Scholarships (On mobile: 2-in-1 layout like img 2 with Scholarships + Competitions) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
-          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -166,7 +165,7 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-[box-shadow,border-color] duration-200 active:scale-98 cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
@@ -196,7 +195,6 @@ export default function QuickHubNav() {
         {/* Card 2: Competitions (On mobile: 2-in-1 layout with DSA Sheets + Aptitude) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
-          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -256,7 +254,7 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-[box-shadow,border-color] duration-200 active:scale-98 cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
@@ -286,7 +284,6 @@ export default function QuickHubNav() {
         {/* Card 3: Reasoning & Verbal Ability (Desktop: DSA Sheets) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
-          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -346,7 +343,7 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-[box-shadow,border-color] duration-200 active:scale-98 cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
@@ -376,7 +373,6 @@ export default function QuickHubNav() {
         {/* Card 4: Career (On mobile: 2-in-1 layout with Career + Resume Build) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
-          whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
@@ -436,7 +432,7 @@ export default function QuickHubNav() {
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-[box-shadow,border-color] duration-200 active:scale-98 cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
