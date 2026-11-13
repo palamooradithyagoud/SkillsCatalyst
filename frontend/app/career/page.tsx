@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import CareerCards from "@/components/career/CareerCards";
@@ -29,6 +29,23 @@ export default function CareerPage() {
     setIsPlacementPrepOpen(false);
     setSelectedPrepCategory(null);
   };
+
+  // Support direct modal launch via ?prep= query param (e.g. from QuickHubNav)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const prep = params.get("prep") || params.get("category");
+    if (prep) {
+      const lower = prep.toLowerCase();
+      if (lower.includes("reason")) {
+        handleOpenPlacementPrep("Logical Reasoning");
+      } else if (lower.includes("verbal")) {
+        handleOpenPlacementPrep("Verbal Ability");
+      } else if (lower.includes("quant") || lower.includes("aptitude")) {
+        handleOpenPlacementPrep("Quantitative Aptitude");
+      }
+    }
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 pt-0 sm:pt-2">

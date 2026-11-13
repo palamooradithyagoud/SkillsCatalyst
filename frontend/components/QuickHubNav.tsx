@@ -230,7 +230,7 @@ export default function QuickHubNav() {
 
               {/* Option B: Aptitude */}
               <Link
-                href="/practice"
+                href="/career?prep=aptitude#placement-prep"
                 className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
               >
                 <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
@@ -283,19 +283,70 @@ export default function QuickHubNav() {
           </Link>
         </motion.div>
 
-        {/* Card 3: DSA Sheets */}
+        {/* Card 3: Reasoning & Verbal Ability (Desktop: DSA Sheets) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
+          {/* ── Mobile View: 2-in-1 layout (Reasoning + Verbal Ability) ── */}
+          <div
+            style={{
+              boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+            }}
+            className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
+          >
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+              {/* Option A: Reasoning */}
+              <Link
+                href="/career?prep=reasoning#placement-prep"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/reasoning_3d.png"
+                    alt="Reasoning 3D Brain and Puzzle"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Reasoning
+                </span>
+              </Link>
+
+              {/* Option B: Verbal Ability */}
+              <Link
+                href="/career?prep=verbal#placement-prep"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/verbal_3d.png"
+                    alt="Verbal Ability 3D Book and Audio"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[9.5px] xs:text-[10.5px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Verbal Ability
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Desktop View: Single feature card (DSA Sheets) ── */}
           <Link
             href="/practice?section=dsa-sheets#dsa-sheets"
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
