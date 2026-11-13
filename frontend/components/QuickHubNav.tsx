@@ -103,19 +103,70 @@ export default function QuickHubNav() {
 
       {/* ── Bottom Tier: 4 Clean Feature Tiles (Scholarships, Competitions, DSA Sheets, Career) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 md:gap-3.5 pb-4 sm:pb-5">
-        {/* Card 1: Scholarships */}
+        {/* Card 1: Scholarships (On mobile: 2-in-1 layout like img 2 with Scholarships + Competitions) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
+          {/* ── Mobile View: 2-in-1 layout like img 2 (Scholarships + Competitions) ── */}
+          <div
+            style={{
+              boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+            }}
+            className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
+          >
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+              {/* Option A: Scholarships */}
+              <Link
+                href="/explore?tab=scholarships"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/scholarships_certificate.png"
+                    alt="Scholarships 3D Graduation"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Scholarships
+                </span>
+              </Link>
+
+              {/* Option B: Competitions */}
+              <Link
+                href="/explore?tab=events"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/gold_trophy.png"
+                    alt="Competitions 3D Trophy"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Competitions
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Desktop View: Single feature card ── */}
           <Link
             href="/explore?tab=scholarships"
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
@@ -220,19 +271,70 @@ export default function QuickHubNav() {
           </Link>
         </motion.div>
 
-        {/* Card 4: Career */}
+        {/* Card 4: Career (On mobile: 2-in-1 layout with Career + Resume Build) */}
         <motion.div
           whileHover={{ y: -3, scale: 1.018 }}
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className="relative"
         >
+          {/* ── Mobile View: 2-in-1 layout (Career + Resume Build) ── */}
+          <div
+            style={{
+              boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
+            }}
+            className="sm:hidden block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] p-2 xs:p-2.5 hub-card-shadow"
+          >
+            <div className="grid grid-cols-2 gap-1 items-center h-full min-h-[96px] xs:min-h-[104px]">
+              {/* Option A: Career */}
+              <Link
+                href="/career"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/career_consultant.png"
+                    alt="Career Goals 3D"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Career
+                </span>
+              </Link>
+
+              {/* Option B: Resume Build */}
+              <Link
+                href="/resume-review"
+                className="group/item flex flex-col items-center justify-center p-1 rounded-[14px] active:scale-95 transition-transform"
+              >
+                <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1.5 transition-transform duration-300 group-hover/item:scale-108">
+                  <Image
+                    src="/images/hub/resume_builder_3d.png"
+                    alt="Resume Build 3D"
+                    width={40}
+                    height={40}
+                    priority
+                    className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
+                </div>
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-900 dark:text-white tracking-tight mt-1 text-center truncate max-w-full">
+                  Resume Build
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Desktop View: Single feature card ── */}
           <Link
             href="/career"
             style={{
               boxShadow: "0 16px 26px 0px rgba(0, 0, 0, 0.16), 0 8px 14px 0px rgba(0, 0, 0, 0.12), 0 3px 6px 0px rgba(0, 0, 0, 0.08), 0 1px 2px 0px rgba(0, 0, 0, 0.06)",
             }}
-            className="group block bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
+            className="hidden sm:block group bg-white dark:bg-[#1D1D1D] dark:border dark:border-white/[0.08] rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 hub-card-shadow transition-all cursor-pointer"
           >
             {/* 3D Icon */}
             <div className="w-full h-18 sm:h-22 md:h-24 flex items-center justify-center p-0.5 sm:p-1">
