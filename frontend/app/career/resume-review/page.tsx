@@ -61,6 +61,7 @@ import {
 } from "@/data/career/constants";
 import { getFileExt } from "@/lib/career/helpers";
 import { useResumeReview } from "@/hooks/useResumeReview";
+import { reviewResume } from "@/lib/api/career";
 import { useAuth } from "@/lib/auth";
 
 interface SavedResumeItem {
@@ -135,6 +136,43 @@ const defaultResumeData: ResumeData = {
   },
 };
 
+function serializeResumeDataToPlainText(data: ResumeData): string {
+  const parts: string[] = [];
+  if (data.fullName) parts.push(`Name: ${data.fullName}`);
+  if (data.role) parts.push(`Target Role: ${data.role}`);
+  const contacts = [data.email, data.phone, data.location, data.linkedin, data.github].filter(Boolean);
+  if (contacts.length) parts.push(`Contact: ${contacts.join(" | ")}`);
+  if (data.summary) parts.push(`\nProfessional Summary:\n${data.summary}`);
+  if (data.experience && data.experience.length) {
+    parts.push(`\nExperience:`);
+    data.experience.forEach((exp) => {
+      parts.push(`- ${exp.role} at ${exp.company} (${exp.dates || exp.startDate || ""})`);
+      (exp.bullets || []).forEach((b) => parts.push(`  * ${b}`));
+    });
+  }
+  if (data.education && data.education.length) {
+    parts.push(`\nEducation:`);
+    data.education.forEach((edu) => {
+      parts.push(`- ${edu.degree}, ${edu.institution} (${edu.dates || ""}) ${edu.gpa ? `GPA: ${edu.gpa}` : ""}`);
+    });
+  }
+  if (data.projects && data.projects.length) {
+    parts.push(`\nProjects:`);
+    data.projects.forEach((proj) => {
+      parts.push(`- ${proj.name} (${proj.tech || ""})`);
+      (proj.bullets || []).forEach((b) => parts.push(`  * ${b}`));
+    });
+  }
+  if (data.skills) {
+    parts.push(`\nSkills:`);
+    if (data.skills.languages) parts.push(`Languages: ${data.skills.languages}`);
+    if (data.skills.frameworks) parts.push(`Frameworks: ${data.skills.frameworks}`);
+    if (data.skills.databases) parts.push(`Databases: ${data.skills.databases}`);
+    if (data.skills.tools) parts.push(`Tools: ${data.skills.tools}`);
+  }
+  return parts.join("\n").trim();
+}
+
 export default function ResumeWorkspacePage() {
   const router = useRouter();
   const { session } = useAuth();
@@ -156,6 +194,7 @@ export default function ResumeWorkspacePage() {
   >("contact");
   const [mobileBuilderTab, setMobileBuilderTab] = useState<"editor" | "preview">("editor");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isEvaluatingBuilderResume, setIsEvaluatingBuilderResume] = useState(false);
 
   // Saved resumes state
   const [savedResumes, setSavedResumes] = useState<SavedResumeItem[]>([]);
@@ -258,19 +297,20 @@ export default function ResumeWorkspacePage() {
   };
 
   const handleSaveCreatedResume = () => {
-    const tmplDef = RESUME_TEMPLATES.find((t) => t.id === selectedTemplate);
-    const score = tmplDef?.atsScore || 95;
+    // Preserve verified score if evaluated, otherwise explicitly null (Not evaluated)
+    const existing = savedResumes.find((r) => r.id === selectedResumeId);
+    const verifiedScore = existing?.atsScore ?? null;
     const newItem: SavedResumeItem = {
-      id: `resume-${Date.now()}`,
-      title: `${resumeData.fullName} — ${resumeData.role}`,
-      role: resumeData.role,
+      id: selectedResumeId && selectedResumeId.startsWith("resume-") ? selectedResumeId : `resume-${Date.now()}`,
+      title: `${resumeData.fullName || "Untitled"} — ${resumeData.role || "Resume"}`,
+      role: resumeData.role || "Software Engineer",
       date: "Just now",
-      atsScore: score,
+      atsScore: verifiedScore, // Never invent or default to 95; only null (Not evaluated) or genuine score
       starred: false,
       templateId: selectedTemplate,
       resumeData: { ...resumeData },
     };
-    const nextList = [newItem, ...savedResumes];
+    const nextList = [newItem, ...savedResumes.filter((r) => r.id !== newItem.id)];
     setSavedResumes(nextList);
     try {
       localStorage.setItem("skillscatalyst_resumes", JSON.stringify(nextList));
@@ -281,6 +321,48 @@ export default function ResumeWorkspacePage() {
     try {
       confetti({ particleCount: 75, spread: 70, origin: { y: 0.65 } });
     } catch {}
+  };
+
+  const handleEvaluateBuilderResume = async () => {
+    const plainText = serializeResumeDataToPlainText(resumeData);
+    if (!plainText || plainText.length < 50) {
+      alert("Please provide more resume details before running an ATS evaluation.");
+      return;
+    }
+    setIsEvaluatingBuilderResume(true);
+    try {
+      const filename = `${resumeData.fullName || "Resume"}.pdf`;
+      const res = await reviewResume(
+        plainText,
+        resumeData.role || "Software Engineer",
+        "1-3 years",
+        "Product-Based",
+        "",
+        filename
+      );
+      if (typeof res.overall_score === "number" && !isNaN(res.overall_score)) {
+        const scoreVal = Math.round(res.overall_score);
+        setSavedResumes((prev) => {
+          const updated = prev.map((r) =>
+            r.id === selectedResumeId ? { ...r, atsScore: scoreVal } : r
+          );
+          try {
+            localStorage.setItem("skillscatalyst_resumes", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+        reviewState.setEditedText(plainText);
+        if (res.review) {
+          reviewState.setReviewText(res.review);
+          reviewState.setOverallScore(scoreVal);
+          reviewState.setScoringStatus("scored");
+        }
+      }
+    } catch (err: any) {
+      console.error("Failed to evaluate builder resume:", err);
+    } finally {
+      setIsEvaluatingBuilderResume(false);
+    }
   };
 
   const toggleStar = (id: string, e: React.MouseEvent) => {
@@ -309,10 +391,17 @@ export default function ResumeWorkspacePage() {
     }
   };
 
-  const filteredResumes = savedResumes.filter((r) => {
-    if (activeTab === "starred") return r.starred;
-    return true;
-  });
+  const filteredResumes = savedResumes
+    .filter((r) => {
+      if (activeTab === "starred") return r.starred;
+      return true;
+    })
+    .sort((a, b) => {
+      if (activeTab === "recent") {
+        return (b.id || "").localeCompare(a.id || "");
+      }
+      return 0;
+    });
 
   return (
     <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 pb-20 select-none overflow-x-hidden w-full">
@@ -726,8 +815,15 @@ export default function ResumeWorkspacePage() {
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold text-xs">
-                          {resume.atsScore !== null && resume.atsScore !== undefined ? resume.atsScore : "—"}
+                        <div
+                          className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold text-xs"
+                          title={resume.atsScore !== null && resume.atsScore !== undefined ? `ATS Score: ${resume.atsScore}/100` : "Not evaluated"}
+                        >
+                          {resume.atsScore !== null && resume.atsScore !== undefined ? (
+                            resume.atsScore
+                          ) : (
+                            <span className="text-[9px] text-slate-400 font-bold">N/A</span>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-slate-900 truncate">
@@ -873,6 +969,23 @@ export default function ResumeWorkspacePage() {
                         </span>
                         <span className="text-purple-400 font-normal">· Change</span>
                       </button>
+
+                      {(() => {
+                        const currentResume = savedResumes.find((r) => r.id === selectedResumeId);
+                        if (currentResume?.atsScore !== null && currentResume?.atsScore !== undefined) {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-emerald-600" />
+                              ATS Score: {currentResume.atsScore}/100
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                            Not evaluated
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="text-xs text-slate-400 font-medium">
                       Live preview updates instantly with your changes.
@@ -938,6 +1051,25 @@ export default function ResumeWorkspacePage() {
                       <>
                         <Download className="w-3.5 h-3.5 text-purple-600" />
                         <span>Export as PDF</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isEvaluatingBuilderResume}
+                    onClick={handleEvaluateBuilderResume}
+                    className="flex-1 sm:flex-none bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isEvaluatingBuilderResume ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin" />
+                        <span>Evaluating ATS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Evaluate ATS</span>
                       </>
                     )}
                   </button>

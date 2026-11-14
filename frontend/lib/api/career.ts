@@ -212,7 +212,8 @@ export async function reviewResume(
   targetRole: string,
   yearsExperience: string,
   companyType: string = "Product-Based",
-  jobDescription: string = ""
+  jobDescription: string = "",
+  filename?: string
 ): Promise<ResumeReviewResponse> {
   const authHeaders = await getAuthHeaders();
   let res: Response;
@@ -226,6 +227,7 @@ export async function reviewResume(
         years_experience: yearsExperience,
         company_type: companyType,
         job_description: jobDescription,
+        filename: filename || undefined,
       }),
     });
   } catch (err: any) {
@@ -275,20 +277,6 @@ export async function reviewResume(
     if (data.overall_score >= 0 && data.overall_score <= 100) {
       overallScore = Math.round(data.overall_score);
     }
-  } else if (data?.overall_score === undefined && data?.review) {
-    // Backwards-compatibility fallback if an older server omitted overall_score
-    const match = data.review.match(
-      /(?:Final\s*Score|Overall\s*Score|ATS\s*Score|Total\s*Score|Score)\s*[:\-*]*\s*(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\b/i
-    );
-    if (match) {
-      const val = parseFloat(match[1]);
-      const denom = parseFloat(match[2]);
-      if (denom === 10 && val >= 0 && val <= 10) {
-        overallScore = Math.round(val * 10);
-      } else if (denom === 100 && val >= 0 && val <= 100) {
-        overallScore = Math.round(val);
-      }
-    }
   }
 
   if (typeof overallScore === "number" && typeof window !== "undefined") {
@@ -302,5 +290,13 @@ export async function reviewResume(
     review: data?.review || "",
     overall_score: overallScore,
     scoring_status: scoringStatus,
+    ats_compatibility_score: data?.ats_compatibility_score ?? null,
+    skills_match_score: data?.skills_match_score ?? null,
+    experience_score: data?.experience_score ?? null,
+    structure_score: data?.structure_score ?? null,
+    content_quality_score: data?.content_quality_score ?? null,
+    score_status: data?.score_status ?? (overallScore !== null ? "completed" : "failed"),
+    filename: data?.filename ?? filename ?? null,
+    persisted: Boolean(data?.persisted),
   };
 }

@@ -167,7 +167,8 @@ export function useResumeReview() {
         targetRole,
         yearsExperience,
         companyType,
-        jobDescription
+        jobDescription,
+        extraction?.filename
       );
       if (res?.review) {
         setReviewText(res.review);
@@ -225,8 +226,11 @@ export function useResumeReview() {
     setEditedText,
     errorMessage,
     reviewText,
+    setReviewText,
     overallScore,
+    setOverallScore,
     scoringStatus,
+    setScoringStatus,
     isDragging,
     fileInputRef,
     stageNum,

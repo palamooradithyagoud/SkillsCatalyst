@@ -30,4 +30,12 @@ export interface ResumeReviewResponse {
   review: string;
   overall_score?: number | null;
   scoring_status?: "scored" | "unscored";
+  ats_compatibility_score?: number | null;
+  skills_match_score?: number | null;
+  experience_score?: number | null;
+  structure_score?: number | null;
+  content_quality_score?: number | null;
+  score_status?: "pending" | "completed" | "partially_completed" | "failed";
+  filename?: string | null;
+  persisted?: boolean;
 }

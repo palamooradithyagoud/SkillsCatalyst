@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, File, UploadFile, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from backend.services.resume_extractor import parse_and_clean_document
+from backend.services.resume_scoring import sanitize_resume_filename
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_RESUME_RPM
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ async def extract_resume(file: UploadFile = File(...)):
             content={"success": False, "message": "No file uploaded."}
         )
 
-    filename = file.filename
+    filename = sanitize_resume_filename(file.filename)
     ext = "." + filename.split(".")[-1].lower() if "." in filename else ""
 
     if ext not in ALLOWED_EXTENSIONS:
