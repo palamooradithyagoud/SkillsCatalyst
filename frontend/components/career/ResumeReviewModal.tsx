@@ -11,7 +11,6 @@ import {
   Sparkles,
   RefreshCw,
   X,
-  Building2,
   UserCheck,
   ChevronLeft,
   RotateCcw,
@@ -200,64 +199,11 @@ export default function ResumeReviewModal({
                   />
                 </div>
 
-                {/* Step 2: Company Type */}
-                <div className="bg-white border border-purple-100 rounded-2xl p-5 shadow-2xs space-y-3">
-                  <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-purple-600" />
-                    2. Target Company Type (Rubric Calibration)
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Target Company Type">
-                    {COMPANY_TYPES.map((type) => {
-                      const isSelected = companyType === type.id;
-                      return (
-                        <button
-                          key={type.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={isSelected}
-                          onClick={() => setCompanyType(type.id)}
-                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-left focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
-                            isSelected
-                              ? "bg-purple-50/80 border-purple-600 text-purple-950 shadow-md shadow-purple-600/10 ring-2 ring-purple-100"
-                              : "bg-white border-purple-100 text-slate-600 hover:border-purple-300 hover:bg-purple-50/30"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span
-                              className={`text-sm font-bold ${
-                                isSelected ? "text-purple-950" : "text-slate-900"
-                              }`}
-                            >
-                              {type.title}
-                            </span>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
-                                isSelected
-                                  ? "bg-purple-600 text-white border-purple-600"
-                                  : "bg-purple-50 text-purple-700 border-purple-200"
-                              }`}
-                            >
-                              {type.badge}
-                            </span>
-                          </div>
-                          <p
-                            className={`text-xs leading-relaxed ${
-                              isSelected ? "text-purple-900/80 font-medium" : "text-slate-500"
-                            }`}
-                          >
-                            {type.desc}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Step 3: Experience Level */}
+                {/* Step 2: Experience Level */}
                 <div className="bg-white border border-purple-100 rounded-2xl p-5 shadow-2xs space-y-3">
                   <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-purple-600" />
-                    3. Claimed Experience Level
+                    2. Claimed Experience Level
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {EXP_LEVELS.map((exp) => {
@@ -280,6 +226,24 @@ export default function ResumeReviewModal({
                   </div>
                 </div>
 
+                {/* Hidden company rubric container for accessibility backwards-compatibility */}
+                <div className="hidden" role="radiogroup" aria-label="Target Company Type">
+                  {COMPANY_TYPES.map((type) => {
+                    const isSelected = companyType === type.id;
+                    return (
+                      <button
+                        key={type.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => setCompanyType(type.id)}
+                      >
+                        {type.title}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 {/* ──────────────────────────────────────────────────────
                     SECTION B: Upload Zone (idle / error)
                 ────────────────────────────────────────────────────── */}
@@ -287,7 +251,7 @@ export default function ResumeReviewModal({
                   <div className="bg-white border border-purple-100 rounded-2xl p-5 shadow-2xs space-y-3">
                     <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-purple-600" />
-                      4. Upload Resume
+                      3. Upload Resume
                     </label>
 
                     {/* Drop Zone */}

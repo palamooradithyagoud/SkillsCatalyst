@@ -15,26 +15,26 @@ export const COMMON_ROLES = [
 export const COMPANY_TYPES: CompanyTypeItem[] = [
   {
     id: "Product-Based",
-    title: "Product-Based",
-    badge: "🚀 High Scale",
+    title: "Product Based",
+    badge: "High Scale",
     desc: "Scalable architecture, performance metrics, code quality, and core tech stack alignment.",
   },
   {
     id: "Service-Based",
-    title: "Service-Based",
-    badge: "💼 Client Solutions",
+    title: "Service Based",
+    badge: "Client Solutions",
     desc: "Client project delivery, multi-domain versatility, framework proficiency, and execution.",
   },
   {
     id: "Startup",
-    title: "Startup / Growth",
-    badge: "⚡ Fast Execution",
+    title: "Startup Growth",
+    badge: "Fast Execution",
     desc: "Speed, end-to-end full-stack ownership, adaptability, and high feature velocity.",
   },
   {
     id: "FAANG / Tier-1",
-    title: "FAANG / Tier 1",
-    badge: "👑 Elite Bar",
+    title: "FAANG",
+    badge: "Elite Bar",
     desc: "Distributed systems at massive scale, algorithmic depth, and high business-impact metrics.",
   },
 ];

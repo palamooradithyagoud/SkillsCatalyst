@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { X, Check, Sparkles, FileText, Zap, Code2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export type ResumeTemplateId = "simple-classic" | "modern-cv" | "sb2nov" | "ultra-minimal";
+export type ResumeTemplateId = "simple-classic" | "modern-cv" | "sb2nov" | "ultra-minimal" | "academic";
 
 export interface TemplateDefinition {
   id: ResumeTemplateId;
@@ -80,6 +80,21 @@ export const RESUME_TEMPLATES: TemplateDefinition[] = [
       "Direct recruiter scanning speed",
     ],
   },
+  {
+    id: "academic",
+    name: "Academic & Research",
+    tagline: "Structured layout with education, research, publications & achievements emphasized",
+    badge: "Students & Academia",
+    badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
+    atsScore: 97,
+    bestFor: "Students, Freshers, Research Fellows, Graduate Applications & Internships",
+    features: [
+      "Prominent education & academic credential hierarchy",
+      "Dedicated achievements, research & project emphasis",
+      "Crisp, readable serif and clean sans typography",
+      "Strict ATS single-column parseability",
+    ],
+  },
 ];
 
 interface TemplateSelectModalProps {
@@ -120,23 +135,23 @@ export default function TemplateSelectModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby="template-select-modal-title"
-          className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          className="relative w-full max-w-5xl bg-[#141519] rounded-3xl shadow-2xl border border-white/10 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-gradient-to-r from-purple-50/50 via-white to-slate-50">
+          <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#141519]">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-600 bg-purple-100/70 px-2.5 py-0.5 rounded-full border border-purple-200">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300 bg-purple-950/60 px-2.5 py-0.5 rounded-full border border-purple-500/30">
                   Step 1 · Choose Layout
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">
+                <span className="text-[10px] font-bold text-zinc-400">
                   All templates are ATS Calibrated
                 </span>
               </div>
-              <h2 id="template-select-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
+              <h2 id="template-select-modal-title" className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
                 Select Your Resume Template
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-0.5">
                 Choose the foundation that best matches your target industry and career goals.
               </p>
             </div>
@@ -145,14 +160,14 @@ export default function TemplateSelectModal({
               type="button"
               onClick={onClose}
               aria-label="Close template selection"
-              className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-2 rounded-2xl text-zinc-400 hover:text-white hover:bg-[#1c1d24] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Cards Grid */}
-          <div className="p-3 sm:p-6 md:p-8 overflow-y-auto flex-1 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6">
+          <div className="p-3 sm:p-6 md:p-8 overflow-y-auto flex-1 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6 bg-[#111216]">
             {RESUME_TEMPLATES.map((tmpl) => {
               const isSelected = selectedTemplate === tmpl.id;
 
@@ -169,10 +184,10 @@ export default function TemplateSelectModal({
                       onSelectTemplate(tmpl.id);
                     }
                   }}
-                  className={`group relative rounded-xl sm:rounded-2xl border-2 transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-purple-600 ${
+                  className={`group relative rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                     isSelected
-                      ? "border-purple-600 bg-purple-50/40 shadow-lg shadow-purple-600/10 ring-4 ring-purple-600/10"
-                      : "border-slate-200 hover:border-purple-300 bg-white hover:shadow-md"
+                      ? "border-purple-500 bg-purple-950/30 shadow-lg shadow-purple-600/20 ring-2 ring-purple-500/30"
+                      : "border-white/10 hover:border-purple-500/40 bg-[#18191f] hover:bg-[#1c1d24] hover:shadow-md"
                   }`}
                 >
                   {/* Selected Indicator Badge */}
@@ -183,23 +198,23 @@ export default function TemplateSelectModal({
                     </div>
                   )}
 
-                  {/* Visual Skeleton Thumbnail (Faithful representation of the layout) */}
-                  <div className="w-full h-28 sm:h-40 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-200 p-2 sm:p-3 mb-2.5 sm:mb-4 overflow-hidden flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
+                  {/* Visual Skeleton Thumbnail */}
+                  <div className="w-full h-28 sm:h-40 rounded-lg sm:rounded-xl bg-[#141519] border border-white/10 p-2 sm:p-3 mb-2.5 sm:mb-4 overflow-hidden flex flex-col justify-between group-hover:scale-[1.01] transition-transform">
                     {/* Template 1: Simple & Classic Preview */}
                     {tmpl.id === "simple-classic" && (
-                      <div className="w-full h-full flex flex-col space-y-1.5 select-none font-serif text-[7px] text-slate-700 opacity-90">
+                      <div className="w-full h-full flex flex-col space-y-1.5 select-none font-serif text-[7px] text-zinc-300 opacity-90">
                         {/* Header centered */}
-                        <div className="text-center pb-1 border-b border-slate-300">
-                          <div className="font-bold text-[9px] text-slate-900 tracking-wider">
+                        <div className="text-center pb-1 border-b border-zinc-700">
+                          <div className="font-bold text-[9px] text-white tracking-wider">
                             JOHN DOE
                           </div>
-                          <div className="text-[6px] text-slate-500">
+                          <div className="text-[6px] text-zinc-400">
                             john@example.com · +1 (555) 019-2831 · New York, NY
                           </div>
                         </div>
                         {/* Section 1 */}
                         <div>
-                          <div className="font-bold text-[7px] text-slate-900 border-b border-slate-200 pb-0.5 uppercase tracking-wide">
+                          <div className="font-bold text-[7px] text-zinc-200 border-b border-zinc-700 pb-0.5 uppercase tracking-wide">
                             Education
                           </div>
                           <div className="flex justify-between text-[6px] font-semibold pt-0.5">
@@ -325,24 +340,24 @@ export default function TemplateSelectModal({
                   </div>
 
                   {/* Title & Tagline */}
-                  <h3 className="text-xs sm:text-base font-black text-slate-900 group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-xs sm:text-base font-black text-white group-hover:text-purple-400 transition-colors">
                     {tmpl.name}
                   </h3>
-                  <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-relaxed mt-0.5 sm:mt-1 line-clamp-2">
+                  <p className="text-[10px] sm:text-xs text-zinc-400 font-medium leading-relaxed mt-0.5 sm:mt-1 line-clamp-2">
                     {tmpl.tagline}
                   </p>
 
                   {/* Best For */}
-                  <div className="my-2 sm:my-3 pt-1.5 sm:pt-2 border-t border-slate-100 text-[10px] sm:text-[11px] line-clamp-2">
-                    <span className="font-bold text-slate-700">Best for: </span>
-                    <span className="text-slate-500">{tmpl.bestFor}</span>
+                  <div className="my-2 sm:my-3 pt-1.5 sm:pt-2 border-t border-white/10 text-[10px] sm:text-[11px] line-clamp-2">
+                    <span className="font-bold text-zinc-300">Best for: </span>
+                    <span className="text-zinc-400">{tmpl.bestFor}</span>
                   </div>
 
                   {/* Feature Bullets */}
-                  <ul className="space-y-1 sm:space-y-1.5 text-[10px] sm:text-xs text-slate-600 flex-1 mb-2.5 sm:mb-4">
+                  <ul className="space-y-1 sm:space-y-1.5 text-[10px] sm:text-xs text-zinc-300 flex-1 mb-2.5 sm:mb-4">
                     {tmpl.features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-1 sm:gap-1.5 text-[9.5px] sm:text-[11px] leading-tight">
-                        <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0 mt-0.5 stroke-[2.5]" />
+                        <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0 mt-0.5 stroke-[2.5]" />
                         <span className="line-clamp-1">{feat}</span>
                       </li>
                     ))}
@@ -358,8 +373,8 @@ export default function TemplateSelectModal({
                     aria-label={isSelected ? `${tmpl.name} template selected` : `Use ${tmpl.name} template`}
                     className={`w-full py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
-                        : "bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-700"
+                        ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                        : "bg-[#23242B] hover:bg-purple-950/50 text-zinc-200 hover:text-purple-300 border border-white/10"
                     }`}
                   >
                     <span>{isSelected ? "Selected" : "Use Template"}</span>
@@ -371,9 +386,9 @@ export default function TemplateSelectModal({
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 sm:px-8 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-              <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+          <div className="px-6 sm:px-8 py-4 bg-[#141519] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
+              <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
               <span>
                 You can switch between templates anytime while editing without losing your content.
               </span>
@@ -383,14 +398,14 @@ export default function TemplateSelectModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer text-center"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-zinc-400 hover:text-white hover:bg-[#1c1d24] rounded-xl transition-colors cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => onSelectTemplate(selectedTemplate)}
-                className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl shadow-md shadow-purple-600/20 transition-all cursor-pointer text-center flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-xl shadow-md shadow-purple-600/30 transition-all cursor-pointer text-center flex items-center justify-center gap-2"
               >
                 <span>Continue to Builder</span>
                 <ArrowRight className="w-3.5 h-3.5" />

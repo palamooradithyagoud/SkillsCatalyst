@@ -11,8 +11,6 @@ import {
   AlertCircle,
   Sparkles,
   RefreshCw,
-  Building2,
-  UserCheck,
   ChevronLeft,
   RotateCcw,
   Edit3,
@@ -24,8 +22,6 @@ import {
   Star,
   Trash2,
   Zap,
-  Target,
-  BarChart3,
   Check,
   Mail,
   Phone,
@@ -41,9 +37,16 @@ import {
   Eye,
   Download,
   Save,
+  HardDrive,
+  Calendar,
 } from "lucide-react";
 import StageIndicator from "@/components/career/StageIndicator";
 import ResumeMarkdownViewer from "@/components/career/ResumeMarkdownViewer";
+import ResumeAnalysisResults from "@/components/career/ResumeAnalysisResults";
+import ResumeHistory from "@/components/career/ResumeHistory";
+import ResumeSeriesDashboard from "@/components/career/ResumeSeriesDashboard";
+import ResumeComparisonModal from "@/components/career/ResumeComparisonModal";
+import ResumeGrowthDashboard from "@/components/career/ResumeGrowthDashboard";
 import TemplateSelectModal, {
   ResumeTemplateId,
   RESUME_TEMPLATES,
@@ -54,14 +57,17 @@ import { exportResumeAsPdf } from "@/lib/career/pdfExportHelper";
 import confetti from "canvas-confetti";
 import {
   COMMON_ROLES,
-  COMPANY_TYPES,
-  EXP_LEVELS,
   FILE_TYPE_COLORS,
   MAX_FILE_MB,
 } from "@/data/career/constants";
 import { getFileExt } from "@/lib/career/helpers";
 import { useResumeReview } from "@/hooks/useResumeReview";
-import { reviewResume } from "@/lib/api/career";
+import {
+  reviewResume,
+  getResumeHistory,
+  getResumeAnalysisById,
+  downloadResumeFile,
+} from "@/lib/api/career";
 import { useAuth } from "@/lib/auth";
 
 interface SavedResumeItem {
@@ -181,8 +187,14 @@ export default function ResumeWorkspacePage() {
   // Tab state for left sidebar: "recent" | "all" | "starred"
   const [activeTab, setActiveTab] = useState<"recent" | "all" | "starred">("recent");
 
-  // Main panel active mode: "empty" | "upload" | "create"
-  const [viewMode, setViewMode] = useState<"empty" | "upload" | "create">("empty");
+  // Main panel active mode: "empty" | "upload" | "create" | "history" | "series" | "growth"
+  const [viewMode, setViewMode] = useState<"empty" | "upload" | "create" | "history" | "series" | "growth">("empty");
+
+  // Comparison & Growth state
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  const [compareOlderId, setCompareOlderId] = useState<string | null>(null);
+  const [compareNewerId, setCompareNewerId] = useState<string | null>(null);
+  const [growthSeriesId, setGrowthSeriesId] = useState<string | null>(null);
 
   // Template modal state
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -199,6 +211,8 @@ export default function ResumeWorkspacePage() {
   // Saved resumes state
   const [savedResumes, setSavedResumes] = useState<SavedResumeItem[]>([]);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [historyRefreshTrigger, setHistoryRefreshTrigger] = useState(0);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Resume builder data state
   const [resumeData, setResumeData] = useState<ResumeData>({
@@ -206,20 +220,47 @@ export default function ResumeWorkspacePage() {
     fullName: userName,
   });
 
-  // Load saved resumes from localStorage on mount
+  // Authoritative cloud history loading (with localStorage fallback)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("skillscatalyst_resumes");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSavedResumes(parsed);
+    let isMounted = true;
+    async function fetchCloudHistory() {
+      setIsLoadingHistory(true);
+      try {
+        const res = await getResumeHistory({ page: 1, pageSize: 20 });
+        if (isMounted && res?.items && res.items.length > 0) {
+          const cloudSaved: SavedResumeItem[] = res.items.map((item) => ({
+            id: item.id,
+            title: item.original_filename,
+            role: item.file_type ? `${item.file_type} Document` : "Uploaded Resume",
+            date: new Date(item.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }),
+            atsScore: item.overall_score ?? item.ats_score ?? null,
+            starred: false,
+          }));
+          setSavedResumes(cloudSaved);
         }
+      } catch {
+        // Fall back to local storage if unauthenticated or offline
+        try {
+          const stored = localStorage.getItem("skillscatalyst_resumes");
+          if (stored && isMounted) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSavedResumes(parsed);
+            }
+          }
+        } catch {}
+      } finally {
+        if (isMounted) setIsLoadingHistory(false);
       }
-    } catch (e) {
-      console.error(e);
     }
-  }, []);
+    fetchCloudHistory();
+    return () => {
+      isMounted = false;
+    };
+  }, [historyRefreshTrigger]);
 
   // Use the existing career resume review hook
   const reviewState = useResumeReview();
@@ -240,6 +281,13 @@ export default function ResumeWorkspacePage() {
     errorMessage,
     reviewText,
     overallScore,
+    scoringStatus,
+    atsAnalysis,
+    keywordAnalysis,
+    aiEvaluation,
+    scoreBreakdown,
+    careerStage,
+    subScores,
     isDragging,
     fileInputRef,
     stageNum,
@@ -248,20 +296,59 @@ export default function ResumeWorkspacePage() {
     handleDragLeave,
     handleDrop,
     handleRunEvaluation,
+    loadHistoricalAnalysis,
     resetAll,
   } = reviewState;
+
+  // Trigger history refresh when a new cloud analysis completes
+  useEffect(() => {
+    if (uploadStage === "done" && reviewState.savedAnalysisId) {
+      setHistoryRefreshTrigger((p) => p + 1);
+    }
+  }, [uploadStage, reviewState.savedAnalysisId]);
+
+  const handleSelectHistoricalAnalysis = async (analysisId: string) => {
+    setSelectedResumeId(analysisId);
+    try {
+      const detail = await getResumeAnalysisById(analysisId);
+      if (detail && detail.analysis_result) {
+        reviewState.loadHistoricalAnalysis(detail);
+        setViewMode("upload");
+      }
+    } catch (err: unknown) {
+      console.error("Failed to load historical analysis:", err);
+    }
+  };
+
+  const handleDownloadHistorical = async (analysisId: string) => {
+    try {
+      const res = await downloadResumeFile(analysisId);
+      if (res?.signed_url) {
+        const link = document.createElement("a");
+        link.href = res.signed_url;
+        link.download = res.filename || "resume.pdf";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
 
   // Sync uploadStage: if evaluated, keep view on upload/results
   useEffect(() => {
     if (uploadStage === "done" && reviewText) {
-      const existing = savedResumes.find((r) => r.id === extraction?.filename);
+      const existing = savedResumes.find((r) => r.id === extraction?.filename || r.id === reviewState.savedAnalysisId);
       if (!existing && extraction) {
         const calculatedAtsScore =
           typeof overallScore === "number" && !isNaN(overallScore)
             ? Math.round(overallScore)
             : null;
         const newItem: SavedResumeItem = {
-          id: extraction.filename || `resume-${Date.now()}`,
+          id: reviewState.savedAnalysisId || extraction.filename || `resume-${Date.now()}`,
           title: extraction.filename,
           role: targetRole,
           date: "Just now",
@@ -406,23 +493,23 @@ export default function ResumeWorkspacePage() {
   return (
     <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 pb-20 select-none overflow-x-hidden w-full">
       {/* ──────────────────────────────────────────────────────────
-          1. TOP HERO / BANNER CARD (Compact & Proportional, Mobile Fit)
+          1. TOP HERO / BANNER CARD (Dark Charcoal Theme & Crisp White Text)
       ────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-50/70 via-slate-50/50 to-indigo-50/70 border border-purple-100/90 p-4 sm:p-6 md:p-7 shadow-xs transition-all">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#181920] via-[#141519] to-[#111216] border border-white/10 p-4 sm:p-6 md:p-7 shadow-2xl transition-all">
         {/* Subtle background glow */}
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-purple-300/15 blur-2xl pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Left Column: Headlines & Call to Actions */}
           <div className="lg:col-span-7 space-y-3 sm:space-y-3.5">
             <div>
-              <p className="text-[10px] font-extrabold tracking-[0.18em] text-slate-400 uppercase mb-1">
+              <p className="text-[10px] font-extrabold tracking-[0.18em] text-purple-400 uppercase mb-1">
                 BUILD. ANALYZE. IMPROVE.
               </p>
-              <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-[32px] font-black text-slate-900 tracking-tight leading-tight">
-                Resumes that <span className="text-purple-600">open doors.</span>
+              <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-[32px] font-black text-white tracking-tight leading-tight">
+                Resumes that <span className="text-purple-400">open doors.</span>
               </h1>
-              <p className="text-xs sm:text-[13px] text-slate-500 font-medium leading-relaxed mt-1 max-w-lg">
+              <p className="text-xs sm:text-[13px] text-zinc-300 font-medium leading-relaxed mt-1 max-w-lg">
                 Create industry-ready resumes, analyze ATS scores, fix missing keywords, and export professional PDFs in seconds.
               </p>
             </div>
@@ -432,7 +519,7 @@ export default function ResumeWorkspacePage() {
               <button
                 type="button"
                 onClick={handleStartCreate}
-                className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl shadow-sm shadow-purple-600/20 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl shadow-sm shadow-purple-600/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create New Resume</span>
@@ -441,25 +528,25 @@ export default function ResumeWorkspacePage() {
               <button
                 type="button"
                 onClick={handleStartUpload}
-                className="w-full sm:w-auto justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl border border-white/10 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
-                <Upload className="w-3.5 h-3.5 text-slate-600" />
+                <Upload className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Upload Existing</span>
               </button>
             </div>
 
             {/* Feature Highlights Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-2 sm:pt-1.5 border-t border-purple-100/60 sm:border-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-2 sm:pt-1.5 border-t border-white/10 sm:border-0">
               {/* Feature 1 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/50 shadow-2xs">
-                  <Zap className="w-3.5 h-3.5 text-purple-600 fill-purple-600" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
+                  <Zap className="w-3.5 h-3.5 text-purple-400 fill-purple-400" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[11px] font-bold text-slate-900 leading-tight">
+                  <h4 className="text-[11px] font-bold text-white leading-tight">
                     Real-time ATS Scoring
                   </h4>
-                  <p className="text-[9px] text-slate-400 font-medium truncate">
+                  <p className="text-[9px] text-zinc-400 font-medium truncate">
                     See how well you match
                   </p>
                 </div>
@@ -467,14 +554,14 @@ export default function ResumeWorkspacePage() {
 
               {/* Feature 2 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/50 shadow-2xs">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[11px] font-bold text-slate-900 leading-tight">
+                  <h4 className="text-[11px] font-bold text-white leading-tight">
                     AI Suggestions
                   </h4>
-                  <p className="text-[9px] text-slate-400 font-medium truncate">
+                  <p className="text-[9px] text-zinc-400 font-medium truncate">
                     Get role-specific improvements
                   </p>
                 </div>
@@ -482,14 +569,14 @@ export default function ResumeWorkspacePage() {
 
               {/* Feature 3 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/50 shadow-2xs">
-                  <FileText className="w-3.5 h-3.5 text-purple-600" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
+                  <FileText className="w-3.5 h-3.5 text-purple-400" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[11px] font-bold text-slate-900 leading-tight">
+                  <h4 className="text-[11px] font-bold text-white leading-tight">
                     Export in PDF &amp; LaTeX
                   </h4>
-                  <p className="text-[9px] text-slate-400 font-medium truncate">
+                  <p className="text-[9px] text-zinc-400 font-medium truncate">
                     Production-ready output
                   </p>
                 </div>
@@ -505,14 +592,14 @@ export default function ResumeWorkspacePage() {
               <div className="absolute -top-3.5 -right-0.5 sm:-top-5 sm:right-2 flex flex-col items-end z-20 pointer-events-none">
                 <span
                   style={{ fontFamily: "var(--font-caveat), 'Caveat', cursive" }}
-                  className="text-purple-600 font-bold text-xs sm:text-base tracking-wide -rotate-6"
+                  className="text-purple-400 font-bold text-xs sm:text-base tracking-wide -rotate-6"
                 >
                   From résumé
                   <br />
                   to opportunities
                 </span>
                 <svg
-                  className="w-5 h-4 sm:w-7 sm:h-5 text-purple-500 -rotate-12 mt-0.5 mr-0.5 sm:mr-1"
+                  className="w-5 h-4 sm:w-7 sm:h-5 text-purple-400 -rotate-12 mt-0.5 mr-0.5 sm:mr-1"
                   viewBox="0 0 40 30"
                   fill="none"
                   stroke="currentColor"
@@ -526,62 +613,62 @@ export default function ResumeWorkspacePage() {
               </div>
 
               {/* Back Card: Realistic Resume Preview */}
-              <div className="absolute left-0 top-1 w-[195px] sm:w-[215px] bg-white rounded-xl border border-slate-200/90 p-3 shadow-md text-slate-800 transform -rotate-1">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+              <div className="absolute left-0 top-1 w-[195px] sm:w-[215px] bg-[#1a1b22] rounded-xl border border-white/10 p-3 shadow-xl text-white transform -rotate-1">
+                <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                  <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                     {userName.charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-extrabold text-slate-900 truncate leading-none">
+                    <p className="text-[10px] font-extrabold text-white truncate leading-none">
                       {userName}
                     </p>
-                    <p className="text-[8px] text-slate-400 font-medium truncate mt-0.5">
+                    <p className="text-[8px] text-zinc-400 font-medium truncate mt-0.5">
                       Software Engineer
                     </p>
                   </div>
                 </div>
 
                 {/* Contact Icons Strip */}
-                <div className="space-y-0.5 pt-1.5 pb-1.5 text-[8px] text-slate-500 font-medium">
+                <div className="space-y-0.5 pt-1.5 pb-1.5 text-[8px] text-zinc-300 font-medium">
                   <div className="flex items-center gap-1 truncate">
-                    <Mail className="w-2 h-2 text-slate-400 shrink-0" />
+                    <Mail className="w-2 h-2 text-zinc-400 shrink-0" />
                     <span>adithya@example.com</span>
                   </div>
                   <div className="flex items-center gap-1 truncate">
-                    <Phone className="w-2 h-2 text-slate-400 shrink-0" />
+                    <Phone className="w-2 h-2 text-zinc-400 shrink-0" />
                     <span>+91 98765 43210</span>
                   </div>
                   <div className="flex items-center gap-1 truncate">
-                    <MapPin className="w-2 h-2 text-slate-400 shrink-0" />
+                    <MapPin className="w-2 h-2 text-zinc-400 shrink-0" />
                     <span>Hyderabad, India</span>
                   </div>
                   <div className="flex items-center gap-1 truncate">
-                    <Globe className="w-2 h-2 text-slate-400 shrink-0" />
+                    <Globe className="w-2 h-2 text-zinc-400 shrink-0" />
                     <span>linkedin.com/in/adithya</span>
                   </div>
                 </div>
 
                 {/* Skeleton Education & Experience Lines */}
-                <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                <div className="space-y-1.5 pt-1 border-t border-white/10">
                   <div>
-                    <span className="text-[8px] font-bold text-slate-700">
+                    <span className="text-[8px] font-bold text-zinc-200">
                       Education
                     </span>
-                    <div className="w-3/4 h-1 bg-slate-100 rounded-full mt-0.5" />
+                    <div className="w-3/4 h-1 bg-zinc-700/60 rounded-full mt-0.5" />
                   </div>
                   <div>
-                    <span className="text-[8px] font-bold text-slate-700">
+                    <span className="text-[8px] font-bold text-zinc-200">
                       Experience
                     </span>
-                    <div className="w-5/6 h-1 bg-slate-100 rounded-full mt-0.5" />
+                    <div className="w-5/6 h-1 bg-zinc-700/60 rounded-full mt-0.5" />
                   </div>
                 </div>
               </div>
 
               {/* Front Card: Elevated Overlapping ATS Score Card */}
-              <div className="absolute right-0 bottom-0 w-[130px] sm:w-[145px] bg-white rounded-xl border border-purple-100 p-2.5 shadow-lg text-center space-y-1.5 z-10">
+              <div className="absolute right-0 bottom-0 w-[130px] sm:w-[145px] bg-[#22232a] rounded-xl border border-purple-500/30 p-2.5 shadow-2xl text-center space-y-1.5 z-10">
                 <div className="text-left">
-                  <span className="text-[9px] font-extrabold text-slate-800">
+                  <span className="text-[9px] font-extrabold text-zinc-200">
                     ATS Score
                   </span>
                 </div>
@@ -591,7 +678,7 @@ export default function ResumeWorkspacePage() {
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                     {/* Background circle */}
                     <path
-                      className="text-purple-100"
+                      className="text-[#333542]"
                       strokeWidth="3.5"
                       stroke="currentColor"
                       fill="none"
@@ -599,7 +686,7 @@ export default function ResumeWorkspacePage() {
                     />
                     {/* Progress circle */}
                     <path
-                      className="text-purple-600"
+                      className="text-purple-400"
                       strokeDasharray="92, 100"
                       strokeWidth="3.5"
                       strokeLinecap="round"
@@ -609,7 +696,7 @@ export default function ResumeWorkspacePage() {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center">
-                    <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
+                    <span className="text-base sm:text-lg font-black text-white leading-none">
                       92
                     </span>
                   </div>
@@ -617,26 +704,26 @@ export default function ResumeWorkspacePage() {
 
                 {/* Score Rating */}
                 <div>
-                  <p className="text-[9px] font-extrabold text-slate-900">
+                  <p className="text-[9px] font-extrabold text-purple-300">
                     Great Match
                   </p>
                 </div>
 
                 {/* Checklist */}
-                <div className="space-y-0.5 text-left pt-1 border-t border-slate-100">
-                  <div className="flex items-center gap-1 text-[8px] font-semibold text-slate-700">
+                <div className="space-y-0.5 text-left pt-1 border-t border-white/10">
+                  <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
                     <span>Relevant Keywords</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[8px] font-semibold text-slate-700">
+                  <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
                     <span>Proper Structure</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[8px] font-semibold text-slate-700">
+                  <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
@@ -650,16 +737,16 @@ export default function ResumeWorkspacePage() {
       </div>
 
       {/* ──────────────────────────────────────────────────────────
-          MOBILE SEGMENTED SWITCHER (Visible on mobile only)
+          MOBILE SEGMENTED SWITCHER (Dark Charcoal & White Text)
       ────────────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+      <div className="lg:hidden flex items-center bg-[#141519] p-1 rounded-xl border border-white/10">
         <button
           type="button"
           onClick={() => setViewMode("empty")}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode === "empty"
-              ? "bg-white text-purple-700 shadow-xs border border-purple-100"
-              : "text-slate-500 hover:text-slate-900"
+              ? "bg-[#24252C] text-purple-300 shadow-xs border border-purple-500/30"
+              : "text-zinc-400 hover:text-white"
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
@@ -672,11 +759,11 @@ export default function ResumeWorkspacePage() {
           }}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode !== "empty"
-              ? "bg-white text-purple-700 shadow-xs border border-purple-100"
-              : "text-slate-500 hover:text-slate-900"
+              ? "bg-[#24252C] text-purple-300 shadow-xs border border-purple-500/30"
+              : "text-zinc-400 hover:text-white"
           }`}
         >
-          <Zap className="w-3.5 h-3.5 text-purple-600" />
+          <Zap className="w-3.5 h-3.5 text-purple-400" />
           <span>{viewMode === "create" ? "Resume Builder" : "ATS Evaluator"}</span>
         </button>
       </div>
@@ -685,18 +772,18 @@ export default function ResumeWorkspacePage() {
           2. TWO-COLUMN MAIN WORKSPACE: "YOUR RESUMES" + DETAIL WORKSPACE
       ────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
-        {/* ── Left Column: "Your Resumes" Sidebar ── */}
+        {/* ── Left Column: "Your Resumes" Sidebar (Dark Charcoal & White Text) ── */}
         <div
-          className={`lg:col-span-4 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-3.5 sm:space-y-4 ${
+          className={`lg:col-span-4 bg-[#141519] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3.5 sm:space-y-4 ${
             viewMode !== "empty" ? "hidden lg:block" : "block"
           }`}
         >
           {/* Header Row */}
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-slate-900">
+            <h3 className="text-sm font-extrabold text-white">
               Your Resumes
             </h3>
-            <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center border border-slate-200">
+            <span className="w-6 h-6 rounded-full bg-[#23242B] text-zinc-300 font-bold text-xs flex items-center justify-center border border-white/10">
               {savedResumes.length}
             </span>
           </div>
@@ -706,7 +793,7 @@ export default function ResumeWorkspacePage() {
             <button
               type="button"
               onClick={handleStartCreate}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create New Resume</span>
@@ -715,22 +802,48 @@ export default function ResumeWorkspacePage() {
             <button
               type="button"
               onClick={handleStartUpload}
-              className="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs border border-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="w-full bg-[#1c1d24] hover:bg-[#252630] text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/10 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
-              <Upload className="w-3.5 h-3.5 text-slate-600" />
+              <Upload className="w-3.5 h-3.5 text-zinc-300" />
               <span>Upload Existing Resume</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode("series")}
+              className={`w-full font-bold py-2.5 px-4 rounded-xl text-xs border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 ${
+                viewMode === "series" || viewMode === "growth"
+                  ? "bg-purple-950/60 text-purple-200 border-purple-500/50 ring-2 ring-purple-500/30"
+                  : "bg-[#1c1d24] hover:bg-[#252630] text-white border-white/10"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 text-purple-400" />
+              <span>Resume Tracks & Series</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode("history")}
+              className={`w-full font-bold py-2.5 px-4 rounded-xl text-xs border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 ${
+                viewMode === "history"
+                  ? "bg-purple-950/60 text-purple-200 border-purple-500/50 ring-2 ring-purple-500/30"
+                  : "bg-[#1c1d24] hover:bg-[#252630] text-white border-white/10"
+              }`}
+            >
+              <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+              <span>Cloud Analysis History</span>
             </button>
           </div>
 
           {/* Tab Filter Navigation */}
-          <div className="flex items-center gap-6 border-b border-slate-100 pt-1 text-xs">
+          <div className="flex items-center gap-6 border-b border-white/10 pt-1 text-xs">
             <button
               type="button"
               onClick={() => setActiveTab("recent")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "recent"
-                  ? "text-purple-600 border-b-2 border-purple-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "text-purple-400 border-b-2 border-purple-500"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Recent
@@ -740,8 +853,8 @@ export default function ResumeWorkspacePage() {
               onClick={() => setActiveTab("all")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "all"
-                  ? "text-purple-600 border-b-2 border-purple-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "text-purple-400 border-b-2 border-purple-500"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               All
@@ -751,8 +864,8 @@ export default function ResumeWorkspacePage() {
               onClick={() => setActiveTab("starred")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "starred"
-                  ? "text-purple-600 border-b-2 border-purple-600"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "text-purple-400 border-b-2 border-purple-500"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Starred
@@ -764,13 +877,13 @@ export default function ResumeWorkspacePage() {
             {filteredResumes.length === 0 ? (
               /* Empty state (matches screenshot) */
               <div className="text-center py-8 space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-400 flex items-center justify-center mx-auto shadow-2xs">
-                  <FileText className="w-6 h-6 text-slate-400" />
+                <div className="w-12 h-12 rounded-2xl bg-[#1c1d24] border border-white/10 text-zinc-400 flex items-center justify-center mx-auto shadow-sm">
+                  <FileText className="w-6 h-6 text-zinc-400" />
                 </div>
-                <h4 className="text-xs font-extrabold text-slate-800">
+                <h4 className="text-xs font-extrabold text-white">
                   No resumes yet
                 </h4>
-                <p className="text-[11px] text-slate-400 font-medium">
+                <p className="text-[11px] text-zinc-400 font-medium">
                   Create or upload a resume to get started.
                 </p>
               </div>
@@ -808,30 +921,30 @@ export default function ResumeWorkspacePage() {
                           }
                         }
                       }}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1 ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:ring-offset-[#141519] ${
                         isSelected
-                          ? "bg-purple-50/80 border-purple-600 shadow-xs"
-                          : "bg-white border-slate-200 hover:border-purple-300"
+                          ? "bg-purple-950/40 border-purple-500 shadow-md"
+                          : "bg-[#1a1b22] border-white/10 hover:border-purple-400/50 hover:bg-[#22232a]"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold text-xs"
+                          className="w-8 h-8 rounded-xl bg-purple-900/60 text-purple-200 border border-purple-500/30 flex items-center justify-center shrink-0 font-bold text-xs"
                           title={resume.atsScore !== null && resume.atsScore !== undefined ? `ATS Score: ${resume.atsScore}/100` : "Not evaluated"}
                         >
                           {resume.atsScore !== null && resume.atsScore !== undefined ? (
                             resume.atsScore
                           ) : (
-                            <span className="text-[9px] text-slate-400 font-bold">N/A</span>
+                            <span className="text-[9px] text-zinc-400 font-bold">N/A</span>
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">
+                          <p className="text-xs font-bold text-white truncate">
                             {resume.title}
                           </p>
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 truncate mt-0.5">
+                          <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 truncate mt-0.5">
                             {resume.templateId && (
-                              <span className="bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase">
+                              <span className="bg-purple-950/60 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase">
                                 {resume.templateId === "sb2nov"
                                   ? "SB2Nov"
                                   : resume.templateId === "modern-cv"
@@ -849,7 +962,7 @@ export default function ResumeWorkspacePage() {
                           type="button"
                           onClick={(e) => toggleStar(resume.id, e)}
                           aria-label={resume.starred ? "Unstar resume" : "Star resume"}
-                          className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-amber-500"
+                          className="p-1 rounded-lg hover:bg-[#252630] text-zinc-400 hover:text-amber-400 transition-colors"
                         >
                           <Star
                             className={`w-3.5 h-3.5 ${
@@ -863,7 +976,7 @@ export default function ResumeWorkspacePage() {
                           type="button"
                           onClick={(e) => deleteResume(resume.id, e)}
                           aria-label="Delete resume"
-                          className="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600"
+                          className="p-1 rounded-lg hover:bg-rose-950/40 text-zinc-400 hover:text-rose-400 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -876,35 +989,37 @@ export default function ResumeWorkspacePage() {
           </div>
         </div>
 
-        {/* ── Right Column: Main Detail / Workspace Panel ── */}
+        {/* ── Right Column: Main Detail / Workspace Panel (Dark Charcoal & White Text) ── */}
         <div
           className={`${
-            viewMode === "create" ? "lg:col-span-12" : "lg:col-span-8"
-          } bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
+            viewMode === "create" || viewMode === "series" || viewMode === "growth"
+              ? "lg:col-span-12"
+              : "lg:col-span-8"
+          } bg-[#141519] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
             viewMode === "empty" ? "hidden lg:flex" : "flex"
           }`}
         >
           {/* ──────────────────────────────────────────────────────────
-              STATE A: "NO RESUME SELECTED" (Exact match to screenshot)
+              STATE A: "NO RESUME SELECTED" (Dark Charcoal & Crisp White Text)
           ────────────────────────────────────────────────────────── */}
           {viewMode === "empty" && (
             <div className="text-center space-y-3 sm:space-y-4 py-4 sm:py-8 max-w-md mx-auto w-full">
               {/* Document Icon with Purple Plus Badge */}
               <div className="relative inline-block mx-auto mb-1">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-300 shadow-2xs">
-                  <FileText className="w-7 h-7 sm:w-9 sm:h-9 text-slate-300" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#1c1d24] border border-white/10 flex items-center justify-center text-zinc-400 shadow-sm">
+                  <FileText className="w-7 h-7 sm:w-9 sm:h-9 text-zinc-400" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-sm">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-md">
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                 </div>
               </div>
 
               {/* Title & Description */}
               <div>
-                <h2 className="text-lg sm:text-2xl font-black text-slate-900">
+                <h2 className="text-lg sm:text-2xl font-black text-white">
                   No Resume Selected
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mt-1 sm:mt-2 max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed mt-1 sm:mt-2 max-w-md mx-auto">
                   Select a resume from the sidebar or create a new one to view ATS scores, keyword analysis, and personalized recommendations.
                 </p>
               </div>
@@ -914,7 +1029,7 @@ export default function ResumeWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleStartCreate}
-                  className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md shadow-purple-600/25 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Create Your First Resume</span>
@@ -923,9 +1038,9 @@ export default function ResumeWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleStartUpload}
-                  className="w-full sm:w-auto justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-white/10 shadow-sm flex items-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
-                  <Upload className="w-4 h-4 text-slate-600" />
+                  <Upload className="w-4 h-4 text-zinc-300" />
                   <span>Upload a Resume</span>
                 </button>
               </div>
@@ -938,12 +1053,12 @@ export default function ResumeWorkspacePage() {
           {viewMode === "create" && (
             <div className="space-y-5">
               {/* Studio Header Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setViewMode("empty")}
-                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+                    className="p-2 rounded-xl hover:bg-[#1c1d24] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span>Back</span>
@@ -951,15 +1066,15 @@ export default function ResumeWorkspacePage() {
 
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base sm:text-lg font-black text-slate-900">
+                      <h3 className="text-base sm:text-lg font-black text-white">
                         {resumeData.fullName}
                       </h3>
                       <button
                         type="button"
                         onClick={() => setIsTemplateModalOpen(true)}
-                        className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-200 transition-colors flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-950/60 text-purple-300 hover:bg-purple-900/60 border border-purple-500/30 transition-colors flex items-center gap-1 cursor-pointer"
                       >
-                        <LayoutTemplate className="w-3 h-3" />
+                        <LayoutTemplate className="w-3 h-3 text-purple-400" />
                         <span>
                           {selectedTemplate === "sb2nov"
                             ? "Template: SB2Nov"
@@ -974,20 +1089,20 @@ export default function ResumeWorkspacePage() {
                         const currentResume = savedResumes.find((r) => r.id === selectedResumeId);
                         if (currentResume?.atsScore !== null && currentResume?.atsScore !== undefined) {
                           return (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-emerald-600" />
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-emerald-400" />
                               ATS Score: {currentResume.atsScore}/100
                             </span>
                           );
                         }
                         return (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1c1d24] text-zinc-400 border border-white/10">
                             Not evaluated
                           </span>
                         );
                       })()}
                     </div>
-                    <p className="text-xs text-slate-400 font-medium">
+                    <p className="text-xs text-zinc-400 font-medium">
                       Live preview updates instantly with your changes.
                     </p>
                   </div>
@@ -995,14 +1110,14 @@ export default function ResumeWorkspacePage() {
 
                 {/* Mobile View Toggle & Save Button */}
                 <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
-                  <div className="lg:hidden flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold">
+                  <div className="lg:hidden flex items-center bg-[#1c1d24] p-0.5 rounded-xl border border-white/10 text-xs font-bold">
                     <button
                       type="button"
                       onClick={() => setMobileBuilderTab("editor")}
                       className={`px-3 py-1.5 rounded-lg transition-all ${
                         mobileBuilderTab === "editor"
-                          ? "bg-white text-purple-700 shadow-xs"
-                          : "text-slate-500"
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-zinc-400"
                       }`}
                     >
                       Edit Form
@@ -1012,8 +1127,8 @@ export default function ResumeWorkspacePage() {
                       onClick={() => setMobileBuilderTab("preview")}
                       className={`px-3 py-1.5 rounded-lg transition-all ${
                         mobileBuilderTab === "preview"
-                          ? "bg-white text-purple-700 shadow-xs"
-                          : "text-slate-500"
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-zinc-400"
                       }`}
                     >
                       Preview
@@ -1040,16 +1155,16 @@ export default function ResumeWorkspacePage() {
                         setIsExportingPdf(false);
                       }
                     }}
-                    className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none bg-[#1c1d24] hover:bg-[#23242B] text-zinc-200 hover:text-white border border-white/10 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isExportingPdf ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
                         <span>Exporting PDF...</span>
                       </>
                     ) : (
                       <>
-                        <Download className="w-3.5 h-3.5 text-purple-600" />
+                        <Download className="w-3.5 h-3.5 text-purple-400" />
                         <span>Export as PDF</span>
                       </>
                     )}
@@ -1059,16 +1174,16 @@ export default function ResumeWorkspacePage() {
                     type="button"
                     disabled={isEvaluatingBuilderResume}
                     onClick={handleEvaluateBuilderResume}
-                    className="flex-1 sm:flex-none bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isEvaluatingBuilderResume ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
                         <span>Evaluating ATS...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                         <span>Evaluate ATS</span>
                       </>
                     )}
@@ -1077,7 +1192,7 @@ export default function ResumeWorkspacePage() {
                   <button
                     type="button"
                     onClick={handleSaveCreatedResume}
-                    className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-purple-600/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                    className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>Save Resume</span>
@@ -1094,7 +1209,7 @@ export default function ResumeWorkspacePage() {
                   }`}
                 >
                   {/* Section Switcher Tabs */}
-                  <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-slate-100 text-xs">
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-white/10 text-xs">
                     {(
                       [
                         { id: "contact", label: "Contact" },
@@ -1111,7 +1226,7 @@ export default function ResumeWorkspacePage() {
                         className={`px-3 py-1.5 font-bold rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
                           activeEditorSection === tab.id
                             ? "bg-purple-600 text-white shadow-xs"
-                            : "text-slate-600 hover:bg-slate-100"
+                            : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
                         }`}
                       >
                         {tab.label}
@@ -1121,97 +1236,97 @@ export default function ResumeWorkspacePage() {
 
                   {/* Section 1: Contact & Personal Details */}
                   {activeEditorSection === "contact" && (
-                    <div className="space-y-3.5 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 text-xs">
+                    <div className="space-y-3.5 bg-[#18191f] p-4 rounded-2xl border border-white/10 text-xs">
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">Full Name</label>
+                        <label className="font-bold text-zinc-200 block mb-1">Full Name</label>
                         <input
                           type="text"
                           value={resumeData.fullName}
                           onChange={(e) =>
                             setResumeData({ ...resumeData, fullName: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">Target Role / Headline</label>
+                        <label className="font-bold text-zinc-200 block mb-1">Target Role / Headline</label>
                         <input
                           type="text"
                           value={resumeData.role}
                           onChange={(e) =>
                             setResumeData({ ...resumeData, role: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
-                          <label className="font-bold text-slate-800 block mb-1">Email</label>
+                          <label className="font-bold text-zinc-200 block mb-1">Email</label>
                           <input
                             type="email"
                             value={resumeData.email}
                             onChange={(e) =>
                               setResumeData({ ...resumeData, email: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                           />
                         </div>
                         <div>
-                          <label className="font-bold text-slate-800 block mb-1">Phone</label>
+                          <label className="font-bold text-zinc-200 block mb-1">Phone</label>
                           <input
                             type="text"
                             value={resumeData.phone}
                             onChange={(e) =>
                               setResumeData({ ...resumeData, phone: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
-                          <label className="font-bold text-slate-800 block mb-1">Location</label>
+                          <label className="font-bold text-zinc-200 block mb-1">Location</label>
                           <input
                             type="text"
                             value={resumeData.location}
                             onChange={(e) =>
                               setResumeData({ ...resumeData, location: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                           />
                         </div>
                         <div>
-                          <label className="font-bold text-slate-800 block mb-1">LinkedIn Profile</label>
+                          <label className="font-bold text-zinc-200 block mb-1">LinkedIn Profile</label>
                           <input
                             type="text"
                             value={resumeData.linkedin}
                             onChange={(e) =>
                               setResumeData({ ...resumeData, linkedin: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">GitHub / Portfolio</label>
+                        <label className="font-bold text-zinc-200 block mb-1">GitHub / Portfolio</label>
                         <input
                           type="text"
                           value={resumeData.github}
                           onChange={(e) =>
                             setResumeData({ ...resumeData, github: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">Professional Summary</label>
+                        <label className="font-bold text-zinc-200 block mb-1">Professional Summary</label>
                         <textarea
                           rows={3}
                           value={resumeData.summary}
                           onChange={(e) =>
                             setResumeData({ ...resumeData, summary: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none resize-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none resize-none"
                         />
                       </div>
                     </div>
@@ -1223,10 +1338,10 @@ export default function ResumeWorkspacePage() {
                       {resumeData.experience.map((exp, expIdx) => (
                         <div
                           key={expIdx}
-                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5 relative"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5 relative"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-                            <span className="font-extrabold text-slate-800 text-[11px]">
+                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                            <span className="font-extrabold text-white text-[11px]">
                               Position #{expIdx + 1}
                             </span>
                             {resumeData.experience.length > 1 && (
@@ -1238,7 +1353,7 @@ export default function ResumeWorkspacePage() {
                                   );
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                                className="text-rose-400 hover:text-rose-300 text-[11px] font-bold cursor-pointer"
                               >
                                 Remove
                               </button>
@@ -1247,7 +1362,7 @@ export default function ResumeWorkspacePage() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Role Title</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Role Title</label>
                               <input
                                 type="text"
                                 value={exp.role}
@@ -1256,11 +1371,11 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].role = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Company</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Company</label>
                               <input
                                 type="text"
                                 value={exp.company}
@@ -1269,14 +1384,14 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].company = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Dates / Period</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Dates / Period</label>
                               <input
                                 type="text"
                                 value={exp.dates}
@@ -1285,11 +1400,11 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].dates = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Location</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Location</label>
                               <input
                                 type="text"
                                 value={exp.location}
@@ -1298,14 +1413,14 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].location = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                           </div>
 
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="font-bold text-slate-700">Achievement Bullets</label>
+                              <label className="font-bold text-zinc-300">Achievement Bullets</label>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1313,7 +1428,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].bullets.push("Achieved measurable impact using modern tooling.");
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="text-purple-600 hover:text-purple-700 font-bold text-[10px] cursor-pointer"
+                                className="text-purple-400 hover:text-purple-300 font-bold text-[10px] cursor-pointer"
                               >
                                 + Add Bullet
                               </button>
@@ -1329,7 +1444,7 @@ export default function ResumeWorkspacePage() {
                                       updated[expIdx].bullets[bIdx] = e.target.value;
                                       setResumeData({ ...resumeData, experience: updated });
                                     }}
-                                    className="flex-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                                    className="flex-1 px-2.5 py-1 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                                   />
                                   {exp.bullets.length > 1 && (
                                     <button
@@ -1341,7 +1456,7 @@ export default function ResumeWorkspacePage() {
                                         );
                                         setResumeData({ ...resumeData, experience: updated });
                                       }}
-                                      className="text-slate-400 hover:text-rose-600 p-1"
+                                      className="text-zinc-500 hover:text-rose-400 p-1"
                                     >
                                       ×
                                     </button>
@@ -1370,7 +1485,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Another Work Experience
                       </button>
@@ -1383,10 +1498,10 @@ export default function ResumeWorkspacePage() {
                       {resumeData.education.map((edu, eduIdx) => (
                         <div
                           key={eduIdx}
-                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-                            <span className="font-extrabold text-slate-800 text-[11px]">
+                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                            <span className="font-extrabold text-white text-[11px]">
                               Education #{eduIdx + 1}
                             </span>
                             {resumeData.education.length > 1 && (
@@ -1398,7 +1513,7 @@ export default function ResumeWorkspacePage() {
                                   );
                                   setResumeData({ ...resumeData, education: updated });
                                 }}
-                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                                className="text-rose-400 hover:text-rose-300 text-[11px] font-bold cursor-pointer"
                               >
                                 Remove
                               </button>
@@ -1406,7 +1521,7 @@ export default function ResumeWorkspacePage() {
                           </div>
 
                           <div>
-                            <label className="font-bold text-slate-700 block mb-0.5">Institution / University</label>
+                            <label className="font-bold text-zinc-300 block mb-0.5">Institution / University</label>
                             <input
                               type="text"
                               value={edu.institution}
@@ -1415,12 +1530,12 @@ export default function ResumeWorkspacePage() {
                                 updated[eduIdx].institution = e.target.value;
                                 setResumeData({ ...resumeData, education: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                             />
                           </div>
 
                           <div>
-                            <label className="font-bold text-slate-700 block mb-0.5">Degree &amp; Major</label>
+                            <label className="font-bold text-zinc-300 block mb-0.5">Degree &amp; Major</label>
                             <input
                               type="text"
                               value={edu.degree}
@@ -1429,13 +1544,13 @@ export default function ResumeWorkspacePage() {
                                 updated[eduIdx].degree = e.target.value;
                                 setResumeData({ ...resumeData, education: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                             />
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Dates / Grad Year</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Dates / Grad Year</label>
                               <input
                                 type="text"
                                 value={edu.dates}
@@ -1444,11 +1559,11 @@ export default function ResumeWorkspacePage() {
                                   updated[eduIdx].dates = e.target.value;
                                   setResumeData({ ...resumeData, education: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">GPA (optional)</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">GPA (optional)</label>
                               <input
                                 type="text"
                                 value={edu.gpa || ""}
@@ -1457,7 +1572,7 @@ export default function ResumeWorkspacePage() {
                                   updated[eduIdx].gpa = e.target.value;
                                   setResumeData({ ...resumeData, education: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1480,7 +1595,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Education
                       </button>
@@ -1493,10 +1608,10 @@ export default function ResumeWorkspacePage() {
                       {resumeData.projects.map((proj, projIdx) => (
                         <div
                           key={projIdx}
-                          className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-2.5"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-                            <span className="font-extrabold text-slate-800 text-[11px]">
+                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                            <span className="font-extrabold text-white text-[11px]">
                               Project #{projIdx + 1}
                             </span>
                             {resumeData.projects.length > 1 && (
@@ -1508,7 +1623,7 @@ export default function ResumeWorkspacePage() {
                                   );
                                   setResumeData({ ...resumeData, projects: updated });
                                 }}
-                                className="text-rose-600 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                                className="text-rose-400 hover:text-rose-300 text-[11px] font-bold cursor-pointer"
                               >
                                 Remove
                               </button>
@@ -1517,7 +1632,7 @@ export default function ResumeWorkspacePage() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Project Name</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Project Name</label>
                               <input
                                 type="text"
                                 value={proj.name}
@@ -1526,11 +1641,11 @@ export default function ResumeWorkspacePage() {
                                   updated[projIdx].name = e.target.value;
                                   setResumeData({ ...resumeData, projects: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                             <div>
-                              <label className="font-bold text-slate-700 block mb-0.5">Tech Stack</label>
+                              <label className="font-bold text-zinc-300 block mb-0.5">Tech Stack</label>
                               <input
                                 type="text"
                                 value={proj.tech}
@@ -1539,13 +1654,13 @@ export default function ResumeWorkspacePage() {
                                   updated[projIdx].tech = e.target.value;
                                   setResumeData({ ...resumeData, projects: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label className="font-bold text-slate-700 block mb-0.5">Link / Repository</label>
+                            <label className="font-bold text-zinc-300 block mb-0.5">Link / Repository</label>
                             <input
                               type="text"
                               value={proj.link || ""}
@@ -1554,12 +1669,12 @@ export default function ResumeWorkspacePage() {
                                 updated[projIdx].link = e.target.value;
                                 setResumeData({ ...resumeData, projects: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                             />
                           </div>
 
                           <div>
-                            <label className="font-bold text-slate-700 block mb-1">Description / Bullet</label>
+                            <label className="font-bold text-zinc-300 block mb-1">Description / Bullet</label>
                             <input
                               type="text"
                               value={proj.bullets[0] || ""}
@@ -1568,7 +1683,7 @@ export default function ResumeWorkspacePage() {
                                 updated[projIdx].bullets = [e.target.value];
                                 setResumeData({ ...resumeData, projects: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1590,7 +1705,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Project
                       </button>
@@ -1599,9 +1714,9 @@ export default function ResumeWorkspacePage() {
 
                   {/* Section 5: Skills */}
                   {activeEditorSection === "skills" && (
-                    <div className="space-y-3 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 text-xs">
+                    <div className="space-y-3 bg-[#18191f] p-4 rounded-2xl border border-white/10 text-xs">
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">
+                        <label className="font-bold text-zinc-200 block mb-1">
                           Languages
                         </label>
                         <input
@@ -1614,11 +1729,11 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="JavaScript, TypeScript, Python, C++, SQL..."
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">
+                        <label className="font-bold text-zinc-200 block mb-1">
                           Frameworks &amp; Platforms
                         </label>
                         <input
@@ -1631,11 +1746,11 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="React, Next.js, FastAPI, Node.js, Tailwind CSS..."
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="font-bold text-slate-800 block mb-1">
+                        <label className="font-bold text-zinc-200 block mb-1">
                           Developer Tools &amp; Cloud
                         </label>
                         <input
@@ -1648,7 +1763,7 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="Git, Docker, PostgreSQL, Supabase, Linux, Vercel..."
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-purple-600 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1676,151 +1791,88 @@ export default function ResumeWorkspacePage() {
           ────────────────────────────────────────────────────────── */}
           {viewMode === "upload" && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
+              {/* Header for Upload/Scan Flow */}
+              {uploadStage !== "done" ? (
+                <>
+                  <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("empty")}
+                        className="p-1.5 rounded-xl hover:bg-[#1c1d24] text-zinc-400 hover:text-white cursor-pointer transition-colors shrink-0"
+                        aria-label="Back to dashboard"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-black text-white truncate">
+                          Upload &amp; Analyze Resume
+                        </h3>
+                        <p className="text-xs text-zinc-400 font-medium truncate">
+                          ATS parseability check, keyword match, and bullet impact.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Steps Indicator */}
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-3 py-1">
+                    <StageIndicator stage={1} currentStage={stageNum} label="Configure" />
+                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <StageIndicator stage={2} currentStage={stageNum} label="Upload" />
+                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <StageIndicator stage={3} currentStage={stageNum} label="Review" />
+                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <StageIndicator stage={4} currentStage={stageNum} label="Evaluate" />
+                  </div>
+                </>
+              ) : (
+                /* Results Top Navigation Bar (Mobile-fitted & Sleek) */
+                <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-white/10 gap-3">
                   <button
                     type="button"
                     onClick={() => setViewMode("empty")}
-                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#18191f] hover:bg-[#23242B] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4 text-purple-400" />
+                    <span>Dashboard</span>
                   </button>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900">
-                      Upload &amp; Analyze Resume
-                    </h3>
-                    <p className="text-xs text-slate-500 font-medium">
-                      Calibrated evaluation against top hiring rubrics with ATS keyword scoring.
-                    </p>
+
+                  <div className="text-right min-w-0">
+                    <span className="text-xs font-bold text-white block truncate">
+                      {extraction?.filename || "Resume Analysis"}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block truncate">
+                      ATS Quality Diagnostic
+                    </span>
                   </div>
                 </div>
-
-                {uploadStage === "done" && (
-                  <button
-                    type="button"
-                    onClick={resetAll}
-                    className="text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-200 font-bold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    New Scan
-                  </button>
-                )}
-              </div>
-
-              {/* Progress Steps Indicator */}
-              <div className="flex items-center justify-center gap-1.5 sm:gap-3 py-1">
-                <StageIndicator stage={1} currentStage={stageNum} label="Configure" />
-                <div className="w-2.5 sm:w-4 h-px bg-purple-200" />
-                <StageIndicator stage={2} currentStage={stageNum} label="Upload" />
-                <div className="w-2.5 sm:w-4 h-px bg-purple-200" />
-                <StageIndicator stage={3} currentStage={stageNum} label="Review" />
-                <div className="w-2.5 sm:w-4 h-px bg-purple-200" />
-                <StageIndicator stage={4} currentStage={stageNum} label="Evaluate" />
-              </div>
+              )}
 
               {/* Configuration / Upload Form */}
               {uploadStage !== "reviewing" && uploadStage !== "done" && (
                 <div className="space-y-5">
                   {/* Step 1: Role */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-purple-600" />
-                      1. Target Role &amp; Job Description
+                    <label className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-purple-400" />
+                      1. Target Role
                     </label>
                     <input
                       type="text"
                       value={targetRole}
                       onChange={(e) => setTargetRole(e.target.value)}
                       placeholder="e.g. Fullstack Software Engineer, SDE-2, Backend..."
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-purple-600 focus:outline-none"
-                    />
-                    <textarea
-                      rows={2}
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      placeholder="Optional: Paste target Job Description for custom keyword & skill matching..."
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:border-purple-600 focus:outline-none resize-none"
+                      className="w-full px-4 py-2.5 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
                     />
                   </div>
 
-                  {/* Step 2: Company Rubric */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-purple-600" />
-                      2. Target Company Rubric
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="radiogroup" aria-label="Target Company Rubric">
-                      {COMPANY_TYPES.map((type) => {
-                        const isSelected = companyType === type.id;
-                        return (
-                          <button
-                            key={type.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={isSelected}
-                            onClick={() => setCompanyType(type.id)}
-                            className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all text-left focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-1 ${
-                              isSelected
-                                ? "bg-purple-50/80 border-purple-600 text-purple-950 shadow-2xs"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-purple-300"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-extrabold text-slate-900">
-                                {type.title}
-                              </span>
-                              <span
-                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                                  isSelected
-                                    ? "bg-purple-600 text-white border-purple-600"
-                                    : "bg-purple-50 text-purple-700 border-purple-200"
-                                }`}
-                              >
-                                {type.badge}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 leading-tight">
-                              {type.desc}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Step 3: Experience Level */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-purple-600" />
-                      3. Experience Level
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {EXP_LEVELS.map((exp) => {
-                        const isSelected = yearsExperience === exp.id;
-                        return (
-                          <button
-                            key={exp.id}
-                            type="button"
-                            onClick={() => setYearsExperience(exp.id)}
-                            className={`p-2.5 rounded-xl text-xs font-bold text-center border-2 transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
-                                : "bg-white border-slate-200 text-slate-700 hover:text-purple-700 hover:border-purple-300"
-                            }`}
-                          >
-                            {exp.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Step 4: Upload Resume Dropzone */}
+                  {/* Step 2: Upload Resume Dropzone */}
                   {(uploadStage === "idle" || uploadStage === "upload_error") && (
                     <div className="space-y-2 pt-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-purple-900 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-purple-600" />
-                        4. Upload Resume Document
+                      <label className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-purple-400" />
+                        2. Upload Resume Document
                       </label>
                       <div
                         role="button"
@@ -1836,19 +1888,19 @@ export default function ResumeWorkspacePage() {
                             fileInputRef.current?.click();
                           }
                         }}
-                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
+                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                           isDragging
-                            ? "border-purple-600 bg-purple-50"
-                            : "border-purple-200 hover:border-purple-500 bg-purple-50/20 hover:bg-purple-50/40"
+                            ? "border-purple-500 bg-purple-950/40"
+                            : "border-white/15 hover:border-purple-500/50 bg-[#18191f] hover:bg-[#1c1d24]"
                         }`}
                       >
-                        <CloudUpload className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 text-purple-600" />
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                        <CloudUpload className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 text-purple-400" />
+                        <h4 className="text-xs sm:text-sm font-bold text-white">
                           {isDragging
                             ? "Drop your resume file here"
                             : "Drag & Drop or Tap to Upload"}
                         </h4>
-                        <p className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                        <p className="text-[11px] sm:text-xs text-zinc-400 mt-1">
                           Supports PDF, DOCX, TXT, MD · Max {MAX_FILE_MB} MB
                         </p>
                         <input
@@ -1862,8 +1914,8 @@ export default function ResumeWorkspacePage() {
                       </div>
 
                       {uploadStage === "upload_error" && errorMessage && (
-                        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <div className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                           <span>{errorMessage}</span>
                         </div>
                       )}
@@ -1872,18 +1924,18 @@ export default function ResumeWorkspacePage() {
 
                   {/* Uploading Progress */}
                   {(uploadStage === "uploading" || uploadStage === "extracting") && (
-                    <div className="p-5 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-3">
+                    <div className="p-5 rounded-2xl bg-[#18191f] border border-purple-500/30 space-y-3">
                       <div className="flex items-center gap-3">
-                        <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
                         <div>
-                          <p className="text-xs font-bold text-slate-900">
+                          <p className="text-xs font-bold text-white">
                             {uploadStage === "uploading"
                               ? `Uploading document (${uploadProgress}%)...`
                               : "Extracting resume text..."}
                           </p>
                         </div>
                       </div>
-                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-[#23242B] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-purple-600 transition-all duration-300 rounded-full"
                           style={{
@@ -1901,14 +1953,34 @@ export default function ResumeWorkspacePage() {
                   {(uploadStage === "extracted" || uploadStage === "review_error") &&
                     extraction && (
                       <div className="space-y-3 pt-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-purple-900">
-                            Extracted Resume Content ({editedText.length} chars)
-                          </span>
+                        {/* Diagnostic banner */}
+                        {extraction.is_scanned || (typeof extraction.extraction_quality === "number" && extraction.extraction_quality < 70) ? (
+                          <div className="p-3 rounded-xl bg-amber-950/50 border border-amber-500/30 text-amber-200 flex items-start gap-2.5 text-xs">
+                            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold block text-amber-200">Scanned / Low-Fidelity Text Detected</span>
+                              <p className="text-[11px] text-amber-300/80">
+                                This file looks like a scanned document or rasterized PDF. For best results, verify the extracted text below or upload a clean digital PDF/Word document.
+                              </p>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-purple-300">
+                              Extracted Resume Content ({editedText.length} chars)
+                            </span>
+                            {extraction.detected_columns && extraction.detected_columns > 1 && (
+                              <span className="text-[10px] bg-[#23242B] text-zinc-300 px-2 py-0.5 rounded-md font-medium border border-white/10">
+                                {extraction.detected_columns}-column layout detected
+                              </span>
+                            )}
+                          </div>
                           <button
                             type="button"
                             onClick={resetAll}
-                            className="text-xs text-purple-700 hover:text-purple-900 font-semibold cursor-pointer"
+                            className="text-xs text-purple-400 hover:text-purple-300 font-semibold cursor-pointer"
                           >
                             Replace File
                           </button>
@@ -1917,11 +1989,11 @@ export default function ResumeWorkspacePage() {
                           rows={8}
                           value={editedText}
                           onChange={(e) => setEditedText(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:bg-white focus:border-purple-600 focus:outline-none"
+                          className="w-full px-4 py-3 bg-[#18191f] border border-white/10 rounded-xl text-xs font-mono text-zinc-200 focus:border-purple-500 focus:outline-none"
                         />
                         {uploadStage === "review_error" && errorMessage && (
-                          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <div className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                             <span>{errorMessage}</span>
                           </div>
                         )}
@@ -1929,7 +2001,7 @@ export default function ResumeWorkspacePage() {
                           type="button"
                           onClick={handleRunEvaluation}
                           disabled={!editedText.trim() || editedText.length < 50}
-                          className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-[0.99] transition-all"
+                          className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl shadow-md shadow-purple-600/30 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-[0.99] transition-all"
                         >
                           <Sparkles className="w-4 h-4 text-purple-200" />
                           <span>Evaluate Resume with Groq AI</span>
@@ -1942,14 +2014,13 @@ export default function ResumeWorkspacePage() {
               {/* Reviewing Loading State */}
               {uploadStage === "reviewing" && (
                 <div className="text-center py-12 space-y-4">
-                  <RefreshCw className="w-10 h-10 text-purple-600 animate-spin mx-auto" />
-                  <h3 className="text-base font-bold text-slate-900">
+                  <RefreshCw className="w-10 h-10 text-purple-400 animate-spin mx-auto" />
+                  <h3 className="text-base font-bold text-white">
                     Evaluating Resume with Groq AI...
                   </h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
                     Benchmarking keywords, structure, and recruiter signals for{" "}
-                    <span className="font-bold text-purple-700">{targetRole}</span> at{" "}
-                    <span className="font-bold text-purple-700">{companyType}</span>.
+                    <span className="font-bold text-purple-400">{targetRole}</span>.
                   </p>
                 </div>
               )}
@@ -1957,101 +2028,172 @@ export default function ResumeWorkspacePage() {
               {/* Results View */}
               {uploadStage === "done" && reviewText && (
                 <div className="space-y-4">
-                  <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-between flex-wrap gap-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-purple-900 truncate max-w-[160px] sm:max-w-none">
-                        {targetRole}
-                      </span>
-                      <span className="text-slate-400">·</span>
-                      <span className="font-semibold text-purple-700 truncate max-w-[120px] sm:max-w-none">
-                        {companyType}
-                      </span>
+                  {reviewState.isHistorical ? (
+                    <div className="p-3.5 sm:p-4 bg-purple-950/40 border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-white truncate">
+                            Viewing Historical Analysis: {extraction?.filename}
+                          </p>
+                          <p className="text-purple-300 text-[11px] mt-0.5">
+                            Analyzed on{" "}
+                            {reviewState.analysisCreatedAt
+                              ? new Date(reviewState.analysisCreatedAt).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                })
+                              : "Cloud Vault"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full sm:w-auto pt-1 sm:pt-0">
+                        {reviewState.savedAnalysisId && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadHistorical(reviewState.savedAnalysisId!)}
+                            className="px-2.5 py-2 bg-[#1c1d24] border border-white/10 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
+                          >
+                            <Download className="w-3.5 h-3.5 text-purple-400" />
+                            <span className="truncate">Download</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setViewMode("history")}
+                          className="px-2.5 py-2 bg-[#1c1d24] border border-white/10 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
+                        >
+                          <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+                          <span className="truncate">History</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetAll();
+                            setViewMode("upload");
+                          }}
+                          className="px-2.5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span className="truncate">New Scan</span>
+                        </button>
+                      </div>
                     </div>
-                    {typeof overallScore === "number" && !isNaN(overallScore) ? (
-                      <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full text-xs">
-                        ATS Score: {Math.round(overallScore)}/100
-                      </span>
-                    ) : (
-                      <span className="font-bold text-amber-700 bg-amber-100/80 px-2.5 py-0.5 rounded-full text-xs">
-                        ATS Score: Qualitative Evaluation Only
-                      </span>
-                    )}
-                  </div>
+                  ) : reviewState.savedAnalysisId ? (
+                    <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl flex items-center justify-between text-xs text-emerald-300">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>
+                          <strong>Saved to Cloud Vault:</strong> Your resume and structured evaluation have been stored securely.
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("history")}
+                        className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-2 shrink-0 cursor-pointer"
+                      >
+                        View in History →
+                      </button>
+                    </div>
+                  ) : null}
 
-                  <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-slate-200 space-y-3 overflow-x-hidden">
-                    <ResumeMarkdownViewer content={reviewText} />
-                  </div>
+                  <ResumeAnalysisResults
+                    reviewText={reviewText}
+                    overallScore={overallScore}
+                    scoringStatus={scoringStatus}
+                    targetRole={targetRole}
+                    companyType={companyType}
+                    extraction={extraction}
+                    atsAnalysis={atsAnalysis}
+                    keywordAnalysis={keywordAnalysis}
+                    aiEvaluation={aiEvaluation}
+                    scoreBreakdown={scoreBreakdown}
+                    careerStage={careerStage}
+                    subScores={subScores}
+                    analysisId={reviewState.savedAnalysisId || selectedResumeId}
+                    onReset={resetAll}
+                  />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────────
+              STATE D: CLOUD RESUME HISTORY
+          ────────────────────────────────────────────────────────── */}
+          {viewMode === "history" && (
+            <div className="space-y-6">
+              <ResumeHistory
+                onSelectAnalysis={handleSelectHistoricalAnalysis}
+                onStartNewUpload={() => {
+                  resetAll();
+                  setViewMode("upload");
+                }}
+                refreshTrigger={historyRefreshTrigger}
+                activeAnalysisId={reviewState.savedAnalysisId}
+              />
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────────
+              STATE E: RESUME TRACKS & SERIES (Phase 4.1 & 4.2)
+          ────────────────────────────────────────────────────────── */}
+          {viewMode === "series" && (
+            <div className="space-y-6">
+              <ResumeSeriesDashboard
+                onSelectAnalysis={handleSelectHistoricalAnalysis}
+                onCompareVersions={(olderId, newerId) => {
+                  setCompareOlderId(olderId);
+                  setCompareNewerId(newerId);
+                  setIsCompareModalOpen(true);
+                }}
+                onViewGrowth={(seriesId) => {
+                  setGrowthSeriesId(seriesId);
+                  setViewMode("growth");
+                }}
+                onStartNewStandalone={() => {
+                  resetAll();
+                  setViewMode("upload");
+                }}
+              />
+            </div>
+          )}
+
+          {/* ──────────────────────────────────────────────────────────
+              STATE F: RESUME GROWTH TRACKING DASHBOARD (Phase 4.3)
+          ────────────────────────────────────────────────────────── */}
+          {viewMode === "growth" && growthSeriesId && (
+            <div className="space-y-6">
+              <ResumeGrowthDashboard
+                seriesId={growthSeriesId}
+                onBack={() => setViewMode("series")}
+                onSelectAnalysis={handleSelectHistoricalAnalysis}
+              />
             </div>
           )}
         </div>
       </div>
 
       {/* ──────────────────────────────────────────────────────────
-          3. BOTTOM 4 FEATURE CARDS (Exact match to screenshot)
+          Phase 4.2: Intelligent Resume Comparison Modal
       ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1 sm:pt-2">
-        {/* Card 1 */}
-        <div className="bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow flex items-center sm:items-start gap-3 sm:gap-3.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/60 shadow-2xs">
-            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-              Industry-Specific Templates
-            </h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-              Tailored for top tech roles.
-            </p>
-          </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow flex items-center sm:items-start gap-3 sm:gap-3.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/60 shadow-2xs">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-              AI-Powered Feedback
-            </h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-              Fix gaps, improve content.
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow flex items-center sm:items-start gap-3 sm:gap-3.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/60 shadow-2xs">
-            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-              Track Your Progress
-            </h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-              See your ATS score improve.
-            </p>
-          </div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow flex items-center sm:items-start gap-3 sm:gap-3.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-purple-100/90 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200/60 shadow-2xs">
-            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-              Export Anywhere
-            </h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-              Download PDF, LaTeX or share.
-            </p>
-          </div>
-        </div>
-      </div>
+      {isCompareModalOpen && compareOlderId && compareNewerId && (
+        <ResumeComparisonModal
+          olderId={compareOlderId}
+          newerId={compareNewerId}
+          onClose={() => {
+            setIsCompareModalOpen(false);
+            setCompareOlderId(null);
+            setCompareNewerId(null);
+          }}
+          onInspectAnalysis={handleSelectHistoricalAnalysis}
+        />
+      )}
     </div>
   );
 }

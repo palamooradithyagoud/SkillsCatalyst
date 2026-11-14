@@ -415,32 +415,34 @@
   padding-right: 0.65rem;
 }
 
-/* 1. Log In Button: Dark Charcoal Pill, No Outline, Crisp White Text */
+/* 1. Log In Button: Liquid Glass Pill, Translucent, Crisp White Text */
 .scNavLoginBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.52rem 1.45rem;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #ffffff;
-  background: #18191E;
-  border: none !important;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   outline: none !important;
   border-radius: 9999px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .scNavLoginBtn:hover {
-  background: #d5ff38 !important;
-  color: #000000 !important;
-  border: none !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
   outline: none !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .scNavLoginBtn:active {

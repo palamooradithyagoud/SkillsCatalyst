@@ -30,11 +30,26 @@ import {
   HelpCircle,
   RotateCcw,
   Loader2,
+  Target,
+  FolderOpen,
+  HardDrive,
+  ArrowRight,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import ResumeLivePreview from "@/components/career/ResumeLivePreview";
 import { ResumeTemplateId, RESUME_TEMPLATES } from "@/components/career/TemplateSelectModal";
 import { exportResumeAsPdf } from "@/lib/career/pdfExportHelper";
+import ResumeAIWritingModal from "@/components/career/ResumeAIWritingModal";
+import ResumeJobOptimizer from "@/components/career/ResumeJobOptimizer";
+import ResumeImportModal from "@/components/career/ResumeImportModal";
+import ResumeDraftsModal from "@/components/career/ResumeDraftsModal";
+import {
+  createBuilderDocument,
+  updateBuilderDocument,
+  saveBuilderVersion,
+  downloadResumeDocx,
+} from "@/lib/api/career";
+import { ResumeBuilderDocument, JobOptimizationRecommendation } from "@/types/career";
 import {
   ResumeData,
   generateSB2NovLaTeX,
@@ -224,6 +239,12 @@ const TEMPLATE_CARDS: TemplateCardDef[] = [
     tagline: "Single page high-density impact layout with crisp typography",
     atsScore: 99,
   },
+  {
+    id: "academic",
+    badgeTitle: "Academic",
+    tagline: "Structured layout with education, research & achievements emphasized",
+    atsScore: 97,
+  },
 ];
 
 type EditorSection =
@@ -236,6 +257,7 @@ type EditorSection =
   | "certifications"
   | "languages"
   | "achievements"
+  | "job-optimize"
   | "review";
 
 const EDITOR_SECTIONS: { id: EditorSection; label: string; icon: React.ReactNode }[] = [
@@ -248,6 +270,7 @@ const EDITOR_SECTIONS: { id: EditorSection; label: string; icon: React.ReactNode
   { id: "certifications", label: "Certificates", icon: <Award className="w-3.5 h-3.5" /> },
   { id: "languages", label: "Languages", icon: <LanguagesIcon className="w-3.5 h-3.5" /> },
   { id: "achievements", label: "Achievements", icon: <Trophy className="w-3.5 h-3.5" /> },
+  { id: "job-optimize", label: "Job Optimize", icon: <Target className="w-3.5 h-3.5 text-purple-600" /> },
   { id: "review", label: "Finish & Download", icon: <Download className="w-3.5 h-3.5" /> },
 ];
 
@@ -283,6 +306,33 @@ function ResumeBuilderInner() {
   const [showLatexModal, setShowLatexModal] = useState(false);
   const [copiedLatex, setCopiedLatex] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
+
+  // Phase 5 State: Drafts, Version Management & AI Assistants
+  const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  const [docTitle, setDocTitle] = useState("My Resume");
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSavingVersion, setIsSavingVersion] = useState(false);
+  const [evaluatedAtsScore, setEvaluatedAtsScore] = useState<number | null>(null);
+  const [evaluatedVersionNum, setEvaluatedVersionNum] = useState<number | null>(null);
+
+  // AI Assistant Modal configuration
+  const [aiModalConfig, setAiModalConfig] = useState<{
+    isOpen: boolean;
+    initialText: string;
+    contextType: "bullet" | "summary" | "project";
+    roleContext?: string;
+    projectName?: string;
+    technologies?: string;
+    onApply: (text: string) => void;
+  }>({
+    isOpen: false,
+    initialText: "",
+    contextType: "bullet",
+    onApply: () => {},
+  });
 
   // Compute ATS completeness score
   const computeATSScore = () => {
@@ -299,7 +349,7 @@ function ResumeBuilderInner() {
     return Math.min(score, 100);
   };
 
-  const atsScore = computeATSScore();
+  const atsScore = evaluatedAtsScore ?? computeATSScore();
 
   const handleSelectTemplate = (templateId: ResumeTemplateId) => {
     setSelectedTemplate(templateId);
@@ -324,6 +374,147 @@ function ResumeBuilderInner() {
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const handleDownloadDocx = async () => {
+    if (isExportingDocx) return;
+    setIsExportingDocx(true);
+    try {
+      await downloadResumeDocx(resumeData, selectedTemplate, docTitle);
+      try {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+      } catch {}
+    } catch (err) {
+      console.error("Failed to export DOCX:", err);
+    } finally {
+      setIsExportingDocx(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const title = docTitle || `${resumeData.fullName || "Untitled"} Resume`;
+      if (!currentDocId) {
+        const created = await createBuilderDocument({
+          title,
+          selected_template: selectedTemplate,
+          structured_resume_data: resumeData,
+          target_role: resumeData.role,
+        });
+        setCurrentDocId(created.id);
+      } else {
+        await updateBuilderDocument(currentDocId, {
+          title,
+          selected_template: selectedTemplate,
+          structured_resume_data: resumeData,
+          target_role: resumeData.role,
+        });
+      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to save draft:", err);
+      // Fallback to local storage
+      handleSaveResume();
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSaveVersion = async () => {
+    setIsSavingVersion(true);
+    try {
+      let docId = currentDocId;
+      if (!docId) {
+        const created = await createBuilderDocument({
+          title: docTitle || `${resumeData.fullName || "Untitled"} Resume`,
+          selected_template: selectedTemplate,
+          structured_resume_data: resumeData,
+          target_role: resumeData.role,
+        });
+        docId = created.id;
+        setCurrentDocId(docId);
+      } else {
+        await updateBuilderDocument(docId, {
+          structured_resume_data: resumeData,
+          selected_template: selectedTemplate,
+        });
+      }
+
+      const ver = await saveBuilderVersion(docId, {
+        change_summary: `Version snapshot evaluated from Resume Builder`,
+        run_ats_eval: true,
+      });
+
+      setEvaluatedVersionNum(ver.version_number);
+      setSavedSuccess(true);
+      try {
+        confetti({ particleCount: 85, spread: 80, origin: { y: 0.65 } });
+      } catch {}
+      setTimeout(() => setSavedSuccess(false), 4500);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to save version and run ATS audit.");
+    } finally {
+      setIsSavingVersion(false);
+    }
+  };
+
+  const handleImportSuccess = (importedDoc: ResumeBuilderDocument) => {
+    setCurrentDocId(importedDoc.id);
+    setDocTitle(importedDoc.title);
+    if (importedDoc.selected_template) {
+      setSelectedTemplate(importedDoc.selected_template as ResumeTemplateId);
+    }
+    if (importedDoc.structured_resume_data) {
+      setResumeData(importedDoc.structured_resume_data as ResumeData);
+    }
+    setViewMode("editor");
+    setMobileBuilderTab("editor");
+    try {
+      confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 } });
+    } catch {}
+  };
+
+  const handleSelectDraft = (d: ResumeBuilderDocument) => {
+    setCurrentDocId(d.id);
+    setDocTitle(d.title);
+    if (d.selected_template) {
+      setSelectedTemplate(d.selected_template as ResumeTemplateId);
+    }
+    if (d.structured_resume_data) {
+      setResumeData(d.structured_resume_data as ResumeData);
+    }
+    setViewMode("editor");
+    setMobileBuilderTab("editor");
+  };
+
+  const handleApplyOptimizationSuggestion = (sug: JobOptimizationRecommendation) => {
+    if (sug.section === "summary") {
+      setResumeData((prev) => ({
+        ...prev,
+        summary: sug.suggested_content,
+      }));
+    } else if (sug.section === "skills") {
+      setResumeData((prev) => ({
+        ...prev,
+        skills: {
+          ...prev.skills,
+          languages: sug.suggested_content,
+        },
+      }));
+    } else if (sug.section === "projects" && sug.suggested_content) {
+      setResumeData((prev) => {
+        const nextProjects = [...prev.projects];
+        if (nextProjects.length > 0 && nextProjects[0].bullets && nextProjects[0].bullets.length > 0) {
+          nextProjects[0].bullets[0] = sug.suggested_content;
+        }
+        return { ...prev, projects: nextProjects };
+      });
+    }
+    try {
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+    } catch {}
   };
 
   const handleCopyLatex = () => {
@@ -421,16 +612,47 @@ function ResumeBuilderInner() {
       ────────────────────────────────────────────────────────── */}
       {viewMode === "gallery" && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="text-center max-w-2xl mx-auto space-y-1.5">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Select Your Resume Template
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              Choose the foundation that best matches your target industry and career goals.
+              Choose the foundation that best matches your target industry, or import an existing resume to get started instantly.
             </p>
+
+            {/* 3 Entry Points */}
+            <div className="flex items-center justify-center gap-2.5 pt-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  handleClearAll();
+                  setViewMode("editor");
+                }}
+                className="px-3.5 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Build From Scratch</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="px-3.5 py-2 bg-white hover:bg-purple-50 border border-slate-200 hover:border-purple-300 text-slate-700 hover:text-purple-700 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-purple-600" />
+                <span>Import Analyzed Resume</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDraftsModalOpen(true)}
+                className="px-3.5 py-2 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <HardDrive className="w-3.5 h-3.5 text-blue-600" />
+                <span>Saved Drafts</span>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 max-w-5xl mx-auto pt-1">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 max-w-6xl mx-auto pt-1">
             {TEMPLATE_CARDS.map((tmpl) => (
               <div
                 key={tmpl.id}
@@ -520,6 +742,23 @@ function ResumeBuilderInner() {
                       </div>
                     </div>
                   )}
+
+                  {tmpl.id === "academic" && (
+                    <div className="pt-5 sm:pt-7 font-serif space-y-1 sm:space-y-2 text-slate-900">
+                      <div className="text-center pb-0.5 sm:pb-1 border-b border-slate-900">
+                        <div className="font-bold text-[7.5px] sm:text-[9px] tracking-wide">JOHN DOE, B.TECH</div>
+                        <div className="text-[4px] sm:text-[5px] text-slate-600">Research &amp; Engineering</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-[5px] sm:text-[6px] uppercase border-b border-slate-300 pb-0.5">
+                          Education &amp; Honors
+                        </div>
+                        <div className="text-[4.5px] sm:text-[5px] pt-0.5 font-sans">
+                          Indian Institute of Information Technology (CGPA 9.2)
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -541,15 +780,15 @@ function ResumeBuilderInner() {
       {viewMode === "editor" && (
         <div className="space-y-5 animate-in fade-in duration-300">
           {/* Top Toolbar */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setViewMode("gallery")}
                 className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors flex items-center gap-1 text-xs font-bold cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span>Templates</span>
+                <span className="hidden sm:inline">Templates</span>
               </button>
               <div className="h-4 w-px bg-slate-200" />
 
@@ -560,7 +799,7 @@ function ResumeBuilderInner() {
                     key={tc.id}
                     type="button"
                     onClick={() => setSelectedTemplate(tc.id)}
-                    className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] sm:text-xs transition-all cursor-pointer ${
                       selectedTemplate === tc.id
                         ? "bg-pink-600 text-white shadow-xs"
                         : "text-slate-600 hover:text-slate-900"
@@ -573,36 +812,56 @@ function ResumeBuilderInner() {
 
               <div className="h-4 w-px bg-slate-200 hidden sm:block" />
 
-              {/* Sample / Reset buttons */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleLoadSample}
-                  title="Load realistic sample resume data to test templates"
-                  className="px-2.5 py-1.5 text-xs font-bold text-pink-700 bg-pink-50 hover:bg-pink-100 border border-pink-200/80 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3 text-pink-600" />
-                  <span className="hidden md:inline">Load Sample</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleClearAll}
-                  title="Clear all fields to start fresh"
-                  className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3 text-slate-500" />
-                  <span className="hidden md:inline">Clear</span>
-                </button>
+              {/* Title input & ATS Score */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={docTitle}
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg max-w-[130px] truncate focus:bg-white focus:outline-none"
+                  placeholder="Document Title"
+                  title="Document Title"
+                />
+
+                <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-[11px] text-slate-600 hidden md:inline">ATS:</span>
+                  <span className="text-[11px] text-emerald-700 font-extrabold">{atsScore}%</span>
+                  {evaluatedVersionNum && (
+                    <span className="text-[9px] bg-purple-100 text-purple-700 px-1 rounded font-bold">v{evaluatedVersionNum}</span>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            <div className="flex items-center gap-2 w-full lg:w-auto justify-end flex-wrap">
+              {/* Import & Drafts buttons */}
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="px-2.5 py-1.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/80 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                title="Import sections from analyzed resume"
+              >
+                <FolderOpen className="w-3 h-3 text-purple-600" />
+                <span className="hidden sm:inline">Import</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsDraftsModalOpen(true)}
+                className="px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                title="Load or switch saved drafts"
+              >
+                <HardDrive className="w-3 h-3 text-blue-600" />
+                <span className="hidden sm:inline">Drafts</span>
+              </button>
+
               <div className="lg:hidden flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setMobileBuilderTab("editor")}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
                     mobileBuilderTab === "editor"
                       ? "bg-white text-pink-700 shadow-xs"
                       : "text-slate-500"
@@ -613,7 +872,7 @@ function ResumeBuilderInner() {
                 <button
                   type="button"
                   onClick={() => setMobileBuilderTab("preview")}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
                     mobileBuilderTab === "preview"
                       ? "bg-white text-pink-700 shadow-xs"
                       : "text-slate-500"
@@ -627,46 +886,88 @@ function ResumeBuilderInner() {
                 <button
                   type="button"
                   onClick={() => setShowLatexModal(true)}
-                  className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-800 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                  className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-800 font-bold text-xs px-2.5 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                  title="View LaTeX source"
                 >
                   <Code2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">LaTeX (.tex)</span>
+                  <span className="hidden md:inline">LaTeX</span>
                 </button>
               )}
 
+              {/* Word Export */}
               <button
                 type="button"
-                onClick={handleDownloadResume}
-                disabled={isExportingPdf}
-                className="bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                onClick={handleDownloadDocx}
+                disabled={isExportingDocx}
+                className="bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                title="Export as Word (.docx)"
               >
-                {isExportingPdf ? (
+                {isExportingDocx ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 text-pink-600 animate-spin" />
-                    <span>Exporting PDF...</span>
+                    <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />
+                    <span>Docx...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-3.5 h-3.5 text-pink-600" />
-                    <span>Export as PDF</span>
+                    <Download className="w-3 h-3 text-blue-600" />
+                    <span>Word (.docx)</span>
                   </>
                 )}
               </button>
 
+              {/* PDF Export */}
               <button
                 type="button"
-                onClick={handleSaveResume}
-                className="bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-pink-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                onClick={handleDownloadResume}
+                disabled={isExportingPdf}
+                className="bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 border border-slate-200 hover:border-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {savedSuccess ? (
+                {isExportingPdf ? (
                   <>
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Saved!</span>
+                    <Loader2 className="w-3 h-3 text-pink-600 animate-spin" />
+                    <span>PDF...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Resume</span>
+                    <Download className="w-3 h-3 text-pink-600" />
+                    <span>PDF</span>
+                  </>
+                )}
+              </button>
+
+              {/* Save Draft */}
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft}
+                className="bg-white hover:bg-slate-50 text-pink-700 border border-pink-200 hover:border-pink-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70"
+                title="Save draft"
+              >
+                {isSavingDraft ? (
+                  <Loader2 className="w-3 h-3 text-pink-600 animate-spin" />
+                ) : (
+                  <Save className="w-3 h-3 text-pink-600" />
+                )}
+                <span>Draft</span>
+              </button>
+
+              {/* Save Version & Run ATS */}
+              <button
+                type="button"
+                onClick={handleSaveVersion}
+                disabled={isSavingVersion}
+                className="bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-md shadow-pink-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-70"
+                title="Save version & trigger deterministic ATS re-evaluation"
+              >
+                {isSavingVersion ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Auditing...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Save &amp; Audit ATS</span>
                   </>
                 )}
               </button>
@@ -865,9 +1166,27 @@ function ResumeBuilderInner() {
               {activeEditorSection === "summary" && (
                 <div className="space-y-3.5 text-xs">
                   <div>
-                    <label className="font-bold text-slate-800 block mb-1">
-                      Professional Summary
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-800 block">
+                        Professional Summary
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAiModalConfig({
+                            isOpen: true,
+                            initialText: resumeData.summary,
+                            contextType: "summary",
+                            roleContext: resumeData.role,
+                            onApply: (text) => setResumeData((prev) => ({ ...prev, summary: text })),
+                          })
+                        }
+                        className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                        <span>AI Assistant</span>
+                      </button>
+                    </div>
                     <p className="text-slate-500 text-[11px] mb-2 leading-relaxed">
                       Highlight your core expertise, key achievements, and target roles in 2–4 concise sentences.
                     </p>
@@ -1082,6 +1401,26 @@ function ResumeBuilderInner() {
                                   }}
                                   className="flex-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAiModalConfig({
+                                      isOpen: true,
+                                      initialText: bullet,
+                                      contextType: "bullet",
+                                      roleContext: exp.role || resumeData.role,
+                                      onApply: (newText) => {
+                                        const updated = [...resumeData.experience];
+                                        updated[expIdx].bullets[bIdx] = newText;
+                                        setResumeData({ ...resumeData, experience: updated });
+                                      },
+                                    })
+                                  }
+                                  className="p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                                  title="AI Bullet Enhancer"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                </button>
                                 {exp.bullets.length > 1 && (
                                   <button
                                     type="button"
@@ -1621,6 +1960,27 @@ function ResumeBuilderInner() {
                                   }}
                                   className="flex-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAiModalConfig({
+                                      isOpen: true,
+                                      initialText: bullet,
+                                      contextType: "project",
+                                      projectName: proj.name,
+                                      technologies: proj.tech,
+                                      onApply: (newText) => {
+                                        const updated = [...resumeData.projects];
+                                        updated[projIdx].bullets[bIdx] = newText;
+                                        setResumeData({ ...resumeData, projects: updated });
+                                      },
+                                    })
+                                  }
+                                  className="p-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                                  title="AI Project Bullet Enhancer"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                </button>
                                 {proj.bullets.length > 1 && (
                                   <button
                                     type="button"
@@ -1988,7 +2348,19 @@ function ResumeBuilderInner() {
               )}
 
               {/* ────────────────────────────────────────────────────
-                  10. FINISH & EXPORT
+                  10. JOB-SPECIFIC OPTIMIZATION
+              ──────────────────────────────────────────────────── */}
+              {activeEditorSection === "job-optimize" && (
+                <div className="space-y-4 text-xs">
+                  <ResumeJobOptimizer
+                    resumeData={resumeData}
+                    onApplySuggestion={handleApplyOptimizationSuggestion}
+                  />
+                </div>
+              )}
+
+              {/* ────────────────────────────────────────────────────
+                  11. FINISH & EXPORT
               ──────────────────────────────────────────────────── */}
               {activeEditorSection === "review" && (
                 <div className="space-y-4 text-xs">
@@ -2001,7 +2373,7 @@ function ResumeBuilderInner() {
                       <div>
                         <h3 className="text-base font-extrabold text-white">Your Resume is Ready!</h3>
                         <p className="text-[11px] text-slate-300">
-                          Review the live preview on the right. You can now download your PDF or save it to your workspace.
+                          Review the live preview on the right. You can now download in PDF or editable Word (.docx) format.
                         </p>
                       </div>
                     </div>
@@ -2035,7 +2407,7 @@ function ResumeBuilderInner() {
                   </div>
 
                   {/* Actions */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <button
                       type="button"
                       onClick={handleDownloadResume}
@@ -2045,22 +2417,45 @@ function ResumeBuilderInner() {
                       {isExportingPdf ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Generating A4 PDF...</span>
+                          <span>PDF...</span>
                         </>
                       ) : (
                         <>
                           <Download className="w-4 h-4" />
-                          <span>Export as PDF</span>
+                          <span>Export PDF</span>
                         </>
                       )}
                     </button>
                     <button
                       type="button"
-                      onClick={handleSaveResume}
-                      className="py-3 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all text-xs"
+                      onClick={handleDownloadDocx}
+                      disabled={isExportingDocx}
+                      className="py-3 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-500/25 transition-all text-xs disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4 text-pink-400" />
-                      <span>Save to Workspace</span>
+                      {isExportingDocx ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Word...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Word (.docx)</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveVersion}
+                      disabled={isSavingVersion}
+                      className="py-3 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all text-xs disabled:opacity-70"
+                    >
+                      {isSavingVersion ? (
+                        <Loader2 className="w-4 h-4 text-pink-400 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 text-pink-400" />
+                      )}
+                      <span>Save &amp; Audit ATS</span>
                     </button>
                   </div>
 
@@ -2223,6 +2618,33 @@ function ResumeBuilderInner() {
           </div>
         </div>
       )}
+
+      {/* AI Writing Assistant Modal */}
+      <ResumeAIWritingModal
+        isOpen={aiModalConfig.isOpen}
+        onClose={() => setAiModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        initialText={aiModalConfig.initialText}
+        contextType={aiModalConfig.contextType}
+        roleContext={aiModalConfig.roleContext}
+        projectName={aiModalConfig.projectName}
+        technologies={aiModalConfig.technologies}
+        onApply={aiModalConfig.onApply}
+      />
+
+      {/* Import Analyzed Resume Modal */}
+      <ResumeImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        selectedTemplate={selectedTemplate}
+        onImportSuccess={handleImportSuccess}
+      />
+
+      {/* Saved Drafts Modal */}
+      <ResumeDraftsModal
+        isOpen={isDraftsModalOpen}
+        onClose={() => setIsDraftsModalOpen(false)}
+        onSelectDraft={handleSelectDraft}
+      />
     </div>
   );
 }

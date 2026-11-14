@@ -321,3 +321,129 @@ def extract_resume_scores(review_text: str) -> ResumeCategoryScores:
         score_status=status,
     )
 
+
+# ---------------------------------------------------------------------------
+# Unified Transparent Scoring Model
+# ---------------------------------------------------------------------------
+
+class ScoreComponent(BaseModel):
+    raw_score: Optional[float] = None
+    weight: float = 0.0
+    weighted_score: Optional[float] = None
+    included: bool = True
+    reason: Optional[str] = None
+
+
+class UnifiedScoreBreakdown(BaseModel):
+    overall_score: Optional[float] = None
+    ats_compatibility: ScoreComponent = Field(default_factory=ScoreComponent)
+    content_quality: ScoreComponent = Field(default_factory=ScoreComponent)
+    skills_match: ScoreComponent = Field(default_factory=ScoreComponent)
+    structure: ScoreComponent = Field(default_factory=ScoreComponent)
+    weights_used: Dict[str, float] = Field(default_factory=dict)
+    formula: str = Field(default="0.25*ATS + 0.30*Content + 0.25*Skills + 0.20*Structure")
+    evaluated_categories_count: int = Field(default=0)
+    score_status: str = Field(default="completed")
+    scoring_mode: str = Field(default="complete")
+    explanation: str = Field(default="")
+
+
+def calculate_unified_resume_score(
+    ats_compatibility_score: Optional[float],
+    content_quality_score: Optional[float],
+    skills_match_score: Optional[float],
+    structure_score: Optional[float],
+) -> Tuple[Optional[float], UnifiedScoreBreakdown, str]:
+    """
+    Computes a transparent weighted composite score from available validated categories:
+      - ATS compatibility: 25% (0.25)
+      - Content quality: 30% (0.30)
+      - Skills and role relevance: 25% (0.25)
+      - Structure and readability: 20% (0.20)
+
+    Guarantees:
+      - Missing categories are NEVER assigned 0 or fake default scores.
+      - Weights are renormalized strictly across available evaluated categories.
+      - Returns (overall_score, UnifiedScoreBreakdown, score_status).
+    """
+    base_weights = {
+        "ats_compatibility": 0.25,
+        "content_quality": 0.30,
+        "skills_match": 0.25,
+        "structure": 0.20,
+    }
+
+    components = {
+        "ats_compatibility": validate_score(ats_compatibility_score),
+        "content_quality": validate_score(content_quality_score),
+        "skills_match": validate_score(skills_match_score),
+        "structure": validate_score(structure_score),
+    }
+
+    available_keys = [k for k, v in components.items() if v is not None]
+    evaluated_count = len(available_keys)
+
+    if evaluated_count == 0:
+        return None, UnifiedScoreBreakdown(
+            overall_score=None,
+            evaluated_categories_count=0,
+            weights_used={},
+            score_status="failed",
+            scoring_mode="unavailable",
+            explanation="No valid categories could be evaluated.",
+            ats_compatibility=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            content_quality=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            skills_match=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            structure=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+        ), "failed"
+
+    total_available_weight = sum(base_weights[k] for k in available_keys)
+    renormalized_weights = {
+        k: round(base_weights[k] / total_available_weight, 4) for k in available_keys
+    }
+
+    composite_score = sum(
+        components[k] * renormalized_weights[k] for k in available_keys
+    )
+    final_score = round(composite_score, 2)
+
+    status = "completed" if evaluated_count == 4 else "partially_completed"
+    explanation = (
+        f"Calculated as a weighted composite of {evaluated_count} verified categories "
+        f"({', '.join(available_keys)}) on a 0-100 scale."
+    )
+
+    def _make_component(key: str) -> ScoreComponent:
+        if key in available_keys:
+            raw = components[key]
+            wt = renormalized_weights[key]
+            return ScoreComponent(
+                raw_score=raw,
+                weight=wt,
+                weighted_score=round(raw * wt, 2) if raw is not None else None,
+                included=True,
+            )
+        return ScoreComponent(
+            raw_score=None,
+            weight=0.0,
+            weighted_score=None,
+            included=False,
+            reason="Category was not evaluated or unavailable",
+        )
+
+    breakdown = UnifiedScoreBreakdown(
+        overall_score=final_score,
+        ats_compatibility=_make_component("ats_compatibility"),
+        content_quality=_make_component("content_quality"),
+        skills_match=_make_component("skills_match"),
+        structure=_make_component("structure"),
+        formula="0.25*ATS + 0.30*Content + 0.25*Skills + 0.20*Structure",
+        evaluated_categories_count=evaluated_count,
+        weights_used=renormalized_weights,
+        score_status=status,
+        scoring_mode="complete" if evaluated_count == 4 else "renormalized",
+        explanation=explanation,
+    )
+
+    return final_score, breakdown, status
+

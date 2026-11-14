@@ -1384,6 +1384,202 @@ export default function ResumeLivePreview({
                 )}
             </div>
           )}
+
+          {/* ────────────────────────────────────────────────────────
+              TEMPLATE 5: ACADEMIC & RESEARCH (Phase 5)
+              Tailored for students, freshers, researchers & academia
+          ──────────────────────────────────────────────────────── */}
+          {templateId === "academic" && (
+            <div className="space-y-4 font-sans text-slate-900 leading-snug">
+              {/* Academic Header */}
+              <div className="text-center pb-3 border-b-2 border-teal-600/40 space-y-1">
+                <h1 className="text-2xl font-serif font-black tracking-tight text-slate-900">
+                  {data.fullName || "Candidate Name"}
+                </h1>
+                {data.role && (
+                  <p className="text-xs font-semibold text-teal-800 uppercase tracking-widest">
+                    {data.role}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center justify-center gap-x-2 text-[10px] text-slate-600 pt-0.5">
+                  {data.email && <span>{data.email}</span>}
+                  {data.phone && <span>• {data.phone}</span>}
+                  {data.location && <span>• {data.location}</span>}
+                  {data.linkedin && (
+                    <span>
+                      • <a href={normalizeUrl(data.linkedin)} target="_blank" rel="noopener noreferrer" className="text-teal-700 underline font-medium">LinkedIn</a>
+                    </span>
+                  )}
+                  {data.github && (
+                    <span>
+                      • <a href={normalizeUrl(data.github)} target="_blank" rel="noopener noreferrer" className="text-teal-700 underline font-medium">GitHub</a>
+                    </span>
+                  )}
+                  {data.portfolio && (
+                    <span>
+                      • <a href={normalizeUrl(data.portfolio)} target="_blank" rel="noopener noreferrer" className="text-teal-700 underline font-medium">Portfolio</a>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Summary / Research Statement */}
+              {data.summary && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Research Objective &amp; Academic Summary
+                  </div>
+                  <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
+                    {data.summary}
+                  </p>
+                </div>
+              )}
+
+              {/* Education (Prominently Ranked Top for Academic) */}
+              {validEducation.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Education &amp; Academic Background
+                  </div>
+                  <div className="space-y-2">
+                    {validEducation.map((edu, idx) => (
+                      <div key={idx} className="text-[11px]">
+                        <div className="flex justify-between items-baseline font-bold text-slate-900">
+                          <span>
+                            {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ""}
+                          </span>
+                          <span className="text-[10px] font-semibold text-slate-600">{edu.dates}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline text-slate-700">
+                          <span className="italic">{edu.institution}</span>
+                          {edu.location && <span className="text-[10px] text-slate-500">{edu.location}</span>}
+                        </div>
+                        {edu.gpa && (
+                          <div className="text-[10px] text-teal-800 font-semibold mt-0.5">
+                            Cumulative {edu.gpaType || "GPA"}: {edu.gpa}
+                          </div>
+                        )}
+                        {edu.activities && (
+                          <div className="text-[10.5px] text-slate-600 mt-0.5 pl-2 border-l border-teal-200">
+                            <strong>Coursework &amp; Leadership:</strong> {edu.activities}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Projects & Research */}
+              {validProjects.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Academic &amp; Research Projects
+                  </div>
+                  <div className="space-y-2.5">
+                    {validProjects.map((proj, idx) => (
+                      <div key={idx} className="text-[11px]">
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-bold text-slate-900">
+                            {proj.name}
+                            {proj.tech && <span className="font-normal text-slate-600 text-[10px]"> — {proj.tech}</span>}
+                          </span>
+                          {proj.dates && <span className="text-[10px] text-slate-500">{proj.dates}</span>}
+                        </div>
+                        {proj.bullets && proj.bullets.length > 0 && (
+                          <ul className="list-disc ml-4 space-y-0.5 mt-1 text-[10.5px] text-slate-700">
+                            {proj.bullets.map((b, bIdx) => (
+                              <li key={bIdx}>{b}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Experience & Fellowships */}
+              {validExperience.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Professional &amp; Teaching Experience
+                  </div>
+                  <div className="space-y-2.5">
+                    {validExperience.map((exp, idx) => (
+                      <div key={idx} className="text-[11px]">
+                        <div className="flex justify-between items-baseline font-bold text-slate-900">
+                          <span>{exp.role}</span>
+                          <span className="text-[10px] font-semibold text-slate-600">{exp.dates}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline text-slate-700 italic">
+                          <span>{exp.company}</span>
+                          {exp.location && <span className="text-[10px] not-italic text-slate-500">{exp.location}</span>}
+                        </div>
+                        {exp.bullets && exp.bullets.length > 0 && (
+                          <ul className="list-disc ml-4 space-y-0.5 mt-1 text-[10.5px] text-slate-700">
+                            {exp.bullets.map((b, bIdx) => (
+                              <li key={bIdx}>{b}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Technical & Academic Skills */}
+              {hasAnySkill(data.skills) && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Technical &amp; Research Methodologies
+                  </div>
+                  <div className="space-y-1 text-[10.5px] leading-relaxed">
+                    {renderSkillRows("text-slate-800")}
+                  </div>
+                </div>
+              )}
+
+              {/* Achievements & Honors */}
+              {validAchievements.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Honors, Awards &amp; Publications
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    {validAchievements.map((ach, idx) => (
+                      <div key={idx} className="flex justify-between items-baseline">
+                        <span className="text-[10.5px] text-slate-700">
+                          <strong>{ach.title}</strong>{ach.description ? `: ${ach.description}` : ""}
+                        </span>
+                        {ach.date && <span className="text-[10px] text-slate-500 shrink-0 ml-2">{ach.date}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Certifications */}
+              {validCertifications.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-teal-900 border-b border-teal-200 pb-0.5 mb-1.5 font-serif">
+                    Certifications &amp; Credentials
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    {validCertifications.map((c, idx) => (
+                      <div key={idx} className="flex justify-between items-baseline text-[10.5px] text-slate-700">
+                        <span>
+                          <strong>{c.name}</strong> — {c.issuer}
+                        </span>
+                        {c.date && <span className="text-[10px] text-slate-500">{c.date}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

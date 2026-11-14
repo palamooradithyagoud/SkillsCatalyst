@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 from collections import defaultdict
-from typing import Optional, Dict
+from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, field_validator
 from backend.services.auth_service import get_current_user_id, get_session_or_user_id, is_valid_uuid
@@ -23,7 +23,12 @@ from backend.services.resume_scoring import (
     extract_resume_scores,
     sanitize_resume_filename,
     validate_score,
+    calculate_unified_resume_score,
+    UnifiedScoreBreakdown,
 )
+from backend.services.ats_engine import evaluate_resume_ats, ATSAnalysisReport
+from backend.services.keyword_matcher import match_keywords, KeywordAnalysisReport
+from backend.services.resume_ai_evaluator import evaluate_resume_content, AIEvaluationReport
 from backend.dependencies.subscription import require_entitlement
 from backend.services.ai_mentor import (
     MentorContext,
@@ -200,6 +205,8 @@ class ResumeReviewRequest(BaseModel):
     company_type: Optional[str] = "Product-Based"
     job_description: Optional[str] = None
     filename: Optional[str] = None
+    detected_columns: Optional[int] = 1
+    extraction_quality: Optional[float] = 100.0
 
     @field_validator("resume_text")
     @classmethod
@@ -237,6 +244,14 @@ class ResumeReviewResponse(BaseModel):
     score_status: str = "completed"  # "pending" | "completed" | "partially_completed" | "failed"
     filename: Optional[str] = None
     persisted: bool = False
+    career_stage: Optional[str] = None
+
+    # Phase 2 Advanced Structured Artifacts
+    extraction: Optional[Dict[str, Any]] = None
+    ats_analysis: Optional[Dict[str, Any]] = None
+    keyword_analysis: Optional[Dict[str, Any]] = None
+    ai_evaluation: Optional[Dict[str, Any]] = None
+    score_breakdown: Optional[Dict[str, Any]] = None
 
 
 def extract_and_validate_resume_score(review_text: str) -> Optional[float]:
@@ -850,8 +865,30 @@ STRICT RULES:
 - Focus on impact, metrics, and role relevance
 - Assume this resume is competing at a top 10% level"""
 
+    # 1. Deterministic ATS Analysis
+    ats_rep = evaluate_resume_ats(
+        resume_text,
+        years_experience=years_exp,
+        detected_columns=req.detected_columns or 1,
+        extraction_quality=req.extraction_quality or 100.0,
+    )
+
+    # 2. Deterministic Keyword Matching (Against JD or Target Role)
+    kw_rep = match_keywords(
+        resume_text,
+        job_description=req.job_description,
+        target_role=target_role,
+    )
+
+    # 3. Structured Career-Stage Aware AI Evaluation
     try:
-        review_text = await run_bounded_ai_call(chat_with_groq, user_prompt, system_prompt=system_prompt)
+        ai_rep = await evaluate_resume_content(
+            resume_text=resume_text,
+            target_role=target_role,
+            years_experience=years_exp,
+            company_type=company_type,
+            job_description=req.job_description,
+        )
     except AIProviderError as prov_err:
         logger.warning(f"AI provider error in review_resume: {prov_err.code} - {prov_err.message}")
         if reservation_id:
@@ -878,37 +915,72 @@ STRICT RULES:
                 release_ai_mentor_slot(current_user_id, reservation_id)
                 reservation_id = None
         raise
-    except Exception:
+    except Exception as general_err:
+        logger.error(f"Unexpected error in AI content evaluation: {general_err}")
         if reservation_id:
             release_ai_mentor_slot(current_user_id, reservation_id)
             reservation_id = None
         raise
 
-    if not review_text or review_text == _AI_UNAVAILABLE_MSG:
-        logger.error(f"Groq returned an error response: {review_text}")
-        if reservation_id:
-            release_ai_mentor_slot(current_user_id, reservation_id)
-            reservation_id = None
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={
-                "success": False,
-                "code": "AI_PROVIDER_UNAVAILABLE",
-                "message": "AI evaluator is temporarily unavailable. Please try again.",
-            },
-        )
-
     # Provider succeeded: commit reservation so it can never be refunded
     if reservation_id:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
 
-    # 1. Authoritative independent score extraction and validation
-    scoring_result = extract_resume_scores(review_text)
-    overall_score = scoring_result.overall_score
+    # 4. Unified Transparent Score Computation
+    overall_score, score_breakdown, score_status = calculate_unified_resume_score(
+        ats_compatibility_score=ats_rep.ats_compatibility_score,
+        content_quality_score=ai_rep.content_quality_score,
+        skills_match_score=kw_rep.keyword_match_percentage,
+        structure_score=ats_rep.structure_score,
+    )
     scoring_status = "scored" if overall_score is not None else "unscored"
     sanitized_filename = sanitize_resume_filename(req.filename, default="uploaded_resume.pdf")
 
-    # 2. Persist resume score and review into Supabase ONLY if a valid score exists
+    # 5. Build rich backwards-compatible markdown review text
+    review_lines = [
+        "## 🧠 Overall Verdict",
+        f"- Final Score: {int(overall_score) if overall_score is not None else 0}/100",
+        f"- **Career Stage Evaluated:** {ai_rep.career_stage.capitalize()}",
+        f"- {ai_rep.summary_verdict}",
+        "",
+        "## 📊 Section-wise Scores",
+        f"- ATS Compatibility: {int(ats_rep.ats_compatibility_score)}/100",
+        f"- Role Alignment: {int(kw_rep.keyword_match_percentage)}/100",
+        f"- Impact: {int(ai_rep.content_quality_score)}/100",
+        f"- Structure: {int(ats_rep.structure_score)}/100",
+        "",
+        "## ❌ Critical Issues (Top Findings)",
+    ]
+    for finding in ats_rep.findings:
+        if finding.severity in ("critical", "warning"):
+            review_lines.append(f"- **[{finding.severity.upper()}] {finding.issue}:** {finding.impact} *Fix:* {finding.recommended_fix}")
+    if not any(f.severity in ("critical", "warning") for f in ats_rep.findings):
+        review_lines.append("- No critical ATS formatting issues detected.")
+
+    review_lines.append("")
+    review_lines.append("## 🔧 Bullet Fixes (Before → After)")
+    for b in ai_rep.rewritten_bullets[:4]:
+        review_lines.append(f"- **Before:** {b.original}")
+        review_lines.append(f"- **After:** {b.improved}")
+        if b.reason:
+            review_lines.append(f"  *{b.reason}*")
+
+    review_lines.append("")
+    review_lines.append("## 📈 Missing Keywords")
+    missing_kw_names = [m.name for m in kw_rep.missing[:8]]
+    if missing_kw_names:
+        review_lines.append(f"- Missing role keywords: {', '.join(missing_kw_names)}")
+    else:
+        review_lines.append("- All core target keywords detected.")
+
+    review_lines.append("")
+    review_lines.append("## 🚀 Improvement Plan")
+    for imp in ai_rep.improvements[:5]:
+        review_lines.append(f"- **{imp.section}:** {imp.action} ({imp.issue})")
+
+    review_text = "\n".join(review_lines)
+
+    # 6. Persist resume score and review into Supabase ONLY if a valid score exists
     persisted = False
     if overall_score is not None:
         try:
@@ -951,15 +1023,19 @@ STRICT RULES:
                         "target_role": target_role,
                         "company_type": company_type,
                         "overall_score": overall_score,
-                        "ats_compatibility_score": scoring_result.ats_compatibility_score,
-                        "skills_match_score": scoring_result.skills_match_score,
-                        "experience_score": scoring_result.experience_score,
+                        "ats_compatibility_score": ats_rep.ats_compatibility_score,
+                        "skills_match_score": kw_rep.keyword_match_percentage,
+                        "experience_score": ai_rep.content_quality_score,
                         "full_review_json": {
                             "review": review_text,
-                            "scoring": scoring_result.model_dump(),
-                            "structure_score": scoring_result.structure_score,
-                            "content_quality_score": scoring_result.content_quality_score,
-                            "score_status": scoring_result.score_status,
+                            "ats_analysis": ats_rep.model_dump(),
+                            "keyword_analysis": kw_rep.model_dump(),
+                            "ai_evaluation": ai_rep.model_dump(),
+                            "score_breakdown": score_breakdown.model_dump(),
+                            "structure_score": ats_rep.structure_score,
+                            "content_quality_score": ai_rep.content_quality_score,
+                            "score_status": score_status,
+                            "career_stage": ai_rep.career_stage,
                         },
                     }
                     def _persist_resume_score():
@@ -981,22 +1057,28 @@ STRICT RULES:
 
     logger.info(
         f"Resume review completed (filename='{sanitized_filename}', chars={len(review_text)}, "
-        f"score={overall_score}, ats={scoring_result.ats_compatibility_score}, "
-        f"skills={scoring_result.skills_match_score}, exp={scoring_result.experience_score}, "
-        f"status={scoring_result.score_status}, persisted={persisted})."
+        f"overall={overall_score}, ats={ats_rep.ats_compatibility_score}, "
+        f"skills={kw_rep.keyword_match_percentage}, content={ai_rep.content_quality_score}, "
+        f"structure={ats_rep.structure_score}, stage={ai_rep.career_stage}, "
+        f"status={score_status}, persisted={persisted})."
     )
     return ResumeReviewResponse(
         review=review_text,
         overall_score=overall_score,
         scoring_status=scoring_status,
-        ats_compatibility_score=scoring_result.ats_compatibility_score,
-        skills_match_score=scoring_result.skills_match_score,
-        experience_score=scoring_result.experience_score,
-        structure_score=scoring_result.structure_score,
-        content_quality_score=scoring_result.content_quality_score,
-        score_status=scoring_result.score_status,
+        ats_compatibility_score=ats_rep.ats_compatibility_score,
+        skills_match_score=kw_rep.keyword_match_percentage,
+        experience_score=ai_rep.content_quality_score,
+        structure_score=ats_rep.structure_score,
+        content_quality_score=ai_rep.content_quality_score,
+        score_status=score_status,
         filename=sanitized_filename,
         persisted=persisted,
+        career_stage=ai_rep.career_stage,
+        ats_analysis=ats_rep.model_dump(),
+        keyword_analysis=kw_rep.model_dump(),
+        ai_evaluation=ai_rep.model_dump(),
+        score_breakdown=score_breakdown.model_dump(),
     )
 
 
