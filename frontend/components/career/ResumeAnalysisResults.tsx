@@ -38,6 +38,12 @@ import {
   UnifiedScoreBreakdown,
   ExtractionResult,
   ATSFinding,
+  SkillEvidenceReport,
+  ProjectEvaluationReport,
+  EducationEvaluationReport,
+  ContentQualityReport,
+  RecruiterEvaluationReport,
+  JobMatchingReport,
 } from "@/types/career";
 import ResumeMarkdownViewer from "@/components/career/ResumeMarkdownViewer";
 
@@ -50,6 +56,12 @@ interface ResumeAnalysisResultsProps {
   extraction?: ExtractionResult | null;
   atsAnalysis?: ATSAnalysisReport | null;
   keywordAnalysis?: KeywordAnalysisReport | null;
+  skillEvidence?: SkillEvidenceReport | null;
+  projectsEvaluation?: ProjectEvaluationReport | null;
+  educationEvaluation?: EducationEvaluationReport | null;
+  contentQuality?: ContentQualityReport | null;
+  recruiterEvaluation?: RecruiterEvaluationReport | null;
+  jobMatching?: JobMatchingReport | null;
   aiEvaluation?: AIEvaluationReport | null;
   scoreBreakdown?: UnifiedScoreBreakdown | null;
   careerStage?: string | null;
@@ -63,7 +75,16 @@ interface ResumeAnalysisResultsProps {
   onReset?: () => void;
 }
 
-type TabType = "overview" | "ats" | "keywords" | "rewrites" | "roadmap" | "markdown";
+type TabType =
+  | "overview"
+  | "ats"
+  | "keywords"
+  | "evidence"
+  | "recruiter"
+  | "jobmatch"
+  | "rewrites"
+  | "roadmap"
+  | "markdown";
 
 export default function ResumeAnalysisResults({
   reviewText,
@@ -73,6 +94,12 @@ export default function ResumeAnalysisResults({
   extraction,
   atsAnalysis,
   keywordAnalysis,
+  skillEvidence,
+  projectsEvaluation,
+  educationEvaluation,
+  contentQuality,
+  recruiterEvaluation,
+  jobMatching,
   aiEvaluation,
   scoreBreakdown,
   careerStage,
@@ -97,7 +124,7 @@ export default function ResumeAnalysisResults({
     }
   };
 
-  // Resolved scores with fallbacks
+  // Resolved 7-dimensional enterprise scores
   const displayOverallScore =
     typeof overallScore === "number" && !isNaN(overallScore)
       ? Math.round(overallScore)
@@ -112,18 +139,41 @@ export default function ResumeAnalysisResults({
       ? Math.round(atsAnalysis.ats_compatibility_score)
       : null;
 
-  const contentScore =
-    typeof subScores?.content === "number"
-      ? Math.round(subScores.content)
-      : typeof aiEvaluation?.content_quality_score === "number"
-      ? Math.round(aiEvaluation.content_quality_score)
-      : null;
-
-  const skillsScore =
+  const kwScore =
     typeof subScores?.skills === "number"
       ? Math.round(subScores.skills)
       : typeof keywordAnalysis?.keyword_match_percentage === "number"
       ? Math.round(keywordAnalysis.keyword_match_percentage)
+      : null;
+
+  const techScore =
+    typeof skillEvidence?.technical_skills_score === "number"
+      ? Math.round(skillEvidence.technical_skills_score)
+      : typeof scoreBreakdown?.technical_skills?.raw_score === "number"
+      ? Math.round(scoreBreakdown.technical_skills.raw_score)
+      : kwScore;
+
+  const projScore =
+    typeof projectsEvaluation?.projects_experience_score === "number"
+      ? Math.round(projectsEvaluation.projects_experience_score)
+      : typeof scoreBreakdown?.projects_experience?.raw_score === "number"
+      ? Math.round(scoreBreakdown.projects_experience.raw_score)
+      : null;
+
+  const eduScore =
+    typeof educationEvaluation?.education_certifications_score === "number"
+      ? Math.round(educationEvaluation.education_certifications_score)
+      : typeof scoreBreakdown?.education_certifications?.raw_score === "number"
+      ? Math.round(scoreBreakdown.education_certifications.raw_score)
+      : null;
+
+  const contentScore =
+    typeof contentQuality?.content_quality_score === "number"
+      ? Math.round(contentQuality.content_quality_score)
+      : typeof subScores?.content === "number"
+      ? Math.round(subScores.content)
+      : typeof aiEvaluation?.content_quality_score === "number"
+      ? Math.round(aiEvaluation.content_quality_score)
       : null;
 
   const structureScore =
@@ -131,6 +181,11 @@ export default function ResumeAnalysisResults({
       ? Math.round(subScores.structure)
       : typeof atsAnalysis?.structure_score === "number"
       ? Math.round(atsAnalysis.structure_score)
+      : null;
+
+  const jobMatchScore =
+    jobMatching?.job_match_status === "evaluated" && typeof jobMatching?.job_match_score === "number"
+      ? Math.round(jobMatching.job_match_score)
       : null;
 
   const stage = careerStage || atsAnalysis?.career_stage_detected || "Professional";
@@ -288,135 +343,230 @@ export default function ResumeAnalysisResults({
       )}
 
       {/* ──────────────────────────────────────────────────────────
-          3. UNIFIED 4-COMPONENT SCORING CARDS
+          3. ENTERPRISE 7-DIMENSIONAL SCORING CARDS (100% TOTAL)
       ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* ATS Compatibility */}
-        <div className="bg-[#141519] border border-white/10 rounded-2xl p-4 shadow-xs space-y-2 hover:border-white/20 transition-all">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-3">
+        {/* Dim 1: ATS Compatibility (15%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-white flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-purple-400" />
-              ATS Compatibility
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              ATS
             </span>
-            <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-500/30">
-              25% Wt
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              15%
             </span>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">
+            <span className="text-xl sm:text-2xl font-black text-white">
               {atsScore !== null ? `${atsScore}` : "—"}
-              <span className="text-xs text-zinc-400 font-semibold">/100</span>
-            </span>
-            <span className="text-[11px] font-semibold text-zinc-300">
-              {atsScore !== null && atsScore >= 80 ? "High Compatibility" : atsScore !== null && atsScore >= 60 ? "Moderate" : "Needs Fixes"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
             </span>
           </div>
-          <div className="w-full bg-[#23242B] rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(atsScore)}`}
               style={{ width: `${Math.min(100, Math.max(0, atsScore ?? 0))}%` }}
             />
           </div>
-          <p className="text-[11px] text-zinc-400 leading-tight">
-            Deterministic check of contact info, standard headings, and parseable layout.
-          </p>
+          <p className="text-[10px] text-zinc-400 truncate">Parseability &amp; layout</p>
         </div>
 
-        {/* Content Quality / Impact */}
-        <div className="bg-[#141519] border border-white/10 rounded-2xl p-4 shadow-xs space-y-2 hover:border-white/20 transition-all">
+        {/* Dim 2: Keyword Coverage (15%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-white flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              Content Impact
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <Zap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Keywords
             </span>
-            <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-500/30">
-              30% Wt
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              15%
             </span>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">
-              {contentScore !== null ? `${contentScore}` : "—"}
-              <span className="text-xs text-zinc-400 font-semibold">/100</span>
-            </span>
-            <span className="text-[11px] font-semibold text-zinc-300">
-              {contentScore !== null && contentScore >= 80 ? "Strong Impact" : contentScore !== null && contentScore >= 60 ? "Average" : "Weak Metrics"}
+            <span className="text-xl sm:text-2xl font-black text-white">
+              {kwScore !== null ? `${kwScore}` : "—"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
             </span>
           </div>
-          <div className="w-full bg-[#23242B] rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(kwScore)}`}
+              style={{ width: `${Math.min(100, Math.max(0, kwScore ?? 0))}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-zinc-400 truncate">Role taxonomy match</p>
+        </div>
+
+        {/* Dim 3: Technical Skills (15%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <Terminal className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Tech Skills
+            </span>
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              15%
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xl sm:text-2xl font-black text-white">
+              {techScore !== null ? `${techScore}` : "—"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
+            </span>
+          </div>
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(techScore)}`}
+              style={{ width: `${Math.min(100, Math.max(0, techScore ?? 0))}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-zinc-400 truncate">Evidence verification</p>
+        </div>
+
+        {/* Dim 4: Projects & Experience (20%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <Briefcase className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Projects
+            </span>
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              20%
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xl sm:text-2xl font-black text-white">
+              {projScore !== null ? `${projScore}` : "—"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
+            </span>
+          </div>
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(projScore)}`}
+              style={{ width: `${Math.min(100, Math.max(0, projScore ?? 0))}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-zinc-400 truncate">Depth &amp; metrics</p>
+        </div>
+
+        {/* Dim 5: Education & Certs (10%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <GraduationCap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Education
+            </span>
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              10%
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xl sm:text-2xl font-black text-white">
+              {eduScore !== null ? `${eduScore}` : "—"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
+            </span>
+          </div>
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(eduScore)}`}
+              style={{ width: `${Math.min(100, Math.max(0, eduScore ?? 0))}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-zinc-400 truncate">Degrees &amp; certs</p>
+        </div>
+
+        {/* Dim 6: Content Quality (15%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Content
+            </span>
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              15%
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xl sm:text-2xl font-black text-white">
+              {contentScore !== null ? `${contentScore}` : "—"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
+            </span>
+          </div>
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(contentScore)}`}
               style={{ width: `${Math.min(100, Math.max(0, contentScore ?? 0))}%` }}
             />
           </div>
-          <p className="text-[11px] text-zinc-400 leading-tight">
-            Action verbs, quantifiable results, and STAR framework bullet clarity.
-          </p>
+          <p className="text-[10px] text-zinc-400 truncate">Action verbs &amp; STAR</p>
         </div>
 
-        {/* Skills & JD Match */}
-        <div className="bg-[#141519] border border-white/10 rounded-2xl p-4 shadow-xs space-y-2 hover:border-white/20 transition-all">
+        {/* Dim 7: Structure & Flow (10%) */}
+        <div className="bg-[#141519] border border-white/10 rounded-2xl p-3 sm:p-3.5 shadow-xs space-y-1.5 hover:border-purple-500/30 transition-all">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-white flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-purple-400" />
-              Skills &amp; Keywords
+            <span className="font-bold text-white flex items-center gap-1 text-[11px] truncate">
+              <Layers className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              Structure
             </span>
-            <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-500/30">
-              25% Wt
+            <span className="text-[9px] font-bold text-purple-300 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-500/30">
+              10%
             </span>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">
-              {skillsScore !== null ? `${skillsScore}` : "—"}
-              <span className="text-xs text-zinc-400 font-semibold">/100</span>
-            </span>
-            <span className="text-[11px] font-semibold text-zinc-300">
-              {keywordAnalysis && typeof keywordAnalysis.matched_count === "number" && typeof keywordAnalysis.total_analyzed_keywords === "number"
-                ? `${keywordAnalysis.matched_count}/${keywordAnalysis.total_analyzed_keywords} Found`
-                : "Keyword Match"}
-            </span>
-          </div>
-          <div className="w-full bg-[#23242B] rounded-full h-1.5 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(skillsScore)}`}
-              style={{ width: `${Math.min(100, Math.max(0, skillsScore ?? 0))}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-zinc-400 leading-tight">
-            Role taxonomy &amp; job description keyword alignment with alias matching.
-          </p>
-        </div>
-
-        {/* Structure & Readability */}
-        <div className="bg-[#141519] border border-white/10 rounded-2xl p-4 shadow-xs space-y-2 hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-white flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-purple-400" />
-              Structure &amp; Flow
-            </span>
-            <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-500/30">
-              20% Wt
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-black text-white">
+            <span className="text-xl sm:text-2xl font-black text-white">
               {structureScore !== null ? `${structureScore}` : "—"}
-              <span className="text-xs text-zinc-400 font-semibold">/100</span>
-            </span>
-            <span className="text-[11px] font-semibold text-zinc-300">
-              {structureScore !== null && structureScore >= 80 ? "Clean Layout" : "Needs Revision"}
+              <span className="text-[10px] text-zinc-400 font-normal">/100</span>
             </span>
           </div>
-          <div className="w-full bg-[#23242B] rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-[#23242B] rounded-full h-1 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getScoreProgressBar(structureScore)}`}
               style={{ width: `${Math.min(100, Math.max(0, structureScore ?? 0))}%` }}
             />
           </div>
-          <p className="text-[11px] text-zinc-400 leading-tight">
-            Reading order, symbol hygiene, and section hierarchy across ATS scanners.
-          </p>
+          <p className="text-[10px] text-zinc-400 truncate">Symbol &amp; reading order</p>
         </div>
       </div>
+
+      {/* Target Job Match Banner (Independent) */}
+      {jobMatching && (
+        <div className="p-3 sm:p-3.5 bg-[#141519] border border-white/10 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white">Target Job Alignment:</span>
+                {jobMatching.job_match_status === "evaluated" && jobMatchScore !== null ? (
+                  <span className="px-2 py-0.5 rounded-full font-bold text-xs bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">
+                    {jobMatchScore}% Match
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full font-medium text-[11px] bg-zinc-800 text-zinc-300">
+                    Not Evaluated (No JD Provided)
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                {jobMatching.job_match_status === "evaluated"
+                  ? `${jobMatching.matched_required_count}/${jobMatching.required_skills_count} required competencies matched.`
+                  : "Target Job Description was not provided during scan. Supply a JD anytime for custom tailoring."}
+              </p>
+            </div>
+          </div>
+          {jobMatching.job_match_status === "evaluated" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("jobmatch")}
+              className="text-purple-400 hover:text-purple-300 font-bold text-xs underline cursor-pointer shrink-0 self-start sm:self-center"
+            >
+              View JD Match Breakdown →
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ──────────────────────────────────────────────────────────
           4. TAB NAVIGATION
@@ -446,7 +596,7 @@ export default function ResumeAnalysisResults({
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            ATS Rules &amp; Health
+            ATS Rules
             {criticalCount > 0 && (
               <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white">
                 {criticalCount}
@@ -464,13 +614,59 @@ export default function ResumeAnalysisResults({
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            Keyword Match
+            Keywords
             {keywordAnalysis && typeof keywordAnalysis.matched_count === "number" && (
               <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-950/60 text-purple-300 border border-purple-500/30">
                 {keywordAnalysis.matched_count}/{keywordAnalysis.total_analyzed_keywords}
               </span>
             )}
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("evidence")}
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "evidence"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
+            }`}
+          >
+            <Terminal className="w-3.5 h-3.5" />
+            Skill Evidence
+            {skillEvidence && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-950/60 text-purple-300 border border-purple-500/30">
+                {Math.round(skillEvidence.demonstration_rate)}% Verified
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("recruiter")}
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "recruiter"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            Recruiter Lens
+          </button>
+
+          {jobMatching && jobMatching.job_match_status === "evaluated" && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("jobmatch")}
+              className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "jobmatch"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
+              }`}
+            >
+              <FileSearch className="w-3.5 h-3.5" />
+              JD Alignment
+            </button>
+          )}
 
           <button
             type="button"
@@ -482,7 +678,7 @@ export default function ResumeAnalysisResults({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            Bullet Rewrites
+            Rewrites
             {aiEvaluation?.rewritten_bullets && (
               <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-950/60 text-purple-300 border border-purple-500/30">
                 {aiEvaluation.rewritten_bullets.length}
@@ -512,8 +708,8 @@ export default function ResumeAnalysisResults({
                 : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
             }`}
           >
-            <FileSearch className="w-3.5 h-3.5" />
-            Full Markdown Report
+            <Code className="w-3.5 h-3.5" />
+            Markdown
           </button>
         </div>
       </div>
@@ -931,6 +1127,299 @@ export default function ResumeAnalysisResults({
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          7A. TAB: SKILL EVIDENCE VERIFICATION (Supporting Engine 1)
+      ────────────────────────────────────────────────────────── */}
+      {activeTab === "evidence" && (
+        <div className="space-y-4">
+          <div className="bg-[#141519] border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-purple-400" />
+                  Skill Evidence &amp; Practical Verification
+                </h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Verifies whether declared technical competencies are substantiated by actual project bullets and work experience.
+                </p>
+              </div>
+              {skillEvidence && (
+                <div className="px-3 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-bold shrink-0 self-start sm:self-center">
+                  Demonstration Rate: {Math.round(skillEvidence.demonstration_rate)}%
+                </div>
+              )}
+            </div>
+
+            {skillEvidence ? (
+              <div className="space-y-5">
+                {/* Metrics Tally */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3 bg-[#18191f] border border-white/10 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total Declared</span>
+                    <span className="text-xl font-black text-white">{skillEvidence.total_declared_skills}</span>
+                  </div>
+                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-emerald-400 block">Demonstrated</span>
+                    <span className="text-xl font-black text-emerald-300">{skillEvidence.demonstrated_count}</span>
+                  </div>
+                  <div className="p-3 bg-amber-950/30 border border-amber-500/20 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-amber-400 block">Mentioned Only</span>
+                    <span className="text-xl font-black text-amber-300">{skillEvidence.mentioned_only_count}</span>
+                  </div>
+                  <div className="p-3 bg-rose-950/30 border border-rose-500/20 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-rose-400 block">Unsupported Claims</span>
+                    <span className="text-xl font-black text-rose-300">{skillEvidence.unsupported_count}</span>
+                  </div>
+                </div>
+
+                {/* Evidence Items Breakdown */}
+                <div className="space-y-3">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                    Detailed Skill Verifications
+                  </h5>
+                  <div className="space-y-2.5 max-h-[450px] overflow-y-auto pr-1">
+                    {skillEvidence.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl bg-[#18191f] border border-white/10 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-white">{item.skill}</span>
+                            <span className="text-[10px] text-zinc-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                              {item.category}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              item.classification === "demonstrated"
+                                ? "bg-emerald-950/60 border-emerald-500/30 text-emerald-300"
+                                : item.classification === "partially_demonstrated"
+                                ? "bg-cyan-950/60 border-cyan-500/30 text-cyan-300"
+                                : item.classification === "mentioned_only"
+                                ? "bg-amber-950/60 border-amber-500/30 text-amber-300"
+                                : "bg-rose-950/60 border-rose-500/30 text-rose-300"
+                            }`}
+                          >
+                            {item.classification.replace("_", " ").toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">{item.explanation}</p>
+                        {item.evidence && item.evidence.length > 0 && (
+                          <div className="space-y-1 pt-1 border-t border-white/5">
+                            {item.evidence.map((ev, evIdx) => (
+                              <div key={evIdx} className="text-[10px] text-zinc-300 flex items-start gap-1.5 bg-[#121316] p-2 rounded-lg border border-white/5">
+                                <span className="font-bold text-purple-400 shrink-0">[{ev.section}]:</span>
+                                <span className="italic line-clamp-2">"{ev.snippet}"</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recommendations */}
+                {skillEvidence.recommendations && skillEvidence.recommendations.length > 0 && (
+                  <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/20 space-y-1.5">
+                    <span className="text-xs font-bold text-purple-300 block">Evidence Optimization Recommendations:</span>
+                    <ul className="list-disc list-inside space-y-1 text-xs text-purple-200/80">
+                      {skillEvidence.recommendations.map((rec, rIdx) => (
+                        <li key={rIdx}>{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-400">Skill evidence analysis will populate when full evaluation completes.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          7B. TAB: RECRUITER LENS (Supporting Engine 2)
+      ────────────────────────────────────────────────────────── */}
+      {activeTab === "recruiter" && (
+        <div className="space-y-4">
+          <div className="bg-[#141519] border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-purple-400" />
+                  Senior Technical Recruiter Evaluation
+                </h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  How hiring managers and technical recruiters perceive your resume within the first 10 seconds of scanning.
+                </p>
+              </div>
+              {recruiterEvaluation && (
+                <div className="px-3 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-bold shrink-0 self-start sm:self-center">
+                  Verdict: {recruiterEvaluation.overall_qualitative_verdict}
+                </div>
+              )}
+            </div>
+
+            {recruiterEvaluation ? (
+              <div className="space-y-4">
+                {/* 10-Second Impression */}
+                <div className="p-4 rounded-xl bg-[#18191f] border border-white/10 space-y-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-purple-300 block">
+                    ⚡ 10-Second First Impression
+                  </span>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    {recruiterEvaluation.first_10_second_impression}
+                  </p>
+                </div>
+
+                {/* Strengths & Concerns Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Strengths */}
+                  <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 space-y-2">
+                    <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      Candidate Strengths
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-emerald-200/90 list-disc list-inside">
+                      {recruiterEvaluation.recruiter_strengths.map((str, sIdx) => (
+                        <li key={sIdx}>{str}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Concerns */}
+                  <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/20 space-y-2">
+                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      Recruiter Concerns / Flags
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-amber-200/90 list-disc list-inside">
+                      {recruiterEvaluation.recruiter_concerns.map((con, cIdx) => (
+                        <li key={cIdx}>{con}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Priority Improvements */}
+                {recruiterEvaluation.top_improvement_recommendations && recruiterEvaluation.top_improvement_recommendations.length > 0 && (
+                  <div className="p-4 rounded-xl bg-[#18191f] border border-white/10 space-y-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <ChevronRight className="w-4 h-4 text-purple-400" />
+                      Top Recommended Adjustments Before Applying
+                    </span>
+                    <ul className="space-y-1 text-xs text-zinc-300 list-disc list-inside">
+                      {recruiterEvaluation.top_improvement_recommendations.map((tip, tIdx) => (
+                        <li key={tIdx}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-400">Recruiter lens evaluation will populate when analysis completes.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────
+          7C. TAB: TARGET JOB MATCH (Supporting Engine 3)
+      ────────────────────────────────────────────────────────── */}
+      {activeTab === "jobmatch" && (
+        <div className="space-y-4">
+          <div className="bg-[#141519] border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <FileSearch className="w-4 h-4 text-purple-400" />
+                  Target Job Alignment Analysis
+                </h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Detailed evaluation of candidate suitability against the target Job Description.
+                </p>
+              </div>
+              {jobMatching?.job_match_score !== null && (
+                <div className="px-3 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-bold shrink-0 self-start sm:self-center">
+                  Score: {jobMatching?.job_match_score}/100
+                </div>
+              )}
+            </div>
+
+            {jobMatching && jobMatching.job_match_status === "evaluated" ? (
+              <div className="space-y-4">
+                {/* Matched Competencies */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
+                    Matched Competencies ({jobMatching.matched_skills.length})
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {jobMatching.matched_skills.map((m, mIdx) => (
+                      <span
+                        key={mIdx}
+                        className={`text-xs px-2.5 py-1 rounded-lg border flex items-center gap-1.5 ${
+                          m.is_demonstrated
+                            ? "bg-emerald-950/60 border-emerald-500/30 text-emerald-300"
+                            : "bg-cyan-950/60 border-cyan-500/30 text-cyan-300"
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <strong>{m.name}</strong>
+                        <span className="text-[10px] opacity-75">
+                          ({m.is_required ? "Required" : "Preferred"} · {m.is_demonstrated ? "Proven" : "Mentioned"})
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Missing Required Skills */}
+                {jobMatching.missing_required_skills && jobMatching.missing_required_skills.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-rose-300 block">
+                      Missing Required Competencies ({jobMatching.missing_required_skills.length})
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {jobMatching.missing_required_skills.map((sk, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className="text-xs px-2.5 py-1 rounded-lg bg-rose-950/60 border border-rose-500/30 text-rose-300 flex items-center gap-1"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tailoring Recommendations */}
+                {jobMatching.tailoring_recommendations && jobMatching.tailoring_recommendations.length > 0 && (
+                  <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-500/20 space-y-2">
+                    <span className="text-xs font-bold text-purple-300 block">Tailoring Recommendations:</span>
+                    <ul className="space-y-1 text-xs text-purple-200/80 list-disc list-inside">
+                      {jobMatching.tailoring_recommendations.map((rec, rIdx) => (
+                        <li key={rIdx}>{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-6 text-center space-y-2 bg-[#18191f] rounded-2xl border border-white/5">
+                <Info className="w-8 h-8 text-zinc-500 mx-auto" />
+                <h5 className="text-xs font-bold text-white">No Target Job Description Provided</h5>
+                <p className="text-xs text-zinc-400 max-w-md mx-auto">
+                  To evaluate alignment against specific company requirements, paste a Job Description during your next scan.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

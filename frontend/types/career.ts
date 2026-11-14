@@ -128,13 +128,119 @@ export interface ScoreComponent {
   reason?: string;
 }
 
+export interface SkillEvidenceCitation {
+  section: string;
+  snippet: string;
+  confidence: number;
+}
+
+export interface SkillEvidenceItem {
+  skill: string;
+  category: string;
+  classification: "demonstrated" | "partially_demonstrated" | "mentioned_only" | "unsupported_claim" | "requires_verification";
+  evidence: SkillEvidenceCitation[];
+  confidence: number;
+  explanation: string;
+}
+
+export interface SkillEvidenceReport {
+  technical_skills_score: number;
+  total_declared_skills: number;
+  demonstrated_count: number;
+  partially_demonstrated_count: number;
+  mentioned_only_count: number;
+  unsupported_count: number;
+  demonstration_rate: number;
+  items: SkillEvidenceItem[];
+  demonstrated_skills: string[];
+  mentioned_only_skills: string[];
+  recommendations: string[];
+}
+
+export interface ProjectEvaluationReport {
+  projects_experience_score: number;
+  project_count: number;
+  experience_count: number;
+  total_metrics_count: number;
+  technical_depth_level: string;
+  career_stage_applied: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+}
+
+export interface EducationEvaluationReport {
+  education_certifications_score: number;
+  has_degree: boolean;
+  completeness_status: string;
+  has_certifications: boolean;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+}
+
+export interface ContentQualityReport {
+  content_quality_score: number;
+  strong_action_verbs_count: number;
+  weak_action_verbs_count: number;
+  quantifiable_metrics_count: number;
+  metric_bullet_percentage: number;
+  star_alignment_percentage: number;
+  total_bullets_analyzed: number;
+  fluff_phrases_detected: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+}
+
+export interface RecruiterEvaluationReport {
+  first_10_second_impression: string;
+  overall_qualitative_verdict: string;
+  recruiter_strengths: string[];
+  recruiter_concerns: string[];
+  top_improvement_recommendations: string[];
+  timeline_flags: string[];
+  positioning_clarity: string;
+}
+
+export interface MatchedSkillDetail {
+  name: string;
+  category: string;
+  match_type: string;
+  is_demonstrated: boolean;
+  is_required: boolean;
+}
+
+export interface JobMatchingReport {
+  job_match_status: "evaluated" | "not_evaluated";
+  job_match_score: number | null;
+  target_job_title?: string | null;
+  required_skills_count: number;
+  matched_required_count: number;
+  preferred_skills_count: number;
+  matched_preferred_count: number;
+  demonstrated_matches_count: number;
+  matched_skills: MatchedSkillDetail[];
+  missing_required_skills: string[];
+  missing_preferred_skills: string[];
+  explanation: string;
+  tailoring_recommendations: string[];
+}
+
 export interface UnifiedScoreBreakdown {
   overall_score: number | null;
   ats_compatibility: ScoreComponent;
+  keyword_coverage?: ScoreComponent;
+  technical_skills?: ScoreComponent;
+  projects_experience?: ScoreComponent;
+  education_certifications?: ScoreComponent;
   content_quality: ScoreComponent;
-  skills_match: ScoreComponent;
   structure: ScoreComponent;
+  skills_match?: ScoreComponent;
   weights_used: Record<string, number>;
+  formula?: string;
+  evaluated_categories_count?: number;
+  total_categories_count?: number;
   score_status: "completed" | "partially_completed" | "failed";
   scoring_mode: string;
   explanation: string;
@@ -145,6 +251,10 @@ export interface ResumeReviewResponse {
   overall_score?: number | null;
   scoring_status?: "scored" | "unscored";
   ats_compatibility_score?: number | null;
+  keyword_coverage_score?: number | null;
+  technical_skills_score?: number | null;
+  projects_experience_score?: number | null;
+  education_certifications_score?: number | null;
   skills_match_score?: number | null;
   experience_score?: number | null;
   structure_score?: number | null;
@@ -155,6 +265,12 @@ export interface ResumeReviewResponse {
   career_stage?: string | null;
   ats_analysis?: ATSAnalysisReport | null;
   keyword_analysis?: KeywordAnalysisReport | null;
+  skill_evidence?: SkillEvidenceReport | null;
+  projects_evaluation?: ProjectEvaluationReport | null;
+  education_evaluation?: EducationEvaluationReport | null;
+  content_quality?: ContentQualityReport | null;
+  recruiter_evaluation?: RecruiterEvaluationReport | null;
+  job_matching?: JobMatchingReport | null;
   ai_evaluation?: AIEvaluationReport | null;
   score_breakdown?: UnifiedScoreBreakdown | null;
   extraction?: Record<string, any> | null;

@@ -366,6 +366,8 @@ export async function analyzeResumeFile(
     targetRole?: string;
     yearsExperience?: string;
     companyType?: string;
+    resumeSeriesId?: string;
+    editedText?: string;
   }
 ): Promise<ResumeAnalyzeResponse> {
   const authHeaders = await getAuthHeaders();
@@ -375,6 +377,8 @@ export async function analyzeResumeFile(
   if (options?.targetRole) formData.append("target_role", options.targetRole);
   if (options?.yearsExperience) formData.append("years_experience", options.yearsExperience);
   if (options?.companyType) formData.append("company_type", options.companyType);
+  if (options?.resumeSeriesId) formData.append("resume_series_id", options.resumeSeriesId);
+  if (options?.editedText) formData.append("edited_text", options.editedText);
 
   let res: Response;
   try {

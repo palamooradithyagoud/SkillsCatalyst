@@ -154,6 +154,7 @@ def analyze_resume_job_alignment(
     unsupported_skills: List[str] = []
     preferred_matches: List[str] = []
 
+    # Separate missing skills from unsupported skills (BUG 3 fix)
     req_skills = job_requirements.get("required_skills") or []
     for s in req_skills:
         s_norm = s.lower()
@@ -161,7 +162,26 @@ def analyze_resume_job_alignment(
             matched_skills.append(s)
         else:
             missing_skills.append(s)
-            unsupported_skills.append(s)
+
+    # Check for unsupported skills: declared in skills section but lacking project/experience evidence
+    skills_obj = resume_data.get("skills") or {}
+    declared_skills_text = " ".join(str(v) for v in skills_obj.values() if v)
+    projects_list = resume_data.get("projects") or []
+    experience_list = resume_data.get("experience") or []
+
+    practical_bullets = []
+    for p in projects_list:
+        practical_bullets.extend(p.get("bullets") or [])
+    for e in experience_list:
+        practical_bullets.extend(e.get("bullets") or [])
+    practical_str = " ".join(practical_bullets).lower()
+
+    for s in matched_skills:
+        s_norm = s.lower()
+        # If it was declared in skills but not mentioned in practical bullets
+        if re.search(r'\b' + re.escape(s_norm) + r'\b', declared_skills_text.lower()):
+            if not re.search(r'\b' + re.escape(s_norm) + r'\b', practical_str):
+                unsupported_skills.append(s)
 
     pref_skills = job_requirements.get("preferred_skills") or []
     for p in pref_skills:

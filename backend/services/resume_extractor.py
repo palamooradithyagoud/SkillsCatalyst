@@ -49,6 +49,8 @@ class ExtractionReport(BaseModel):
     char_count: int = Field(default=0, description="Total extracted non-whitespace characters")
     warnings: List[str] = Field(default_factory=list, description="List of extraction caveats or warnings")
     extraction_quality: float = Field(default=100.0, description="Measurable extraction quality score (0-100)")
+    hyperlinks: List[Dict[str, str]] = Field(default_factory=list, description="Extracted hyperlinks with anchor and URL")
+    extraction_confidence: float = Field(default=1.0, description="Confidence of reading order and layout resolution (0.0-1.0)")
 
 
 # ---------------------------------------------------------------------------
@@ -85,11 +87,19 @@ def clean_extracted_text(text: str) -> str:
 # Advanced PDF Extraction (Column-Aware Block Sorting)
 # ---------------------------------------------------------------------------
 
-def _sort_page_blocks_by_layout(blocks: List[Tuple], page_width: float, page_height: float) -> Tuple[List[str], int]:
+class LayoutResult(tuple):
+    """2-tuple (sorted_texts, detected_columns) with optional confidence attribute for backward compatibility."""
+    def __new__(cls, texts: List[str], cols: int, confidence: float = 1.0):
+        inst = super().__new__(cls, (texts, cols))
+        inst.confidence = confidence
+        return inst
+
+
+def _sort_page_blocks_by_layout(blocks: List[Tuple], page_width: float, page_height: float) -> LayoutResult:
     """
-    Sorts PyMuPDF blocks by dynamic gutter detection to preserve natural reading order
+    Sorts PyMuPDF blocks by dynamic vertical band & gutter detection to preserve natural reading order
     across single-column, symmetric 2-column, asymmetric sidebar (30/70 or 70/30),
-    and 3-column layouts.
+    3-column layouts, and pages with mid-page full-width spanners (BUG 6 fix).
     Returns (sorted_block_texts, detected_columns).
 
     Block format in fitz: (x0, y0, x1, y1, text, block_no, block_type)
@@ -97,39 +107,43 @@ def _sort_page_blocks_by_layout(blocks: List[Tuple], page_width: float, page_hei
     """
     text_blocks = [b for b in blocks if len(b) >= 7 and b[6] == 0 and b[4].strip()]
     if not text_blocks:
-        return [], 1
+        return LayoutResult([], 1, 1.0)
 
     top_threshold = page_height * 0.35
     bottom_threshold = page_height * 0.82
 
     headers = []
     footers = []
-    body_blocks = []
+    mid_spanners = []
+    column_candidates = []
 
     for b in text_blocks:
         x0, y0, x1, y1 = b[0], b[1], b[2], b[3]
         width_ratio = (x1 - x0) / max(page_width, 1.0)
-        # Full-width spanning blocks or blocks restricted to top margin band (y1 <= 80)
         is_full_width_header = (width_ratio > 0.65 and y1 <= top_threshold)
         is_top_margin_header = (y1 <= min(80.0, page_height * 0.12) and (x1 - x0) > 80)
+        is_spanning_element = (width_ratio > 0.70) or (x0 <= page_width * 0.16 and x1 >= page_width * 0.75)
 
         if is_full_width_header or is_top_margin_header:
             headers.append(b)
         elif width_ratio > 0.65 and y0 >= bottom_threshold:
             footers.append(b)
+        elif is_spanning_element:
+            # Mid-page full-width spanner (e.g. section title across columns)
+            mid_spanners.append(b)
         else:
-            body_blocks.append(b)
+            column_candidates.append(b)
 
-    if len(body_blocks) < 3:
+    if len(column_candidates) < 2:
         text_blocks.sort(key=lambda b: (b[1], b[0]))
-        return [b[4].strip() for b in text_blocks if b[4].strip()], 1
+        return LayoutResult([b[4].strip() for b in text_blocks if b[4].strip()], 1, 1.0)
 
-    # Project horizontal intervals of body blocks onto 1pt bins to detect empty vertical gutters
+    # Project horizontal intervals of column_candidates onto 1pt bins to detect empty vertical gutters
     start_x = int(page_width * 0.18)
     end_x = int(page_width * 0.82)
     bins = [0] * int(page_width + 10)
 
-    for b in body_blocks:
+    for b in column_candidates:
         x0, x1 = int(max(0, b[0])), int(min(page_width - 1, b[2]))
         for i in range(x0, x1 + 1):
             bins[i] += 1
@@ -151,48 +165,69 @@ def _sort_page_blocks_by_layout(blocks: List[Tuple], page_width: float, page_hei
     if cur_start is not None and (end_x - cur_start) >= min_gutter_width:
         gutters.append((cur_start + end_x) / 2.0)
 
+    detected_cols = 1
+    confidence = 1.0
+    if len(gutters) == 1:
+        detected_cols = 2
+        confidence = 0.95
+    elif len(gutters) >= 2:
+        detected_cols = 3
+        confidence = 0.90
+
     headers.sort(key=lambda b: (b[1], b[0]))
     footers.sort(key=lambda b: (b[1], b[0]))
+    mid_spanners.sort(key=lambda b: (b[1], b[0]))
 
-    # Case A: 1 Gutter -> 2 Columns (Symmetric 50/50 OR Asymmetric Sidebar 30/70, 70/30)
-    if len(gutters) == 1:
-        split_x = gutters[0]
-        col1 = [b for b in body_blocks if b[2] <= split_x + 8]
-        col2 = [b for b in body_blocks if b[0] >= split_x - 8]
-        spanners = [b for b in body_blocks if b not in col1 and b not in col2]
+    # Order blocks by vertical bands to preserve reading order around mid-page spanners
+    ordered = []
+    ordered.extend(headers)
 
-        if len(col1) >= 2 and len(col2) >= 2:
-            col1.sort(key=lambda b: (b[1], b[0]))
-            col2.sort(key=lambda b: (b[1], b[0]))
-            spanners.sort(key=lambda b: (b[1], b[0]))
-            ordered = headers + col1 + col2 + spanners + footers
-            return [b[4].strip() for b in ordered if b[4].strip()], 2
+    def _sort_band(band_blocks: List[Tuple]) -> List[Tuple]:
+        if not band_blocks:
+            return []
+        if detected_cols == 2:
+            split_x = gutters[0]
+            col1 = sorted([b for b in band_blocks if b[2] <= split_x + 8], key=lambda b: (b[1], b[0]))
+            col2 = sorted([b for b in band_blocks if b[0] >= split_x - 8], key=lambda b: (b[1], b[0]))
+            spanners = sorted([b for b in band_blocks if b not in col1 and b not in col2], key=lambda b: (b[1], b[0]))
+            return col1 + col2 + spanners
+        elif detected_cols == 3:
+            g1, g2 = gutters[0], gutters[1]
+            col1 = sorted([b for b in band_blocks if b[2] <= g1 + 8], key=lambda b: (b[1], b[0]))
+            col2 = sorted([b for b in band_blocks if b[0] >= g1 - 8 and b[2] <= g2 + 8], key=lambda b: (b[1], b[0]))
+            col3 = sorted([b for b in band_blocks if b[0] >= g2 - 8], key=lambda b: (b[1], b[0]))
+            spanners = sorted([b for b in band_blocks if b not in col1 and b not in col2 and b not in col3], key=lambda b: (b[1], b[0]))
+            return col1 + col2 + col3 + spanners
+        return sorted(band_blocks, key=lambda b: (b[1], b[0]))
 
-    # Case B: 2 Gutters -> 3 Columns
-    elif len(gutters) >= 2:
-        g1, g2 = gutters[0], gutters[1]
-        col1 = [b for b in body_blocks if b[2] <= g1 + 8]
-        col2 = [b for b in body_blocks if b[0] >= g1 - 8 and b[2] <= g2 + 8]
-        col3 = [b for b in body_blocks if b[0] >= g2 - 8]
-        spanners = [b for b in body_blocks if b not in col1 and b not in col2 and b not in col3]
+    last_y = 0.0 if not headers else max(h[3] for h in headers)
 
-        if len(col1) >= 1 and len(col2) >= 1 and len(col3) >= 1:
-            col1.sort(key=lambda b: (b[1], b[0]))
-            col2.sort(key=lambda b: (b[1], b[0]))
-            col3.sort(key=lambda b: (b[1], b[0]))
-            spanners.sort(key=lambda b: (b[1], b[0]))
-            ordered = headers + col1 + col2 + col3 + spanners + footers
-            return [b[4].strip() for b in ordered if b[4].strip()], 3
+    for spanner in mid_spanners:
+        s_top = spanner[1]
+        band_blocks = [b for b in column_candidates if b[1] >= last_y - 8 and b[3] <= s_top + 8]
+        ordered.extend(_sort_band(band_blocks))
+        ordered.append(spanner)
+        last_y = spanner[3]
 
-    # Case C: Standard Single Column reading order
-    text_blocks.sort(key=lambda b: (b[1], b[0]))
-    return [b[4].strip() for b in text_blocks if b[4].strip()], 1
+    bottom_y = page_height if not footers else min(f[1] for f in footers)
+    trailing_blocks = [b for b in column_candidates if b[1] >= last_y - 8 and b[3] <= bottom_y + 8]
+    ordered.extend(_sort_band(trailing_blocks))
+    ordered.extend(footers)
+
+    # Safety: include any unassigned blocks
+    seen_ids = {id(b) for b in ordered}
+    leftovers = [b for b in text_blocks if id(b) not in seen_ids]
+    if leftovers:
+        ordered.extend(sorted(leftovers, key=lambda b: (b[1], b[0])))
+
+    return LayoutResult([b[4].strip() for b in ordered if b[4].strip()], detected_cols, confidence)
 
 
-def _extract_pdf_with_layout(content: bytes) -> Tuple[str, int, int, bool, List[str]]:
+def _extract_pdf_with_layout(content: bytes) -> Tuple[str, int, int, bool, List[str], List[Dict[str, str]], float]:
     """
-    Extracts text from PDF bytes via PyMuPDF with column layout detection and scan detection.
-    Returns: (text, detected_columns, page_count, is_scanned, warnings)
+    Extracts text from PDF bytes via PyMuPDF with column layout detection,
+    hyperlink extraction (BUG 5), and scan/OCR detection (Part 9).
+    Returns: (text, detected_columns, page_count, is_scanned, warnings, hyperlinks, confidence)
     """
     if not HAVE_FITZ or fitz is None:
         raise ValueError("PyMuPDF (fitz) is not installed.")
@@ -211,10 +246,13 @@ def _extract_pdf_with_layout(content: bytes) -> Tuple[str, int, int, bool, List[
         raise ValueError("PDF document has 0 pages.")
 
     all_page_texts: List[str] = []
+    all_hyperlinks: List[Dict[str, str]] = []
+    seen_uris: Set[str] = set()
     max_columns_detected = 1
     total_images = 0
     scanned_pages_count = 0
     warnings: List[str] = []
+    overall_confidence = 1.0
 
     for page_num in range(page_count):
         page = doc.load_page(page_num)
@@ -223,17 +261,52 @@ def _extract_pdf_with_layout(content: bytes) -> Tuple[str, int, int, bool, List[
         image_list = page.get_images()
         total_images += len(image_list)
 
+        # 1. Hyperlink Extraction (BUG 5 fix)
+        try:
+            links = page.get_links()
+            for l in links:
+                uri = l.get("uri", "").strip()
+                if uri and (uri.startswith("http://") or uri.startswith("https://") or uri.startswith("mailto:")):
+                    if uri not in seen_uris:
+                        seen_uris.add(uri)
+                        anchor = ""
+                        try:
+                            anchor_rect = fitz.Rect(l["from"])
+                            anchor = page.get_text("text", clip=anchor_rect).strip()
+                        except Exception:
+                            pass
+                        all_hyperlinks.append({"uri": uri, "anchor": anchor or "Link"})
+        except Exception as link_err:
+            logger.debug(f"Could not extract links from page {page_num}: {link_err}")
+
+        # 2. Block layout sorting (BUG 6 fix)
         raw_blocks = page.get_text("blocks")
-        sorted_texts, col_count = _sort_page_blocks_by_layout(raw_blocks, page_width, page_height)
+        layout_res = _sort_page_blocks_by_layout(raw_blocks, page_width, page_height)
+        sorted_texts, col_count = layout_res
+        conf = getattr(layout_res, "confidence", 1.0)
         if col_count > max_columns_detected:
             max_columns_detected = col_count
+        if conf < overall_confidence:
+            overall_confidence = conf
 
         page_str = "\n\n".join(sorted_texts).strip()
 
-        # Scanned page detection heuristic:
-        # Has images, but extracted fewer than 50 characters of machine text
+        # 3. Scanned Page Detection & OCR Fallback (Part 9)
         if len(image_list) > 0 and len(page_str) < 50:
-            scanned_pages_count += 1
+            # Try OCR if PyMuPDF OCR / Tesseract is available
+            ocr_text = ""
+            try:
+                textpage_ocr = page.get_textpage_ocr(language='eng')
+                if textpage_ocr:
+                    ocr_text = textpage_ocr.extractText().strip()
+            except Exception:
+                ocr_text = ""
+
+            if ocr_text and len(ocr_text) > 50:
+                page_str = ocr_text
+                warnings.append(f"Page {page_num + 1} was extracted via Optical Character Recognition (OCR).")
+            else:
+                scanned_pages_count += 1
 
         if page_str:
             all_page_texts.append(page_str)
@@ -245,12 +318,23 @@ def _extract_pdf_with_layout(content: bytes) -> Tuple[str, int, int, bool, List[
         (scanned_pages_count > 0 and (scanned_pages_count == page_count or len(full_text) < 100))
         or (total_images > 0 and len(full_text) < 100)
     )
+
+    # Append any important extracted hyperlinks not present in plain text (e.g. LinkedIn, GitHub)
+    if all_hyperlinks:
+        unmentioned_links = [
+            h for h in all_hyperlinks
+            if h["uri"] not in full_text and any(site in h["uri"].lower() for site in ["linkedin.com", "github.com", "portfolio", "gitlab.com", "http"])
+        ]
+        if unmentioned_links:
+            links_block = "\n\n## Contact Links\n" + "\n".join([f"- {h['anchor']}: {h['uri']}" for h in unmentioned_links])
+            full_text = full_text + links_block
+
     if is_scanned:
         warnings.append("Document appears to be a scanned image. Extracted text may be incomplete or missing.")
     elif max_columns_detected > 1:
-        warnings.append(f"Detected {max_columns_detected}-column layout. Text reading order has been normalized.")
+        warnings.append(f"Detected {max_columns_detected}-column layout. Text reading order has been normalized with regional band sorting.")
 
-    return full_text, max_columns_detected, page_count, is_scanned, warnings
+    return full_text, max_columns_detected, page_count, is_scanned, warnings, all_hyperlinks, overall_confidence
 
 
 def _extract_pdf_pypdf_fallback(content: bytes) -> Tuple[str, int, int, bool, List[str]]:
@@ -427,13 +511,16 @@ def extract_document(content: bytes, filename: str) -> ExtractionReport:
     is_scanned = False
     warnings: List[str] = []
     file_type = "unknown"
+    hyperlinks: List[Dict[str, str]] = []
+    confidence = 1.0
 
     if filename_lower.endswith(".pdf"):
         file_type = "pdf"
         if HAVE_FITZ:
-            raw_text, detected_cols, page_count, is_scanned, warnings = _extract_pdf_with_layout(content)
+            raw_text, detected_cols, page_count, is_scanned, warnings, hyperlinks, confidence = _extract_pdf_with_layout(content)
         else:
             raw_text, detected_cols, page_count, is_scanned, warnings = _extract_pdf_pypdf_fallback(content)
+            confidence = 0.85
     elif filename_lower.endswith((".docx", ".doc")):
         file_type = "docx"
         raw_text, detected_cols, page_count, is_scanned, warnings = _extract_docx_structured(content)
@@ -471,6 +558,8 @@ def extract_document(content: bytes, filename: str) -> ExtractionReport:
         char_count=len(cleaned_text),
         warnings=warnings,
         extraction_quality=quality,
+        hyperlinks=hyperlinks,
+        extraction_confidence=confidence,
     )
 
 

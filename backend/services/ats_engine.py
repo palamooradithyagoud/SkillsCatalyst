@@ -56,6 +56,7 @@ class ATSAnalysisReport(BaseModel):
     contact_information: ContactInformation
     detected_sections: List[str] = Field(default_factory=list)
     missing_sections: List[str] = Field(default_factory=list)
+    empty_sections: List[str] = Field(default_factory=list, description="Sections with headings but zero substantive content (anti-gaming)")
     critical_issues_count: int = 0
     warnings_count: int = 0
     good_points_count: int = 0
@@ -216,23 +217,35 @@ def extract_contact_info(text: str) -> ContactInformation:
 # Section Detection
 # ---------------------------------------------------------------------------
 
-def detect_sections(text: str) -> Tuple[List[str], List[str]]:
+class SectionDetectionResult(tuple):
+    """
+    Backward-compatible tuple (detected, missing) with empty_sections tracking.
+    """
+    def __new__(cls, detected: List[str], missing: List[str], empty_sections: Optional[List[str]] = None):
+        return super().__new__(cls, (detected, missing))
+
+    def __init__(self, detected: List[str], missing: List[str], empty_sections: Optional[List[str]] = None):
+        self.empty_sections: List[str] = empty_sections or []
+
+
+def detect_sections(text: str) -> SectionDetectionResult:
     """
     Scans the document for recognizable section headings in document appearance order.
     Handles both standalone line headings (e.g. EDUCATION) and inline colon headings (e.g. EDUCATION: ...).
-    Returns (detected_sections, missing_sections).
+    Guards against empty section heading gaming: verifies actual substantive content exists under each heading.
+    Returns SectionDetectionResult (unpacks as (detected_sections, missing_sections)).
     """
-    detected_with_index: List[Tuple[int, str]] = []
+    detected_with_index: List[Tuple[int, str, bool]] = []  # (line_idx, section_name, is_inline)
     lines = text.split("\n")
 
     for section_name, patterns in SECTION_TAXONOMY.items():
-        found = False
         for idx, line in enumerate(lines):
             line_str = line.strip().lower()
             if not line_str:
                 continue
 
             is_match = False
+            is_inline = False
             # Candidate 1: Standalone short line (< 50 chars)
             if len(line_str) <= 50:
                 clean_line = re.sub(r'^[#*\-•\s|]+|[#*\-•\s|:]+$', '', line_str).strip()
@@ -249,27 +262,47 @@ def detect_sections(text: str) -> Tuple[List[str], List[str]]:
                     for pat in patterns:
                         if re.search(rf'^{pat}$', clean_prefix, re.IGNORECASE):
                             is_match = True
+                            is_inline = True
                             break
 
             if is_match:
-                detected_with_index.append((idx, section_name))
+                detected_with_index.append((idx, section_name, is_inline))
                 break
 
     # Sort by line position to preserve true document reading order
     detected_with_index.sort(key=lambda x: x[0])
+
     seen: Set[str] = set()
     detected: List[str] = []
-    for _, s in detected_with_index:
-        if s not in seen:
-            seen.add(s)
-            detected.append(s)
+    empty_sections: List[str] = []
+
+    for i, (idx, sec_name, is_inline) in enumerate(detected_with_index):
+        if sec_name in seen:
+            continue
+        seen.add(sec_name)
+
+        # Anti-gaming check: verify substantive content under header
+        next_idx = detected_with_index[i + 1][0] if i + 1 < len(detected_with_index) else len(lines)
+        if is_inline:
+            line_after_colon = lines[idx].split(":", 1)[1] if ":" in lines[idx] else ""
+            body = " ".join(lines[idx + 1:next_idx])
+            content_text = (line_after_colon + " " + body).strip()
+        else:
+            content_text = " ".join(lines[idx + 1:next_idx]).strip()
+
+        # Alphanumeric check: heading must have at least 8 alphanumeric chars of actual content
+        alphanumeric_count = len(re.sub(r'[^a-zA-Z0-9]', '', content_text))
+        if alphanumeric_count >= 8:
+            detected.append(sec_name)
+        else:
+            empty_sections.append(sec_name)
 
     # Determine missing important sections
     # Core standard sections: EDUCATION, SKILLS, and (EXPERIENCE or PROJECTS)
     all_core = ["EDUCATION", "SKILLS", "EXPERIENCE", "PROJECTS", "SUMMARY"]
     missing = [s for s in all_core if s not in detected]
 
-    return detected, missing
+    return SectionDetectionResult(detected, missing, empty_sections)
 
 
 # ---------------------------------------------------------------------------
@@ -341,7 +374,9 @@ def evaluate_resume_ats(
     """
     findings: List[ATSFinding] = []
     contact = extract_contact_info(text)
-    detected_sections, missing_sections = detect_sections(text)
+    sec_res = detect_sections(text)
+    detected_sections, missing_sections = sec_res
+    empty_sections = getattr(sec_res, "empty_sections", [])
     struct_info = analyze_structure_and_symbols(text)
 
     # Detect career stage
@@ -474,6 +509,20 @@ def evaluate_resume_ats(
             ))
             ats_score -= 20.0
 
+    # Anti-gaming check: penalize empty section headers
+    for emp_sec in empty_sections:
+        findings.append(ATSFinding(
+            id=f"ATS-SEC-EMPTY-{emp_sec[:4]}",
+            category="sections",
+            severity="critical",
+            issue=f"Empty Section Header Detected: {emp_sec}",
+            evidence=f"Heading '{emp_sec}' was detected but contains zero substantive entries or bullet points.",
+            impact="Empty section headings are flagged by ATS parsers and recruiters as placeholders or gaming attempts.",
+            recommended_fix=f"Provide substantive accomplishment entries under '{emp_sec}' or remove the empty heading."
+        ))
+        ats_score -= 15.0
+        structure_score -= 10.0
+
     # 3. Formatting & Structural Checks
     if not struct_info["uses_bullets"]:
         findings.append(ATSFinding(
@@ -574,6 +623,7 @@ def evaluate_resume_ats(
         contact_information=contact,
         detected_sections=detected_sections,
         missing_sections=missing_sections,
+        empty_sections=empty_sections,
         critical_issues_count=crit_count,
         warnings_count=warn_count,
         good_points_count=good_count,

@@ -36,10 +36,18 @@ class KeywordAnalysisReport(BaseModel):
     missing_keywords_count: int = 0
     exact_matches_count: int = 0
     alias_matches_count: int = 0
-    keyword_match_percentage: float = 0.0
+    keyword_match_percentage: Optional[float] = None
     matched: List[KeywordItem] = Field(default_factory=list)
     missing: List[KeywordItem] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
+    evaluation_mode: str = Field(default="general_resume", description="'general_resume' | 'job_specific'")
+    job_match_status: str = Field(default="not_evaluated", description="'not_evaluated' | 'evaluated'")
+    job_match_score: Optional[float] = Field(default=None, description="Score strictly against an uploaded JD (0-100). None if no JD.")
+    keyword_optimization_score: float = Field(default=75.0, description="Dimension 2: Keyword Optimization (15%)")
+    technical_skills_relevance_score: float = Field(default=75.0, description="Dimension 3: Technical Skills Relevance (15%)")
+    keyword_stuffing_detected: bool = Field(default=False, description="Flagged if keywords are repeated unnaturally")
+    stuffed_keywords: List[str] = Field(default_factory=list, description="Keywords repeated excessively")
+    category_coverage: Dict[str, int] = Field(default_factory=dict, description="Count of verified skills per category")
 
 
 # ---------------------------------------------------------------------------
@@ -290,6 +298,97 @@ CANONICAL_KEYWORDS = [canonical for cat in TAXONOMY_DICTIONARY.values() for cano
 
 
 # ---------------------------------------------------------------------------
+# General Keyword Optimization & Skills Breadth Evaluator
+# ---------------------------------------------------------------------------
+
+def evaluate_general_keywords(
+    resume_text: str
+) -> Tuple[float, float, bool, List[str], Dict[str, int], List[KeywordItem]]:
+    """
+    Evaluates general resume technical keyword health independently of any Job Description.
+    Calculates:
+      - Dimension 2: Keyword Optimization Score (15%)
+      - Dimension 3: Technical Skills Relevance Score (15%)
+      - Repetition and keyword stuffing detection
+      - Verified category coverage
+    """
+    resume_lower = resume_text.lower()
+    cat_counts: Dict[str, int] = {
+        "languages": 0, "frameworks": 0, "databases": 0,
+        "tools": 0, "cloud": 0, "concepts": 0
+    }
+    all_matched: List[KeywordItem] = []
+    seen = set()
+
+    # 1. Identify all verified technical keywords
+    for cat_name, items in TAXONOMY_DICTIONARY.items():
+        for canonical, aliases in items.items():
+            if canonical in seen:
+                continue
+            m_type = _keyword_present_in_text(canonical, aliases, resume_lower)
+            if m_type:
+                all_matched.append(KeywordItem(name=canonical, category=cat_name, match_type=m_type))
+                cat_counts[cat_name] = cat_counts.get(cat_name, 0) + 1
+                seen.add(canonical)
+
+    # 2. Keyword Stuffing Detection (Repeated > 7 times)
+    stuffed_keywords: List[str] = []
+    stuffing_detected = False
+    for item in all_matched:
+        kw = item.name.lower()
+        # Word boundary pattern count
+        matches = len(re.findall(rf'\b{re.escape(kw)}\b', resume_lower))
+        if matches >= 8 and kw not in ["git", "c", "go"]:
+            stuffed_keywords.append(f"{item.name} ({matches}x)")
+            stuffing_detected = True
+
+    # 3. Compute Dimension 3: Technical Skills Relevance Score (0-100)
+    # Balanced evaluation across fundamental software engineering pillars:
+    # Languages (25%), Frameworks (20%), Databases (20%), Tools/Cloud (20%), Concepts (15%)
+    lang_score = min(100.0, cat_counts["languages"] * 35.0)
+    fw_score = min(100.0, cat_counts["frameworks"] * 40.0)
+    db_score = min(100.0, cat_counts["databases"] * 45.0)
+    tool_score = min(100.0, (cat_counts["tools"] + cat_counts["cloud"]) * 25.0)
+    concept_score = min(100.0, cat_counts["concepts"] * 45.0)
+
+    tech_score = round(
+        0.25 * lang_score +
+        0.20 * fw_score +
+        0.20 * db_score +
+        0.20 * tool_score +
+        0.15 * concept_score,
+        1
+    )
+
+    # 4. Compute Dimension 2: Keyword Optimization Score (0-100)
+    # Evaluates terminology depth, variety, alias normalization, and penalizes stuffing
+    total_skills = len(all_matched)
+    if total_skills == 0:
+        opt_score = 20.0
+    elif total_skills < 4:
+        opt_score = 45.0
+    elif total_skills < 8:
+        opt_score = 70.0
+    elif total_skills < 15:
+        opt_score = 88.0
+    else:
+        opt_score = 96.0
+
+    # Penalize keyword stuffing
+    if stuffing_detected:
+        opt_score = max(20.0, opt_score - (15.0 * min(3, len(stuffed_keywords))))
+
+    return (
+        round(max(0.0, min(100.0, opt_score)), 1),
+        round(max(0.0, min(100.0, tech_score)), 1),
+        stuffing_detected,
+        stuffed_keywords,
+        cat_counts,
+        all_matched,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Master Keyword Matching API
 # ---------------------------------------------------------------------------
 
@@ -299,79 +398,118 @@ def match_keywords(
     target_role: Optional[str] = "Fullstack Software Engineer",
 ) -> KeywordAnalysisReport:
     """
-    Compares resume text against job description or inferred role competencies.
-    Returns complete, deterministic KeywordAnalysisReport.
+    Compares resume text against job description when provided, or calculates
+    pure general keyword optimization & technical skill relevance (BUG 2 fix).
+    Never fabricates a job-specific match percentage when no JD is supplied.
     """
     resume_lower = resume_text.lower()
+    (
+        kw_opt_score,
+        tech_skills_score,
+        stuffing_detected,
+        stuffed_kws,
+        cat_counts,
+        general_matched,
+    ) = evaluate_general_keywords(resume_text)
 
-    # 1. Identify target keyword list
-    target_skills = []
-    if job_description and len(job_description.strip()) >= 3:
+    has_jd = bool(job_description and len(job_description.strip()) >= 20)
+
+    if has_jd:
+        # ── Mode A: Job-Specific Evaluation ──────────────────────────────────
         target_skills = extract_keywords_from_jd(job_description)
+        if not target_skills:
+            # Fallback to role inference only if JD did not contain recognized keywords
+            target_skills = infer_keywords_for_role(target_role or "Fullstack Software Engineer")
 
-    # If no target skills extracted from JD, infer from role
-    if not target_skills:
-        target_skills = infer_keywords_for_role(target_role or "Fullstack Software Engineer")
+        matched: List[KeywordItem] = []
+        missing: List[KeywordItem] = []
 
-    # 2. Check each target skill in resume
-    matched: List[KeywordItem] = []
-    missing: List[KeywordItem] = []
+        for canonical, category in target_skills:
+            aliases = TAXONOMY_DICTIONARY.get(category, {}).get(canonical, [canonical.lower()])
+            match_type = _keyword_present_in_text(canonical, aliases, resume_lower)
 
-    for canonical, category in target_skills:
-        aliases = TAXONOMY_DICTIONARY.get(category, {}).get(canonical, [canonical.lower()])
-        match_type = _keyword_present_in_text(canonical, aliases, resume_lower)
+            if match_type:
+                matched.append(KeywordItem(name=canonical, category=category, match_type=match_type))
+            else:
+                missing.append(KeywordItem(name=canonical, category=category, match_type="missing"))
 
-        if match_type:
-            matched.append(KeywordItem(
-                name=canonical,
-                category=category,
-                match_type=match_type
-            ))
-        else:
-            missing.append(KeywordItem(
-                name=canonical,
-                category=category,
-                match_type="missing"
-            ))
+        total = len(target_skills)
+        matched_count = len(matched)
+        missing_count = len(missing)
+        pct = round((matched_count / max(total, 1)) * 100.0, 1)
 
-    total = len(target_skills)
-    matched_count = len(matched)
-    missing_count = len(missing)
+        recommendations: List[str] = []
+        if missing:
+            missing_by_cat: Dict[str, List[str]] = {}
+            for m in missing:
+                missing_by_cat.setdefault(m.category, []).append(m.name)
 
-    pct = round((matched_count / max(total, 1)) * 100.0, 1)
+            if "languages" in missing_by_cat:
+                recommendations.append(f"Target JD seeks experience with {', '.join(missing_by_cat['languages'][:3])}.")
+            if "databases" in missing_by_cat:
+                recommendations.append(f"Consider highlighting database competencies in {', '.join(missing_by_cat['databases'][:2])}.")
+            if "tools" in missing_by_cat or "cloud" in missing_by_cat:
+                tools = ", ".join((missing_by_cat.get("tools", []) + missing_by_cat.get("cloud", []))[:3])
+                recommendations.append(f"Add deployment/cloud tooling keywords ({tools}) matching the JD.")
 
-    # 3. Formulate Actionable, Grounded Recommendations
-    recommendations: List[str] = []
-    if missing:
-        # Group missing by category
-        missing_by_cat: Dict[str, List[str]] = {}
-        for m in missing:
-            missing_by_cat.setdefault(m.category, []).append(m.name)
+        if not recommendations:
+            recommendations.append("Strong keyword alignment with target requirements.")
 
-        if "languages" in missing_by_cat:
-            langs = ", ".join(missing_by_cat["languages"][:3])
-            recommendations.append(f"Consider emphasizing experience with {langs} in your projects if you have used them.")
-        if "databases" in missing_by_cat:
-            dbs = ", ".join(missing_by_cat["databases"][:2])
-            recommendations.append(f"Highlight database design experience using {dbs}.")
-        if "tools" in missing_by_cat or "cloud" in missing_by_cat:
-            tools = ", ".join((missing_by_cat.get("tools", []) + missing_by_cat.get("cloud", []))[:3])
-            recommendations.append(f"Add deployment or CI/CD tooling keywords ({tools}) to your project bullet points.")
+        exact_count = sum(1 for m in matched if m.match_type == "exact")
+        alias_count = sum(1 for m in matched if m.match_type == "alias")
 
-    if not recommendations:
-        recommendations.append("Strong keyword alignment with target requirements. Ensure all metrics in bullets are quantified.")
+        return KeywordAnalysisReport(
+            total_keywords=total,
+            matched_keywords_count=matched_count,
+            missing_keywords_count=missing_count,
+            exact_matches_count=exact_count,
+            alias_matches_count=alias_count,
+            keyword_match_percentage=pct,
+            matched=matched,
+            missing=missing,
+            recommendations=recommendations,
+            evaluation_mode="job_specific",
+            job_match_status="evaluated",
+            job_match_score=pct,
+            keyword_optimization_score=kw_opt_score,
+            technical_skills_relevance_score=tech_skills_score,
+            keyword_stuffing_detected=stuffing_detected,
+            stuffed_keywords=stuffed_kws,
+            category_coverage=cat_counts,
+        )
 
-    exact_count = sum(1 for m in matched if m.match_type == "exact")
-    alias_count = sum(1 for m in matched if m.match_type == "alias")
+    else:
+        # ── Mode B: General Resume Evaluation (No Fake JD Match!) ─────────────
+        exact_count = sum(1 for m in general_matched if m.match_type == "exact")
+        alias_count = sum(1 for m in general_matched if m.match_type == "alias")
 
-    return KeywordAnalysisReport(
-        total_keywords=total,
-        matched_keywords_count=matched_count,
-        missing_keywords_count=missing_count,
-        exact_matches_count=exact_count,
-        alias_matches_count=alias_count,
-        keyword_match_percentage=pct,
-        matched=matched,
-        missing=missing,
-        recommendations=recommendations,
-    )
+        recommendations: List[str] = []
+        if cat_counts["cloud"] == 0 and cat_counts["tools"] < 2:
+            recommendations.append("Add modern CI/CD, cloud, or containerization tooling (Docker, AWS, Git) to strengthen infrastructure skills.")
+        if cat_counts["databases"] == 0:
+            recommendations.append("Include explicit database management skills (PostgreSQL, MongoDB, Redis).")
+        if stuffing_detected:
+            recommendations.append(f"Avoid repetitive keyword stuffing ({', '.join(stuffed_kws)}). Use natural accomplishment bullets instead.")
+
+        if not recommendations:
+            recommendations.append("Well-balanced technical skills distribution across languages, frameworks, and tools.")
+
+        return KeywordAnalysisReport(
+            total_keywords=len(general_matched),
+            matched_keywords_count=len(general_matched),
+            missing_keywords_count=0,
+            exact_matches_count=exact_count,
+            alias_matches_count=alias_count,
+            keyword_match_percentage=tech_skills_score,  # Populated for backward-compatible fallback
+            matched=general_matched,
+            missing=[],
+            recommendations=recommendations,
+            evaluation_mode="general_resume",
+            job_match_status="not_evaluated",
+            job_match_score=None,  # NEVER fake a job match without a JD!
+            keyword_optimization_score=kw_opt_score,
+            technical_skills_relevance_score=tech_skills_score,
+            keyword_stuffing_detected=stuffing_detected,
+            stuffed_keywords=stuffed_kws,
+            category_coverage=cat_counts,
+        )

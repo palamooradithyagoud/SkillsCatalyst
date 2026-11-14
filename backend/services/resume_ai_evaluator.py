@@ -40,9 +40,17 @@ class AIImprovementItem(BaseModel):
 
 
 class AIEvaluationReport(BaseModel):
-    content_quality_score: float = Field(default=75.0, description="Content depth, action verbs, and impact score (0-100)")
+    content_quality_score: Optional[float] = Field(default=None, description="Content depth, action verbs, and impact score (0-100). None if evaluation failed/unavailable.")
+    evaluation_status: str = Field(default="AI_SUCCESS", description="'AI_SUCCESS' | 'AI_TIMEOUT' | 'AI_RATE_LIMITED' | 'AI_PROVIDER_ERROR' | 'AI_INVALID_RESPONSE'")
+    failure_reason: Optional[str] = Field(default=None, description="Detailed explanation if AI evaluation failed")
     fresher_potential_score: Optional[float] = None
     summary_verdict: str = Field(default="Evaluation completed.")
+    strengths: List[str] = Field(default_factory=list)
+    weaknesses: List[str] = Field(default_factory=list)
+    improvements: List[AIImprovementItem] = Field(default_factory=list)
+    rewritten_bullets: List[AIBulletRewrite] = Field(default_factory=list)
+    career_stage: str = Field(default="experienced")
+    anti_hallucination_verified: bool = Field(default=True)
     strengths: List[str] = Field(default_factory=list)
     weaknesses: List[str] = Field(default_factory=list)
     improvements: List[AIImprovementItem] = Field(default_factory=list)
@@ -206,6 +214,8 @@ def parse_structured_evaluation(raw_response: str, career_stage: str = "experien
         clean_json = re.sub(r'^```(?:json)?\s*', '', clean_json)
         clean_json = re.sub(r'\s*```$', '', clean_json)
 
+    parse_error = False
+    data = {}
     try:
         data = json.loads(clean_json)
     except json.JSONDecodeError:
@@ -216,48 +226,61 @@ def parse_structured_evaluation(raw_response: str, career_stage: str = "experien
             try:
                 data = json.loads(clean_json[start:end + 1])
             except Exception:
-                data = {}
+                parse_error = True
         else:
-            data = {}
+            parse_error = True
 
-    raw_score = data.get("content_quality_score", 75.0)
+    raw_score = data.get("content_quality_score") if isinstance(data, dict) else None
     score_val = validate_score(raw_score)
-    if score_val is None:
-        score_val = 75.0
 
-    strengths = [str(s) for s in data.get("strengths", []) if s]
-    weaknesses = [str(w) for w in data.get("weaknesses", []) if w]
+    eval_status = "AI_SUCCESS"
+    fail_reason = None
+    if parse_error:
+        eval_status = "AI_INVALID_RESPONSE"
+        fail_reason = "AI provider returned malformed non-JSON text output."
+    elif score_val is None:
+        eval_status = "AI_INVALID_RESPONSE"
+        fail_reason = "AI provider output omitted a valid content_quality_score (0-100)."
+
+    strengths = [str(s) for s in data.get("strengths", []) if s] if isinstance(data, dict) else []
+    weaknesses = [str(w) for w in data.get("weaknesses", []) if w] if isinstance(data, dict) else []
 
     improvements = []
-    for imp in data.get("improvements", []):
-        if isinstance(imp, dict):
-            improvements.append(AIImprovementItem(
-                section=str(imp.get("section", "General")),
-                issue=str(imp.get("issue", "")),
-                action=str(imp.get("action", "")),
-                priority=str(imp.get("priority", "medium")),
-            ))
+    if isinstance(data, dict):
+        for imp in data.get("improvements", []):
+            if isinstance(imp, dict):
+                improvements.append(AIImprovementItem(
+                    section=str(imp.get("section", "General")),
+                    issue=str(imp.get("issue", "")),
+                    action=str(imp.get("action", "")),
+                    priority=str(imp.get("priority", "medium")),
+                ))
 
     rewritten_bullets = []
-    for rb in data.get("rewritten_bullets", []):
-        if isinstance(rb, dict):
-            metrics = rb.get("metrics_added", [])
-            rewritten_bullets.append(AIBulletRewrite(
-                original=str(rb.get("original", "")),
-                improved=str(rb.get("improved", "")),
-                reason=str(rb.get("reason", "")),
-                metrics_added=[str(m) for m in metrics] if isinstance(metrics, list) else [],
-            ))
+    if isinstance(data, dict):
+        for rb in data.get("rewritten_bullets", []):
+            if isinstance(rb, dict):
+                metrics = rb.get("metrics_added", [])
+                rewritten_bullets.append(AIBulletRewrite(
+                    original=str(rb.get("original", "")),
+                    improved=str(rb.get("improved", "")),
+                    reason=str(rb.get("reason", "")),
+                    metrics_added=[str(m) for m in metrics] if isinstance(metrics, list) else [],
+                ))
+
+    default_verdict = "Evaluation completed." if eval_status == "AI_SUCCESS" else f"AI evaluation limited: {fail_reason}"
 
     return AIEvaluationReport(
         content_quality_score=score_val,
-        summary_verdict=str(data.get("summary_verdict", "Evaluation completed.")),
+        evaluation_status=eval_status,
+        failure_reason=fail_reason,
+        summary_verdict=str(data.get("summary_verdict", default_verdict)) if isinstance(data, dict) else default_verdict,
         strengths=strengths,
         weaknesses=weaknesses,
         improvements=improvements,
         rewritten_bullets=rewritten_bullets,
-        career_stage=str(data.get("career_stage", career_stage)),
-        anti_hallucination_verified=bool(data.get("anti_hallucination_verified", True)),
+        career_stage=str(data.get("career_stage", career_stage)) if isinstance(data, dict) else career_stage,
+        anti_hallucination_verified=bool(data.get("anti_hallucination_verified", True)) if isinstance(data, dict) else False,
     )
 
 
@@ -270,7 +293,8 @@ async def evaluate_resume_content(
 ) -> AIEvaluationReport:
     """
     Executes structured AI evaluation of resume content.
-    Returns AIEvaluationReport.
+    Returns AIEvaluationReport with explicit failure handling (BUG 1 fix).
+    Never fabricates arbitrary 70.0 or 75.0 fallback scores.
     """
     system_prompt, user_prompt = build_evaluation_prompts(
         resume_text=resume_text,
@@ -289,15 +313,29 @@ async def evaluate_resume_content(
             system_prompt=system_prompt,
         )
     except Exception as e:
-        logger.warning(f"Groq evaluation failed: {e}. Generating graceful structured fallback.")
+        err_msg = str(e).lower()
+        if "timeout" in err_msg or "deadline" in err_msg:
+            status = "AI_TIMEOUT"
+            reason = "AI evaluation provider timed out."
+        elif "rate" in err_msg or "429" in err_msg:
+            status = "AI_RATE_LIMITED"
+            reason = "AI evaluation provider rate limit exceeded."
+        else:
+            status = "AI_PROVIDER_ERROR"
+            reason = f"AI provider connection error: {e}"
+
+        logger.warning(f"Groq evaluation failed [{status}]: {reason}. Returning un-scored partial state.")
         return AIEvaluationReport(
-            content_quality_score=70.0,
-            summary_verdict="AI evaluation temporarily unavailable; deterministic ATS checks and keyword matches remain fully active.",
-            strengths=["Resume extracted and parsed successfully."],
-            weaknesses=["Detailed AI content review could not be completed at this moment."],
+            content_quality_score=None,
+            evaluation_status=status,
+            failure_reason=reason,
+            summary_verdict=f"AI content review unavailable ({reason}). Deterministic ATS and keyword checks remain fully active.",
+            strengths=["Resume document extracted and parsed successfully."],
+            weaknesses=[f"Detailed AI content review could not be completed: {reason}"],
             improvements=[],
             rewritten_bullets=[],
             career_stage=stage,
+            anti_hallucination_verified=False,
         )
 
     return parse_structured_evaluation(raw_response, career_stage=stage)

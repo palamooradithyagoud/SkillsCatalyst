@@ -9,6 +9,12 @@ import {
   KeywordAnalysisReport,
   AIEvaluationReport,
   UnifiedScoreBreakdown,
+  SkillEvidenceReport,
+  ProjectEvaluationReport,
+  EducationEvaluationReport,
+  ContentQualityReport,
+  RecruiterEvaluationReport,
+  JobMatchingReport,
   ResumeAnalysisDetail,
 } from "@/types/career";
 import { validateFile, computeStageNum } from "@/lib/career/helpers";
@@ -34,12 +40,18 @@ export function useResumeReview() {
   const [overallScore, setOverallScore] = useState<number | null>(null);
   const [scoringStatus, setScoringStatus] = useState<"scored" | "unscored" | null>(null);
 
-  // Phase 2 Structured Evaluation Artifacts
+  // Enterprise 7D & Supporting Evaluation Artifacts
   const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysisReport | null>(null);
   const [keywordAnalysis, setKeywordAnalysis] = useState<KeywordAnalysisReport | null>(null);
   const [aiEvaluation, setAiEvaluation] = useState<AIEvaluationReport | null>(null);
   const [scoreBreakdown, setScoreBreakdown] = useState<UnifiedScoreBreakdown | null>(null);
   const [careerStage, setCareerStage] = useState<string | null>(null);
+  const [skillEvidence, setSkillEvidence] = useState<SkillEvidenceReport | null>(null);
+  const [projectsEvaluation, setProjectsEvaluation] = useState<ProjectEvaluationReport | null>(null);
+  const [educationEvaluation, setEducationEvaluation] = useState<EducationEvaluationReport | null>(null);
+  const [contentQuality, setContentQuality] = useState<ContentQualityReport | null>(null);
+  const [recruiterEvaluation, setRecruiterEvaluation] = useState<RecruiterEvaluationReport | null>(null);
+  const [jobMatching, setJobMatching] = useState<JobMatchingReport | null>(null);
   const [subScores, setSubScores] = useState<{
     ats: number | null;
     skills: number | null;
@@ -79,6 +91,12 @@ export function useResumeReview() {
     setReviewText(null);
     setAtsAnalysis(null);
     setKeywordAnalysis(null);
+    setSkillEvidence(null);
+    setProjectsEvaluation(null);
+    setEducationEvaluation(null);
+    setContentQuality(null);
+    setRecruiterEvaluation(null);
+    setJobMatching(null);
     setAiEvaluation(null);
     setScoreBreakdown(null);
     setCareerStage(null);
@@ -208,6 +226,12 @@ export function useResumeReview() {
     setScoringStatus(null);
     setAtsAnalysis(null);
     setKeywordAnalysis(null);
+    setSkillEvidence(null);
+    setProjectsEvaluation(null);
+    setEducationEvaluation(null);
+    setContentQuality(null);
+    setRecruiterEvaluation(null);
+    setJobMatching(null);
     setAiEvaluation(null);
     setScoreBreakdown(null);
     setCareerStage(null);
@@ -217,11 +241,13 @@ export function useResumeReview() {
     try {
       if (uploadedFile) {
         // Phase 3 Cloud Storage & Unified Analysis Pipeline
+        const hasEdited = Boolean(editedText.trim() && editedText.trim() !== extraction?.text?.trim());
         const cloudRes = await analyzeResumeFile(uploadedFile, {
           jobDescription,
           targetRole,
           yearsExperience,
           companyType,
+          editedText: hasEdited ? editedText.trim() : undefined,
         });
 
         setSavedAnalysisId(cloudRes.id);
@@ -233,6 +259,12 @@ export function useResumeReview() {
           setReviewText(reviewData.review);
           setAtsAnalysis(reviewData.ats_analysis ?? null);
           setKeywordAnalysis(reviewData.keyword_analysis ?? null);
+          setSkillEvidence(reviewData.skill_evidence ?? null);
+          setProjectsEvaluation(reviewData.projects_evaluation ?? null);
+          setEducationEvaluation(reviewData.education_evaluation ?? null);
+          setContentQuality(reviewData.content_quality ?? null);
+          setRecruiterEvaluation(reviewData.recruiter_evaluation ?? null);
+          setJobMatching(reviewData.job_matching ?? null);
           setAiEvaluation(reviewData.ai_evaluation ?? null);
           setScoreBreakdown(reviewData.score_breakdown ?? null);
           setCareerStage(reviewData.career_stage ?? null);
@@ -320,6 +352,12 @@ export function useResumeReview() {
     setScoringStatus(result.scoring_status ?? (detail.overall_score !== null ? "scored" : "unscored"));
     setAtsAnalysis(result.ats_analysis ?? null);
     setKeywordAnalysis(result.keyword_analysis ?? null);
+    setSkillEvidence(result.skill_evidence ?? null);
+    setProjectsEvaluation(result.projects_evaluation ?? null);
+    setEducationEvaluation(result.education_evaluation ?? null);
+    setContentQuality(result.content_quality ?? null);
+    setRecruiterEvaluation(result.recruiter_evaluation ?? null);
+    setJobMatching(result.job_matching ?? null);
     setAiEvaluation(result.ai_evaluation ?? null);
     setScoreBreakdown(result.score_breakdown ?? null);
     setCareerStage(result.career_stage ?? null);
@@ -361,6 +399,12 @@ export function useResumeReview() {
     setScoringStatus(null);
     setAtsAnalysis(null);
     setKeywordAnalysis(null);
+    setSkillEvidence(null);
+    setProjectsEvaluation(null);
+    setEducationEvaluation(null);
+    setContentQuality(null);
+    setRecruiterEvaluation(null);
+    setJobMatching(null);
     setAiEvaluation(null);
     setScoreBreakdown(null);
     setCareerStage(null);
@@ -398,6 +442,12 @@ export function useResumeReview() {
     setScoringStatus,
     atsAnalysis,
     keywordAnalysis,
+    skillEvidence,
+    projectsEvaluation,
+    educationEvaluation,
+    contentQuality,
+    recruiterEvaluation,
+    jobMatching,
     aiEvaluation,
     scoreBreakdown,
     careerStage,

@@ -29,6 +29,12 @@ from backend.services.resume_scoring import (
 from backend.services.ats_engine import evaluate_resume_ats, ATSAnalysisReport
 from backend.services.keyword_matcher import match_keywords, KeywordAnalysisReport
 from backend.services.resume_ai_evaluator import evaluate_resume_content, AIEvaluationReport
+from backend.services.project_evaluator import evaluate_projects
+from backend.services.education_evaluator import evaluate_education_and_certifications
+from backend.services.content_quality_engine import evaluate_content_quality
+from backend.services.skill_evidence_engine import verify_skill_evidence
+from backend.services.recruiter_engine import evaluate_recruiter_lens
+from backend.services.job_matching_engine import evaluate_job_match
 from backend.dependencies.subscription import require_entitlement
 from backend.services.ai_mentor import (
     MentorContext,
@@ -246,10 +252,20 @@ class ResumeReviewResponse(BaseModel):
     persisted: bool = False
     career_stage: Optional[str] = None
 
-    # Phase 2 Advanced Structured Artifacts
+    # Phase 2 & Enterprise 7D Structured Artifacts
+    keyword_coverage_score: Optional[float] = None
+    technical_skills_score: Optional[float] = None
+    projects_experience_score: Optional[float] = None
+    education_certifications_score: Optional[float] = None
     extraction: Optional[Dict[str, Any]] = None
     ats_analysis: Optional[Dict[str, Any]] = None
     keyword_analysis: Optional[Dict[str, Any]] = None
+    skill_evidence: Optional[Dict[str, Any]] = None
+    projects_evaluation: Optional[Dict[str, Any]] = None
+    education_evaluation: Optional[Dict[str, Any]] = None
+    content_quality: Optional[Dict[str, Any]] = None
+    recruiter_evaluation: Optional[Dict[str, Any]] = None
+    job_matching: Optional[Dict[str, Any]] = None
     ai_evaluation: Optional[Dict[str, Any]] = None
     score_breakdown: Optional[Dict[str, Any]] = None
 
@@ -926,12 +942,33 @@ STRICT RULES:
     if reservation_id:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
 
-    # 4. Unified Transparent Score Computation
+    # 4. Enterprise 7-Dimensional & Supporting Engines Evaluation
+    skill_ev_rep = verify_skill_evidence(req.text)
+    proj_rep = evaluate_projects(req.text, career_stage=ats_rep.career_stage_detected)
+    edu_rep = evaluate_education_and_certifications(req.text)
+    content_qual_rep = evaluate_content_quality(req.text, ai_content_score=ai_rep.content_quality_score)
+    recruiter_rep = evaluate_recruiter_lens(
+        req.text,
+        target_role=target_role,
+        years_experience=years_experience,
+        ats_score=ats_rep.ats_compatibility_score,
+        demonstration_rate=skill_ev_rep.demonstration_rate,
+    )
+    job_match_rep = evaluate_job_match(
+        req.text,
+        job_description=req.job_description,
+        target_role=target_role,
+    )
+
     overall_score, score_breakdown, score_status = calculate_unified_resume_score(
         ats_compatibility_score=ats_rep.ats_compatibility_score,
-        content_quality_score=ai_rep.content_quality_score,
-        skills_match_score=kw_rep.keyword_match_percentage,
+        keyword_coverage_score=kw_rep.keyword_match_percentage,
+        technical_skills_score=skill_ev_rep.technical_skills_score,
+        projects_experience_score=proj_rep.projects_experience_score,
+        education_certifications_score=edu_rep.education_certifications_score,
+        content_quality_score=content_qual_rep.content_quality_score,
         structure_score=ats_rep.structure_score,
+        skills_match_score=kw_rep.keyword_match_percentage,
     )
     scoring_status = "scored" if overall_score is not None else "unscored"
     sanitized_filename = sanitize_resume_filename(req.filename, default="uploaded_resume.pdf")
@@ -946,7 +983,7 @@ STRICT RULES:
         "## 📊 Section-wise Scores",
         f"- ATS Compatibility: {int(ats_rep.ats_compatibility_score)}/100",
         f"- Role Alignment: {int(kw_rep.keyword_match_percentage)}/100",
-        f"- Impact: {int(ai_rep.content_quality_score)}/100",
+        f"- Impact: {int(ai_rep.content_quality_score) if ai_rep.content_quality_score is not None else int(content_qual_rep.content_quality_score)}/100",
         f"- Structure: {int(ats_rep.structure_score)}/100",
         "",
         "## ❌ Critical Issues (Top Findings)",
@@ -1067,16 +1104,26 @@ STRICT RULES:
         overall_score=overall_score,
         scoring_status=scoring_status,
         ats_compatibility_score=ats_rep.ats_compatibility_score,
-        skills_match_score=kw_rep.keyword_match_percentage,
-        experience_score=ai_rep.content_quality_score,
+        keyword_coverage_score=kw_rep.keyword_match_percentage,
+        technical_skills_score=skill_ev_rep.technical_skills_score,
+        projects_experience_score=proj_rep.projects_experience_score,
+        education_certifications_score=edu_rep.education_certifications_score,
+        content_quality_score=content_qual_rep.content_quality_score,
         structure_score=ats_rep.structure_score,
-        content_quality_score=ai_rep.content_quality_score,
+        skills_match_score=kw_rep.keyword_match_percentage,
+        experience_score=proj_rep.projects_experience_score,
         score_status=score_status,
         filename=sanitized_filename,
         persisted=persisted,
         career_stage=ai_rep.career_stage,
         ats_analysis=ats_rep.model_dump(),
         keyword_analysis=kw_rep.model_dump(),
+        skill_evidence=skill_ev_rep.model_dump(),
+        projects_evaluation=proj_rep.model_dump(),
+        education_evaluation=edu_rep.model_dump(),
+        content_quality=content_qual_rep.model_dump(),
+        recruiter_evaluation=recruiter_rep.model_dump(),
+        job_matching=job_match_rep.model_dump(),
         ai_evaluation=ai_rep.model_dump(),
         score_breakdown=score_breakdown.model_dump(),
     )

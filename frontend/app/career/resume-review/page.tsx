@@ -284,6 +284,12 @@ export default function ResumeWorkspacePage() {
     scoringStatus,
     atsAnalysis,
     keywordAnalysis,
+    skillEvidence,
+    projectsEvaluation,
+    educationEvaluation,
+    contentQuality,
+    recruiterEvaluation,
+    jobMatching,
     aiEvaluation,
     scoreBreakdown,
     careerStage,
@@ -1851,28 +1857,13 @@ export default function ResumeWorkspacePage() {
 
               {/* Configuration / Upload Form */}
               {uploadStage !== "reviewing" && uploadStage !== "done" && (
-                <div className="space-y-5">
-                  {/* Step 1: Role */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-purple-400" />
-                      1. Target Role
-                    </label>
-                    <input
-                      type="text"
-                      value={targetRole}
-                      onChange={(e) => setTargetRole(e.target.value)}
-                      placeholder="e.g. Fullstack Software Engineer, SDE-2, Backend..."
-                      className="w-full px-4 py-2.5 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Step 2: Upload Resume Dropzone */}
+                <div className="space-y-4">
+                  {/* Upload Resume Dropzone */}
                   {(uploadStage === "idle" || uploadStage === "upload_error") && (
-                    <div className="space-y-2 pt-1">
+                    <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
                         <FileText className="w-4 h-4 text-purple-400" />
-                        2. Upload Resume Document
+                        Upload Resume Document
                       </label>
                       <div
                         role="button"
@@ -2019,8 +2010,7 @@ export default function ResumeWorkspacePage() {
                     Evaluating Resume with Groq AI...
                   </h3>
                   <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                    Benchmarking keywords, structure, and recruiter signals for{" "}
-                    <span className="font-bold text-purple-400">{targetRole}</span>.
+                    Benchmarking keywords, structure, and recruiter signals.
                   </p>
                 </div>
               )}
@@ -2111,6 +2101,12 @@ export default function ResumeWorkspacePage() {
                     extraction={extraction}
                     atsAnalysis={atsAnalysis}
                     keywordAnalysis={keywordAnalysis}
+                    skillEvidence={skillEvidence}
+                    projectsEvaluation={projectsEvaluation}
+                    educationEvaluation={educationEvaluation}
+                    contentQuality={contentQuality}
+                    recruiterEvaluation={recruiterEvaluation}
+                    jobMatching={jobMatching}
                     aiEvaluation={aiEvaluation}
                     scoreBreakdown={scoreBreakdown}
                     careerStage={careerStage}

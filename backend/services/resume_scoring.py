@@ -336,49 +336,109 @@ class ScoreComponent(BaseModel):
 
 class UnifiedScoreBreakdown(BaseModel):
     overall_score: Optional[float] = None
-    ats_compatibility: ScoreComponent = Field(default_factory=ScoreComponent)
-    content_quality: ScoreComponent = Field(default_factory=ScoreComponent)
+    # 7 Enterprise Dimensions
+    ats_compatibility: ScoreComponent = Field(default_factory=ScoreComponent)          # 15% (or 25% legacy)
+    keyword_coverage: ScoreComponent = Field(default_factory=ScoreComponent)           # 15%
+    technical_skills: ScoreComponent = Field(default_factory=ScoreComponent)           # 15%
+    projects_experience: ScoreComponent = Field(default_factory=ScoreComponent)        # 20%
+    education_certifications: ScoreComponent = Field(default_factory=ScoreComponent)   # 10%
+    content_quality: ScoreComponent = Field(default_factory=ScoreComponent)           # 15% (or 30% legacy)
+    structure: ScoreComponent = Field(default_factory=ScoreComponent)                 # 10% (or 20% legacy)
+    # Backward compatibility field
     skills_match: ScoreComponent = Field(default_factory=ScoreComponent)
-    structure: ScoreComponent = Field(default_factory=ScoreComponent)
     weights_used: Dict[str, float] = Field(default_factory=dict)
-    formula: str = Field(default="0.25*ATS + 0.30*Content + 0.25*Skills + 0.20*Structure")
+    formula: str = Field(default="")
     evaluated_categories_count: int = Field(default=0)
+    total_categories_count: int = Field(default=7)
     score_status: str = Field(default="completed")
     scoring_mode: str = Field(default="complete")
     explanation: str = Field(default="")
 
 
 def calculate_unified_resume_score(
-    ats_compatibility_score: Optional[float],
-    content_quality_score: Optional[float],
-    skills_match_score: Optional[float],
-    structure_score: Optional[float],
+    ats_compatibility_score: Optional[float] = None,
+    content_quality_score: Optional[float] = None,
+    skills_match_score: Optional[float] = None,
+    structure_score: Optional[float] = None,
+    keyword_coverage_score: Optional[float] = None,
+    technical_skills_score: Optional[float] = None,
+    projects_experience_score: Optional[float] = None,
+    education_certifications_score: Optional[float] = None,
 ) -> Tuple[Optional[float], UnifiedScoreBreakdown, str]:
     """
     Computes a transparent weighted composite score from available validated categories:
+
+    Enterprise 7-Dimensional Architecture (when 7D dimensions are provided):
+      - ATS Compatibility: 15% (0.15)
+      - Keyword Match / Coverage: 15% (0.15)
+      - Technical Skills Assessment: 15% (0.15)
+      - Projects & Practical Experience: 20% (0.20)
+      - Education & Certifications: 10% (0.10)
+      - Content Quality & Achievements: 15% (0.15)
+      - Structure, Formatting & Completeness: 10% (0.10)
+      Total = 100%
+
+    Legacy 4-Dimensional Architecture (when called with legacy arguments):
       - ATS compatibility: 25% (0.25)
       - Content quality: 30% (0.30)
       - Skills and role relevance: 25% (0.25)
       - Structure and readability: 20% (0.20)
+      Total = 100%
 
     Guarantees:
       - Missing categories are NEVER assigned 0 or fake default scores.
       - Weights are renormalized strictly across available evaluated categories.
       - Returns (overall_score, UnifiedScoreBreakdown, score_status).
     """
-    base_weights = {
-        "ats_compatibility": 0.25,
-        "content_quality": 0.30,
-        "skills_match": 0.25,
-        "structure": 0.20,
-    }
+    is_7d_mode = any(
+        x is not None
+        for x in [
+            keyword_coverage_score,
+            technical_skills_score,
+            projects_experience_score,
+            education_certifications_score,
+        ]
+    )
 
-    components = {
-        "ats_compatibility": validate_score(ats_compatibility_score),
-        "content_quality": validate_score(content_quality_score),
-        "skills_match": validate_score(skills_match_score),
-        "structure": validate_score(structure_score),
-    }
+    if is_7d_mode:
+        base_weights = {
+            "ats_compatibility": 0.15,
+            "keyword_coverage": 0.15,
+            "technical_skills": 0.15,
+            "projects_experience": 0.20,
+            "education_certifications": 0.10,
+            "content_quality": 0.15,
+            "structure": 0.10,
+        }
+        components = {
+            "ats_compatibility": validate_score(ats_compatibility_score),
+            "keyword_coverage": validate_score(keyword_coverage_score),
+            "technical_skills": validate_score(technical_skills_score),
+            "projects_experience": validate_score(projects_experience_score),
+            "education_certifications": validate_score(education_certifications_score),
+            "content_quality": validate_score(content_quality_score),
+            "structure": validate_score(structure_score),
+        }
+        total_dimensions = 7
+        formula_str = (
+            "0.15*ATS + 0.15*Keyword + 0.15*TechSkills + 0.20*ProjectsExp + "
+            "0.10*Education + 0.15*Content + 0.10*Structure"
+        )
+    else:
+        base_weights = {
+            "ats_compatibility": 0.25,
+            "content_quality": 0.30,
+            "skills_match": 0.25,
+            "structure": 0.20,
+        }
+        components = {
+            "ats_compatibility": validate_score(ats_compatibility_score),
+            "content_quality": validate_score(content_quality_score),
+            "skills_match": validate_score(skills_match_score),
+            "structure": validate_score(structure_score),
+        }
+        total_dimensions = 4
+        formula_str = "0.25*ATS + 0.30*Content + 0.25*Skills + 0.20*Structure"
 
     available_keys = [k for k, v in components.items() if v is not None]
     evaluated_count = len(available_keys)
@@ -387,14 +447,20 @@ def calculate_unified_resume_score(
         return None, UnifiedScoreBreakdown(
             overall_score=None,
             evaluated_categories_count=0,
+            total_categories_count=total_dimensions,
             weights_used={},
+            formula=formula_str,
             score_status="failed",
             scoring_mode="unavailable",
             explanation="No valid categories could be evaluated.",
             ats_compatibility=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            keyword_coverage=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            technical_skills=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            projects_experience=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            education_certifications=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
             content_quality=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
-            skills_match=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
             structure=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
+            skills_match=ScoreComponent(raw_score=None, weight=0.0, weighted_score=None, included=False, reason="Unavailable"),
         ), "failed"
 
     total_available_weight = sum(base_weights[k] for k in available_keys)
@@ -407,9 +473,9 @@ def calculate_unified_resume_score(
     )
     final_score = round(composite_score, 2)
 
-    status = "completed" if evaluated_count == 4 else "partially_completed"
+    status = "completed" if evaluated_count == total_dimensions else "partially_completed"
     explanation = (
-        f"Calculated as a weighted composite of {evaluated_count} verified categories "
+        f"Calculated as a weighted composite of {evaluated_count}/{total_dimensions} verified categories "
         f"({', '.join(available_keys)}) on a 0-100 scale."
     )
 
@@ -431,17 +497,29 @@ def calculate_unified_resume_score(
             reason="Category was not evaluated or unavailable",
         )
 
+    # For backward compatibility mapping
+    skills_match_comp = (
+        _make_component("technical_skills")
+        if is_7d_mode and "technical_skills" in available_keys
+        else (_make_component("skills_match") if not is_7d_mode else _make_component("keyword_coverage"))
+    )
+
     breakdown = UnifiedScoreBreakdown(
         overall_score=final_score,
         ats_compatibility=_make_component("ats_compatibility"),
+        keyword_coverage=_make_component("keyword_coverage") if is_7d_mode else ScoreComponent(raw_score=None, weight=0.0, included=False, reason="Legacy mode"),
+        technical_skills=_make_component("technical_skills") if is_7d_mode else ScoreComponent(raw_score=None, weight=0.0, included=False, reason="Legacy mode"),
+        projects_experience=_make_component("projects_experience") if is_7d_mode else ScoreComponent(raw_score=None, weight=0.0, included=False, reason="Legacy mode"),
+        education_certifications=_make_component("education_certifications") if is_7d_mode else ScoreComponent(raw_score=None, weight=0.0, included=False, reason="Legacy mode"),
         content_quality=_make_component("content_quality"),
-        skills_match=_make_component("skills_match"),
         structure=_make_component("structure"),
-        formula="0.25*ATS + 0.30*Content + 0.25*Skills + 0.20*Structure",
+        skills_match=skills_match_comp,
+        formula=formula_str,
         evaluated_categories_count=evaluated_count,
+        total_categories_count=total_dimensions,
         weights_used=renormalized_weights,
         score_status=status,
-        scoring_mode="complete" if evaluated_count == 4 else "renormalized",
+        scoring_mode="complete" if evaluated_count == total_dimensions else "renormalized",
         explanation=explanation,
     )
 

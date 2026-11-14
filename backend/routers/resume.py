@@ -18,6 +18,12 @@ from backend.services.resume_scoring import (
 from backend.services.ats_engine import evaluate_resume_ats
 from backend.services.keyword_matcher import match_keywords
 from backend.services.resume_ai_evaluator import evaluate_resume_content
+from backend.services.project_evaluator import evaluate_projects
+from backend.services.education_evaluator import evaluate_education_and_certifications
+from backend.services.content_quality_engine import evaluate_content_quality
+from backend.services.skill_evidence_engine import verify_skill_evidence
+from backend.services.recruiter_engine import evaluate_recruiter_lens
+from backend.services.job_matching_engine import evaluate_job_match
 from backend.services.auth_service import get_current_user_id, is_valid_uuid
 from backend.services.rate_limiter import enforce_rate_limit, RATE_LIMIT_RESUME_RPM
 from backend.models.subscription import FeatureKey, EntitlementDetailDTO
@@ -231,48 +237,93 @@ def format_resume_review_markdown(
     ats_rep: Any,
     ai_rep: Any,
     kw_rep: Any,
+    skill_ev_rep: Optional[Any] = None,
+    proj_rep: Optional[Any] = None,
+    edu_rep: Optional[Any] = None,
+    content_qual_rep: Optional[Any] = None,
+    recruiter_rep: Optional[Any] = None,
+    job_match_rep: Optional[Any] = None,
 ) -> str:
-    """Constructs rich markdown review text for backwards compatibility."""
+    """Constructs rich markdown review text with 7-dimensional breakdown and recruiter feedback."""
+    stage = (
+        ai_rep.career_stage.capitalize()
+        if (ai_rep and hasattr(ai_rep, "career_stage") and ai_rep.career_stage)
+        else getattr(ats_rep, "career_stage_detected", "fresher").capitalize()
+    )
+    verdict = (
+        ai_rep.summary_verdict
+        if (ai_rep and hasattr(ai_rep, "summary_verdict") and ai_rep.summary_verdict)
+        else (
+            recruiter_rep.overall_qualitative_verdict
+            if (recruiter_rep and hasattr(recruiter_rep, "overall_qualitative_verdict"))
+            else "Comprehensive deterministic evaluation complete."
+        )
+    )
+
     review_lines = [
         "## 🧠 Overall Verdict",
         f"- Final Score: {int(overall_score) if overall_score is not None else 0}/100",
-        f"- **Career Stage Evaluated:** {ai_rep.career_stage.capitalize()}",
-        f"- {ai_rep.summary_verdict}",
+        f"- **Career Stage Evaluated:** {stage}",
+        f"- {verdict}",
         "",
-        "## 📊 Section-wise Scores",
-        f"- ATS Compatibility: {int(ats_rep.ats_compatibility_score)}/100",
-        f"- Role Alignment: {int(kw_rep.keyword_match_percentage)}/100",
-        f"- Impact: {int(ai_rep.content_quality_score)}/100",
-        f"- Structure: {int(ats_rep.structure_score)}/100",
-        "",
-        "## ❌ Critical Issues (Top Findings)",
+        "## 📊 7-Dimensional Enterprise Scoring",
+        f"- ATS Compatibility (15%): {int(ats_rep.ats_compatibility_score)}/100",
+        f"- Keyword Match / Coverage (15%): {int(kw_rep.keyword_match_percentage)}/100",
     ]
-    for finding in ats_rep.findings:
-        if finding.severity in ("critical", "warning"):
-            review_lines.append(f"- **[{finding.severity.upper()}] {finding.issue}:** {finding.impact} *Fix:* {finding.recommended_fix}")
-    if not any(f.severity in ("critical", "warning") for f in ats_rep.findings):
-        review_lines.append("- No critical ATS formatting issues detected.")
+
+    if skill_ev_rep:
+        review_lines.append(f"- Technical Skills Assessment (15%): {int(getattr(skill_ev_rep, 'technical_skills_score', 0))}/100")
+    if proj_rep:
+        review_lines.append(f"- Projects & Practical Experience (20%): {int(getattr(proj_rep, 'projects_experience_score', 0))}/100")
+    if edu_rep:
+        review_lines.append(f"- Education & Certifications (10%): {int(getattr(edu_rep, 'education_certifications_score', 0))}/100")
+    if content_qual_rep:
+        review_lines.append(f"- Content Quality & Achievements (15%): {int(getattr(content_qual_rep, 'content_quality_score', 0))}/100")
+    elif ai_rep and hasattr(ai_rep, "content_quality_score") and ai_rep.content_quality_score is not None:
+        review_lines.append(f"- Content Quality (15%): {int(ai_rep.content_quality_score)}/100")
+
+    review_lines.append(f"- Structure, Formatting & Completeness (10%): {int(ats_rep.structure_score)}/100")
+
+    if job_match_rep and getattr(job_match_rep, "job_match_status", "") == "evaluated":
+        review_lines.append(f"- **Target Job Match (Independent):** {int(getattr(job_match_rep, 'job_match_score', 0))}/100")
 
     review_lines.append("")
-    review_lines.append("## 🔧 Bullet Fixes (Before → After)")
-    for b in ai_rep.rewritten_bullets[:4]:
-        review_lines.append(f"- **Before:** {b.original}")
-        review_lines.append(f"- **After:** {b.improved}")
-        if b.reason:
-            review_lines.append(f"  *{b.reason}*")
+    review_lines.append("## ❌ Critical Issues (Top Findings)")
+    for finding in getattr(ats_rep, "findings", []):
+        if finding.severity in ("critical", "warning"):
+            review_lines.append(f"- **[{finding.severity.upper()}] {finding.issue}:** {finding.impact} *Fix:* {finding.recommended_fix}")
+    if not any(f.severity in ("critical", "warning") for f in getattr(ats_rep, "findings", [])):
+        review_lines.append("- No critical ATS formatting issues detected.")
+
+    if recruiter_rep and getattr(recruiter_rep, "recruiter_concerns", None):
+        review_lines.append("")
+        review_lines.append("## 👔 Recruiter Lens")
+        review_lines.append(f"- **First 10-Second Impression:** {recruiter_rep.first_10_second_impression}")
+        for concern in recruiter_rep.recruiter_concerns[:3]:
+            review_lines.append(f"- **Recruiter Note:** {concern}")
+
+    if ai_rep and hasattr(ai_rep, "rewritten_bullets") and ai_rep.rewritten_bullets:
+        review_lines.append("")
+        review_lines.append("## 🔧 Bullet Fixes (Before → After)")
+        for b in ai_rep.rewritten_bullets[:4]:
+            review_lines.append(f"- **Before:** {b.original}")
+            review_lines.append(f"- **After:** {b.improved}")
+            if b.reason:
+                review_lines.append(f"  *{b.reason}*")
 
     review_lines.append("")
     review_lines.append("## 📈 Missing Keywords")
-    missing_kw_names = [m.name for m in kw_rep.missing[:8]]
+    missing_kw_names = [m.name for m in getattr(kw_rep, "missing", [])[:8]]
     if missing_kw_names:
         review_lines.append(f"- Missing role keywords: {', '.join(missing_kw_names)}")
     else:
         review_lines.append("- All core target keywords detected.")
 
-    review_lines.append("")
-    review_lines.append("## 🚀 Improvement Plan")
-    for imp in ai_rep.improvements[:5]:
-        review_lines.append(f"- **{imp.section}:** {imp.action} ({imp.issue})")
+    if ai_rep and hasattr(ai_rep, "improvements") and ai_rep.improvements:
+        review_lines.append("")
+        review_lines.append("## 🚀 Improvement Plan")
+        for imp in ai_rep.improvements[:5]:
+            review_lines.append(f"- **{imp.section}:** {imp.action} ({imp.issue})")
 
     return "\n".join(review_lines)
 
@@ -397,6 +448,7 @@ async def _execute_resume_analysis_pipeline(
     current_user_id: str,
     entitlement: EntitlementDetailDTO,
     resume_series_id: Optional[str] = None,
+    edited_text: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Unified multi-stage evaluation and cloud storage pipeline:
@@ -404,9 +456,20 @@ async def _execute_resume_analysis_pipeline(
     2. Enforces quota limits and slot reservations.
     3. Resolves series membership or creates a new logical resume series.
     4. Uploads original document to private Supabase Storage 'resumes' bucket.
-    5. Performs deterministic extraction, ATS checks, keyword matching, and AI evaluation.
-    6. Persists structured record with versioning metadata in PostgreSQL.
-    7. Implements compensation rollback on storage/DB errors.
+    5. Performs deterministic extraction (or prioritizes user-edited text from the editor).
+    6. Executes the 7-Dimensional Enterprise Evaluation and 3 Supporting Engines:
+       - Dim 1: ATS Compatibility (15%)
+       - Dim 2: Keyword Coverage (15%)
+       - Dim 3: Technical Skills Assessment (15%)
+       - Dim 4: Projects & Experience (20%)
+       - Dim 5: Education & Certifications (10%)
+       - Dim 6: Content Quality & Achievements (15%)
+       - Dim 7: Structure & Flow (10%)
+       - Supporting Engine 1: Skill Evidence Verification
+       - Supporting Engine 2: Recruiter Lens Evaluation
+       - Supporting Engine 3: Decoupled Job Matching
+    7. Persists structured record with versioning metadata in PostgreSQL.
+    8. Implements compensation rollback on storage/DB errors.
     """
     if not current_user_id:
         raise HTTPException(
@@ -542,30 +605,49 @@ async def _execute_resume_analysis_pipeline(
                 detail=str(ve),
             )
 
-        # 7. ATS Engine analysis
+        # Bug 4 Fix: If edited_text is provided by frontend editor, prioritize it over raw OCR
+        used_edited_text = bool(edited_text and edited_text.strip())
+        eval_text = edited_text.strip() if used_edited_text else report.extracted_text
+
+        # 7. Dimension 1 (ATS Compatibility, 15%) & Dimension 7 (Structure, 10%)
         ats_rep = evaluate_resume_ats(
-            report.extracted_text,
+            eval_text,
             years_experience=years_experience or "1-3 years",
             detected_columns=report.detected_columns,
             extraction_quality=report.extraction_quality,
         )
 
-        # 8. Keyword Matcher
+        # 8. Dimension 2: Keyword Matcher (15%)
         kw_rep = match_keywords(
-            report.extracted_text,
+            eval_text,
             job_description=job_description or "",
             target_role=target_role or "Fullstack Software Engineer",
         )
 
-        # 9. AI Content Evaluator
+        # 9. Dimension 3 & Supporting Engine 1: Skill Evidence Engine (15%)
+        skill_ev_rep = verify_skill_evidence(eval_text)
+
+        # 10. Dimension 4: Projects & Experience Evaluator (20%)
+        proj_rep = evaluate_projects(
+            eval_text,
+            career_stage=ats_rep.career_stage_detected,
+        )
+
+        # 11. Dimension 5: Education & Certifications Evaluator (10%)
+        edu_rep = evaluate_education_and_certifications(eval_text)
+
+        # 12. Dimension 6: AI Evaluator & Content Quality Engine (15%)
+        ai_rep = None
+        raw_ai_score = None
         try:
             ai_rep = await evaluate_resume_content(
-                resume_text=report.extracted_text,
+                resume_text=eval_text,
                 target_role=target_role or "Fullstack Software Engineer",
                 years_experience=years_experience or "1-3 years",
                 company_type=company_type or "Product-Based",
                 job_description=job_description or "",
             )
+            raw_ai_score = ai_rep.content_quality_score
         except AIProviderError as prov_err:
             headers = {}
             if isinstance(prov_err, AIProviderRateLimitError) and prov_err.retry_after:
@@ -575,44 +657,93 @@ async def _execute_resume_analysis_pipeline(
                 detail={"code": prov_err.code, "message": prov_err.message},
                 headers=headers if headers else None,
             )
+        except Exception as ai_err:
+            logger.warning(f"AI content evaluation non-fatal issue: {ai_err}")
+
+        content_qual_rep = evaluate_content_quality(eval_text, ai_content_score=raw_ai_score)
+
+        # 13. Supporting Engine 2: Recruiter Lens Evaluation
+        recruiter_rep = evaluate_recruiter_lens(
+            resume_text=eval_text,
+            target_role=target_role or "Fullstack Software Engineer",
+            years_experience=years_experience or "1-3 years",
+            ats_score=ats_rep.ats_compatibility_score,
+            demonstration_rate=skill_ev_rep.demonstration_rate,
+        )
+
+        # 14. Supporting Engine 3: Decoupled Job Matching
+        job_match_rep = evaluate_job_match(
+            resume_text=eval_text,
+            job_description=job_description,
+            target_role=target_role,
+        )
 
         # Commit quota reservation
         if reservation_id:
             commit_ai_mentor_reservation(current_user_id, reservation_id)
             reservation_id = None
 
-        # 10. Unified scoring
+        # 15. Unified 7-Dimensional Scoring (100% total)
         overall_score, score_breakdown, score_status = calculate_unified_resume_score(
             ats_compatibility_score=ats_rep.ats_compatibility_score,
-            content_quality_score=ai_rep.content_quality_score,
-            skills_match_score=kw_rep.keyword_match_percentage,
+            keyword_coverage_score=kw_rep.keyword_match_percentage,
+            technical_skills_score=skill_ev_rep.technical_skills_score,
+            projects_experience_score=proj_rep.projects_experience_score,
+            education_certifications_score=edu_rep.education_certifications_score,
+            content_quality_score=content_qual_rep.content_quality_score,
             structure_score=ats_rep.structure_score,
+            skills_match_score=kw_rep.keyword_match_percentage,
         )
 
-        review_markdown = format_resume_review_markdown(overall_score, ats_rep, ai_rep, kw_rep)
+        review_markdown = format_resume_review_markdown(
+            overall_score=overall_score,
+            ats_rep=ats_rep,
+            ai_rep=ai_rep,
+            kw_rep=kw_rep,
+            skill_ev_rep=skill_ev_rep,
+            proj_rep=proj_rep,
+            edu_rep=edu_rep,
+            content_qual_rep=content_qual_rep,
+            recruiter_rep=recruiter_rep,
+            job_match_rep=job_match_rep,
+        )
 
         # Full structured payload
         analysis_result = {
             "review": review_markdown,
             "overall_score": overall_score,
             "scoring_status": "scored" if overall_score is not None else "unscored",
+            # 7 Enterprise Dimensions
             "ats_compatibility_score": ats_rep.ats_compatibility_score,
-            "skills_match_score": kw_rep.keyword_match_percentage,
-            "experience_score": ai_rep.content_quality_score,
+            "keyword_coverage_score": kw_rep.keyword_match_percentage,
+            "technical_skills_score": skill_ev_rep.technical_skills_score,
+            "projects_experience_score": proj_rep.projects_experience_score,
+            "education_certifications_score": edu_rep.education_certifications_score,
+            "content_quality_score": content_qual_rep.content_quality_score,
             "structure_score": ats_rep.structure_score,
-            "content_quality_score": ai_rep.content_quality_score,
+            # Backward-compatible fields
+            "skills_match_score": kw_rep.keyword_match_percentage,
+            "experience_score": proj_rep.projects_experience_score,
             "score_status": score_status,
             "filename": clean_filename,
-            "career_stage": ai_rep.career_stage,
+            "career_stage": ats_rep.career_stage_detected,
+            "used_edited_text": used_edited_text,
+            # Detailed Sub-Reports
             "ats_analysis": ats_rep.model_dump(),
             "keyword_analysis": kw_rep.model_dump(),
-            "ai_evaluation": ai_rep.model_dump(),
+            "skill_evidence": skill_ev_rep.model_dump(),
+            "projects_evaluation": proj_rep.model_dump(),
+            "education_evaluation": edu_rep.model_dump(),
+            "content_quality": content_qual_rep.model_dump(),
+            "recruiter_evaluation": recruiter_rep.model_dump(),
+            "job_matching": job_match_rep.model_dump(),
+            "ai_evaluation": ai_rep.model_dump() if ai_rep else None,
             "score_breakdown": score_breakdown.model_dump(),
             "extraction": report.model_dump(),
             "target_role": target_role,
         }
 
-        # 11. Persist in database
+        # 16. Persist in database
         saved_record = persist_resume_analysis(
             analysis_id=resume_id,
             user_id=current_user_id,
@@ -621,7 +752,7 @@ async def _execute_resume_analysis_pipeline(
             file_type=report.file_type,
             file_size=len(content),
             ats_score=ats_rep.ats_compatibility_score,
-            content_score=ai_rep.content_quality_score,
+            content_score=content_qual_rep.content_quality_score,
             skills_score=kw_rep.keyword_match_percentage,
             structure_score=ats_rep.structure_score,
             overall_score=overall_score,
@@ -630,8 +761,8 @@ async def _execute_resume_analysis_pipeline(
             resume_series_id=series_id,
             version_number=version_number,
             previous_analysis_id=previous_analysis_id,
-            scoring_engine_version="2.2",
-            ai_evaluator_version="2.2",
+            scoring_engine_version="3.0",
+            ai_evaluator_version="3.0",
             job_description_hash=jd_hash,
         )
 
@@ -645,9 +776,12 @@ async def _execute_resume_analysis_pipeline(
             "storage_path": storage_path,
             "overall_score": overall_score,
             "ats_score": ats_rep.ats_compatibility_score,
-            "content_score": ai_rep.content_quality_score,
+            "content_score": content_qual_rep.content_quality_score,
             "skills_score": kw_rep.keyword_match_percentage,
             "structure_score": ats_rep.structure_score,
+            "technical_skills_score": skill_ev_rep.technical_skills_score,
+            "projects_score": proj_rep.projects_experience_score,
+            "education_score": edu_rep.education_certifications_score,
             "created_at": saved_record.get("created_at") or datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "persisted": True,
             "analysis_result": analysis_result,
@@ -676,12 +810,14 @@ async def analyze_and_store_resume(
     years_experience: Optional[str] = Form("1-3 years"),
     company_type: Optional[str] = Form("Product-Based"),
     resume_series_id: Optional[str] = Form(None),
+    edited_text: Optional[str] = Form(None),
     current_user_id: str = Depends(get_current_user_id),
     entitlement: EntitlementDetailDTO = Depends(require_entitlement(FeatureKey.AI_MENTOR.value)),
 ):
     """
     Phase 3 & 4 Unified Resume Analysis Entry Point.
     Accepts an optional resume_series_id to append revisions to a logical series.
+    Accepts optional edited_text to evaluate user's manual adjustments/edits without data loss.
     """
     return await _execute_resume_analysis_pipeline(
         file=file,
@@ -692,6 +828,7 @@ async def analyze_and_store_resume(
         current_user_id=current_user_id,
         entitlement=entitlement,
         resume_series_id=resume_series_id,
+        edited_text=edited_text,
     )
 
 
