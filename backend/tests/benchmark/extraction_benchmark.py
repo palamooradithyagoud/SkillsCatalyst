@@ -21,10 +21,12 @@ Measures:
 - Scanned document warning accuracy
 """
 
+from __future__ import annotations
+
 import io
 import fitz  # PyMuPDF
 import docx  # python-docx
-from typing import Dict, List, Any, NamedTuple, Set
+from typing import Dict, List, Any, NamedTuple, Set, Tuple
 from dataclasses import dataclass, field
 
 from backend.services.resume_extractor import extract_document

@@ -9,9 +9,11 @@ Performs rule-based, deterministic analysis of resume text without relying on LL
 5. Deterministic ATS Compatibility Score & Structure Score computation (0-100).
 """
 
+from __future__ import annotations
+
 import re
 import logging
-from typing import List, Dict, Optional, Any, Set
+from typing import List, Dict, Optional, Any, Set, Tuple
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

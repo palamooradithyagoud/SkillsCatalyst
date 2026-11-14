@@ -10,9 +10,11 @@ Features:
 - Deterministic keyword match percentage calculation.
 """
 
+from __future__ import annotations
+
 import re
 import logging
-from typing import List, Dict, Optional, Set, Any
+from typing import List, Dict, Optional, Set, Any, Tuple
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
