@@ -174,7 +174,7 @@ def generate_deterministic_comparison_summary(
     # Score evaluations
     for metric, key in [
         ("Overall Score", "overall"),
-        ("ATS Compatibility Score", "ats"),
+        ("ATS Parsing & Readability Score", "ats"),
         ("Content Quality Score", "content"),
         ("Skills Match Score", "skills"),
         ("Structure Score", "structure"),

@@ -18,10 +18,10 @@ export default function StageIndicator({
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all ${
           done
-            ? "bg-purple-600 border-purple-600 text-white shadow-xs"
+            ? "bg-zinc-800 border-zinc-600 text-white shadow-xs"
             : active
-            ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-100"
-            : "bg-slate-100 border-slate-200 text-slate-400"
+            ? "bg-zinc-700 border-zinc-500 text-white shadow-xs"
+            : "bg-[#181920] border-zinc-800 text-zinc-500"
         }`}
       >
         {done ? "✓" : stage}
@@ -29,10 +29,10 @@ export default function StageIndicator({
       <span
         className={`text-xs transition-colors hidden sm:inline ${
           done
-            ? "text-purple-700 font-semibold"
+            ? "text-zinc-300 font-semibold"
             : active
-            ? "text-purple-900 font-extrabold"
-            : "text-slate-400 font-medium"
+            ? "text-white font-bold"
+            : "text-zinc-500 font-medium"
         }`}
       >
         {label}

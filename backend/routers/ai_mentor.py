@@ -847,30 +847,30 @@ EVALUATION FRAMEWORK:
 
 OUTPUT FORMAT:
 
-## 🧠 Overall Verdict
+## Executive Verdict
 - Short, direct evaluation (2–3 lines)
 - Final Score: X/10
 - Hire / No Hire / Borderline
 
-## 📊 Section-wise Scores
-- ATS Compatibility: X/10
+## Section-wise Scores
+- ATS Parsing & Readability: X/10
 - Role Alignment: X/10
 - Impact: X/10
 - Structure: X/10
 
-## ❌ Critical Issues (Top 5)
+## Critical Issues (Top 5)
 - List major problems clearly
 
-## 🔧 Bullet Fixes (Before → After)
+## Bullet Improvements (Before → After)
 - Rewrite at least 3 weak bullet points into strong, quantified versions
 
-## 📈 Missing Keywords
+## Missing Keywords
 - List important keywords missing for the target role
 
-## 🚀 Improvement Plan
+## Improvement Plan
 - Step-by-step actions to improve the resume
 
-## ✨ Optional Advanced Suggestions
+## Optional Advanced Suggestions
 - Portfolio / GitHub / certifications / projects to add
 
 ---
@@ -943,19 +943,19 @@ STRICT RULES:
         commit_ai_mentor_reservation(current_user_id, reservation_id)
 
     # 4. Enterprise 7-Dimensional & Supporting Engines Evaluation
-    skill_ev_rep = verify_skill_evidence(req.text)
-    proj_rep = evaluate_projects(req.text, career_stage=ats_rep.career_stage_detected)
-    edu_rep = evaluate_education_and_certifications(req.text)
-    content_qual_rep = evaluate_content_quality(req.text, ai_content_score=ai_rep.content_quality_score)
+    skill_ev_rep = verify_skill_evidence(resume_text)
+    proj_rep = evaluate_projects(resume_text, career_stage=ats_rep.career_stage_detected)
+    edu_rep = evaluate_education_and_certifications(resume_text)
+    content_qual_rep = evaluate_content_quality(resume_text, ai_content_score=ai_rep.content_quality_score)
     recruiter_rep = evaluate_recruiter_lens(
-        req.text,
+        resume_text,
         target_role=target_role,
-        years_experience=years_experience,
+        years_experience=years_exp,
         ats_score=ats_rep.ats_compatibility_score,
         demonstration_rate=skill_ev_rep.demonstration_rate,
     )
     job_match_rep = evaluate_job_match(
-        req.text,
+        resume_text,
         job_description=req.job_description,
         target_role=target_role,
     )
@@ -975,18 +975,18 @@ STRICT RULES:
 
     # 5. Build rich backwards-compatible markdown review text
     review_lines = [
-        "## 🧠 Overall Verdict",
+        "## Executive Verdict",
         f"- Final Score: {int(overall_score) if overall_score is not None else 0}/100",
         f"- **Career Stage Evaluated:** {ai_rep.career_stage.capitalize()}",
         f"- {ai_rep.summary_verdict}",
         "",
-        "## 📊 Section-wise Scores",
-        f"- ATS Compatibility: {int(ats_rep.ats_compatibility_score)}/100",
+        "## Section-wise Scores",
+        f"- ATS Parsing & Readability: {int(ats_rep.ats_compatibility_score)}/100",
         f"- Role Alignment: {int(kw_rep.keyword_match_percentage)}/100",
         f"- Impact: {int(ai_rep.content_quality_score) if ai_rep.content_quality_score is not None else int(content_qual_rep.content_quality_score)}/100",
         f"- Structure: {int(ats_rep.structure_score)}/100",
         "",
-        "## ❌ Critical Issues (Top Findings)",
+        "## Critical Issues (Top Findings)",
     ]
     for finding in ats_rep.findings:
         if finding.severity in ("critical", "warning"):
@@ -995,7 +995,7 @@ STRICT RULES:
         review_lines.append("- No critical ATS formatting issues detected.")
 
     review_lines.append("")
-    review_lines.append("## 🔧 Bullet Fixes (Before → After)")
+    review_lines.append("## Bullet Improvements (Before → After)")
     for b in ai_rep.rewritten_bullets[:4]:
         review_lines.append(f"- **Before:** {b.original}")
         review_lines.append(f"- **After:** {b.improved}")
@@ -1003,7 +1003,7 @@ STRICT RULES:
             review_lines.append(f"  *{b.reason}*")
 
     review_lines.append("")
-    review_lines.append("## 📈 Missing Keywords")
+    review_lines.append("## Missing Keywords")
     missing_kw_names = [m.name for m in kw_rep.missing[:8]]
     if missing_kw_names:
         review_lines.append(f"- Missing role keywords: {', '.join(missing_kw_names)}")
@@ -1011,7 +1011,7 @@ STRICT RULES:
         review_lines.append("- All core target keywords detected.")
 
     review_lines.append("")
-    review_lines.append("## 🚀 Improvement Plan")
+    review_lines.append("## Improvement Plan")
     for imp in ai_rep.improvements[:5]:
         review_lines.append(f"- **{imp.section}:** {imp.action} ({imp.issue})")
 

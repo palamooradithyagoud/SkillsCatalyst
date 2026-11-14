@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { X, Check, Sparkles, FileText, Zap, Code2, ArrowRight } from "lucide-react";
+import { X, Check, FileText, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export type ResumeTemplateId = "simple-classic" | "modern-cv" | "sb2nov" | "ultra-minimal" | "academic";
@@ -135,20 +135,20 @@ export default function TemplateSelectModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby="template-select-modal-title"
-          className="relative w-full max-w-5xl bg-[#141519] rounded-3xl shadow-2xl border border-white/10 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          className="relative w-full max-w-5xl bg-[#141519] rounded-3xl shadow-2xl border border-zinc-800 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#141519]">
+          <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-4 border-b border-zinc-800 flex items-center justify-between shrink-0 bg-[#141519]">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300 bg-purple-950/60 px-2.5 py-0.5 rounded-full border border-purple-500/30">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 bg-zinc-800 px-2.5 py-0.5 rounded-md border border-zinc-700">
                   Step 1 · Choose Layout
                 </span>
-                <span className="text-[10px] font-bold text-zinc-400">
+                <span className="text-[10px] font-medium text-zinc-400">
                   All templates are ATS Calibrated
                 </span>
               </div>
-              <h2 id="template-select-modal-title" className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
+              <h2 id="template-select-modal-title" className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
                 Select Your Resume Template
               </h2>
               <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-0.5">
@@ -184,16 +184,16 @@ export default function TemplateSelectModal({
                       onSelectTemplate(tmpl.id);
                     }
                   }}
-                  className={`group relative rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                  className={`group relative rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col p-2.5 sm:p-5 cursor-pointer text-left focus:outline-none focus:ring-1 focus:ring-zinc-600 ${
                     isSelected
-                      ? "border-purple-500 bg-purple-950/30 shadow-lg shadow-purple-600/20 ring-2 ring-purple-500/30"
-                      : "border-white/10 hover:border-purple-500/40 bg-[#18191f] hover:bg-[#1c1d24] hover:shadow-md"
+                      ? "border-zinc-500 bg-[#1a1b22] ring-1 ring-zinc-500"
+                      : "border-zinc-800 hover:border-zinc-700 bg-[#141519] hover:bg-[#181920]"
                   }`}
                 >
                   {/* Selected Indicator Badge */}
                   {isSelected && (
-                    <div className="absolute -top-3 right-4 bg-purple-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                      <Check className="w-3 h-3 stroke-[3]" />
+                    <div className="absolute -top-3 right-4 bg-zinc-800 text-white text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border border-zinc-600 shadow-sm flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[2.5]" />
                       <span>Selected</span>
                     </div>
                   )}
@@ -333,14 +333,13 @@ export default function TemplateSelectModal({
                     >
                       {tmpl.badge}
                     </span>
-                    <div className="flex items-center gap-1 text-[8.5px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200">
-                      <Zap className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-600 fill-emerald-600" />
+                    <div className="flex items-center gap-1 text-[8.5px] sm:text-[10px] font-bold text-zinc-300 bg-zinc-800 px-1.5 sm:px-2 py-0.5 rounded-full border border-zinc-700">
                       <span>{tmpl.atsScore}% ATS</span>
                     </div>
                   </div>
 
                   {/* Title & Tagline */}
-                  <h3 className="text-xs sm:text-base font-black text-white group-hover:text-purple-400 transition-colors">
+                  <h3 className="text-xs sm:text-base font-bold text-white transition-colors">
                     {tmpl.name}
                   </h3>
                   <p className="text-[10px] sm:text-xs text-zinc-400 font-medium leading-relaxed mt-0.5 sm:mt-1 line-clamp-2">
@@ -373,8 +372,8 @@ export default function TemplateSelectModal({
                     aria-label={isSelected ? `${tmpl.name} template selected` : `Use ${tmpl.name} template`}
                     className={`w-full py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
-                        : "bg-[#23242B] hover:bg-purple-950/50 text-zinc-200 hover:text-purple-300 border border-white/10"
+                        ? "bg-zinc-800 text-white border border-zinc-600 shadow-xs"
+                        : "bg-[#181920] hover:bg-zinc-800 text-zinc-300 border border-zinc-800"
                     }`}
                   >
                     <span>{isSelected ? "Selected" : "Use Template"}</span>
@@ -386,9 +385,9 @@ export default function TemplateSelectModal({
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 sm:px-8 py-4 bg-[#141519] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+          <div className="px-6 sm:px-8 py-4 bg-[#141519] border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
-              <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+              <FileText className="w-4 h-4 text-zinc-400 shrink-0" />
               <span>
                 You can switch between templates anytime while editing without losing your content.
               </span>
@@ -405,7 +404,7 @@ export default function TemplateSelectModal({
               <button
                 type="button"
                 onClick={() => onSelectTemplate(selectedTemplate)}
-                className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-xl shadow-md shadow-purple-600/30 transition-all cursor-pointer text-center flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-xl shadow-xs transition-all cursor-pointer text-center flex items-center justify-center gap-2"
               >
                 <span>Continue to Builder</span>
                 <ArrowRight className="w-3.5 h-3.5" />

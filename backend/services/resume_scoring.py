@@ -231,7 +231,7 @@ def extract_resume_scores(review_text: str) -> ResumeCategoryScores:
     # 1. Independent Category Sub-Scores Extraction
     ats_score = extract_single_category_score(
         clean_text,
-        [r"ATS\s*Compatibility", r"ATS\s*Parseability", r"ATS\s*Format", r"ATS\s*Compatibility\s*Score"]
+        [r"ATS\s*Parsing\s*(?:&|and)\s*Readability", r"ATS\s*Compatibility", r"ATS\s*Parseability", r"ATS\s*Format", r"ATS\s*Compatibility\s*Score"]
     )
     skills_score = extract_single_category_score(
         clean_text,
@@ -369,7 +369,7 @@ def calculate_unified_resume_score(
     Computes a transparent weighted composite score from available validated categories:
 
     Enterprise 7-Dimensional Architecture (when 7D dimensions are provided):
-      - ATS Compatibility: 15% (0.15)
+      - ATS Parsing & Readability: 15% (0.15)
       - Keyword Match / Coverage: 15% (0.15)
       - Technical Skills Assessment: 15% (0.15)
       - Projects & Practical Experience: 20% (0.20)
@@ -471,7 +471,7 @@ def calculate_unified_resume_score(
     composite_score = sum(
         components[k] * renormalized_weights[k] for k in available_keys
     )
-    final_score = round(composite_score, 2)
+    final_score = max(0.0, min(100.0, round(composite_score, 2)))
 
     status = "completed" if evaluated_count == total_dimensions else "partially_completed"
     explanation = (

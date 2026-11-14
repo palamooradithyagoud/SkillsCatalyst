@@ -9,7 +9,6 @@ import {
   Upload,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   RefreshCw,
   ChevronLeft,
   RotateCcw,
@@ -21,7 +20,6 @@ import {
   Plus,
   Star,
   Trash2,
-  Zap,
   Check,
   Mail,
   Phone,
@@ -501,19 +499,16 @@ export default function ResumeWorkspacePage() {
       {/* ──────────────────────────────────────────────────────────
           1. TOP HERO / BANNER CARD (Dark Charcoal Theme & Crisp White Text)
       ────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#181920] via-[#141519] to-[#111216] border border-white/10 p-4 sm:p-6 md:p-7 shadow-2xl transition-all">
-        {/* Subtle background glow */}
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
-
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#141519] border border-zinc-800 p-4 sm:p-6 md:p-7 shadow-2xl transition-all">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Left Column: Headlines & Call to Actions */}
           <div className="lg:col-span-7 space-y-3 sm:space-y-3.5">
             <div>
-              <p className="text-[10px] font-extrabold tracking-[0.18em] text-purple-400 uppercase mb-1">
+              <p className="text-[10px] font-extrabold tracking-[0.18em] text-zinc-400 uppercase mb-1">
                 BUILD. ANALYZE. IMPROVE.
               </p>
               <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-[32px] font-black text-white tracking-tight leading-tight">
-                Resumes that <span className="text-purple-400">open doors.</span>
+                Resumes that open doors.
               </h1>
               <p className="text-xs sm:text-[13px] text-zinc-300 font-medium leading-relaxed mt-1 max-w-lg">
                 Create industry-ready resumes, analyze ATS scores, fix missing keywords, and export professional PDFs in seconds.
@@ -525,7 +520,7 @@ export default function ResumeWorkspacePage() {
               <button
                 type="button"
                 onClick={handleStartCreate}
-                className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl shadow-sm shadow-purple-600/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                className="w-full sm:w-auto justify-center bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl border border-zinc-700 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create New Resume</span>
@@ -534,7 +529,7 @@ export default function ResumeWorkspacePage() {
               <button
                 type="button"
                 onClick={handleStartUpload}
-                className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl border border-white/10 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl border border-zinc-800 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               >
                 <Upload className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Upload Existing</span>
@@ -542,41 +537,41 @@ export default function ResumeWorkspacePage() {
             </div>
 
             {/* Feature Highlights Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-2 sm:pt-1.5 border-t border-white/10 sm:border-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 pt-2 sm:pt-1.5 border-t border-zinc-800 sm:border-0">
               {/* Feature 1 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
-                  <Zap className="w-3.5 h-3.5 text-purple-400 fill-purple-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-800 shadow-sm">
+                  <FileCheck className="w-3.5 h-3.5 text-zinc-300" />
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[11px] font-bold text-white leading-tight">
-                    Real-time ATS Scoring
+                    ATS Scoring
                   </h4>
                   <p className="text-[9px] text-zinc-400 font-medium truncate">
-                    See how well you match
+                    Deterministic checks
                   </p>
                 </div>
               </div>
 
               {/* Feature 2 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-800 shadow-sm">
+                  <FileBadge className="w-3.5 h-3.5 text-zinc-300" />
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[11px] font-bold text-white leading-tight">
-                    AI Suggestions
+                    Role Calibration
                   </h4>
                   <p className="text-[9px] text-zinc-400 font-medium truncate">
-                    Get role-specific improvements
+                    Domain &amp; keywords
                   </p>
                 </div>
               </div>
 
               {/* Feature 3 */}
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-purple-400 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
-                  <FileText className="w-3.5 h-3.5 text-purple-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#23242B] text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-800 shadow-sm">
+                  <FileText className="w-3.5 h-3.5 text-zinc-300" />
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[11px] font-bold text-white leading-tight">
@@ -598,14 +593,14 @@ export default function ResumeWorkspacePage() {
               <div className="absolute -top-3.5 -right-0.5 sm:-top-5 sm:right-2 flex flex-col items-end z-20 pointer-events-none">
                 <span
                   style={{ fontFamily: "var(--font-caveat), 'Caveat', cursive" }}
-                  className="text-purple-400 font-bold text-xs sm:text-base tracking-wide -rotate-6"
+                  className="text-zinc-400 font-bold text-xs sm:text-base tracking-wide -rotate-6"
                 >
                   From résumé
                   <br />
                   to opportunities
                 </span>
                 <svg
-                  className="w-5 h-4 sm:w-7 sm:h-5 text-purple-400 -rotate-12 mt-0.5 mr-0.5 sm:mr-1"
+                  className="w-5 h-4 sm:w-7 sm:h-5 text-zinc-500 -rotate-12 mt-0.5 mr-0.5 sm:mr-1"
                   viewBox="0 0 40 30"
                   fill="none"
                   stroke="currentColor"
@@ -619,9 +614,9 @@ export default function ResumeWorkspacePage() {
               </div>
 
               {/* Back Card: Realistic Resume Preview */}
-              <div className="absolute left-0 top-1 w-[195px] sm:w-[215px] bg-[#1a1b22] rounded-xl border border-white/10 p-3 shadow-xl text-white transform -rotate-1">
-                <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-                  <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+              <div className="absolute left-0 top-1 w-[195px] sm:w-[215px] bg-[#1a1b22] rounded-xl border border-zinc-800 p-3 shadow-xl text-white transform -rotate-1">
+                <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">
+                  <div className="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                     {userName.charAt(0)}
                   </div>
                   <div className="min-w-0">
@@ -655,7 +650,7 @@ export default function ResumeWorkspacePage() {
                 </div>
 
                 {/* Skeleton Education & Experience Lines */}
-                <div className="space-y-1.5 pt-1 border-t border-white/10">
+                <div className="space-y-1.5 pt-1 border-t border-zinc-800">
                   <div>
                     <span className="text-[8px] font-bold text-zinc-200">
                       Education
@@ -672,7 +667,7 @@ export default function ResumeWorkspacePage() {
               </div>
 
               {/* Front Card: Elevated Overlapping ATS Score Card */}
-              <div className="absolute right-0 bottom-0 w-[130px] sm:w-[145px] bg-[#22232a] rounded-xl border border-purple-500/30 p-2.5 shadow-2xl text-center space-y-1.5 z-10">
+              <div className="absolute right-0 bottom-0 w-[130px] sm:w-[145px] bg-[#22232a] rounded-xl border border-zinc-800 p-2.5 shadow-2xl text-center space-y-1.5 z-10">
                 <div className="text-left">
                   <span className="text-[9px] font-extrabold text-zinc-200">
                     ATS Score
@@ -692,7 +687,7 @@ export default function ResumeWorkspacePage() {
                     />
                     {/* Progress circle */}
                     <path
-                      className="text-purple-400"
+                      className="text-white"
                       strokeDasharray="92, 100"
                       strokeWidth="3.5"
                       strokeLinecap="round"
@@ -710,27 +705,27 @@ export default function ResumeWorkspacePage() {
 
                 {/* Score Rating */}
                 <div>
-                  <p className="text-[9px] font-extrabold text-purple-300">
+                  <p className="text-[9px] font-extrabold text-zinc-300">
                     Great Match
                   </p>
                 </div>
 
                 {/* Checklist */}
-                <div className="space-y-0.5 text-left pt-1 border-t border-white/10">
+                <div className="space-y-0.5 text-left pt-1 border-t border-zinc-800">
                   <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 text-zinc-300 flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
                     <span>Relevant Keywords</span>
                   </div>
                   <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 text-zinc-300 flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
                     <span>Proper Structure</span>
                   </div>
                   <div className="flex items-center gap-1 text-[8px] font-semibold text-zinc-200">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 text-zinc-300 flex items-center justify-center shrink-0">
                       <Check className="w-1.5 h-1.5 stroke-[3]" />
                     </div>
                     <span>Good Readability</span>
@@ -745,13 +740,13 @@ export default function ResumeWorkspacePage() {
       {/* ──────────────────────────────────────────────────────────
           MOBILE SEGMENTED SWITCHER (Dark Charcoal & White Text)
       ────────────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex items-center bg-[#141519] p-1 rounded-xl border border-white/10">
+      <div className="lg:hidden flex items-center bg-[#141519] p-1 rounded-xl border border-zinc-800">
         <button
           type="button"
           onClick={() => setViewMode("empty")}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode === "empty"
-              ? "bg-[#24252C] text-purple-300 shadow-xs border border-purple-500/30"
+              ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
               : "text-zinc-400 hover:text-white"
           }`}
         >
@@ -765,11 +760,11 @@ export default function ResumeWorkspacePage() {
           }}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             viewMode !== "empty"
-              ? "bg-[#24252C] text-purple-300 shadow-xs border border-purple-500/30"
+              ? "bg-zinc-800 text-white shadow-xs border border-zinc-700"
               : "text-zinc-400 hover:text-white"
           }`}
         >
-          <Zap className="w-3.5 h-3.5 text-purple-400" />
+          <FileBadge className="w-3.5 h-3.5 text-zinc-300" />
           <span>{viewMode === "create" ? "Resume Builder" : "ATS Evaluator"}</span>
         </button>
       </div>
@@ -780,7 +775,7 @@ export default function ResumeWorkspacePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
         {/* ── Left Column: "Your Resumes" Sidebar (Dark Charcoal & White Text) ── */}
         <div
-          className={`lg:col-span-4 bg-[#141519] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3.5 sm:space-y-4 ${
+          className={`lg:col-span-4 bg-[#141519] border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3.5 sm:space-y-4 ${
             viewMode !== "empty" ? "hidden lg:block" : "block"
           }`}
         >
@@ -789,7 +784,7 @@ export default function ResumeWorkspacePage() {
             <h3 className="text-sm font-extrabold text-white">
               Your Resumes
             </h3>
-            <span className="w-6 h-6 rounded-full bg-[#23242B] text-zinc-300 font-bold text-xs flex items-center justify-center border border-white/10">
+            <span className="w-6 h-6 rounded-full bg-[#23242B] text-zinc-300 font-bold text-xs flex items-center justify-center border border-zinc-800">
               {savedResumes.length}
             </span>
           </div>
@@ -799,7 +794,7 @@ export default function ResumeWorkspacePage() {
             <button
               type="button"
               onClick={handleStartCreate}
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-zinc-700 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create New Resume</span>
@@ -808,7 +803,7 @@ export default function ResumeWorkspacePage() {
             <button
               type="button"
               onClick={handleStartUpload}
-              className="w-full bg-[#1c1d24] hover:bg-[#252630] text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/10 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="w-full bg-[#1c1d24] hover:bg-[#252630] text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-zinc-800 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <Upload className="w-3.5 h-3.5 text-zinc-300" />
               <span>Upload Existing Resume</span>
@@ -819,11 +814,11 @@ export default function ResumeWorkspacePage() {
               onClick={() => setViewMode("series")}
               className={`w-full font-bold py-2.5 px-4 rounded-xl text-xs border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 ${
                 viewMode === "series" || viewMode === "growth"
-                  ? "bg-purple-950/60 text-purple-200 border-purple-500/50 ring-2 ring-purple-500/30"
-                  : "bg-[#1c1d24] hover:bg-[#252630] text-white border-white/10"
+                  ? "bg-zinc-800 text-white border-zinc-600"
+                  : "bg-[#1c1d24] hover:bg-[#252630] text-zinc-300 border-zinc-800"
               }`}
             >
-              <Layers className="w-3.5 h-3.5 text-purple-400" />
+              <Layers className="w-3.5 h-3.5 text-zinc-400" />
               <span>Resume Tracks & Series</span>
             </button>
 
@@ -832,23 +827,23 @@ export default function ResumeWorkspacePage() {
               onClick={() => setViewMode("history")}
               className={`w-full font-bold py-2.5 px-4 rounded-xl text-xs border flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 ${
                 viewMode === "history"
-                  ? "bg-purple-950/60 text-purple-200 border-purple-500/50 ring-2 ring-purple-500/30"
-                  : "bg-[#1c1d24] hover:bg-[#252630] text-white border-white/10"
+                  ? "bg-zinc-800 text-white border-zinc-600"
+                  : "bg-[#1c1d24] hover:bg-[#252630] text-zinc-300 border-zinc-800"
               }`}
             >
-              <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+              <HardDrive className="w-3.5 h-3.5 text-zinc-400" />
               <span>Cloud Analysis History</span>
             </button>
           </div>
 
           {/* Tab Filter Navigation */}
-          <div className="flex items-center gap-6 border-b border-white/10 pt-1 text-xs">
+          <div className="flex items-center gap-6 border-b border-zinc-800 pt-1 text-xs">
             <button
               type="button"
               onClick={() => setActiveTab("recent")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "recent"
-                  ? "text-purple-400 border-b-2 border-purple-500"
+                  ? "text-white border-b-2 border-white"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -859,7 +854,7 @@ export default function ResumeWorkspacePage() {
               onClick={() => setActiveTab("all")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "all"
-                  ? "text-purple-400 border-b-2 border-purple-500"
+                  ? "text-white border-b-2 border-white"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -870,7 +865,7 @@ export default function ResumeWorkspacePage() {
               onClick={() => setActiveTab("starred")}
               className={`pb-2 font-bold transition-colors cursor-pointer relative ${
                 activeTab === "starred"
-                  ? "text-purple-400 border-b-2 border-purple-500"
+                  ? "text-white border-b-2 border-white"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -883,7 +878,7 @@ export default function ResumeWorkspacePage() {
             {filteredResumes.length === 0 ? (
               /* Empty state (matches screenshot) */
               <div className="text-center py-8 space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-[#1c1d24] border border-white/10 text-zinc-400 flex items-center justify-center mx-auto shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-[#1c1d24] border border-zinc-800 text-zinc-400 flex items-center justify-center mx-auto shadow-sm">
                   <FileText className="w-6 h-6 text-zinc-400" />
                 </div>
                 <h4 className="text-xs font-extrabold text-white">
@@ -927,15 +922,15 @@ export default function ResumeWorkspacePage() {
                           }
                         }
                       }}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 focus:ring-offset-[#141519] ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-1 focus:ring-offset-[#141519] ${
                         isSelected
-                          ? "bg-purple-950/40 border-purple-500 shadow-md"
-                          : "bg-[#1a1b22] border-white/10 hover:border-purple-400/50 hover:bg-[#22232a]"
+                          ? "bg-zinc-800 border-zinc-600 shadow-md"
+                          : "bg-[#1a1b22] border-zinc-800 hover:border-zinc-700 hover:bg-[#22232a]"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className="w-8 h-8 rounded-xl bg-purple-900/60 text-purple-200 border border-purple-500/30 flex items-center justify-center shrink-0 font-bold text-xs"
+                          className="w-8 h-8 rounded-xl bg-zinc-800 text-white border border-zinc-700 flex items-center justify-center shrink-0 font-bold text-xs"
                           title={resume.atsScore !== null && resume.atsScore !== undefined ? `ATS Score: ${resume.atsScore}/100` : "Not evaluated"}
                         >
                           {resume.atsScore !== null && resume.atsScore !== undefined ? (
@@ -950,7 +945,7 @@ export default function ResumeWorkspacePage() {
                           </p>
                           <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 truncate mt-0.5">
                             {resume.templateId && (
-                              <span className="bg-purple-950/60 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase">
+                              <span className="bg-zinc-800 text-zinc-300 border border-zinc-700 px-1.5 py-0.2 rounded font-bold text-[9px] uppercase">
                                 {resume.templateId === "sb2nov"
                                   ? "SB2Nov"
                                   : resume.templateId === "modern-cv"
@@ -1001,7 +996,7 @@ export default function ResumeWorkspacePage() {
             viewMode === "create" || viewMode === "series" || viewMode === "growth"
               ? "lg:col-span-12"
               : "lg:col-span-8"
-          } bg-[#141519] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
+          } bg-[#141519] border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl min-h-[300px] sm:min-h-[460px] flex flex-col justify-center ${
             viewMode === "empty" ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -1010,12 +1005,12 @@ export default function ResumeWorkspacePage() {
           ────────────────────────────────────────────────────────── */}
           {viewMode === "empty" && (
             <div className="text-center space-y-3 sm:space-y-4 py-4 sm:py-8 max-w-md mx-auto w-full">
-              {/* Document Icon with Purple Plus Badge */}
+              {/* Document Icon with Neutral Plus Badge */}
               <div className="relative inline-block mx-auto mb-1">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#1c1d24] border border-white/10 flex items-center justify-center text-zinc-400 shadow-sm">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#1c1d24] border border-zinc-800 flex items-center justify-center text-zinc-400 shadow-sm">
                   <FileText className="w-7 h-7 sm:w-9 sm:h-9 text-zinc-400" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-md">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center shadow-md">
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                 </div>
               </div>
@@ -1035,7 +1030,7 @@ export default function ResumeWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleStartCreate}
-                  className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-md shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto justify-center bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-zinc-700 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Create Your First Resume</span>
@@ -1044,7 +1039,7 @@ export default function ResumeWorkspacePage() {
                 <button
                   type="button"
                   onClick={handleStartUpload}
-                  className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-white/10 shadow-sm flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  className="w-full sm:w-auto justify-center bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-zinc-800 shadow-sm flex items-center gap-2 transition-all cursor-pointer active:scale-95"
                 >
                   <Upload className="w-4 h-4 text-zinc-300" />
                   <span>Upload a Resume</span>
@@ -1059,7 +1054,7 @@ export default function ResumeWorkspacePage() {
           {viewMode === "create" && (
             <div className="space-y-5">
               {/* Studio Header Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1078,9 +1073,9 @@ export default function ResumeWorkspacePage() {
                       <button
                         type="button"
                         onClick={() => setIsTemplateModalOpen(true)}
-                        className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-950/60 text-purple-300 hover:bg-purple-900/60 border border-purple-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-zinc-800 text-zinc-300 hover:bg-zinc-750 border border-zinc-700 transition-colors flex items-center gap-1 cursor-pointer"
                       >
-                        <LayoutTemplate className="w-3 h-3 text-purple-400" />
+                        <LayoutTemplate className="w-3 h-3 text-zinc-400" />
                         <span>
                           {selectedTemplate === "sb2nov"
                             ? "Template: SB2Nov"
@@ -1088,21 +1083,20 @@ export default function ResumeWorkspacePage() {
                             ? "Template: Modern CV"
                             : "Template: Simple & Classic"}
                         </span>
-                        <span className="text-purple-400 font-normal">· Change</span>
+                        <span className="text-zinc-400 font-normal">· Change</span>
                       </button>
 
                       {(() => {
                         const currentResume = savedResumes.find((r) => r.id === selectedResumeId);
                         if (currentResume?.atsScore !== null && currentResume?.atsScore !== undefined) {
                           return (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-emerald-400" />
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-zinc-800 text-white border border-zinc-700 flex items-center gap-1">
                               ATS Score: {currentResume.atsScore}/100
                             </span>
                           );
                         }
                         return (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1c1d24] text-zinc-400 border border-white/10">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1c1d24] text-zinc-400 border border-zinc-800">
                             Not evaluated
                           </span>
                         );
@@ -1116,13 +1110,13 @@ export default function ResumeWorkspacePage() {
 
                 {/* Mobile View Toggle & Save Button */}
                 <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
-                  <div className="lg:hidden flex items-center bg-[#1c1d24] p-0.5 rounded-xl border border-white/10 text-xs font-bold">
+                  <div className="lg:hidden flex items-center bg-[#1c1d24] p-0.5 rounded-xl border border-zinc-800 text-xs font-bold">
                     <button
                       type="button"
                       onClick={() => setMobileBuilderTab("editor")}
                       className={`px-3 py-1.5 rounded-lg transition-all ${
                         mobileBuilderTab === "editor"
-                          ? "bg-purple-600 text-white shadow-xs"
+                          ? "bg-zinc-800 text-white shadow-xs"
                           : "text-zinc-400"
                       }`}
                     >
@@ -1133,7 +1127,7 @@ export default function ResumeWorkspacePage() {
                       onClick={() => setMobileBuilderTab("preview")}
                       className={`px-3 py-1.5 rounded-lg transition-all ${
                         mobileBuilderTab === "preview"
-                          ? "bg-purple-600 text-white shadow-xs"
+                          ? "bg-zinc-800 text-white shadow-xs"
                           : "text-zinc-400"
                       }`}
                     >
@@ -1161,16 +1155,16 @@ export default function ResumeWorkspacePage() {
                         setIsExportingPdf(false);
                       }
                     }}
-                    className="flex-1 sm:flex-none bg-[#1c1d24] hover:bg-[#23242B] text-zinc-200 hover:text-white border border-white/10 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none bg-[#1c1d24] hover:bg-[#23242B] text-zinc-200 hover:text-white border border-zinc-800 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isExportingPdf ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
                         <span>Exporting PDF...</span>
                       </>
                     ) : (
                       <>
-                        <Download className="w-3.5 h-3.5 text-purple-400" />
+                        <Download className="w-3.5 h-3.5 text-zinc-400" />
                         <span>Export as PDF</span>
                       </>
                     )}
@@ -1180,16 +1174,16 @@ export default function ResumeWorkspacePage() {
                     type="button"
                     disabled={isEvaluatingBuilderResume}
                     onClick={handleEvaluateBuilderResume}
-                    className="flex-1 sm:flex-none bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none bg-zinc-800 hover:bg-zinc-750 text-white border border-zinc-700 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isEvaluatingBuilderResume ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
                         <span>Evaluating ATS...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <FileCheck className="w-3.5 h-3.5 text-zinc-400" />
                         <span>Evaluate ATS</span>
                       </>
                     )}
@@ -1198,7 +1192,7 @@ export default function ResumeWorkspacePage() {
                   <button
                     type="button"
                     onClick={handleSaveCreatedResume}
-                    className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                    className="flex-1 sm:flex-none bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>Save Resume</span>
@@ -1215,7 +1209,7 @@ export default function ResumeWorkspacePage() {
                   }`}
                 >
                   {/* Section Switcher Tabs */}
-                  <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-white/10 text-xs">
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-zinc-800 text-xs">
                     {(
                       [
                         { id: "contact", label: "Contact" },
@@ -1231,7 +1225,7 @@ export default function ResumeWorkspacePage() {
                         onClick={() => setActiveEditorSection(tab.id)}
                         className={`px-3 py-1.5 font-bold rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
                           activeEditorSection === tab.id
-                            ? "bg-purple-600 text-white shadow-xs"
+                            ? "bg-zinc-800 text-white border border-zinc-700 shadow-xs"
                             : "text-zinc-400 hover:text-white hover:bg-[#1c1d24]"
                         }`}
                       >
@@ -1242,7 +1236,7 @@ export default function ResumeWorkspacePage() {
 
                   {/* Section 1: Contact & Personal Details */}
                   {activeEditorSection === "contact" && (
-                    <div className="space-y-3.5 bg-[#18191f] p-4 rounded-2xl border border-white/10 text-xs">
+                    <div className="space-y-3.5 bg-[#18191f] p-4 rounded-2xl border border-zinc-800 text-xs">
                       <div>
                         <label className="font-bold text-zinc-200 block mb-1">Full Name</label>
                         <input
@@ -1251,7 +1245,7 @@ export default function ResumeWorkspacePage() {
                           onChange={(e) =>
                             setResumeData({ ...resumeData, fullName: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1262,7 +1256,7 @@ export default function ResumeWorkspacePage() {
                           onChange={(e) =>
                             setResumeData({ ...resumeData, role: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1274,7 +1268,7 @@ export default function ResumeWorkspacePage() {
                             onChange={(e) =>
                               setResumeData({ ...resumeData, email: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                           />
                         </div>
                         <div>
@@ -1285,7 +1279,7 @@ export default function ResumeWorkspacePage() {
                             onChange={(e) =>
                               setResumeData({ ...resumeData, phone: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -1298,7 +1292,7 @@ export default function ResumeWorkspacePage() {
                             onChange={(e) =>
                               setResumeData({ ...resumeData, location: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                           />
                         </div>
                         <div>
@@ -1309,7 +1303,7 @@ export default function ResumeWorkspacePage() {
                             onChange={(e) =>
                               setResumeData({ ...resumeData, linkedin: e.target.value })
                             }
-                            className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                            className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -1321,7 +1315,7 @@ export default function ResumeWorkspacePage() {
                           onChange={(e) =>
                             setResumeData({ ...resumeData, github: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1332,7 +1326,7 @@ export default function ResumeWorkspacePage() {
                           onChange={(e) =>
                             setResumeData({ ...resumeData, summary: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none resize-none"
+                          className="w-full px-3.5 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none resize-none"
                         />
                       </div>
                     </div>
@@ -1344,9 +1338,9 @@ export default function ResumeWorkspacePage() {
                       {resumeData.experience.map((exp, expIdx) => (
                         <div
                           key={expIdx}
-                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5 relative"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-zinc-800 space-y-2.5 relative"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                          <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
                             <span className="font-extrabold text-white text-[11px]">
                               Position #{expIdx + 1}
                             </span>
@@ -1377,7 +1371,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].role = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                             <div>
@@ -1390,7 +1384,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].company = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1406,7 +1400,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].dates = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                             <div>
@@ -1419,7 +1413,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].location = e.target.value;
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1434,7 +1428,7 @@ export default function ResumeWorkspacePage() {
                                   updated[expIdx].bullets.push("Achieved measurable impact using modern tooling.");
                                   setResumeData({ ...resumeData, experience: updated });
                                 }}
-                                className="text-purple-400 hover:text-purple-300 font-bold text-[10px] cursor-pointer"
+                                className="text-zinc-400 hover:text-white font-bold text-[10px] cursor-pointer"
                               >
                                 + Add Bullet
                               </button>
@@ -1450,7 +1444,7 @@ export default function ResumeWorkspacePage() {
                                       updated[expIdx].bullets[bIdx] = e.target.value;
                                       setResumeData({ ...resumeData, experience: updated });
                                     }}
-                                    className="flex-1 px-2.5 py-1 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                    className="flex-1 px-2.5 py-1 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                                   />
                                   {exp.bullets.length > 1 && (
                                     <button
@@ -1491,7 +1485,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-[#181920] hover:bg-[#202128] text-zinc-300 border border-zinc-700 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Another Work Experience
                       </button>
@@ -1504,9 +1498,9 @@ export default function ResumeWorkspacePage() {
                       {resumeData.education.map((edu, eduIdx) => (
                         <div
                           key={eduIdx}
-                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-zinc-800 space-y-2.5"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                          <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
                             <span className="font-extrabold text-white text-[11px]">
                               Education #{eduIdx + 1}
                             </span>
@@ -1536,7 +1530,7 @@ export default function ResumeWorkspacePage() {
                                 updated[eduIdx].institution = e.target.value;
                                 setResumeData({ ...resumeData, education: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                             />
                           </div>
 
@@ -1550,7 +1544,7 @@ export default function ResumeWorkspacePage() {
                                 updated[eduIdx].degree = e.target.value;
                                 setResumeData({ ...resumeData, education: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                             />
                           </div>
 
@@ -1565,7 +1559,7 @@ export default function ResumeWorkspacePage() {
                                   updated[eduIdx].dates = e.target.value;
                                   setResumeData({ ...resumeData, education: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                             <div>
@@ -1578,7 +1572,7 @@ export default function ResumeWorkspacePage() {
                                   updated[eduIdx].gpa = e.target.value;
                                   setResumeData({ ...resumeData, education: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1601,7 +1595,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-[#181920] hover:bg-[#202128] text-zinc-300 border border-zinc-700 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Education
                       </button>
@@ -1614,9 +1608,9 @@ export default function ResumeWorkspacePage() {
                       {resumeData.projects.map((proj, projIdx) => (
                         <div
                           key={projIdx}
-                          className="p-3.5 bg-[#18191f] rounded-2xl border border-white/10 space-y-2.5"
+                          className="p-3.5 bg-[#18191f] rounded-2xl border border-zinc-800 space-y-2.5"
                         >
-                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                          <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
                             <span className="font-extrabold text-white text-[11px]">
                               Project #{projIdx + 1}
                             </span>
@@ -1647,7 +1641,7 @@ export default function ResumeWorkspacePage() {
                                   updated[projIdx].name = e.target.value;
                                   setResumeData({ ...resumeData, projects: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                             <div>
@@ -1660,7 +1654,7 @@ export default function ResumeWorkspacePage() {
                                   updated[projIdx].tech = e.target.value;
                                   setResumeData({ ...resumeData, projects: updated });
                                 }}
-                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                                className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1675,7 +1669,7 @@ export default function ResumeWorkspacePage() {
                                 updated[projIdx].link = e.target.value;
                                 setResumeData({ ...resumeData, projects: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                             />
                           </div>
 
@@ -1689,7 +1683,7 @@ export default function ResumeWorkspacePage() {
                                 updated[projIdx].bullets = [e.target.value];
                                 setResumeData({ ...resumeData, projects: updated });
                               }}
-                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-white/10 text-white rounded-lg text-xs focus:border-purple-500 focus:outline-none"
+                              className="w-full px-2.5 py-1.5 bg-[#1c1d24] border border-zinc-800 text-white rounded-lg text-xs focus:border-zinc-500 focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1711,7 +1705,7 @@ export default function ResumeWorkspacePage() {
                             ],
                           });
                         }}
-                        className="w-full py-2 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 rounded-xl font-bold transition-colors cursor-pointer text-center"
+                        className="w-full py-2 bg-[#181920] hover:bg-[#202128] text-zinc-300 border border-zinc-700 rounded-xl font-bold transition-colors cursor-pointer text-center"
                       >
                         + Add Project
                       </button>
@@ -1720,7 +1714,7 @@ export default function ResumeWorkspacePage() {
 
                   {/* Section 5: Skills */}
                   {activeEditorSection === "skills" && (
-                    <div className="space-y-3 bg-[#18191f] p-4 rounded-2xl border border-white/10 text-xs">
+                    <div className="space-y-3 bg-[#18191f] p-4 rounded-2xl border border-zinc-800 text-xs">
                       <div>
                         <label className="font-bold text-zinc-200 block mb-1">
                           Languages
@@ -1735,7 +1729,7 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="JavaScript, TypeScript, Python, C++, SQL..."
-                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1752,7 +1746,7 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="React, Next.js, FastAPI, Node.js, Tailwind CSS..."
-                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1769,7 +1763,7 @@ export default function ResumeWorkspacePage() {
                             })
                           }
                           placeholder="Git, Docker, PostgreSQL, Supabase, Linux, Vercel..."
-                          className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-3 py-2 bg-[#1c1d24] border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1800,7 +1794,7 @@ export default function ResumeWorkspacePage() {
               {/* Header for Upload/Scan Flow */}
               {uploadStage !== "done" ? (
                 <>
-                  <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                  <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <button
                         type="button"
@@ -1824,33 +1818,57 @@ export default function ResumeWorkspacePage() {
                   {/* Progress Steps Indicator */}
                   <div className="flex items-center justify-center gap-1.5 sm:gap-3 py-1">
                     <StageIndicator stage={1} currentStage={stageNum} label="Configure" />
-                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <div className="w-2.5 sm:w-4 h-px bg-zinc-700" />
                     <StageIndicator stage={2} currentStage={stageNum} label="Upload" />
-                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <div className="w-2.5 sm:w-4 h-px bg-zinc-700" />
                     <StageIndicator stage={3} currentStage={stageNum} label="Review" />
-                    <div className="w-2.5 sm:w-4 h-px bg-purple-500/30" />
+                    <div className="w-2.5 sm:w-4 h-px bg-zinc-700" />
                     <StageIndicator stage={4} currentStage={stageNum} label="Evaluate" />
                   </div>
                 </>
               ) : (
                 /* Results Top Navigation Bar (Mobile-fitted & Sleek) */
-                <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-white/10 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("empty")}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#18191f] hover:bg-[#23242B] border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-purple-400" />
-                    <span>Dashboard</span>
-                  </button>
+                <div className="flex flex-wrap items-center justify-between pb-3 sm:pb-4 border-b border-zinc-800 gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("empty")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#18191f] hover:bg-[#23242B] border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-zinc-400" />
+                      <span>Dashboard</span>
+                    </button>
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-white block truncate max-w-[200px] sm:max-w-xs">
+                        {extraction?.filename || "Resume Analysis"}
+                      </span>
+                    </div>
+                  </div>
 
-                  <div className="text-right min-w-0">
-                    <span className="text-xs font-bold text-white block truncate">
-                      {extraction?.filename || "Resume Analysis"}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block truncate">
-                      ATS Quality Diagnostic
-                    </span>
+                  <div className="flex items-center gap-2">
+                    {(reviewState.savedAnalysisId || selectedResumeId) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadHistorical(reviewState.savedAnalysisId || selectedResumeId!)}
+                        className="px-3 py-1.5 bg-[#1c1d24] border border-zinc-800 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+                        title="Download PDF Report"
+                      >
+                        <Download className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>Download</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetAll();
+                        setViewMode("upload");
+                      }}
+                      className="px-3 py-1.5 bg-[#1c1d24] border border-zinc-800 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+                      title="Upload and scan another resume"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>New Scan</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -1861,8 +1879,8 @@ export default function ResumeWorkspacePage() {
                   {/* Upload Resume Dropzone */}
                   {(uploadStage === "idle" || uploadStage === "upload_error") && (
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-purple-400" />
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-zinc-400" />
                         Upload Resume Document
                       </label>
                       <div
@@ -1879,13 +1897,13 @@ export default function ResumeWorkspacePage() {
                             fileInputRef.current?.click();
                           }
                         }}
-                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-600 ${
                           isDragging
-                            ? "border-purple-500 bg-purple-950/40"
-                            : "border-white/15 hover:border-purple-500/50 bg-[#18191f] hover:bg-[#1c1d24]"
+                            ? "border-zinc-500 bg-zinc-800/40"
+                            : "border-zinc-800 hover:border-zinc-600 bg-[#18191f] hover:bg-[#1c1d24]"
                         }`}
                       >
-                        <CloudUpload className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 text-purple-400" />
+                        <CloudUpload className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 text-zinc-400" />
                         <h4 className="text-xs sm:text-sm font-bold text-white">
                           {isDragging
                             ? "Drop your resume file here"
@@ -1915,9 +1933,9 @@ export default function ResumeWorkspacePage() {
 
                   {/* Uploading Progress */}
                   {(uploadStage === "uploading" || uploadStage === "extracting") && (
-                    <div className="p-5 rounded-2xl bg-[#18191f] border border-purple-500/30 space-y-3">
+                    <div className="p-5 rounded-2xl bg-[#18191f] border border-zinc-800 space-y-3">
                       <div className="flex items-center gap-3">
-                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                        <Loader2 className="w-5 h-5 text-zinc-400 animate-spin" />
                         <div>
                           <p className="text-xs font-bold text-white">
                             {uploadStage === "uploading"
@@ -1928,7 +1946,7 @@ export default function ResumeWorkspacePage() {
                       </div>
                       <div className="w-full h-2 bg-[#23242B] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-purple-600 transition-all duration-300 rounded-full"
+                          className="h-full bg-zinc-400 transition-all duration-300 rounded-full"
                           style={{
                             width:
                               uploadStage === "extracting"
@@ -1959,11 +1977,11 @@ export default function ResumeWorkspacePage() {
 
                         <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-purple-300">
+                            <span className="font-bold text-white">
                               Extracted Resume Content ({editedText.length} chars)
                             </span>
                             {extraction.detected_columns && extraction.detected_columns > 1 && (
-                              <span className="text-[10px] bg-[#23242B] text-zinc-300 px-2 py-0.5 rounded-md font-medium border border-white/10">
+                              <span className="text-[10px] bg-[#23242B] text-zinc-300 px-2 py-0.5 rounded-md font-medium border border-zinc-800">
                                 {extraction.detected_columns}-column layout detected
                               </span>
                             )}
@@ -1971,7 +1989,7 @@ export default function ResumeWorkspacePage() {
                           <button
                             type="button"
                             onClick={resetAll}
-                            className="text-xs text-purple-400 hover:text-purple-300 font-semibold cursor-pointer"
+                            className="text-xs text-zinc-400 hover:text-white font-semibold cursor-pointer"
                           >
                             Replace File
                           </button>
@@ -1980,7 +1998,7 @@ export default function ResumeWorkspacePage() {
                           rows={8}
                           value={editedText}
                           onChange={(e) => setEditedText(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#18191f] border border-white/10 rounded-xl text-xs font-mono text-zinc-200 focus:border-purple-500 focus:outline-none"
+                          className="w-full px-4 py-3 bg-[#18191f] border border-zinc-800 rounded-xl text-xs font-mono text-zinc-200 focus:border-zinc-500 focus:outline-none"
                         />
                         {uploadStage === "review_error" && errorMessage && (
                           <div className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
@@ -1992,10 +2010,9 @@ export default function ResumeWorkspacePage() {
                           type="button"
                           onClick={handleRunEvaluation}
                           disabled={!editedText.trim() || editedText.length < 50}
-                          className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl shadow-md shadow-purple-600/30 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-[0.99] transition-all"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl border border-zinc-700 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-[0.99] transition-all"
                         >
-                          <Sparkles className="w-4 h-4 text-purple-200" />
-                          <span>Evaluate Resume with Groq AI</span>
+                          <span>Run Comprehensive Resume Audit</span>
                         </button>
                       </div>
                     )}
@@ -2005,9 +2022,9 @@ export default function ResumeWorkspacePage() {
               {/* Reviewing Loading State */}
               {uploadStage === "reviewing" && (
                 <div className="text-center py-12 space-y-4">
-                  <RefreshCw className="w-10 h-10 text-purple-400 animate-spin mx-auto" />
+                  <RefreshCw className="w-8 h-8 text-zinc-400 animate-spin mx-auto" />
                   <h3 className="text-base font-bold text-white">
-                    Evaluating Resume with Groq AI...
+                    Evaluating Resume Diagnostics...
                   </h3>
                   <p className="text-xs text-zinc-400 max-w-sm mx-auto">
                     Benchmarking keywords, structure, and recruiter signals.
@@ -2018,80 +2035,6 @@ export default function ResumeWorkspacePage() {
               {/* Results View */}
               {uploadStage === "done" && reviewText && (
                 <div className="space-y-4">
-                  {reviewState.isHistorical ? (
-                    <div className="p-3.5 sm:p-4 bg-purple-950/40 border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                          <Calendar className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-white truncate">
-                            Viewing Historical Analysis: {extraction?.filename}
-                          </p>
-                          <p className="text-purple-300 text-[11px] mt-0.5">
-                            Analyzed on{" "}
-                            {reviewState.analysisCreatedAt
-                              ? new Date(reviewState.analysisCreatedAt).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                })
-                              : "Cloud Vault"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full sm:w-auto pt-1 sm:pt-0">
-                        {reviewState.savedAnalysisId && (
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadHistorical(reviewState.savedAnalysisId!)}
-                            className="px-2.5 py-2 bg-[#1c1d24] border border-white/10 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
-                          >
-                            <Download className="w-3.5 h-3.5 text-purple-400" />
-                            <span className="truncate">Download</span>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setViewMode("history")}
-                          className="px-2.5 py-2 bg-[#1c1d24] border border-white/10 text-zinc-200 hover:text-white hover:bg-[#23242B] rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
-                        >
-                          <HardDrive className="w-3.5 h-3.5 text-purple-400" />
-                          <span className="truncate">History</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            resetAll();
-                            setViewMode("upload");
-                          }}
-                          className="px-2.5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer text-xs"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span className="truncate">New Scan</span>
-                        </button>
-                      </div>
-                    </div>
-                  ) : reviewState.savedAnalysisId ? (
-                    <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl flex items-center justify-between text-xs text-emerald-300">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>
-                          <strong>Saved to Cloud Vault:</strong> Your resume and structured evaluation have been stored securely.
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("history")}
-                        className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-2 shrink-0 cursor-pointer"
-                      >
-                        View in History →
-                      </button>
-                    </div>
-                  ) : null}
-
                   <ResumeAnalysisResults
                     reviewText={reviewText}
                     overallScore={overallScore}

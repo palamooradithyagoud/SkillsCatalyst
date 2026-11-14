@@ -1,6 +1,7 @@
 import logging
 import uuid
 import datetime
+import re
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, File, UploadFile, HTTPException, status, Depends, Form, Query
 from fastapi.responses import JSONResponse, Response
@@ -261,13 +262,13 @@ def format_resume_review_markdown(
     )
 
     review_lines = [
-        "## 🧠 Overall Verdict",
+        "## Executive Verdict",
         f"- Final Score: {int(overall_score) if overall_score is not None else 0}/100",
         f"- **Career Stage Evaluated:** {stage}",
         f"- {verdict}",
         "",
-        "## 📊 7-Dimensional Enterprise Scoring",
-        f"- ATS Compatibility (15%): {int(ats_rep.ats_compatibility_score)}/100",
+        "## 7-Dimensional Enterprise Scoring",
+        f"- ATS Parsing & Readability (15%): {int(ats_rep.ats_compatibility_score)}/100",
         f"- Keyword Match / Coverage (15%): {int(kw_rep.keyword_match_percentage)}/100",
     ]
 
@@ -288,7 +289,7 @@ def format_resume_review_markdown(
         review_lines.append(f"- **Target Job Match (Independent):** {int(getattr(job_match_rep, 'job_match_score', 0))}/100")
 
     review_lines.append("")
-    review_lines.append("## ❌ Critical Issues (Top Findings)")
+    review_lines.append("## Critical Issues (Top Findings)")
     for finding in getattr(ats_rep, "findings", []):
         if finding.severity in ("critical", "warning"):
             review_lines.append(f"- **[{finding.severity.upper()}] {finding.issue}:** {finding.impact} *Fix:* {finding.recommended_fix}")
@@ -297,14 +298,14 @@ def format_resume_review_markdown(
 
     if recruiter_rep and getattr(recruiter_rep, "recruiter_concerns", None):
         review_lines.append("")
-        review_lines.append("## 👔 Recruiter Lens")
+        review_lines.append("## Recruiter Lens")
         review_lines.append(f"- **First 10-Second Impression:** {recruiter_rep.first_10_second_impression}")
         for concern in recruiter_rep.recruiter_concerns[:3]:
             review_lines.append(f"- **Recruiter Note:** {concern}")
 
     if ai_rep and hasattr(ai_rep, "rewritten_bullets") and ai_rep.rewritten_bullets:
         review_lines.append("")
-        review_lines.append("## 🔧 Bullet Fixes (Before → After)")
+        review_lines.append("## Bullet Improvements (Before → After)")
         for b in ai_rep.rewritten_bullets[:4]:
             review_lines.append(f"- **Before:** {b.original}")
             review_lines.append(f"- **After:** {b.improved}")
@@ -312,7 +313,7 @@ def format_resume_review_markdown(
                 review_lines.append(f"  *{b.reason}*")
 
     review_lines.append("")
-    review_lines.append("## 📈 Missing Keywords")
+    review_lines.append("## Missing Keywords")
     missing_kw_names = [m.name for m in getattr(kw_rep, "missing", [])[:8]]
     if missing_kw_names:
         review_lines.append(f"- Missing role keywords: {', '.join(missing_kw_names)}")
@@ -321,7 +322,7 @@ def format_resume_review_markdown(
 
     if ai_rep and hasattr(ai_rep, "improvements") and ai_rep.improvements:
         review_lines.append("")
-        review_lines.append("## 🚀 Improvement Plan")
+        review_lines.append("## Improvement Plan")
         for imp in ai_rep.improvements[:5]:
             review_lines.append(f"- **{imp.section}:** {imp.action} ({imp.issue})")
 
@@ -458,7 +459,7 @@ async def _execute_resume_analysis_pipeline(
     4. Uploads original document to private Supabase Storage 'resumes' bucket.
     5. Performs deterministic extraction (or prioritizes user-edited text from the editor).
     6. Executes the 7-Dimensional Enterprise Evaluation and 3 Supporting Engines:
-       - Dim 1: ATS Compatibility (15%)
+       - Dim 1: ATS Parsing & Readability (15%)
        - Dim 2: Keyword Coverage (15%)
        - Dim 3: Technical Skills Assessment (15%)
        - Dim 4: Projects & Experience (20%)
@@ -607,9 +608,12 @@ async def _execute_resume_analysis_pipeline(
 
         # Bug 4 Fix: If edited_text is provided by frontend editor, prioritize it over raw OCR
         used_edited_text = bool(edited_text and edited_text.strip())
-        eval_text = edited_text.strip() if used_edited_text else report.extracted_text
+        if edited_text and edited_text.strip():
+            eval_text = edited_text.strip()
+        else:
+            eval_text = report.extracted_text or ""
 
-        # 7. Dimension 1 (ATS Compatibility, 15%) & Dimension 7 (Structure, 10%)
+        # 7. Dimension 1 (ATS Parsing & Readability, 15%) & Dimension 7 (Structure, 10%)
         ats_rep = evaluate_resume_ats(
             eval_text,
             years_experience=years_experience or "1-3 years",
@@ -621,7 +625,7 @@ async def _execute_resume_analysis_pipeline(
         kw_rep = match_keywords(
             eval_text,
             job_description=job_description or "",
-            target_role=target_role or "Fullstack Software Engineer",
+            target_role=target_role or "",
         )
 
         # 9. Dimension 3 & Supporting Engine 1: Skill Evidence Engine (15%)
@@ -642,7 +646,7 @@ async def _execute_resume_analysis_pipeline(
         try:
             ai_rep = await evaluate_resume_content(
                 resume_text=eval_text,
-                target_role=target_role or "Fullstack Software Engineer",
+                target_role=target_role or "",
                 years_experience=years_experience or "1-3 years",
                 company_type=company_type or "Product-Based",
                 job_description=job_description or "",
@@ -665,7 +669,7 @@ async def _execute_resume_analysis_pipeline(
         # 13. Supporting Engine 2: Recruiter Lens Evaluation
         recruiter_rep = evaluate_recruiter_lens(
             resume_text=eval_text,
-            target_role=target_role or "Fullstack Software Engineer",
+            target_role=target_role or "",
             years_experience=years_experience or "1-3 years",
             ats_score=ats_rep.ats_compatibility_score,
             demonstration_rate=skill_ev_rep.demonstration_rate,
@@ -806,7 +810,7 @@ async def _execute_resume_analysis_pipeline(
 async def analyze_and_store_resume(
     file: UploadFile = File(...),
     job_description: Optional[str] = Form(None),
-    target_role: Optional[str] = Form("Fullstack Software Engineer"),
+    target_role: Optional[str] = Form(None),
     years_experience: Optional[str] = Form("1-3 years"),
     company_type: Optional[str] = Form("Product-Based"),
     resume_series_id: Optional[str] = Form(None),

@@ -21,7 +21,7 @@ import { validateFile, computeStageNum } from "@/lib/career/helpers";
 
 export function useResumeReview() {
   // Configuration (Step 1)
-  const [targetRole, setTargetRole] = useState("Fullstack Software Engineer");
+  const [targetRole, setTargetRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [companyType, setCompanyType] = useState("Product Based");
   const [yearsExperience, setYearsExperience] = useState("1-3 years");
@@ -244,7 +244,7 @@ export function useResumeReview() {
         const hasEdited = Boolean(editedText.trim() && editedText.trim() !== extraction?.text?.trim());
         const cloudRes = await analyzeResumeFile(uploadedFile, {
           jobDescription,
-          targetRole,
+          targetRole: targetRole || undefined,
           yearsExperience,
           companyType,
           editedText: hasEdited ? editedText.trim() : undefined,
@@ -291,7 +291,7 @@ export function useResumeReview() {
         // Fallback for direct text editing or resume builder
         const res = await reviewResume(
           text,
-          targetRole,
+          targetRole || "",
           yearsExperience,
           companyType,
           jobDescription,

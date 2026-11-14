@@ -96,16 +96,16 @@ export default function ResumeComparisonModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-[#141519] rounded-3xl max-w-4xl w-full shadow-2xl border border-white/10 overflow-hidden my-auto max-h-[92vh] flex flex-col">
+      <div className="bg-[#141519] rounded-3xl max-w-4xl w-full shadow-2xl border border-zinc-800 overflow-hidden my-auto max-h-[92vh] flex flex-col">
         {/* Modal Top Header */}
-        <div className="p-5 sm:p-6 bg-[#181920] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="p-5 sm:p-6 bg-[#181920] border-b border-zinc-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/30 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-800 text-white flex items-center justify-center border border-zinc-700 shrink-0">
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-white">
+                <h2 className="text-base sm:text-lg font-bold text-white">
                   Version Diff Comparison
                 </h2>
               </div>
@@ -118,7 +118,7 @@ export default function ResumeComparisonModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-[#23242B] rounded-xl transition-colors cursor-pointer"
+            className="p-2 text-zinc-400 hover:text-white hover:bg-[#1c1d24] rounded-xl transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -129,7 +129,7 @@ export default function ResumeComparisonModal({
         <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 text-zinc-200 bg-[#111216]">
           {isLoading ? (
             <div className="py-24 text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-purple-400 mx-auto" />
+              <Loader2 className="w-8 h-8 animate-spin text-zinc-400 mx-auto" />
               <p className="text-sm font-bold text-white">Computing granular diff analysis...</p>
               <p className="text-xs text-zinc-400">Comparing scores, sections, skills, and keyword trajectories.</p>
             </div>
@@ -141,7 +141,7 @@ export default function ResumeComparisonModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl"
+                className="mt-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl border border-zinc-700"
               >
                 Close
               </button>
@@ -177,9 +177,9 @@ export default function ResumeComparisonModal({
               {/* Version Comparison Header Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Older Version */}
-                <div className="p-4 rounded-2xl bg-[#18191f] border border-white/10 space-y-2">
+                <div className="p-4 rounded-2xl bg-[#181920] border border-zinc-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 bg-[#23242B] text-zinc-300 font-extrabold text-[10px] rounded-lg border border-white/10">
+                    <span className="px-2 py-0.5 bg-[#23242B] text-zinc-300 font-bold text-[10px] rounded-lg border border-zinc-700">
                       BASELINE (V{data.older_version.version_number})
                     </span>
                     <span className="text-[11px] text-zinc-400">
@@ -197,12 +197,12 @@ export default function ResumeComparisonModal({
                 </div>
 
                 {/* Newer Version */}
-                <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-2">
+                <div className="p-4 rounded-2xl bg-[#181920] border border-zinc-750 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 bg-purple-600 text-white font-extrabold text-[10px] rounded-lg">
+                    <span className="px-2 py-0.5 bg-zinc-800 text-white font-bold text-[10px] rounded-lg border border-zinc-700">
                       LATEST (V{data.newer_version.version_number})
                     </span>
-                    <span className="text-[11px] text-purple-300">
+                    <span className="text-[11px] text-zinc-400">
                       {new Date(data.newer_version.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export default function ResumeComparisonModal({
                     {data.newer_version.filename}
                   </h4>
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-black text-purple-200">
+                    <span className="text-lg font-bold text-white">
                       {data.newer_version.overall_score !== null
                         ? `${Math.round(data.newer_version.overall_score)}/100`
                         : "Not Evaluated"}
@@ -222,14 +222,13 @@ export default function ResumeComparisonModal({
 
               {/* 1. Granular Score Deltas Table */}
               <div className="space-y-3">
-                <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   Score Progression Matrix
                 </h3>
 
-                <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#18191f] shadow-xs">
+                <div className="border border-zinc-800 rounded-2xl overflow-hidden bg-[#181920] shadow-xs">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-[#141519] border-b border-white/10 text-zinc-400 font-bold text-[11px]">
+                    <thead className="bg-[#141519] border-b border-zinc-800 text-zinc-400 font-bold text-[11px]">
                       <tr>
                         <th className="py-2.5 px-4">Evaluation Dimension</th>
                         <th className="py-2.5 px-4 text-center">Baseline (V{data.older_version.version_number})</th>
@@ -237,7 +236,7 @@ export default function ResumeComparisonModal({
                         <th className="py-2.5 px-4 text-right">Delta</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-zinc-800">
                       <tr>
                         <td className="py-3 px-4 font-bold text-white">Overall ATS Score</td>
                         <td className="py-3 px-4 text-center font-semibold text-zinc-300">
@@ -295,17 +294,17 @@ export default function ResumeComparisonModal({
 
               {/* 2. Structured Content Differences */}
               <div className="space-y-4">
-                <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5 text-purple-400" />
-                  Content & Section Revisions
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                  Content &amp; Section Revisions
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Skills Added & Removed */}
-                  <div className="p-4 bg-[#18191f] rounded-2xl border border-white/10 space-y-3">
+                  <div className="p-4 bg-[#181920] rounded-2xl border border-zinc-800 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-purple-400" />
+                        <Tag className="w-3.5 h-3.5 text-zinc-400" />
                         Skills Differential
                       </span>
                       <span className="text-[11px] text-zinc-400 font-semibold">
@@ -357,10 +356,10 @@ export default function ResumeComparisonModal({
                   </div>
 
                   {/* Section & Project Changes */}
-                  <div className="p-4 bg-[#18191f] rounded-2xl border border-white/10 space-y-3">
+                  <div className="p-4 bg-[#181920] rounded-2xl border border-zinc-800 space-y-3">
                     <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Briefcase className="w-3.5 h-3.5 text-purple-400" />
-                      Section & Project Adjustments
+                      <Briefcase className="w-3.5 h-3.5 text-zinc-400" />
+                      Section &amp; Project Adjustments
                     </span>
 
                     <div className="space-y-2 text-xs">
@@ -386,7 +385,7 @@ export default function ResumeComparisonModal({
                         )}
                       </div>
 
-                      <div className="pt-2 border-t border-white/10">
+                      <div className="pt-2 border-t border-zinc-800">
                         <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1">
                           Projects Evolution
                         </span>
@@ -409,12 +408,12 @@ export default function ResumeComparisonModal({
 
               {/* 3. Keyword Match Trajectory */}
               <div className="space-y-3">
-                <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                  <ListChecks className="w-3.5 h-3.5 text-purple-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <ListChecks className="w-3.5 h-3.5 text-zinc-400" />
                   Target Keyword Coverage
                 </h3>
 
-                <div className="p-4 bg-[#18191f] rounded-2xl border border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-[#181920] rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1.5">
                       Newly Matched Keywords
@@ -452,10 +451,10 @@ export default function ResumeComparisonModal({
               </div>
 
               {/* 4. Grounded Summary & Action Items */}
-              <div className="space-y-4 pt-2 border-t border-white/10">
-                <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
-                  Diagnostic Summary & Action Plan
+              <div className="space-y-4 pt-2 border-t border-zinc-800">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                  Diagnostic Summary &amp; Action Plan
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -491,14 +490,14 @@ export default function ResumeComparisonModal({
                 </div>
 
                 {/* Next Steps */}
-                <div className="p-4 bg-purple-950/30 border border-purple-500/30 rounded-2xl space-y-2">
-                  <span className="text-xs font-black text-purple-300 block">
+                <div className="p-4 bg-[#181920] border border-zinc-800 rounded-2xl space-y-2">
+                  <span className="text-xs font-bold text-zinc-300 block">
                     Next Recommended Actions
                   </span>
                   <div className="space-y-1.5 text-xs text-zinc-200">
                     {data.summary.next_action_items.map((action, idx) => (
                       <div key={idx} className="flex items-start gap-2">
-                        <span className="w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                        <span className="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <span>{action}</span>
@@ -512,7 +511,7 @@ export default function ResumeComparisonModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-5 bg-[#141519] border-t border-white/10 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 bg-[#141519] border-t border-zinc-800 flex items-center justify-between shrink-0">
           <span className="text-xs text-zinc-500 font-medium hidden sm:inline">
             SkillsCatalyst AI ATS Intelligence Engine v4.0
           </span>
@@ -520,7 +519,7 @@ export default function ResumeComparisonModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-[#23242B] hover:bg-[#2c2d36] text-white font-bold text-xs rounded-xl border border-white/10 transition-colors cursor-pointer"
+              className="px-4 py-2 bg-[#181920] hover:bg-[#202128] text-white font-bold text-xs rounded-xl border border-zinc-800 transition-colors cursor-pointer"
             >
               Close Comparison
             </button>

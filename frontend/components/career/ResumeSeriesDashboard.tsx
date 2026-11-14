@@ -232,11 +232,11 @@ export default function ResumeSeriesDashboard({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-purple-400" />
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-zinc-400" />
               Resume Series &amp; Version History
             </h2>
           </div>
@@ -249,7 +249,7 @@ export default function ResumeSeriesDashboard({
           <button
             type="button"
             onClick={() => setIsCreatingSeries(true)}
-            className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl border border-zinc-700 shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Series</span>
@@ -257,7 +257,7 @@ export default function ResumeSeriesDashboard({
           <button
             type="button"
             onClick={fetchSeries}
-            className="p-2 bg-[#1c1d24] border border-white/10 text-zinc-300 hover:text-white hover:bg-[#23242B] rounded-xl transition-colors cursor-pointer"
+            className="p-2 bg-[#181920] border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
             title="Refresh Series"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -275,7 +275,7 @@ export default function ResumeSeriesDashboard({
               <button
                 type="button"
                 onClick={onStartNewStandalone}
-                className="text-purple-400 hover:text-purple-300 text-[11px]"
+                className="text-zinc-300 hover:text-white text-[11px] font-semibold"
               >
                 + Quick Upload
               </button>
@@ -283,12 +283,12 @@ export default function ResumeSeriesDashboard({
           </div>
 
           {isLoadingList ? (
-            <div className="p-8 text-center bg-[#18191f] rounded-2xl border border-white/10">
-              <Loader2 className="w-5 h-5 animate-spin mx-auto text-purple-400 mb-2" />
+            <div className="p-8 text-center bg-[#181920] rounded-2xl border border-zinc-800">
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-zinc-400 mb-2" />
               <p className="text-xs text-zinc-400 font-medium">Loading tracks...</p>
             </div>
           ) : seriesList.length === 0 ? (
-            <div className="p-6 text-center bg-[#18191f] rounded-2xl border border-dashed border-white/10 space-y-3">
+            <div className="p-6 text-center bg-[#181920] rounded-2xl border border-dashed border-zinc-800 space-y-3">
               <Layers className="w-8 h-8 text-zinc-500 mx-auto" />
               <div>
                 <p className="text-xs font-bold text-white">No Resume Series Yet</p>
@@ -299,7 +299,7 @@ export default function ResumeSeriesDashboard({
               <button
                 type="button"
                 onClick={() => setIsCreatingSeries(true)}
-                className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg border border-zinc-700 transition-colors cursor-pointer"
               >
                 Create Track
               </button>
@@ -314,8 +314,8 @@ export default function ResumeSeriesDashboard({
                     onClick={() => setSelectedSeriesId(series.id)}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer text-left space-y-2 ${
                       isSelected
-                        ? "bg-purple-950/40 border-purple-500 shadow-xs ring-2 ring-purple-500/20"
-                        : "bg-[#18191f] border-white/10 hover:border-white/20 hover:bg-[#1c1d24]"
+                        ? "bg-[#16171d] border-zinc-600 shadow-xs ring-1 ring-zinc-600"
+                        : "bg-[#181920] border-zinc-800 hover:border-zinc-700 hover:bg-[#1c1d24]"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -324,17 +324,17 @@ export default function ResumeSeriesDashboard({
                           {series.title}
                         </h4>
                         {series.target_role && (
-                          <p className="text-[11px] text-purple-300 font-medium truncate">
+                          <p className="text-[11px] text-zinc-400 font-medium truncate">
                             {series.target_role}
                           </p>
                         )}
                       </div>
-                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-[#23242B] text-zinc-300 border border-white/10 shrink-0">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 shrink-0">
                         {series.versions_count} {series.versions_count === 1 ? "ver" : "vers"}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-white/10">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-800">
                       <span>
                         Latest:{" "}
                         <strong className="text-white">
@@ -360,10 +360,10 @@ export default function ResumeSeriesDashboard({
         </div>
 
         {/* Right Column: Series Detail & Versions Timeline */}
-        <div className="lg:col-span-8 bg-[#141519] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xl min-h-[420px]">
+        <div className="lg:col-span-8 bg-[#141519] border border-zinc-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs min-h-[420px]">
           {isLoadingDetail ? (
             <div className="py-20 text-center">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-400 mx-auto mb-2" />
+              <Loader2 className="w-6 h-6 animate-spin text-zinc-400 mx-auto mb-2" />
               <p className="text-xs text-zinc-400 font-medium">Loading version history...</p>
             </div>
           ) : !selectedSeriesDetail ? (
@@ -377,14 +377,14 @@ export default function ResumeSeriesDashboard({
           ) : (
             <div className="space-y-6">
               {/* Selected Series Header Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base sm:text-lg font-black text-white">
+                    <h3 className="text-base sm:text-lg font-bold text-white">
                       {selectedSeriesDetail.title}
                     </h3>
                     {selectedSeriesDetail.target_role && (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-950/60 text-purple-300 border border-purple-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
                         {selectedSeriesDetail.target_role}
                       </span>
                     )}
@@ -400,16 +400,16 @@ export default function ResumeSeriesDashboard({
                   <button
                     type="button"
                     onClick={() => onViewGrowth(selectedSeriesDetail.id)}
-                    className="bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 font-bold text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="bg-[#181920] hover:bg-zinc-800 text-zinc-300 hover:text-white font-bold text-xs px-3 py-1.5 rounded-xl border border-zinc-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                    <TrendingUp className="w-3.5 h-3.5 text-zinc-400" />
                     <span>Track Growth</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setIsUploadingVersion(true)}
-                    className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                    className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload New Version</span>
@@ -428,10 +428,10 @@ export default function ResumeSeriesDashboard({
 
               {/* Version Comparison Floating Bar */}
               {selectedForCompare.length > 0 && (
-                <div className="p-3 bg-purple-950/50 border border-purple-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                <div className="p-3 bg-[#181920] border border-zinc-800 rounded-2xl flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2">
-                    <ArrowRightLeft className="w-4 h-4 text-purple-400" />
-                    <span className="font-semibold text-purple-300">
+                    <ArrowRightLeft className="w-4 h-4 text-zinc-400" />
+                    <span className="font-semibold text-zinc-300">
                       Comparing: {selectedForCompare.length} of 2 versions selected
                     </span>
                   </div>
@@ -440,7 +440,7 @@ export default function ResumeSeriesDashboard({
                       <button
                         type="button"
                         onClick={handleTriggerCompare}
-                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-1 rounded-xl shadow-xs transition-colors cursor-pointer"
+                        className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 font-bold px-3 py-1 rounded-xl shadow-xs transition-colors cursor-pointer"
                       >
                         Launch Diff Comparison
                       </button>
@@ -448,7 +448,7 @@ export default function ResumeSeriesDashboard({
                     <button
                       type="button"
                       onClick={() => setSelectedForCompare([])}
-                      className="text-purple-400 hover:text-purple-300 underline font-medium text-[11px]"
+                      className="text-zinc-400 hover:text-white underline font-medium text-[11px]"
                     >
                       Clear
                     </button>
@@ -481,14 +481,14 @@ export default function ResumeSeriesDashboard({
                           key={ver.id}
                           className={`p-4 rounded-2xl border transition-all ${
                             isSelectedForComp
-                              ? "bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/20"
-                              : "bg-[#18191f] border-white/10 hover:border-white/20 hover:bg-[#1c1d24]"
+                              ? "bg-[#16171d] border-zinc-600 ring-1 ring-zinc-600"
+                              : "bg-[#181920] border-zinc-800 hover:border-zinc-700 hover:bg-[#1c1d24]"
                           }`}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             {/* Version Info */}
                             <div className="flex items-start gap-3">
-                              <span className="w-8 h-8 rounded-xl bg-purple-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+                              <span className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
                                 V{verNum}
                               </span>
                               <div>
@@ -499,7 +499,7 @@ export default function ResumeSeriesDashboard({
                                   <span>{new Date(ver.created_at).toLocaleDateString()}</span>
                                   {ver.file_type && <span>· {ver.file_type}</span>}
                                   {ver.job_description && (
-                                    <span className="text-purple-400 font-medium truncate max-w-[140px]">
+                                    <span className="text-zinc-400 font-medium truncate max-w-[140px]">
                                       · Tailored to JD
                                     </span>
                                   )}
@@ -513,20 +513,20 @@ export default function ResumeSeriesDashboard({
                                 <span className="text-[10px] text-zinc-400 uppercase font-bold block">
                                   Overall Score
                                 </span>
-                                <span className="text-sm font-black text-white">
+                                <span className="text-sm font-bold text-white">
                                   {ver.overall_score !== null && ver.overall_score !== undefined
                                     ? `${Math.round(ver.overall_score)}/100`
                                     : "—"}
                                 </span>
                               </div>
 
-                              <div className="h-7 w-px bg-white/10 mx-1" />
+                              <div className="h-7 w-px bg-zinc-800 mx-1" />
 
                               <div className="text-right">
                                 <span className="text-[10px] text-zinc-400 uppercase font-bold block">
                                   ATS
                                 </span>
-                                <span className="text-xs font-extrabold text-purple-400">
+                                <span className="text-xs font-bold text-white">
                                   {ver.ats_score !== null && ver.ats_score !== undefined
                                     ? `${Math.round(ver.ats_score)}%`
                                     : "—"}
@@ -536,13 +536,13 @@ export default function ResumeSeriesDashboard({
                           </div>
 
                           {/* Action Buttons Row */}
-                          <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-white/10 text-xs">
+                          <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-zinc-800 text-xs">
                             <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-semibold text-zinc-300">
                               <input
                                 type="checkbox"
                                 checked={isSelectedForComp}
                                 onChange={() => toggleCompareSelect(ver.id)}
-                                className="rounded text-purple-600 focus:ring-purple-500 w-3.5 h-3.5 bg-[#1c1d24] border-white/10"
+                                className="rounded text-zinc-600 focus:ring-zinc-500 w-3.5 h-3.5 bg-[#141519] border-zinc-800"
                               />
                               <span>Select to Compare</span>
                             </label>
@@ -551,7 +551,7 @@ export default function ResumeSeriesDashboard({
                               <button
                                 type="button"
                                 onClick={() => onSelectAnalysis(ver.id)}
-                                className="px-3 py-1 bg-[#1c1d24] hover:bg-[#23242B] text-zinc-200 hover:text-white border border-white/10 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                                className="px-3 py-1 bg-[#141519] hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>Inspect</span>
@@ -561,7 +561,7 @@ export default function ResumeSeriesDashboard({
                                 type="button"
                                 onClick={() => handleDownloadPdfReport(ver.id, `Report_${ver.original_filename}.pdf`)}
                                 disabled={downloadingReportId === ver.id}
-                                className="px-3 py-1 bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                                className="px-3 py-1 bg-[#181920] hover:bg-zinc-800 text-zinc-300 border border-zinc-800 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                                 title="Download 5-page PDF Diagnostic Report"
                               >
                                 {downloadingReportId === ver.id ? (
@@ -588,10 +588,10 @@ export default function ResumeSeriesDashboard({
           Modal: Create New Series
       ────────────────────────────────────────────────────────── */}
       {isCreatingSeries && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#141519] rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-[#141519] rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-800 space-y-4">
             <div>
-              <h3 className="text-base font-black text-white">Create Resume Track</h3>
+              <h3 className="text-base font-bold text-white">Create Resume Track</h3>
               <p className="text-xs text-zinc-400 mt-0.5">
                 Group revisions tailored for a specific career path or target job role.
               </p>
@@ -608,7 +608,7 @@ export default function ResumeSeriesDashboard({
                   placeholder="e.g., Senior Fullstack Engineer"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-[#181920] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
                 />
               </div>
 
@@ -621,7 +621,7 @@ export default function ResumeSeriesDashboard({
                   placeholder="e.g., Software Development Engineer II"
                   value={newTargetRole}
                   onChange={(e) => setNewTargetRole(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-[#181920] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
                 />
               </div>
 
@@ -634,7 +634,7 @@ export default function ResumeSeriesDashboard({
                   placeholder="Focusing on distributed systems, microservices, and high-scale impact..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-3 py-2 bg-[#181920] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 resize-none"
                 />
               </div>
 
@@ -642,14 +642,14 @@ export default function ResumeSeriesDashboard({
                 <button
                   type="button"
                   onClick={() => setIsCreatingSeries(false)}
-                  className="px-4 py-2 bg-[#1c1d24] border border-white/10 text-zinc-300 hover:text-white hover:bg-[#23242B] font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-[#181920] border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingNewSeries}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl border border-zinc-700 transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   {isSubmittingNewSeries ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                   <span>Create Track</span>
@@ -664,10 +664,10 @@ export default function ResumeSeriesDashboard({
           Modal: Upload New Version into Track
       ────────────────────────────────────────────────────────── */}
       {isUploadingVersion && selectedSeriesDetail && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#141519] rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-[#141519] rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-800 space-y-4">
             <div>
-              <h3 className="text-base font-black text-white">
+              <h3 className="text-base font-bold text-white">
                 Upload New Version to &ldquo;{selectedSeriesDetail.title}&rdquo;
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -689,7 +689,7 @@ export default function ResumeSeriesDashboard({
                       setUploadFile(e.target.files[0]);
                     }
                   }}
-                  className="w-full text-xs text-zinc-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-950/60 file:text-purple-300 hover:file:bg-purple-900/60 cursor-pointer"
+                  className="w-full text-xs text-zinc-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 cursor-pointer"
                 />
               </div>
 
@@ -702,7 +702,7 @@ export default function ResumeSeriesDashboard({
                   placeholder="Paste the target job description to run keyword match benchmarking..."
                   value={uploadJobDesc}
                   onChange={(e) => setUploadJobDesc(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#1c1d24] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-3 py-2 bg-[#181920] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 resize-none"
                 />
               </div>
 
@@ -714,17 +714,17 @@ export default function ResumeSeriesDashboard({
                     setUploadFile(null);
                     setUploadJobDesc("");
                   }}
-                  className="px-4 py-2 bg-[#1c1d24] border border-white/10 text-zinc-300 hover:text-white hover:bg-[#23242B] font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-[#181920] border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingUpload || !uploadFile}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl border border-zinc-700 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                 >
                   {isSubmittingUpload ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                  <span>Upload & Analyze</span>
+                  <span>Upload &amp; Analyze</span>
                 </button>
               </div>
             </form>

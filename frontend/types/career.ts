@@ -86,8 +86,13 @@ export interface KeywordItem {
 export interface KeywordAnalysisReport {
   target_role: string;
   total_analyzed_keywords: number;
+  total_keywords?: number;
   matched_count: number;
+  matched_keywords_count?: number;
   missing_count: number;
+  missing_keywords_count?: number;
+  exact_matches_count?: number;
+  alias_matches_count?: number;
   keyword_match_percentage: number;
   matched: KeywordItem[];
   missing: KeywordItem[];

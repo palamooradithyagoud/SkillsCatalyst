@@ -9,6 +9,7 @@ Uses reportlab in-memory streaming with strict input validation.
 """
 
 import io
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
@@ -45,17 +46,17 @@ COLOR_AMBER = colors.HexColor("#D97706")         # Amber 600
 COLOR_RED = colors.HexColor("#DC2626")           # Red 600
 
 
-def get_score_color(score: Optional[float]) -> colors.HexColor:
-    """Returns color based on score threshold."""
+def get_score_color(score: Optional[float]) -> str:
+    """Returns hex color string based on score threshold."""
     if score is None:
-        return COLOR_MUTED
+        return "#64748B"
     if score >= 80:
-        return colors.HexColor("#16A34A")  # Green
+        return "#16A34A"  # Green
     if score >= 65:
-        return colors.HexColor("#0284C7")  # Blue
+        return "#0284C7"  # Blue
     if score >= 50:
-        return colors.HexColor("#D97706")  # Amber
-    return colors.HexColor("#DC2626")      # Red
+        return "#D97706"  # Amber
+    return "#DC2626"      # Red
 
 
 def build_pdf_styles():
@@ -170,6 +171,11 @@ def generate_resume_pdf_report(user_id: str, analysis_id: str) -> bytes:
     """
     record = get_resume_analysis_by_id(user_id=user_id, analysis_id=analysis_id)
     analysis_res = record.get("analysis_result", {}) or {}
+    if isinstance(analysis_res, str):
+        try:
+            analysis_res = json.loads(analysis_res)
+        except Exception:
+            analysis_res = {}
     ats_data = analysis_res.get("ats_analysis", {}) or {}
     ai_data = analysis_res.get("ai_evaluation", {}) or {}
     kw_data = analysis_res.get("keyword_analysis", {}) or {}
@@ -201,11 +207,11 @@ def generate_resume_pdf_report(user_id: str, analysis_id: str) -> bytes:
     target_role = analysis_res.get("target_role") or "General Software Role"
     career_stage = analysis_res.get("career_stage") or ai_data.get("career_stage", "Fresher")
 
-    ov_score = record.get("overall_score")
-    ats_score = record.get("ats_score")
-    cnt_score = record.get("content_score")
-    skl_score = record.get("skills_score")
-    str_score = record.get("structure_score")
+    ov_score = record.get("overall_score") or analysis_res.get("score_breakdown", {}).get("overall_score")
+    ats_score = record.get("ats_score") or ats_data.get("ats_compatibility_score")
+    cnt_score = record.get("content_score") or ai_data.get("content_quality_score")
+    skl_score = record.get("skills_score") or kw_data.get("keyword_match_percentage")
+    str_score = record.get("structure_score") or ats_data.get("structure_score")
 
     # =========================================================================
     # PAGE 1: EXECUTIVE SUMMARY & SCORE DASHBOARD
@@ -246,14 +252,14 @@ def generate_resume_pdf_report(user_id: str, analysis_id: str) -> bytes:
         score_str = f"{int(round(score))}" if score is not None else "N/A"
         color_val = get_score_color(score)
         return [
-            Paragraph(f"<font color='{color_val.hexval()}'>{score_str}</font><font size='10' color='#64748B'>/100</font>", styles["CardScore"]),
+            Paragraph(f"<font color='{color_val}'>{score_str}</font><font size='10' color='#64748B'>/100</font>", styles["CardScore"]),
             Paragraph(label.upper(), styles["CardLabel"]),
         ]
 
     scores_data = [
         [
             make_score_box("Overall Score", ov_score),
-            make_score_box("ATS Score", ats_score),
+            make_score_box("ATS Parsing", ats_score),
             make_score_box("Content Quality", cnt_score),
             make_score_box("Skills Match", skl_score),
             make_score_box("Structure", str_score),
@@ -302,11 +308,11 @@ def generate_resume_pdf_report(user_id: str, analysis_id: str) -> bytes:
     # =========================================================================
     # PAGE 2: DETERMINISTIC ATS & KEYWORD ANALYSIS
     # =========================================================================
-    story.append(Paragraph("ATS Compatibility & Keyword Coverage", styles["ReportTitle"]))
+    story.append(Paragraph("ATS Parsing & Readability & Keyword Coverage", styles["ReportTitle"]))
     story.append(HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceBefore=4, spaceAfter=14))
 
     ats_observations = ats_data.get("formatting_checks", []) or []
-    story.append(Paragraph(f"ATS Compatibility Score: <b>{ats_score or 'N/A'}/100</b>", styles["SectionHeading"]))
+    story.append(Paragraph(f"ATS Parsing & Readability Score: <b>{ats_score or 'N/A'}/100</b>", styles["SectionHeading"]))
     story.append(Paragraph(
         "Applicant Tracking Systems parse documents linearly to extract contact info, skills, and chronological roles. "
         "Standard headings and simple layout hierarchies ensure reliable indexation.",

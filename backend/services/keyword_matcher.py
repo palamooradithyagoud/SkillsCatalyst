@@ -73,7 +73,24 @@ TAXONOMY_DICTIONARY: Dict[str, Dict[str, List[str]]] = {
         "Dart": ["dart"],
         "HTML/CSS": ["html", "css", "html5", "css3"],
         "Bash/Shell": ["bash", "shell scripting", "sh", "zsh"],
-        "R": [r"\br\b", "r-lang"],
+        "R": [
+            r"\br-lang\b",
+            r"\br-language\b",
+            r"\br\s+language\b",
+            r"\br\s+programming\b",
+            r"\br-programming\b",
+            r"\br\s+script(?:ing|s)?\b",
+            r"\brstudio\b",
+            r"\br-studio\b",
+            r"\br\s+studio\b",
+            r"\b(?:cran|tidyverse|ggplot2?|dplyr|shiny)\b",
+            r"\b(?:used|using|use|utilizing|utilized|experience\s+with|proficient\s+in|knowledge\s+of|developed\s+in|programmed\s+in|programming\s+in|code\s+in|coding\s+in|written\s+in|scripted\s+in|expertise\s+in|skills?\s+in)\s+r\b",
+            r"\br\b\s+(?:for\s+(?:statistical|data|analysis|analytics|modeling|machine\s+learning|regression|visualization|bioinformatics)|environment|scripts?|code|developer|programmer)\b",
+            r"\b(?:python|java|c\+\+|c#|sql|scala|julia|matlab|sas|spss|bash|perl|ruby|javascript|typescript)\s*[,/|]\s*r\b",
+            r"\br\b\s*[,/|]\s*(?:python|java|c\+\+|c#|sql|scala|julia|matlab|sas|spss|bash|perl|ruby|javascript|typescript)\b",
+            r"\b(?:languages?|programming\s+languages?)\s*:[^.\n]*?\br\b",
+            r"\b(?:required|requirements?|qualifications?|preferred|seeking)\s*:[^.\n]*?\br\b",
+        ],
         "Scala": ["scala"],
     },
     "frameworks": {
@@ -110,6 +127,7 @@ TAXONOMY_DICTIONARY: Dict[str, Dict[str, List[str]]] = {
         "DynamoDB": ["dynamodb"],
         "Cassandra": ["cassandra"],
         "Oracle": ["oracle db", "oracle database"],
+        "Vector Databases": ["vector database", "vector databases", "vector db", "pinecone", "weaviate", "chromadb", "qdrant"],
     },
     "tools": {
         "Git": ["git"],
@@ -138,6 +156,8 @@ TAXONOMY_DICTIONARY: Dict[str, Dict[str, List[str]]] = {
         "Vercel": ["vercel"],
         "Netlify": ["netlify"],
         "Cloudflare": ["cloudflare"],
+        "Railway": ["railway.app", r"\brailway\s+(?:app|deployment|hosting|cloud|platform)\b", r"(?:deployed|hosted)\s+(?:on|via|to)\s+railway\b", r"\brailway\b\s*[,/|]\s*(?:vercel|render|supabase|heroku|aws|docker)", r"(?:vercel|render|supabase|heroku|aws|docker)\s*[,/|]\s*\brailway\b", r"\b(?:tools|technologies|cloud)\b[^.\n]*?\brailway\b"],
+        "Render": ["render.com", r"\brender\s+(?:cloud|deployment|hosting|platform|app)\b", r"(?:deployed|hosted)\s+(?:on|via|to)\s+render\b", r"\brender\b\s*[,/|]\s*(?:vercel|railway|heroku|aws|gcp|netlify|fly\.io|supabase)", r"(?:vercel|railway|heroku|aws|gcp|netlify|fly\.io|supabase)\s*[,/|]\s*\brender\b", r"\b(?:tools|technologies|cloud)\b[^.\n]*?\brender\b"],
     },
     "concepts": {
         "API": [r"\bapi\b", r"\bapis\b", "rest api", "rest apis"],
@@ -150,6 +170,8 @@ TAXONOMY_DICTIONARY: Dict[str, Dict[str, List[str]]] = {
         "Database Indexing & Optimization": ["indexing", "query optimization", "normalization"],
         "Testing & QA": ["unit testing", "integration testing", "jest", "pytest", "cypress"],
         "Agile / Scrum": ["agile", "scrum", "sprints"],
+        "Machine Learning": ["machine learning", "deep learning", "neural networks", "model training"],
+        "LLM APIs": ["llm", "llms", "llm api", "llm apis", "generative ai", "genai", "prompt engineering", "langchain", "llamaindex", "groq", "groq api", "openai", "anthropic"],
     },
     "soft_skills": {
         "Problem Solving": ["problem solving", "analytical thinking"],
@@ -207,22 +229,28 @@ def _keyword_present_in_text(canonical: str, patterns: List[str], text_lower: st
     Returns 'exact' if canonical matched, 'alias' if alias matched, or None.
     """
     # 1. Check canonical first
-    can_escaped = re.escape(canonical.lower())
-    if canonical.lower() == "c":
+    if canonical.lower() == "r":
+        # Single-letter "R" should NEVER match as a bare standalone letter because
+        # standalone "r" causes false positives on initials (e.g. 'P. R.'), R&D, regulation codes, section markers, etc.
+        can_regex = None
+    elif canonical.lower() == "c":
         can_regex = re.compile(r'(?<![a-zA-Z0-9_])c(?![a-zA-Z0-9_+#])')
     else:
+        can_escaped = re.escape(canonical.lower())
         can_regex = re.compile(rf'(?<![a-zA-Z0-9_]){can_escaped}(?![a-zA-Z0-9_])')
-    for m in can_regex.finditer(text_lower):
-        if canonical.lower() == "git":
-            following = text_lower[m.end():m.end()+10]
-            if re.match(r'\s+(?:out|up|going|done)\b', following):
-                continue
-        if not _is_match_negated(m.start(), text_lower):
-            return "exact"
 
-    # 2. Check aliases
+    if can_regex:
+        for m in can_regex.finditer(text_lower):
+            if canonical.lower() == "git":
+                following = text_lower[m.end():m.end()+10]
+                if re.match(r'\s+(?:out|up|going|done)\b', following):
+                    continue
+            if not _is_match_negated(m.start(), text_lower):
+                return "exact"
+
+    # 2. Check aliases / patterns
     for pat in patterns:
-        if pat.startswith(r"\b"):
+        if pat.startswith(r"\b") or pat.startswith(r"(?"):
             p_regex = re.compile(pat)
         else:
             p_escaped = re.escape(pat.lower())
@@ -234,7 +262,7 @@ def _keyword_present_in_text(canonical: str, patterns: List[str], text_lower: st
                 if re.match(r'\s+(?:out|up|going|done)\b', following):
                     continue
             if not _is_match_negated(m.start(), text_lower):
-                return "alias"
+                return "exact" if canonical.lower() == "r" else "alias"
 
     return None
 
@@ -264,17 +292,20 @@ def infer_keywords_for_role(target_role: str) -> List[Tuple[str, str]]:
     inferred: List[Tuple[str, str]] = []
 
     # Map role name to best matching profile
-    profile_key = "fullstack"
-    if "front" in role_lower:
-        profile_key = "frontend"
-    elif "back" in role_lower:
-        profile_key = "backend"
-    elif "devops" in role_lower or "cloud" in role_lower or "infra" in role_lower:
-        profile_key = "devops"
-    elif "data" in role_lower or "machine" in role_lower or "ai" in role_lower:
-        profile_key = "data"
+    if not role_lower:
+        target_list = ["Python", "JavaScript", "PostgreSQL", "Docker", "Git", "REST APIs", "Data Structures & Algorithms"]
+    else:
+        profile_key = "fullstack"
+        if "front" in role_lower:
+            profile_key = "frontend"
+        elif "back" in role_lower:
+            profile_key = "backend"
+        elif "devops" in role_lower or "cloud" in role_lower or "infra" in role_lower:
+            profile_key = "devops"
+        elif "data" in role_lower or "machine" in role_lower or "ai" in role_lower:
+            profile_key = "data"
 
-    target_list = ROLE_DEFAULTS.get(profile_key, ROLE_DEFAULTS["fullstack"])
+        target_list = ROLE_DEFAULTS.get(profile_key, ["Python", "JavaScript", "PostgreSQL", "Docker", "Git", "REST APIs"])
 
     for cat_name, items in TAXONOMY_DICTIONARY.items():
         for canonical in target_list:
@@ -282,6 +313,149 @@ def infer_keywords_for_role(target_role: str) -> List[Tuple[str, str]]:
                 inferred.append((canonical, cat_name))
 
     return inferred
+
+
+def extract_summary_and_signals(resume_text: str) -> str:
+    """Extracts the professional summary or top section of the resume for domain context."""
+    m = re.search(
+        r'(?:executive\s+summary|professional\s+summary|summary|profile|about\s+me)\s*[:\-\n](.+?)(?=\n[A-Z\s]{3,20}[:\n]|\Z)',
+        resume_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if m:
+        return m.group(1)[:1200]
+    return resume_text[:1200]
+
+
+def infer_companion_missing_keywords(
+    resume_text: str,
+    matched: List[KeywordItem],
+    target_role: Optional[str] = None,
+) -> List[KeywordItem]:
+    """
+    Dynamically identifies high-value, complementary industry keywords that the candidate
+    is missing based on their declared Executive Summary, target role, and detected tech stack.
+    Checks the Summary and entire resume to never flag already-present skills as missing.
+    """
+    matched_names = {m.name.lower() for m in matched}
+    summary_text = extract_summary_and_signals(resume_text).lower()
+    full_text_lower = resume_text.lower()
+    role_text = (target_role or "").lower()
+
+    # Determine candidate's primary technical domain from summary, target role, and matched skills
+    is_ai_ml = (
+        any(sig in summary_text or sig in role_text for sig in ["ai", "ml", "machine learning", "deep learning", "intelligent", "llm", "nlp", "computer vision"])
+        or any(m.name in ["PyTorch", "TensorFlow", "Pandas", "Scikit-learn", "R", "Machine Learning", "LLM APIs"] for m in matched)
+    )
+    is_data = (
+        any(sig in summary_text or sig in role_text for sig in ["data engineer", "data science", "analytics", "etl", "big data", "data pipeline"])
+        or any(m.name in ["Spark", "BigQuery", "SQL", "Pandas"] for m in matched)
+    )
+    is_frontend = (
+        any(sig in summary_text or sig in role_text for sig in ["frontend", "front-end", "ui/ux", "web design", "client-side"])
+        or any(m.name in ["React", "Vue.js", "Angular", "Tailwind CSS", "Next.js"] for m in matched)
+    )
+    is_devops = any(sig in summary_text or sig in role_text for sig in ["devops", "cloud", "infra", "sre", "platform", "kubernetes", "ci/cd"])
+    is_backend = (
+        any(sig in summary_text or sig in role_text for sig in ["backend", "back-end", "api", "microservices", "server-side"])
+        or any(m.name in ["Flask", "FastAPI", "Django", "Spring Boot", "Node.js", "PostgreSQL", "Supabase", "Redis"] for m in matched)
+    )
+
+    # Core companion competencies prioritized by ecosystem
+    candidates_to_check: List[Tuple[str, str]] = []
+
+    if is_ai_ml:
+        candidates_to_check.extend([
+            ("FastAPI", "frameworks"),
+            ("Docker", "tools"),
+            ("Redis", "databases"),
+            ("Vector Databases", "databases"),
+            ("Git", "tools"),
+            ("CI/CD", "tools"),
+            ("REST APIs", "concepts"),
+            ("Data Structures & Algorithms", "concepts"),
+            ("PyTorch", "frameworks"),
+            ("Testing & QA", "concepts"),
+        ])
+    elif is_data:
+        candidates_to_check.extend([
+            ("SQL", "languages"),
+            ("Docker", "tools"),
+            ("PostgreSQL", "databases"),
+            ("Git", "tools"),
+            ("CI/CD", "tools"),
+            ("Redis", "databases"),
+            ("Data Structures & Algorithms", "concepts"),
+            ("Spark", "tools"),
+            ("FastAPI", "frameworks"),
+        ])
+    elif is_frontend:
+        candidates_to_check.extend([
+            ("TypeScript", "languages"),
+            ("React", "frameworks"),
+            ("Next.js", "frameworks"),
+            ("Tailwind CSS", "frameworks"),
+            ("Git", "tools"),
+            ("REST APIs", "concepts"),
+            ("CI/CD", "tools"),
+            ("Testing & QA", "concepts"),
+        ])
+    elif is_devops:
+        candidates_to_check.extend([
+            ("Docker", "tools"),
+            ("Kubernetes", "tools"),
+            ("Linux", "tools"),
+            ("CI/CD", "tools"),
+            ("AWS", "cloud"),
+            ("Git", "tools"),
+            ("Terraform", "tools"),
+            ("Prometheus", "tools"),
+        ])
+    elif is_backend:
+        candidates_to_check.extend([
+            ("FastAPI", "frameworks"),
+            ("Docker", "tools"),
+            ("Redis", "databases"),
+            ("Git", "tools"),
+            ("PostgreSQL", "databases"),
+            ("REST APIs", "concepts"),
+            ("CI/CD", "tools"),
+            ("Data Structures & Algorithms", "concepts"),
+            ("Testing & QA", "concepts"),
+        ])
+    else:
+        # Balanced General Software Engineering
+        candidates_to_check.extend([
+            ("Git", "tools"),
+            ("Docker", "tools"),
+            ("PostgreSQL", "databases"),
+            ("REST APIs", "concepts"),
+            ("CI/CD", "tools"),
+            ("Data Structures & Algorithms", "concepts"),
+            ("Testing & QA", "concepts"),
+        ])
+
+    missing_items: List[KeywordItem] = []
+    seen: Set[str] = set()
+
+    for canonical, category in candidates_to_check:
+        if canonical.lower() in seen:
+            continue
+        seen.add(canonical.lower())
+
+        # Verify not already in matched list
+        if canonical.lower() in matched_names:
+            continue
+
+        # Also double-check if present via regex in resume text (including summary)
+        aliases = TAXONOMY_DICTIONARY.get(category, {}).get(canonical, [canonical.lower()])
+        if _keyword_present_in_text(canonical, aliases, full_text_lower):
+            continue
+
+        missing_items.append(KeywordItem(name=canonical, category=category, match_type="missing"))
+
+    # Cap recommended missing keywords at 5 to keep it crisp and actionable
+    return missing_items[:5]
 
 
 def normalize_skill(skill: str) -> str:
@@ -395,7 +569,7 @@ def evaluate_general_keywords(
 def match_keywords(
     resume_text: str,
     job_description: Optional[str] = None,
-    target_role: Optional[str] = "Fullstack Software Engineer",
+    target_role: Optional[str] = None,
 ) -> KeywordAnalysisReport:
     """
     Compares resume text against job description when provided, or calculates
@@ -412,14 +586,12 @@ def match_keywords(
         general_matched,
     ) = evaluate_general_keywords(resume_text)
 
-    has_jd = bool(job_description and len(job_description.strip()) >= 20)
-
-    if has_jd:
+    if job_description and len(job_description.strip()) >= 20:
         # ── Mode A: Job-Specific Evaluation ──────────────────────────────────
         target_skills = extract_keywords_from_jd(job_description)
         if not target_skills:
             # Fallback to role inference only if JD did not contain recognized keywords
-            target_skills = infer_keywords_for_role(target_role or "Fullstack Software Engineer")
+            target_skills = infer_keywords_for_role(target_role or "")
 
         matched: List[KeywordItem] = []
         missing: List[KeywordItem] = []
@@ -479,14 +651,27 @@ def match_keywords(
         )
 
     else:
-        # ── Mode B: General Resume Evaluation (No Fake JD Match!) ─────────────
+        # ── Mode B: General Resume Evaluation (Ecosystem & Summary-Guided) ────
         exact_count = sum(1 for m in general_matched if m.match_type == "exact")
         alias_count = sum(1 for m in general_matched if m.match_type == "alias")
 
+        # Dynamically infer ecosystem-specific missing keywords from resume summary and detected stack
+        missing = infer_companion_missing_keywords(
+            resume_text=resume_text,
+            matched=general_matched,
+            target_role=target_role,
+        )
+
+        total_evaluated = len(general_matched) + len(missing)
+        domain_match_pct = round((len(general_matched) / max(total_evaluated, 1)) * 100.0, 1)
+
         recommendations: List[str] = []
-        if cat_counts["cloud"] == 0 and cat_counts["tools"] < 2:
+        if missing:
+            missing_names = [m.name for m in missing[:3]]
+            recommendations.append(f"High-impact companion skills to consider adding: {', '.join(missing_names)}.")
+        if cat_counts.get("cloud", 0) == 0 and cat_counts.get("tools", 0) < 2:
             recommendations.append("Add modern CI/CD, cloud, or containerization tooling (Docker, AWS, Git) to strengthen infrastructure skills.")
-        if cat_counts["databases"] == 0:
+        if cat_counts.get("databases", 0) == 0:
             recommendations.append("Include explicit database management skills (PostgreSQL, MongoDB, Redis).")
         if stuffing_detected:
             recommendations.append(f"Avoid repetitive keyword stuffing ({', '.join(stuffed_kws)}). Use natural accomplishment bullets instead.")
@@ -495,20 +680,20 @@ def match_keywords(
             recommendations.append("Well-balanced technical skills distribution across languages, frameworks, and tools.")
 
         return KeywordAnalysisReport(
-            total_keywords=len(general_matched),
+            total_keywords=total_evaluated,
             matched_keywords_count=len(general_matched),
-            missing_keywords_count=0,
+            missing_keywords_count=len(missing),
             exact_matches_count=exact_count,
             alias_matches_count=alias_count,
-            keyword_match_percentage=tech_skills_score,  # Populated for backward-compatible fallback
+            keyword_match_percentage=domain_match_pct,
             matched=general_matched,
-            missing=[],
+            missing=missing,
             recommendations=recommendations,
             evaluation_mode="general_resume",
             job_match_status="not_evaluated",
             job_match_score=None,  # NEVER fake a job match without a JD!
             keyword_optimization_score=kw_opt_score,
-            technical_skills_relevance_score=tech_skills_score,
+            technical_skills_relevance_score=domain_match_pct,
             keyword_stuffing_detected=stuffing_detected,
             stuffed_keywords=stuffed_kws,
             category_coverage=cat_counts,

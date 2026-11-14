@@ -1,8 +1,17 @@
 import React from "react";
-import { ChevronRight, Sparkles } from "lucide-react";
 
 interface ResumeMarkdownViewerProps {
   content: string;
+}
+
+// Complete Unicode regex to strip all emojis & pictographs
+function stripEmojis(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\p{Extended_Pictographic}/gu, "")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "")
+    .replace(/^\s+/, "")
+    .trim();
 }
 
 export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerProps) {
@@ -32,27 +41,27 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
         elements.push(
           <div
             key={`table-${index}`}
-            className="my-4 overflow-x-auto rounded-xl border border-white/10 bg-[#18191f] shadow-md"
+            className="my-4 overflow-x-auto rounded-xl border border-zinc-800 bg-[#181920] shadow-sm"
           >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#22232a] text-white border-b border-white/10 font-bold">
+                <tr className="bg-[#141519] text-white border-b border-zinc-800 font-bold">
                   {header.map((h, i) => (
                     <th key={i} className="p-3">
-                      {h}
+                      {stripEmojis(h)}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-zinc-800">
                 {body.map((r, ri) => (
                   <tr
                     key={ri}
-                    className="hover:bg-white/5 text-zinc-300 transition-colors"
+                    className="hover:bg-zinc-800/40 text-zinc-300 transition-colors"
                   >
                     {r.map((cell, ci) => (
                       <td key={ci} className="p-3 leading-relaxed">
-                        {cell}
+                        {stripEmojis(cell)}
                       </td>
                     ))}
                   </tr>
@@ -69,23 +78,37 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       return;
     }
 
+    const isBeforeBullet =
+      trimmed.startsWith("- **Before:**") ||
+      trimmed.startsWith("- **Original:**") ||
+      trimmed.startsWith("**Original:**") ||
+      trimmed.startsWith("Original:");
+
+    const isAfterBullet =
+      trimmed.startsWith("- **After:**") ||
+      trimmed.startsWith("- **Improved:**") ||
+      trimmed.startsWith("- **AI Rewritten:**") ||
+      trimmed.startsWith("**AI Rewritten:**") ||
+      trimmed.startsWith("AI Rewritten:");
+
     if (trimmed.startsWith("### ")) {
+      const heading = stripEmojis(trimmed.replace("### ", "").replace(/\*\*/g, ""));
       elements.push(
         <h4
           key={index}
-          className="text-base font-bold text-purple-400 mt-5 mb-2 flex items-center gap-2"
+          className="text-sm font-bold text-white mt-5 mb-2 pb-1 border-b border-zinc-800/80"
         >
-          <ChevronRight className="w-4 h-4 text-purple-400" />
-          {trimmed.replace("### ", "").replace(/\*\*/g, "")}
+          {heading}
         </h4>
       );
     } else if (trimmed.startsWith("## ")) {
+      const heading = stripEmojis(trimmed.replace("## ", "").replace(/\*\*/g, ""));
       elements.push(
         <h3
           key={index}
-          className="text-lg font-black text-white mt-6 mb-3 pb-2 border-b border-white/10 flex items-center gap-2"
+          className="text-base font-bold text-white mt-6 mb-3 pb-2 border-b border-zinc-800"
         >
-          {trimmed.replace("## ", "").replace(/\*\*/g, "")}
+          {heading}
         </h3>
       );
     } else if (
@@ -93,56 +116,74 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
       trimmed.toLowerCase().includes("verdict: no hire") ||
       trimmed.toLowerCase().includes("verdict: borderline")
     ) {
-      const isHire = trimmed.toLowerCase().includes("verdict: hire");
-      const isNoHire = trimmed.toLowerCase().includes("verdict: no hire");
       elements.push(
         <div
           key={index}
-          className={`p-3 rounded-xl border my-2 flex items-center gap-2 text-xs font-bold ${
-            isHire
-              ? "bg-emerald-950/60 border-emerald-500/30 text-emerald-300"
-              : isNoHire
-              ? "bg-rose-950/60 border-rose-500/30 text-rose-300"
-              : "bg-amber-950/60 border-amber-500/30 text-amber-300"
-          }`}
+          className="p-3.5 rounded-xl border border-zinc-800 bg-[#181920] my-2 text-xs font-bold text-white flex items-center justify-between"
         >
-          <Sparkles className="w-4 h-4 shrink-0" />
-          <span>{trimmed.replace(/\*\*/g, "")}</span>
+          <span>{stripEmojis(trimmed.replace(/\*\*/g, ""))}</span>
         </div>
       );
-    } else if (trimmed.startsWith("- **Before:**")) {
+    } else if (isBeforeBullet) {
+      const rawText = trimmed
+        .replace(/^- \*\*Before:\*\*/i, "")
+        .replace(/^- \*\*Original:\*\*/i, "")
+        .replace(/^\*\*Original:\*\*/i, "")
+        .replace(/^Original:/i, "")
+        .replace(/~~/g, "")
+        .trim();
       elements.push(
         <div
           key={index}
-          className="mt-3 p-3 rounded-t-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 line-through"
+          className="mt-3 p-3.5 rounded-t-xl bg-[#141519] border border-zinc-800 space-y-1"
         >
-          {trimmed.replace("- **Before:**", "Original:").replace(/\*\*/g, "")}
-        </div>
-      );
-    } else if (trimmed.startsWith("- **After:**")) {
-      elements.push(
-        <div
-          key={index}
-          className="mb-3 p-3 rounded-b-xl bg-purple-950/40 border-x border-b border-purple-500/30 text-xs text-purple-200 font-semibold flex items-start gap-2"
-        >
-          <Sparkles className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-          <span>
-            {trimmed.replace("- **After:**", "AI Rewritten:").replace(/\*\*/g, "")}
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">
+            Original Bullet
           </span>
+          <p className="text-xs text-zinc-400 font-mono leading-relaxed">
+            {rawText}
+          </p>
         </div>
+      );
+    } else if (isAfterBullet) {
+      const rawText = trimmed
+        .replace(/^- \*\*After:\*\*/i, "")
+        .replace(/^- \*\*Improved:\*\*/i, "")
+        .replace(/^- \*\*AI Rewritten:\*\*/i, "")
+        .replace(/^\*\*AI Rewritten:\*\*/i, "")
+        .replace(/^AI Rewritten:/i, "")
+        .trim();
+      elements.push(
+        <div
+          key={index}
+          className="mb-3 p-3.5 rounded-b-xl bg-[#181920] border-x border-b border-zinc-750 space-y-1"
+        >
+          <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider block">
+            Improved Version (STAR / Metric-Driven)
+          </span>
+          <p className="text-xs text-white font-medium leading-relaxed">
+            {rawText}
+          </p>
+        </div>
+      );
+    } else if (trimmed.startsWith("*") && trimmed.endsWith("*") && !trimmed.startsWith("**")) {
+      elements.push(
+        <p key={index} className="text-[11px] text-zinc-400 italic mb-2 px-1">
+          {stripEmojis(trimmed.replace(/^\*|\*$/g, ""))}
+        </p>
       );
     } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      const contentStr = trimmed.substring(2);
+      const contentStr = stripEmojis(trimmed.substring(2));
       elements.push(
         <div
           key={index}
-          className="flex items-start gap-2 text-xs text-zinc-300 ml-2 my-1 leading-relaxed min-w-0"
+          className="flex items-start gap-2.5 text-xs text-zinc-300 ml-1 my-1.5 leading-relaxed min-w-0"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 mt-1.5 shrink-0" />
           <span className="break-words min-w-0">
             {contentStr.split("**").map((part, i) =>
               i % 2 === 1 ? (
-                <strong key={i} className="text-white font-bold">
+                <strong key={i} className="text-white font-semibold">
                   {part}
                 </strong>
               ) : (
@@ -153,14 +194,15 @@ export default function ResumeMarkdownViewer({ content }: ResumeMarkdownViewerPr
         </div>
       );
     } else {
+      const contentStr = stripEmojis(trimmed);
       elements.push(
         <p
           key={index}
-          className="text-xs text-zinc-300 leading-relaxed my-1 break-words"
+          className="text-xs text-zinc-300 leading-relaxed my-1.5 break-words"
         >
-          {trimmed.split("**").map((part, i) =>
+          {contentStr.split("**").map((part, i) =>
             i % 2 === 1 ? (
-              <strong key={i} className="text-white font-bold">
+              <strong key={i} className="text-white font-semibold">
                 {part}
               </strong>
             ) : (
