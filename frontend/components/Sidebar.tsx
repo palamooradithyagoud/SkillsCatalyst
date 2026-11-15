@@ -10,7 +10,9 @@ import {
   BookOpen,
   Map,
   Target,
-  Compass,
+  Calendar,
+  GraduationCap,
+  Newspaper,
   Briefcase,
   Bot,
   BarChart3,
@@ -47,6 +49,24 @@ export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentExploreTab, setCurrentExploreTab] = useState<string>("events");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && pathname === "/explore") {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentExploreTab(params.get("tab") || "events");
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleExploreTabChange = (e: any) => {
+      if (e.detail && typeof e.detail === "string") {
+        setCurrentExploreTab(e.detail);
+      }
+    };
+    window.addEventListener("explore-tab-change", handleExploreTabChange);
+    return () => window.removeEventListener("explore-tab-change", handleExploreTabChange);
+  }, []);
 
   // Keyboard shortcut listener for Command + K (Search) and Escape
   useEffect(() => {
@@ -105,10 +125,22 @@ export default function Sidebar() {
       icon: Target,
     },
     {
-      id: "explore",
-      title: "Explore",
-      href: "/explore",
-      icon: Compass,
+      id: "events",
+      title: "Events",
+      href: "/explore?tab=events",
+      icon: Calendar,
+    },
+    {
+      id: "scholarships",
+      title: "Scholarships",
+      href: "/explore?tab=scholarships",
+      icon: GraduationCap,
+    },
+    {
+      id: "news",
+      title: "Tech News",
+      href: "/explore?tab=news",
+      icon: Newspaper,
     },
   ];
 
@@ -180,8 +212,14 @@ export default function Sidebar() {
     if (item.id === "practice") {
       return pathname.startsWith("/practice");
     }
-    if (item.id === "explore") {
-      return pathname.startsWith("/explore");
+    if (item.id === "events") {
+      return pathname === "/explore" && (currentExploreTab === "events" || !currentExploreTab);
+    }
+    if (item.id === "scholarships") {
+      return pathname === "/explore" && currentExploreTab === "scholarships";
+    }
+    if (item.id === "news") {
+      return pathname === "/explore" && currentExploreTab === "news";
     }
     if (item.id === "career") {
       return pathname.startsWith("/career");
@@ -214,6 +252,14 @@ export default function Sidebar() {
           if (item.onClick) {
             e.preventDefault();
             item.onClick();
+          } else if (item.href.startsWith("/explore")) {
+            const tab = item.id;
+            setCurrentExploreTab(tab);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("explore-tab-change", { detail: tab })
+              );
+            }
           }
         }}
         className={`group relative flex items-center justify-between px-[21px] py-2.5 text-[14px] transition-colors select-none ${

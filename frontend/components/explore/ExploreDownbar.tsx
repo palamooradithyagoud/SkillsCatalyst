@@ -50,7 +50,7 @@ export default function ExploreDownbar({
   return (
     <nav
       aria-label="Explore Sections Navigation"
-      className={`fixed bottom-3 sm:bottom-6 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 md:left-[calc(50%+2.25rem)] lg:left-[calc(50%+2.5rem)] z-40 max-w-lg sm:max-w-none mx-auto flex items-center justify-center gap-2 sm:gap-2.5 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
+      className={`md:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto flex items-center justify-center gap-2 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
     >
       {/* ── Circular Glass Back Button (Matches Image 2) ── */}
       <motion.button

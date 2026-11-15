@@ -277,7 +277,7 @@ function ExplorePageContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28">
+    <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-12">
       {/* ── Normal Tab Views ── */}
       {/* ── 1. Events Widget ── */}
       {activeTab === "events" && <EventsWidget />}
@@ -582,10 +582,11 @@ function ExplorePageContent() {
       </div>
       )}
 
-      {/* ── Floating Downbar Dock (Mobile & Desktop) ── */}
+      {/* ── Mobile Downbar Dock (Hidden on Desktop) ── */}
       <ExploreDownbar
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
+        className="md:hidden"
       />
 
       {/* ── Programming Language Selection Modal ── */}
