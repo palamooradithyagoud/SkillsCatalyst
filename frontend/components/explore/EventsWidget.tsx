@@ -142,13 +142,22 @@ export default function EventsWidget() {
       {/* ── Top Hero (Mobile View Only: Matches Mobile Mockup) ── */}
       <div
         suppressHydrationWarning
-        className="md:hidden relative overflow-hidden rounded-[24px] sm:rounded-[36px] p-4.5 sm:p-8 bg-white border border-slate-200/80 shadow-[0_12px_45px_rgba(0,0,0,0.06)] space-y-3.5 sm:space-y-4"
+        className="md:hidden relative overflow-hidden rounded-[24px] sm:rounded-[36px] p-4.5 sm:p-8 border border-slate-200/80 shadow-[0_12px_45px_rgba(0,0,0,0.06)] space-y-3.5 sm:space-y-4"
+        style={{
+          backgroundColor: "#FAF9F6", // Ivory base
+          backgroundImage: `
+            radial-gradient(ellipse 70% 60% at 92% 10%, rgba(255, 174, 158, 0.5) 0%, transparent 65%),
+            radial-gradient(ellipse 65% 55% at 85% 50%, rgba(216, 180, 254, 0.45) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 60% at 72% 92%, rgba(186, 230, 253, 0.55) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 50% at 15% 90%, rgba(224, 242, 254, 0.4) 0%, transparent 55%)
+          `,
+        }}
       >
-        {/* Animated Pastel Gradient Blobs (Peach, Lilac, Sky Blue) */}
+        {/* Layered Blurred Flowing Shapes (Coral, Lavender, Pale Blue) to create depth */}
         <motion.div
           animate={{
-            x: [0, 22, -14, 0],
-            y: [0, -18, 14, 0],
+            x: [0, 20, -12, 0],
+            y: [0, -16, 14, 0],
             scale: [1, 1.1, 0.96, 1],
           }}
           transition={{
@@ -156,27 +165,27 @@ export default function EventsWidget() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute -top-24 -right-10 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-br from-[#FFA28B] via-[#FF7582]/65 to-[#FF99AC]/50 blur-3xl opacity-75 pointer-events-none"
+          className="absolute -top-20 -right-8 w-80 sm:w-92 h-80 sm:h-92 rounded-full bg-gradient-to-br from-[#FFA28B]/65 via-[#FF7582]/50 to-[#FF99AC]/40 blur-[60px] pointer-events-none"
         />
 
         <motion.div
           animate={{
-            x: [0, -18, 16, 0],
-            y: [0, 16, -16, 0],
-            scale: [1, 0.94, 1.08, 1],
+            x: [0, -18, 15, 0],
+            y: [0, 16, -14, 0],
+            scale: [1, 0.94, 1.07, 1],
           }}
           transition={{
             duration: 13,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 0.4,
+            delay: 0.3,
           }}
-          className="absolute top-4 right-14 w-72 sm:w-84 h-72 sm:h-84 rounded-full bg-gradient-to-tr from-[#C4B5FD] via-[#DDD6FE]/75 to-[#E9D5FF]/60 blur-3xl opacity-75 pointer-events-none"
+          className="absolute top-6 right-12 w-72 sm:w-84 h-72 sm:h-84 rounded-full bg-gradient-to-tr from-[#DDD6FE]/70 via-[#C4B5FD]/55 to-[#E9D5FF]/45 blur-[60px] pointer-events-none"
         />
 
         <motion.div
           animate={{
-            x: [0, 16, -20, 0],
+            x: [0, 18, -14, 0],
             y: [0, -12, 16, 0],
             scale: [1, 1.08, 0.95, 1],
           }}
@@ -184,10 +193,13 @@ export default function EventsWidget() {
             duration: 15,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 0.8,
+            delay: 0.6,
           }}
-          className="absolute -bottom-24 right-4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-tl from-[#BAE6FD] via-[#93C5FD]/75 to-[#C7D2FE]/65 blur-3xl opacity-70 pointer-events-none"
+          className="absolute -bottom-16 right-4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-tl from-[#BAE6FD]/70 via-[#93C5FD]/50 to-[#E0E7FF]/40 blur-[64px] pointer-events-none"
         />
+
+        {/* Ivory Foreground Wash for readable text and controls */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF9F6]/95 via-[#FAF9F6]/75 to-transparent pointer-events-none" />
 
         {/* Ambient Warm Glow behind share button */}
         <motion.div
@@ -340,11 +352,10 @@ export default function EventsWidget() {
             onClick={() => setShowFilterPills(!showFilterPills)}
             aria-label="Filter events"
             suppressHydrationWarning
-            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-              showFilterPills || filterMode !== "all"
-                ? "bg-purple-600 text-white border-purple-600 shadow-xs"
-                : "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700 shadow-2xs"
-            } active:scale-95`}
+            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${showFilterPills || filterMode !== "all"
+              ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+              : "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700 shadow-2xs"
+              } active:scale-95`}
           >
             <Filter className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
@@ -370,11 +381,10 @@ export default function EventsWidget() {
                   type="button"
                   onClick={() => setFilterMode(f.id as any)}
                   suppressHydrationWarning
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    filterMode === f.id
-                      ? "bg-purple-600 text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-neutral-700/80"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterMode === f.id
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-neutral-700/80"
+                    }`}
                 >
                   {f.label}
                 </button>
