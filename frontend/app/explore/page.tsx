@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Search,
   Zap,
-  Globe,
   Star,
   Play,
   Terminal,
@@ -31,17 +30,14 @@ import {
   GraduationCap,
   Newspaper,
   Calendar,
-  Users,
   ExternalLink,
 } from "lucide-react";
 import ScholarshipsWidget from "@/components/explore/ScholarshipsWidget";
 import TechNewsWidget from "@/components/explore/TechNewsWidget";
 import EventsWidget from "@/components/explore/EventsWidget";
-import CommunityWidget from "@/components/explore/CommunityWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
 import { fetchStudentEvents } from "@/lib/api/events";
 import type { EventItem } from "@/types/events";
-import StrokeText from "./StrokeText";
 
 // Foundation items for Explore feed
 const AI_PICKS = [
@@ -228,16 +224,16 @@ function ExplorePageContent() {
     };
   }, []);
 
-  const initialTab = (searchParams.get("tab") as ExploreTabId) || "trending";
+  const initialTab = (searchParams.get("tab") as ExploreTabId) || "events";
   const [activeTab, setActiveTab] = useState<ExploreTabId>(
-    ["trending", "scholarships", "news", "events", "community"].includes(initialTab)
+    ["events", "scholarships", "news", "trending"].includes(initialTab)
       ? initialTab
-      : "trending"
+      : "events"
   );
 
   useEffect(() => {
     const tabParam = searchParams.get("tab") as ExploreTabId;
-    if (tabParam && ["trending", "scholarships", "news", "events", "community"].includes(tabParam)) {
+    if (tabParam && ["events", "scholarships", "news", "trending"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -251,7 +247,7 @@ function ExplorePageContent() {
 
   useEffect(() => {
     const handleExploreTabChange = (e: any) => {
-      if (e.detail && ["trending", "scholarships", "news", "events", "community"].includes(e.detail)) {
+      if (e.detail && ["events", "scholarships", "news", "trending"].includes(e.detail)) {
         setActiveTab(e.detail);
       }
     };
@@ -282,73 +278,13 @@ function ExplorePageContent() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28">
-      {/* ── Top Header ── */}
-      <div className="bg-white dark:bg-[#18191F] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-neutral-800 shadow-md relative overflow-hidden">
-        <div className="flex flex-row items-center justify-between gap-3 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
-              {activeTab === "scholarships" ? (
-                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              ) : activeTab === "events" ? (
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              ) : activeTab === "news" ? (
-                <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              ) : activeTab === "community" ? (
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              ) : (
-                <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              )}
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none flex items-center min-h-[28px] sm:min-h-[36px]">
-                <StrokeText
-                  key={activeTab}
-                  text={
-                    activeTab === "scholarships"
-                      ? "Scholarships"
-                      : activeTab === "events"
-                      ? "Events"
-                      : activeTab === "news"
-                      ? "Tech News"
-                      : activeTab === "community"
-                      ? "Community"
-                      : "Explore"
-                  }
-                  strokeColor="#A78BFA"
-                  fillColor="#A855F7"
-                  strokeWidth={1.4}
-                  drawDuration={1.6}
-                  fillDelay={0.2}
-                  stagger={0.05}
-                  ease="power2.out"
-                  trigger="mount"
-                  fillMode="wipe"
-                  fontSize={128}
-                  fontWeight={800}
-                  letterSpacing={-4}
-                  className="h-7 sm:h-9 w-auto"
-                />
-              </h1>
-              <p className="text-slate-500 dark:text-neutral-400 text-[11px] sm:text-sm font-semibold mt-0.5">
-                {activeTab === "trending" && "Curated roadmaps & skill paths"}
-                {activeTab === "scholarships" && "Verified tech scholarships & fellowships"}
-                {activeTab === "news" && "48-hour curated tech stories & engineering drops"}
-                {activeTab === "events" && "Global hackathons, keynotes & summits"}
-                {activeTab === "community" && "Peer study pods, tech guilds & referrals"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Mobile Category Navigation Pills ── */}
+      {/* ── Mobile Category Navigation Pills (Glassmorphic) ── */}
       <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
         {[
-          { id: "trending", name: "Trending", icon: Flame },
-          { id: "scholarships", name: "Scholarships", icon: GraduationCap },
-          { id: "news", name: "News", icon: Newspaper },
           { id: "events", name: "Events", icon: Calendar },
-          { id: "community", name: "Guilds", icon: Users },
+          { id: "scholarships", name: "Scholarships", icon: GraduationCap },
+          { id: "news", name: "Tech News", icon: Newspaper },
+          { id: "trending", name: "Trending", icon: Flame },
         ].map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -357,10 +293,10 @@ function ExplorePageContent() {
               key={item.id}
               type="button"
               onClick={() => handleSelectTab(item.id as ExploreTabId)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
                 isActive
-                  ? "bg-pink-600 text-white shadow-xs"
-                  : "bg-white dark:bg-[#18191F] text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800"
+                  ? "bg-white/20 dark:bg-white/15 text-white backdrop-blur-xl border border-white/30 dark:border-white/25 shadow-xs font-black"
+                  : "bg-white/10 dark:bg-black/30 backdrop-blur-lg text-neutral-300 border border-white/10"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -371,7 +307,16 @@ function ExplorePageContent() {
       </div>
 
       {/* ── Normal Tab Views ── */}
-      {/* ── Tab Views: Trending (Existing Content) ── */}
+      {/* ── 1. Events Widget ── */}
+      {activeTab === "events" && <EventsWidget />}
+
+      {/* ── 2. Scholarships Widget ── */}
+      {activeTab === "scholarships" && <ScholarshipsWidget />}
+
+      {/* ── 3. Tech News Widget ── */}
+      {activeTab === "news" && <TechNewsWidget />}
+
+      {/* ── 4. Trending (Foundation & Career Tracks) ── */}
       {activeTab === "trending" && (
             <div className="space-y-6">
 
@@ -664,18 +609,6 @@ function ExplorePageContent() {
       </div>
       </div>
       )}
-
-      {/* ── 2. Scholarships Widget ── */}
-      {activeTab === "scholarships" && <ScholarshipsWidget />}
-
-      {/* ── 3. Tech News Widget ── */}
-      {activeTab === "news" && <TechNewsWidget />}
-
-      {/* ── 4. Events Widget ── */}
-      {activeTab === "events" && <EventsWidget />}
-
-      {/* ── 5. Community Widget ── */}
-      {activeTab === "community" && <CommunityWidget />}
 
       {/* ── Desktop Floating Downbar Dock ── */}
       <ExploreDownbar

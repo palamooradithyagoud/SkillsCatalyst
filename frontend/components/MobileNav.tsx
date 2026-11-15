@@ -25,7 +25,6 @@ import {
   GraduationCap,
   Newspaper,
   Calendar,
-  Users,
   BookOpen,
   Compass,
   Film,
@@ -77,11 +76,10 @@ const bottomBarItems = [
 ];
 
 const exploreBottomBarItems = [
-  { id: "trending", name: "Trending", icon: Flame },
+  { id: "events", name: "Events", icon: Calendar },
   { id: "scholarships", name: "Scholarships", icon: GraduationCap },
   { id: "news", name: "News", icon: Newspaper },
-  { id: "events", name: "Events", icon: Calendar },
-  { id: "community", name: "Guilds", icon: Users },
+  { id: "trending", name: "Trending", icon: Flame },
 ];
 
 // Pale light pastel palette (Blue, Yellow, Pink) — zero glass, zero purple
@@ -127,7 +125,7 @@ function MobileNavContent() {
     if (typeof window !== "undefined" && window.location.pathname === "/explore") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      if (tab && ["trending", "scholarships", "news", "events", "community"].includes(tab)) {
+      if (tab && ["events", "scholarships", "news", "trending"].includes(tab)) {
         setExploreTab(tab);
       }
     }
