@@ -38,6 +38,11 @@ export default function ExploreDownbar({
   className = "",
 }: ExploreDownbarProps) {
   const router = useRouter();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -47,9 +52,14 @@ export default function ExploreDownbar({
     }
   };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <nav
       aria-label="Explore Sections Navigation"
+      suppressHydrationWarning
       className={`md:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto flex items-center justify-center gap-2 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
     >
       {/* ── Circular Glass Back Button (Matches Image 2) ── */}
@@ -59,6 +69,7 @@ export default function ExploreDownbar({
         whileHover={{ y: -1 }}
         onClick={handleBack}
         aria-label="Back to Dashboard"
+        suppressHydrationWarning
         className="w-12 h-12 sm:w-13 sm:h-13 rounded-full border border-white/20 dark:border-white/15 bg-white/10 dark:bg-black/35 backdrop-blur-2xl backdrop-saturate-180 shadow-[0_12px_36px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.25)] flex flex-col items-center justify-center text-neutral-300 hover:text-white transition-all duration-200 cursor-pointer shrink-0 select-none group"
       >
         <ArrowLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-neutral-300 group-hover:text-white transition-colors" />
@@ -80,6 +91,7 @@ export default function ExploreDownbar({
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.94 }}
               onClick={() => onSelectTab(tab.id)}
+              suppressHydrationWarning
               className={`relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer select-none group ${
                 isActive
                   ? "text-white font-black"

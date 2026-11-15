@@ -14,6 +14,11 @@ import {
   X,
   ArrowUpRight,
   Sparkles,
+  Search,
+  Share2,
+  SlidersHorizontal,
+  Filter,
+  Check,
 } from "lucide-react";
 import { useStudentEvents } from "@/hooks/useStudentEvents";
 import type { EventItem } from "@/types/events";
@@ -42,6 +47,47 @@ export default function EventsWidget() {
   const { data, isLoading: loadingLiveEvents } = useStudentEvents();
   const liveEvents = data?.events ?? [];
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMode, setFilterMode] = useState<"all" | "hackathons" | "online" | "campus">("all");
+  const [showFilterPills, setShowFilterPills] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Discover Campus Events & Hackathons | SkillsCatalyst",
+          url: window.location.href,
+        });
+        return;
+      } catch {
+        // user canceled share
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const filteredEvents = liveEvents.filter((ev) => {
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      ev.event_name.toLowerCase().includes(q) ||
+      ev.conducted_by_college.toLowerCase().includes(q) ||
+      (ev.location && ev.location.toLowerCase().includes(q)) ||
+      (ev.description && ev.description.toLowerCase().includes(q));
+
+    const matchesFilter =
+      filterMode === "all" ||
+      (filterMode === "hackathons" && ev.is_hackathon) ||
+      (filterMode === "online" && (ev.category === "online" || ev.mode === "online")) ||
+      (filterMode === "campus" && (ev.category === "offline" || ev.mode === "offline"));
+
+    return matchesSearch && matchesFilter;
+  });
 
   // Close modal on ESC key
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -72,6 +118,7 @@ export default function EventsWidget() {
         month: "short",
         day: "numeric",
         year: "numeric",
+        timeZone: "UTC",
       });
     } catch {
       return d;
@@ -83,6 +130,7 @@ export default function EventsWidget() {
       return new Date(d).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
+        timeZone: "UTC",
       });
     } catch {
       return d;
@@ -90,9 +138,254 @@ export default function EventsWidget() {
   };
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* ── Top Hero (Mobile View Only: Matches Mobile Mockup) ── */}
+      <div
+        suppressHydrationWarning
+        className="md:hidden relative overflow-hidden rounded-[24px] sm:rounded-[36px] p-4.5 sm:p-8 bg-white border border-slate-200/80 shadow-[0_12px_45px_rgba(0,0,0,0.06)] space-y-3.5 sm:space-y-4"
+      >
+        {/* Animated Pastel Gradient Blobs (Peach, Lilac, Sky Blue) */}
+        <motion.div
+          animate={{
+            x: [0, 22, -14, 0],
+            y: [0, -18, 14, 0],
+            scale: [1, 1.1, 0.96, 1],
+          }}
+          transition={{
+            duration: 11,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute -top-24 -right-10 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-br from-[#FFA28B] via-[#FF7582]/65 to-[#FF99AC]/50 blur-3xl opacity-75 pointer-events-none"
+        />
+
+        <motion.div
+          animate={{
+            x: [0, -18, 16, 0],
+            y: [0, 16, -16, 0],
+            scale: [1, 0.94, 1.08, 1],
+          }}
+          transition={{
+            duration: 13,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.4,
+          }}
+          className="absolute top-4 right-14 w-72 sm:w-84 h-72 sm:h-84 rounded-full bg-gradient-to-tr from-[#C4B5FD] via-[#DDD6FE]/75 to-[#E9D5FF]/60 blur-3xl opacity-75 pointer-events-none"
+        />
+
+        <motion.div
+          animate={{
+            x: [0, 16, -20, 0],
+            y: [0, -12, 16, 0],
+            scale: [1, 1.08, 0.95, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.8,
+          }}
+          className="absolute -bottom-24 right-4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-tl from-[#BAE6FD] via-[#93C5FD]/75 to-[#C7D2FE]/65 blur-3xl opacity-70 pointer-events-none"
+        />
+
+        {/* Ambient Warm Glow behind share button */}
+        <motion.div
+          animate={{
+            scale: [1, 1.12, 1],
+            opacity: [0.4, 0.55, 0.4],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-0 right-0 w-64 h-64 rounded-full bg-gradient-to-b from-[#FFD1C1]/60 to-[#DDD6FE]/50 blur-2xl pointer-events-none"
+        />
+
+        {/* Top Row: Location Tag + Share Button */}
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF5A5F] shrink-0" />
+            <span className="text-xs sm:text-base font-extrabold text-slate-800 tracking-tight">
+              Events near you
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="Share events"
+            suppressHydrationWarning
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#EEF2FF] hover:bg-[#E0E7FF] border border-white/80 shadow-xs flex items-center justify-center text-slate-700 transition-all active:scale-95 cursor-pointer relative"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <Share2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700" />
+            )}
+            {copied && (
+              <span className="absolute -bottom-6 text-[10px] font-bold text-emerald-600 whitespace-nowrap">
+                Link copied!
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Headline */}
+        <div className="relative z-10 pt-0.5 sm:pt-1">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            Discover events
+          </h1>
+        </div>
+
+        {/* Pill Search Bar */}
+        <div className="relative z-10 space-y-2 pt-0.5 sm:pt-1">
+          <div className="flex items-center w-full min-w-0 bg-white rounded-full border border-slate-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 pl-3.5 sm:p-2 sm:pl-5 gap-2 sm:gap-3 transition-all focus-within:shadow-[0_8px_30px_rgba(99,102,241,0.12)] focus-within:border-indigo-300">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Explore events"
+              suppressHydrationWarning
+              className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                suppressHydrationWarning
+                className="text-slate-400 hover:text-slate-600 p-1 shrink-0 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <div className="h-5 sm:h-6 w-[1px] bg-slate-200 shrink-0 mx-0.5 sm:mx-1" />
+            <button
+              type="button"
+              onClick={() => setShowFilterPills(!showFilterPills)}
+              aria-label="Filter events"
+              suppressHydrationWarning
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${showFilterPills || filterMode !== "all"
+                ? "bg-[#6366F1] text-white shadow-xs"
+                : "bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#5D5FEF]"
+                } active:scale-95`}
+            >
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+
+          {/* Quick Filter Chips (Mobile) */}
+          <AnimatePresence>
+            {showFilterPills && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar"
+              >
+                {[
+                  { id: "all", label: "All Events" },
+                  { id: "hackathons", label: "Hackathons" },
+                  { id: "online", label: "Online Only" },
+                  { id: "campus", label: "On Campus" },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFilterMode(f.id as any)}
+                    suppressHydrationWarning
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${filterMode === f.id
+                      ? "bg-[#6366F1] text-white shadow-xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── Desktop View Search & Filter Bar (Matches Image 2) ── */}
+      <div className="hidden md:block space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search events"
+              suppressHydrationWarning
+              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 outline-none focus:border-indigo-500 dark:focus:border-[#C084FC] transition-colors shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                suppressHydrationWarning
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowFilterPills(!showFilterPills)}
+            aria-label="Filter events"
+            suppressHydrationWarning
+            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+              showFilterPills || filterMode !== "all"
+                ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                : "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700 shadow-2xs"
+            } active:scale-95`}
+          >
+            <Filter className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </button>
+        </div>
+
+        {/* Quick Filter Chips (Desktop) */}
+        <AnimatePresence>
+          {showFilterPills && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 pt-1 pb-0.5"
+            >
+              {[
+                { id: "all", label: "All Events" },
+                { id: "hackathons", label: "Hackathons" },
+                { id: "online", label: "Online Only" },
+                { id: "campus", label: "On Campus" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFilterMode(f.id as any)}
+                  suppressHydrationWarning
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filterMode === f.id
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-neutral-700/80"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* ── Section Header ── */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-1 pt-1">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 dark:bg-[#181920] border border-amber-500/20 dark:border-neutral-800 flex items-center justify-center text-amber-500 dark:text-amber-400 shadow-2xs">
             <Trophy className="w-4 h-4 sm:w-4.5 sm:h-4.5 -rotate-12 transition-transform duration-200" />
@@ -101,6 +394,29 @@ export default function EventsWidget() {
             Live Campus Events &amp; Hackathons
           </h2>
         </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-extrabold text-slate-400 dark:text-neutral-500">
+            {filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"}
+          </span>
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="Share events"
+            suppressHydrationWarning
+            className="hidden md:flex w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#181920] hover:bg-slate-200 dark:hover:bg-[#252630] border border-slate-200/80 dark:border-neutral-700/80 items-center justify-center text-slate-700 dark:text-neutral-200 transition-all active:scale-95 cursor-pointer relative"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-500" />
+            ) : (
+              <Share2 className="w-3.5 h-3.5" />
+            )}
+            {copied && (
+              <span className="absolute -bottom-6 text-[10px] font-bold text-emerald-500 whitespace-nowrap">
+                Link copied!
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── Small / Compact Cards Grid ── */}
@@ -108,17 +424,30 @@ export default function EventsWidget() {
         <div className="p-8 text-center text-xs font-semibold text-slate-400 dark:text-neutral-400 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 rounded-2xl">
           Loading active events...
         </div>
-      ) : liveEvents.length === 0 ? (
+      ) : filteredEvents.length === 0 ? (
         <div className="p-8 text-center bg-white dark:bg-[#18191F] border border-dashed border-slate-200/90 dark:border-neutral-800 rounded-2xl space-y-2">
           <Trophy className="w-8 h-8 text-slate-300 dark:text-neutral-600 mx-auto" />
-          <p className="text-xs font-bold text-slate-700 dark:text-white">No active events published at this moment</p>
-          <p className="text-[11px] text-slate-400 dark:text-neutral-400 max-w-sm mx-auto">
-            New college hackathons, hiring challenges, and tech symposia will be published here directly.
+          <p className="text-xs font-bold text-slate-700 dark:text-white">
+            {searchQuery.trim()
+              ? `No events matching "${searchQuery}"`
+              : "No active events published at this moment"}
           </p>
+          {(searchQuery || filterMode !== "all") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setFilterMode("all");
+              }}
+              className="text-xs font-bold text-purple-600 dark:text-[#C084FC] hover:underline cursor-pointer"
+            >
+              Reset filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
-          {liveEvents.map((ev) => (
+          {filteredEvents.map((ev) => (
             <div
               key={ev.id}
               onClick={() => setSelectedEvent(ev)}
