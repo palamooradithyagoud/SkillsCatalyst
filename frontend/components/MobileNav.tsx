@@ -181,9 +181,10 @@ function MobileNavContent() {
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
-  // Hide bottom navigation bar inside active video player, practice subviews, roadmaps, edit profile page, SkillBits reels, or career page
+  // Hide bottom navigation bar inside explore (which has dedicated downside explore dock), active video player, practice subviews, roadmaps, edit profile page, SkillBits reels, or career page
   const isHideBottomBar =
     isExplicitlyHidden ||
+    pathname.startsWith("/explore") ||
     pathname.startsWith("/career") ||
     pathname.startsWith("/skillbits") ||
     (pathname === "/learning" && isLearningPlayer) ||

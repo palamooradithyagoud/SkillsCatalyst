@@ -278,34 +278,6 @@ function ExplorePageContent() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-28">
-      {/* ── Mobile Category Navigation Pills (Glassmorphic) ── */}
-      <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-        {[
-          { id: "events", name: "Events", icon: Calendar },
-          { id: "scholarships", name: "Scholarships", icon: GraduationCap },
-          { id: "news", name: "Tech News", icon: Newspaper },
-          { id: "trending", name: "Trending", icon: Flame },
-        ].map((item) => {
-          const isActive = activeTab === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleSelectTab(item.id as ExploreTabId)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
-                isActive
-                  ? "bg-white/20 dark:bg-white/15 text-white backdrop-blur-xl border border-white/30 dark:border-white/25 shadow-xs font-black"
-                  : "bg-white/10 dark:bg-black/30 backdrop-blur-lg text-neutral-300 border border-white/10"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{item.name}</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* ── Normal Tab Views ── */}
       {/* ── 1. Events Widget ── */}
       {activeTab === "events" && <EventsWidget />}
@@ -610,11 +582,10 @@ function ExplorePageContent() {
       </div>
       )}
 
-      {/* ── Desktop Floating Downbar Dock ── */}
+      {/* ── Floating Downbar Dock (Mobile & Desktop) ── */}
       <ExploreDownbar
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
-        className="hidden md:flex"
       />
 
       {/* ── Programming Language Selection Modal ── */}

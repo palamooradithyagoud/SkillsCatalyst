@@ -94,21 +94,13 @@ export default function EventsWidget() {
       {/* ── Section Header ── */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-[#18191F] border border-purple-200/80 dark:border-neutral-800 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shadow-2xs">
-            <Trophy className="w-4 h-4" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 dark:bg-[#181920] border border-amber-500/20 dark:border-neutral-800 flex items-center justify-center text-amber-500 dark:text-amber-400 shadow-2xs">
+            <Trophy className="w-4 h-4 sm:w-4.5 sm:h-4.5 -rotate-12 transition-transform duration-200" />
           </div>
-          <div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
-              Live Campus Events &amp; Hackathons
-            </h2>
-            <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
-              Click on any event card to view complete details, prizes, and registration.
-            </p>
-          </div>
+          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+            Live Campus Events &amp; Hackathons
+          </h2>
         </div>
-        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-purple-950/60 text-purple-300 border border-purple-800/60 shrink-0">
-          {liveEvents.length} Active
-        </span>
       </div>
 
       {/* ── Small / Compact Cards Grid ── */}
