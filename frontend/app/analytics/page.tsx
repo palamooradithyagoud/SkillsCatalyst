@@ -267,6 +267,77 @@ function RingProgress({ pct: p, color, size = 80, stroke = 8 }: { pct: number; c
   );
 }
 
+/** Smartwatch-style Circular Progress Widget matching Image 1 for mobile view */
+function CircularMetricWidget({
+  icon: Icon,
+  iconColor,
+  ringColor,
+  value,
+  label,
+  percent,
+}: {
+  icon: React.ElementType;
+  iconColor: string;
+  ringColor: string;
+  value: React.ReactNode;
+  label: string;
+  percent: number;
+}) {
+  const stroke = 5.5;
+  const radius = 45;
+  const circ = 2 * Math.PI * radius; // ~282.74
+  const clampedPct = Math.min(100, Math.max(0, percent));
+  const offset = circ - (clampedPct / 100) * circ;
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="relative flex flex-col items-center justify-center w-[104px] h-[104px] xs:w-[114px] xs:h-[114px] sm:w-[130px] sm:h-[130px] rounded-full bg-[#1b1c22] border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.65)] select-none shrink-0"
+    >
+      <svg
+        viewBox="0 0 100 100"
+        className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none overflow-visible p-1"
+      >
+        {/* Subtle Background Track */}
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.08)"
+          strokeWidth={stroke}
+        />
+        {/* Crisp Progress Arc (No Glow) */}
+        <motion.circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke={ringColor}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        />
+      </svg>
+
+      <div className="flex flex-col items-center justify-center text-center px-1 z-10">
+        <Icon className={`w-4 h-4 xs:w-4.5 xs:h-4.5 mb-0.5 xs:mb-1 ${iconColor}`} />
+        <div className="text-base xs:text-lg sm:text-xl font-black text-white tracking-tight leading-none">
+          {value}
+        </div>
+        <div className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-neutral-400 mt-0.5 xs:mt-1 leading-tight text-center">
+          {label}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function formatCompanyName(slug: string): string {
   if (!slug) return "";
   const specialMap: Record<string, string> = {
@@ -596,8 +667,36 @@ export default function AnalyticsPage() {
         </div>
       </motion.div>
 
-      {/* ── REAL KPI CARDS GRID ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ── MOBILE CIRCULAR METRICS (IMAGE 1 FITNESS RING STYLE) ─────────── */}
+      <div className="md:hidden flex items-center justify-center gap-2 xs:gap-3.5 sm:gap-5 max-w-full mx-auto py-2 overflow-x-auto scrollbar-none">
+        <CircularMetricWidget
+          icon={Code2}
+          iconColor="text-[#D5FF38]"
+          ringColor="#22c55e"
+          value={stats.problemsSolved}
+          label="Total Solved"
+          percent={Math.min(100, Math.max(stats.problemsSolved > 0 ? 12 : 0, Math.round((stats.problemsSolved / 150) * 100)))}
+        />
+        <CircularMetricWidget
+          icon={PlayCircle}
+          iconColor="text-[#D5FF38]"
+          ringColor="#22c55e"
+          value={<>{stats.completedVideos}<span className="text-[10px] xs:text-[11px] font-semibold text-neutral-400">/{stats.totalVideos}</span></>}
+          label="Videos Watched"
+          percent={Math.min(100, Math.max(stats.completedVideos > 0 ? 12 : 0, stats.learningPct))}
+        />
+        <CircularMetricWidget
+          icon={Bookmark}
+          iconColor="text-[#D5FF38]"
+          ringColor="#22c55e"
+          value={stats.savedPlaylistsCount}
+          label="Saved Playlists"
+          percent={Math.min(100, Math.max(stats.savedPlaylistsCount > 0 ? 15 : 0, Math.round((stats.savedPlaylistsCount / 5) * 100)))}
+        />
+      </div>
+
+      {/* ── REAL KPI CARDS GRID (DESKTOP) ─────────────────────────────────── */}
+      <div className="hidden md:grid md:grid-cols-4 gap-4">
         {/* Metric 1: Problems Solved */}
         <motion.div
           whileHover={{ y: -4 }}
