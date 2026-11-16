@@ -553,21 +553,47 @@ export default function AnalyticsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-6 pb-28 sm:pb-16 select-none"
     >
-      {/* ── TOP HERO BANNER IMAGE ─────────────────────────────────────────── */}
+      {/* ── TOP HERO BANNER: TEXT ON LEFT, IMAGE ON RIGHT (DESKTOP) ───────── */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="relative w-full h-[180px] xs:h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/[0.08] shadow-md bg-white dark:bg-[#18191F]"
+        className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-8 bg-black select-none pt-1 md:pt-0 overflow-hidden"
       >
-        <Image
-          src="/images/analytics/analytics_hero.png"
-          alt="Career Preparation & Analytics"
-          fill
-          priority
-          className="object-cover object-[center_60%]"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1280px"
-        />
+        {/* Left Side: Progress Heading & Subtitle */}
+        <div className="w-full md:w-5/12 lg:w-4/12 shrink-0 px-1 md:px-0 py-1 md:py-6 z-10">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D5FF38] block mb-1">
+            Platform Analytics
+          </span>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none">
+            Progress
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400 font-medium mt-1.5 sm:mt-2.5 max-w-sm leading-relaxed">
+            Overview &amp; Metrics across your coding profiles, video tracks, and daily streak.
+          </p>
+        </div>
+
+        {/* Right Side: Hero Illustration (Blends into black on desktop & mobile) */}
+        <div className="relative w-full md:w-7/12 lg:w-8/12 h-[200px] xs:h-[240px] sm:h-[280px] md:h-[320px] lg:h-[360px] overflow-hidden -mx-3.5 sm:-mx-6 md:mx-0 w-[calc(100%+1.75rem)] sm:w-[calc(100%+3rem)] md:w-auto">
+          <Image
+            src="/images/analytics/analytics_hero.png"
+            alt="Career Preparation & Progress"
+            fill
+            priority
+            className="object-cover object-center md:object-right"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
+          />
+
+          {/* Smooth black fades to blend seamlessly into background */}
+          {/* Bottom fade */}
+          <div className="absolute inset-x-0 bottom-0 h-16 sm:h-24 bg-gradient-to-t from-black via-black/85 to-transparent pointer-events-none z-[2]" />
+          {/* Left fade towards the text on desktop */}
+          <div className="hidden md:block absolute inset-y-0 left-0 w-24 lg:w-36 bg-gradient-to-r from-black via-black/80 to-transparent pointer-events-none z-[2]" />
+          {/* Top subtle fade */}
+          <div className="absolute inset-x-0 top-0 h-8 sm:h-12 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-[2]" />
+          {/* Right subtle fade on desktop */}
+          <div className="hidden md:block absolute inset-y-0 right-0 w-8 lg:w-16 bg-gradient-to-l from-black/60 to-transparent pointer-events-none z-[2]" />
+        </div>
       </motion.div>
 
       {/* ── REAL KPI CARDS GRID ───────────────────────────────────────────── */}
