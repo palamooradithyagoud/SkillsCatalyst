@@ -329,20 +329,20 @@ export default function Sidebar() {
             }
           }
         }}
-        className={`group relative flex items-center justify-between px-[21px] py-2.5 text-[14px] transition-colors select-none ${
+        className={`group relative flex items-center justify-between px-5 py-2 text-[13.5px] transition-colors select-none ${
           isActive
             ? "bg-[#ECEEF2] dark:bg-neutral-900 text-slate-900 dark:text-white font-bold"
             : "text-slate-700 dark:text-neutral-400 font-medium hover:bg-[#D5FF38] dark:hover:bg-[#D5FF38] hover:text-black dark:hover:text-black active:bg-[#D5FF38]/20 dark:active:bg-[#D5FF38]/20"
         }`}
       >
-        <div className="flex items-center gap-3.5 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           {/* ACID LIME active stripe indicator on left edge */}
           {isActive && (
-            <span className="absolute left-0 top-0 bottom-0 w-[4.5px] bg-[#D5FF38] dark:bg-[#D5FF38]" />
+            <span className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#D5FF38] dark:bg-[#D5FF38]" />
           )}
 
           <IconComponent
-            className={`w-[18px] h-[18px] shrink-0 transition-colors ${
+            className={`w-[17px] h-[17px] shrink-0 transition-colors ${
               isActive
                 ? "text-slate-900 dark:text-white"
                 : "text-slate-800 dark:text-neutral-400 group-hover:text-black dark:group-hover:text-black"
@@ -404,7 +404,7 @@ export default function Sidebar() {
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-3 border-b border-slate-200 dark:border-neutral-800" />
+          <div className="my-1.5 mx-3 border-b border-slate-200/80 dark:border-neutral-800" />
 
           {/* CAREER Section Header */}
           <motion.div
@@ -413,18 +413,18 @@ export default function Sidebar() {
               opacity: open ? 1 : 0,
             }}
             transition={{ duration: 0.15 }}
-            className="px-[21px] pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase whitespace-nowrap"
+            className="px-5 pt-2 pb-0.5 text-[10.5px] font-black tracking-wider text-slate-400 dark:text-neutral-500 uppercase whitespace-nowrap"
           >
             CAREER
           </motion.div>
 
-          {/* Career Items: Career Goals, AI Mentor, Analytics */}
+          {/* Career Items */}
           <div className="flex flex-col">
             {careerItems.map((item) => renderNavItem(item))}
           </div>
 
           {/* Divider Line */}
-          <div className="my-2 mx-3 border-b border-slate-200 dark:border-neutral-800" />
+          <div className="my-1.5 mx-3 border-b border-slate-200/80 dark:border-neutral-800" />
 
           {/* ACCOUNT Section Header */}
           <motion.div
@@ -433,7 +433,7 @@ export default function Sidebar() {
               opacity: open ? 1 : 0,
             }}
             transition={{ duration: 0.15 }}
-            className="px-[21px] pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase whitespace-nowrap"
+            className="px-5 pt-2 pb-0.5 text-[10.5px] font-black tracking-wider text-slate-400 dark:text-neutral-500 uppercase whitespace-nowrap"
           >
             ACCOUNT
           </motion.div>
