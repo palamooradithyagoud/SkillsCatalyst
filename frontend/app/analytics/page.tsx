@@ -123,125 +123,121 @@ const C = {
   indigo: "#6366f1",
 };
 
-/** SVG Radar Chart */
-function RadarChart({ data }: { data: { label: string; shortLabel?: string; score: number }[] }) {
-  const size = 280;
-  const cx = size / 2, cy = size / 2, r = 78;
-  const n = data.length;
-  const angleStep = (2 * Math.PI) / n;
-  const angle = (i: number) => -Math.PI / 2 + i * angleStep;
+/** Day-wise Time Spent Bar Chart with Pale Colors & No Glow */
+function WeeklyProgressBarChart({
+  dbProgress,
+  totalSolved,
+}: {
+  dbProgress?: any[];
+  totalSolved?: number;
+} = {}) {
+  const DAYS = [
+    { day: "SUN", minutes: 45, color: "#F29CA3" }, // Pale Blush Coral
+    { day: "MON", minutes: 80, color: "#F4B28C" }, // Pale Apricot Peach
+    { day: "TUE", minutes: 165, color: "#EFE099" }, // Pale Warm Butter
+    { day: "WED", minutes: 115, color: "#A8D5BA" }, // Pale Sage Mint
+    { day: "THU", minutes: 205, color: "#98D2EB" }, // Pale Sky Blue
+    { day: "FRI", minutes: 130, color: "#B8B8FF" }, // Pale Periwinkle
+    { day: "SAT", minutes: 105, color: "#DAB6FC" }, // Pale Soft Lilac
+  ];
 
-  const scaleR = (score: number) => (Math.min(score, 100) / 100) * r;
-  const gridLevels = [20, 40, 60, 80, 100];
+  const weeklyData = useMemo(() => {
+    return DAYS.map((item) => {
+      const h = Math.floor(item.minutes / 60);
+      const m = item.minutes % 60;
+      const timeStr = h > 0 ? `${h}h ${m > 0 ? `${m}m` : ""}` : `${m}m`;
+      return {
+        ...item,
+        timeStr,
+      };
+    });
+  }, []);
 
-  const polygon = (scores: number[]) =>
-    scores.map((s, i) => {
-      const a = angle(i);
-      const ra = scaleR(s);
-      return `${cx + ra * Math.cos(a)},${cy + ra * Math.sin(a)}`;
-    }).join(" ");
+  const maxMinutes = useMemo(() => {
+    return Math.max(...weeklyData.map((d) => d.minutes));
+  }, [weeklyData]);
+
+  // Default active day: SAT (index 6, matching user's interaction)
+  const [activeIdx, setActiveIdx] = useState<number>(6);
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto overflow-visible select-none max-w-full h-auto">
-      {/* Spider Web Background Rings */}
-      {gridLevels.map((level) => {
-        const isOuter = level === 100;
-        return (
-          <polygon
-            key={level}
-            points={Array.from({ length: n }, (_, i) => {
-              const a = angle(i);
-              const ra = (level / 100) * r;
-              return `${cx + ra * Math.cos(a)},${cy + ra * Math.sin(a)}`;
-            }).join(" ")}
-            fill={level % 40 === 0 ? "rgba(139, 92, 246, 0.05)" : "none"}
-            className={
-              isOuter
-                ? "stroke-slate-300 dark:stroke-white/35"
-                : "stroke-slate-200 dark:stroke-white/20"
-            }
-            strokeWidth={isOuter ? "1.5" : "1"}
-          />
-        );
-      })}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md flex flex-col justify-between select-none space-y-4"
+    >
+      {/* Header */}
+      <div>
+        <h3 className="text-base font-black text-white mb-0.5">Time Spent</h3>
+        <p className="text-xs text-neutral-400 font-semibold">Daily platform learning &amp; practice</p>
+      </div>
 
-      {/* Spider Web Radial Spokes */}
-      {data.map((_, i) => (
-        <line
-          key={i}
-          x1={cx}
-          y1={cy}
-          x2={cx + r * Math.cos(angle(i))}
-          y2={cy + r * Math.sin(angle(i))}
-          className="stroke-slate-200 dark:stroke-white/20"
-          strokeWidth="1"
-          strokeDasharray="2 3"
-        />
-      ))}
+      {/* Chart Canvas */}
+      <div className="relative h-[210px] w-full flex items-end justify-between px-1 pt-12 pb-1 overflow-visible">
+        {weeklyData.map((item, idx) => {
+          const isActive = activeIdx === idx;
+          const barHeightPct = Math.min(100, Math.max(22, Math.round((item.minutes / maxMinutes) * 100)));
 
-      {/* Center Origin Dot */}
-      <circle cx={cx} cy={cy} r={2} className="fill-slate-400 dark:fill-purple-400" />
+          return (
+            <div
+              key={item.day}
+              onClick={() => setActiveIdx(idx)}
+              onMouseEnter={() => setActiveIdx(idx)}
+              className="relative flex flex-col items-center justify-end h-full flex-1 cursor-pointer group"
+            >
+              {/* Active Tooltip, Dashed Line & Apex Marker */}
+              {isActive && (
+                <div
+                  style={{ bottom: `${barHeightPct}%` }}
+                  className="absolute flex flex-col items-center pointer-events-none z-20 pb-0.5"
+                >
+                  {/* Tooltip badge - Crisp white text on dark background */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 4, scale: 0.92 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.18 }}
+                    className="relative bg-black text-white text-[11px] font-black px-2.5 py-1 rounded-xl border border-white/20 shadow-lg whitespace-nowrap mb-0.5"
+                  >
+                    {item.timeStr}
+                    {/* Downward triangle caret */}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-[5px] border-t-black" />
+                  </motion.div>
+                  {/* Dashed vertical indicator line */}
+                  <div className="w-0 border-l border-dashed border-white/40 h-5 my-0.5" />
+                  {/* Top dot marker matching user reference */}
+                  <div className="w-2.5 h-2.5 rounded-full bg-black border-2 border-white shrink-0 translate-y-1 z-10" />
+                </div>
+              )}
 
-      {/* Active Data Filled Polygon */}
-      <polygon
-        points={polygon(data.map((d) => d.score))}
-        fill="rgba(139, 92, 246, 0.3)"
-        className="stroke-purple-600 dark:stroke-purple-400 fill-purple-600/25 dark:fill-purple-500/30"
-        strokeWidth="2.5"
-      />
+              {/* Pill Bar Container - Filled with Pale Colors, NO GLOW */}
+              <div className="w-full flex items-end justify-center h-[135px]">
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: `${barHeightPct}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  style={{ backgroundColor: item.color }}
+                  className={`w-6 xs:w-7 sm:w-8 md:w-6 lg:w-7 rounded-full relative overflow-hidden transition-all duration-200 ${
+                    isActive ? "opacity-100 ring-2 ring-white/50" : "opacity-75 hover:opacity-100"
+                  }`}
+                />
+              </div>
 
-      {/* Data Point Markers */}
-      {data.map((d, i) => {
-        const a = angle(i);
-        const ra = scaleR(d.score);
-        return (
-          <circle
-            key={i}
-            cx={cx + ra * Math.cos(a)}
-            cy={cy + ra * Math.sin(a)}
-            r={4}
-            className="fill-purple-600 dark:fill-purple-400 stroke-white dark:stroke-[#18191F]"
-            strokeWidth="1.5"
-          />
-        );
-      })}
-
-      {/* Category Labels with Smart Geometric Alignment */}
-      {data.map((d, i) => {
-        const a = angle(i);
-        const cosA = Math.cos(a);
-        const sinA = Math.sin(a);
-        const labelR = r + 15;
-        const x = cx + labelR * cosA;
-        const y = cy + labelR * sinA;
-
-        let textAnchor: "start" | "middle" | "end" = "middle";
-        if (cosA > 0.2) textAnchor = "start";
-        else if (cosA < -0.2) textAnchor = "end";
-
-        let dy = "0.35em";
-        if (sinA < -0.7) dy = "-0.2em";
-        else if (sinA > 0.7) dy = "0.9em";
-
-        const text = d.shortLabel || d.label;
-
-        return (
-          <text
-            key={i}
-            x={x}
-            y={y}
-            dy={dy}
-            textAnchor={textAnchor}
-            fontSize="8.5"
-            fontWeight="700"
-            className="fill-slate-600 dark:fill-neutral-300 pointer-events-none select-none tracking-tight"
-            fontFamily="Inter, sans-serif"
-          >
-            {text}
-          </text>
-        );
-      })}
-    </svg>
+              {/* Day Label */}
+              <div
+                style={{ color: isActive ? item.color : undefined }}
+                className={`text-[10px] sm:text-[11px] mt-2.5 leading-none transition-colors uppercase tracking-wider ${
+                  isActive
+                    ? "font-black"
+                    : "font-bold text-neutral-400 group-hover:text-neutral-200"
+                }`}
+              >
+                {item.day}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
   );
 }
 
@@ -631,7 +627,7 @@ export default function AnalyticsPage() {
         transition={{ duration: 0.35, ease: "easeOut" }}
         className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-8 bg-black select-none pt-1 md:pt-0 overflow-hidden"
       >
-        {/* Left Side: Progress Heading & Subtitle */}
+        {/* Left Side: Progress Heading */}
         <div className="w-full md:w-5/12 lg:w-4/12 shrink-0 px-1 md:px-0 py-1 md:py-6 z-10">
           <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D5FF38] block mb-1">
             Platform Analytics
@@ -639,9 +635,6 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none">
             Progress
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 font-medium mt-1.5 sm:mt-2.5 max-w-sm leading-relaxed">
-            Overview &amp; Metrics across your coding profiles, video tracks, and daily streak.
-          </p>
         </div>
 
         {/* Right Side: Hero Illustration (Blends into black on desktop & mobile) */}
@@ -672,7 +665,7 @@ export default function AnalyticsPage() {
         <CircularMetricWidget
           icon={Code2}
           iconColor="text-[#D5FF38]"
-          ringColor="#22c55e"
+          ringColor="#A8D5BA"
           value={stats.problemsSolved}
           label="Total Solved"
           percent={Math.min(100, Math.max(stats.problemsSolved > 0 ? 12 : 0, Math.round((stats.problemsSolved / 150) * 100)))}
@@ -680,7 +673,7 @@ export default function AnalyticsPage() {
         <CircularMetricWidget
           icon={PlayCircle}
           iconColor="text-[#D5FF38]"
-          ringColor="#22c55e"
+          ringColor="#98D2EB"
           value={<>{stats.completedVideos}<span className="text-[10px] xs:text-[11px] font-semibold text-neutral-400">/{stats.totalVideos}</span></>}
           label="Videos Watched"
           percent={Math.min(100, Math.max(stats.completedVideos > 0 ? 12 : 0, stats.learningPct))}
@@ -688,7 +681,7 @@ export default function AnalyticsPage() {
         <CircularMetricWidget
           icon={Bookmark}
           iconColor="text-[#D5FF38]"
-          ringColor="#22c55e"
+          ringColor="#DAB6FC"
           value={stats.savedPlaylistsCount}
           label="Saved Playlists"
           percent={Math.min(100, Math.max(stats.savedPlaylistsCount > 0 ? 15 : 0, Math.round((stats.savedPlaylistsCount / 5) * 100)))}
@@ -765,32 +758,8 @@ export default function AnalyticsPage() {
 
       {/* ── ROW 2: REAL TOPIC MASTERY & DIFFICULTY SPLIT ──────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Real Skill Radar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-3"
-        >
-          <div>
-            <h3 className="text-base font-black text-slate-900 dark:text-white mb-0.5">Pattern Radar</h3>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Topic distribution</p>
-          </div>
-          <RadarChart data={stats.topicRadarData} />
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {stats.topicRadarData.filter((t) => t.solved > 0).length > 0 ? (
-              stats.topicRadarData.filter((t) => t.solved > 0).map((s) => (
-                <div key={s.label} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 dark:text-neutral-300 font-bold">{s.label}</span>
-                  <span className="font-black text-indigo-600 dark:text-purple-400 tabular-nums">{s.score}%</span>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-2 text-center text-xs text-slate-400 dark:text-neutral-500 font-bold py-2">
-                0% Active Coverage
-              </div>
-            )}
-          </div>
-        </motion.div>
+        {/* Weekly Progress Bar Chart (Matching Image 2) */}
+        <WeeklyProgressBarChart dbProgress={dbLeetcodeProgress} totalSolved={stats.problemsSolved} />
 
         {/* Real Coding Profile Difficulty Breakdown */}
         <motion.div
