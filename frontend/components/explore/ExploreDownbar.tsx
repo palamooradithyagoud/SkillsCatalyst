@@ -98,14 +98,7 @@ export default function ExploreDownbar({
                   : "text-neutral-400 hover:text-white hover:bg-white/[0.06]"
               }`}
             >
-              {/* Active Pill Glass Spring Indicator */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeExploreTabIndicator"
-                  className="absolute inset-0 bg-white/20 dark:bg-white/15 backdrop-blur-xl rounded-full border border-white/30 dark:border-white/25 shadow-[0_2px_12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.35)] -z-10"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
+              {/* Active Tab without background bubble - clean icon highlight */}
 
               <motion.div
                 animate={{ scale: isActive ? 1.08 : 1 }}
@@ -115,14 +108,8 @@ export default function ExploreDownbar({
                 <Icon
                   className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${
                     isActive
-                      ? tab.id === "events"
-                        ? "text-purple-400"
-                        : tab.id === "scholarships"
-                        ? "text-indigo-400"
-                        : tab.id === "news"
-                        ? "text-blue-400"
-                        : "text-amber-400 fill-amber-400/20"
-                      : "text-neutral-400 group-hover:text-white"
+                      ? "text-[#D5FF38]"
+                      : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
                   }`}
                 />
               </motion.div>

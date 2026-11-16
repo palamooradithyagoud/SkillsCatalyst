@@ -29,35 +29,35 @@ export const CAREER_TABS: CareerTabItem[] = [
     label: "Roadmaps",
     href: "/roadmaps",
     icon: Map,
-    activeColor: "text-sky-400",
+    activeColor: "text-[#D5FF38]",
   },
   {
     id: "learn",
     label: "Learn",
     href: "/learning",
     icon: BookOpen,
-    activeColor: "text-emerald-400",
+    activeColor: "text-[#D5FF38]",
   },
   {
     id: "practice",
     label: "Practice",
     href: "/practice",
     icon: Target,
-    activeColor: "text-amber-400",
+    activeColor: "text-[#D5FF38]",
   },
   {
     id: "placement",
     label: "Placement",
     href: "/career",
     icon: Briefcase,
-    activeColor: "text-purple-400",
+    activeColor: "text-[#D5FF38]",
   },
   {
     id: "analytics",
     label: "Analytics",
     href: "/analytics",
     icon: BarChart3,
-    activeColor: "text-indigo-400",
+    activeColor: "text-[#D5FF38]",
   },
 ];
 
@@ -102,7 +102,14 @@ export default function CareerDownbar({
     return "placement";
   };
 
-  const currentActiveTab = getActiveTab();
+  const routeTab = getActiveTab();
+  const [clickedTab, setClickedTab] = useState<CareerTabId | null>(null);
+
+  useEffect(() => {
+    setClickedTab(null);
+  }, [pathname]);
+
+  const currentActiveTab = clickedTab || routeTab;
 
   const handleBack = () => {
     if (pathname.startsWith("/career/resume-review") || pathname.startsWith("/career/resume-builder")) {
@@ -149,6 +156,7 @@ export default function CareerDownbar({
               key={tab.id}
               href={tab.href}
               onClick={() => {
+                setClickedTab(tab.id);
                 if (onSelectTab) {
                   onSelectTab(tab.id);
                 }
@@ -160,14 +168,7 @@ export default function CareerDownbar({
                   : "text-neutral-400 hover:text-white hover:bg-white/[0.06]"
               }`}
             >
-              {/* Active Pill Glass Spring Indicator */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeCareerTabIndicator"
-                  className="absolute inset-0 bg-white/20 dark:bg-white/15 backdrop-blur-xl rounded-full border border-white/30 dark:border-white/25 shadow-[0_2px_12px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.35)] -z-10"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
+              {/* Active Tab without background bubble - clean icon highlight */}
 
               <motion.div
                 animate={{ scale: isActive ? 1.08 : 1 }}
@@ -176,12 +177,14 @@ export default function CareerDownbar({
               >
                 <Icon
                   className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${
-                    isActive ? tab.activeColor : "text-neutral-400 group-hover:text-white"
+                    isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
                   }`}
                 />
               </motion.div>
 
-              <span className="text-[8px] sm:text-[10px] font-bold sm:font-extrabold leading-tight">
+              <span className={`text-[8px] sm:text-[10px] leading-tight transition-colors ${
+                isActive ? "text-white font-black" : "text-neutral-400 font-bold group-hover:text-white"
+              }`}>
                 {tab.label}
               </span>
             </Link>
