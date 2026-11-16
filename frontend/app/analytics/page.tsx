@@ -620,25 +620,32 @@ export default function AnalyticsPage() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto space-y-6 pb-28 sm:pb-16 select-none"
     >
-      {/* ── TOP HERO BANNER: TEXT ON LEFT, IMAGE ON RIGHT (DESKTOP) ───────── */}
+      {/* ── TOP HERO BANNER: PROGRESS + TIME SPENT ON LEFT, IMAGE ON RIGHT (DESKTOP) ── */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-8 bg-black select-none pt-1 md:pt-0 overflow-hidden"
+        className="relative flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-8 bg-black select-none pt-1 md:pt-0 overflow-hidden"
       >
-        {/* Left Side: Progress Heading */}
-        <div className="w-full md:w-5/12 lg:w-4/12 shrink-0 px-1 md:px-0 py-1 md:py-6 z-10">
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D5FF38] block mb-1">
-            Platform Analytics
-          </span>
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none">
-            Progress
-          </h1>
+        {/* Left Side: Progress Heading + Time Spent card on desktop */}
+        <div className="w-full md:w-5/12 lg:w-5/12 shrink-0 px-1 md:px-0 py-1 md:py-2 z-10 flex flex-col justify-start gap-4">
+          <div>
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D5FF38] block mb-1">
+              Platform Analytics
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-none">
+              Progress
+            </h1>
+          </div>
+
+          {/* Time Spent card placed right under Progress text on desktop */}
+          <div className="hidden md:block w-full">
+            <WeeklyProgressBarChart />
+          </div>
         </div>
 
         {/* Right Side: Hero Illustration (Blends into black on desktop & mobile) */}
-        <div className="relative w-full md:w-7/12 lg:w-8/12 h-[200px] xs:h-[240px] sm:h-[280px] md:h-[320px] lg:h-[360px] overflow-hidden -mx-3.5 sm:-mx-6 md:mx-0 w-[calc(100%+1.75rem)] sm:w-[calc(100%+3rem)] md:w-auto">
+        <div className="relative w-full md:w-7/12 lg:w-7/12 h-[200px] xs:h-[240px] sm:h-[280px] md:h-[370px] lg:h-[410px] overflow-hidden -mx-3.5 sm:-mx-6 md:mx-0 w-[calc(100%+1.75rem)] sm:w-[calc(100%+3rem)] md:w-auto self-center">
           <Image
             src="/images/analytics/analytics_hero.png"
             alt="Career Preparation & Progress"
@@ -686,6 +693,11 @@ export default function AnalyticsPage() {
           label="Saved Playlists"
           percent={Math.min(100, Math.max(stats.savedPlaylistsCount > 0 ? 15 : 0, Math.round((stats.savedPlaylistsCount / 5) * 100)))}
         />
+      </div>
+
+      {/* ── MOBILE TIME SPENT CARD ───────────────────────────────────────── */}
+      <div className="md:hidden">
+        <WeeklyProgressBarChart />
       </div>
 
       {/* ── REAL KPI CARDS GRID (DESKTOP) ─────────────────────────────────── */}
@@ -756,10 +768,8 @@ export default function AnalyticsPage() {
         </motion.div>
       </div>
 
-      {/* ── ROW 2: REAL TOPIC MASTERY & DIFFICULTY SPLIT ──────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Weekly Progress Bar Chart (Matching Image 2) */}
-        <WeeklyProgressBarChart dbProgress={dbLeetcodeProgress} totalSolved={stats.problemsSolved} />
+      {/* ── ROW 2: DIFFICULTY BREAKDOWN & TOPIC COMPLETION ──────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Real Coding Profile Difficulty Breakdown */}
         <motion.div
@@ -774,7 +784,7 @@ export default function AnalyticsPage() {
               <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">{stats.problemsSolved} total problems solved on profile</p>
             </div>
             {stats.leetcodeHandle && (
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 shadow-2xs">
+              <span className="text-xs font-semibold text-neutral-400">
                 @{stats.leetcodeHandle}
               </span>
             )}
@@ -845,8 +855,8 @@ export default function AnalyticsPage() {
           className="rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
         >
           <div>
-            <h3 className="text-base font-black text-slate-900 dark:text-white mb-0.5">Topic Completion</h3>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Practice pattern coverage</p>
+            <h3 className="text-base font-black text-white mb-0.5">Topic Completion</h3>
+            <p className="text-xs text-neutral-400 font-semibold">Practice pattern coverage</p>
           </div>
 
           <div className="space-y-4">
@@ -854,23 +864,23 @@ export default function AnalyticsPage() {
               stats.topicRadarData.filter((t) => t.solved > 0).map((t) => (
                 <div key={t.label}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-slate-700 dark:text-neutral-200">{t.label}</span>
-                    <span className="text-xs font-black tabular-nums text-indigo-600 dark:text-purple-400">
+                    <span className="text-xs font-bold text-neutral-200">{t.label}</span>
+                    <span className="text-xs font-black tabular-nums text-[#D5FF38]">
                       {t.solved}/{t.total} ({t.score}%)
                     </span>
                   </div>
-                  <div className="h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-neutral-800 border border-slate-200/60 dark:border-neutral-700">
+                  <div className="h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-neutral-800/80 border border-slate-200/60 dark:border-neutral-700/60">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${t.score}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full rounded-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                      className="h-full rounded-full bg-[#D5FF38]"
                     />
                   </div>
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-xs text-slate-400 dark:text-neutral-500 font-bold">
+              <div className="py-8 text-center text-xs text-neutral-400 font-bold">
                 No active topic progress yet. Solve practice problems to unlock pattern metrics!
               </div>
             )}
