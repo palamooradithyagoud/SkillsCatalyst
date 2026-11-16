@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import {
-  BarChart3, TrendingUp, TrendingDown, Zap, Clock, Award, Target,
-  Flame, Brain, Code2, Trophy, ArrowUpRight, ArrowDownRight,
+  BarChart3, TrendingUp, TrendingDown, Zap, Clock, Award,
+  Flame, Code2, Trophy, ArrowDownRight,
   Calendar, Activity, BookOpen, CheckCircle2, Star, Layers,
   GitCommit, Database, PlayCircle, Bookmark
 } from "lucide-react";
@@ -523,10 +524,8 @@ export default function AnalyticsPage() {
     const learningPct = dashboardData?.metrics?.learningProgress?.percentage || 0;
     const savedPlaylistsCount = savedPlaylistsData?.count || savedPlaylistsData?.saved?.length || 0;
 
-    // Streak and AI Career Health score
+    // Streak days from dashboard API
     const streakDays = dashboardData?.user?.streakDays || 0;
-    const aiCareerHealth = dashboardData?.metrics?.aiCareerHealth?.percentage || 0;
-    const successRate = dashboardData?.practiceOverview?.successRate || 0;
 
     return {
       problemsSolved: totalProblemsSolved,
@@ -543,67 +542,36 @@ export default function AnalyticsPage() {
       learningPct,
       savedPlaylistsCount,
       streakDays,
-      aiCareerHealth,
-      successRate,
       leetcodeHandle: lcStats?.username || "",
       isProfileConnected: hasExternalLeetcode || hasExternalGfg,
     };
   }, [solvedKeys, dbLeetcodeProgress, dashboardData, savedPlaylistsData, profileData]);
 
-  // Real recent activity events
-  const realRecentActivity = useMemo(() => {
-    const events: { icon: any; color: string; text: string; time: string; tag: string }[] = [];
-
-    if (stats.leetcodeHandle) {
-      events.push({
-        icon: Code2,
-        color: C.blue,
-        text: `Connected LeetCode profile @${stats.leetcodeHandle} (${stats.problemsSolved} solved)`,
-        time: "Live Sync",
-        tag: "LeetCode",
-      });
-    }
-
-    if (savedPlaylistsData?.saved && savedPlaylistsData.saved.length > 0) {
-      savedPlaylistsData.saved.slice(-2).reverse().forEach((pl) => {
-        events.push({
-          icon: Bookmark,
-          color: C.purple,
-          text: `Saved playlist: "${pl.title.slice(0, 35)}..."`,
-          time: "Saved",
-          tag: "Learning",
-        });
-      });
-    }
-
-    if (stats.completedVideos > 0) {
-      events.push({
-        icon: PlayCircle,
-        color: C.green,
-        text: `Completed ${stats.completedVideos} video modules in learning playlists`,
-        time: "Progress",
-        tag: "Videos",
-      });
-    }
-
-    if (events.length === 0) {
-      events.push(
-        { icon: Code2, color: C.blue, text: "Linked coding platform stats in Settings", time: "Today", tag: "Profiles" },
-        { icon: BookOpen, color: C.purple, text: "Explored Learning playlist repository", time: "Recently", tag: "Learning" }
-      );
-    }
-
-    return events;
-  }, [stats, savedPlaylistsData]);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-7 pb-28 sm:pb-16 select-none"
+      className="max-w-7xl mx-auto space-y-6 pb-28 sm:pb-16 select-none"
     >
+      {/* ── TOP HERO BANNER IMAGE ─────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="relative w-full h-[180px] xs:h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/[0.08] shadow-md bg-white dark:bg-[#18191F]"
+      >
+        <Image
+          src="/images/analytics/analytics_hero.png"
+          alt="Career Preparation & Analytics"
+          fill
+          priority
+          className="object-cover object-[center_60%]"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 1280px"
+        />
+      </motion.div>
+
       {/* ── REAL KPI CARDS GRID ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Metric 1: Problems Solved */}
         <motion.div
           whileHover={{ y: -4 }}
@@ -616,10 +584,7 @@ export default function AnalyticsPage() {
             <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.problemsSolved}
             </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Total Solved</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 px-2 py-0.5 rounded-full w-max">
-              <ArrowUpRight className="w-3 h-3 text-emerald-700 dark:text-emerald-300" /> {stats.isProfileConnected ? "Coding Profile" : "Live Data"}
-            </div>
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Total Solved</div>
           </div>
         </motion.div>
 
@@ -636,10 +601,7 @@ export default function AnalyticsPage() {
               {stats.completedVideos}
               <span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">/{stats.totalVideos}</span>
             </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Videos Watched</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-cyan-700 dark:text-cyan-300 bg-cyan-100/90 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/60 px-2 py-0.5 rounded-full w-max">
-              {stats.learningPct}% Complete
-            </div>
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Videos Watched</div>
           </div>
         </motion.div>
 
@@ -655,33 +617,11 @@ export default function AnalyticsPage() {
             <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.savedPlaylistsCount}
             </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Saved Playlists</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-100/90 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 px-2 py-0.5 rounded-full w-max">
-              Video Library
-            </div>
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Saved Playlists</div>
           </div>
         </motion.div>
 
-        {/* Metric 4: Success Rate */}
-        <motion.div
-          whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
-        >
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black flex items-center justify-center mb-3 shadow-2xs">
-            <Target className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
-              {stats.successRate}%
-            </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Accuracy Rate</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 px-2 py-0.5 rounded-full w-max">
-              Submission Rate
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Metric 5: Streak Days */}
+        {/* Metric 4: Streak Days */}
         <motion.div
           whileHover={{ y: -4 }}
           className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
@@ -693,29 +633,7 @@ export default function AnalyticsPage() {
             <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
               {stats.streakDays} <span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">days</span>
             </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">Active Streak</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/60 px-2 py-0.5 rounded-full w-max">
-              Daily Practice
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Metric 6: AI Career Score */}
-        <motion.div
-          whileHover={{ y: -4 }}
-          className="rounded-3xl p-5 relative overflow-hidden bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
-        >
-          <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black flex items-center justify-center mb-3 shadow-2xs">
-            <Brain className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mb-1">
-              {stats.aiCareerHealth}<span className="text-xs font-semibold text-slate-400 dark:text-neutral-500">/100</span>
-            </div>
-            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-2">AI Career Health</div>
-            <div className="flex items-center gap-1 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100/90 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/60 px-2 py-0.5 rounded-full w-max">
-              Progress Score
-            </div>
+            <div className="text-[10px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Active Streak</div>
           </div>
         </motion.div>
       </div>
@@ -913,76 +831,7 @@ export default function AnalyticsPage() {
         </div>
       </motion.div>
 
-      {/* ── ROW 3: REAL RECENT ACTIVITY & AI CAREER HEALTH SUMMARY ───────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        {/* AI Career Readiness Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md flex flex-col justify-between space-y-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-purple-600 text-white shadow-md shadow-purple-600/25">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="text-base font-black text-slate-900 dark:text-white">AI Career Health Index</div>
-              <div className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Live platform score</div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-3 py-2">
-            <div className="relative">
-              <RingProgress pct={stats.aiCareerHealth} color="#7c3aed" size={130} stroke={10} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.aiCareerHealth}</span>
-                <span className="text-[10px] text-slate-500 dark:text-neutral-400 font-bold">/100</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="text-sm font-black text-purple-700 dark:text-purple-300 mb-0.5">Live Readiness Rating</div>
-              <div className="text-xs text-slate-500 dark:text-neutral-400 font-semibold">Based on your practice &amp; profile metrics</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Real Activity Stream */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-3 rounded-3xl p-6 bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-md space-y-4"
-        >
-          <div className="border-b border-slate-100 dark:border-neutral-800 pb-3">
-            <h3 className="text-base font-black text-slate-900 dark:text-white">Real Activity Stream</h3>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 font-semibold mt-0.5">Your actual recent actions across SkillsCatalyst</p>
-          </div>
-
-          <div className="space-y-3">
-            {realRecentActivity.map((a, i) => {
-              const Icon = a.icon;
-              return (
-                <div
-                  key={i}
-                  className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 shadow-2xs"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center shrink-0 mt-0.5 font-black shadow-2xs">
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm text-slate-800 dark:text-white font-bold leading-snug truncate">{a.text}</p>
-                    <p className="text-[11px] text-slate-400 dark:text-neutral-500 font-semibold mt-0.5">{a.time}</p>
-                  </div>
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shrink-0">
-                    {a.tag}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      </div>
+      {/* ── ROW 3: RECENT ACTIVITY / HEALTH CARDS REMOVED ───────────────── */}
     </motion.div>
   );
 }
