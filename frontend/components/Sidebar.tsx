@@ -23,6 +23,11 @@ import {
   Command,
   X,
   ListTodo,
+  FileText,
+  Calculator,
+  BrainCircuit,
+  Languages,
+  Video,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -50,11 +55,20 @@ export default function Sidebar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExploreTab, setCurrentExploreTab] = useState<string>("events");
+  const [currentCareerPrep, setCurrentCareerPrep] = useState<string>("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && pathname === "/explore") {
-      const params = new URLSearchParams(window.location.search);
-      setCurrentExploreTab(params.get("tab") || "events");
+    if (typeof window !== "undefined") {
+      if (pathname === "/explore") {
+        const params = new URLSearchParams(window.location.search);
+        setCurrentExploreTab(params.get("tab") || "events");
+      }
+      if (pathname === "/career") {
+        const params = new URLSearchParams(window.location.search);
+        setCurrentCareerPrep(params.get("prep") || params.get("category") || "");
+      } else {
+        setCurrentCareerPrep("");
+      }
     }
   }, [pathname]);
 
@@ -64,8 +78,17 @@ export default function Sidebar() {
         setCurrentExploreTab(e.detail);
       }
     };
+    const handleCareerPrepChange = (e: any) => {
+      if (e.detail && typeof e.detail === "string") {
+        setCurrentCareerPrep(e.detail);
+      }
+    };
     window.addEventListener("explore-tab-change", handleExploreTabChange);
-    return () => window.removeEventListener("explore-tab-change", handleExploreTabChange);
+    window.addEventListener("career-prep-change", handleCareerPrepChange);
+    return () => {
+      window.removeEventListener("explore-tab-change", handleExploreTabChange);
+      window.removeEventListener("career-prep-change", handleCareerPrepChange);
+    };
   }, []);
 
   // Keyboard shortcut listener for Command + K (Search) and Escape
@@ -86,7 +109,7 @@ export default function Sidebar() {
     return null;
   }
 
-  // ── Core Everyday SkillsCatalyst Features ─────────────────────────────────
+  // ── Block 1: Main Everyday Features ───────────────────────────────────────
   const mainItems: NavItemData[] = [
     {
       id: "dashboard",
@@ -95,34 +118,10 @@ export default function Sidebar() {
       icon: LayoutDashboard,
     },
     {
-      id: "tasks",
-      title: "To-Do List",
-      href: "/tasks",
-      icon: ListTodo,
-    },
-    {
       id: "skillbits",
       title: "SkillBits",
       href: "/skillbits",
       icon: Film,
-    },
-    {
-      id: "learning",
-      title: "Learning",
-      href: "/learning",
-      icon: BookOpen,
-    },
-    {
-      id: "roadmaps",
-      title: "Roadmaps",
-      href: "/roadmaps",
-      icon: Map,
-    },
-    {
-      id: "practice",
-      title: "Practice",
-      href: "/practice",
-      icon: Target,
     },
     {
       id: "events",
@@ -142,16 +141,6 @@ export default function Sidebar() {
       href: "/explore?tab=news",
       icon: Newspaper,
     },
-  ];
-
-  // ── Career, Intelligence & Assessment Features ───────────────────────────
-  const careerItems: NavItemData[] = [
-    {
-      id: "career",
-      title: "Career Goals",
-      href: "/career",
-      icon: Briefcase,
-    },
     {
       id: "ai-mentor",
       title: "AI Mentor",
@@ -159,10 +148,68 @@ export default function Sidebar() {
       icon: Bot,
     },
     {
+      id: "tasks",
+      title: "To-Do List",
+      href: "/tasks",
+      icon: ListTodo,
+    },
+    {
       id: "analytics",
       title: "Analytics",
       href: "/analytics",
       icon: BarChart3,
+    },
+  ];
+
+  // ── Block 2: Career, Learning & Assessment Features ───────────────────────
+  const careerItems: NavItemData[] = [
+    {
+      id: "learning",
+      title: "Learn",
+      href: "/learning",
+      icon: BookOpen,
+    },
+    {
+      id: "roadmaps",
+      title: "Roadmaps",
+      href: "/roadmaps",
+      icon: Map,
+    },
+    {
+      id: "practice",
+      title: "Practice",
+      href: "/practice",
+      icon: Target,
+    },
+    {
+      id: "resume-prep",
+      title: "Resume Prep",
+      href: "/career/resume-review",
+      icon: FileText,
+    },
+    {
+      id: "aptitude",
+      title: "Aptitude",
+      href: "/career?prep=aptitude",
+      icon: Calculator,
+    },
+    {
+      id: "reasoning",
+      title: "Reasoning",
+      href: "/career?prep=reasoning",
+      icon: BrainCircuit,
+    },
+    {
+      id: "verbal-ability",
+      title: "Verbal Ability",
+      href: "/career?prep=verbal",
+      icon: Languages,
+    },
+    {
+      id: "ai-interviews",
+      title: "AI Interviews",
+      href: "/career?prep=interviews",
+      icon: Video,
     },
   ];
 
@@ -197,20 +244,8 @@ export default function Sidebar() {
     if (item.id === "dashboard") {
       return pathname === "/dashboard" || pathname === "/";
     }
-    if (item.id === "tasks") {
-      return pathname.startsWith("/tasks");
-    }
     if (item.id === "skillbits") {
       return pathname.startsWith("/skillbits");
-    }
-    if (item.id === "learning") {
-      return pathname.startsWith("/learning");
-    }
-    if (item.id === "roadmaps") {
-      return pathname.startsWith("/roadmaps");
-    }
-    if (item.id === "practice") {
-      return pathname.startsWith("/practice");
     }
     if (item.id === "events") {
       return pathname === "/explore" && (currentExploreTab === "events" || !currentExploreTab);
@@ -221,14 +256,38 @@ export default function Sidebar() {
     if (item.id === "news") {
       return pathname === "/explore" && currentExploreTab === "news";
     }
-    if (item.id === "career") {
-      return pathname.startsWith("/career");
-    }
     if (item.id === "ai-mentor") {
       return pathname.startsWith("/ai-mentor");
     }
+    if (item.id === "tasks") {
+      return pathname.startsWith("/tasks");
+    }
     if (item.id === "analytics") {
       return pathname.startsWith("/analytics");
+    }
+    if (item.id === "learning") {
+      return pathname.startsWith("/learning");
+    }
+    if (item.id === "roadmaps") {
+      return pathname.startsWith("/roadmaps");
+    }
+    if (item.id === "practice") {
+      return pathname.startsWith("/practice");
+    }
+    if (item.id === "resume-prep") {
+      return pathname.startsWith("/career/resume");
+    }
+    if (item.id === "aptitude") {
+      return pathname === "/career" && currentCareerPrep.toLowerCase().includes("aptitude");
+    }
+    if (item.id === "reasoning") {
+      return pathname === "/career" && currentCareerPrep.toLowerCase().includes("reason");
+    }
+    if (item.id === "verbal-ability") {
+      return pathname === "/career" && currentCareerPrep.toLowerCase().includes("verbal");
+    }
+    if (item.id === "ai-interviews") {
+      return pathname === "/career" && currentCareerPrep.toLowerCase().includes("interview");
     }
     if (item.id === "profile") {
       return pathname.startsWith("/settings") || pathname.startsWith("/profile");
@@ -258,6 +317,14 @@ export default function Sidebar() {
             if (typeof window !== "undefined") {
               window.dispatchEvent(
                 new CustomEvent("explore-tab-change", { detail: tab })
+              );
+            }
+          } else if (item.href.includes("prep=")) {
+            const prep = item.href.split("prep=")[1] || "";
+            setCurrentCareerPrep(prep);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("career-prep-change", { detail: prep })
               );
             }
           }
@@ -339,7 +406,7 @@ export default function Sidebar() {
           {/* Divider Line */}
           <div className="my-2 mx-3 border-b border-slate-200 dark:border-neutral-800" />
 
-          {/* CAREER & INTELLIGENCE Section Header */}
+          {/* CAREER Section Header */}
           <motion.div
             animate={{
               display: open ? "block" : "none",
@@ -348,7 +415,7 @@ export default function Sidebar() {
             transition={{ duration: 0.15 }}
             className="px-[21px] pt-2 pb-1 text-[11px] font-black tracking-wider text-slate-900 dark:text-neutral-400 uppercase whitespace-nowrap"
           >
-            CAREER & INTELLIGENCE
+            CAREER
           </motion.div>
 
           {/* Career Items: Career Goals, AI Mentor, Analytics */}

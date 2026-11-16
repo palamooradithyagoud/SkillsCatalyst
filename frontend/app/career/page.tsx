@@ -30,21 +30,39 @@ export default function CareerPage() {
     setSelectedPrepCategory(null);
   };
 
-  // Support direct modal launch via ?prep= query param (e.g. from QuickHubNav)
+  // Support direct modal launch via ?prep= query param (e.g. from Sidebar or QuickHubNav)
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const prep = params.get("prep") || params.get("category");
-    if (prep) {
-      const lower = prep.toLowerCase();
-      if (lower.includes("reason")) {
-        handleOpenPlacementPrep("Logical Reasoning");
-      } else if (lower.includes("verbal")) {
-        handleOpenPlacementPrep("Verbal Ability");
-      } else if (lower.includes("quant") || lower.includes("aptitude")) {
-        handleOpenPlacementPrep("Quantitative Aptitude");
+    const handlePrepParam = (prepVal?: string | null) => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const prep = prepVal !== undefined ? prepVal : (params.get("prep") || params.get("category"));
+      if (prep) {
+        const lower = prep.toLowerCase();
+        if (lower.includes("reason")) {
+          handleOpenPlacementPrep("Logical Reasoning");
+        } else if (lower.includes("verbal")) {
+          handleOpenPlacementPrep("Verbal Ability");
+        } else if (lower.includes("quant") || lower.includes("aptitude")) {
+          handleOpenPlacementPrep("Quantitative Aptitude");
+        } else if (lower.includes("interview")) {
+          const el = document.getElementById("ai-interviews");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
       }
-    }
+    };
+
+    handlePrepParam();
+    const onCustomChange = (e: any) => {
+      if (e.detail) handlePrepParam(e.detail);
+    };
+    window.addEventListener("career-prep-change", onCustomChange);
+    window.addEventListener("popstate", () => handlePrepParam());
+    return () => {
+      window.removeEventListener("career-prep-change", onCustomChange);
+      window.removeEventListener("popstate", () => handlePrepParam());
+    };
   }, []);
 
   return (

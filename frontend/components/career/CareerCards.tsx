@@ -197,7 +197,7 @@ export default function CareerCards({
         </div>
 
         {/* ── CARD 5: AI Interviews (Locked) ── */}
-        <div className="bg-white dark:bg-[#18191F] rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 dark:border-neutral-800 shadow-xs flex flex-col overflow-hidden h-full min-w-0">
+        <div id="ai-interviews" className="bg-white dark:bg-[#18191F] rounded-xl sm:rounded-2xl md:rounded-[28px] border border-slate-200/80 dark:border-neutral-800 shadow-xs flex flex-col overflow-hidden h-full min-w-0 scroll-mt-24">
           {/* Top Pink Gradient Header */}
           <div className="w-full bg-gradient-to-r from-[#F0D5EC] via-[#FCE3F4] to-[#EBD5F5] p-1.5 sm:p-3.5 md:p-4.5 pt-1.5 sm:pt-3 pb-1.5 sm:pb-3 border-b border-[#ECCEE7]/70 dark:border-neutral-800">
             <div className="flex items-center justify-end mb-0.5 sm:mb-1.5">
