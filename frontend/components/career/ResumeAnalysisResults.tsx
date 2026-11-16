@@ -80,6 +80,20 @@ export default function ResumeAnalysisResults({
   onReset,
 }: ResumeAnalysisResultsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
+
+  // SYS-RESUME: Guarantee mobile bottom navigation bar is completely hidden during active results inspection
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-resume-active", "true");
+      document.body.setAttribute("data-hide-bottombar", "true");
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-resume-active");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    };
+  }, []);
   const [severityFilter, setSeverityFilter] = useState<"all" | "critical" | "warning" | "good">("all");
   const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);

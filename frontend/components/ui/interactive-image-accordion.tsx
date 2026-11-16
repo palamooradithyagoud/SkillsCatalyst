@@ -214,8 +214,6 @@ export function LandingAccordionItem({
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
     } else {
       router.push("/dashboard");
     }

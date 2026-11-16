@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LucideIcon, Home, Clapperboard, Bot, Target } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface NavItem {
@@ -30,6 +30,18 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
     const current = items.find((item) => {
       if (item.url === "/dashboard") return pathname === "/dashboard" || pathname === "/";
       if (item.url === "/profile" || item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
+      if (item.name === "Career" || item.url === "/career" || item.url === "/roadmaps") {
+        return (
+          pathname.startsWith("/career") ||
+          pathname.startsWith("/roadmaps") ||
+          pathname.startsWith("/learning") ||
+          pathname.startsWith("/practice") ||
+          pathname.startsWith("/analytics")
+        );
+      }
+      if (item.url === "/explore") return pathname.startsWith("/explore");
+      if (item.url === "/skillbits") return pathname.startsWith("/skillbits");
+      if (item.url === "/ai-mentor") return pathname.startsWith("/ai-mentor");
       if (item.url === "/practice") return pathname.startsWith("/practice") || pathname.startsWith("/learning");
       return pathname.startsWith(item.url);
     });
@@ -42,6 +54,18 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
     if (!pathname) return activeTab === item.name;
     if (item.url === "/dashboard") return pathname === "/dashboard" || pathname === "/";
     if (item.url === "/profile" || item.url === "/settings") return pathname.startsWith("/settings") || pathname.startsWith("/profile");
+    if (item.name === "Career" || item.url === "/career" || item.url === "/roadmaps") {
+      return (
+        pathname.startsWith("/career") ||
+        pathname.startsWith("/roadmaps") ||
+        pathname.startsWith("/learning") ||
+        pathname.startsWith("/practice") ||
+        pathname.startsWith("/analytics")
+      );
+    }
+    if (item.url === "/explore") return pathname.startsWith("/explore");
+    if (item.url === "/skillbits") return pathname.startsWith("/skillbits");
+    if (item.url === "/ai-mentor") return pathname.startsWith("/ai-mentor");
     if (item.url === "/practice") return pathname.startsWith("/practice") || pathname.startsWith("/learning");
     return pathname.startsWith(item.url);
   };
@@ -62,7 +86,6 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = isTabActive(item);
-          const isProfile = item.name.toLowerCase() === "profile" || item.url === "/profile" || item.url === "/settings";
 
           return (
             <Link
@@ -77,40 +100,25 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
                 "transition-transform duration-150 active:scale-90"
               )}
             >
-              {isProfile ? (
-                // ── 5th Tab: User Profile Avatar (Instagram-style circular ring) ──
-                <div
+              <div className="relative flex items-center justify-center w-7 h-7">
+                <Icon
+                  size={22}
+                  strokeWidth={isActive ? 2.5 : 1.9}
                   className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-[10.5px] font-black transition-all",
+                    "transition-all duration-200",
                     isActive
-                      ? "ring-2 ring-[#D5FF38] ring-offset-2 ring-offset-black dark:ring-offset-[#10110E] bg-[#D5FF38] text-black shadow-xs shadow-[#D5FF38]/40"
-                      : "bg-[#18191E] text-neutral-300 border border-[#24271F] hover:border-[#D5FF38]"
+                      ? "fill-[#10110E] text-[#D5FF38] drop-shadow-[0_0_8px_rgba(213,255,56,0.35)]"
+                      : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
                   )}
-                >
-                  <span>{userInitial}</span>
-                </div>
-              ) : (
-                // ── Standard Icon Tab (Home, SkillBits, AI Mentor, Practice) ──
-                <div className="relative flex items-center justify-center w-7 h-7">
-                  <Icon
-                    size={24}
-                    strokeWidth={isActive ? 2.5 : 1.9}
-                    className={cn(
-                      "transition-all duration-200",
-                      isActive
-                        ? "fill-[#10110E] text-[#D5FF38] drop-shadow-[0_0_8px_rgba(213,255,56,0.35)]"
-                        : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
-                    )}
-                  />
+                />
 
-                  {/* Optional notification / activity badge */}
-                  {item.badge && (
-                    <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#D5FF38] text-black text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#10110E] shadow-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              )}
+                {/* Optional notification / activity badge */}
+                {item.badge && (
+                  <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-[#D5FF38] text-black text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#10110E] shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
 
               {/* ── Active Gliding Indicator Dot (Acid Lime Glow) ── */}
               {isActive && (

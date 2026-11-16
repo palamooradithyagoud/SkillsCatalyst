@@ -66,12 +66,13 @@ export default function CareerPage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 pt-0 sm:pt-2">
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-24 md:pb-12 pt-0 sm:pt-2">
       {/* ── Featured Interactive Placement Accordion (Top Section) ── */}
       <div className="-mx-3.5 -mt-3.5 sm:-mx-6 sm:-mt-6 md:-mx-8 md:-mt-8 lg:-mx-10 lg:-mt-10 xl:mx-0 xl:mt-0 xl:px-0">
         <LandingAccordionItem
           onOpenPlacementPrep={handleOpenPlacementPrep}
           onOpenResumeReview={() => router.push("/career/resume-review")}
+          onBack={() => router.push("/dashboard")}
         />
       </div>
 

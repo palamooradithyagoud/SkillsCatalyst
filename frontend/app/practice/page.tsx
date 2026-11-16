@@ -277,7 +277,7 @@ function PracticeContent() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-8 pb-16 select-none"
+      className="max-w-7xl mx-auto space-y-8 pb-28 sm:pb-16 select-none"
     >
       {/* ── Top Header */}
       <PracticeHeader

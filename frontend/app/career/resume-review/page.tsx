@@ -188,6 +188,26 @@ export default function ResumeWorkspacePage() {
   // Main panel active mode: "empty" | "upload" | "create" | "history" | "series" | "growth"
   const [viewMode, setViewMode] = useState<"empty" | "upload" | "create" | "history" | "series" | "growth">("empty");
 
+  // Completely hide mobile navigation bar when in any active resume workspace (scan results, builder, history, etc.)
+  React.useEffect(() => {
+    const isAnyActive = viewMode !== "empty";
+    if (typeof document !== "undefined") {
+      if (isAnyActive) {
+        document.body.setAttribute("data-resume-active", "true");
+        document.body.setAttribute("data-hide-bottombar", "true");
+      } else {
+        document.body.removeAttribute("data-resume-active");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-resume-active");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    };
+  }, [viewMode]);
+
   // Comparison & Growth state
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [compareOlderId, setCompareOlderId] = useState<string | null>(null);
@@ -495,7 +515,7 @@ export default function ResumeWorkspacePage() {
     });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 pb-20 select-none overflow-x-hidden w-full">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 pb-28 sm:pb-24 select-none overflow-x-hidden w-full">
       {/* ──────────────────────────────────────────────────────────
           1. TOP HERO / BANNER CARD (Dark Charcoal Theme & Crisp White Text)
       ────────────────────────────────────────────────────────── */}

@@ -600,7 +600,7 @@ export default function AnalyticsPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-7 pb-16 select-none"
+      className="max-w-7xl mx-auto space-y-7 pb-28 sm:pb-16 select-none"
     >
       {/* ── REAL KPI CARDS GRID ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">

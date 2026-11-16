@@ -2253,6 +2253,20 @@ function RoadmapDetailView({
 
   const [completedSubtopics, setCompletedSubtopics] = useState<Record<string, boolean>>({});
 
+  // SYS-ROADMAP: Completely hide mobile bottom navigation bar when viewing an active roadmap
+  React.useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-roadmap-detail", "true");
+      document.body.setAttribute("data-hide-bottombar", "true");
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-roadmap-detail");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    };
+  }, []);
+
   const isCareerRoadmap = selectedRoadmap.category === "career";
 
   const toggleSubtopic = (subtopicId: string, nodeName: string) => {
@@ -2404,7 +2418,7 @@ function RoadmapDetailView({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto pb-16"
+      className="max-w-7xl mx-auto pb-28 sm:pb-16"
     >
       <RoadmapCurriculumView
         roadmapTitle={selectedRoadmap.displayTitle || selectedRoadmap.title}
@@ -2438,6 +2452,25 @@ export default function RoadmapsPage() {
   const roadmapLimit = isPremium ? null : getLimit("roadmaps");
 
   const [selectedRoadmap, setSelectedRoadmap] = useState<PresetRoadmap | null>(null);
+
+  // SYS-ROADMAP: Completely hide mobile bottom navigation bar when viewing an active roadmap
+  React.useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (selectedRoadmap) {
+        document.body.setAttribute("data-roadmap-detail", "true");
+        document.body.setAttribute("data-hide-bottombar", "true");
+      } else {
+        document.body.removeAttribute("data-roadmap-detail");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.removeAttribute("data-roadmap-detail");
+        document.body.removeAttribute("data-hide-bottombar");
+      }
+    };
+  }, [selectedRoadmap]);
   const [query, setQuery] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -2654,7 +2687,7 @@ export default function RoadmapsPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto space-y-6 sm:space-y-10 pb-16"
+      className="max-w-7xl mx-auto space-y-6 sm:space-y-10 pb-28 sm:pb-16"
     >
       {/* ── Roadmaps Header Banner ── */}
       <div className="-mx-3.5 -mt-3.5 sm:mx-0 sm:mt-0 w-[calc(100%+1.75rem)] sm:w-auto relative overflow-hidden rounded-none sm:rounded-3xl bg-[#a1ccff] border-b sm:border border-[#8ec2fc] p-5 sm:p-8 lg:p-10 shadow-none sm:shadow-sm">

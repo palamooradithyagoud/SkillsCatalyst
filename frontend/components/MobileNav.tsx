@@ -40,6 +40,7 @@ import ExploreIcon from "@/components/icons/ExploreIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
+import CareerDownbar from "@/components/career/CareerDownbar";
 import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
@@ -61,9 +62,10 @@ const navItems = [
 const mobileNavItems: NavItem[] = [
   { name: "Home", url: "/dashboard", icon: Home },
   { name: "SkillBits", url: "/skillbits", icon: Clapperboard },
+  { name: "Career", url: "/roadmaps", icon: Briefcase },
   { name: "Explore", url: "/explore", icon: Compass },
   { name: "AI Mentor", url: "/ai-mentor", icon: Bot },
-  { name: "Practice & Learn", url: "/practice", icon: Target },
+  { name: "Profile", url: "/profile", icon: User },
 ];
 
 const bottomBarItems = [
@@ -114,6 +116,8 @@ function MobileNavContent() {
   const { unreadCount } = useNotifications();
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
   const [isLearningPlayer, setIsLearningPlayer] = useState(false);
+  const [isRoadmapDetail, setIsRoadmapDetail] = useState(false);
+  const [isResumeActive, setIsResumeActive] = useState(false);
   const [exploreTab, setExploreTab] = useState<string>("trending");
   const [isExplicitlyHidden, setIsExplicitlyHidden] = useState(false);
 
@@ -136,6 +140,14 @@ function MobileNavContent() {
       if (typeof document !== "undefined") {
         setIsPracticeSubView(document.body.hasAttribute("data-practice-subview"));
         setIsLearningPlayer(document.body.hasAttribute("data-learning-player"));
+        setIsRoadmapDetail(
+          document.body.hasAttribute("data-roadmap-detail") ||
+          document.body.hasAttribute("data-roadmap-active")
+        );
+        setIsResumeActive(
+          document.body.hasAttribute("data-resume-active") ||
+          document.body.hasAttribute("data-resume-workspace")
+        );
         setIsExplicitlyHidden(document.body.hasAttribute("data-hide-bottombar"));
         const tabAttr = document.body.getAttribute("data-explore-tab");
         if (tabAttr && tabAttr !== exploreTab) {
@@ -154,6 +166,10 @@ function MobileNavContent() {
         attributeFilter: [
           "data-practice-subview",
           "data-learning-player",
+          "data-roadmap-detail",
+          "data-roadmap-active",
+          "data-resume-active",
+          "data-resume-workspace",
           "data-hide-bottombar",
           "data-explore-tab",
         ],
@@ -181,15 +197,25 @@ function MobileNavContent() {
   const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
-  // Hide bottom navigation bar inside explore (which has dedicated downside explore dock), active video player, practice subviews, roadmaps, edit profile page, SkillBits reels, or career page
+  const isCareerGroup =
+    pathname.startsWith("/career") ||
+    pathname.startsWith("/roadmaps") ||
+    pathname.startsWith("/learning") ||
+    pathname.startsWith("/practice") ||
+    pathname.startsWith("/analytics");
+
+  // Hide standard bottom navigation bar inside explore (which has dedicated explore dock),
+  // career group (which has dedicated CareerDownbar dock), active video player, practice subviews,
+  // roadmap detail view, resume active scan/workspace, edit profile page, SkillBits reels
   const isHideBottomBar =
     isExplicitlyHidden ||
+    isRoadmapDetail ||
+    isResumeActive ||
     pathname.startsWith("/explore") ||
-    pathname.startsWith("/career") ||
+    isCareerGroup ||
     pathname.startsWith("/skillbits") ||
     (pathname === "/learning" && isLearningPlayer) ||
     (pathname === "/practice" && isPracticeSubView) ||
-    pathname.startsWith("/roadmaps") ||
     pathname.startsWith("/settings/edit") ||
     pathname.startsWith("/profile/edit");
 
@@ -272,8 +298,19 @@ function MobileNavContent() {
       </div>
 
 
-      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden when Drawer is Open) ── */}
-      {!isHideBottomBar && !drawerOpen && (
+      {/* ── Career & Placement Suite Downbar Dock (Roadmaps, Learn, Practice, Resume Prep, Interview) ── */}
+      {isCareerGroup &&
+        !drawerOpen &&
+        !isLearningPlayer &&
+        !isPracticeSubView &&
+        !isRoadmapDetail &&
+        !isResumeActive &&
+        !isExplicitlyHidden && (
+          <CareerDownbar className="md:hidden" />
+        )}
+
+      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden when Drawer is Open, or on Career Group / Explore / Reels) ── */}
+      {!isHideBottomBar && !isCareerGroup && !drawerOpen && (
         <NavBar
           items={mobileNavItems}
           userInitial={userInitial}
