@@ -27,6 +27,14 @@ html.sc-splash-done #mobile-app-opening-splash {
   display: none !important;
 }
 
+/* Explicitly hide top and bottom bars when modal or preview requests it */
+body[data-hide-appbars="true"] header,
+body[data-hide-appbars="true"] nav,
+body[data-hide-appbars="true"] [aria-label="Mobile Navigation"],
+body[data-hide-bottombar="true"] [aria-label="Mobile Navigation"] {
+  display: none !important;
+}
+
 :root {
   /* Kinetic Navigation Tokens */
   --color-primary: #6366f1;

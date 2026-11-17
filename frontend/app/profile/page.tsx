@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   GraduationCap,
+  Download,
   Code2,
   Trophy,
   Save,
@@ -46,6 +48,8 @@ import {
   Cpu,
   GitBranch,
   User,
+  Settings,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -70,10 +74,37 @@ import { extractResume, reviewResume } from "@/lib/api/career";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 
+function VerifiedBadge({ className = "w-5 h-5 sm:w-5.5 sm:h-5.5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M10.29 2.308a2.3 2.3 0 0 1 3.42 0l.707.785a2.3 2.3 0 0 0 1.942.748l1.045-.145a2.3 2.3 0 0 1 2.57 2.227l.034 1.055a2.3 2.3 0 0 0 1.258 1.83l.942.476a2.3 2.3 0 0 1 1.06 3.197l-.547.903a2.3 2.3 0 0 0-.001 2.228l.547.903a2.3 2.3 0 0 1-1.06 3.197l-.942.476a2.3 2.3 0 0 0-1.258 1.83l-.034 1.055a2.3 2.3 0 0 1-2.57 2.227l-1.045-.145a2.3 2.3 0 0 0-1.942.748l-.707.785a2.3 2.3 0 0 1-3.42 0l-.707-.785a2.3 2.3 0 0 0-1.942-.748l-1.045.145a2.3 2.3 0 0 1-2.57-2.227l-.034-1.055a2.3 2.3 0 0 0-1.258-1.83l-.942-.476a2.3 2.3 0 0 1-1.06-3.197l.547-.903a2.3 2.3 0 0 0 .001-2.228l-.547-.903a2.3 2.3 0 0 1 1.06-3.197l.942-.476a2.3 2.3 0 0 0 1.258-1.83l.034-1.055a2.3 2.3 0 0 1 2.57-2.227l1.045.145a2.3 2.3 0 0 0 1.942-.748l.707-.785z"
+        fill="#D5FF38"
+      />
+      <path
+        d="M8.5 12.2l2.3 2.3 4.7-4.8"
+        stroke="#10110E"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function ProfilePage() {
   const { session, logout } = useAuth();
   const userId = session?.user_id;
   const qc = useQueryClient();
+
+  // Active action button state (filled only after user clicks on it; no glow)
+  const [activeActionBtn, setActiveActionBtn] = useState<"resume" | "projects" | "edit" | null>(null);
+
 
   // ── Master Profile State ──────────────────────────────────────────────────
   const [profileData, setProfileData] = useState<CompleteProfileData>({
@@ -160,10 +191,109 @@ export default function ProfilePage() {
     } catch {}
   }, []);
 
+  // ── Download Resume Function ─────────────────────────────────────────────
+  const handleDownloadResume = () => {
+    if (resumePreviewUrl) {
+      const a = document.createElement("a");
+      a.href = resumePreviewUrl;
+      a.download = profileData.resume?.filename || "PALAMOOR_ADITHYA_GOUD_Resume.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+    const printContent = document.getElementById("printable-resume-sheet");
+    if (!printContent) {
+      window.print();
+      return;
+    }
+    const printWindow = window.open("", "_blank", "width=850,height=1100");
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>PALAMOOR_ADITHYA_GOUD_Resume</title>
+            <meta charset="utf-8" />
+            <style>
+              @page { size: A4; margin: 12mm 15mm; }
+              body {
+                font-family: 'Times New Roman', Times, Georgia, serif;
+                color: #000;
+                margin: 0;
+                padding: 10px;
+                background: #fff;
+                line-height: 1.3;
+                font-size: 10pt;
+              }
+              * { box-sizing: border-box; }
+              a { color: #000; text-decoration: underline; }
+              h1 { font-size: 18pt; text-align: center; margin: 0 0 2px 0; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+              .text-center { text-align: center; }
+              .flex { display: flex; }
+              .justify-between { justify-content: space-between; }
+              .items-baseline { align-items: baseline; }
+              .font-bold { font-weight: bold; }
+              .italic { font-style: italic; }
+              .underline { text-decoration: underline; }
+              ul { margin: 2px 0 4px 18px; padding: 0; }
+              li { margin-bottom: 2px; }
+              .section-title {
+                font-weight: bold;
+                font-size: 10pt;
+                text-transform: uppercase;
+                border-bottom: 1px solid #000;
+                padding-bottom: 2px;
+                margin-top: 8px;
+                margin-bottom: 4px;
+                letter-spacing: 0.5px;
+              }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 600);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } else {
+      window.print();
+    }
+  };
+
   // ── Modals State ──────────────────────────────────────────────────────────
   type ModalType = "avatar" | "resume_preview" | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [modalError, setModalError] = useState("");
+
+  // ── Client Mount & Body Bar Suppression ─────────────────────────────────
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (activeModal === "resume_preview") {
+      document.body.setAttribute("data-hide-bottombar", "true");
+      document.body.setAttribute("data-hide-appbars", "true");
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.removeAttribute("data-hide-bottombar");
+      document.body.removeAttribute("data-hide-appbars");
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.removeAttribute("data-hide-bottombar");
+      document.body.removeAttribute("data-hide-appbars");
+      document.body.style.overflow = "";
+    };
+  }, [activeModal]);
 
   // ── Interactive UI States ─────────────────────────────────────────────────
   const [languages, setLanguages] = useState<string[]>(["English"]);
@@ -493,210 +623,167 @@ export default function ProfilePage() {
       />
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. HEADER CARD (TALL LILAC CARD DRAGGED DOWN WITH BOWL CURVE)       */}
+      {/* 1. TOP HEADER & PROFILE HERO (MATCHES IMAGE 2)                      */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="relative -mx-3 sm:-mx-4 -mt-4 sm:-mt-6 overflow-visible">
-        {/* Tall Lilac card body: photo on left, name/ID/role/followers on right */}
-        <div className="w-full bg-gradient-to-b from-[#B79CF5] to-[#7C5CD6] min-h-[250px] sm:min-h-[300px] pt-8 sm:pt-12 px-5 sm:px-8 pb-10 sm:pb-14 text-white flex flex-col justify-center">
-          <div className="max-w-md mx-auto w-full flex items-center justify-between gap-4 sm:gap-6">
-            {/* Left Side: Full Name & Followers / Following */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center space-y-2.5">
-              {/* Full Name (fits completely without truncation) */}
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-snug break-words drop-shadow-xs">
-                {displayName}
-              </h1>
+      <div className="pt-2 sm:pt-4 pb-2 space-y-6">
+        {/* Top Header Row: "My profile" | Streak pill & Settings */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            My profile
+          </h1>
 
-              {/* Followers & Following */}
-              <div className="flex items-center gap-3.5 pt-1 text-white">
-                <div className="flex items-baseline gap-1">
-                  <span className="font-black text-sm sm:text-base">0</span>
-                  <span className="text-[11px] sm:text-xs text-white/90 font-medium">Followers</span>
-                </div>
-                <div className="w-px h-3.5 bg-white/30" />
-                <div className="flex items-baseline gap-1">
-                  <span className="font-black text-sm sm:text-base">0</span>
-                  <span className="text-[11px] sm:text-xs text-white/90 font-medium">Following</span>
-                </div>
-              </div>
+          <div className="flex items-center gap-2.5">
+            {/* Streak Counter Pill */}
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#18191E] border border-white/10 text-white shadow-xs">
+              <Flame className="w-4 h-4 text-white stroke-[2]" />
+              <span className="text-sm font-bold tracking-tight">
+                {progressStats.streakDays || 5}
+              </span>
             </div>
 
-            {/* Right Side: Photo with ID & Goal downside the img */}
-            <div className="shrink-0 flex flex-col items-center gap-1.5">
-              {/* User Photo */}
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Change photo or avatar"
-                onClick={() => setActiveModal("avatar")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setActiveModal("avatar");
-                  }
-                }}
-                title="Change photo or avatar"
-                className="cursor-pointer focus:outline-none focus:ring-3 focus:ring-white/80 rounded-2xl sm:rounded-3xl group/avatar"
-              >
-                {personalForm.avatar_url ? (
-                  <img
-                    src={personalForm.avatar_url}
-                    alt={displayName}
-                    className="w-22 h-22 sm:w-28 sm:h-28 aspect-square object-cover object-center rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/90 shadow-xl group-hover/avatar:scale-[1.03] transition-all duration-300"
-                  />
-                ) : (
-                  <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl border-2 sm:border-[3px] border-white/90 bg-white/20 backdrop-blur-md shadow-xl flex items-center justify-center group-hover/avatar:scale-[1.03] transition-all duration-300">
-                    <span className="text-2xl sm:text-4xl font-black text-white select-none drop-shadow-sm">
-                      {getInitials(displayName)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* ID downside the img */}
-              {personalForm.username ? (
-                <p className="text-xs sm:text-sm font-bold text-white/95 truncate text-center max-w-[120px]">
-                  @{personalForm.username}
-                </p>
-              ) : (
-                <Link
-                  href="/settings/edit?tab=personal"
-                  className="inline-block text-[11px] sm:text-xs font-semibold text-purple-100 hover:text-white transition-colors underline text-center"
-                >
-                  Set username &rarr;
-                </Link>
-              )}
-
-              {/* Fav Goal downside the img */}
-              {favGoal && (
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[10.5px] sm:text-xs font-bold text-white border border-white/25 w-fit text-center max-w-[130px] truncate shadow-xs">
-                  <Target className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{favGoal}</span>
-                </div>
-              )}
-            </div>
+            {/* Settings Gear Button */}
+            <Link
+              href="/settings/edit"
+              aria-label="Settings"
+              title="Settings & Edit Profile"
+              className="w-10 h-10 rounded-full bg-[#18191E] border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer shadow-xs active:scale-95"
+            >
+              <Settings className="w-5 h-5 text-white stroke-[2]" />
+            </Link>
           </div>
         </div>
 
-        {/* Downward Bowl Curve & Floating Buttons: Buttons centered on the curved bottom edge */}
-        <div className="relative -mt-0.5 w-full leading-none overflow-visible">
-          {/* Smooth Downward Arc SVG */}
-          <svg
-            viewBox="0 0 1000 100"
-            preserveAspectRatio="none"
-            className="w-full h-20 fill-[#7C5CD6] block"
+        {/* Center Profile Hero: Large Circular Avatar, Name with Acid Lime Verified Badge, Followers */}
+        <div className="flex flex-col items-center text-center">
+          {/* Large Circular Avatar with Cyan Background */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setActiveModal("avatar")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActiveModal("avatar");
+              }
+            }}
+            aria-label="Change photo"
+            title="Click to change photo"
+            className="relative group cursor-pointer focus:outline-none"
           >
-            <path d="M 0,0 L 1000,0 Q 500,200 0,0 Z" />
-          </svg>
-
-          {/* 4 Floating Circular Buttons: Glassmorphism, transparent frosted glass, dark black icons & text */}
-          <div className="absolute inset-x-0 top-0 z-30 pointer-events-none">
-            <div className="max-w-md mx-auto px-4 sm:px-6 flex items-center justify-between">
-              {/* 1st Button: Resume */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (profileData.resume?.filename || resumePreviewUrl) {
-                    setActiveModal("resume_preview");
-                  } else {
-                    fileInputRef.current?.click();
-                  }
-                }}
-                className="pointer-events-auto w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] rounded-full bg-gradient-to-b from-white/40 via-white/25 to-white/15 backdrop-blur-xl border-[1.5px] border-white/80 hover:border-white hover:bg-white/45 flex flex-col items-center justify-center gap-1 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0 group/btn"
-                style={{
-                  boxShadow: "inset 0 1.5px 2px rgba(255, 255, 255, 0.8), 0 10px 24px rgba(60, 20, 120, 0.22)",
-                  transform: "translateY(calc(39px - 50%))",
-                }}
-                aria-label="Resume"
-                title="Resume (Preview / Upload)"
-              >
-                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-black stroke-[2.2] group-hover/btn:scale-110 transition-transform duration-200" />
-                <span className="text-[10px] sm:text-[11px] font-black text-black tracking-tight leading-none">
-                  Resume
-                </span>
-              </button>
-
-              {/* 2nd Button: Projects (Dips lower along curve to stay half on, half out) */}
-              <a
-                href="#proof-of-work"
-                className="pointer-events-auto w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] rounded-full bg-gradient-to-b from-white/40 via-white/25 to-white/15 backdrop-blur-xl border-[1.5px] border-white/80 hover:border-white hover:bg-white/45 flex flex-col items-center justify-center gap-1 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0 group/btn"
-                style={{
-                  boxShadow: "inset 0 1.5px 2px rgba(255, 255, 255, 0.8), 0 10px 24px rgba(60, 20, 120, 0.22)",
-                  transform: "translateY(calc(74px - 50%))",
-                }}
-                aria-label="Projects"
-                title="Projects"
-              >
-                <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-black stroke-[2.2] group-hover/btn:scale-110 transition-transform duration-200" />
-                <span className="text-[10px] sm:text-[11px] font-black text-black tracking-tight leading-none">
-                  Projects
-                </span>
-              </a>
-
-              {/* 3rd Button: Roadmap Following (Dips lower along curve to stay half on, half out) */}
-              <Link
-                href="/roadmaps"
-                className="pointer-events-auto w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] rounded-full bg-gradient-to-b from-white/40 via-white/25 to-white/15 backdrop-blur-xl border-[1.5px] border-white/80 hover:border-white hover:bg-white/45 flex flex-col items-center justify-center gap-1 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0 group/btn"
-                style={{
-                  boxShadow: "inset 0 1.5px 2px rgba(255, 255, 255, 0.8), 0 10px 24px rgba(60, 20, 120, 0.22)",
-                  transform: "translateY(calc(74px - 50%))",
-                }}
-                aria-label="Roadmap Following"
-                title="Roadmap Following"
-              >
-                <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-black stroke-[2.2] group-hover/btn:scale-110 transition-transform duration-200" />
-                <span className="text-[10px] sm:text-[11px] font-black text-black tracking-tight leading-none">
-                  Roadmaps
-                </span>
-              </Link>
-
-              {/* 4th Button: Edit */}
-              <Link
-                href="/settings/edit"
-                className="pointer-events-auto w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] rounded-full bg-gradient-to-b from-white/40 via-white/25 to-white/15 backdrop-blur-xl border-[1.5px] border-white/80 hover:border-white hover:bg-white/45 flex flex-col items-center justify-center gap-1 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none shrink-0 group/btn"
-                style={{
-                  boxShadow: "inset 0 1.5px 2px rgba(255, 255, 255, 0.8), 0 10px 24px rgba(60, 20, 120, 0.22)",
-                  transform: "translateY(calc(39px - 50%))",
-                }}
-                aria-label="Edit Profile & Settings"
-                title="Edit Profile & Settings"
-              >
-                <Edit3 className="w-5 h-5 sm:w-6 sm:h-6 text-black stroke-[2.2] group-hover/btn:scale-110 transition-transform duration-200" />
-                <span className="text-[10px] sm:text-[11px] font-black text-black tracking-tight leading-none">
-                  Edit
-                </span>
-              </Link>
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-[#38BDF8] border-2 border-white/15 shadow-2xl flex items-center justify-center relative transition-transform duration-200 group-hover:scale-105">
+              {personalForm.avatar_url ? (
+                <img
+                  src={personalForm.avatar_url}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-[#38BDF8] flex items-center justify-center">
+                  <span className="text-3xl sm:text-4xl font-black text-white select-none">
+                    {getInitials(displayName)}
+                  </span>
+                </div>
+              )}
+              {/* Camera overlay on hover */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full transition-opacity duration-200">
+                <Camera className="w-6 h-6 text-white" />
+              </div>
             </div>
           </div>
+
+          {/* Name + Acid Lime Verified Badge */}
+          <div className="mt-3.5 flex items-center justify-center gap-1.5 sm:gap-2">
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              {displayName}
+            </h2>
+            <VerifiedBadge className="w-5 h-5 sm:w-5.5 sm:h-5.5 shrink-0" />
+          </div>
+
+          {/* Followers · Following Subtitle */}
+          <div className="mt-1 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-400">
+            <span>0 followers</span>
+            <span className="text-neutral-600 font-bold">·</span>
+            <span>0 following</span>
+          </div>
+          {userHandle && (
+            <div className="text-[11px] sm:text-xs font-semibold text-neutral-500 mt-0.5">
+              {userHandle} {favGoal ? `· ${favGoal}` : ""}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Action Buttons: Resume, Projects, Edit */}
+        <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 pt-2 pb-1 flex-wrap">
+          {/* Resume Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveActionBtn("resume");
+              setActiveModal("resume_preview");
+            }}
+            className={`flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+              activeActionBtn === "resume"
+                ? "bg-[#D5FF38] text-black border border-transparent shadow-none"
+                : "bg-[#18191E] border border-white/10 text-white hover:border-[#D5FF38]/50 hover:text-[#D5FF38] shadow-xs active:scale-95"
+            }`}
+          >
+            <FileText className={`w-4 h-4 stroke-[2.2] ${activeActionBtn === "resume" ? "text-black" : "text-white"}`} />
+            <span>Resume</span>
+          </button>
+
+          {/* Projects Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveActionBtn("projects");
+              const el = document.getElementById("proof-of-work");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            className={`flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+              activeActionBtn === "projects"
+                ? "bg-[#D5FF38] text-black border border-transparent shadow-none"
+                : "bg-[#18191E] border border-white/10 text-white hover:border-[#D5FF38]/50 hover:text-[#D5FF38] shadow-xs active:scale-95"
+            }`}
+          >
+            <Briefcase className={`w-4 h-4 stroke-[2.2] ${activeActionBtn === "projects" ? "text-black" : "text-white"}`} />
+            <span>Projects</span>
+          </button>
+
+          {/* Edit Button */}
+          <Link
+            href="/settings/edit"
+            onClick={() => setActiveActionBtn("edit")}
+            className={`flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
+              activeActionBtn === "edit"
+                ? "bg-[#D5FF38] text-black border border-transparent shadow-none"
+                : "bg-[#18191E] border border-white/10 text-white hover:border-[#D5FF38]/50 hover:text-[#D5FF38] shadow-xs active:scale-95"
+            }`}
+          >
+            <Edit3 className={`w-4 h-4 stroke-[2.2] ${activeActionBtn === "edit" ? "text-black" : "text-white"}`} />
+            <span>Edit</span>
+          </Link>
         </div>
       </div>
-      <div className="h-16 sm:h-20" />
 
       {resumeMsg && (
-        <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/50 text-purple-900 dark:text-purple-200 text-xs font-bold flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+        <div className="p-3.5 rounded-2xl bg-neutral-900/60 border border-neutral-800 text-neutral-200 text-xs font-bold flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#D5FF38] shrink-0" />
           <span>{resumeMsg}</span>
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 3. EXPERIENCE CARD                                                  */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 2. EXPERIENCE CARD */}
       <div id="experience" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Experience</h3>
-          <Link
-            href="/settings/edit?tab=experience"
-            className="text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Manage</span>
-          </Link>
         </div>
 
         {profileData.experiences.length === 0 ? (
           <div className="py-8 text-center text-sm font-medium text-slate-400 dark:text-neutral-500">
             No experience added yet.{" "}
-            <Link href="/settings/edit?tab=experience" className="text-purple-600 dark:text-purple-400 underline font-bold">
+            <Link href="/settings/edit?tab=experience" className="text-slate-700 dark:text-neutral-300 hover:text-[#D5FF38] underline font-bold">
               Add your work experience
             </Link>
           </div>
@@ -707,7 +794,7 @@ export default function ProfilePage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="text-xs font-black text-slate-900 dark:text-white">{exp.role || (exp as any).job_title}</h4>
-                    <p className="text-xs font-semibold text-purple-700 dark:text-purple-400">{exp.company_name}</p>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-neutral-400">{exp.company_name}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-neutral-400 font-medium">
@@ -740,20 +827,13 @@ export default function ProfilePage() {
       <div id="proof-of-work" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Proof of Work</h3>
-          <Link
-            href="/settings/edit?tab=projects"
-            className="text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Manage</span>
-          </Link>
         </div>
 
         {profileData.projects.length === 0 ? (
           <div className="py-8 text-center text-sm font-medium text-slate-400 dark:text-neutral-500">
             No projects added yet.{" "}
-            <Link href="/settings/edit?tab=projects" className="text-purple-600 dark:text-purple-400 underline font-bold">
-              Add links to your work and projects
+            <Link href="/settings/edit?tab=projects" className="text-slate-700 dark:text-neutral-300 hover:text-[#D5FF38] underline font-bold">
+              Add your projects
             </Link>
           </div>
         ) : (
@@ -783,7 +863,7 @@ export default function ProfilePage() {
                       href={proj.github_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
+                      className="text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:underline flex items-center gap-1"
                     >
                       <span>GitHub Repo</span>
                       <ExternalLink className="w-3 h-3" />
@@ -794,7 +874,7 @@ export default function ProfilePage() {
                       href={proj.live_demo_url || (proj as any).demo_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
+                      className="text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:underline flex items-center gap-1"
                     >
                       <span>Live Demo</span>
                       <ExternalLink className="w-3 h-3" />
@@ -807,120 +887,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 5. EXPERTISE & SKILLS CARD                                          */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div id="skills" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Expertise & Skills</h3>
-          <Link
-            href="/settings/edit?tab=skills"
-            className="text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Manage</span>
-          </Link>
-        </div>
-
-        {profileData.skills.length === 0 ? (
-          <div className="py-8 text-center text-sm font-medium text-slate-400 dark:text-neutral-500">
-            No skills added yet. Add your programming languages, tools, and frameworks in settings.
-          </div>
-        ) : (
-          <div className="space-y-4 pt-1">
-            {SKILL_CATEGORIES.map((cat) => {
-              const matchedSkills = profileData.skills.filter(cat.filter);
-              if (matchedSkills.length === 0) return null;
-
-              return (
-                <div key={cat.id} className="space-y-2">
-                  <div className="text-xs font-semibold text-indigo-500/90 dark:text-indigo-400 flex items-center gap-1.5">
-                    <span className="text-indigo-400">—</span>
-                    <span>{cat.label}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {matchedSkills.map((s) => (
-                      <div
-                        key={s.id || s.skill_name}
-                        className="px-3.5 py-2 rounded-2xl bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 shadow-2xs flex items-center gap-2"
-                      >
-                        {cat.iconType === "terminal" ? (
-                          <span className="text-[11px] font-mono font-bold text-amber-500">{`>_`}</span>
-                        ) : cat.iconType === "cloud" ? (
-                          <Cloud className="w-3.5 h-3.5 text-teal-500" />
-                        ) : cat.iconType === "database" ? (
-                          <Database className="w-3.5 h-3.5 text-purple-500" />
-                        ) : cat.iconType === "layers" ? (
-                          <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                        ) : cat.iconType === "cpu" ? (
-                          <Cpu className="w-3.5 h-3.5 text-blue-500" />
-                        ) : cat.iconType === "git" ? (
-                          <GitBranch className="w-3.5 h-3.5 text-orange-500" />
-                        ) : (
-                          <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                        )}
-                        <span className="text-xs font-bold text-slate-800 dark:text-white">{s.skill_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 6. LANGUAGES CARD                                                   */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Languages</h3>
-          <Link
-            href="/settings/edit?tab=languages"
-            className="text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Manage</span>
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-1">
-          {languages.map((lang) => (
-            <span
-              key={lang}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-indigo-50/70 dark:bg-[#121318] border border-indigo-100 dark:border-neutral-800 text-xs font-semibold text-indigo-700 dark:text-indigo-300"
-            >
-              <Languages className="w-3.5 h-3.5 text-indigo-500" />
-              <span>{lang}</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 7. COURSE CERTIFICATES CARD                                         */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Official Certificates</h3>
-              <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">Verified credentials issued for skill assessments</p>
-            </div>
-          </div>
-          <Link
-            href="/certificates"
-            className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-amber-300 dark:hover:border-amber-500/40 hover:bg-amber-50 dark:hover:bg-amber-500/10 text-slate-700 dark:text-neutral-200 hover:text-amber-700 dark:hover:text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-          >
-            <Eye className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>View Certificates</span>
-          </Link>
-        </div>
-      </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 8. EDUCATION CARD                                                   */}
@@ -928,13 +894,6 @@ export default function ProfilePage() {
       <div id="education" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Education</h3>
-          <Link
-            href="/settings/edit?tab=education"
-            className="text-xs font-bold text-purple-700 dark:text-purple-400 hover:underline flex items-center gap-1"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Manage</span>
-          </Link>
         </div>
 
         {profileData.education.length === 0 ? (
@@ -980,22 +939,10 @@ export default function ProfilePage() {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div id="preferences" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
-              <Target className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Career Preferences</h3>
-              <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">Desired job roles, dream companies, and arrangements</p>
-            </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Career Preferences</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">Desired job roles and dream companies</p>
           </div>
-          <Link
-            href="/settings/edit?tab=career"
-            className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-slate-700 dark:text-neutral-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span>Edit Preferences</span>
-          </Link>
         </div>
 
         {/* Roles */}
@@ -1008,7 +955,7 @@ export default function ProfilePage() {
               {careerPrefsForm.target_roles?.map((r, i) => (
                 <span
                   key={i}
-                  className="px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-900 dark:text-rose-200 text-xs font-bold shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-slate-900 dark:text-white text-xs font-bold shadow-2xs"
                 >
                   {r}
                 </span>
@@ -1016,7 +963,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <p className="text-xs text-slate-400 dark:text-neutral-500 font-medium italic">
-              No target roles specified yet. Click &apos;Edit Preferences&apos; to configure your career goals.
+              No target roles specified yet. Click &apos;Edit&apos; to configure your career goals.
             </p>
           )}
         </div>
@@ -1031,7 +978,7 @@ export default function ProfilePage() {
               {careerPrefsForm.target_companies?.map((c, i) => (
                 <span
                   key={i}
-                  className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/40 text-purple-900 dark:text-purple-200 text-xs font-bold shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-slate-900 dark:text-neutral-200 text-xs font-bold shadow-2xs"
                 >
                   {c}
                 </span>
@@ -1039,61 +986,96 @@ export default function ProfilePage() {
             </div>
           ) : (
             <p className="text-xs text-slate-400 dark:text-neutral-500 font-medium italic">
-              No dream companies specified yet. Click &apos;Edit Preferences&apos; to add companies.
+              No dream companies specified yet. Click &apos;Edit&apos; to add companies.
             </p>
           )}
         </div>
+      </div>
 
-        {/* Work Arrangements */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-black text-slate-500 dark:text-neutral-400 uppercase tracking-wider block">
-            Work Arrangements
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {["Remote", "Hybrid", "Onsite"].map((arr) => {
-              const isSelected = (careerPrefsForm.work_arrangements || []).includes(arr);
+      {/* Expertise & Skills Card */}
+      <div id="skills" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Expertise & Skills</h3>
+        </div>
+
+        {profileData.skills.length === 0 ? (
+          <div className="py-8 text-center text-sm font-medium text-slate-400 dark:text-neutral-500">
+            No skills added yet. Add your programming languages, tools, and frameworks in settings.
+          </div>
+        ) : (
+          <div className="space-y-4 pt-1">
+            {SKILL_CATEGORIES.map((cat) => {
+              const matchedSkills = profileData.skills.filter(cat.filter);
+              if (matchedSkills.length === 0) return null;
+
               return (
-                <span
-                  key={arr}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    isSelected
-                      ? "bg-purple-700 text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-[#121318] text-slate-400 dark:text-neutral-500 border dark:border-neutral-800 opacity-60"
-                  }`}
-                >
-                  {arr}
-                </span>
+                <div key={cat.id} className="space-y-2">
+                  <div className="text-xs font-semibold text-slate-400 dark:text-neutral-400 flex items-center gap-1.5">
+                    <span className="text-slate-500">—</span>
+                    <span>{cat.label}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {matchedSkills.map((s) => (
+                      <div
+                        key={s.id || s.skill_name}
+                        className="px-3.5 py-2 rounded-2xl bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 shadow-2xs flex items-center gap-2"
+                      >
+                        {cat.iconType === "terminal" ? (
+                          <span className="text-[11px] font-mono font-bold text-amber-500">{`>_`}</span>
+                        ) : cat.iconType === "cloud" ? (
+                          <Cloud className="w-3.5 h-3.5 text-teal-500" />
+                        ) : cat.iconType === "database" ? (
+                          <Database className="w-3.5 h-3.5 text-cyan-400" />
+                        ) : cat.iconType === "layers" ? (
+                          <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                        ) : cat.iconType === "cpu" ? (
+                          <Cpu className="w-3.5 h-3.5 text-blue-500" />
+                        ) : cat.iconType === "git" ? (
+                          <GitBranch className="w-3.5 h-3.5 text-orange-500" />
+                        ) : (
+                          <Sparkles className="w-3.5 h-3.5 text-[#D5FF38]" />
+                        )}
+                        <span className="text-xs font-bold text-slate-800 dark:text-white">{s.skill_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>
+        )}
+      </div>
+
+      {/* Languages Card */}
+      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Languages</h3>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          {languages.map((lang) => (
+            <span
+              key={lang}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-neutral-200"
+            >
+              <Languages className="w-3.5 h-3.5 text-slate-400 dark:text-neutral-400" />
+              <span>{lang}</span>
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 10. DEVELOPER PLATFORMS CARD                                        */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
+{/* 6. DEVELOPER & CODING PROFILES */}
       <div id="developer" className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400">
-              <Code2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                Developer & Coding Profiles
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">
-                Connected accounts across competitive programming and developer platforms
-              </p>
-            </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+              Developer & Coding Profiles
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">
+              Connected accounts across competitive programming and developer platforms
+            </p>
           </div>
-          <Link
-            href="/settings/edit?tab=coding"
-            className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-slate-700 dark:text-neutral-200 hover:text-purple-700 dark:hover:text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span>Edit Profiles</span>
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1127,10 +1109,10 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <span
-                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                    className={`text-xs font-bold ${
                       isConnected
-                        ? "bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50"
-                        : "bg-slate-100 dark:bg-[#18191F] text-slate-400 dark:text-neutral-500 border border-slate-200/60 dark:border-neutral-800"
+                        ? "text-emerald-400"
+                        : "text-slate-400 dark:text-neutral-500"
                     }`}
                   >
                     {isConnected ? "Connected" : "Not Connected"}
@@ -1145,7 +1127,7 @@ export default function ProfilePage() {
                       </span>
                     </div>
                     {item.stat && item.stat.summary && (
-                      <p className="text-[11px] font-medium text-purple-700 dark:text-purple-400 truncate">
+                      <p className="text-[11px] font-medium text-emerald-400 truncate">
                         {item.stat.summary}
                       </p>
                     )}
@@ -1158,57 +1140,6 @@ export default function ProfilePage() {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 11. CUSTOMER SERVICE & LEGAL POLICIES                               */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-800/40 shadow-2xs">
-              <Headset className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Customer Service & Founder Support</h3>
-              <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">Direct founder contact and student policies</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/support"
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white text-xs font-bold shadow-xs hover:opacity-95 transition-opacity"
-            >
-              Support Desk ➔
-            </Link>
-            <button
-              onClick={logout}
-              className="px-4 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase block">Founder</span>
-            <span className="font-bold text-slate-900 dark:text-white">Palamoor Adithya Goud</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase block">Phone / WhatsApp</span>
-            <a href="tel:+917330602101" className="font-bold text-purple-700 dark:text-purple-400 hover:underline">
-              +91 7330602101
-            </a>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs truncate">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase block">Email</span>
-            <a href="mailto:palamooradithyagoud@gmail.com" className="font-bold text-purple-700 dark:text-purple-400 hover:underline truncate">
-              palamooradithyagoud@gmail.com
-            </a>
-          </div>
         </div>
       </div>
 
@@ -1239,119 +1170,277 @@ export default function ProfilePage() {
         />
       </ModalShell>
 
-      {/* MODAL: RESUME DOCUMENT PREVIEW */}
-      <AnimatePresence>
-        {activeModal === "resume_preview" && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white dark:bg-[#18191F] rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-100 dark:border-neutral-800 flex flex-col max-h-[92vh] overflow-hidden my-auto"
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/70 dark:bg-[#121318]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-                    PDF
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      <span className="truncate max-w-[200px] sm:max-w-xs">
-                        {profileData.resume?.filename || "Resume Document"}
-                      </span>
-                      {(profileData.resume?.ats_score || profileData.resume?.overall_score) && (
-                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 shrink-0">
-                          {profileData.resume.ats_score || profileData.resume.overall_score}/100 ATS
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-400 dark:text-neutral-400 font-medium">
-                      {profileData.resume?.summary || "Interactive resume document preview"}
-                    </p>
-                  </div>
-                </div>
+      {/* ── MODAL: RESUME VIEW (MATCHES REFERENCE IMAGE 100%) ── */}
+      {isClient &&
+        createPortal(
+          <AnimatePresence>
+            {activeModal === "resume_preview" && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 overflow-y-auto"
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.97, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: 10 }}
+                  className="bg-white rounded-none sm:rounded-3xl max-w-4xl w-full h-full sm:h-auto sm:max-h-[92vh] shadow-2xl border-0 sm:border border-slate-200 flex flex-col overflow-hidden my-auto"
+                >
+                  {/* Modal Header: Clean Title 'Resume' on Left | 'Download' & '✕' on Right */}
+                  <div className="flex items-center justify-between px-6 sm:px-8 py-4 bg-white border-b border-slate-200 shrink-0">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                      Resume
+                    </h2>
 
-                <div className="flex items-center gap-2">
-                  {resumePreviewUrl && (
-                    <a
-                      href={resumePreviewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#18191F] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-700 dark:text-neutral-200 text-xs font-bold transition-all flex items-center gap-1.5"
-                      title="Open full document in a new tab"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Open Fullscreen</span>
-                    </a>
-                  )}
-                  <button
-                    onClick={() => {
-                      fileInputRef.current?.click();
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                    title="Upload replacement resume"
-                  >
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    <span>Replace PDF</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveModal(null)}
-                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-[#20222A] transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Modal Body */}
-              <div className="flex-1 overflow-hidden p-3 sm:p-5 bg-slate-100/60 dark:bg-[#101114] flex flex-col items-center justify-center min-h-[420px] sm:min-h-[580px]">
-                {resumePreviewUrl ? (
-                  <iframe
-                    src={resumePreviewUrl}
-                    title="Uploaded Resume Preview"
-                    className="w-full h-[58vh] sm:h-[68vh] rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-[#18191F] shadow-xs"
-                  />
-                ) : (
-                  <div className="max-w-md text-center space-y-4 p-8 bg-white dark:bg-[#18191F] rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-xs my-auto">
-                    <div className="w-16 h-16 rounded-3xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 flex items-center justify-center mx-auto shadow-xs">
-                      <FileText className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-black text-slate-900 dark:text-white">
-                        {profileData.resume?.filename || "Resume on file"}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed">
-                        Your resume has been saved and reviewed by AI with an ATS readiness score of{" "}
-                        <strong className="text-purple-700 dark:text-purple-400">
-                          {profileData.resume?.ats_score || profileData.resume?.overall_score || 75}/100
-                        </strong>
-                        . To render the embedded PDF reader in this browser session, select or drop your PDF document below.
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                    <div className="flex items-center gap-2.5">
                       <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#4A1584] to-[#7E22CE] text-white font-bold text-xs shadow-xs hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        type="button"
+                        onClick={handleDownloadResume}
+                        className="px-5 py-2 rounded-xl bg-[#18191E] hover:bg-black text-white text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                        title="Download Resume PDF"
                       >
-                        <UploadCloud className="w-4 h-4" />
-                        <span>Select PDF to View</span>
+                        Download
                       </button>
-                      <Link
-                        href="/career"
-                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-700 dark:text-neutral-200 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border dark:border-neutral-800"
+                      <button
+                        type="button"
+                        onClick={() => setActiveModal(null)}
+                        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                        aria-label="Close modal"
                       >
-                        <span>AI Mentor Review</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  {/* Modal Body: Soft light grey wrapper with white paper sheet */}
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEEF1] flex justify-center items-start">
+                    <div
+                      id="printable-resume-sheet"
+                      className="bg-white text-slate-900 w-full max-w-[720px] rounded-t-2xl sm:rounded-2xl p-6 sm:p-10 shadow-lg border border-slate-200/90 font-serif leading-tight text-[11px] select-text my-2"
+                    >
+                      {/* NAME & CONTACT HEADER */}
+                      <div className="text-center pb-2">
+                        <h1 className="text-xl sm:text-2xl font-bold tracking-wide uppercase font-serif text-slate-950">
+                          {personalForm.full_name || session?.name || "PALAMOOR ADITHYA GOUD"}
+                        </h1>
+                        <div className="text-xs text-slate-700 mt-0.5 font-normal">
+                          {[personalForm.city, personalForm.state].filter(Boolean).join(", ") || "Hyderabad, Telangana"}
+                        </div>
+                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-800">
+                          <span className="inline-flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-slate-800 inline shrink-0" />
+                            <a href={`tel:${personalForm.phone || "+919392640702"}`} className="underline hover:text-black">
+                              {personalForm.phone || "+91 9392640702"}
+                            </a>
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Mail className="w-3 h-3 text-slate-800 inline shrink-0" />
+                            <a
+                              href={`mailto:${session?.email || personalForm.email || "palamooradithyagoud@gmail.com"}`}
+                              className="underline hover:text-black"
+                            >
+                              {session?.email || personalForm.email || "palamooradithyagoud@gmail.com"}
+                            </a>
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <span className="font-bold border border-slate-800 rounded-2xs px-0.5 text-[8.5px] leading-none inline-block">
+                              in
+                            </span>
+                            <a
+                              href="https://www.linkedin.com/in/palamoor-adithya-goud"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-black"
+                            >
+                              LinkedIn
+                            </a>
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <svg className="w-3 h-3 inline fill-current shrink-0" viewBox="0 0 24 24">
+                              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
+                            <a
+                              href="https://github.com/palamooradithyagoud"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-black"
+                            >
+                              GitHub
+                            </a>
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Code2 className="w-3 h-3 text-slate-800 inline shrink-0" />
+                            <a
+                              href="https://leetcode.com/Palamoor_Adithya_Goud"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-black"
+                            >
+                              LeetCode
+                            </a>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* SUMMARY */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          SUMMARY
+                        </h3>
+                        <p className="text-[10.5px] text-slate-800 leading-normal text-justify">
+                          {personalForm.about ||
+                            "Motivated B.Tech student specializing in AI & ML with a strong foundation in problem solving and software development. Experienced in building intelligent systems and full-stack projects using modern tools and AI technologies. Proven ability to collaborate in teams and deliver innovative solutions, with recognition in multiple national-level hackathons."}
+                        </p>
+                      </div>
+
+                      {/* EDUCATION */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          EDUCATION
+                        </h3>
+                        <div className="space-y-1 text-[10.5px]">
+                          <div>
+                            <div className="flex justify-between items-baseline">
+                              <span className="font-bold text-slate-900">Vardhaman College of Engineering</span>
+                              <span className="font-medium text-slate-900">2025 – 2029</span>
+                            </div>
+                            <div className="flex justify-between items-baseline italic text-slate-700">
+                              <span>B.Tech in CSE (AI &amp; ML) – CGPA: 8.95</span>
+                              <span>Hyderabad, Telangana</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between items-baseline">
+                              <span className="font-bold text-slate-900">Narayana Junior College</span>
+                              <span className="font-medium text-slate-900">2024</span>
+                            </div>
+                            <div className="flex justify-between items-baseline italic text-slate-700">
+                              <span>Intermediate (MPC) – CGPA: 9.64</span>
+                              <span>Hyderabad, Telangana</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between items-baseline">
+                              <span className="font-bold text-slate-900">Geethanjali High School</span>
+                              <span className="font-medium text-slate-900">2022</span>
+                            </div>
+                            <div className="flex justify-between items-baseline italic text-slate-700">
+                              <span>Secondary Education (SSC) – CGPA: 9.8/10</span>
+                              <span>Maddur, Telangana</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TECHNICAL SKILLS */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          TECHNICAL SKILLS
+                        </h3>
+                        <div className="text-[10.5px] space-y-0.5 text-slate-800">
+                          <div>
+                            <span className="font-bold text-slate-900">Programming:</span> Java, Python
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900">Tools &amp; Technologies:</span> Flask, Supabase, PostgreSQL, Vercel, Railway, Render, Groq API, YouTube Data API
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* PROJECTS */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          PROJECTS
+                        </h3>
+                        <div className="space-y-2 text-[10.5px]">
+                          <div>
+                            <div className="flex justify-between items-baseline">
+                              <div className="font-bold text-slate-900">
+                                <span className="underline">SkillPath</span> <span className="text-[9px]">↗</span> | <span className="font-normal">Flask · Supabase · Groq API · YouTube Data API</span>
+                              </div>
+                              <span className="font-bold text-slate-900 shrink-0">2026</span>
+                            </div>
+                            <ul className="list-disc pl-4 space-y-0.5 mt-0.5 text-[10px] text-slate-800 leading-tight">
+                              <li>Built SkillPath, an AI-powered platform that generates personalized learning paths by curating high-quality resources from fragmented online content.</li>
+                              <li>Integrated YouTube Data API and Groq LLM to fetch, rank, and filter content, delivering the top 5 most relevant resources per query.</li>
+                              <li>Designed a pipeline architecture (fetch → LLM ranking → store → reuse) with Supabase caching to improve response speed and consistency.</li>
+                              <li>Implemented DSA company-wise question tracking, resume analyzer, and dashboard features, serving 10+ active users.</li>
+                              <li>Reduced manual resource search effort by ~60% and improved preparation efficiency by ~30% based on user estimates.</li>
+                            </ul>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between items-baseline">
+                              <div className="font-bold text-slate-900">
+                                <span className="underline">Work Assignment System (AI-Enabled)</span> <span className="text-[9px]">↗</span> | <span className="font-normal">Flask · Supabase · Rule-based AI Engine</span>
+                              </div>
+                              <span className="font-bold text-slate-900 shrink-0">2026</span>
+                            </div>
+                            <ul className="list-disc pl-4 space-y-0.5 mt-0.5 text-[10px] text-slate-800 leading-tight">
+                              <li>Built an AI-based work assignment system using skill matching and workload balancing to automate team composition.</li>
+                              <li>Implemented a decision engine with rule-based confidence scoring and explainable outputs for task allocation and alternative recommendations.</li>
+                              <li>Designed a role-based system for PM, TL, and Employee roles with centralized assignment logic and real-time tracking dashboards.</li>
+                              <li>Reduced manual task allocation effort by ~50% in simulated scenarios.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* WORK EXPERIENCE */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          WORK EXPERIENCE
+                        </h3>
+                        <div className="text-[10.5px]">
+                          <div className="flex justify-between items-baseline">
+                            <span className="font-bold text-slate-900">StayKaro Private Limited</span>
+                            <span className="font-medium text-slate-900">August 2026 – Present</span>
+                          </div>
+                          <div className="flex justify-between items-baseline italic text-slate-700">
+                            <span>AI Engineer Intern</span>
+                            <span>Hyderabad, Telangana</span>
+                          </div>
+                          <ul className="list-disc pl-4 space-y-0.5 mt-0.5 text-[10px] text-slate-800 leading-tight">
+                            <li>Working as an AI Engineer Intern, contributing to AI-driven solutions and software development initiatives.</li>
+                            <li>Applying AI/ML concepts and modern development tools to build and improve intelligent systems.</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* ACHIEVEMENTS */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          ACHIEVEMENTS
+                        </h3>
+                        <ul className="list-disc pl-4 space-y-0.5 text-[10px] text-slate-800 leading-tight">
+                          <li>1st Place – GNIT Devnoate National Hackathon, April 18-19, 2026</li>
+                          <li>1st Place – MRU Hack2Hire Hackathon, July 18-19, 2026</li>
+                          <li>1st Place – Demux 3.0 Hackathon, August 13-14, 2026</li>
+                          <li>3rd Place – ISL National Hackathon, April 9, 2026</li>
+                          <li>4th Place – Digital India Hackathon, SNIST College, July 9-11, 2026</li>
+                          <li>5th Place – CodeStorm National Hackathon, NRCM College, April 25, 2026</li>
+                        </ul>
+                      </div>
+
+                      {/* SOFT SKILLS */}
+                      <div className="mt-2.5">
+                        <h3 className="font-bold text-[11px] uppercase tracking-wider border-b border-black pb-0.5 mb-1 text-black">
+                          SOFT SKILLS
+                        </h3>
+                        <div className="text-[10px] text-slate-800">
+                          Problem Solving · Leadership · Teamwork · Fast Execution · Communication
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1489,11 +1578,11 @@ function AvatarModalForm({
     <div className="space-y-5">
       {/* Photo Preview & Custom Upload */}
       <div className="flex flex-col items-center justify-center gap-3 pt-2">
-        <div className="w-24 h-24 rounded-3xl bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-500/30 overflow-hidden flex items-center justify-center shadow-lg relative group">
+        <div className="w-24 h-24 rounded-3xl bg-[#18191E] border-2 border-white/10 overflow-hidden flex items-center justify-center shadow-lg relative group">
           {selectedAvatar ? (
             <img src={selectedAvatar} alt="Avatar preview" className="w-full h-full object-cover" />
           ) : (
-            <User className="w-10 h-10 text-purple-400" />
+            <User className="w-10 h-10 text-slate-400" />
           )}
           {isProcessing && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -1517,9 +1606,9 @@ function AvatarModalForm({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isProcessing}
-          className="px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          className="px-4 py-2 rounded-xl bg-[#18191E] hover:bg-[#20222A] text-white border border-white/10 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
         >
-          <Camera className="w-4 h-4" />
+          <Camera className="w-4 h-4 text-[#D5FF38]" />
           <span>Upload Custom Photo</span>
         </button>
 
@@ -1541,8 +1630,8 @@ function AvatarModalForm({
               onClick={() => setSelectedAvatar(url)}
               className={`p-1.5 rounded-2xl border transition-all cursor-pointer ${
                 selectedAvatar === url
-                  ? "border-[#7C3AED] bg-purple-50 dark:bg-purple-950/40 scale-105 shadow-sm"
-                  : "border-slate-200 dark:border-neutral-800 hover:border-purple-300"
+                  ? "border-[#D5FF38] bg-[#D5FF38]/10 scale-105 shadow-sm"
+                  : "border-slate-200 dark:border-neutral-800 hover:border-[#D5FF38]/40"
               }`}
             >
               <img src={url} alt={`Preset ${i}`} className="w-10 h-10 rounded-xl" />
@@ -1562,7 +1651,7 @@ function AvatarModalForm({
         <button
           type="button"
           onClick={() => onSave(selectedAvatar)}
-          className="px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+          className="px-5 py-2 rounded-xl bg-[#D5FF38] text-black font-extrabold text-xs shadow-xs hover:bg-[#c4ed30] transition-all cursor-pointer"
         >
           Save Photo
         </button>
