@@ -113,7 +113,7 @@ function processImageFile(file: File): Promise<string> {
   });
 }
 
-// ── Circular SVG Progress Ring (Purple & Neutral Track, No Blue, No Pink) ─────
+// ── Circular SVG Progress Ring (Acid Lime Track, Zero Glass, Zero Glow) ─────
 function CircularProgress({ percent }: { percent: number }) {
   const radius = 22;
   const stroke = 4.5;
@@ -125,16 +125,16 @@ function CircularProgress({ percent }: { percent: number }) {
     <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
       <svg height="56" width="56" className="transform -rotate-90">
         <circle
-          stroke="#EDE9FE"
+          stroke="#262626"
           fill="transparent"
           strokeWidth={stroke}
           r={normalizedRadius}
           cx="28"
           cy="28"
-          className="dark:stroke-neutral-800"
+          className="stroke-slate-200 dark:stroke-neutral-800"
         />
         <circle
-          stroke="#7C3AED"
+          stroke="#D5FF38"
           fill="transparent"
           strokeWidth={stroke}
           strokeDasharray={`${circumference} ${circumference}`}
@@ -145,7 +145,7 @@ function CircularProgress({ percent }: { percent: number }) {
           cy="28"
         />
       </svg>
-      <span className="absolute text-xs font-black text-[#7C3AED] dark:text-purple-300">
+      <span className="absolute text-xs font-black text-slate-900 dark:text-white">
         {percent}%
       </span>
     </div>
@@ -370,7 +370,7 @@ function EditProfileContent() {
           setLanguages(parsed);
         }
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Real-time dynamic Profile Completion calculation
@@ -397,7 +397,7 @@ function EditProfileContent() {
     setLanguages(newLangs);
     try {
       localStorage.setItem("sc_profile_languages", JSON.stringify(newLangs));
-    } catch {}
+    } catch { }
   };
 
   // User identity details
@@ -407,12 +407,12 @@ function EditProfileContent() {
     : "No username set";
   const userInitials = personalForm.full_name
     ? personalForm.full_name
-        .split(" ")
-        .filter(Boolean)
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
     : userEmail.slice(0, 2).toUpperCase() || "PG";
   const userRole = personalForm.headline || "Student";
 
@@ -535,14 +535,14 @@ function EditProfileContent() {
               className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-neutral-800 shadow-sm"
             />
           ) : (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] text-white flex items-center justify-center font-black text-lg tracking-tight shadow-xs">
+            <div className="w-14 h-14 rounded-full bg-[#18191F] border border-white/10 text-white flex items-center justify-center font-black text-lg tracking-tight shadow-xs">
               {userInitials}
             </div>
           )}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-xs hover:bg-[#6D28D9] transition-all cursor-pointer"
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#D5FF38] text-black font-extrabold flex items-center justify-center shadow-xs hover:bg-[#c2ea2f] transition-all cursor-pointer"
             title="Upload profile photo"
           >
             <Camera className="w-3.5 h-3.5" />
@@ -579,10 +579,10 @@ function EditProfileContent() {
         </div>
       </div>
 
-      {/* ── Real-time Profile Progress Card (Soft Lavender / Neutral Dark, No Blue, No Pink) ── */}
+      {/* ── Real-time Profile Progress Card (Neutral Dark, Zero Border Highlights, Zero Glass, Zero Glow) ── */}
       <div
         onClick={() => setShowProgressDetails(!showProgressDetails)}
-        className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#18191F] border border-[#E9E0FA] dark:border-neutral-800 flex items-center justify-between shadow-2xs cursor-pointer hover:border-purple-300 dark:hover:border-purple-600 transition-all group"
+        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18191F] border border-slate-200/80 dark:border-neutral-800 flex items-center justify-between shadow-xs cursor-pointer hover:border-slate-300 dark:hover:border-neutral-700 transition-all group"
       >
         <div className="space-y-0.5 pr-3 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -590,9 +590,8 @@ function EditProfileContent() {
               Profile Progress
             </span>
             <ChevronDown
-              className={`w-4 h-4 text-[#7C3AED] transition-transform ${
-                showProgressDetails ? "rotate-180" : ""
-              }`}
+              className={`w-4 h-4 text-slate-400 dark:text-neutral-400 transition-transform ${showProgressDetails ? "rotate-180" : ""
+                }`}
             />
           </div>
           <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium truncate">
@@ -620,7 +619,7 @@ function EditProfileContent() {
                 <span className="text-xs font-black text-slate-900 dark:text-white">
                   Profile Completion Breakdown
                 </span>
-                <span className="text-xs font-bold text-[#7C3AED]">
+                <span className="text-xs font-extrabold text-[#D5FF38]">
                   {liveCompletion.totalPercent}% Total
                 </span>
               </div>
@@ -677,7 +676,7 @@ function EditProfileContent() {
                       setActiveTab(item.tab as EditTab);
                       setShowProgressDetails(false);
                     }}
-                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/60 dark:border-neutral-800 flex items-center justify-between text-left hover:border-purple-300 dark:hover:border-purple-600 transition-colors cursor-pointer"
+                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/60 dark:border-neutral-800 flex items-center justify-between text-left hover:border-slate-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       {item.done ? (
@@ -731,7 +730,7 @@ function EditProfileContent() {
         </div>
       )}
 
-      {/* ── Category Pill Tabs Bar (Vibrant Purple Active, Zero Blue, Zero Pink) ── */}
+      {/* ── Category Pill Tabs Bar (Acid Lime Active, Zero Glass, Zero Glow) ── */}
       <div className="overflow-x-auto no-scrollbar scroll-smooth touch-pan-x py-1">
         <div className="flex items-center gap-2 min-w-max">
           {[
@@ -755,20 +754,18 @@ function EditProfileContent() {
                   setProjView("list");
                   setEduView("list");
                 }}
-                className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs transition-all cursor-pointer font-bold ${
-                  isActive
-                    ? "bg-[#7C3AED] text-white shadow-xs shadow-purple-600/30"
+                className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs transition-all cursor-pointer font-bold ${isActive
+                    ? "bg-[#D5FF38] text-black font-extrabold shadow-none"
                     : "bg-transparent text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#18191F]"
-                }`}
+                  }`}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
-                    className={`ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
-                      isActive
-                        ? "bg-white/25 text-white"
+                    className={`ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${isActive
+                        ? "bg-black/15 text-black"
                         : "bg-slate-200 dark:bg-[#20222A] text-slate-700 dark:text-neutral-300"
-                    }`}
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -786,7 +783,7 @@ function EditProfileContent() {
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "personal" && (
           <form id="personal-edit-form" onSubmit={handleSavePersonal} className="space-y-4">
-            {/* Form Header with Cancel & Save changes (Purple, No Blue, No Pink!) */}
+            {/* Form Header with Cancel & Save changes (Acid Lime, No Glass, No Glow) */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Personal Details
@@ -801,9 +798,9 @@ function EditProfileContent() {
                 <button
                   type="submit"
                   disabled={savingPersonal}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black text-xs font-extrabold shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-3.5 h-3.5 text-black" />
                   <span>{savingPersonal ? "Saving..." : "Save changes"}</span>
                 </button>
               </div>
@@ -823,7 +820,7 @@ function EditProfileContent() {
                 value={personalForm.full_name || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, full_name: e.target.value })}
                 placeholder="e.g. Palamoor Adithya Goud"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -875,13 +872,12 @@ function EditProfileContent() {
                   autoComplete="username"
                   autoCapitalize="none"
                   spellCheck={false}
-                  className={`w-full bg-white dark:bg-[#121318] border pl-8 pr-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none transition-colors text-slate-900 dark:text-white ${
-                    usernameStatus === "taken" || usernameStatus === "invalid"
+                  className={`w-full bg-white dark:bg-[#121318] border pl-8 pr-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none transition-colors text-slate-900 dark:text-white ${usernameStatus === "taken" || usernameStatus === "invalid"
                       ? "border-rose-400 focus:border-rose-500"
                       : usernameStatus === "available"
-                      ? "border-emerald-400 focus:border-emerald-500"
-                      : "border-slate-200 dark:border-neutral-800 focus:border-[#7C3AED]"
-                  }`}
+                        ? "border-emerald-400 focus:border-emerald-500"
+                        : "border-slate-200 dark:border-neutral-800 focus:border-[#D5FF38]"
+                    }`}
                 />
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
@@ -902,7 +898,7 @@ function EditProfileContent() {
                 value={personalForm.college || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, college: e.target.value })}
                 placeholder="e.g. ABC Engineering College"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -917,7 +913,7 @@ function EditProfileContent() {
                 value={personalForm.headline || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, headline: e.target.value })}
                 placeholder="e.g. Student / Full Stack Developer"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -932,7 +928,7 @@ function EditProfileContent() {
                 value={personalForm.country || "India"}
                 onChange={(e) => setPersonalForm({ ...personalForm, country: e.target.value })}
                 placeholder="e.g. India"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -947,7 +943,7 @@ function EditProfileContent() {
                 value={personalForm.state || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, state: e.target.value })}
                 placeholder="e.g. Telangana"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -962,7 +958,7 @@ function EditProfileContent() {
                 value={personalForm.city || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, city: e.target.value })}
                 placeholder="e.g. Hyderabad"
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
               />
             </div>
 
@@ -978,7 +974,7 @@ function EditProfileContent() {
                   value={personalForm.phone || ""}
                   onChange={(e) => setPersonalForm({ ...personalForm, phone: e.target.value })}
                   placeholder="e.g. 9392640702"
-                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
                 />
               </div>
               <div>
@@ -989,7 +985,7 @@ function EditProfileContent() {
                   id="personal-gender"
                   value={personalForm.gender || "Prefer not to say"}
                   onChange={(e) => setPersonalForm({ ...personalForm, gender: e.target.value })}
-                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white transition-colors"
+                  className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] cursor-pointer text-slate-900 dark:text-white transition-colors"
                 >
                   <option value="Prefer not to say">Prefer not to say</option>
                   <option value="Male">Male</option>
@@ -1011,7 +1007,7 @@ function EditProfileContent() {
                 value={personalForm.about || ""}
                 onChange={(e) => setPersonalForm({ ...personalForm, about: e.target.value })}
                 placeholder="Brief summary about your skills, passions, and background..."
-                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y transition-colors"
+                className="w-full bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white resize-y transition-colors"
               />
             </div>
           </form>
@@ -1026,7 +1022,7 @@ function EditProfileContent() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <div>
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[#7C3AED]" />
+                  <Target className="w-4 h-4 text-slate-900 dark:text-[#D5FF38]" />
                   <span>Career Preferences</span>
                 </h2>
                 <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
@@ -1043,7 +1039,7 @@ function EditProfileContent() {
                 <button
                   type="submit"
                   disabled={savingCareer}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{savingCareer ? "Saving..." : "Save changes"}</span>
@@ -1075,7 +1071,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. SDE-1, Full Stack Developer, DevOps Engineer..."
-                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1089,7 +1085,7 @@ function EditProfileContent() {
                       setRoleInput("");
                     }
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                  className="px-4 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
                 >
                   Add
                 </button>
@@ -1135,7 +1131,7 @@ function EditProfileContent() {
                         target_roles: [...prev.target_roles, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:bg-[#D5FF38]/15 dark:hover:bg-[#D5FF38]/15 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1167,7 +1163,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. Google, Microsoft, Atlassian, Amazon, Meta..."
-                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1181,7 +1177,7 @@ function EditProfileContent() {
                       setCompanyInput("");
                     }
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                  className="px-4 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
                 >
                   Add
                 </button>
@@ -1192,7 +1188,7 @@ function EditProfileContent() {
                 {careerForm.target_companies.map((c, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 text-xs font-bold text-purple-900 dark:text-purple-200 shadow-2xs"
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 border border-[#D5FF38]/30 dark:border-[#D5FF38]/30 text-xs font-bold text-[#D5FF38] dark:text-[#D5FF38] shadow-2xs"
                   >
                     <span>{c}</span>
                     <button
@@ -1203,7 +1199,7 @@ function EditProfileContent() {
                           target_companies: prev.target_companies.filter((_, idx) => idx !== i),
                         }))
                       }
-                      className="text-purple-400 hover:text-purple-700 dark:hover:text-purple-100 p-0.5 cursor-pointer"
+                      className="text-[#D5FF38] hover:text-[#D5FF38] dark:hover:text-[#D5FF38] p-0.5 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1227,7 +1223,7 @@ function EditProfileContent() {
                         target_companies: [...prev.target_companies, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#7C3AED] hover:bg-purple-50 dark:hover:bg-purple-950/30 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:bg-[#D5FF38]/15 dark:hover:bg-[#D5FF38]/15 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1252,11 +1248,10 @@ function EditProfileContent() {
                         const next = isSelected ? curr.filter((x) => x !== arr) : [...curr, arr];
                         setCareerForm((prev) => ({ ...prev, work_arrangements: next }));
                       }}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-[#7C3AED] text-white shadow-xs"
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${isSelected
+                          ? "bg-[#D5FF38] text-black font-extrabold shadow-xs"
                           : "bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-[#20222A] border border-slate-200 dark:border-neutral-800"
-                      }`}
+                        }`}
                     >
                       {arr}
                     </button>
@@ -1289,7 +1284,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. Bangalore, Hyderabad, Pune, Mumbai, Remote..."
-                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white transition-colors"
+                  className="flex-1 bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white transition-colors"
                 />
                 <button
                   type="button"
@@ -1303,7 +1298,7 @@ function EditProfileContent() {
                       setLocationInput("");
                     }
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
+                  className="px-4 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer shrink-0 transition-all shadow-xs"
                 >
                   Add
                 </button>
@@ -1345,7 +1340,7 @@ function EditProfileContent() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
               <div>
                 <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Code2 className="w-4 h-4 text-[#7C3AED]" />
+                  <Code2 className="w-4 h-4 text-slate-900 dark:text-[#D5FF38]" />
                   <span>Developer & Coding Profiles</span>
                 </h2>
                 <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
@@ -1362,7 +1357,7 @@ function EditProfileContent() {
                 <button
                   type="submit"
                   disabled={savingCoding}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{savingCoding ? "Saving..." : "Save & Sync"}</span>
@@ -1462,7 +1457,7 @@ function EditProfileContent() {
                 return (
                   <div
                     key={p.key}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-800 space-y-2.5 shadow-2xs hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                    className="p-3.5 rounded-2xl bg-white dark:bg-[#121318] border border-slate-200/90 dark:border-neutral-800 space-y-2.5 shadow-2xs hover:border-slate-300 dark:hover:border-neutral-700 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-h-[26px]">
@@ -1478,11 +1473,10 @@ function EditProfileContent() {
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                          isLinked
-                            ? "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50"
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${isLinked
+                            ? "bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 text-[#D5FF38] dark:text-[#D5FF38] border border-[#D5FF38]/30 dark:border-[#D5FF38]/30"
                             : "bg-slate-100 dark:bg-[#20222A] text-slate-500 dark:text-neutral-400"
-                        }`}
+                          }`}
                       >
                         {isLinked ? "Connected" : "Not Linked"}
                       </span>
@@ -1498,7 +1492,7 @@ function EditProfileContent() {
                         }))
                       }
                       placeholder={p.placeholder}
-                      className="w-full bg-slate-50 dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 transition-colors"
+                      className="w-full bg-slate-50 dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-mono font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 transition-colors"
                     />
 
                     {/* Profile Link Display in Edit Section */}
@@ -1508,11 +1502,11 @@ function EditProfileContent() {
                           href={profileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-[#7C3AED] hover:text-[#6D28D9] dark:text-purple-400 dark:hover:text-purple-300 transition-colors truncate max-w-full group/link"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-slate-900 dark:text-[#D5FF38] hover:text-black dark:hover:text-[#D5FF38] transition-colors truncate max-w-full group/link"
                           title={`Open ${p.title} profile`}
                         >
                           <span className="truncate underline underline-offset-2">{profileUrl}</span>
-                          <ExternalLink className="w-3 h-3 shrink-0 text-[#7C3AED] dark:text-purple-400 group-hover/link:translate-x-0.5 transition-transform" />
+                          <ExternalLink className="w-3 h-3 shrink-0 text-slate-900 dark:text-[#D5FF38] group-hover/link:translate-x-0.5 transition-transform" />
                         </a>
                       </div>
                     ) : (
@@ -1524,8 +1518,8 @@ function EditProfileContent() {
                     )}
 
                     {p.stat && p.stat.summary && (
-                      <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300 truncate">
-                        <Globe className="w-3 h-3 text-[#7C3AED] shrink-0" />
+                      <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-[#D5FF38] dark:text-[#D5FF38] truncate">
+                        <Globe className="w-3 h-3 text-slate-900 dark:text-[#D5FF38] shrink-0" />
                         <span className="truncate">{p.stat.summary}</span>
                       </div>
                     )}
@@ -1574,9 +1568,9 @@ function EditProfileContent() {
                 }
                 setAddingSkill(false);
               }}
-              className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#121318] border border-[#E9E0FA] dark:border-neutral-800 space-y-3"
+              className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 space-y-3"
             >
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#7C3AED] dark:text-purple-300">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-[#D5FF38] dark:text-[#D5FF38]">
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add New Skill</span>
               </div>
@@ -1588,7 +1582,7 @@ function EditProfileContent() {
                     value={newSkillName}
                     onChange={(e) => setNewSkillName(e.target.value)}
                     placeholder="Skill name (e.g. Python, Docker, Next.js)"
-                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
                     required
                   />
                 </div>
@@ -1596,7 +1590,7 @@ function EditProfileContent() {
                   <select
                     value={newSkillCategory}
                     onChange={(e) => setNewSkillCategory(e.target.value)}
-                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+                    className="w-full bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] cursor-pointer text-slate-900 dark:text-white"
                   >
                     <option value="Programming / scripting Languages">Programming / Scripting</option>
                     <option value="Cloud & Devops">Cloud & DevOps</option>
@@ -1611,7 +1605,7 @@ function EditProfileContent() {
                   <select
                     value={newSkillProficiency}
                     onChange={(e) => setNewSkillProficiency(e.target.value as any)}
-                    className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+                    className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-2 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] cursor-pointer text-slate-900 dark:text-white"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -1621,7 +1615,7 @@ function EditProfileContent() {
                   <button
                     type="submit"
                     disabled={addingSkill}
-                    className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     {addingSkill ? "Adding..." : "Add"}
                   </button>
@@ -1644,7 +1638,7 @@ function EditProfileContent() {
                     >
                       <span>{skill.skill_name}</span>
                       {skill.proficiency && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-extrabold">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 text-[#D5FF38] dark:text-[#D5FF38] font-extrabold">
                           {skill.proficiency}
                         </span>
                       )}
@@ -1691,7 +1685,7 @@ function EditProfileContent() {
                       setSelectedExp(null);
                       setExpView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Experience</span>
@@ -1707,7 +1701,7 @@ function EditProfileContent() {
                         setSelectedExp(null);
                         setExpView("form");
                       }}
-                      className="mt-2 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer"
+                      className="mt-2 px-4 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer"
                     >
                       Add First Experience
                     </button>
@@ -1717,13 +1711,13 @@ function EditProfileContent() {
                     {profileData.experiences.map((exp, idx) => (
                       <div
                         key={exp.id || `exp-${idx}-${exp.company_name || "item"}`}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                             {exp.role || (exp as any).job_title}
                           </h3>
-                          <p className="text-xs font-semibold text-[#7C3AED]">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-[#D5FF38]">
                             {exp.company_name}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium pt-0.5">
@@ -1746,7 +1740,7 @@ function EditProfileContent() {
                               setSelectedExp(exp);
                               setExpView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 hover:bg-slate-100 dark:hover:bg-[#18191F] text-slate-700 dark:text-neutral-300 hover:text-[#D5FF38] text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -1818,7 +1812,7 @@ function EditProfileContent() {
                       setSelectedEdu(null);
                       setEduView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Education</span>
@@ -1834,7 +1828,7 @@ function EditProfileContent() {
                         setSelectedEdu(null);
                         setEduView("form");
                       }}
-                      className="mt-2 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer"
+                      className="mt-2 px-4 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer"
                     >
                       Add First Education
                     </button>
@@ -1844,13 +1838,13 @@ function EditProfileContent() {
                     {profileData.education.map((edu, idx) => (
                       <div
                         key={edu.id || `edu-${idx}-${edu.college || "item"}`}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                             {edu.college || (edu as any).institution}
                           </h3>
-                          <p className="text-xs font-semibold text-[#7C3AED]">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-[#D5FF38]">
                             {edu.degree_type || (edu as any).degree} {edu.field_of_study ? `in ${edu.field_of_study}` : ""}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-medium pt-0.5">
@@ -1870,7 +1864,7 @@ function EditProfileContent() {
                               setSelectedEdu(edu);
                               setEduView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 hover:bg-slate-100 dark:hover:bg-[#18191F] text-slate-700 dark:text-neutral-300 hover:text-[#D5FF38] text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -1942,7 +1936,7 @@ function EditProfileContent() {
                       setSelectedProj(null);
                       setProjView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Project</span>
@@ -1958,7 +1952,7 @@ function EditProfileContent() {
                         setSelectedProj(null);
                         setProjView("form");
                       }}
-                      className="mt-2 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer"
+                      className="mt-2 px-4 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer"
                     >
                       Add First Project
                     </button>
@@ -1968,7 +1962,7 @@ function EditProfileContent() {
                     {profileData.projects.map((proj, idx) => (
                       <div
                         key={proj.id || `proj-${idx}-${proj.project_name || "item"}`}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-0.5">
                           <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
@@ -1985,7 +1979,7 @@ function EditProfileContent() {
                               setSelectedProj(proj);
                               setProjView("form");
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-purple-300 hover:bg-purple-50 text-slate-700 dark:text-neutral-300 hover:text-purple-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 hover:bg-slate-100 dark:hover:bg-[#18191F] text-slate-700 dark:text-neutral-300 hover:text-[#D5FF38] text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -2052,8 +2046,8 @@ function EditProfileContent() {
               </h2>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#F8F5FE] dark:bg-[#121318] border border-[#E9E0FA] dark:border-neutral-800 space-y-3">
-              <label className="text-xs font-bold text-[#7C3AED] dark:text-purple-300 block">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-800 space-y-3">
+              <label className="text-xs font-bold text-slate-900 dark:text-[#D5FF38] dark:text-[#D5FF38] block">
                 Add Language
               </label>
               <div className="flex gap-2">
@@ -2073,7 +2067,7 @@ function EditProfileContent() {
                     }
                   }}
                   placeholder="e.g. English, Hindi, Telugu, Spanish..."
-                  className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+                  className="flex-1 bg-white dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 px-3.5 py-2 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
                 />
                 <button
                   type="button"
@@ -2085,7 +2079,7 @@ function EditProfileContent() {
                       showToast(`Added ${val}!`);
                     }
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold cursor-pointer shrink-0 shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold cursor-pointer shrink-0 shadow-xs"
                 >
                   Add
                 </button>
@@ -2099,7 +2093,7 @@ function EditProfileContent() {
                   key={lang}
                   className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs"
                 >
-                  <Languages className="w-3.5 h-3.5 text-[#7C3AED]" />
+                  <Languages className="w-3.5 h-3.5 text-slate-900 dark:text-[#D5FF38]" />
                   <span>{lang}</span>
                   {languages.length > 1 && (
                     <button
@@ -2137,24 +2131,24 @@ function EditProfileContent() {
             type="button"
             onClick={() => router.push("/profile")}
             title="Back to Profile"
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-200 hover:text-[#7C3AED] hover:border-[#7C3AED] hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-[#18191F] shadow-md border border-slate-200/90 dark:border-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-200 hover:text-[#D5FF38] hover:border-slate-300 dark:hover:border-neutral-700 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             aria-label="Back to Profile"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
 
           {/* Floating Pill Action Dock */}
-          <div className="flex items-center gap-2 sm:gap-3 bg-white/90 dark:bg-[#18191F]/90 backdrop-blur-2xl shadow-[0_12px_35px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-slate-200/90 dark:border-neutral-800 rounded-full py-1.5 px-3 sm:px-4">
+          <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-[#18191F] shadow-md border border-slate-200/90 dark:border-neutral-800 rounded-full py-1.5 px-3 sm:px-4">
             <Link
               href="/profile"
-              className="flex items-center gap-1.5 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100/80 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
+              className="flex items-center gap-1.5 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
             >
               <User className="w-3.5 h-3.5" />
               <span className="text-[11px] font-bold">My Profile</span>
             </Link>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/50 text-[#7C3AED] dark:text-purple-300 font-bold text-xs">
-              <Edit3 className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D5FF38] text-black font-extrabold text-xs shadow-none">
+              <Edit3 className="w-3.5 h-3.5 text-black" />
               <span className="text-[11px] font-extrabold capitalize">{activeTab}</span>
               <span className="text-[10px] font-black opacity-80">({liveCompletion.totalPercent}%)</span>
             </div>
@@ -2177,9 +2171,9 @@ function EditProfileContent() {
                 }
               }}
               disabled={savingPersonal || savingCareer || savingCoding}
-              className="flex items-center gap-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-black px-4 sm:px-5 py-2 rounded-full shadow-md shadow-purple-600/30 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-[#D5FF38] hover:bg-[#c2ea2f] text-black text-xs font-black px-4 sm:px-5 py-2 rounded-full shadow-none hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5" />
+              <Save className="w-3.5 h-3.5 text-black" />
               <span>{savingPersonal || savingCareer || savingCoding ? "Saving..." : "Save"}</span>
             </button>
           </div>
@@ -2273,7 +2267,7 @@ function ExperienceEditor({
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="e.g. Software Engineer Intern"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2287,7 +2281,7 @@ function ExperienceEditor({
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             placeholder="e.g. Google, Atlassian, Startup"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
       </div>
@@ -2303,7 +2297,7 @@ function ExperienceEditor({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Bengaluru, IN"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2314,7 +2308,7 @@ function ExperienceEditor({
             id="exp-work-type"
             value={workType}
             onChange={(e) => setWorkType(e.target.value as any)}
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] cursor-pointer text-slate-900 dark:text-white"
           >
             <option value="Full-time">Full-time</option>
             <option value="Internship">Internship</option>
@@ -2331,7 +2325,7 @@ function ExperienceEditor({
             id="exp-arrangement"
             value={empType}
             onChange={(e) => setEmpType(e.target.value as any)}
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] cursor-pointer text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] cursor-pointer text-slate-900 dark:text-white"
           >
             <option value="Remote">Remote</option>
             <option value="Hybrid">Hybrid</option>
@@ -2350,7 +2344,7 @@ function ExperienceEditor({
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2374,7 +2368,7 @@ function ExperienceEditor({
           type="checkbox"
           checked={currentlyWorking}
           onChange={(e) => setCurrentlyWorking(e.target.checked)}
-          className="rounded text-[#7C3AED] focus:ring-[#7C3AED]"
+          className="rounded text-slate-900 dark:text-[#D5FF38] focus:ring-[#D5FF38]"
         />
         <span>I currently work here</span>
       </label>
@@ -2389,7 +2383,7 @@ function ExperienceEditor({
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           placeholder="Developed microservices, optimized database latency by 35%..."
-          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white resize-y"
         />
       </div>
 
@@ -2404,7 +2398,7 @@ function ExperienceEditor({
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
+          className="px-5 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
         >
           {saving ? "Saving..." : "Save Experience"}
         </button>
@@ -2493,7 +2487,7 @@ function ProjectEditor({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. AI Resume Reviewer & Portfolio Engine"
-          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
         />
       </div>
 
@@ -2507,7 +2501,7 @@ function ProjectEditor({
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           placeholder="Full-stack interactive career intelligence application..."
-          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white resize-y"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 p-3.5 text-xs font-medium rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white resize-y"
         />
       </div>
 
@@ -2521,7 +2515,7 @@ function ProjectEditor({
           value={tech}
           onChange={(e) => setTech(e.target.value)}
           placeholder="React, TypeScript, Supabase, Tailwind, Python"
-          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
         />
       </div>
 
@@ -2535,7 +2529,7 @@ function ProjectEditor({
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2559,7 +2553,7 @@ function ProjectEditor({
           type="checkbox"
           checked={currentlyWorking}
           onChange={(e) => setCurrentlyWorking(e.target.checked)}
-          className="rounded text-[#7C3AED] focus:ring-[#7C3AED]"
+          className="rounded text-slate-900 dark:text-[#D5FF38] focus:ring-[#D5FF38]"
         />
         <span>Currently working on this project</span>
       </label>
@@ -2575,7 +2569,7 @@ function ProjectEditor({
             value={github}
             onChange={(e) => setGithub(e.target.value)}
             placeholder="https://github.com/username/project"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2588,7 +2582,7 @@ function ProjectEditor({
             value={demo}
             onChange={(e) => setDemo(e.target.value)}
             placeholder="https://project.vercel.app"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-mono rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
       </div>
@@ -2604,7 +2598,7 @@ function ProjectEditor({
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
+          className="px-5 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
         >
           {saving ? "Saving..." : "Save Project"}
         </button>
@@ -2696,7 +2690,7 @@ function EducationEditor({
           value={college}
           onChange={(e) => setCollege(e.target.value)}
           placeholder="e.g. Indian Institute of Technology, Hyderabad"
-          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+          className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
         />
       </div>
 
@@ -2711,7 +2705,7 @@ function EducationEditor({
             value={degreeType}
             onChange={(e) => setDegreeType(e.target.value)}
             placeholder="e.g. Bachelor of Technology (B.Tech)"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2724,7 +2718,7 @@ function EducationEditor({
             value={field}
             onChange={(e) => setField(e.target.value)}
             placeholder="e.g. Computer Science & Engineering"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
       </div>
@@ -2739,7 +2733,7 @@ function EducationEditor({
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
         <div>
@@ -2765,7 +2759,7 @@ function EducationEditor({
             value={gpa}
             onChange={(e) => setGpa(e.target.value)}
             placeholder="e.g. 8.8 / 10"
-            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#7C3AED] text-slate-900 dark:text-white"
+            className="w-full bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 px-3.5 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-[#D5FF38] text-slate-900 dark:text-white"
           />
         </div>
       </div>
@@ -2776,7 +2770,7 @@ function EducationEditor({
           type="checkbox"
           checked={currentlyStudying}
           onChange={(e) => setCurrentlyStudying(e.target.checked)}
-          className="rounded text-[#7C3AED] focus:ring-[#7C3AED]"
+          className="rounded text-slate-900 dark:text-[#D5FF38] focus:ring-[#D5FF38]"
         />
         <span>I am currently studying here</span>
       </label>
@@ -2792,7 +2786,7 @@ function EducationEditor({
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
+          className="px-5 py-2.5 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50 text-center"
         >
           {saving ? "Saving..." : "Save Education"}
         </button>
