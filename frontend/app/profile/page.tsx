@@ -666,7 +666,7 @@ export default function ProfilePage() {
                 setActiveModal("avatar");
               }
             }}
-            aria-label="Change photo"
+            aria-label="Change photo or avatar"
             title="Click to change photo"
             className="relative group cursor-pointer focus:outline-none"
           >
@@ -717,6 +717,8 @@ export default function ProfilePage() {
           {/* Resume Button */}
           <button
             type="button"
+            aria-label="Resume"
+            title="Resume (Preview / Upload)"
             onClick={() => {
               setActiveActionBtn("resume");
               setActiveModal("resume_preview");
@@ -943,6 +945,12 @@ export default function ProfilePage() {
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">Career Preferences</h3>
             <p className="text-xs text-slate-500 dark:text-neutral-400 font-medium">Desired job roles and dream companies</p>
           </div>
+          <Link
+            href="/settings/edit?tab=career"
+            className="text-xs font-bold text-slate-500 hover:text-black dark:hover:text-[#D5FF38] transition-colors"
+          >
+            Edit
+          </Link>
         </div>
 
         {/* Roles */}
@@ -1076,6 +1084,12 @@ export default function ProfilePage() {
               Connected accounts across competitive programming and developer platforms
             </p>
           </div>
+          <Link
+            href="/settings/edit?tab=coding"
+            className="text-xs font-bold text-slate-500 hover:text-black dark:hover:text-[#D5FF38] transition-colors"
+          >
+            Edit
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

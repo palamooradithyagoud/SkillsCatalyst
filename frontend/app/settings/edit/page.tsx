@@ -12,8 +12,6 @@ import {
   User,
   Briefcase,
   FolderGit2,
-  Code2,
-  Target,
   GraduationCap,
   Languages,
   Plus,
@@ -523,7 +521,7 @@ function EditProfileContent() {
   };
 
   return (
-    <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-4 pb-32 sm:pb-36">
+    <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-4 pb-32 sm:pb-36 px-3.5 sm:px-4">
       {/* ── Top User Profile Header (Zero Blue: Signature Purple Avatar) ── */}
       <div className="flex items-center gap-3.5 pt-1">
         {/* Purple Monogram Avatar with Camera Badge (No Blue!) */}
@@ -731,17 +729,17 @@ function EditProfileContent() {
       )}
 
       {/* ── Category Pill Tabs Bar (Acid Lime Active, Zero Glass, Zero Glow) ── */}
-      <div className="overflow-x-auto no-scrollbar scroll-smooth touch-pan-x py-1">
-        <div className="flex items-center gap-2 min-w-max">
+      <div className="overflow-x-auto no-scrollbar scroll-smooth touch-pan-x py-1 -mx-1 px-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-max">
           {[
             { id: "personal", label: "Account" },
-            { id: "career", label: "Preferences", count: (careerForm.target_roles?.length || 0) + (careerForm.target_companies?.length || 0) },
-            { id: "coding", label: "Coding Profiles" },
             { id: "skills", label: "Skills", count: profileData.skills.length },
             { id: "experience", label: "Experience", count: profileData.experiences.length },
             { id: "education", label: "Education", count: profileData.education.length },
             { id: "projects", label: "Projects", count: profileData.projects.length },
             { id: "languages", label: "Languages", count: languages.length },
+            { id: "coding", label: "Coding Profiles" },
+            { id: "career", label: "Preferences", count: (careerForm.target_roles?.length || 0) + (careerForm.target_companies?.length || 0) },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -754,7 +752,7 @@ function EditProfileContent() {
                   setProjView("list");
                   setEduView("list");
                 }}
-                className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs transition-all cursor-pointer font-bold ${isActive
+                className={`shrink-0 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs transition-all cursor-pointer font-bold ${isActive
                     ? "bg-[#D5FF38] text-black font-extrabold shadow-none"
                     : "bg-transparent text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-[#18191F]"
                   }`}
@@ -777,30 +775,34 @@ function EditProfileContent() {
       </div>
 
       {/* ── Main Form Card (Deep Dark Charcoal in Dark Mode, Zero Blue!) ── */}
-      <div className="bg-white dark:bg-[#18191F] rounded-3xl p-5 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs">
+      <div className="bg-white dark:bg-[#18191F] rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-slate-200/80 dark:border-neutral-800 shadow-xs">
         {/* ─────────────────────────────────────────────────────────────────── */}
         {/* TAB 1: PERSONAL / ACCOUNT DETAILS                                   */}
         {/* ─────────────────────────────────────────────────────────────────── */}
         {activeTab === "personal" && (
           <form id="personal-edit-form" onSubmit={handleSavePersonal} className="space-y-4">
             {/* Form Header with Cancel & Save changes (Acid Lime, No Glass, No Glow) */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                Personal Details
-              </h2>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-neutral-800">
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Personal Details
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5 leading-snug">
+                  Update your personal information and contact details
+                </p>
+              </div>
+              <div className="flex items-center justify-end sm:justify-start gap-2 shrink-0 self-end sm:self-auto">
                 <Link
                   href="/profile"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={savingPersonal}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black text-xs font-extrabold shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black text-xs font-extrabold shadow-none transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                 >
-                  <Save className="w-3.5 h-3.5 text-black" />
                   <span>{savingPersonal ? "Saving..." : "Save changes"}</span>
                 </button>
               </div>
@@ -1019,29 +1021,27 @@ function EditProfileContent() {
         {activeTab === "career" && (
           <form onSubmit={handleSaveCareer} className="space-y-5">
             {/* Form Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-              <div>
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Target className="w-4 h-4 text-slate-900 dark:text-[#D5FF38]" />
-                  <span>Career Preferences</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-neutral-800">
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Career Preferences
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5 leading-snug">
                   Set target roles, dream companies, and ideal work arrangements
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end sm:justify-start gap-2 shrink-0 self-end sm:self-auto">
                 <Link
                   href="/profile"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={savingCareer}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs shadow-none transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                 >
-                  <Save className="w-3.5 h-3.5" />
                   <span>{savingCareer ? "Saving..." : "Save changes"}</span>
                 </button>
               </div>
@@ -1091,12 +1091,12 @@ function EditProfileContent() {
                 </button>
               </div>
 
-              {/* Roles Chips */}
+              {/* Roles Chips (Clean Solid Neutral, Zero Red Glass) */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {careerForm.target_roles.map((r, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-bold text-rose-900 dark:text-rose-200 shadow-2xs"
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-slate-100 dark:bg-[#20222A] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs"
                   >
                     <span>{r}</span>
                     <button
@@ -1107,7 +1107,8 @@ function EditProfileContent() {
                           target_roles: prev.target_roles.filter((_, idx) => idx !== i),
                         }))
                       }
-                      className="text-rose-400 hover:text-rose-700 dark:hover:text-rose-100 p-0.5 cursor-pointer"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-0.5 cursor-pointer transition-colors"
+                      title={`Remove ${r}`}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1131,7 +1132,7 @@ function EditProfileContent() {
                         target_roles: [...prev.target_roles, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:bg-[#D5FF38]/15 dark:hover:bg-[#D5FF38]/15 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#20222A] border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1183,12 +1184,12 @@ function EditProfileContent() {
                 </button>
               </div>
 
-              {/* Companies Chips */}
+              {/* Companies Chips (Clean Solid Neutral, Zero Lime Glass) */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {careerForm.target_companies.map((c, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 border border-[#D5FF38]/30 dark:border-[#D5FF38]/30 text-xs font-bold text-[#D5FF38] dark:text-[#D5FF38] shadow-2xs"
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-xl bg-slate-100 dark:bg-[#20222A] border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-800 dark:text-neutral-200 shadow-2xs"
                   >
                     <span>{c}</span>
                     <button
@@ -1199,7 +1200,8 @@ function EditProfileContent() {
                           target_companies: prev.target_companies.filter((_, idx) => idx !== i),
                         }))
                       }
-                      className="text-[#D5FF38] hover:text-[#D5FF38] dark:hover:text-[#D5FF38] p-0.5 cursor-pointer"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-0.5 cursor-pointer transition-colors"
+                      title={`Remove ${c}`}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1223,7 +1225,7 @@ function EditProfileContent() {
                         target_companies: [...prev.target_companies, sugg],
                       }))
                     }
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-[#D5FF38] hover:bg-[#D5FF38]/15 dark:hover:bg-[#D5FF38]/15 border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#121318] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#20222A] border border-slate-200/60 dark:border-neutral-800 disabled:opacity-40 cursor-pointer transition-all"
                   >
                     + {sugg}
                   </button>
@@ -1337,29 +1339,27 @@ function EditProfileContent() {
         {activeTab === "coding" && (
           <form onSubmit={handleSaveCoding} className="space-y-5">
             {/* Form Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-              <div>
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Code2 className="w-4 h-4 text-slate-900 dark:text-[#D5FF38]" />
-                  <span>Developer & Coding Profiles</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-neutral-800">
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Developer & Coding Profiles
                 </h2>
-                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5 leading-snug">
                   Link your handles to automatically fetch and verify coding ratings and stats
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end sm:justify-start gap-2 shrink-0 self-end sm:self-auto">
                 <Link
                   href="/profile"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </Link>
                 <button
                   type="submit"
                   disabled={savingCoding}
-                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold shadow-xs shadow-none transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 sm:px-5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs shadow-none transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                 >
-                  <Save className="w-3.5 h-3.5" />
                   <span>{savingCoding ? "Saving..." : "Save & Sync"}</span>
                 </button>
               </div>
@@ -1473,9 +1473,9 @@ function EditProfileContent() {
                         )}
                       </div>
                       <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${isLinked
-                            ? "bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 text-[#D5FF38] dark:text-[#D5FF38] border border-[#D5FF38]/30 dark:border-[#D5FF38]/30"
-                            : "bg-slate-100 dark:bg-[#20222A] text-slate-500 dark:text-neutral-400"
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap ${isLinked
+                            ? "bg-slate-100 dark:bg-[#20222A] text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-neutral-800"
+                            : "bg-slate-100 dark:bg-[#20222A] text-slate-500 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
                           }`}
                       >
                         {isLinked ? "Connected" : "Not Linked"}
@@ -1497,16 +1497,16 @@ function EditProfileContent() {
 
                     {/* Profile Link Display in Edit Section */}
                     {profileUrl ? (
-                      <div className="pt-1.5 flex items-center justify-between border-t border-slate-100 dark:border-neutral-800">
+                      <div className="pt-1.5 flex items-center justify-between border-t border-slate-100 dark:border-neutral-800 min-w-0">
                         <a
                           href={profileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-slate-900 dark:text-[#D5FF38] hover:text-black dark:hover:text-[#D5FF38] transition-colors truncate max-w-full group/link"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-slate-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors truncate max-w-full group/link"
                           title={`Open ${p.title} profile`}
                         >
                           <span className="truncate underline underline-offset-2">{profileUrl}</span>
-                          <ExternalLink className="w-3 h-3 shrink-0 text-slate-900 dark:text-[#D5FF38] group-hover/link:translate-x-0.5 transition-transform" />
+                          <ExternalLink className="w-3 h-3 shrink-0 text-slate-400 group-hover/link:translate-x-0.5 transition-transform" />
                         </a>
                       </div>
                     ) : (
@@ -1518,8 +1518,8 @@ function EditProfileContent() {
                     )}
 
                     {p.stat && p.stat.summary && (
-                      <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-[#D5FF38] dark:text-[#D5FF38] truncate">
-                        <Globe className="w-3 h-3 text-slate-900 dark:text-[#D5FF38] shrink-0" />
+                      <div className="pt-0.5 flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 truncate min-w-0">
+                        <Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span className="truncate">{p.stat.summary}</span>
                       </div>
                     )}
@@ -1638,7 +1638,7 @@ function EditProfileContent() {
                     >
                       <span>{skill.skill_name}</span>
                       {skill.proficiency && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#D5FF38]/15 dark:bg-[#D5FF38]/15 text-[#D5FF38] dark:text-[#D5FF38] font-extrabold">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-[#20222A] text-slate-700 dark:text-neutral-300 font-extrabold">
                           {skill.proficiency}
                         </span>
                       )}
@@ -1676,8 +1676,8 @@ function EditProfileContent() {
           <div className="space-y-4">
             {expView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-neutral-800">
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
                     Work Experience ({profileData.experiences.length})
                   </h2>
                   <button
@@ -1685,9 +1685,9 @@ function EditProfileContent() {
                       setSelectedExp(null);
                       setExpView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3 sm:px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-none transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-black shrink-0" />
                     <span>Add Experience</span>
                   </button>
                 </div>
@@ -1803,8 +1803,8 @@ function EditProfileContent() {
           <div className="space-y-4">
             {eduView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-neutral-800">
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
                     Education History ({profileData.education.length})
                   </h2>
                   <button
@@ -1812,9 +1812,9 @@ function EditProfileContent() {
                       setSelectedEdu(null);
                       setEduView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3 sm:px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-none transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-black shrink-0" />
                     <span>Add Education</span>
                   </button>
                 </div>
@@ -1927,8 +1927,8 @@ function EditProfileContent() {
           <div className="space-y-4">
             {projView === "list" ? (
               <>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-neutral-800">
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-neutral-800">
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
                     Projects ({profileData.projects.length})
                   </h2>
                   <button
@@ -1936,9 +1936,9 @@ function EditProfileContent() {
                       setSelectedProj(null);
                       setProjView("form");
                     }}
-                    className="px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    className="px-3 sm:px-3.5 py-2 rounded-xl bg-[#D5FF38] hover:bg-[#c2ea2f] text-black font-extrabold text-xs flex items-center gap-1.5 shadow-none transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-black shrink-0" />
                     <span>Add Project</span>
                   </button>
                 </div>
