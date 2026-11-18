@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Mail,
@@ -19,9 +18,8 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchDashboardData, checkUsernameAvailability } from "@/lib/api";
 import { validateUsername, validateFullName, normalizeUsername, validateEmail, validatePassword } from "@/lib/validation";
-import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import AuthOnboardingHero from "@/components/auth/AuthOnboardingHero";
-import RotatingText from "@/components/RotatingText";
+import AnimatedFaceEyes from "@/components/auth/AnimatedFaceEyes";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +35,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
   const [loading, setLoading] = useState(false);
@@ -535,69 +534,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full min-h-screen min-h-[100dvh] bg-black text-white flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
+    <div className="w-full min-h-screen min-h-[100dvh] bg-black text-white flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden relative">
       {/* ── LEFT HERO: Onboarding Product Features Carousel (Desktop) ── */}
       <AuthOnboardingHero />
 
       {/* ── RIGHT / BOTTOM CARD: Dark Auth Container (Seamless Black Aesthetic) ── */}
       <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-black rounded-t-[28px] lg:rounded-none mt-0 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 relative z-10 overflow-hidden border-t lg:border-t-0 lg:border-l border-zinc-900">
-        {/* ── Low-Opacity Background Watermark Logo Emblem (Silver against Black) ── */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
-          <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.06] brightness-90">
-            <Image
-              src="/logo_white_v2.png"
-              alt="SkillsCatalyst Watermark"
-              fill
-              sizes="(max-width: 640px) 340px, (max-width: 1024px) 460px, 540px"
-              className="object-contain"
-              priority
-            />
-          </div>
+        {/* Back to Home Link (Top Left in Desktop & Mobile) */}
+        <div className="lg:absolute lg:top-8 lg:left-10 z-20 flex items-center justify-start mb-2 lg:mb-0">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span>Back to Home</span>
+          </Link>
         </div>
 
-        <div className="w-full max-w-[380px] mx-auto my-auto space-y-5 pt-1 pb-6 relative z-10">
-          {/* Back to Home Link */}
-          <div className="flex items-center justify-start -mb-2">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white transition-colors group cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-              <span>Back to Home</span>
-            </Link>
-          </div>
-
-          {/* SkillsCatalyst Official Brand Header */}
-          <div className="flex justify-center mb-1">
-            <SkillsCatalystLogo size="md" showText={false} theme="dark" />
+        <div className="w-full max-w-[380px] mx-auto my-auto space-y-4 pt-1 pb-6 relative z-10">
+          {/* Interactive Face Eyes (tracks cursor & reacts to password focus) */}
+          <div className="flex justify-center py-2">
+            <AnimatedFaceEyes isPasswordFocused={passwordFocused} size={32} bgColor="#000000" />
           </div>
 
           {/* Heading & Subtitle */}
           <div className="text-center space-y-1">
-            <h1 className="text-2xl sm:text-[30px] font-black text-white tracking-tight flex items-center justify-center min-h-[38px] sm:min-h-[44px]">
-              {unverifiedEmail ? (
-                "Verify your email"
-              ) : mode === "reset" ? (
-                "Create new password"
-              ) : mode === "forgot" ? (
-                "Reset your password"
-              ) : mode === "signin" ? (
-                <RotatingText
-                  texts={["Learn Faster", "Grow Smarter"]}
-                  mainClassName="justify-center overflow-hidden py-0.5 text-white"
-                  staggerFrom="last"
-                  initial={{ y: "100%", opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: "-120%", opacity: 0 }}
-                  staggerDuration={0.025}
-                  splitLevelClassName="overflow-hidden pb-0.5"
-                  transition={{ type: "spring", damping: 28, stiffness: 350 }}
-                  rotationInterval={2200}
-                />
-              ) : (
-                "Create an account"
-              )}
-            </h1>
+            {(unverifiedEmail || mode !== "signin") && (
+              <h1 className="text-2xl sm:text-[30px] font-black text-white tracking-tight flex items-center justify-center">
+                {unverifiedEmail
+                  ? "Verify your email"
+                  : mode === "reset"
+                  ? "Create new password"
+                  : mode === "forgot"
+                  ? "Reset your password"
+                  : "Create an account"}
+              </h1>
+            )}
             <p className="text-xs sm:text-[13px] text-white/60 font-normal">
               {unverifiedEmail
                 ? "Check your inbox to verify your account"
@@ -762,6 +734,8 @@ export default function LoginPage() {
                                 if (errorMessage) setErrorMessage("");
                                 clearReactionSequence();
                               }}
+                              onFocus={() => setPasswordFocused(true)}
+                              onBlur={() => setPasswordFocused(false)}
                               placeholder="••••••••"
                               suppressHydrationWarning
                               className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
@@ -797,6 +771,8 @@ export default function LoginPage() {
                                 if (errorMessage) setErrorMessage("");
                                 clearReactionSequence();
                               }}
+                              onFocus={() => setPasswordFocused(true)}
+                              onBlur={() => setPasswordFocused(false)}
                               placeholder="Repeat new password"
                               suppressHydrationWarning
                               className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
@@ -923,6 +899,8 @@ export default function LoginPage() {
                                     if (errorMessage) setErrorMessage("");
                                     clearReactionSequence();
                                   }}
+                                  onFocus={() => setPasswordFocused(true)}
+                                  onBlur={() => setPasswordFocused(false)}
                                   placeholder="••••••••"
                                   suppressHydrationWarning
                                   className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
@@ -958,6 +936,8 @@ export default function LoginPage() {
                                     if (errorMessage) setErrorMessage("");
                                     clearReactionSequence();
                                   }}
+                                  onFocus={() => setPasswordFocused(true)}
+                                  onBlur={() => setPasswordFocused(false)}
                                   placeholder="Repeat your password"
                                   suppressHydrationWarning
                                   className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 text-sm text-white outline-none transition-colors placeholder:text-white/40"
