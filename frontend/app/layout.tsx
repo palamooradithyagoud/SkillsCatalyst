@@ -112,7 +112,7 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{document.documentElement.classList.add("dark");localStorage.setItem("theme","dark");if(sessionStorage.getItem("sc_mobile_splash_shown")==="true"){document.documentElement.classList.add("sc-splash-done");}}catch(e){}`,
+            __html: `try{document.documentElement.classList.add("dark");localStorage.setItem("theme","dark");}catch(e){}`,
           }}
         />
       </head>

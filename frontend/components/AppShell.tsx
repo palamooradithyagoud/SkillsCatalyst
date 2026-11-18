@@ -9,7 +9,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { PricingModalProvider } from "@/contexts/PricingModalContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import NotificationPermissionBanner from "@/components/notifications/NotificationPermissionBanner";
-import MobileAppOpeningSplash from "@/components/MobileAppOpeningSplash";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,9 +29,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PricingModalProvider>
       <NotificationProvider>
-        {/* Placed ONCE at the root of AppShell so route transitions never unmount and remount it */}
-        <MobileAppOpeningSplash />
-
         {isAuthPage || isLandingPage || isPricingPage || isAdminPage || isAIMentorPage || isLegalPage ? (
           <div
             className={`w-full min-h-screen min-h-[100dvh] m-0 p-0 overflow-x-hidden flex flex-col ${

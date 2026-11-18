@@ -22,11 +22,6 @@
   --color-card: var(--card);
 }
 
-/* Mobile Opening Splash session suppression */
-html.sc-splash-done #mobile-app-opening-splash {
-  display: none !important;
-}
-
 /* Explicitly hide top and bottom bars when modal or preview requests it */
 body[data-hide-appbars="true"] header,
 body[data-hide-appbars="true"] nav,
