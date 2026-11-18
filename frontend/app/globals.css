@@ -31,7 +31,10 @@ html.sc-splash-done #mobile-app-opening-splash {
 body[data-hide-appbars="true"] header,
 body[data-hide-appbars="true"] nav,
 body[data-hide-appbars="true"] [aria-label="Mobile Navigation"],
-body[data-hide-bottombar="true"] [aria-label="Mobile Navigation"] {
+body[data-hide-bottombar="true"] [data-bottom-nav="true"],
+body[data-hide-bottombar="true"] nav[aria-label="Mobile Navigation"],
+body[data-hide-bottombar="true"] nav[aria-label="Career & Learning Navigation"],
+body[data-hide-bottombar="true"] nav[aria-label="Explore Sections Navigation"] {
   display: none !important;
 }
 

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   GraduationCap,
   Download,
@@ -30,6 +32,7 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   UploadCloud,
   Lock,
   MapPin,
@@ -40,6 +43,7 @@ import {
   Camera,
   Check,
   ArrowRight,
+  ArrowLeft,
   Languages,
   Terminal,
   Cloud,
@@ -50,9 +54,20 @@ import {
   User,
   Settings,
   Zap,
+  Bell,
+  Sliders,
+  Moon,
+  Users,
+  HelpCircle,
+  Info,
+  Shield,
+  Crown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePricingModal } from "@/contexts/PricingModalContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import {
   fetchFullProfileData,
   savePersonalProfile,
@@ -101,9 +116,38 @@ export default function ProfilePage() {
   const { session, logout } = useAuth();
   const userId = session?.user_id;
   const qc = useQueryClient();
+  const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const { isPremium, expiresAt } = useSubscription();
+  const { openPricingModal } = usePricingModal();
+
+  const formattedExpiry = expiresAt
+    ? new Date(expiresAt).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
 
   // Active action button state (filled only after user clicks on it; no glow)
   const [activeActionBtn, setActiveActionBtn] = useState<"resume" | "projects" | "edit" | null>(null);
+
+  // Mobile Settings state & Notifications toggle
+  const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
+  const { requestPushPermission, updatePreferences } = useNotifications();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("sc_notifications_enabled");
+      if (stored !== null) {
+        setNotificationsEnabled(stored === "true");
+      } else {
+        setNotificationsEnabled(true);
+      }
+    } catch {}
+  }, []);
 
 
   // ── Master Profile State ──────────────────────────────────────────────────
@@ -279,7 +323,7 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (activeModal === "resume_preview") {
+    if (activeModal === "resume_preview" || isMobileSettingsOpen) {
       document.body.setAttribute("data-hide-bottombar", "true");
       document.body.setAttribute("data-hide-appbars", "true");
       document.body.style.overflow = "hidden";
@@ -293,7 +337,7 @@ export default function ProfilePage() {
       document.body.removeAttribute("data-hide-appbars");
       document.body.style.overflow = "";
     };
-  }, [activeModal]);
+  }, [activeModal, isMobileSettingsOpen]);
 
   // ── Interactive UI States ─────────────────────────────────────────────────
   const [languages, setLanguages] = useState<string[]>(["English"]);
@@ -642,14 +686,15 @@ export default function ProfilePage() {
             </div>
 
             {/* Settings Gear Button */}
-            <Link
-              href="/settings/edit"
+            <button
+              type="button"
+              onClick={() => setIsMobileSettingsOpen(true)}
               aria-label="Settings"
-              title="Settings & Edit Profile"
+              title="Settings"
               className="w-10 h-10 rounded-full bg-[#18191E] border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <Settings className="w-5 h-5 text-white stroke-[2]" />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -1453,6 +1498,237 @@ export default function ProfilePage() {
               </div>
             )}
           </AnimatePresence>,
+          document.body
+        )}
+
+      {/* ── Mobile Settings Screen (Matches Settings Screenshot) ── */}
+      {isClient &&
+        isMobileSettingsOpen &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Settings"
+            className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-y-auto"
+          >
+            {/* Top Bar */}
+            <div className="pt-[calc(env(safe-area-inset-top,0px)+1rem)] px-4 pb-3 flex items-center justify-between shrink-0 border-b border-white/5">
+              <button
+                type="button"
+                onClick={() => setIsMobileSettingsOpen(false)}
+                aria-label="Close dialog"
+                className="w-10 h-10 rounded-full bg-[#18191E] border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">Settings</h2>
+              <div className="w-10 h-10" />
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="max-w-md mx-auto w-full px-4 py-3 space-y-3.5 pb-16 flex-1 flex flex-col justify-between">
+              <div className="space-y-3.5">
+                {/* 1. User Profile Summary Card */}
+                <div
+                  onClick={() => {
+                    setIsMobileSettingsOpen(false);
+                    router.push("/settings/edit");
+                  }}
+                  className="p-3.5 sm:p-4 rounded-2xl bg-[#18191E] border border-white/10 flex items-center justify-between cursor-pointer hover:bg-[#20222A] transition-all group"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-[#38BDF8] border border-white/15 flex items-center justify-center shrink-0">
+                      {personalForm.avatar_url ? (
+                        <img src={personalForm.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-base font-bold text-white select-none">
+                          {getInitials(displayName)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-white truncate">{displayName}</p>
+                      <p className="text-xs text-neutral-400 font-medium truncate pt-0.5">
+                        {userHandle || `@${(displayName || "user").toLowerCase().replace(/\s+/g, "")}`}
+                      </p>
+
+                      {/* Pro Status or Buy Pro */}
+                      {isPremium ? (
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#D5FF38] text-black text-[10px] font-black tracking-tight shadow-xs">
+                            <Crown className="w-2.5 h-2.5 text-black shrink-0" />
+                            <span>PRO User</span>
+                          </span>
+                          <span className="text-[11px] text-neutral-400 font-semibold flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-neutral-400 shrink-0" />
+                            <span>{formattedExpiry ? `Valid till ${formattedExpiry}` : "Lifetime validity"}</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (openPricingModal) {
+                                openPricingModal();
+                              } else {
+                                window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D5FF38] hover:bg-[#c6f432] text-black font-extrabold text-xs shadow-xs transition-all active:scale-95 cursor-pointer leading-tight"
+                          >
+                            <Crown className="w-3.5 h-3.5 text-black shrink-0" />
+                            <span>Buy PRO</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+                </div>
+
+                {/* 2. Notifications Card */}
+                <div className="rounded-2xl bg-[#18191E] border border-white/10 overflow-hidden">
+                  <div className="flex items-center justify-between p-3.5 sm:p-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Bell className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-white block">Notifications</span>
+                        <span className="text-[11px] text-neutral-400 block -mt-0.5 truncate">
+                          Get daily study & skill updates
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notificationsEnabled}
+                      onClick={async () => {
+                        const next = !notificationsEnabled;
+                        setNotificationsEnabled(next);
+                        try {
+                          localStorage.setItem("sc_notifications_enabled", String(next));
+                          if (next && requestPushPermission) {
+                            await requestPushPermission();
+                          }
+                          if (updatePreferences) {
+                            await updatePreferences({
+                              streak_enabled: next,
+                              events_enabled: next,
+                              scholarships_enabled: next,
+                            });
+                          }
+                        } catch {}
+                      }}
+                      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 cursor-pointer flex items-center shrink-0 ml-3 ${
+                        notificationsEnabled ? "bg-[#D5FF38] justify-end" : "bg-[#2A2B32] justify-start"
+                      }`}
+                    >
+                      <span className="w-6 h-6 rounded-full bg-white shadow-md block" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Preferences Card (Dark Mode, Language) */}
+                <div className="rounded-2xl bg-[#18191E] border border-white/10 overflow-hidden divide-y divide-white/5">
+                  <div className="flex items-center justify-between p-3.5 sm:p-4">
+                    <div className="flex items-center gap-3">
+                      <Moon className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <span className="text-sm font-medium text-white">Dark mode</span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isDark}
+                      onClick={() => setTheme(isDark ? "light" : "dark")}
+                      className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 cursor-pointer flex items-center ${
+                        isDark ? "bg-[#D5FF38] justify-end" : "bg-[#2A2B32] justify-start"
+                      }`}
+                    >
+                      <span className="w-6 h-6 rounded-full bg-white shadow-md block" />
+                    </button>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setIsMobileSettingsOpen(false);
+                      router.push("/settings/edit?tab=languages");
+                    }}
+                    className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-white/[0.03] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Languages className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <span className="text-sm font-medium text-white">Language</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-neutral-400 font-medium">{languages[0] || "English"}</span>
+                      <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Support & Legal Policies Card */}
+                <div className="rounded-2xl bg-[#18191E] border border-white/10 overflow-hidden divide-y divide-white/5">
+                  <div
+                    onClick={() => {
+                      setIsMobileSettingsOpen(false);
+                      router.push("/support");
+                    }}
+                    className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-white/[0.03] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <HelpCircle className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <span className="text-sm font-medium text-white">FAQ</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setIsMobileSettingsOpen(false);
+                      router.push("/terms");
+                    }}
+                    className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-white/[0.03] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Info className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <span className="text-sm font-medium text-white">Terms of service</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setIsMobileSettingsOpen(false);
+                      router.push("/privacy");
+                    }}
+                    className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-white/[0.03] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-5 h-5 text-neutral-300 shrink-0" strokeWidth={1.8} />
+                      <span className="text-sm font-medium text-white">User policy</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Log Out Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileSettingsOpen(false);
+                  if (logout) logout();
+                  router.push("/login");
+                }}
+                className="w-full py-3.5 px-6 rounded-2xl bg-white hover:bg-neutral-100 text-[#DF1C41] font-bold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all mt-6"
+              >
+                <LogOut className="w-4 h-4 text-[#DF1C41] stroke-[2.2]" />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>,
           document.body
         )}
     </motion.div>

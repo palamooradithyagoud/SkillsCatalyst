@@ -13,8 +13,6 @@ import {
   Sparkles,
   BarChart3,
   Code2,
-  Menu,
-  X,
   Flame,
   Zap,
   ChevronRight,
@@ -41,7 +39,6 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import CareerDownbar from "@/components/career/CareerDownbar";
-import { Component as SterlingGateKineticNavigation } from "@/components/ui/sterling-gate-kinetic-navigation";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
 
@@ -111,7 +108,6 @@ function MobileNavContent() {
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading } = useAuth();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { unreadCount } = useNotifications();
   const [isPracticeSubView, setIsPracticeSubView] = useState(false);
@@ -120,6 +116,7 @@ function MobileNavContent() {
   const [isResumeActive, setIsResumeActive] = useState(false);
   const [exploreTab, setExploreTab] = useState<string>("trending");
   const [isExplicitlyHidden, setIsExplicitlyHidden] = useState(false);
+  const [isHideAppBars, setIsHideAppBars] = useState(false);
 
   useEffect(() => {
     setIsNotificationOpen(false);
@@ -149,6 +146,7 @@ function MobileNavContent() {
           document.body.hasAttribute("data-resume-workspace")
         );
         setIsExplicitlyHidden(document.body.hasAttribute("data-hide-bottombar"));
+        setIsHideAppBars(document.body.hasAttribute("data-hide-appbars"));
         const tabAttr = document.body.getAttribute("data-explore-tab");
         if (tabAttr && tabAttr !== exploreTab) {
           setExploreTab(tabAttr);
@@ -171,6 +169,7 @@ function MobileNavContent() {
           "data-resume-active",
           "data-resume-workspace",
           "data-hide-bottombar",
+          "data-hide-appbars",
           "data-explore-tab",
         ],
       });
@@ -189,12 +188,14 @@ function MobileNavContent() {
     };
   }, [pathname, exploreTab]);
 
-  if (pathname === "/login" || isLoading || !session) {
+  if (pathname === "/login") {
     return null;
   }
 
   const userEmail = session?.email || "Guest User";
-  const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+  const userInitial = session?.name
+    ? session.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+    : userEmail.split("@")[0].substring(0, 2).toUpperCase() || "PA";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
   const isCareerGroup =
@@ -222,7 +223,7 @@ function MobileNavContent() {
   return (
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels or when explicitly hidden) ── */}
-      {!pathname.startsWith("/skillbits") && !isExplicitlyHidden && (
+      {!pathname.startsWith("/skillbits") && !isHideAppBars && (
         <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/15 dark:bg-black/25 border-b border-white/30 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 text-slate-900 dark:text-white transition-all duration-200 shadow-[inset_0_-1px_1px_rgba(255,255,255,0.4),0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_-1px_1px_rgba(255,255,255,0.1),0_4px_30px_rgba(0,0,0,0.3)]">
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center">
@@ -238,7 +239,6 @@ function MobileNavContent() {
                 id="mobile-notifications-button"
                 onClick={() => {
                   setIsNotificationOpen(!isNotificationOpen);
-                  setDrawerOpen(false);
                 }}
                 aria-label="Open notifications"
                 className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
@@ -271,36 +271,12 @@ function MobileNavContent() {
             >
               <span>{userInitial}</span>
             </button>
-
-            {/* Menu Drawer Toggle Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setDrawerOpen(!drawerOpen);
-                setIsNotificationOpen(false);
-              }}
-              aria-label="Toggle Menu"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 hover:bg-white/35 dark:bg-white/10 dark:hover:bg-white/15 border border-white/40 dark:border-white/15 backdrop-blur-xl flex items-center justify-center text-slate-800 dark:text-slate-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all active:scale-95 cursor-pointer"
-            >
-              {drawerOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
-            </button>
           </div>
         </header>
       )}
 
-      {/* ── Kinetic Mobile Navigation Drawer (Sterling Gate) ── */}
-      <div className="md:hidden">
-        <SterlingGateKineticNavigation
-          isOpen={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          showTrigger={false}
-        />
-      </div>
-
-
       {/* ── Career & Placement Suite Downbar Dock (Roadmaps, Learn, Practice, Resume Prep, Interview) ── */}
       {isCareerGroup &&
-        !drawerOpen &&
         !isLearningPlayer &&
         !isPracticeSubView &&
         !isRoadmapDetail &&
@@ -309,8 +285,8 @@ function MobileNavContent() {
           <CareerDownbar className="md:hidden" />
         )}
 
-      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden when Drawer is Open, or on Career Group / Explore / Reels) ── */}
-      {!isHideBottomBar && !isCareerGroup && !drawerOpen && (
+      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden on Career Group / Explore / Reels) ── */}
+      {!isHideBottomBar && !isCareerGroup && (
         <NavBar
           items={mobileNavItems}
           userInitial={userInitial}

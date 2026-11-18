@@ -73,6 +73,7 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
   return (
     <nav
       aria-label="Mobile Navigation"
+      data-bottom-nav="true"
       className={cn(
         "fixed bottom-0 inset-x-0 z-40 w-full",
         "bg-white/15 dark:bg-black/25 backdrop-blur-xl backdrop-saturate-160",

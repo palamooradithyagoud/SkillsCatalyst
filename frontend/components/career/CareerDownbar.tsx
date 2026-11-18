@@ -126,6 +126,7 @@ export default function CareerDownbar({
   return (
     <nav
       aria-label="Career & Learning Navigation"
+      data-bottom-nav="true"
       suppressHydrationWarning
       className={`md:hidden fixed bottom-3 inset-x-2 sm:inset-x-3 z-40 max-w-lg mx-auto flex items-center justify-center gap-1.5 sm:gap-2 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
     >

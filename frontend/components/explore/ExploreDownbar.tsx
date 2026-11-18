@@ -59,6 +59,7 @@ export default function ExploreDownbar({
   return (
     <nav
       aria-label="Explore Sections Navigation"
+      data-bottom-nav="true"
       suppressHydrationWarning
       className={`md:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto flex items-center justify-center gap-2 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
     >
