@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
+import MobileLandingOnboarding from "./MobileLandingOnboarding";
 
 // Bespoke minimal chevron icon (Zero stock lucide-react dependency)
 function NavChevronIcon({ isOpen, className = "" }: { isOpen?: boolean; className?: string }) {
@@ -124,13 +125,35 @@ export default function SkillsCatalystDesktopHero() {
 
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [pricingInitialTier, setPricingInitialTier] = useState<LandingPricingTier>("all");
+  const [isMobileOnboardingOpen, setIsMobileOnboardingOpen] = useState(false);
+  const [onboardingTarget, setOnboardingTarget] = useState("/login");
 
   const handleNavigateToLogin = () => {
-    router.push("/login");
+    if (typeof window !== "undefined" && window.innerWidth <= 860) {
+      setOnboardingTarget("/login");
+      setIsMobileOnboardingOpen(true);
+    } else {
+      router.push("/login");
+    }
   };
 
   const handleNavigateToSignUp = () => {
-    router.push("/login?mode=signup");
+    if (typeof window !== "undefined" && window.innerWidth <= 860) {
+      setOnboardingTarget("/login?mode=signup");
+      setIsMobileOnboardingOpen(true);
+    } else {
+      router.push("/login?mode=signup");
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setIsMobileOnboardingOpen(false);
+    router.push(onboardingTarget);
+  };
+
+  const handleOnboardingSkip = () => {
+    setIsMobileOnboardingOpen(false);
+    router.push(onboardingTarget);
   };
 
   const handleNavPillClick = (item: NavItem) => {
@@ -352,13 +375,14 @@ export default function SkillsCatalystDesktopHero() {
 
             {/* CTA Row with Fade-Rise Delay 2 & Liquid Glass Styling */}
             <div className="scCTARow animate-fade-rise-delay-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Link
+              <button
                 id="desktop-hero-start-learning"
-                href="/login?mode=signup"
+                type="button"
+                onClick={handleNavigateToSignUp}
                 className="scPrimaryCTA cursor-pointer hover:scale-[1.03] transition-transform"
               >
                 <span>Start learning for free</span>
-              </Link>
+              </button>
               <Link
                 id="desktop-hero-explore-pro"
                 href="/pricing"
@@ -381,6 +405,14 @@ export default function SkillsCatalystDesktopHero() {
         isOpen={isPricingModalOpen}
         onClose={() => setIsPricingModalOpen(false)}
         initialTier={pricingInitialTier}
+      />
+
+      {/* ── Mobile Landing Onboarding Flow (Product Features Carousel) ── */}
+      <MobileLandingOnboarding
+        isOpen={isMobileOnboardingOpen}
+        onClose={() => setIsMobileOnboardingOpen(false)}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
       />
     </div>
   );
