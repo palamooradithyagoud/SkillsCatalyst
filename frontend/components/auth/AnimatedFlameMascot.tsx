@@ -338,3 +338,89 @@ export default function AnimatedFlameMascot({
     </div>
   );
 }
+
+export function MiniFlameMascot({
+  size = 20,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  const height = size * (250 / 220);
+  return (
+    <div
+      className={`relative inline-flex items-center justify-center shrink-0 select-none ${className}`}
+      style={{ width: size, height }}
+    >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .mini-flame-bob {
+              transform-origin: 50% 90%;
+              animation: miniFlameBob 2.4s ease-in-out infinite;
+            }
+            @keyframes miniFlameBob {
+              0%, 100% { transform: translateY(0) rotate(-1deg); }
+              50% { transform: translateY(-2px) rotate(1deg); }
+            }
+          `,
+        }}
+      />
+      <div className="mini-flame-bob">
+        <svg
+          viewBox="0 0 220 250"
+          width={size}
+          height={height}
+          role="img"
+          aria-label="Streak flame mascot"
+          className="overflow-visible"
+        >
+          <defs>
+            <linearGradient id="miniFlameFill" x1=".15" y1=".9" x2=".83" y2=".08">
+              <stop offset="0" stopColor="#ff9a16" />
+              <stop offset=".55" stopColor="#ff7418" />
+              <stop offset="1" stopColor="#ff5316" />
+            </linearGradient>
+            <linearGradient id="miniFlameInner" x1=".1" y1="1" x2=".8" y2="0">
+              <stop offset="0" stopColor="#ffbd45" stopOpacity=".65" />
+              <stop offset="1" stopColor="#ffd66c" stopOpacity=".1" />
+            </linearGradient>
+          </defs>
+          <path
+            d={OUTER_FLAME_PATH}
+            fill="url(#miniFlameFill)"
+            stroke="#ef6513"
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+          <path
+            d={INNER_FLAME_PATH}
+            fill="url(#miniFlameInner)"
+          />
+          <path
+            d={INNER_LICK_1}
+            fill="#ffe08a"
+            opacity=".6"
+          />
+          <g>
+            <ellipse cx="72" cy="169" rx="22" ry="25" fill="#fff9ee" />
+            <ellipse cx="74" cy="171" rx="15" ry="17" fill="#17191c" />
+            <ellipse cx="69" cy="165" rx="5" ry="6" fill="white" />
+          </g>
+          <g>
+            <ellipse cx="148" cy="169" rx="22" ry="25" fill="#fff9ee" />
+            <ellipse cx="146" cy="171" rx="15" ry="17" fill="#17191c" />
+            <ellipse cx="141" cy="165" rx="5" ry="6" fill="white" />
+          </g>
+          <path
+            d="M95 188 C100 196 119 196 125 188"
+            fill="none"
+            stroke="#342317"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}

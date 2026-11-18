@@ -87,4 +87,14 @@ describe("Streak Celebration Modal (Img 1 -> Img 3 Code Mascot) Suite", () => {
     assert.ok(authContent.includes("isStreakPending"), "AuthContext must check if streak celebration is pending");
     assert.ok(authContent.includes("sc_pending_streak_modal"), "AuthContext must inspect sc_pending_streak_modal session key");
   });
+
+  it("verifies TopNavbar renders the small streak mascot icon in desktop view", () => {
+    const topNavPath = path.join(process.cwd(), "components", "TopNavbar.tsx");
+    assert.ok(fs.existsSync(topNavPath), "TopNavbar.tsx must exist on disk");
+    const topNavContent = fs.readFileSync(topNavPath, "utf-8");
+
+    assert.ok(topNavContent.includes("MiniFlameMascot"), "TopNavbar must import and render MiniFlameMascot");
+    assert.ok(topNavContent.includes("streakDays"), "TopNavbar must display streakDays count");
+    assert.ok(topNavContent.includes("StreakCelebrationModal"), "TopNavbar must integrate StreakCelebrationModal");
+  });
 });

@@ -17,6 +17,9 @@ import { useAuth } from "@/lib/auth";
 import ThemeSwitch from "@/components/ThemeSwitch";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
+import { MiniFlameMascot } from "@/components/auth/AnimatedFlameMascot";
+import StreakCelebrationModal from "@/components/auth/StreakCelebrationModal";
+import { syncDailyLoginStreak } from "@/lib/api";
 
 interface TopNavbarProps {
   onOpenSearch?: () => void;
@@ -31,6 +34,40 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [streakDays, setStreakDays] = useState<number>(1);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const readStoredStreak = () => {
+      const cached =
+        (session?.user_id && localStorage.getItem(`sc_daily_streak_${session.user_id}`)) ||
+        localStorage.getItem("sc_current_streak_days") ||
+        sessionStorage.getItem("sc_celebration_streak");
+      if (cached) {
+        const val = parseInt(cached, 10);
+        if (val > 0) setStreakDays(val);
+      }
+    };
+
+    readStoredStreak();
+
+    if (session?.user_id) {
+      syncDailyLoginStreak(session.user_id)
+        .then((real) => {
+          if (real && real > 0) {
+            setStreakDays(real);
+            localStorage.setItem("sc_current_streak_days", String(real));
+          }
+        })
+        .catch(() => {});
+    }
+
+    const handleStorageChange = () => readStoredStreak();
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [session?.user_id]);
 
   const userDisplayName = session?.name || "Adithya goud Palamoor";
   
@@ -162,6 +199,19 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
             )}
           </button>
         )}
+
+        {/* ── Streak Mascot Pill (Desktop Top Nav) ── */}
+        <button
+          onClick={() => setIsStreakModalOpen(true)}
+          title={`${streakDays} Day Streak — Click to celebrate!`}
+          aria-label={`${streakDays} Day Streak`}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 hover:bg-orange-500/20 text-[#EA580C] dark:text-[#FFA048] border border-orange-500/25 hover:border-orange-500/40 transition-all cursor-pointer group shadow-2xs active:scale-95 shrink-0"
+        >
+          <MiniFlameMascot size={18} />
+          <span className="font-extrabold text-xs sm:text-[13px] tracking-tight group-hover:brightness-110">
+            {streakDays}
+          </span>
+        </button>
 
         {/* 1. Search Icon */}
         <button
@@ -315,6 +365,13 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
           )}
         </div>
       </div>
+
+      {/* ── Streak Celebration Modal ── */}
+      <StreakCelebrationModal
+        isOpen={isStreakModalOpen}
+        streakDays={streakDays}
+        onContinue={() => setIsStreakModalOpen(false)}
+      />
     </header>
   );
 }
