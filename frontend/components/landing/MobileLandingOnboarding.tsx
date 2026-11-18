@@ -54,6 +54,7 @@ function MobileLandingOnboardingDialog({
 }: Omit<MobileLandingOnboardingProps, "isOpen">) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Lock body scroll when modal is active
   useEffect(() => {
@@ -65,8 +66,10 @@ function MobileLandingOnboardingDialog({
   }, []);
 
   const handleComplete = useCallback(() => {
+    if (isNavigating) return;
+    setIsNavigating(true);
     onComplete();
-  }, [onComplete]);
+  }, [isNavigating, onComplete]);
 
   const handleNext = useCallback(() => {
     if (currentSlide < ONBOARDING_SLIDES.length - 1) {
@@ -85,12 +88,14 @@ function MobileLandingOnboardingDialog({
   }, [currentSlide]);
 
   const handleSkip = useCallback(() => {
+    if (isNavigating) return;
+    setIsNavigating(true);
     if (onSkip) {
       onSkip();
     } else {
       onClose();
     }
-  }, [onSkip, onClose]);
+  }, [isNavigating, onSkip, onClose]);
 
   const handleGoToSlide = (index: number) => {
     if (index === currentSlide) return;
@@ -315,23 +320,31 @@ function MobileLandingOnboardingDialog({
             id="onboarding-next-btn"
             type="button"
             onClick={isLastSlide ? handleComplete : handleNext}
-            className="w-11 h-11 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black shadow-none active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+            disabled={isNavigating}
+            className="w-11 h-11 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black shadow-none active:scale-95 transition-all flex items-center justify-center cursor-pointer disabled:opacity-85"
             aria-label={isLastSlide ? "Get started and proceed to login" : "Next slide"}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
+            {isNavigating ? (
+              <svg className="animate-spin w-5 h-5 text-black" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            )}
           </button>
         </div>
       </footer>

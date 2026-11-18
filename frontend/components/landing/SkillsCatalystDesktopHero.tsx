@@ -146,13 +146,32 @@ export default function SkillsCatalystDesktopHero() {
     }
   };
 
+  // Prefetch login destinations so mobile transitions are instant
+  useEffect(() => {
+    router.prefetch("/login");
+    router.prefetch("/login?mode=signup");
+  }, [router]);
+
+  // Ensure onboarding overlay is reset if user returns via browser back-forward cache (bfcache)
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setIsMobileOnboardingOpen(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   const handleOnboardingComplete = () => {
-    setIsMobileOnboardingOpen(false);
+    // DO NOT set isMobileOnboardingOpen(false) here!
+    // Keeping the full-screen onboarding overlay active prevents the underlying landing
+    // page from momentarily flashing while Next.js is transitioning to /login.
     router.push(onboardingTarget);
   };
 
   const handleOnboardingSkip = () => {
-    setIsMobileOnboardingOpen(false);
+    // Keep overlay active during navigation transition to prevent landing page flash
     router.push(onboardingTarget);
   };
 
