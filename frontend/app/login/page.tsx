@@ -535,17 +535,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full min-h-screen min-h-[100dvh] bg-white text-[#18191F] flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
+    <div className="w-full min-h-screen min-h-[100dvh] bg-black text-white flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden">
       {/* ── LEFT HERO: Onboarding Product Features Carousel (Desktop) ── */}
       <AuthOnboardingHero />
 
-      {/* ── RIGHT / BOTTOM CARD: Crisp White Auth Container (Seamless Alignment) ── */}
-      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-white rounded-t-[28px] lg:rounded-none mt-0 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 shadow-lg lg:shadow-2xl relative z-10 overflow-hidden">
-        {/* ── Low-Opacity Background Watermark Logo Emblem ── */}
+      {/* ── RIGHT / BOTTOM CARD: Dark Auth Container (Seamless Black Aesthetic) ── */}
+      <div className="w-full lg:w-1/2 flex-1 min-h-[calc(100vh-230px)] lg:min-h-screen bg-black rounded-t-[28px] lg:rounded-none mt-0 lg:mt-0 flex flex-col justify-between p-6 sm:p-10 lg:p-16 relative z-10 overflow-hidden border-t lg:border-t-0 lg:border-l border-zinc-900">
+        {/* ── Low-Opacity Background Watermark Logo Emblem (Silver against Black) ── */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
-          <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.045] mix-blend-multiply">
+          <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] lg:w-[540px] lg:h-[540px] opacity-[0.06] brightness-90">
             <Image
-              src="/logo_black_v2.png"
+              src="/logo_white_v2.png"
               alt="SkillsCatalyst Watermark"
               fill
               sizes="(max-width: 640px) 340px, (max-width: 1024px) 460px, 540px"
@@ -560,7 +560,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-start -mb-2">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors group cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-white transition-colors group cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
               <span>Back to Home</span>
@@ -569,12 +569,12 @@ export default function LoginPage() {
 
           {/* SkillsCatalyst Official Brand Header */}
           <div className="flex justify-center mb-1">
-            <SkillsCatalystLogo size="md" showText={false} theme="light" />
+            <SkillsCatalystLogo size="md" showText={false} theme="dark" />
           </div>
 
           {/* Heading & Subtitle */}
           <div className="text-center space-y-1">
-            <h1 className="text-2xl sm:text-[30px] font-black text-[#18191F] tracking-tight flex items-center justify-center min-h-[38px] sm:min-h-[44px]">
+            <h1 className="text-2xl sm:text-[30px] font-black text-white tracking-tight flex items-center justify-center min-h-[38px] sm:min-h-[44px]">
               {unverifiedEmail ? (
                 "Verify your email"
               ) : mode === "reset" ? (
@@ -584,7 +584,7 @@ export default function LoginPage() {
               ) : mode === "signin" ? (
                 <RotatingText
                   texts={["Learn Faster", "Grow Smarter"]}
-                  mainClassName="justify-center overflow-hidden py-0.5 text-[#18191F]"
+                  mainClassName="justify-center overflow-hidden py-0.5 text-white"
                   staggerFrom="last"
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -598,7 +598,7 @@ export default function LoginPage() {
                 "Create an account"
               )}
             </h1>
-            <p className="text-xs sm:text-[13px] text-zinc-500 font-normal">
+            <p className="text-xs sm:text-[13px] text-white/60 font-normal">
               {unverifiedEmail
                 ? "Check your inbox to verify your account"
                 : mode === "reset"
@@ -616,26 +616,26 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4 pt-2"
             >
-              <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-zinc-200 text-zinc-800 flex items-center justify-center mx-auto">
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center mx-auto">
                   <Mail className="w-5 h-5" />
                 </div>
-                <h3 className="text-xs font-bold text-zinc-900">Verification Link Sent</h3>
-                <p className="text-xs text-zinc-600 leading-relaxed">
-                  We sent a confirmation link to <span className="font-bold text-black">{unverifiedEmail}</span>.
+                <h3 className="text-xs font-bold text-white">Verification Link Sent</h3>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  We sent a confirmation link to <span className="font-bold text-[#D5FF38]">{unverifiedEmail}</span>.
                 </p>
               </div>
 
               {resendSent && (
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>Verification link resent! Please check your inbox.</span>
                 </div>
               )}
 
               {errorMessage && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )}
@@ -645,7 +645,7 @@ export default function LoginPage() {
                 onClick={handleResendVerification}
                 disabled={resendLoading}
                 suppressHydrationWarning
-                className="w-full py-3.5 px-4 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 px-4 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? "animate-spin" : ""}`} />
                 <span>{resendLoading ? "Resending..." : "Resend Verification Email"}</span>
@@ -658,7 +658,7 @@ export default function LoginPage() {
                   switchMode("signin");
                 }}
                 suppressHydrationWarning
-                className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
+                className="w-full text-center text-xs text-white/60 hover:text-white font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Log In</span>
@@ -673,9 +673,9 @@ export default function LoginPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-2"
+                    className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs font-medium flex items-center gap-2"
                   >
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                     <span>{errorMessage}</span>
                   </motion.div>
                 )}
@@ -685,9 +685,9 @@ export default function LoginPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-2"
+                    className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs font-medium flex items-center gap-2"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>{successMessage}</span>
                   </motion.div>
                 )}
@@ -696,29 +696,29 @@ export default function LoginPage() {
               {/* Recovery Verification States */}
               {mode === "reset" && checkingRecovery ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
-                  <RefreshCw className="w-5 h-5 animate-spin text-zinc-500" />
-                  <span className="text-xs font-medium text-zinc-600">Verifying reset session...</span>
+                  <RefreshCw className="w-5 h-5 animate-spin text-white/60" />
+                  <span className="text-xs font-medium text-white/70">Verifying reset session...</span>
                 </div>
               ) : mode === "reset" && recoveryAuthorized === false ? (
                 <div className="space-y-4 pt-2 text-center">
-                  <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-2">
-                    <AlertCircle className="w-6 h-6 text-rose-600 mx-auto" />
-                    <h3 className="text-xs font-bold text-rose-900">Invalid or Expired Reset Session</h3>
-                    <p className="text-xs text-rose-700 leading-relaxed">
+                  <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 text-rose-300 space-y-2">
+                    <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
+                    <h3 className="text-xs font-bold text-rose-200">Invalid or Expired Reset Session</h3>
+                    <p className="text-xs text-rose-300/90 leading-relaxed">
                       The password reset link is invalid, expired, or has already been used. Please request a new link.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => switchMode("forgot")}
-                    className="w-full py-3.5 px-4 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-xs transition-all cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black font-extrabold text-xs transition-all cursor-pointer"
                   >
                     Request New Reset Link
                   </button>
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
-                    className="w-full text-center text-xs text-zinc-500 hover:text-black font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
+                    className="w-full text-center text-xs text-white/60 hover:text-white font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back to Log In</span>
@@ -744,10 +744,10 @@ export default function LoginPage() {
                       <>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-semibold text-zinc-800 block">
+                            <label className="text-xs font-semibold text-white/90 block">
                               New Password
                             </label>
-                            <span className="text-[10px] text-zinc-400">
+                            <span className="text-[10px] text-white/50">
                               At least 6 characters
                             </span>
                           </div>
@@ -763,15 +763,14 @@ export default function LoginPage() {
                                 clearReactionSequence();
                               }}
                               placeholder="••••••••"
-                              style={{ colorScheme: "light" }}
                               suppressHydrationWarning
-                              className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                              className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
                               suppressHydrationWarning
-                              className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors cursor-pointer"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors cursor-pointer"
                               aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                               {showPassword ? (
@@ -784,7 +783,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-zinc-800 block">
+                          <label className="text-xs font-semibold text-white/90 block">
                             Confirm New Password
                           </label>
                           <div className="relative">
@@ -799,9 +798,8 @@ export default function LoginPage() {
                                 clearReactionSequence();
                               }}
                               placeholder="Repeat new password"
-                              style={{ colorScheme: "light" }}
                               suppressHydrationWarning
-                              className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                              className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                             />
                           </div>
                         </div>
@@ -812,18 +810,18 @@ export default function LoginPage() {
                             type="submit"
                             disabled={loading}
                             suppressHydrationWarning
-                            className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                            className="w-full py-3.5 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black font-extrabold text-sm tracking-wide shadow-none transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
                           >
                             {loading ? (
                               <span className="flex items-center justify-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                                 <span>Resetting Password...</span>
                               </span>
                             ) : (
                               "Reset Password"
                             )}
                           </button>
-                          <p className="text-[11px] text-zinc-400 text-center pt-2">
+                          <p className="text-[11px] text-white/50 text-center pt-2">
                             After resetting, you will be asked to sign in with your new password.
                           </p>
                         </div>
@@ -833,7 +831,7 @@ export default function LoginPage() {
                         {mode === "signup" && (
                           <>
                             <div className="space-y-1">
-                              <label className="text-xs font-semibold text-zinc-800 block">
+                              <label className="text-xs font-semibold text-white/90 block">
                                 Full Name
                               </label>
                               <input
@@ -849,21 +847,21 @@ export default function LoginPage() {
                                 placeholder="Alex Mercer"
                                 autoComplete="name"
                                 suppressHydrationWarning
-                                className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                               />
                             </div>
 
                             <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <label className="text-xs font-semibold text-zinc-800 block">
+                                <label className="text-xs font-semibold text-white/90 block">
                                   Username
                                 </label>
-                                <span className="text-[10px] text-zinc-400">
+                                <span className="text-[10px] text-white/50">
                                   3–30 chars (letters, numbers, _)
                                 </span>
                               </div>
                               <div className="relative flex items-center">
-                                <span className="text-zinc-400 text-sm select-none mr-1">@</span>
+                                <span className="text-white/40 text-sm select-none mr-1">@</span>
                                 <input
                                   id="signup-username"
                                   type="text"
@@ -879,7 +877,7 @@ export default function LoginPage() {
                                   autoCapitalize="none"
                                   spellCheck={false}
                                   suppressHydrationWarning
-                                  className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                  className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                                 />
                               </div>
                             </div>
@@ -888,7 +886,7 @@ export default function LoginPage() {
 
                         {/* Email Field */}
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-zinc-800 block">
+                          <label className="text-xs font-semibold text-white/90 block">
                             Email
                           </label>
                           <input
@@ -902,9 +900,8 @@ export default function LoginPage() {
                               clearReactionSequence();
                             }}
                             placeholder="Enter your email"
-                            style={{ colorScheme: "light" }}
                             suppressHydrationWarning
-                            className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                            className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                           />
                         </div>
 
@@ -912,7 +909,7 @@ export default function LoginPage() {
                         {mode !== "forgot" && (
                           <>
                             <div className="space-y-1">
-                              <label className="text-xs font-semibold text-zinc-800 block">
+                              <label className="text-xs font-semibold text-white/90 block">
                                 Password
                               </label>
                               <div className="relative">
@@ -927,15 +924,14 @@ export default function LoginPage() {
                                     clearReactionSequence();
                                   }}
                                   placeholder="••••••••"
-                                  style={{ colorScheme: "light" }}
                                   suppressHydrationWarning
-                                  className="w-full bg-white border-b border-zinc-300 focus:border-[#18191F] py-2 pr-8 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                  className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 pr-8 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => setShowPassword(!showPassword)}
                                   suppressHydrationWarning
-                                  className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-700 hover:text-black transition-colors"
+                                  className="absolute right-1 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
                                   aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                   {showPassword ? (
@@ -949,7 +945,7 @@ export default function LoginPage() {
 
                             {mode === "signup" && (
                               <div className="space-y-1">
-                                <label className="text-xs font-semibold text-zinc-800 block">
+                                <label className="text-xs font-semibold text-white/90 block">
                                   Confirm Password
                                 </label>
                                 <input
@@ -964,7 +960,7 @@ export default function LoginPage() {
                                   }}
                                   placeholder="Repeat your password"
                                   suppressHydrationWarning
-                                  className="w-full bg-transparent border-b border-zinc-300 focus:border-[#18191F] py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400"
+                                  className="w-full bg-transparent border-b border-white/20 focus:border-[#D5FF38] py-2 text-sm text-white outline-none transition-colors placeholder:text-white/40"
                                 />
                               </div>
                             )}
@@ -974,39 +970,39 @@ export default function LoginPage() {
                         {/* Remember Me & Forgot Password Row */}
                         {mode === "signin" && (
                           <div className="flex items-center justify-between text-xs pt-1">
-                            <label className="flex items-center gap-2 text-zinc-600 cursor-pointer select-none">
+                            <label className="flex items-center gap-2 text-white/80 cursor-pointer select-none">
                               <input
                                 type="checkbox"
                                 checked={rememberMe}
                                 onChange={(e) => setRememberMe(e.target.checked)}
                                 suppressHydrationWarning
-                                className="w-3.5 h-3.5 rounded border-zinc-300 text-[#18191F] focus:ring-0 cursor-pointer accent-[#18191F]"
+                                className="w-3.5 h-3.5 rounded border-white/30 text-black focus:ring-0 cursor-pointer accent-[#D5FF38] bg-transparent"
                               />
                               <span className="font-medium">Remember for 30 days</span>
                             </label>
                             <button
                               type="button"
                               onClick={() => switchMode("forgot")}
-                              className="text-zinc-500 hover:text-black font-medium transition-colors cursor-pointer"
+                              className="text-white/70 hover:text-[#D5FF38] font-medium transition-colors cursor-pointer"
                             >
                               Forgot password?
                             </button>
                           </div>
                         )}
 
-                        {/* Primary Submit Button: Solid Charcoal Pill */}
+                        {/* Primary Submit Button: Acid Lime Pill */}
                         <div className="pt-2">
                           <button
                             id="auth-submit"
                             type="submit"
                             disabled={mode === "forgot" ? (recoveryLoading || recoveryCooldown > 0) : loading}
                             suppressHydrationWarning
-                            className="w-full py-3.5 rounded-full bg-[#18191F] hover:bg-[#2C2D35] text-white font-bold text-sm tracking-wide shadow-xs transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                            className="w-full py-3.5 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black font-extrabold text-sm tracking-wide shadow-none transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
                           >
                             {mode === "forgot" ? (
                               recoveryLoading ? (
                                 <span className="flex items-center justify-center gap-2">
-                                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                                  <RefreshCw className="w-4 h-4 animate-spin shrink-0 text-black" />
                                   <span>Sending Instructions...</span>
                                 </span>
                               ) : recoveryCooldown > 0 ? (
@@ -1016,7 +1012,7 @@ export default function LoginPage() {
                               )
                             ) : loading ? (
                               <span className="flex items-center justify-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                                 <span>Processing...</span>
                               </span>
                             ) : mode === "signin" ? (
@@ -1030,7 +1026,7 @@ export default function LoginPage() {
                     )}
                   </form>
 
-                  {/* Google OAuth Button: Solid Light Pill */}
+                  {/* Google OAuth Button: Solid Dark Pill */}
                   {mode !== "forgot" && mode !== "reset" && (
                     <div>
                       <button
@@ -1039,7 +1035,7 @@ export default function LoginPage() {
                         onClick={handleGoogleSignIn}
                         disabled={loading}
                         suppressHydrationWarning
-                        className="w-full py-3.5 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#1F2937] font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                        className="w-full py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/15 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
                       >
                         <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
                           <path
@@ -1069,13 +1065,13 @@ export default function LoginPage() {
           )}
 
           {/* Bottom Switcher */}
-          <div className="text-center text-xs text-zinc-500 font-medium pt-2">
+          <div className="text-center text-xs text-white/60 font-medium pt-2">
             {mode === "reset" ? (
               <button
                 type="button"
                 onClick={() => switchMode("signin")}
                 suppressHydrationWarning
-                className="inline-flex items-center gap-1.5 font-bold text-[#18191F] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-bold text-[#D5FF38] hover:underline cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Log In</span>
@@ -1085,7 +1081,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => switchMode("signin")}
                 suppressHydrationWarning
-                className="inline-flex items-center gap-1.5 font-bold text-[#18191F] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-bold text-[#D5FF38] hover:underline cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Log In</span>
@@ -1097,7 +1093,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => switchMode("signup")}
                   suppressHydrationWarning
-                  className="font-bold text-[#18191F] hover:underline cursor-pointer ml-1"
+                  className="font-bold text-[#D5FF38] hover:underline cursor-pointer ml-1"
                 >
                   Sign Up
                 </button>
@@ -1109,7 +1105,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => switchMode("signin")}
                   suppressHydrationWarning
-                  className="font-bold text-[#18191F] hover:underline cursor-pointer ml-1"
+                  className="font-bold text-[#D5FF38] hover:underline cursor-pointer ml-1"
                 >
                   Log In
                 </button>
