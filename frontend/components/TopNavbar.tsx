@@ -180,35 +180,31 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
           <button
             onClick={() => setAppMode(appMode === "admin" ? "student" : "admin")}
             title={appMode === "admin" ? "Switch to Student Mode" : "Switch to Admin Mode"}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              appMode === "admin"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 hover:brightness-105"
-                : "bg-[#5227FF]/10 text-[#5227FF] hover:bg-[#5227FF]/15 border border-[#5227FF]/20"
-            }`}
+            className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200/80 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-slate-700 dark:text-neutral-200 border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-colors cursor-pointer shrink-0 active:scale-[0.98]"
           >
             {appMode === "admin" ? (
               <>
-                <ShieldAlert className="w-3.5 h-3.5" />
+                <ShieldAlert className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>Admin CMS</span>
               </>
             ) : (
               <>
-                <GraduationCap className="w-3.5 h-3.5" />
+                <GraduationCap className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
                 <span>Student Mode</span>
               </>
             )}
           </button>
         )}
 
-        {/* ── Streak Mascot Pill (Desktop Top Nav) ── */}
+        {/* ── Streak Mascot Button (Desktop Top Nav) ── */}
         <button
           onClick={() => setIsStreakModalOpen(true)}
           title={`${streakDays} Day Streak — Click to celebrate!`}
           aria-label={`${streakDays} Day Streak`}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 hover:bg-orange-500/20 text-[#EA580C] dark:text-[#FFA048] border border-orange-500/25 hover:border-orange-500/40 transition-all cursor-pointer group shadow-2xs active:scale-95 shrink-0"
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200/80 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-slate-800 dark:text-neutral-200 border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-colors cursor-pointer group shrink-0 active:scale-[0.98]"
         >
-          <MiniFlameMascot size={18} />
-          <span className="font-extrabold text-xs sm:text-[13px] tracking-tight group-hover:brightness-110">
+          <MiniFlameMascot size={16} />
+          <span className="font-extrabold text-xs tracking-tight text-slate-900 dark:text-white">
             {streakDays}
           </span>
         </button>
