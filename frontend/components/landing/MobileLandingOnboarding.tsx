@@ -192,27 +192,30 @@ function MobileLandingOnboardingDialog({
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <AnimatePresence mode="wait" custom={direction}>
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.div
             key={slide.id}
             custom={direction}
             variants={{
               enter: (dir: number) => ({
-                x: dir > 0 ? 160 : -160,
+                x: dir > 0 ? "100%" : "-100%",
                 opacity: 0,
-                scale: 0.96,
               }),
               center: {
                 x: 0,
                 opacity: 1,
-                scale: 1,
-                transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+                transition: {
+                  x: { type: "spring", stiffness: 280, damping: 28 },
+                  opacity: { duration: 0.25, ease: "easeOut" },
+                },
               },
               exit: (dir: number) => ({
-                x: dir > 0 ? -160 : 160,
+                x: dir > 0 ? "-100%" : "100%",
                 opacity: 0,
-                scale: 0.96,
-                transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+                transition: {
+                  x: { type: "spring", stiffness: 280, damping: 28 },
+                  opacity: { duration: 0.2, ease: "easeIn" },
+                },
               }),
             }}
             initial="enter"
@@ -249,7 +252,7 @@ function MobileLandingOnboardingDialog({
 
       {/* ── Bottom Controls: Sliders on Left in White, Circular Prev & Next with Acid Lime & Black ── */}
       <footer className="w-full max-w-md mx-auto px-6 py-4 flex items-center justify-between z-30 shrink-0 border-t border-white/[0.08] bg-black">
-        {/* Left Side: White Color Slider Indicators */}
+        {/* Left Side: White Color Slider Indicators (Flat, zero glow) */}
         <div
           id="onboarding-slider-indicator"
           className="flex items-center gap-1.5"
@@ -265,10 +268,10 @@ function MobileLandingOnboardingDialog({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleGoToSlide(idx)}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                className={`transition-all duration-300 rounded-full cursor-pointer shadow-none ${
                   isActive
-                    ? "w-8 h-2.5 bg-white shadow-none"
-                    : "w-2.5 h-2.5 bg-white/30 hover:bg-white/50 shadow-none"
+                    ? "w-8 h-2.5 bg-white"
+                    : "w-2.5 h-2.5 bg-white/30 hover:bg-white/50"
                 }`}
                 aria-label={`Go to slide ${idx + 1}: ${s.title}`}
               />
@@ -276,18 +279,18 @@ function MobileLandingOnboardingDialog({
           })}
         </div>
 
-        {/* Right Side: Circular Next and Prev Buttons (Acid Lime & Black Navigation) */}
+        {/* Right Side: Circular Next and Prev Buttons (Acid Lime & Black Navigation, zero glow) */}
         <div className="flex items-center gap-3">
-          {/* Circular Prev Button: Acid Lime with Black Arrow */}
+          {/* Circular Prev Button: Acid Lime with Black Arrow (Zero glow) */}
           <button
             id="onboarding-prev-btn"
             type="button"
             onClick={handlePrev}
             disabled={currentSlide === 0}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+            className={`w-11 h-11 rounded-full flex items-center justify-center shadow-none transition-all ${
               currentSlide === 0
                 ? "opacity-0 pointer-events-none"
-                : "bg-[#D5FF38] hover:bg-[#c6f028] text-black shadow-[0_0_12px_rgba(213,255,56,0.35)] active:scale-95 cursor-pointer"
+                : "bg-[#D5FF38] hover:bg-[#c6f028] text-black active:scale-95 cursor-pointer"
             }`}
             aria-label="Previous slide"
           >
@@ -307,12 +310,12 @@ function MobileLandingOnboardingDialog({
             </svg>
           </button>
 
-          {/* Circular Next Button: Acid Lime with Black Arrow */}
+          {/* Circular Next Button: Acid Lime with Black Arrow (Zero glow) */}
           <button
             id="onboarding-next-btn"
             type="button"
             onClick={isLastSlide ? handleComplete : handleNext}
-            className="w-11 h-11 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black shadow-[0_0_16px_rgba(213,255,56,0.45)] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+            className="w-11 h-11 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black shadow-none active:scale-95 transition-all flex items-center justify-center cursor-pointer"
             aria-label={isLastSlide ? "Get started and proceed to login" : "Next slide"}
           >
             <svg
