@@ -16,10 +16,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchDashboardData, checkUsernameAvailability } from "@/lib/api";
+import { fetchDashboardData, checkUsernameAvailability, syncDailyLoginStreak } from "@/lib/api";
 import { validateUsername, validateFullName, normalizeUsername, validateEmail, validatePassword } from "@/lib/validation";
 import AuthOnboardingHero from "@/components/auth/AuthOnboardingHero";
 import AnimatedFaceEyes from "@/components/auth/AnimatedFaceEyes";
+import StreakCelebrationModal from "@/components/auth/StreakCelebrationModal";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +38,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  // ── Streak Celebration Modal State ──
+  const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [celebrationStreak, setCelebrationStreak] = useState(1);
+
+  const handleContinueToDashboard = () => {
+    try {
+      sessionStorage.removeItem("sc_pending_streak_modal");
+      sessionStorage.removeItem("sc_streak_showing");
+      sessionStorage.removeItem("sc_show_streak_celebration");
+      const todayStr = new Date().toISOString().split("T")[0];
+      localStorage.setItem("sc_streak_celebrated_today", todayStr);
+    } catch {}
+    setShowStreakCelebration(false);
+    router.replace("/dashboard");
+  };
 
   const [loading, setLoading] = useState(false);
   const [recoveryLoading, setRecoveryLoading] = useState(false);
@@ -354,12 +371,19 @@ export default function LoginPage() {
     setSuccessMessage("");
 
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("sc_pending_streak_modal", "true");
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
       if (error) {
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("sc_pending_streak_modal");
+        }
         if (error.message.toLowerCase().includes("email not confirmed")) {
           setUnverifiedEmail(email.trim());
           setErrorMessage("Your email is not verified yet. Please verify your email before logging in.");
@@ -374,6 +398,9 @@ export default function LoginPage() {
       if (data.user) {
         const isConfirmed = !!data.user.email_confirmed_at;
         if (!isConfirmed) {
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("sc_pending_streak_modal");
+          }
           setUnverifiedEmail(data.user.email || email.trim());
           setErrorMessage("Please verify your email address to continue to the dashboard.");
           triggerWrongCredentialsSequence();
@@ -382,16 +409,35 @@ export default function LoginPage() {
           return;
         }
 
-        // 1. Prefetch dashboard data
+        // 1. Sync daily login streak to obtain the exact current streak
+        let streak = 1;
+        try {
+          streak = await syncDailyLoginStreak(data.user.id);
+        } catch {
+          // fallback to 1 if network error
+        }
+        setCelebrationStreak(streak || 1);
+
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("sc_streak_showing", "true");
+          sessionStorage.setItem("sc_show_streak_celebration", "true");
+          sessionStorage.setItem("sc_celebration_streak", String(streak || 1));
+        }
+
+        // 2. Prefetch dashboard data in background
         queryClient.prefetchQuery({
           queryKey: ["dashboard", data.user.id],
           queryFn: () => fetchDashboardData(),
         });
 
-        // 2. Navigate to dashboard
-        router.replace("/dashboard");
+        // 3. Display celebratory streak modal (Img 1 -> Img 3) before routing to dashboard
+        setShowStreakCelebration(true);
+        setLoading(false);
       }
     } catch (err: any) {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("sc_pending_streak_modal");
+      }
       setErrorMessage(err?.message || "An unexpected error occurred during sign in.");
       triggerWrongCredentialsSequence();
       setLoading(false);
@@ -490,6 +536,9 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMessage("");
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("sc_show_streak_celebration", "true");
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -497,10 +546,16 @@ export default function LoginPage() {
         },
       });
       if (error) {
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("sc_show_streak_celebration");
+        }
         setErrorMessage(error.message);
         setLoading(false);
       }
     } catch (err: any) {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("sc_show_streak_celebration");
+      }
       setErrorMessage(err?.message || "Failed to initiate Google sign in.");
       setLoading(false);
     }
@@ -535,6 +590,13 @@ export default function LoginPage() {
 
   return (
     <div className="w-full min-h-screen min-h-[100dvh] bg-black text-white flex flex-col lg:flex-row m-0 p-0 font-sans select-none overflow-x-hidden relative">
+      {/* ── STREAK CELEBRATION MODAL (Mobile Fullscreen, Laptop Center Card) ── */}
+      <StreakCelebrationModal
+        streakDays={celebrationStreak}
+        isOpen={showStreakCelebration}
+        onContinue={handleContinueToDashboard}
+      />
+
       {/* ── LEFT HERO: Onboarding Product Features Carousel (Desktop) ── */}
       <AuthOnboardingHero />
 

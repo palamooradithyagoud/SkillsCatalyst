@@ -681,7 +681,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#18191E] border border-white/10 text-white shadow-xs">
               <Flame className="w-4 h-4 text-white stroke-[2]" />
               <span className="text-sm font-bold tracking-tight">
-                {progressStats.streakDays || 5}
+                {progressStats.streakDays ?? 0}
               </span>
             </div>
 

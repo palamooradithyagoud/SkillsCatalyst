@@ -379,7 +379,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session && !isPublicPage) {
       router.replace("/login");
     } else if (session && isLoginPage) {
-      if (!isRecoveryReset) {
+      const isStreakPending =
+        typeof window !== "undefined" &&
+        (sessionStorage.getItem("sc_pending_streak_modal") === "true" ||
+          sessionStorage.getItem("sc_streak_showing") === "true");
+
+      if (!isRecoveryReset && !isStreakPending) {
         router.replace((session.role === "owner" || session.role === "admin") && appMode === "admin" ? "/admin" : "/dashboard");
       }
     } else if (session && isAdminPage && session.role !== "owner" && session.role !== "admin") {

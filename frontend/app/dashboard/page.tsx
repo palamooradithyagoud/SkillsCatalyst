@@ -6,7 +6,7 @@ import QuickHubNav from "@/components/QuickHubNav";
 import EventHeroCard from "@/components/EventHeroCard";
 import { TechNewsStories } from "@/components/tech-news/TechNewsStories";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardData } from "@/lib/api";
+import { fetchDashboardData, syncDailyLoginStreak } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
@@ -15,6 +15,7 @@ import { CheckCircle2, X, Loader2, Clock, AlertCircle } from "lucide-react";
 import { fetchPaymentStatus } from "@/lib/api/payment";
 import MoodCalendarWidget from "@/components/dashboard/MoodCalendarWidget";
 import DashboardHeroCards from "@/components/dashboard/DashboardHeroCards";
+import StreakCelebrationModal from "@/components/auth/StreakCelebrationModal";
 
 interface PaymentBannerState {
   type: "verifying" | "success" | "pending" | "failed" | "error";
@@ -27,6 +28,47 @@ export default function DashboardPage() {
   const { openPricingModal } = usePricingModal();
   const [paymentBanner, setPaymentBanner] = useState<PaymentBannerState | null>(null);
   const { refetch: refetchSubscription } = useSubscription();
+
+  const { data } = useQuery({
+    queryKey: ["dashboard", userId],
+    queryFn: () => fetchDashboardData(),
+    enabled: !!session?.user_id,
+  });
+
+  // ── Streak Celebration Modal State ──
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [celebrationStreakDays, setCelebrationStreakDays] = useState(1);
+
+  const handleCloseStreakModal = React.useCallback(() => {
+    setShowStreakModal(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const celebratedKey = `sc_streak_celebrated_${userId}_${todayStr}`;
+    const wasCelebratedToday = localStorage.getItem(celebratedKey) === "true";
+    const explicitFlag = sessionStorage.getItem("sc_show_streak_celebration") === "true";
+    const storedStreak = sessionStorage.getItem("sc_celebration_streak");
+
+    if (explicitFlag || !wasCelebratedToday) {
+      sessionStorage.removeItem("sc_show_streak_celebration");
+      localStorage.setItem(celebratedKey, "true");
+
+      const initialStreak = storedStreak ? parseInt(storedStreak, 10) : (data?.metrics?.streakDays || 1);
+      setCelebrationStreakDays(initialStreak > 0 ? initialStreak : 1);
+      setShowStreakModal(true);
+
+      syncDailyLoginStreak(userId)
+        .then((realStreak) => {
+          if (realStreak && realStreak > 0) {
+            setCelebrationStreakDays(realStreak);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [userId, data?.metrics?.streakDays]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -116,12 +158,6 @@ export default function DashboardPage() {
     };
   }, [refetchSubscription]);
 
-  const { data } = useQuery({
-    queryKey: ["dashboard", userId],
-    queryFn: () => fetchDashboardData(),
-    enabled: !!session?.user_id,
-  });
-
   // Framer Motion Animation Variants for smooth entrance
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -163,12 +199,20 @@ export default function DashboardPage() {
   };
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-4 sm:space-y-5 pb-16 sm:pb-24"
-    >
+    <>
+      {/* ── Streak Celebration Modal (Img 1 -> Img 3) ── */}
+      <StreakCelebrationModal
+        streakDays={celebrationStreakDays}
+        isOpen={showStreakModal}
+        onContinue={handleCloseStreakModal}
+      />
+
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-[1060px] xl:max-w-[1100px] mx-auto space-y-4 sm:space-y-5 pb-16 sm:pb-24"
+      >
       {/* ── Authoritative Payment Confirmation Banner ── */}
       {paymentBanner && (
         <motion.div
@@ -263,5 +307,6 @@ export default function DashboardPage() {
         </p>
       </motion.div>
     </motion.div>
+    </>
   );
 }
