@@ -39,6 +39,7 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import CareerDownbar from "@/components/career/CareerDownbar";
+import DashboardMobileDock from "@/components/dashboard/DashboardMobileDock";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
 
@@ -198,6 +199,8 @@ function MobileNavContent() {
     : userEmail.split("@")[0].substring(0, 2).toUpperCase() || "PA";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
+  const isDashboard = pathname === "/dashboard" || pathname === "/";
+
   const isCareerGroup =
     pathname.startsWith("/career") ||
     pathname.startsWith("/roadmaps") ||
@@ -285,8 +288,13 @@ function MobileNavContent() {
           <CareerDownbar className="md:hidden" />
         )}
 
-      {/* ── Mobile Instagram-Style Bottom Navigation Bar (Hidden on Career Group / Explore / Reels) ── */}
-      {!isHideBottomBar && !isCareerGroup && (
+      {/* ── Mobile Floating Pill Dock (MAIN DASHBOARD ONLY) ── */}
+      {isDashboard && !isHideBottomBar && (
+        <DashboardMobileDock className="md:hidden" />
+      )}
+
+      {/* ── Mobile Navigation Bar for all other non-dashboard pages ── */}
+      {!isDashboard && !isHideBottomBar && !isCareerGroup && (
         <NavBar
           items={mobileNavItems}
           userInitial={userInitial}
