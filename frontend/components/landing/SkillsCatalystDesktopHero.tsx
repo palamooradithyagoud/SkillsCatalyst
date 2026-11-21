@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import LandingPricingModal, { LandingPricingTier } from "./LandingPricingModal";
 import StructuredCareerPathSection from "./StructuredCareerPathSection";
 import MobileLandingOnboarding from "./MobileLandingOnboarding";
+import FeaturesMegaMenu from "./FeaturesMegaMenu";
 
 // Bespoke minimal chevron icon (Zero stock lucide-react dependency)
 function NavChevronIcon({ isOpen, className = "" }: { isOpen?: boolean; className?: string }) {
@@ -176,11 +177,13 @@ export default function SkillsCatalystDesktopHero() {
   };
 
   const handleNavPillClick = (item: NavItem) => {
-    if (item.id === "pricing") {
+    if (item.id === "features") {
+      setActiveDropdown((prev) => (prev === "features" ? null : "features"));
+    } else if (item.id === "pricing") {
       router.push("/pricing");
       setActiveDropdown(null);
     } else {
-      handleNavigateToLogin();
+      setActiveDropdown((prev) => (prev === item.id ? null : item.id));
     }
   };
 
@@ -277,25 +280,37 @@ export default function SkillsCatalystDesktopHero() {
 
                     <AnimatePresence>
                       {isOpen && (
-                        <motion.div
-                          className="scNavDropdown"
-                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                          transition={{ duration: 0.16, ease: "easeOut" }}
-                        >
-                          {item.items.map((subItem) => (
-                            <button
-                              key={subItem.title}
-                              type="button"
-                              onClick={() => handleDropdownItemClick(item.id, subItem.title)}
-                              className="scDropdownItem cursor-pointer"
-                            >
-                              <span className="scDropdownItemTitle">{subItem.title}</span>
-                              <span className="scDropdownItemDesc">{subItem.description}</span>
-                            </button>
-                          ))}
-                        </motion.div>
+                        item.id === "features" ? (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="relative"
+                          >
+                            <FeaturesMegaMenu onItemClick={() => setActiveDropdown(null)} />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            className="scNavDropdown"
+                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                            transition={{ duration: 0.16, ease: "easeOut" }}
+                          >
+                            {item.items.map((subItem) => (
+                              <button
+                                key={subItem.title}
+                                type="button"
+                                onClick={() => handleDropdownItemClick(item.id, subItem.title)}
+                                className="scDropdownItem cursor-pointer"
+                              >
+                                <span className="scDropdownItemTitle">{subItem.title}</span>
+                                <span className="scDropdownItemDesc">{subItem.description}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )
                       )}
                     </AnimatePresence>
                   </div>
