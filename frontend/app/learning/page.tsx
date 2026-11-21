@@ -29,6 +29,7 @@ import { SearchResults } from "@/components/learning/SearchResults";
 import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
 import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
+import { SavedCourseProgressBanner } from "@/components/learning/SavedCourseProgressBanner";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
@@ -367,6 +368,14 @@ export default function LearningPage() {
                   </motion.button>
                 </div>
               </div>
+
+              {/* ── Saved Course Progress Banner (Matching Image 2) ── */}
+              <SavedCourseProgressBanner
+                savedList={savedList}
+                videoProgressData={videoProgressData}
+                onOpenPlaylist={(pl) => handleOpenPlayer(pl)}
+                onExploreTopic={(topic) => handleSearch(topic)}
+              />
 
               {/* Popular Skill Pills with authentic logos & Browse all */}
               <PopularSkillPills
