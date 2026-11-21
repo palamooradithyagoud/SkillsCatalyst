@@ -65,11 +65,6 @@ export function SavedCourseProgressBanner({
   const touchStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // If the user has no saved courses, do not render the banner
-  if (!savedList || savedList.length === 0) {
-    return null;
-  }
-
   // Smoothly scroll to a specific index in the card container
   const scrollToIndex = useCallback(
     (index: number) => {
@@ -102,6 +97,11 @@ export function SavedCourseProgressBanner({
 
     return () => clearInterval(timer);
   }, [savedList.length, isInteracting, scrollToIndex]);
+
+  // If the user has no saved courses, do not render the banner
+  if (!savedList || savedList.length === 0) {
+    return null;
+  }
 
   // Sync activeIndex with user's manual scroll in mobile view
   const handleScroll = () => {
@@ -271,7 +271,7 @@ export function SavedCourseProgressBanner({
                     handleCardClick(course);
                   }
                 }}
-                className={`relative w-full rounded-[24px] sm:rounded-[28px] ${theme.bg} p-4 sm:p-6 md:p-7 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 select-none text-left h-full flex flex-col justify-between`}
+                className={`group relative w-full rounded-[24px] sm:rounded-[28px] ${theme.bg} p-4 sm:p-6 md:p-7 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 select-none text-left h-full flex flex-col justify-between`}
               >
                 {/* Subtle minimalist concentric arcs background (pure vector SVG, zero photo) */}
                 <div className="absolute -right-8 -top-8 sm:-right-6 sm:-top-6 w-44 h-44 sm:w-60 sm:h-60 pointer-events-none select-none opacity-15">
@@ -332,12 +332,12 @@ export function SavedCourseProgressBanner({
                       </span>
                     </div>
 
-                    {/* Circular Arrow Button */}
+                    {/* Circular Arrow Button: Fills with black on cursor hover or press */}
                     <div
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-[1.8px] sm:border-2 border-neutral-950 flex items-center justify-center bg-transparent group-hover:bg-neutral-950 transition-colors"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-[1.8px] sm:border-2 border-neutral-950 flex items-center justify-center bg-transparent group-hover:bg-neutral-950 group-active:bg-neutral-950 hover:bg-neutral-950 active:bg-neutral-950 transition-all duration-200 cursor-pointer active:scale-95"
                       aria-hidden="true"
                     >
-                      <ArrowUpRight className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-neutral-950 stroke-[2.4]" />
+                      <ArrowUpRight className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-neutral-950 group-hover:text-white group-active:text-white hover:text-white active:text-white transition-colors stroke-[2.4]" />
                     </div>
                   </div>
                 </div>

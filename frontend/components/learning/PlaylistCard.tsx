@@ -24,7 +24,7 @@ export function PlaylistCard({
 }) {
   const isSaved = savedIds.has(pl.id);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 320, height: 230 });
+  const [dimensions, setDimensions] = useState({ width: 320, height: 210 });
 
   // Dynamically measure container dimensions for pixel-perfect SVG path rendering
   useEffect(() => {
@@ -48,8 +48,8 @@ export function PlaylistCard({
     return () => ro.disconnect();
   }, []);
 
-  const W = Math.max(dimensions.width || 320, 160);
-  const H = Math.max(dimensions.height || 230, 180);
+  const W = Math.max(dimensions.width || 320, 140);
+  const H = Math.max(dimensions.height || 195, 160);
   const R = 20; // Corner radius for top-right, bottom-right, bottom-left
   const Rs = 28; // Concave scoop radius
   const rf = 8; // Tangent fillet radius
@@ -81,7 +81,7 @@ export function PlaylistCard({
     >
       <div
         ref={containerRef}
-        className="relative w-full h-full min-h-[220px] sm:min-h-[235px] group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        className="relative w-full h-full min-h-[190px] sm:min-h-[225px] group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
       >
         {/* ── Dynamic Scaled SVG Background with Concave Top-Left Cutout & Crisp Border ── */}
         <svg
@@ -105,71 +105,74 @@ export function PlaylistCard({
             position: "absolute",
             left: "8px",
             top: "8px",
-            width: "40px",
-            height: "40px",
           }}
-          className="rounded-full bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-neutral-700/80 shadow-sm flex items-center justify-center z-20 select-none group-hover:scale-105 transition-transform"
+          className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-neutral-700/80 shadow-sm flex items-center justify-center z-20 select-none group-hover:scale-105 transition-transform"
         >
-          <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight font-sans">
+          <span className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white tracking-tight font-sans">
             #{rank}
           </span>
         </div>
 
         {/* ── Card Content Container ── */}
-        <div className="relative z-10 flex flex-col justify-between h-full p-3.5 sm:p-5">
-          <div>
-            {/* 1. Channel Name in the Top Left Side Corner (beside the #rank cutout) */}
-            <div className="flex items-center h-8 sm:h-9 pl-12 sm:pl-14 pr-1 mb-2">
-              <p
-                className="text-xs sm:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-[#D5FF38] transition-colors truncate leading-tight"
-                title={pl.channel}
-              >
-                {pl.channel}
-              </p>
-            </div>
+        <div className="relative z-10 flex flex-col justify-between h-full p-3 sm:p-4 md:p-5">
+          {/* 1. Channel Name in the Top Left Side Corner (spaced cleanly to the right of the #rank cutout) */}
+          <div className="flex items-center h-7 sm:h-8 pl-[50px] sm:pl-14 pr-1">
+            <p
+              className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-[#D5FF38] transition-colors truncate leading-tight"
+              title={pl.channel}
+            >
+              {pl.channel}
+            </p>
+          </div>
 
-            {/* 2. Video Title */}
-            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#D5FF38] transition-colors leading-snug line-clamp-2 mt-0.5">
+          {/* 2. Video Title: Moved down with ample breathing room below the top badge */}
+          <div className="my-auto pt-2.5 sm:pt-3 pb-1">
+            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#D5FF38] transition-colors leading-[1.3] sm:leading-snug line-clamp-2">
               {pl.title}
             </h3>
+          </div>
 
-            {/* 3. Downside the Title: Language Badge */}
-            <div className="flex items-center gap-1.5 mt-2.5 sm:mt-3">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/80 px-2.5 py-0.5 rounded-full shadow-none">
+          {/* 3. Downside: Language Badge Kept Down + Footer Buttons */}
+          <div className="pt-1">
+            {/* Language Badge */}
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/80 px-2 sm:px-2.5 py-0.5 rounded-full shadow-none">
                 {displayLanguage}
               </span>
             </div>
-          </div>
 
-          {/* 4. Footer: Watch & Save Buttons */}
-          <div className="flex items-center gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-neutral-800/80">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onWatch(pl)}
-              className="flex-1 py-2 sm:py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-black text-black bg-[#D5FF38] hover:bg-[#cbf526] active:bg-[#bfe820] shadow-none transition-all cursor-pointer select-none"
-            >
-              <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black text-black" />
-              <span>Watch</span>
-            </motion.button>
-
-            {onSave && onUnsave && (
+            {/* 4. Footer: Watch & Save Buttons */}
+            <div className="flex items-center gap-1.5 sm:gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-neutral-800/80">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => (isSaved ? onUnsave(pl.id) : onSave(pl))}
-                className={`flex-1 py-2 sm:py-2.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none ${
-                  isSaved
-                    ? "text-black bg-[#D5FF38] border-[#D5FF38] font-black shadow-none"
-                    : "text-slate-700 dark:text-neutral-200 border-slate-200/90 dark:border-neutral-700/80 bg-slate-100/80 dark:bg-neutral-800/80 hover:bg-slate-200/80 dark:hover:bg-neutral-700/80 hover:text-slate-900 dark:hover:text-white shadow-none"
-                }`}
+                onClick={() => onWatch(pl)}
+                className="flex-1 py-1.5 sm:py-2.5 px-1.5 sm:px-2 rounded-full flex items-center justify-center gap-1 text-[11px] sm:text-xs font-black text-black bg-[#D5FF38] hover:bg-[#cbf526] active:bg-[#bfe820] shadow-none transition-all cursor-pointer select-none whitespace-nowrap"
               >
-                {isSaved ? "Saved ✓" : "Save"}
+                <Play className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-black text-black shrink-0" />
+                <span>Watch</span>
               </motion.button>
-            )}
+
+              {onSave && onUnsave && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => (isSaved ? onUnsave(pl.id) : onSave(pl))}
+                  className={`flex-1 py-1.5 sm:py-2.5 px-1.5 sm:px-2 rounded-full text-[11px] sm:text-xs font-bold border transition-all cursor-pointer select-none text-center whitespace-nowrap ${
+                    isSaved
+                      ? "text-black bg-[#D5FF38] border-[#D5FF38] font-black shadow-none"
+                      : "text-slate-700 dark:text-neutral-200 border-slate-200/90 dark:border-neutral-700/80 bg-slate-100/80 dark:bg-neutral-800/80 hover:bg-slate-200/80 dark:hover:bg-neutral-700/80 hover:text-slate-900 dark:hover:text-white shadow-none"
+                  }`}
+                >
+                  {isSaved ? "Saved ✓" : "Save"}
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </motion.div>
   );
 }
+
+export default PlaylistCard;

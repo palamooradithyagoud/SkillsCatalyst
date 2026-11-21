@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bookmark,
   Loader2,
   CheckCircle,
   X,
@@ -12,7 +11,6 @@ import {
   ArrowRight,
   BarChart3,
 } from "lucide-react";
-import MagnifierIcon from "@/components/icons/MagnifierIcon";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   savePlaylist,
@@ -23,10 +21,9 @@ import {
 } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
-import { ActiveCard, LANGUAGES, extractPlaylistId } from "@/lib/learning/searchValidation";
+import { LANGUAGES, extractPlaylistId } from "@/lib/learning/searchValidation";
 import { SelectDropdown } from "@/components/learning/SelectDropdown";
 import { SearchResults } from "@/components/learning/SearchResults";
-import { SavedPlaylistRow } from "@/components/learning/SavedPlaylistRow";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
 import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
 import { SavedCourseProgressBanner } from "@/components/learning/SavedCourseProgressBanner";
@@ -40,7 +37,6 @@ export default function LearningPage() {
   const qc = useQueryClient();
   const { openPricingModal } = usePricingModal();
 
-  const [activeCard, setActiveCard] = useState<ActiveCard>("explore");
   const [notification, setNotification] = useState<{
     msg: string;
     type: "success" | "error";
@@ -250,76 +246,8 @@ export default function LearningPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Text Sub-Navigation Tabs: Explore Skills & Saved Videos ── */}
-      <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/80 dark:border-neutral-800 pb-3 pt-2 overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setActiveCard("explore")}
-          className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeCard === "explore"
-              ? "text-slate-900 dark:text-white"
-              : "text-slate-400 dark:text-white/80 hover:text-slate-700 dark:hover:text-white"
-          }`}
-        >
-          <MagnifierIcon
-            size={18}
-            className={activeCard === "explore" ? "text-[#D5FF38]" : "text-slate-400 dark:text-white/80"}
-          />
-          <span className={activeCard === "explore" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
-            Explore Skills
-          </span>
-          {activeCard === "explore" && (
-            <motion.div
-              layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-[#D5FF38] rounded-full shadow-none"
-            />
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveCard("saved")}
-          className={`relative pb-2.5 text-sm sm:text-base font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeCard === "saved"
-              ? "text-slate-900 dark:text-white"
-              : "text-slate-400 dark:text-white/80 hover:text-slate-700 dark:hover:text-white"
-          }`}
-        >
-          <Bookmark
-            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-[#D5FF38]" : "text-slate-400 dark:text-white/80"}`}
-          />
-          <span className={activeCard === "saved" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
-            Saved Videos
-          </span>
-          {savedList.length > 0 && (
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-extrabold transition-colors ${
-                activeCard === "saved"
-                  ? "bg-[#D5FF38] text-black"
-                  : "bg-slate-100 text-slate-500 dark:bg-neutral-800 dark:text-white"
-              }`}
-            >
-              {savedList.length}
-            </span>
-          )}
-          {activeCard === "saved" && (
-            <motion.div
-              layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-[#D5FF38] rounded-full shadow-none"
-            />
-          )}
-        </button>
-      </div>
-
-      {/* ── EXPLORE Content */}
-      <AnimatePresence mode="wait">
-        {activeCard === "explore" && (
-          <motion.div
-            key="explore"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-6"
-          >
+      {/* ── Main Learning Content: Search, Saved Course Progress Carousel & Topics ── */}
+      <div className="space-y-6">
             {/* Search bar matching Image 2 */}
             <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-4 sm:p-6 border border-slate-200/80 dark:border-neutral-800 shadow-xs space-y-3 sm:space-y-4">
               <div className="flex flex-col gap-3">
@@ -414,58 +342,7 @@ export default function LearningPage() {
               onWatch={(p) => handleOpenPlayer(p)}
               onSelectSuggestion={handleSelectSuggestion}
             />
-          </motion.div>
-        )}
-
-        {/* ── SAVED Content */}
-        {activeCard === "saved" && (
-          <motion.div
-            key="saved"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-4"
-          >
-            {/* ── Playlist rows */}
-            {savedList.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white dark:bg-[#18191F] rounded-3xl py-16 sm:py-20 px-6 border border-slate-200/80 dark:border-neutral-800 shadow-xs flex flex-col items-center gap-3.5 text-center"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-[#C084FC] mb-1 shadow-2xs">
-                  <Bookmark className="w-7 h-7 text-purple-600 dark:text-[#C084FC]" />
-                </div>
-                <div className="text-slate-800 dark:text-white font-bold text-base sm:text-lg">No saved playlists yet</div>
-                <div className="text-slate-500 dark:text-neutral-400 text-xs sm:text-sm max-w-sm leading-relaxed">
-                  Search for a skill in Explore Skills and click the{" "}
-                  <strong className="text-purple-600 dark:text-[#C084FC] font-semibold">Save</strong> button to build your personal learning track.
-                </div>
-                <button
-                  onClick={() => setActiveCard("explore")}
-                  className="mt-3 px-6 py-2.5 rounded-xl text-sm text-white font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md shadow-purple-600/20 transition-all cursor-pointer"
-                >
-                  <Search className="w-4 h-4" /> Explore Skills
-                </button>
-              </motion.div>
-            ) : (
-              <div className="space-y-3">
-                {savedList.map((pl, i) => (
-                  <SavedPlaylistRow
-                    key={pl.id}
-                    pl={pl}
-                    onWatch={(p) => handleOpenPlayer(p)}
-                    onDelete={(id) => unsaveMut.mutate(id)}
-                    onWatchVideo={(p, idx) => handleOpenPlayer(p, idx)}
-                    delay={i * 0.05}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+      </motion.div>
   );
 }
