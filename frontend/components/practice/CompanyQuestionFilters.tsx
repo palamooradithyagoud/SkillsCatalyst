@@ -48,7 +48,7 @@ export function CompanyQuestionFilters({
           <select
             value={selectedPeriod}
             onChange={(e) => onSelectPeriod(e.target.value as QuestionPeriod)}
-            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-neutral-800 hover:border-slate-400 dark:hover:border-neutral-700 focus:border-indigo-500 dark:focus:border-purple-500 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-purple-500 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-2xs transition-all cursor-pointer min-w-[125px]"
+            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-[#24271F] hover:border-slate-400 dark:hover:border-neutral-600 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38]/20 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-none transition-all cursor-pointer min-w-[125px]"
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value} className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">
@@ -64,7 +64,7 @@ export function CompanyQuestionFilters({
           <select
             value={selectedDifficulty}
             onChange={(e) => onSelectDifficulty(e.target.value)}
-            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-neutral-800 hover:border-slate-400 dark:hover:border-neutral-700 focus:border-indigo-500 dark:focus:border-purple-500 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-purple-500 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-2xs transition-all cursor-pointer min-w-[125px]"
+            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-[#24271F] hover:border-slate-400 dark:hover:border-neutral-600 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38]/20 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-none transition-all cursor-pointer min-w-[125px]"
           >
             <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Difficulty</option>
             <option value="Easy" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Easy</option>
@@ -79,7 +79,7 @@ export function CompanyQuestionFilters({
           <select
             value={selectedStatus}
             onChange={(e) => onSelectStatus(e.target.value as PracticeStatus)}
-            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-neutral-800 hover:border-slate-400 dark:hover:border-neutral-700 focus:border-indigo-500 dark:focus:border-purple-500 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-purple-500 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-2xs transition-all cursor-pointer min-w-[115px]"
+            className="appearance-none bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-[#24271F] hover:border-slate-400 dark:hover:border-neutral-600 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38]/20 text-slate-800 dark:text-white text-sm font-semibold pl-3.5 pr-8 py-2 rounded-xl outline-none shadow-none transition-all cursor-pointer min-w-[115px]"
           >
             <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Status: All</option>
             <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
@@ -92,7 +92,7 @@ export function CompanyQuestionFilters({
         {hasActiveFilters && (
           <button
             onClick={handleReset}
-            className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#24271F] transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
             <span>Reset</span>
@@ -108,7 +108,7 @@ export function CompanyQuestionFilters({
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           placeholder="Search question title..."
-          className="w-full bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-neutral-800 hover:border-slate-400 dark:hover:border-neutral-700 focus:border-indigo-500 dark:focus:border-purple-500 focus:bg-white dark:focus:bg-[#18191F] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 text-xs font-bold pl-10 pr-8 py-2 rounded-xl transition-all shadow-2xs outline-none"
+          className="w-full bg-white dark:bg-[#18191F] border border-slate-300/90 dark:border-[#24271F] hover:border-slate-400 dark:hover:border-neutral-600 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:bg-white dark:focus:bg-[#18191F] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 text-xs font-bold pl-10 pr-8 py-2 rounded-xl transition-all shadow-none outline-none"
         />
         {searchQuery && (
           <button

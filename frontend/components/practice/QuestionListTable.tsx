@@ -45,17 +45,17 @@ export function QuestionListTable({
   const unlockedCount = filteredQuestions.filter((q) => !q.is_locked).length;
 
   return (
-    <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-6 border border-slate-100 dark:border-neutral-800 shadow-xs space-y-4">
+    <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-6 border border-slate-100 dark:border-[#24271F] shadow-none space-y-4">
       {/* Table Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-neutral-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#24271F] pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-800/60 text-purple-700 dark:text-[#C084FC] flex items-center justify-center font-bold">
-            <Building2 className="w-5 h-5 text-purple-700 dark:text-[#C084FC]" />
+          <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] text-slate-800 dark:text-[#D5FF38] flex items-center justify-center font-bold">
+            <Building2 className="w-5 h-5 text-slate-800 dark:text-[#D5FF38]" />
           </div>
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <span>{formatCompanyName(company)}</span>
-              <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-neutral-700">
+              <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-[#24271F]">
                 {company}
               </span>
             </h3>
@@ -64,12 +64,12 @@ export function QuestionListTable({
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
           {loadingQuestions ? (
-            <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-[#C084FC] font-bold">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex items-center gap-2 text-xs text-slate-900 dark:text-[#D5FF38] font-bold">
+              <Loader2 className="w-4 h-4 animate-spin text-[#D5FF38]" />
               <span>Loading questions...</span>
             </div>
           ) : (
-            <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700">
+            <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F]">
               {hasLockedQuestions ? (
                 <>
                   <strong className="text-amber-600 dark:text-amber-400 font-black">{unlockedCount} Unlocked</strong> of{" "}
@@ -78,7 +78,7 @@ export function QuestionListTable({
               ) : (
                 <>
                   Showing <strong className="text-slate-900 dark:text-white">{filteredQuestions.length}</strong> of{" "}
-                  <strong className="text-purple-600 dark:text-[#C084FC]">{totalCount}</strong> questions
+                  <strong className="text-slate-900 dark:text-[#D5FF38]">{totalCount}</strong> questions
                 </>
               )}
             </span>
@@ -88,7 +88,7 @@ export function QuestionListTable({
 
       {/* Freemium Teaser Hook Banner */}
       {!loadingQuestions && hasLockedQuestions && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-900/10 via-amber-500/10 to-indigo-900/10 border border-amber-500/30 dark:border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/5 border border-amber-500/30 dark:border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-none">
           <div>
             <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
               <span>Free Preview: First 3 Questions Unlocked</span>
@@ -114,13 +114,13 @@ export function QuestionListTable({
       {/* Questions Table Body */}
       {loadingQuestions ? (
         <div className="py-16 text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-purple-600 dark:text-[#C084FC] animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-[#D5FF38] animate-spin mx-auto" />
           <p className="text-sm font-medium text-slate-500 dark:text-neutral-400">
             Loading question bank for {formatCompanyName(company)}...
           </p>
         </div>
       ) : filteredQuestions.length === 0 ? (
-        <div className="py-16 text-center space-y-3 bg-slate-50 dark:bg-[#121318] rounded-2xl border border-slate-200/80 dark:border-neutral-800">
+        <div className="py-16 text-center space-y-3 bg-slate-50 dark:bg-[#121318] rounded-2xl border border-slate-200/80 dark:border-[#24271F]">
           <Filter className="w-8 h-8 text-slate-400 dark:text-neutral-500 mx-auto" />
           <h4 className="text-base font-bold text-slate-900 dark:text-white">No questions found</h4>
           <p className="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto font-medium">
@@ -128,7 +128,7 @@ export function QuestionListTable({
           </p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-[#14151C] rounded-2xl border border-slate-200/90 dark:border-neutral-800 divide-y divide-slate-100 dark:divide-neutral-800/80 overflow-hidden shadow-2xs">
+        <div className="bg-white dark:bg-[#121318] rounded-2xl border border-slate-200/90 dark:border-[#24271F] divide-y divide-slate-100 dark:divide-[#24271F] overflow-hidden shadow-none">
           {filteredQuestions.map((q, idx) => {
             const key = `q_${company}_${q.id}_${q.title}`;
             const isDone = !!solvedState[key] || !!solvedState[q.id.toString()];
@@ -177,7 +177,7 @@ export function QuestionListTable({
         <div className="pt-4 text-center">
           <button
             onClick={onLoadMore}
-            className="px-6 py-2.5 rounded-xl bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-[#121318] hover:bg-[#24271F] border border-[#24271F] hover:border-[#D5FF38] text-neutral-200 hover:text-[#D5FF38] text-xs font-bold transition-all shadow-none inline-flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Load More Questions ({loadedCount} / {totalCount})</span>

@@ -40,10 +40,10 @@ export function QuestionRow({
     <div
       className={`flex items-center justify-between py-3 px-3.5 sm:px-4.5 transition-colors gap-3 group ${
         isLocked
-          ? "bg-slate-50/40 dark:bg-neutral-900/30 hover:bg-amber-50/20 dark:hover:bg-amber-950/10"
+          ? "bg-slate-50/40 dark:bg-[#121318] hover:bg-amber-50/20 dark:hover:bg-amber-950/10"
           : isDone
-          ? "bg-purple-50/20 dark:bg-purple-950/20 hover:bg-purple-50/40 dark:hover:bg-purple-950/30"
-          : "hover:bg-slate-50/80 dark:hover:bg-neutral-800/40"
+          ? "bg-slate-50/60 dark:bg-[#18191F]/70 hover:bg-slate-100/60 dark:hover:bg-[#18191F]"
+          : "hover:bg-slate-50/80 dark:hover:bg-[#18191F]/40"
       }`}
     >
       {/* Left: Minimal Checkbox + Title */}
@@ -74,12 +74,12 @@ export function QuestionRow({
             }
             className={`w-4.5 h-4.5 rounded-[4px] border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
               isDone
-                ? "bg-purple-600 dark:bg-purple-600 border-purple-600 dark:border-purple-500 text-white shadow-2xs"
-                : "border-slate-300 dark:border-neutral-700 hover:border-slate-400 dark:hover:border-neutral-500 bg-white dark:bg-[#121318]"
+                ? "bg-[#D5FF38] border-[#D5FF38] text-black font-black shadow-none"
+                : "border-slate-300 dark:border-[#24271F] hover:border-[#D5FF38] dark:hover:border-[#D5FF38] bg-white dark:bg-[#121318]"
             }`}
             aria-label={isDone ? "Mark unsolved" : "Mark solved"}
           >
-            {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+            {isDone && <Check className="w-3.5 h-3.5 stroke-[3] text-black" />}
           </button>
         )}
 
@@ -108,7 +108,7 @@ export function QuestionRow({
               className={`text-sm font-medium transition-colors truncate flex items-center gap-1.5 group/link ${
                 isDone
                   ? "text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-neutral-300"
-                  : "text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-[#C084FC]"
+                  : "text-slate-900 dark:text-white hover:text-black dark:hover:text-[#D5FF38]"
               }`}
             >
               <span className={`truncate ${isDone ? "line-through decoration-slate-400 dark:decoration-neutral-500" : ""}`}>
@@ -131,19 +131,19 @@ export function QuestionRow({
 
         {/* Frequency */}
         {q.frequency && (
-          <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 border border-purple-100/80 dark:border-purple-800/50 px-2 py-0.5 rounded-md hidden sm:inline-block tabular-nums">
+          <span className="text-xs text-slate-500 dark:text-neutral-400 font-medium hidden sm:inline-block tabular-nums">
             {q.frequency} Freq
           </span>
         )}
 
-        {/* Difficulty Badge */}
+        {/* Difficulty */}
         <span
-          className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+          className={`text-xs font-bold min-w-[56px] text-center sm:text-left ${
             q.difficulty === "Easy"
-              ? "text-purple-700 dark:text-[#C084FC] bg-purple-50 dark:bg-purple-950/50 border border-purple-200/60 dark:border-purple-800/50"
+              ? "text-emerald-600 dark:text-emerald-400"
               : q.difficulty === "Medium"
-              ? "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/50"
-              : "text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/50"
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-rose-600 dark:text-rose-400"
           }`}
         >
           {q.difficulty}
@@ -165,7 +165,7 @@ export function QuestionRow({
             href={leetCodeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-[#C084FC] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-black dark:hover:text-[#D5FF38] hover:bg-slate-100 dark:hover:bg-[#24271F] transition-all cursor-pointer"
             title="Solve on LeetCode"
           >
             <span>Solve</span>

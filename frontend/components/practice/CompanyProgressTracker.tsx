@@ -33,21 +33,21 @@ export function CompanyProgressTracker({
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
-    <div className="relative w-full rounded-2xl sm:rounded-[24px] border border-purple-500/20 shadow-[0_16px_45px_rgba(0,0,0,0.5),0_0_50px_rgba(168,85,247,0.06)] overflow-hidden bg-[#0C0B14]">
+    <div className="relative w-full rounded-2xl sm:rounded-[24px] border border-slate-200/90 dark:border-[#24271F] overflow-hidden bg-white dark:bg-[#18191F] shadow-none">
       <GlowCursor
-        color="#67E8F9"
-        secondaryColor="#A78BFA"
+        color="#D5FF38"
+        secondaryColor="#24271F"
         trailLength={40}
         trailWidth={8}
         trailTaper={0.8}
         followSpeed={0.16}
-        glowIntensity={1.9}
-        glowSpread={1.2}
-        hotspot={0.65}
-        brightness={1.25}
-        opacity={1}
-        pulseSpeed={1.1}
-        noiseStrength={0.035}
+        glowIntensity={1.2}
+        glowSpread={1.0}
+        hotspot={0.5}
+        brightness={1.0}
+        opacity={0.7}
+        pulseSpeed={1.0}
+        noiseStrength={0.02}
         idleFade
         idleTimeout={700}
         fadeDuration={900}
@@ -55,35 +55,31 @@ export function CompanyProgressTracker({
         className="w-full"
       >
         <div className="relative w-full p-5 sm:p-6 md:p-7 select-none flex flex-col md:flex-row md:items-center justify-between gap-6">
-        {/* Soft Ambient Glows */}
-        <div className="absolute -top-16 left-12 w-64 h-64 bg-purple-600/10 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute -bottom-16 right-16 w-64 h-64 bg-fuchsia-600/10 blur-3xl rounded-full pointer-events-none" />
-
         {/* Left Column: Track Info */}
         <div className="relative z-10 flex-1 space-y-2 max-w-xl">
           {/* Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-[#24173D] border border-purple-500/35 text-[#D8B4FE] shadow-xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] text-slate-800 dark:text-[#D5FF38] shadow-none">
             <span>Practice Track</span>
           </div>
 
           {/* Main Title */}
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
             {formatCompanyName(company)}
           </h2>
 
           {/* Subtitle */}
-          <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 font-normal leading-relaxed">
             Real interview questions asked by top tech firms. Check off questions to track your live progress.
           </p>
         </div>
 
         {/* Right Column: YOUR PROGRESS Box (Exact match with Image 2) */}
-        <div className="relative z-10 w-full sm:w-[310px] md:w-[320px] shrink-0 bg-[#131222]/90 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-sm">
+        <div className="relative z-10 w-full sm:w-[310px] md:w-[320px] shrink-0 bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] rounded-2xl p-4 sm:p-5 shadow-none">
           {/* Box Header */}
-          <div className="text-[11px] font-bold tracking-widest uppercase text-zinc-400 mb-3.5 pb-2 border-b border-white/5 flex items-center justify-between">
+          <div className="text-[11px] font-bold tracking-widest uppercase text-zinc-400 mb-3.5 pb-2 border-b border-[#24271F] flex items-center justify-between">
             <span>YOUR PROGRESS</span>
             {progressPercent === 100 && (
-              <span className="text-[10px] font-bold text-[#C084FC] bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/30">
+              <span className="text-[10px] font-bold text-black bg-[#D5FF38] px-2 py-0.5 rounded-full border border-[#D5FF38]">
                 Completed
               </span>
             )}
@@ -97,7 +93,7 @@ export function CompanyProgressTracker({
                   cx={center}
                   cy={center}
                   r={radius}
-                  stroke="#232136"
+                  stroke="#24271F"
                   strokeWidth={strokeWidth}
                   fill="transparent"
                 />
@@ -115,8 +111,8 @@ export function CompanyProgressTracker({
                 />
                 <defs>
                   <linearGradient id="companyProgressGaugeGradient" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#C084FC" />
-                    <stop offset="100%" stopColor="#9333EA" />
+                    <stop offset="0%" stopColor="#D5FF38" />
+                    <stop offset="100%" stopColor="#B4E61F" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -125,7 +121,7 @@ export function CompanyProgressTracker({
                 <span className="text-base sm:text-lg font-black text-white leading-none">
                   {progressPercent}%
                 </span>
-                <span className="text-[9px] text-zinc-400 font-medium mt-1 leading-none">
+                <span className="text-[9px] text-[#D5FF38] font-bold mt-1 leading-none">
                   Complete
                 </span>
               </div>

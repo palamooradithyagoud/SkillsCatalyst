@@ -154,7 +154,10 @@ export default function LearningPage() {
         `"${pl.title.slice(0, 35)}..." saved to Supabase!`,
         "success",
         "View Saved →",
-        () => setActiveCard("saved")
+        () => {
+          const el = document.getElementById("saved-playlists");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }
       );
       qc.invalidateQueries({ queryKey: ["saved-playlists"] });
       qc.refetchQueries({ queryKey: ["saved-playlists"] });
