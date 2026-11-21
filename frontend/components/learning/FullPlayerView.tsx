@@ -6,6 +6,7 @@ import {
   BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import KineticGrid from "@/components/ui/kinetic-grid";
 import {
   Playlist,
   fetchPlaylistVideos,
@@ -72,7 +73,7 @@ export function FullPlayerView({
     }
   }, [currentIdx, currentVideo, ytPlaylistId]);
 
-  const [activeTab, setActiveTab] = useState<"Overview" | "Notes" | "Instructor" | "FAQ">("Overview");
+  const [activeTab, setActiveTab] = useState<"Overview" | "Instructor" | "FAQ">("Overview");
 
   // Sync active player view state to document body attribute for MobileNav detection
   useEffect(() => {
@@ -205,7 +206,7 @@ export function FullPlayerView({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-gradient-to-r from-[#5B2A82] via-[#481E6A] to-[#2E1047] text-white border border-[#A478D8]/40"
+            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-neutral-900 text-white border border-neutral-700"
           >
             <motion.div
               initial={{ rotate: -20, scale: 0 }}
@@ -217,61 +218,59 @@ export function FullPlayerView({
             </motion.div>
             <div>
               <div className="font-bold text-white text-sm">Lesson Completed!</div>
-              <div className="text-purple-200 text-xs font-medium">75% threshold reached ✓</div>
+              <div className="text-neutral-400 text-xs font-medium">75% threshold reached ✓</div>
             </div>
-            <CheckCircle2 className="w-5 h-5 text-[#C084FC]" />
+            <CheckCircle2 className="w-5 h-5 text-[#D5FF38]" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Course Header Banner (Matches Screenshot) */}
-      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-br from-[#5B2A82] via-[#481E6A] to-[#2E1047] p-3.5 sm:p-8 text-white shadow-xl border border-[#A478D8]/40">
-        <div className="absolute -right-12 -top-12 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none hidden md:block">
-          <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-purple-400 to-rose-400 blur-2xl" />
-        </div>
-
-        <div className="relative z-10 max-w-3xl space-y-3">
+      {/* ── Course Header Banner with KineticGrid */}
+      <KineticGrid
+        className="rounded-[20px] sm:rounded-[28px] border border-neutral-800 p-4 sm:p-8 text-white shadow-xl"
+        globalColor="default"
+      >
+        <div className="max-w-3xl space-y-2.5 sm:space-y-3">
           {/* Breadcrumb + Back Button */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-pink-200/80">
+          <div className="flex items-center gap-2 text-xs font-semibold text-white/60 min-w-0 overflow-hidden">
             <button
               onClick={onBack}
-              className="hover:text-[#C084FC] transition-colors flex items-center gap-1 cursor-pointer"
+              className="hover:text-[#D5FF38] transition-colors flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap"
             >
-              <ChevronLeft className="w-3.5 h-3.5 text-[#C084FC]" /> My playlists
+              <ChevronLeft className="w-3.5 h-3.5 text-[#D5FF38] shrink-0" /> My playlists
             </button>
-            <span className="text-white/40">&gt;</span>
-            <span className="text-white font-bold">{pl.title}</span>
+            <span className="text-white/40 shrink-0">&gt;</span>
+            <span className="text-white font-bold truncate">{pl.title}</span>
           </div>
 
           {/* Big Course Title */}
-          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold sm:font-black text-white tracking-tight leading-snug sm:leading-tight">
             {pl.title}
           </h1>
 
           {/* Course description */}
-          <p className="text-xs sm:text-sm text-pink-100/90 leading-relaxed font-normal line-clamp-2">
+          <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-normal line-clamp-2">
             {pl.description || `This course will help you quickly get started with ${pl.skill_query || "this topic"}: setting up the environment, project structure, syntax, data types, functions, DOM, and basic debugging.`}
           </p>
 
           {/* Progress & Lessons Info */}
-          <div className="flex items-center gap-6 pt-2 flex-wrap text-xs sm:text-sm font-semibold text-pink-100">
-            <div className="flex items-center gap-3">
-              <div className="w-40 h-2.5 rounded-full bg-black/30 overflow-hidden p-0.5 border border-white/15">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-6 pt-1 text-xs sm:text-sm font-semibold text-white/80">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-28 sm:w-36 h-2 sm:h-2.5 rounded-full bg-black/40 overflow-hidden p-0.5 border border-white/15 shrink-0">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-purple-400 via-pink-400 to-[#C084FC] transition-all duration-500"
+                  className="h-full rounded-full bg-[#D5FF38] shadow-none transition-all duration-500"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="text-purple-200 font-bold">{pct}% complete</span>
+              <span className="text-[#D5FF38] font-bold whitespace-nowrap">{pct}% complete</span>
             </div>
-            <div className="flex items-center gap-1.5 text-white">
-              <BookOpen className="w-4 h-4 text-[#C084FC]" />
+            <div className="flex items-center gap-1.5 text-white/90 whitespace-nowrap">
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D5FF38] shrink-0" />
               <span>{videos.length - watchedCount} videos left</span>
             </div>
           </div>
         </div>
-      </div>
+      </KineticGrid>
 
       {/* ── Main Player Grid (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
@@ -279,11 +278,11 @@ export function FullPlayerView({
         <div className="space-y-6">
           {/* Embedded Video Card */}
           <div className="bg-white dark:bg-[#18191F] rounded-[28px] border border-slate-200/90 dark:border-neutral-800 shadow-sm p-4 space-y-4 overflow-hidden transition-colors">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white line-clamp-1">
+            <div className="flex items-center justify-between gap-3 px-1 sm:px-2">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate min-w-0">
                 {currentVideo ? `${currentIdx + 1}. ${currentVideo.title}` : pl.title}
               </h2>
-              <span className="text-xs font-bold text-slate-600 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800/90 px-3 py-1 rounded-full border border-slate-200/80 dark:border-neutral-700/80">
+              <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-xs font-bold text-slate-600 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800/90 px-2.5 sm:px-3 py-1 rounded-full border border-slate-200/80 dark:border-neutral-700/80">
                 {currentIdx + 1} of {videos.length}
               </span>
             </div>
@@ -306,34 +305,33 @@ export function FullPlayerView({
             </div>
 
             {/* Prev / Next / Complete */}
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 pt-2 flex-wrap sm:flex-nowrap">
               <div className="flex items-center gap-2">
                 <button
                   onClick={goPrev}
                   disabled={currentIdx === 0}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800/90 hover:bg-slate-200 dark:hover:bg-neutral-700 border border-slate-200/80 dark:border-neutral-700/80 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800/90 hover:bg-slate-200 dark:hover:bg-neutral-700 border border-slate-200/80 dark:border-neutral-700/80 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap"
                 >
-                  <ChevronLeft className="w-4 h-4" /> Previous
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Prev
                 </button>
                 <button
                   onClick={goNext}
                   disabled={currentIdx >= videos.length - 1}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#A478D8] hover:bg-[#9364CB] active:bg-[#8352BE] shadow-sm shadow-[#A478D8]/25 disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-black bg-[#D5FF38] hover:bg-[#c4ec32] disabled:opacity-40 transition-all cursor-pointer flex items-center gap-1 shadow-none whitespace-nowrap"
                 >
-                  Next <ChevronRight className="w-4 h-4" />
+                  Next <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
 
               {currentVideo && (
                 <button
                   onClick={() => markMut.mutate({ videoId: currentVideo.videoId, watched: !isCompleted(currentVideo.videoId) })}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isCompleted(currentVideo.videoId)
-                      ? "bg-[#A478D8] text-white border-[#A478D8] shadow-xs"
-                      : "bg-slate-100 dark:bg-neutral-800/90 text-slate-700 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-[#A478D8]/10 dark:hover:bg-purple-950/40 hover:text-[#A478D8] dark:hover:text-[#C084FC]"
-                  }`}
+                  className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${isCompleted(currentVideo.videoId)
+                      ? "bg-[#D5FF38] text-black border-[#D5FF38] font-black shadow-none"
+                      : "bg-slate-100 dark:bg-neutral-800/90 text-slate-700 dark:text-neutral-300 border-slate-200/80 dark:border-neutral-700/80 hover:bg-[#D5FF38]/20 hover:text-slate-900 dark:hover:text-white"
+                    }`}
                 >
-                  <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted(currentVideo.videoId) ? "text-white" : "text-purple-600 dark:text-[#C084FC]"}`} />
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted(currentVideo.videoId) ? "text-black" : "text-slate-500 dark:text-neutral-400"}`} />
                   {isCompleted(currentVideo.videoId) ? "Completed ✓" : "Mark Complete"}
                 </button>
               )}
@@ -343,15 +341,14 @@ export function FullPlayerView({
           {/* Navigation Pills below Video */}
           <div className="bg-white dark:bg-[#18191F] rounded-[28px] border border-slate-200/90 dark:border-neutral-800 p-6 shadow-sm space-y-4 transition-colors">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-neutral-800 pb-4 flex-wrap">
-              {(["Overview", "Notes", "Instructor", "FAQ"] as const).map((tab) => (
+              {(["Overview", "Instructor", "FAQ"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === tab
-                      ? "bg-[#A478D8] text-white shadow-sm border border-[#A478D8]/30"
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${activeTab === tab
+                      ? "bg-[#D5FF38] text-black font-extrabold shadow-none"
                       : "text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800/80"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -368,35 +365,16 @@ export function FullPlayerView({
                 <div className="flex items-center gap-4 pt-3 text-xs text-slate-500 dark:text-neutral-400 flex-wrap">
                   <span>Instructor: <strong className="text-slate-800 dark:text-white">{pl.channel || "Verified Top Educator"}</strong></span>
                   <span>•</span>
-                  <span>Category: <strong className="text-slate-800 dark:text-[#C084FC]">{pl.skill_query || "General"}</strong></span>
+                  <span>Category: <strong className="text-slate-800 dark:text-[#D5FF38]">{pl.skill_query || "General"}</strong></span>
                   <span>•</span>
                   <span>Level: <strong className="text-slate-800 dark:text-white">{pl.level || "All Levels"}</strong></span>
                 </div>
               </div>
             )}
 
-            {activeTab === "Notes" && (
-              <div className="space-y-3 pt-1">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Key Timestamps</h3>
-                <div className="space-y-2">
-                  {[
-                    { time: "2:10", text: "Arrays: map, filter, reduce — short examples." },
-                    { time: "3:10", text: "Functions: declarations and expressions; default parameters." },
-                    { time: "5:14", text: "Primitives vs objects; type conversion." },
-                    { time: "6:12", text: "Variables let/const; when not to use var." },
-                  ].map((n, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-neutral-900/70 border border-slate-100 dark:border-neutral-800">
-                      <span className="text-xs font-bold text-purple-900 dark:text-[#C084FC] bg-purple-100 dark:bg-purple-950/60 border border-purple-200/60 dark:border-purple-800/40 px-2.5 py-0.5 rounded-lg font-mono">{n.time}</span>
-                      <span className="text-xs text-slate-700 dark:text-neutral-200 font-medium">{n.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {activeTab === "Instructor" && (
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-neutral-900/70 border border-slate-100 dark:border-neutral-800 pt-1">
-                <div className="w-12 h-12 rounded-full bg-purple-600 text-white font-black flex items-center justify-center text-base shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-neutral-800 text-[#D5FF38] border border-neutral-700 font-black flex items-center justify-center text-base shadow-none">
                   {pl.channel ? pl.channel.slice(0, 2).toUpperCase() : "IN"}
                 </div>
                 <div>
@@ -421,7 +399,7 @@ export function FullPlayerView({
           <div className="bg-white dark:bg-[#18191F] rounded-[28px] border border-slate-200/90 dark:border-neutral-800 p-5 shadow-sm space-y-4 flex flex-col max-h-[680px] transition-colors">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-3">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Course content</h3>
-              <span className="text-xs font-bold text-slate-500 dark:text-[#C084FC] bg-slate-100 dark:bg-purple-950/40 border border-slate-200 dark:border-purple-800/40 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 px-2.5 py-0.5 rounded-full">
                 {videos.length} Videos
               </span>
             </div>
@@ -437,37 +415,34 @@ export function FullPlayerView({
                     key={v.videoId}
                     data-idx={i}
                     onClick={() => changeLesson(i)}
-                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                      isCurrent
-                        ? "bg-[#e9d5ff] dark:bg-purple-950/70 border-purple-400 dark:border-purple-500 text-black dark:text-white font-bold shadow-xs ring-2 ring-purple-300/50 dark:ring-purple-500/40"
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${isCurrent
+                        ? "bg-slate-100 dark:bg-neutral-800 border-2 border-[#D5FF38] text-slate-900 dark:text-white font-bold shadow-none ring-0"
                         : done
-                        ? "bg-[#f3e8ff] dark:bg-purple-950/25 border-purple-200 dark:border-purple-900/40 text-black dark:text-neutral-300 font-semibold hover:bg-[#ebd5ff] dark:hover:bg-purple-950/40"
-                        : "bg-white dark:bg-neutral-900/50 border-slate-200 dark:border-neutral-800 text-black dark:text-neutral-200 font-medium hover:border-purple-300 dark:hover:border-purple-700/60 hover:bg-[#f3e8ff] dark:hover:bg-neutral-800/60"
-                    }`}
+                          ? "bg-slate-50 dark:bg-neutral-900/90 border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-300 font-semibold hover:bg-slate-100 dark:hover:bg-neutral-800/70"
+                          : "bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 font-medium hover:border-slate-300 dark:hover:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800/50"
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        isCurrent
-                          ? "bg-purple-300 text-purple-950 font-bold border border-purple-400 dark:bg-[#C084FC] dark:text-purple-950 dark:border-purple-300"
-                          : done
-                          ? "bg-purple-200 border border-purple-300 text-purple-900 font-bold dark:bg-purple-900/40 dark:border-purple-700/50 dark:text-purple-300"
-                          : "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700"
-                      }`}>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 transition-colors ${done
+                          ? "bg-[#D5FF38] text-black font-black border border-[#D5FF38]"
+                          : isCurrent
+                            ? "bg-[#D5FF38] text-black font-black border border-[#D5FF38]"
+                            : "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 font-bold"
+                        }`}>
                         {done ? "✓" : i + 1}
                       </span>
-                      <span className={`text-xs leading-snug line-clamp-2 transition-colors ${
-                        isCurrent
-                          ? "text-black dark:text-white font-bold"
+                      <span className={`text-xs leading-snug line-clamp-2 transition-colors ${isCurrent
+                          ? "text-slate-900 dark:text-white font-bold"
                           : done
-                          ? "line-through text-slate-400 dark:text-neutral-400 font-normal decoration-slate-400 dark:decoration-neutral-500"
-                          : "text-black dark:text-neutral-200 font-medium"
-                      }`}>
+                            ? "line-through text-slate-400 dark:text-neutral-400 font-normal decoration-slate-400 dark:decoration-neutral-500"
+                            : "text-slate-800 dark:text-neutral-200 font-medium"
+                        }`}>
                         {v.title}
                       </span>
                     </div>
 
                     {done && !isCurrent && (
-                      <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-[#C084FC] shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#D5FF38] shrink-0" />
                     )}
                   </button>
                 );
