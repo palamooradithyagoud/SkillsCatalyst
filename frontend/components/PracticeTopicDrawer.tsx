@@ -356,13 +356,13 @@ export default function PracticeTopicDrawer({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="relative w-full max-w-4xl xl:max-w-5xl bg-white dark:bg-[#18191F] border-l border-slate-200 dark:border-neutral-800 text-slate-900 dark:text-white shadow-2xl h-full flex flex-col z-[10001] overflow-hidden transition-colors"
+          className="relative w-full max-w-4xl xl:max-w-5xl bg-white dark:bg-[#18191F] border-l border-slate-200 dark:border-[#24271F] text-slate-900 dark:text-white shadow-2xl h-full flex flex-col z-[10001] overflow-hidden transition-colors"
         >
-          <div className="p-4 sm:p-6 pb-4 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-[#14151C] flex items-center justify-between gap-3 shrink-0">
+          <div className="p-4 sm:p-6 pb-4 border-b border-slate-100 dark:border-[#24271F] bg-slate-50 dark:bg-[#121318] flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2.5">
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-neutral-200 rounded-xl text-xs font-black transition-colors flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                className="px-3 py-1.5 bg-slate-100 dark:bg-[#18191F] hover:bg-slate-200 dark:hover:bg-[#24271F] border border-slate-200 dark:border-[#24271F] text-slate-800 dark:text-neutral-200 rounded-xl text-xs font-black transition-colors flex items-center gap-1 cursor-pointer shadow-none active:scale-95"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-neutral-300" />
                 <span>Back</span>
@@ -371,12 +371,12 @@ export default function PracticeTopicDrawer({
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-purple-800 dark:text-[#C084FC] bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 px-3.5 py-1 rounded-full">
-                Solved: <span className="font-extrabold">({solvedCount} / {data.problems.length})</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-[#D5FF38] bg-slate-100 dark:bg-[#18191F] border border-slate-200 dark:border-[#24271F] px-3.5 py-1 rounded-full">
+                Solved: <span className="font-extrabold text-slate-900 dark:text-white">({solvedCount} / {data.problems.length})</span>
               </span>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 transition-colors cursor-pointer active:scale-95"
+                className="p-2 rounded-xl text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-[#18191F] border border-slate-200/80 dark:border-[#24271F] transition-colors cursor-pointer active:scale-95"
                 aria-label="Close drawer"
               >
                 <X className="w-5 h-5" />
@@ -395,16 +395,16 @@ export default function PracticeTopicDrawer({
                 </p>
               </div>
 
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-neutral-900/60 border border-slate-200/80 dark:border-neutral-800 space-y-2">
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-[#24271F] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-[#C084FC]" /> Pattern Definition
+                    <BookOpen className="w-3.5 h-3.5 text-slate-700 dark:text-[#D5FF38]" /> Pattern Definition
                   </span>
                   <div className="flex items-center gap-2 text-xs font-mono font-bold">
-                    <span className="px-2.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-[#C084FC] border border-purple-200 dark:border-purple-800/60">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18191F] text-slate-800 dark:text-neutral-200 border border-slate-200 dark:border-[#24271F]">
                       Time: {data.timeComplexity}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-[#18191F] text-slate-800 dark:text-neutral-200 border border-slate-200 dark:border-[#24271F]">
                       Space: {data.spaceComplexity}
                     </span>
                   </div>
@@ -423,9 +423,9 @@ export default function PracticeTopicDrawer({
                     {data.prerequisites.map((pr: any, pIdx: number) => (
                       <div
                         key={pIdx}
-                        className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-white flex items-center gap-2"
+                        className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] text-xs font-semibold text-slate-800 dark:text-white flex items-center gap-2"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-[#C084FC]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#D5FF38]" />
                         <div>
                           <div className="font-bold text-slate-900 dark:text-white leading-none">{pr.title}</div>
                           <div className="text-[10px] text-slate-500 dark:text-neutral-400 font-medium mt-0.5">{pr.subtitle}</div>
@@ -438,19 +438,19 @@ export default function PracticeTopicDrawer({
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#24271F] pb-3">
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <span>Curated Practice Problems</span>
-                  <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-[#C084FC] border border-purple-200 dark:border-purple-800/60">
+                  <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-[#24271F]">
                     {data.problems.length} Questions
                   </span>
                 </h3>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-2xs">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#24271F] shadow-none">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-100 dark:bg-neutral-900/80 border-b border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 font-extrabold uppercase text-[10px] tracking-wider">
+                    <tr className="bg-slate-100 dark:bg-[#121318] border-b border-slate-200 dark:border-[#24271F] text-slate-600 dark:text-neutral-400 font-extrabold uppercase text-[10px] tracking-wider">
                       <th className="p-3.5 pl-4">#</th>
                       <th className="p-3.5">Title</th>
                       <th className="p-3.5">Difficulty</th>
@@ -458,51 +458,54 @@ export default function PracticeTopicDrawer({
                       <th className="p-3.5 pr-4 text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-800 bg-white dark:bg-[#18191F]">
+                  <tbody className="divide-y divide-slate-100 dark:divide-[#24271F] bg-white dark:bg-[#18191F]">
                     {data.problems.map((p: any) => {
                       const isDone = !!solvedSet[p.id];
-                      const diffColor =
-                        p.difficulty === "Easy"
-                          ? "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-[#C084FC] border-purple-200 dark:border-purple-800/60"
-                          : p.difficulty === "Medium"
-                          ? "bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/60"
-                          : "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800/60";
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-neutral-800/50 transition-colors">
+                        <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-[#121318]/60 transition-colors">
                           <td className="p-3.5 pl-4 font-mono font-bold text-slate-400 dark:text-neutral-500">{p.number}</td>
                           <td className="p-3.5 font-bold text-slate-900 dark:text-white">
                             <a
                               href={p.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="hover:text-purple-700 dark:hover:text-[#C084FC] hover:underline flex items-center gap-1.5"
+                              className="hover:text-black dark:hover:text-[#D5FF38] hover:underline flex items-center gap-1.5"
                             >
                               <span>{p.title}</span>
                               <ExternalLink className="w-3 h-3 text-slate-400 dark:text-neutral-500" />
                             </a>
                           </td>
                           <td className="p-3.5">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${diffColor}`}>
+                            <span
+                              className={`text-xs font-bold ${
+                                p.difficulty === "Easy"
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : p.difficulty === "Medium"
+                                  ? "text-amber-600 dark:text-amber-400"
+                                  : "text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
                               {p.difficulty}
                             </span>
                           </td>
                           <td className="p-3.5">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 border border-slate-200/80 dark:border-neutral-700/80 shadow-2xs select-none">
-                              <Clock className="w-3 h-3 text-slate-400" />
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 dark:bg-[#121318] text-slate-500 dark:text-neutral-400 border border-slate-200/80 dark:border-[#24271F] shadow-none select-none">
+                              <Clock className="w-3 h-3 text-slate-400 dark:text-neutral-400" />
                               <span>Upcoming</span>
                             </span>
                           </td>
                           <td className="p-3.5 pr-4 text-right">
                             <button
                               onClick={() => toggleSolved(p)}
+                              aria-label={isDone ? "Mark unsolved" : "Mark solved"}
                               className={`w-6 h-6 rounded-lg border inline-flex items-center justify-center transition-all cursor-pointer ${
                                 isDone
-                                  ? "bg-purple-600 dark:bg-purple-600 border-purple-600 dark:border-purple-500 text-white shadow-2xs"
-                                  : "border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-transparent hover:border-purple-500"
+                                  ? "bg-[#D5FF38] border-[#D5FF38] text-black font-black shadow-none"
+                                  : "border-slate-300 dark:border-[#24271F] bg-white dark:bg-[#121318] text-transparent hover:border-[#D5FF38]"
                               }`}
                             >
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              {isDone && <Check className="w-3.5 h-3.5 stroke-[3] text-black" />}
                             </button>
                           </td>
                         </tr>
