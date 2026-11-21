@@ -2,9 +2,40 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Globe, CheckCircle, Database, Search } from "lucide-react";
+import { Globe, Search } from "lucide-react";
 import { Playlist, SearchResult } from "@/lib/api";
 import { PlaylistCard } from "./PlaylistCard";
+
+export function PlaylistCardSkeleton() {
+  return (
+    <div className="relative w-full h-full min-h-[220px] sm:min-h-[235px] rounded-[22px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 p-3.5 sm:p-5 flex flex-col justify-between overflow-hidden animate-pulse select-none">
+      <div>
+        {/* Top Header: Rank Circle & Channel Name Skeleton */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-200/80 dark:bg-neutral-800 shrink-0" />
+          <div className="h-3.5 w-24 sm:w-32 rounded-md bg-slate-200/80 dark:bg-neutral-800" />
+        </div>
+
+        {/* Video Title Lines Skeleton */}
+        <div className="space-y-2 mt-2">
+          <div className="h-4 sm:h-4.5 w-[92%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
+          <div className="h-4 sm:h-4.5 w-[65%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
+        </div>
+
+        {/* Language Badge Skeleton */}
+        <div className="mt-3">
+          <div className="h-5 w-16 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
+        </div>
+      </div>
+
+      {/* Footer: Watch & Save Buttons Skeleton */}
+      <div className="flex items-center gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-neutral-800/80">
+        <div className="flex-1 h-8 sm:h-9 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
+        <div className="flex-1 h-8 sm:h-9 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
+      </div>
+    </div>
+  );
+}
 
 export function SearchResults({
   searching,
@@ -41,13 +72,11 @@ export function SearchResults({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="flex flex-col items-center py-24 gap-4"
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
         >
-          <Loader2 className="w-10 h-10 animate-spin text-[#A855F7] dark:text-[#C084FC]" />
-          <div className="text-slate-600 dark:text-neutral-400 text-sm font-medium">
-            Searching curated playlists &amp; YouTube API for{" "}
-            <span className="text-slate-900 dark:text-white font-bold">"{query}"</span>...
-          </div>
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <PlaylistCardSkeleton key={`skeleton-${idx}`} />
+          ))}
         </motion.div>
       )}
 
@@ -77,7 +106,7 @@ export function SearchResults({
           <div className="flex items-center gap-3 mb-5">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               {results.length} Playlist{results.length !== 1 ? "s" : ""} for
-              <span className="text-[#A855F7] dark:text-[#C084FC] font-extrabold ml-2">"{searchTerm}"</span>
+              <span className="text-[#D5FF38] font-extrabold ml-2">"{searchTerm}"</span>
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -105,8 +134,8 @@ export function SearchResults({
           exit={{ opacity: 0 }}
           className="flex flex-col items-center py-20 gap-3 text-center"
         >
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-[#18191F] border border-purple-100 dark:border-neutral-800 flex items-center justify-center mb-1 shadow-sm">
-            <Search className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 flex items-center justify-center mb-1 shadow-none">
+            <Search className="w-8 h-8 text-[#D5FF38]" />
           </div>
           <div className="text-slate-800 dark:text-white font-bold text-base sm:text-lg">
             Search

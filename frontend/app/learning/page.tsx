@@ -261,7 +261,7 @@ export default function LearningPage() {
         >
           <MagnifierIcon
             size={18}
-            className={activeCard === "explore" ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-white/80"}
+            className={activeCard === "explore" ? "text-[#D5FF38]" : "text-slate-400 dark:text-white/80"}
           />
           <span className={activeCard === "explore" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
             Explore Skills
@@ -269,7 +269,7 @@ export default function LearningPage() {
           {activeCard === "explore" && (
             <motion.div
               layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 rounded-full"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-[#D5FF38] rounded-full shadow-none"
             />
           )}
         </button>
@@ -283,7 +283,7 @@ export default function LearningPage() {
           }`}
         >
           <Bookmark
-            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-white/80"}`}
+            className={`w-[18px] h-[18px] ${activeCard === "saved" ? "text-[#D5FF38]" : "text-slate-400 dark:text-white/80"}`}
           />
           <span className={activeCard === "saved" ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-white/80 hover:dark:text-white font-bold"}>
             Saved Videos
@@ -292,7 +292,7 @@ export default function LearningPage() {
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-extrabold transition-colors ${
                 activeCard === "saved"
-                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-white"
+                  ? "bg-[#D5FF38] text-black"
                   : "bg-slate-100 text-slate-500 dark:bg-neutral-800 dark:text-white"
               }`}
             >
@@ -302,7 +302,7 @@ export default function LearningPage() {
           {activeCard === "saved" && (
             <motion.div
               layoutId="learningActiveTabIndicator"
-              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 rounded-full"
+              className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-[#D5FF38] rounded-full shadow-none"
             />
           )}
         </button>
@@ -325,7 +325,7 @@ export default function LearningPage() {
                 {/* 1. Full-width Search Bar */}
                 <div className="relative w-full">
                   <Search
-                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#A478D8] dark:text-[#C4A3F0] pointer-events-none"
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500 pointer-events-none"
                   />
                   <input
                     type="text"
@@ -336,7 +336,7 @@ export default function LearningPage() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#A478D8] dark:focus:border-[#C4A3F0] focus:ring-2 focus:ring-[#A478D8]/20 dark:focus:ring-[#C4A3F0]/20 focus:outline-none transition-all shadow-2xs ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38] focus:outline-none transition-all shadow-none ${
                       queryError ? "border-rose-500" : ""
                     }`}
                   />
@@ -352,16 +352,16 @@ export default function LearningPage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSearch()}
                     disabled={searching || !query.trim()}
-                    className="flex-1 sm:flex-initial sm:px-8 py-3 sm:py-3.5 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 whitespace-nowrap bg-[#A478D8] hover:bg-[#9364CB] active:bg-[#8352BE] shadow-md shadow-[#A478D8]/25 transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 sm:flex-initial sm:px-8 py-3 sm:py-3.5 rounded-2xl text-black font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 whitespace-nowrap bg-[#D5FF38] hover:bg-[#cbf526] active:bg-[#bfe820] shadow-none transition-all cursor-pointer disabled:opacity-50"
                   >
                     {searching ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-white" /> Searching...
+                        <Loader2 className="w-4 h-4 animate-spin text-black" /> Searching...
                       </>
                     ) : (
                       <>
                         <span>Find Resources</span>
-                        <ArrowRight className="w-4 h-4 text-white" />
+                        <ArrowRight className="w-4 h-4 text-black stroke-[2.5]" />
                       </>
                     )}
                   </motion.button>

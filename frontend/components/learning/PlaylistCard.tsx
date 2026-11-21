@@ -93,7 +93,7 @@ export function PlaylistCard({
         >
           <path
             d={cardPath}
-            className="fill-white dark:fill-[#18191F] stroke-slate-200/90 dark:stroke-neutral-800 group-hover:stroke-purple-300/80 dark:group-hover:stroke-purple-500/50 transition-colors"
+            className="fill-white dark:fill-[#18191F] stroke-slate-200/90 dark:stroke-neutral-800 group-hover:stroke-[#D5FF38]/60 transition-colors"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
@@ -121,7 +121,7 @@ export function PlaylistCard({
             {/* 1. Channel Name in the Top Left Side Corner (beside the #rank cutout) */}
             <div className="flex items-center h-8 sm:h-9 pl-12 sm:pl-14 pr-1 mb-2">
               <p
-                className="text-xs sm:text-sm font-bold text-purple-600 dark:text-[#C4A3F0] truncate leading-tight"
+                className="text-xs sm:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-[#D5FF38] transition-colors truncate leading-tight"
                 title={pl.channel}
               >
                 {pl.channel}
@@ -129,13 +129,13 @@ export function PlaylistCard({
             </div>
 
             {/* 2. Video Title */}
-            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-[#C4A3F0] transition-colors leading-snug line-clamp-2 mt-0.5">
+            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#D5FF38] transition-colors leading-snug line-clamp-2 mt-0.5">
               {pl.title}
             </h3>
 
             {/* 3. Downside the Title: Language Badge */}
             <div className="flex items-center gap-1.5 mt-2.5 sm:mt-3">
-              <span className="text-[10px] sm:text-xs font-bold text-violet-700 dark:text-[#C4A3F0] bg-violet-50 dark:bg-purple-950/60 border border-violet-200/90 dark:border-purple-800/60 px-2.5 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/80 px-2.5 py-0.5 rounded-full shadow-none">
                 {displayLanguage}
               </span>
             </div>
@@ -147,9 +147,9 @@ export function PlaylistCard({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => onWatch(pl)}
-              className="flex-1 py-2 sm:py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-[#A478D8] hover:bg-[#9364CB] active:bg-[#8352BE] shadow-md shadow-[#A478D8]/25 transition-all cursor-pointer select-none"
+              className="flex-1 py-2 sm:py-2.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-black text-black bg-[#D5FF38] hover:bg-[#cbf526] active:bg-[#bfe820] shadow-none transition-all cursor-pointer select-none"
             >
-              <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white" />
+              <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black text-black" />
               <span>Watch</span>
             </motion.button>
 
@@ -160,8 +160,8 @@ export function PlaylistCard({
                 onClick={() => (isSaved ? onUnsave(pl.id) : onSave(pl))}
                 className={`flex-1 py-2 sm:py-2.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none ${
                   isSaved
-                    ? "text-purple-700 dark:text-[#C4A3F0] border-purple-300 dark:border-purple-600/60 bg-purple-50 dark:bg-purple-950/60 shadow-xs"
-                    : "text-slate-700 dark:text-neutral-200 border-slate-200/90 dark:border-neutral-700/80 bg-slate-100/80 dark:bg-neutral-800/80 hover:bg-slate-200/80 dark:hover:bg-neutral-700/80 hover:text-slate-900 dark:hover:text-white shadow-xs"
+                    ? "text-black bg-[#D5FF38] border-[#D5FF38] font-black shadow-none"
+                    : "text-slate-700 dark:text-neutral-200 border-slate-200/90 dark:border-neutral-700/80 bg-slate-100/80 dark:bg-neutral-800/80 hover:bg-slate-200/80 dark:hover:bg-neutral-700/80 hover:text-slate-900 dark:hover:text-white shadow-none"
                 }`}
               >
                 {isSaved ? "Saved ✓" : "Save"}
