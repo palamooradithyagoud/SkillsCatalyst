@@ -17,12 +17,12 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.05 }}
       onClick={onSelect}
-      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_36px_rgba(234,88,12,0.18)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none relative h-full"
+      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none relative h-full"
     >
       {/* ─────────────────────────────────────────────────────────────
           TOP BANNER / THUMBNAIL (USING USER'S SHRADHA DIDI IMAGE)
           ───────────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-[95px] xs:h-[115px] sm:h-[195px] bg-[#120502] overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-[95px] xs:h-[115px] sm:h-[195px] bg-[#10110E] overflow-hidden flex items-center justify-center">
         {/* Ambient blurred glow from the image itself to fill banner borders seamlessly */}
         <Image
           src="/images/practice/shradha_dsa_30_days.jpg"
@@ -53,7 +53,7 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
         <div>
           {/* Title */}
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-slate-900 dark:text-white font-extrabold text-[13px] sm:text-[18px] tracking-tight group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors leading-snug line-clamp-2">
+            <h3 className="text-slate-900 dark:text-white font-extrabold text-[13px] sm:text-[18px] tracking-tight leading-snug line-clamp-2">
               Shradha Didi&apos;s 30 Days Sheet
             </h3>
           </div>
@@ -81,7 +81,7 @@ export function ShradhaDSASheetCard({ onSelect }: ShradhaDSASheetCardProps) {
 
         {/* Problems Count with Bookmark/Book Icon */}
         <div className="flex items-center gap-1 sm:gap-1.5 text-slate-700 dark:text-neutral-300 text-[10px] sm:text-[13px] font-semibold mt-2 sm:mt-3.5 pt-1.5 sm:pt-2.5 border-t border-slate-100 dark:border-neutral-800">
-          <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500 shrink-0" />
+          <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-neutral-400 shrink-0" />
           <span className="text-slate-900 dark:text-white font-bold">{TOTAL_SHRADHA_PROBLEMS} Problems</span>
           <span className="text-slate-300 dark:text-neutral-600 hidden sm:inline">•</span>
           <span className="text-slate-500 dark:text-neutral-400 font-medium hidden sm:inline">30 Days</span>

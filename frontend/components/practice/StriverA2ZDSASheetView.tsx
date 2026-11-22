@@ -494,7 +494,7 @@ export function StriverA2ZDSASheetView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search problems by title or topic..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 focus:border-[#D5FF38] transition-all"
           />
         </div>
 
@@ -503,7 +503,7 @@ export function StriverA2ZDSASheetView() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 cursor-pointer"
           >
             <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
             <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
@@ -514,13 +514,13 @@ export function StriverA2ZDSASheetView() {
           <div className="flex items-center gap-1 border-l border-slate-200 dark:border-neutral-700 pl-2">
             <button
               onClick={expandAll}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-[#C084FC] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-[#D5FF38] dark:hover:text-[#D5FF38] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Expand All
             </button>
             <button
               onClick={collapseAll}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-[#C084FC] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-[#D5FF38] dark:hover:text-[#D5FF38] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Collapse
             </button>
@@ -547,7 +547,7 @@ export function StriverA2ZDSASheetView() {
               >
                 {/* Left: Clean Topic Title */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-slate-900 dark:text-white font-bold text-[13px] sm:text-[15px] tracking-tight truncate group-hover:text-purple-600 dark:group-hover:text-[#C084FC] transition-colors">
+                  <h3 className="text-slate-900 dark:text-white font-bold text-[13px] sm:text-[15px] tracking-tight truncate group-hover:text-[#D5FF38] dark:group-hover:text-[#D5FF38] transition-colors">
                     {cleanCategoryTitle(category.title)}
                   </h3>
                 </div>
@@ -600,7 +600,7 @@ export function StriverA2ZDSASheetView() {
                           <div
                             key={problem.id}
                             className={`p-3 sm:px-5 sm:py-3.5 transition-colors flex items-center justify-between gap-3 ${
-                              isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
+                              isSolved ? "bg-slate-100/60 dark:bg-[#121318]" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
                             }`}
                           >
                             {/* Checkbox + Bookmark + Q# + Title */}
@@ -610,11 +610,11 @@ export function StriverA2ZDSASheetView() {
                                 aria-label={isSolved ? "Mark as unsolved" : "Mark as solved"}
                                 className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 cursor-pointer ${
                                   isSolved
-                                    ? "bg-purple-600 border-purple-600 text-white shadow-xs"
-                                    : "border-slate-300 dark:border-neutral-700 hover:border-purple-500 dark:hover:border-purple-500 bg-white dark:bg-[#121318]"
+                                    ? "bg-[#D5FF38] border-[#D5FF38] text-black shadow-xs font-black"
+                                    : "border-slate-300 dark:border-neutral-700 hover:border-[#D5FF38] dark:hover:border-[#D5FF38] bg-white dark:bg-[#121318]"
                                 }`}
                               >
-                                {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                {isSolved && <Check className="w-3.5 h-3.5 stroke-[3.5] text-black" />}
                               </button>
 
                               <button
@@ -646,16 +646,14 @@ export function StriverA2ZDSASheetView() {
                               {hasVideo ? (
                                 <button
                                   onClick={() => setActiveVideoProblem(problem)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200/80 dark:border-red-800/60 text-red-700 dark:text-red-300 font-bold text-xs transition-all shadow-2xs hover:scale-102 cursor-pointer group"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#16171D] hover:bg-slate-200 dark:hover:bg-[#20222A] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 font-bold text-xs transition-all cursor-pointer group"
                                   title={
                                     startTimestamp !== null
                                       ? `Watch solution starting at ${formatTimestampBadge(startTimestamp)}`
                                       : "Watch Video Solution"
                                   }
                                 >
-                                  <div className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                    <Play className="w-2.5 h-2.5 fill-white ml-0.5" />
-                                  </div>
+                                  <Play className="w-3 h-3 fill-red-500 text-red-500 shrink-0 group-hover:scale-110 transition-transform" />
                                   <span className="text-[11px]">
                                     {startTimestamp !== null ? formatTimestampBadge(startTimestamp) : "Watch"}
                                   </span>

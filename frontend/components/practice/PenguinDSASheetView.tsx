@@ -193,7 +193,7 @@ export function PenguinDSASheetView() {
       case "interviewbit":
         return "bg-blue-50 text-blue-800 border-blue-200/80";
       case "spoj":
-        return "bg-purple-50 text-purple-800 border-purple-200/80";
+        return "bg-slate-100 text-slate-800 border-slate-200";
       case "hackerrank":
         return "bg-teal-50 text-teal-800 border-teal-200/80";
       case "hackerearth":
@@ -231,7 +231,7 @@ export function PenguinDSASheetView() {
           left: 8%;
           width: 380px;
           height: 380px;
-          background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+          background: radial-gradient(circle, #0ea5e9 0%, rgba(14, 165, 233, 0) 70%);
           animation-duration: 10s;
         }
         .aurora-blob:nth-child(2) {
@@ -248,7 +248,7 @@ export function PenguinDSASheetView() {
           right: 8%;
           width: 350px;
           height: 350px;
-          background: radial-gradient(circle, #a855f7 0%, rgba(168, 85, 247, 0) 70%);
+          background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
           animation-duration: 12s;
           animation-delay: -6s;
         }
@@ -265,7 +265,7 @@ export function PenguinDSASheetView() {
 
       <div
         ref={heroCardRef}
-        className="hero-container relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0d0722] via-[#140b33] to-[#240c4d] border border-purple-500/30 p-6 sm:p-8 md:p-10 text-white shadow-2xl min-h-[290px] flex flex-col justify-between"
+        className="hero-container relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0B0D13] via-[#10121A] to-[#151822] border border-neutral-800 p-6 sm:p-8 md:p-10 text-white shadow-2xl min-h-[290px] flex flex-col justify-between"
       >
         {/* Custom Smooth Physics Cursor Scoped to this Card */}
         <SmoothCursor containerRef={heroCardRef} />
@@ -281,7 +281,7 @@ export function PenguinDSASheetView() {
           {/* Left Column: Big Bold Title (Text removed as requested) */}
           <div className="space-y-1.5 max-w-sm">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-none drop-shadow-md">
-              Penguin&apos;s <span className="text-[#8B5CF6]">DSA Sheet</span>
+              Penguin&apos;s <span className="text-[#D5FF38]">DSA Sheet</span>
             </h1>
           </div>
 
@@ -293,7 +293,7 @@ export function PenguinDSASheetView() {
           {/* ─────────────────────────────────────────────────────────
               Right Column: "YOUR PROGRESS" TRACKER (MATCHING EXACTLY)
               ───────────────────────────────────────────────────────── */}
-          <div className="bg-[#140827]/90 border border-purple-500/25 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full lg:w-[340px] shrink-0">
+          <div className="bg-[#121318]/90 border border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full lg:w-[340px] shrink-0">
 
             {/* Header with Divider Line */}
             <div className="text-[11px] font-black text-slate-300 tracking-wider uppercase pb-2.5 border-b border-white/10">
@@ -329,8 +329,8 @@ export function PenguinDSASheetView() {
                   />
                   <defs>
                     <linearGradient id="ringGradExact" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#A855F7" />
-                      <stop offset="100%" stopColor="#7C3AED" />
+                      <stop offset="0%" stopColor="#D5FF38" />
+                      <stop offset="100%" stopColor="#10B981" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -395,7 +395,7 @@ export function PenguinDSASheetView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search problems by name or platform..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all bg-slate-50/50 dark:bg-[#121318]"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 focus:border-[#D5FF38] transition-all bg-slate-50/50 dark:bg-[#121318]"
             />
             {searchQuery && (
               <button
@@ -412,7 +412,7 @@ export function PenguinDSASheetView() {
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 cursor-pointer"
             >
               <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Difficulties</option>
               <option value="Easy" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Easy</option>
@@ -424,7 +424,7 @@ export function PenguinDSASheetView() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-white bg-white dark:bg-[#121318] hover:bg-slate-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 cursor-pointer"
             >
               <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
               <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
@@ -465,7 +465,7 @@ export function PenguinDSASheetView() {
                 setSelectedDifficulty("All");
                 setSelectedStatus("All");
               }}
-              className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#D5FF38] text-black font-black text-xs hover:bg-[#c4ec30] transition-colors"
             >
               Reset Filters
             </button>
@@ -486,14 +486,14 @@ export function PenguinDSASheetView() {
                   className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left hover:bg-slate-50/70 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <span className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 text-purple-700 dark:text-[#C084FC] font-black text-xs flex items-center justify-center shrink-0">
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 font-black text-xs flex items-center justify-center shrink-0">
                       {catIdx + 1}
                     </span>
                     <div>
                       <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <span>{cat.title}</span>
                         {cat.solvedCount === cat.total && cat.total > 0 && (
-                          <CheckCircle2 className="w-4 h-4 text-[#C084FC] fill-purple-950/60 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-[#D5FF38] fill-neutral-900 shrink-0" />
                         )}
                       </h2>
                     </div>
@@ -507,7 +507,7 @@ export function PenguinDSASheetView() {
                       </span>
                       <div className="w-16 sm:w-24 h-1.5 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden mt-1">
                         <div
-                          className="h-full bg-purple-600 rounded-full transition-all"
+                          className="h-full bg-[#D5FF38] rounded-full transition-all"
                           style={{ width: `${catProgress}%` }}
                         />
                       </div>
@@ -537,7 +537,7 @@ export function PenguinDSASheetView() {
                             <div
                               key={prob.id}
                               className={`px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 transition-colors ${
-                                isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/40 dark:hover:bg-neutral-800/40"
+                                isSolved ? "bg-slate-100/60 dark:bg-[#121318]" : "hover:bg-slate-50/40 dark:hover:bg-neutral-800/40"
                               }`}
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -547,12 +547,12 @@ export function PenguinDSASheetView() {
                                   onClick={() => toggleSolved(prob.id)}
                                   className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                                     isSolved
-                                      ? "bg-purple-600 border-purple-600 text-white shadow-sm"
-                                      : "border-slate-300 dark:border-neutral-700 hover:border-purple-400 dark:hover:border-purple-400 bg-white dark:bg-[#121318]"
+                                      ? "bg-[#D5FF38] border-[#D5FF38] text-black shadow-sm font-black"
+                                      : "border-slate-300 dark:border-neutral-700 hover:border-[#D5FF38] dark:hover:border-[#D5FF38] bg-white dark:bg-[#121318]"
                                   }`}
                                   title={isSolved ? "Mark as unsolved" : "Mark as solved"}
                                 >
-                                  {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  {isSolved && <Check className="w-3.5 h-3.5 stroke-[3.5] text-black" />}
                                 </button>
 
                                 {/* Problem Title with Strikethrough when solved */}
@@ -560,7 +560,7 @@ export function PenguinDSASheetView() {
                                   href={prob.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`text-xs sm:text-sm font-semibold tracking-tight truncate transition-colors hover:text-purple-600 dark:hover:text-[#C084FC] ${
+                                  className={`text-xs sm:text-sm font-semibold tracking-tight truncate transition-colors hover:text-[#D5FF38] dark:hover:text-[#D5FF38] ${
                                     isSolved
                                       ? "line-through text-slate-400 dark:text-neutral-500 font-normal"
                                       : "text-slate-800 dark:text-white font-bold"
@@ -595,7 +595,7 @@ export function PenguinDSASheetView() {
                                   href={prob.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#D5FF38] hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
                                   title="Open Problem"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />

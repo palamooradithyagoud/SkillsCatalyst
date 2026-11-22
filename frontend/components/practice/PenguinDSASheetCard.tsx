@@ -16,7 +16,7 @@ export function PenguinDSASheetCard({ onSelect }: PenguinDSASheetCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       onClick={onSelect}
-      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(168,85,247,0.18)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none h-full"
+      className="w-full sm:max-w-[335px] rounded-2xl sm:rounded-[20px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col group select-none h-full"
     >
       {/* ─────────────────────────────────────────────────────────────
           TOP BANNER / THUMBNAIL (IDENTICAL PROPORTIONS TO REFERENCE)
@@ -341,7 +341,7 @@ export function PenguinDSASheetCard({ onSelect }: PenguinDSASheetCardProps) {
       <div className="p-2.5 sm:p-5 pt-2 sm:pt-4 bg-white dark:bg-[#18191F] flex flex-col justify-between flex-1 text-left">
         <div>
           {/* Title */}
-          <h3 className="text-slate-900 dark:text-white font-extrabold text-[13px] sm:text-[18px] tracking-tight group-hover:text-purple-600 dark:group-hover:text-[#C084FC] transition-colors leading-snug line-clamp-2">
+          <h3 className="text-slate-900 dark:text-white font-extrabold text-[13px] sm:text-[18px] tracking-tight leading-snug line-clamp-2">
             Penguin&apos;s A2Z DSA Sheet
           </h3>
 

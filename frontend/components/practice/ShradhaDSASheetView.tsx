@@ -409,7 +409,7 @@ export function ShradhaDSASheetView() {
 
       <div
         ref={heroCardRef}
-        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#160602] via-[#240a04] to-[#140502] border border-orange-500/30 p-6 sm:p-8 md:p-9 text-white shadow-2xl min-h-[300px] flex flex-col justify-between"
+        className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0B0D13] via-[#10121A] to-[#151822] border border-neutral-800 p-6 sm:p-8 md:p-9 text-white shadow-2xl min-h-[300px] flex flex-col justify-between"
       >
         {/* Custom Physics Cursor */}
         <SmoothCursor containerRef={heroCardRef} />
@@ -424,7 +424,7 @@ export function ShradhaDSASheetView() {
         {/* Interactive Cursor Grid on Backside */}
         <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl pointer-events-auto">
           <CursorGrid
-            color="#FB923C"
+            color="#A7B77A"
             cellSize={48}
             gridOpacity={0.16}
             maxOpacity={0.75}
@@ -455,11 +455,11 @@ export function ShradhaDSASheetView() {
             </div>
 
             {/* "YOUR PROGRESS" TRACKER (on Left Side) */}
-            <div className="bg-[#1c0a04]/90 border border-orange-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[340px]">
+            <div className="bg-[#121318]/90 border border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md w-full sm:max-w-[340px]">
               {/* Header */}
-              <div className="text-[11px] font-black text-orange-300 tracking-wider uppercase pb-2.5 border-b border-white/10 flex items-center justify-between">
+              <div className="text-[11px] font-black text-slate-300 tracking-wider uppercase pb-2.5 border-b border-white/10 flex items-center justify-between">
                 <span>YOUR PROGRESS</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950 text-orange-300 font-bold border border-orange-500/30">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-[#18191F] text-slate-700 dark:text-neutral-200 font-bold border border-slate-200 dark:border-neutral-700">
                   {totalSolved} / {TOTAL_SHRADHA_PROBLEMS}
                 </span>
               </div>
@@ -536,7 +536,7 @@ export function ShradhaDSASheetView() {
 
           {/* Right Column: Shradha Didi Image (At Right Side) */}
           <div className="shrink-0 flex items-center justify-center pointer-events-auto w-full lg:w-auto">
-            <div className="relative w-52 h-52 sm:w-60 sm:h-60 md:w-68 md:h-68 rounded-2xl overflow-hidden border-2 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.35)] hover:shadow-[0_0_60px_rgba(249,115,22,0.55)] transition-all duration-300 group">
+            <div className="relative w-52 h-52 sm:w-60 sm:h-60 md:w-68 md:h-68 rounded-2xl overflow-hidden border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-all duration-300 group">
               <Image
                 src="/images/practice/shradha_dsa_30_days.jpg"
                 alt="Shradha Khapra DSA 30 Days"
@@ -566,7 +566,7 @@ export function ShradhaDSASheetView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search problems by name, company (Google, Microsoft), or platform..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 focus:border-[#D5FF38] transition-all"
           />
         </div>
 
@@ -576,7 +576,7 @@ export function ShradhaDSASheetView() {
           <select
             value={selectedDifficulty}
             onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 cursor-pointer"
           >
             <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Difficulties</option>
             <option value="Easy" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Easy</option>
@@ -588,7 +588,7 @@ export function ShradhaDSASheetView() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as "All" | "Unsolved" | "Solved")}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
+            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#D5FF38]/20 cursor-pointer"
           >
             <option value="All" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">All Status</option>
             <option value="Unsolved" className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white">Unsolved</option>
@@ -599,13 +599,13 @@ export function ShradhaDSASheetView() {
           <div className="flex items-center gap-1 border-l border-slate-200 dark:border-neutral-700 pl-2">
             <button
               onClick={expandAll}
-              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-orange-500 dark:hover:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-neutral-800 transition-colors"
+              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-[#D5FF38] dark:hover:text-[#D5FF38] rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
             >
               Expand All
             </button>
             <button
               onClick={collapseAll}
-              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-orange-500 dark:hover:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-neutral-800 transition-colors"
+              className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-neutral-300 hover:text-[#D5FF38] dark:hover:text-[#D5FF38] rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
             >
               Collapse
             </button>
@@ -627,7 +627,7 @@ export function ShradhaDSASheetView() {
                 setSelectedStatus("All");
                 setSelectedPhase("All");
               }}
-              className="mt-3 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-colors"
+              className="mt-3 px-4 py-2 rounded-xl bg-[#D5FF38] text-black font-black text-xs hover:bg-[#c4ec30] transition-colors"
             >
               Clear All Filters
             </button>
@@ -652,8 +652,8 @@ export function ShradhaDSASheetView() {
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                     {/* Day Range Pill */}
-                    <div className="px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800/60 text-orange-700 dark:text-orange-300 font-black text-xs shrink-0 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                    <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-neutral-200 font-black text-xs shrink-0 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
                       <span>{category.dayRange}</span>
                     </div>
 
@@ -675,13 +675,13 @@ export function ShradhaDSASheetView() {
                       </span>
                       <div className="w-20 sm:w-24 h-1.5 rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden mt-1">
                         <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all duration-500"
+                          className="h-full bg-[#D5FF38] rounded-full transition-all duration-500"
                           style={{ width: `${categoryPercent}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-600 dark:text-neutral-400 group-hover:bg-orange-100 dark:group-hover:bg-neutral-700 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-600 dark:text-neutral-400 group-hover:bg-slate-200 dark:group-hover:bg-neutral-700 transition-colors">
                       {isExpanded ? (
                         <ChevronUp className="w-4 h-4 text-slate-700 dark:text-neutral-300" />
                       ) : (
@@ -734,7 +734,7 @@ export function ShradhaDSASheetView() {
                             <div
                               key={problem.id}
                               className={`px-3.5 sm:px-5 py-3 md:py-3.5 flex flex-col md:grid md:grid-cols-12 gap-2 md:gap-3 items-start md:items-center transition-colors ${
-                                isSolved ? "bg-purple-950/15 dark:bg-purple-950/20" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
+                                isSolved ? "bg-slate-100/60 dark:bg-[#121318]" : "hover:bg-slate-50/60 dark:hover:bg-neutral-800/40"
                               }`}
                             >
                               {/* 1. Problem Top Line on Mobile / Col 5 on Desktop */}
@@ -745,15 +745,15 @@ export function ShradhaDSASheetView() {
                                     onClick={() => toggleSolved(problem.id)}
                                     className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                                       isSolved
-                                        ? "bg-purple-600 border-purple-600 text-white shadow-xs"
-                                        : "border-slate-300 dark:border-neutral-700 hover:border-orange-500 dark:hover:border-orange-500 bg-white dark:bg-[#121318]"
+                                        ? "bg-[#D5FF38] border-[#D5FF38] text-black shadow-xs font-black"
+                                        : "border-slate-300 dark:border-neutral-700 hover:border-[#D5FF38] dark:hover:border-[#D5FF38] bg-white dark:bg-[#121318]"
                                     }`}
                                     aria-label={isSolved ? "Mark unsolved" : "Mark solved"}
                                   >
-                                    {isSolved && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                    {isSolved && <Check className="w-3.5 h-3.5 stroke-[3.5] text-black" />}
                                   </button>
 
-                                  <span className="text-[10px] sm:text-[11px] font-extrabold text-orange-700 bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/60 px-1.5 py-0.5 rounded shrink-0">
+                                  <span className="text-[11px] font-bold text-slate-400 dark:text-neutral-400 shrink-0 w-8">
                                     Q{problem.qno}
                                   </span>
 
@@ -764,12 +764,12 @@ export function ShradhaDSASheetView() {
                                     className={`font-bold text-xs sm:text-sm tracking-tight truncate transition-colors flex items-center gap-1.5 group ${
                                       isSolved
                                         ? "text-slate-400 dark:text-neutral-500 line-through decoration-slate-300 dark:decoration-neutral-600 font-normal"
-                                        : "text-slate-800 dark:text-white hover:text-orange-600 dark:hover:text-orange-400"
+                                        : "text-slate-800 dark:text-white hover:text-[#D5FF38] dark:hover:text-[#D5FF38]"
                                     }`}
                                     title={problem.title}
                                   >
                                     <span className="truncate">{problem.title}</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-400 dark:text-neutral-500 group-hover:text-orange-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <ExternalLink className="w-3 h-3 text-slate-400 dark:text-neutral-500 group-hover:text-slate-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                                   </a>
                                 </div>
 
@@ -795,7 +795,7 @@ export function ShradhaDSASheetView() {
                                       <button
                                         type="button"
                                         onClick={() => setActiveVideoProblem(problem)}
-                                        className="h-7 px-2.5 md:px-0 md:w-8 md:h-8 rounded-lg bg-red-50 hover:bg-red-500 text-red-600 hover:text-white border border-red-200/80 hover:border-red-500 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-xs group/yt"
+                                        className="h-7 px-2.5 md:px-0 md:w-8 md:h-8 rounded-lg bg-slate-100 dark:bg-[#16171D] hover:bg-slate-200 dark:hover:bg-[#20222A] text-red-500 border border-slate-200 dark:border-neutral-800 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer group/yt"
                                         title="Watch Embedded Video Solution"
                                       >
                                         <Video className="w-3.5 h-3.5 group-hover/yt:fill-white transition-colors" />
@@ -853,7 +853,7 @@ export function ShradhaDSASheetView() {
                                         e.stopPropagation();
                                         toggleCompanyExpand(problem.id);
                                       }}
-                                      className="text-[9px] sm:text-[10px] font-extrabold text-orange-700 bg-orange-50 hover:bg-orange-100 px-1.5 py-0.5 rounded border border-orange-200/80 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
+                                      className="text-[9px] sm:text-[10px] font-extrabold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-neutral-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-neutral-800 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
                                       title={isCompanyExpanded ? "Click to show less" : "Click to view all companies"}
                                     >
                                       {isCompanyExpanded ? "Less" : `+${problem.companies.length - 2}`}
