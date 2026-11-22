@@ -31,6 +31,7 @@ import { SelectDropdown } from "@/components/learning/SelectDropdown";
 import { SearchResults } from "@/components/learning/SearchResults";
 import { FullPlayerView } from "@/components/learning/FullPlayerView";
 import { PopularSkillPills } from "@/components/learning/PopularSkillPills";
+import { LearningSkillsBanner } from "@/components/learning/LearningSkillsBanner";
 import { useLearningSearch } from "@/hooks/useLearningSearch";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePricingModal } from "@/contexts/PricingModalContext";
@@ -285,6 +286,18 @@ export default function LearningPage() {
         )}
       </AnimatePresence>
 
+      {/* ── Mobile Only: Learning Skills Hero Banner (Full-bleed edge-to-edge, seamlessly integrated) ── */}
+      <div className="block md:hidden -mx-3.5 sm:-mx-6 -mt-4 sm:-mt-6 mb-3">
+        <LearningSkillsBanner
+          onExplore={() => {
+            setActiveSection("explore");
+            const el = document.getElementById("learning-search-input");
+            el?.focus();
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+      </div>
+
       {/* ── Section Switcher: 1. Explore section | 2. Your Learning Space ── */}
       <div className="flex items-center justify-between gap-3 pt-1">
         <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] self-start shadow-none">
@@ -331,7 +344,7 @@ export default function LearningPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
           {/* Search bar & Topics Card */}
           <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-4 sm:p-6 border border-slate-200/80 dark:border-[#24271F] shadow-none space-y-4">
@@ -342,6 +355,7 @@ export default function LearningPage() {
                   className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500 pointer-events-none"
                 />
                 <input
+                  id="learning-search-input"
                   type="text"
                   value={query}
                   onChange={(e) => {
@@ -381,11 +395,13 @@ export default function LearningPage() {
               </div>
             </div>
 
-            {/* Popular Skill Pills with authentic logos & Browse all */}
-            <PopularSkillPills
-              onSelectSkill={(skillName) => handleSearch(skillName)}
-              activeSkill={searchTerm}
-            />
+            {/* Popular Skill Pills with authentic logos & Browse all — desktop only */}
+            <div className="hidden md:block">
+              <PopularSkillPills
+                onSelectSkill={(skillName) => handleSearch(skillName)}
+                activeSkill={searchTerm}
+              />
+            </div>
 
             {/* Inline query error */}
             <AnimatePresence>
