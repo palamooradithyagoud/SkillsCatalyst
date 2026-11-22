@@ -286,8 +286,8 @@ export default function LearningPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Only: Learning Skills Hero Banner (Full-bleed edge-to-edge, seamlessly integrated) ── */}
-      <div className="block md:hidden -mx-3.5 sm:-mx-6 -mt-4 sm:-mt-6 mb-3">
+      {/* ── Mobile Only: Learning Skills Hero Banner (Full-bleed rectangle fitting the screen) ── */}
+      <div className="block md:hidden -mx-3.5 sm:-mx-6 -mt-3.5 sm:-mt-6 mb-4">
         <LearningSkillsBanner
           onExplore={() => {
             setActiveSection("explore");
