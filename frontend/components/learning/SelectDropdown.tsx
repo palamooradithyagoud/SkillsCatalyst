@@ -21,7 +21,7 @@ export function SelectDropdown({
         onChange={(e) => onChange(e.target.value as Lang)}
         suppressHydrationWarning
         aria-label="Select learning language"
-        className="appearance-none pl-10 pr-9 py-3 sm:py-3.5 text-sm font-semibold rounded-2xl cursor-pointer bg-slate-50/80 dark:bg-neutral-900/90 border border-slate-200/90 dark:border-neutral-700/80 text-slate-800 dark:text-white hover:bg-slate-100/80 dark:hover:bg-neutral-800 focus:bg-white dark:focus:bg-neutral-900 focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38] focus:outline-none transition-all shadow-none"
+        className="appearance-none pl-10 pr-9 py-3 sm:py-3.5 text-sm font-semibold rounded-2xl cursor-pointer bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-[#24271F] text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-[#202229] focus:bg-white dark:focus:bg-[#18191F] focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38] focus:outline-none transition-all shadow-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-white dark:bg-[#18191F] text-slate-900 dark:text-white font-medium">

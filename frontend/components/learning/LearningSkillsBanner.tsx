@@ -238,14 +238,7 @@ export function LearningSkillsBanner({ onExplore }: LearningSkillsBannerProps) {
           <ChevronRight className="w-3.5 h-3.5 stroke-[2.8]" />
         </motion.button>
 
-        {/* 4. Carousel Pagination Dots matching Image 2 (• • ◯ • •) */}
-        <div className="flex items-center justify-center gap-1.5 mt-4 pt-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-          <span className="w-2.5 h-2.5 rounded-full bg-white shadow-sm ring-2 ring-white/30" />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-          <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-        </div>
+
       </div>
     </div>
   );

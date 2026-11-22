@@ -299,35 +299,35 @@ export default function LearningPage() {
       </div>
 
       {/* ── Section Switcher: 1. Explore section | 2. Your Learning Space ── */}
-      <div className="flex items-center justify-between gap-3 pt-1">
-        <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#121318] border border-slate-200 dark:border-[#24271F] self-start shadow-none">
+      <div className="w-full flex items-center justify-between gap-3 pt-1">
+        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#18191F] border border-slate-200 dark:border-[#24271F] shadow-none">
           <button
             type="button"
             onClick={() => setActiveSection("explore")}
-            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${activeSection === "explore"
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${activeSection === "explore"
               ? "bg-[#D5FF38] text-black shadow-none scale-100"
               : "text-slate-600 dark:text-neutral-300 hover:text-black dark:hover:text-white"
               }`}
           >
-            <Compass className="w-4 h-4" />
-            <span>Explore</span>
+            <Compass className="w-4 h-4 shrink-0" />
+            <span className="truncate">Explore</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSection("learning-space")}
-            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${activeSection === "learning-space"
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${activeSection === "learning-space"
               ? "bg-[#D5FF38] text-black shadow-none scale-100"
               : "text-slate-600 dark:text-neutral-300 hover:text-black dark:hover:text-white"
               }`}
           >
-            <BookOpen className="w-4 h-4" />
-            <span>Your Learning Space</span>
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span className="truncate">Your Learning Space</span>
             {savedList.length > 0 && (
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black tabular-nums ${activeSection === "learning-space"
                   ? "bg-black text-[#D5FF38]"
-                  : "bg-slate-200 dark:bg-[#18191F] text-slate-800 dark:text-[#D5FF38] border border-slate-300 dark:border-[#24271F]"
+                  : "bg-slate-200 dark:bg-[#121318] text-slate-800 dark:text-[#D5FF38] border border-slate-300 dark:border-[#24271F]"
                   }`}
               >
                 {savedList.length}
@@ -346,9 +346,9 @@ export default function LearningPage() {
           exit={{ opacity: 0, y: -8 }}
           className="space-y-4 sm:space-y-6"
         >
-          {/* Search bar & Topics Card */}
-          <div className="bg-white dark:bg-[#18191F] rounded-[28px] p-4 sm:p-6 border border-slate-200/80 dark:border-[#24271F] shadow-none space-y-4">
-            <div className="flex flex-col gap-3">
+          {/* Search bar & Controls (Clean layout without redundant outer card) */}
+          <div className="w-full space-y-3 sm:space-y-4">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
               {/* 1. Full-width Search Bar */}
               <div className="relative w-full">
                 <Search
@@ -364,7 +364,7 @@ export default function LearningPage() {
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Search a programming skill, tool, or technology (e.g. Python, React, DSA)"
-                  className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-slate-50/70 dark:bg-[#121318] border border-slate-200/90 dark:border-[#24271F] rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-[#121318] focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38] focus:outline-none transition-all shadow-none ${queryError ? "border-rose-500" : ""
+                  className={`w-full pl-12 pr-4 py-3 sm:py-3.5 text-sm sm:text-base font-semibold bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-[#24271F] rounded-2xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:bg-white dark:focus:bg-[#18191F] focus:border-[#D5FF38] dark:focus:border-[#D5FF38] focus:ring-1 focus:ring-[#D5FF38] focus:outline-none transition-all shadow-none ${queryError ? "border-rose-500" : ""
                     }`}
                 />
               </div>
@@ -396,7 +396,7 @@ export default function LearningPage() {
             </div>
 
             {/* Popular Skill Pills with authentic logos & Browse all — desktop only */}
-            <div className="hidden md:block">
+            <div className="hidden md:block pt-1">
               <PopularSkillPills
                 onSelectSkill={(skillName) => handleSearch(skillName)}
                 activeSkill={searchTerm}
