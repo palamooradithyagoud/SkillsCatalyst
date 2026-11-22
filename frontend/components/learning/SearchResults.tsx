@@ -8,7 +8,7 @@ import { PlaylistCard } from "./PlaylistCard";
 
 export function PlaylistCardSkeleton() {
   return (
-    <div className="relative w-full h-full min-h-[190px] sm:min-h-[225px] rounded-[22px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 p-3 sm:p-4 md:p-5 flex flex-col justify-between overflow-hidden animate-pulse select-none">
+    <div className="relative w-full h-full min-h-[190px] sm:min-h-[225px] rounded-[22px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-[#24271F] p-3 sm:p-4 md:p-5 flex flex-col justify-between overflow-hidden animate-pulse select-none">
       {/* Top Header: Rank Circle & Channel Name Skeleton */}
       <div className="flex items-center gap-3 sm:gap-3.5">
         <div className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-slate-200/80 dark:bg-neutral-800 shrink-0" />
@@ -26,7 +26,7 @@ export function PlaylistCardSkeleton() {
         <div className="mb-2">
           <div className="h-4.5 w-14 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-neutral-800/80">
+        <div className="flex items-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-[#24271F]">
           <div className="flex-1 h-7 sm:h-8 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
           <div className="flex-1 h-7 sm:h-8 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
         </div>

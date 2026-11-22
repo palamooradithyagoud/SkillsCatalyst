@@ -93,7 +93,7 @@ export function PlaylistCard({
         >
           <path
             d={cardPath}
-            className="fill-white dark:fill-[#18191F] stroke-slate-200/90 dark:stroke-neutral-800 group-hover:stroke-[#D5FF38]/60 transition-colors"
+            className="fill-white dark:fill-[#18191F] stroke-slate-200/90 dark:stroke-[#24271F] transition-colors"
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
@@ -106,7 +106,7 @@ export function PlaylistCard({
             left: "8px",
             top: "8px",
           }}
-          className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-neutral-700/80 shadow-sm flex items-center justify-center z-20 select-none group-hover:scale-105 transition-transform"
+          className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-[#24271F] shadow-sm flex items-center justify-center z-20 select-none group-hover:scale-105 transition-transform"
         >
           <span className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white tracking-tight font-sans">
             #{rank}
@@ -118,7 +118,7 @@ export function PlaylistCard({
           {/* 1. Channel Name in the Top Left Side Corner (spaced cleanly to the right of the #rank cutout) */}
           <div className="flex items-center h-7 sm:h-8 pl-[50px] sm:pl-14 pr-1">
             <p
-              className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-[#D5FF38] transition-colors truncate leading-tight"
+              className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-black dark:group-hover:text-white transition-colors truncate leading-tight"
               title={pl.channel}
             >
               {pl.channel}
@@ -127,7 +127,7 @@ export function PlaylistCard({
 
           {/* 2. Video Title: Moved down with ample breathing room below the top badge */}
           <div className="my-auto pt-2.5 sm:pt-3 pb-1">
-            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#D5FF38] transition-colors leading-[1.3] sm:leading-snug line-clamp-2">
+            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors leading-[1.3] sm:leading-snug line-clamp-2">
               {pl.title}
             </h3>
           </div>
@@ -136,13 +136,13 @@ export function PlaylistCard({
           <div className="pt-1">
             {/* Language Badge */}
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/80 px-2 sm:px-2.5 py-0.5 rounded-full shadow-none">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-[#24271F] px-2 sm:px-2.5 py-0.5 rounded-full shadow-none">
                 {displayLanguage}
               </span>
             </div>
 
             {/* 4. Footer: Watch & Save Buttons */}
-            <div className="flex items-center gap-1.5 sm:gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-neutral-800/80">
+            <div className="flex items-center gap-1.5 sm:gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-[#24271F]">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}

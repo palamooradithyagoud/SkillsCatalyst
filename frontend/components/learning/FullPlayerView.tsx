@@ -201,27 +201,29 @@ export function FullPlayerView({
       {/* ── Completion Banner Toast */}
       <AnimatePresence>
         {showCompletionBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -40, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl bg-neutral-900 text-white border border-neutral-700"
-          >
+          <div className="fixed top-16 sm:top-20 inset-x-3 sm:inset-x-auto sm:right-6 z-[9999] pointer-events-none flex justify-center sm:justify-end">
             <motion.div
-              initial={{ rotate: -20, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 500 }}
-              className="text-xl"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className="pointer-events-auto flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xl bg-[#18191F] text-white border border-[#24271F]"
             >
-              🎉
+              <motion.div
+                initial={{ rotate: -20, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 500 }}
+                className="text-xl"
+              >
+                🎉
+              </motion.div>
+              <div>
+                <div className="font-bold text-white text-sm">Lesson Completed!</div>
+                <div className="text-neutral-400 text-xs font-medium">75% threshold reached ✓</div>
+              </div>
+              <CheckCircle2 className="w-5 h-5 text-[#D5FF38]" />
             </motion.div>
-            <div>
-              <div className="font-bold text-white text-sm">Lesson Completed!</div>
-              <div className="text-neutral-400 text-xs font-medium">75% threshold reached ✓</div>
-            </div>
-            <CheckCircle2 className="w-5 h-5 text-[#D5FF38]" />
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
