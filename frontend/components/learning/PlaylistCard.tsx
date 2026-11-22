@@ -1,173 +1,161 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Play } from "lucide-react";
+import { Play, Bookmark } from "lucide-react";
 import { Playlist } from "@/lib/api";
+import { extractPlaylistId } from "@/lib/learning/searchValidation";
 
 export function PlaylistCard({
   pl,
   rank,
   savedIds,
+  videoProgressData,
   onSave,
   onUnsave,
   onWatch,
   delay = 0,
 }: {
   pl: Playlist;
-  rank: number;
+  rank?: number;
   savedIds: Set<string>;
+  videoProgressData?: any;
   onSave?: (pl: Playlist) => void;
   onUnsave?: (id: string) => void;
   onWatch: (pl: Playlist) => void;
   delay?: number;
 }) {
-  const isSaved = savedIds.has(pl.id);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 320, height: 210 });
+  const isSaved = savedIds?.has(pl.id);
+  const [imgError, setImgError] = useState(false);
 
-  // Dynamically measure container dimensions for pixel-perfect SVG path rendering
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      setDimensions({ width: Math.round(rect.width), height: Math.round(rect.height) });
-    }
+  // ── Calculate Real Dynamic Progress from Supabase / Backend Activity ──
+  const plId = pl.id || (pl as any).playlist_id;
+  const cleanId = extractPlaylistId(pl.playlist_url || pl.id || "");
+  const watchedCount =
+    videoProgressData?.raw?.filter(
+      (r: any) =>
+        !!r.watched &&
+        (String(r.playlist_id) === String(plId) ||
+          (cleanId && String(r.playlist_id) === String(cleanId)))
+    ).length || 0;
 
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDimensions({ width: Math.round(width), height: Math.round(height) });
-        }
-      }
-    });
+  const rawNum = pl.video_count ? String(pl.video_count).replace(/[^0-9]/g, "") : "";
+  const totalVideos = Number(rawNum) || 1;
+  const pct = Math.min(100, Math.round((watchedCount / totalVideos) * 100));
 
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  // ── Clean Dynamic Video Count Label ──
+  const videoCountText = rawNum ? `${rawNum} Videos` : (pl.video_count || "Videos");
 
-  const W = Math.max(dimensions.width || 320, 140);
-  const H = Math.max(dimensions.height || 195, 160);
-  const R = 20; // Corner radius for top-right, bottom-right, bottom-left
-  const Rs = 28; // Concave scoop radius
-  const rf = 8; // Tangent fillet radius
-
-  // ── Exact C1-Continuous Concave Cutout Path for Top-Left Corner ──
-  // Scoop center at (28, 28) with 8px tangent fillets into top edge (at x=58) and left edge (at y=58).
-  const cardPath =
-    `M 58 0 ` +
-    `L ${W - R} 0 ` +
-    `A ${R} ${R} 0 0 1 ${W} ${R} ` +
-    `L ${W} ${H - R} ` +
-    `A ${R} ${R} 0 0 1 ${W - R} ${H} ` +
-    `L ${R} ${H} ` +
-    `A ${R} ${R} 0 0 1 0 ${H - R} ` +
-    `L 0 58 ` +
-    `A ${rf} ${rf} 0 0 1 12.5 51.3 ` +
-    `A ${Rs} ${Rs} 0 0 0 51.3 12.5 ` +
-    `A ${rf} ${rf} 0 0 1 58 0 ` +
-    `Z`;
-
-  const displayLanguage = pl.language && pl.language !== "All" ? pl.language : "English";
+  // ── Dynamic Thumbnail Source with Fallback ──
+  const thumbnailSrc =
+    !imgError && pl.thumbnail
+      ? pl.thumbnail
+      : cleanId
+      ? `https://i.ytimg.com/vi/${cleanId}/hqdefault.jpg`
+      : null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.35, ease: "easeOut" }}
+      transition={{ delay, duration: 0.3, ease: "easeOut" }}
       className="h-full select-none"
     >
-      <div
-        ref={containerRef}
-        className="relative w-full h-full min-h-[190px] sm:min-h-[225px] group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-      >
-        {/* ── Dynamic Scaled SVG Background with Concave Top-Left Cutout & Crisp Border ── */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${W} ${H}`}
-          className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-xs"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d={cardPath}
-            className="fill-white dark:fill-[#18191F] stroke-slate-200/90 dark:stroke-[#24271F] transition-colors"
-            strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
+      <div className="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/80 dark:border-[#24271F] flex flex-col justify-between gap-2 sm:gap-3 hover:border-slate-300 dark:hover:border-neutral-600 transition-colors group h-full shadow-none">
+        <div className="space-y-1.5 sm:space-y-2">
+          {/* 1. Dynamic Video Thumbnail with 16:9 Aspect Ratio matching Reference Image 2 */}
+          <div className="relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-black/40">
+            {thumbnailSrc ? (
+              <img
+                src={thumbnailSrc}
+                alt={pl.title || "Course thumbnail"}
+                loading="lazy"
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900 text-neutral-400">
+                <Play className="w-7 h-7 sm:w-8 sm:h-8 opacity-40 mb-1" />
+                <span className="text-[10px] font-bold uppercase tracking-wider line-clamp-1 px-2 text-center">
+                  {pl.channel || "Course"}
+                </span>
+              </div>
+            )}
 
-        {/* ── Floating Circular Badge Nested in the Top-Left Round Cutout ── */}
-        <div
-          style={{
-            position: "absolute",
-            left: "8px",
-            top: "8px",
-          }}
-          className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-[#24271F] shadow-sm flex items-center justify-center z-20 select-none group-hover:scale-105 transition-transform"
-        >
-          <span className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white tracking-tight font-sans">
-            #{rank}
-          </span>
-        </div>
+            {/* Video Count Badge in Bottom-Right Corner */}
+            <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/80 text-[9px] sm:text-[10px] font-bold text-white backdrop-blur-xs">
+              {videoCountText}
+            </div>
 
-        {/* ── Card Content Container ── */}
-        <div className="relative z-10 flex flex-col justify-between h-full p-3 sm:p-4 md:p-5">
-          {/* 1. Channel Name in the Top Left Side Corner (spaced cleanly to the right of the #rank cutout) */}
-          <div className="flex items-center h-7 sm:h-8 pl-[50px] sm:pl-14 pr-1">
-            <p
-              className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-700 dark:text-neutral-300 group-hover:text-black dark:group-hover:text-white transition-colors truncate leading-tight"
-              title={pl.channel}
-            >
+            {/* Rank Badge in Top-Left Corner */}
+            {typeof rank === "number" && (
+              <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/80 text-[9px] sm:text-[10px] font-black text-white border border-white/20 backdrop-blur-xs">
+                #{rank}
+              </div>
+            )}
+          </div>
+
+          {/* 2. Dynamic Course Title */}
+          <h3
+            className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white line-clamp-2 leading-tight sm:leading-snug group-hover:text-black dark:group-hover:text-[#D5FF38] transition-colors"
+            title={pl.title}
+          >
+            {pl.title}
+          </h3>
+
+          {/* 3. Dynamic Channel Name */}
+          {pl.channel && (
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-neutral-400 font-medium truncate">
               {pl.channel}
             </p>
+          )}
+        </div>
+
+        {/* 4. Progress Section & Actions matching Reference Image 2 */}
+        <div className="space-y-1.5 sm:space-y-2.5 pt-1.5 sm:pt-2 border-t border-slate-200/70 dark:border-[#24271F]">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-neutral-400">
+            <span>Progress</span>
+            <span className="text-slate-900 dark:text-white font-bold">{pct}%</span>
           </div>
 
-          {/* 2. Video Title: Moved down with ample breathing room below the top badge */}
-          <div className="my-auto pt-2.5 sm:pt-3 pb-1">
-            <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors leading-[1.3] sm:leading-snug line-clamp-2">
-              {pl.title}
-            </h3>
+          {/* Thin Progress Bar */}
+          <div className="w-full h-1 sm:h-1.5 rounded-full bg-slate-200 dark:bg-neutral-800 overflow-hidden">
+            <div
+              className="h-full bg-[#D5FF38] transition-all duration-500 rounded-full"
+              style={{ width: `${pct}%` }}
+            />
           </div>
 
-          {/* 3. Downside: Language Badge Kept Down + Footer Buttons */}
-          <div className="pt-1">
-            {/* Language Badge */}
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-[#24271F] px-2 sm:px-2.5 py-0.5 rounded-full shadow-none">
-                {displayLanguage}
-              </span>
-            </div>
+          {/* Action Buttons: Resume/Start + Bookmark */}
+          <div className="flex items-center gap-1.5 sm:gap-2 pt-0.5 sm:pt-1">
+            <button
+              type="button"
+              onClick={() => onWatch(pl)}
+              className="flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-black text-[11px] sm:text-xs font-black flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer active:scale-95"
+            >
+              <Play className="w-3 h-3 fill-current shrink-0" />
+              <span className="truncate">{pct > 0 ? "Resume" : "Start"}</span>
+            </button>
 
-            {/* 4. Footer: Watch & Save Buttons */}
-            <div className="flex items-center gap-1.5 sm:gap-2 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-[#24271F]">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onWatch(pl)}
-                className="flex-1 py-1.5 sm:py-2.5 px-1.5 sm:px-2 rounded-full flex items-center justify-center gap-1 text-[11px] sm:text-xs font-black text-black bg-[#D5FF38] hover:bg-[#cbf526] active:bg-[#bfe820] shadow-none transition-all cursor-pointer select-none whitespace-nowrap"
+            {onSave && onUnsave && (
+              <button
+                type="button"
+                onClick={() => (isSaved ? onUnsave(pl.id) : onSave(pl))}
+                className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all cursor-pointer shrink-0 border ${
+                  isSaved
+                    ? "bg-[#D5FF38]/20 border-[#D5FF38]/50 text-[#D5FF38] hover:bg-[#D5FF38]/30"
+                    : "text-slate-400 hover:text-white border-slate-200 dark:border-[#24271F] bg-slate-100 dark:bg-[#18191F] hover:border-slate-300 dark:hover:border-neutral-600"
+                }`}
+                title={isSaved ? "Saved to your space (click to unsave)" : "Save to your space"}
+                aria-label={isSaved ? "Saved" : "Save"}
               >
-                <Play className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-black text-black shrink-0" />
-                <span>Watch</span>
-              </motion.button>
-
-              {onSave && onUnsave && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => (isSaved ? onUnsave(pl.id) : onSave(pl))}
-                  className={`flex-1 py-1.5 sm:py-2.5 px-1.5 sm:px-2 rounded-full text-[11px] sm:text-xs font-bold border transition-all cursor-pointer select-none text-center whitespace-nowrap ${
-                    isSaved
-                      ? "text-black bg-[#D5FF38] border-[#D5FF38] font-black shadow-none"
-                      : "text-slate-700 dark:text-neutral-200 border-slate-200/90 dark:border-neutral-700/80 bg-slate-100/80 dark:bg-neutral-800/80 hover:bg-slate-200/80 dark:hover:bg-neutral-700/80 hover:text-slate-900 dark:hover:text-white shadow-none"
+                <Bookmark
+                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-90 ${
+                    isSaved ? "fill-[#D5FF38]" : ""
                   }`}
-                >
-                  {isSaved ? "Saved ✓" : "Save"}
-                </motion.button>
-              )}
-            </div>
+                />
+              </button>
+            )}
           </div>
         </div>
       </div>

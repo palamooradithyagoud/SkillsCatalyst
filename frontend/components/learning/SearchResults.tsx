@@ -8,27 +8,29 @@ import { PlaylistCard } from "./PlaylistCard";
 
 export function PlaylistCardSkeleton() {
   return (
-    <div className="relative w-full h-full min-h-[190px] sm:min-h-[225px] rounded-[22px] bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-[#24271F] p-3 sm:p-4 md:p-5 flex flex-col justify-between overflow-hidden animate-pulse select-none">
-      {/* Top Header: Rank Circle & Channel Name Skeleton */}
-      <div className="flex items-center gap-3 sm:gap-3.5">
-        <div className="w-[36px] h-[36px] sm:w-10 sm:h-10 rounded-full bg-slate-200/80 dark:bg-neutral-800 shrink-0" />
-        <div className="h-3 w-20 sm:w-28 rounded-md bg-slate-200/80 dark:bg-neutral-800" />
-      </div>
-
-      {/* Video Title Lines Skeleton: Moved down into middle */}
-      <div className="space-y-1.5 my-auto pt-2.5 sm:pt-3 pb-1">
-        <div className="h-3.5 sm:h-4 w-[92%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
-        <div className="h-3.5 sm:h-4 w-[65%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
-      </div>
-
-      {/* Bottom: Language Badge Kept Down & Buttons Skeleton */}
-      <div className="pt-1">
-        <div className="mb-2">
-          <div className="h-4.5 w-14 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
+    <div className="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 dark:bg-[#121318] border border-slate-200/80 dark:border-[#24271F] flex flex-col justify-between gap-2 sm:gap-3 h-full animate-pulse select-none shadow-none">
+      <div className="space-y-1.5 sm:space-y-2">
+        {/* 16:9 Thumbnail skeleton matching Reference Image 2 */}
+        <div className="relative aspect-video rounded-lg sm:rounded-xl bg-slate-200/80 dark:bg-neutral-800" />
+        {/* Title skeleton */}
+        <div className="space-y-1.5 pt-1">
+          <div className="h-3.5 sm:h-4 w-[90%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
+          <div className="h-3.5 sm:h-4 w-[60%] rounded-md bg-slate-200/80 dark:bg-neutral-800" />
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-[#24271F]">
-          <div className="flex-1 h-7 sm:h-8 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
-          <div className="flex-1 h-7 sm:h-8 rounded-full bg-slate-200/80 dark:bg-neutral-800" />
+        {/* Channel skeleton */}
+        <div className="h-3 w-24 rounded-md bg-slate-200/80 dark:bg-neutral-800" />
+      </div>
+
+      {/* Progress & Buttons skeleton */}
+      <div className="space-y-2 pt-1.5 sm:pt-2 border-t border-slate-200/70 dark:border-[#24271F]">
+        <div className="flex items-center justify-between">
+          <div className="h-2.5 w-12 rounded bg-slate-200/80 dark:bg-neutral-800" />
+          <div className="h-2.5 w-6 rounded bg-slate-200/80 dark:bg-neutral-800" />
+        </div>
+        <div className="w-full h-1 sm:h-1.5 rounded-full bg-slate-200 dark:bg-neutral-800" />
+        <div className="flex items-center gap-1.5 sm:gap-2 pt-0.5 sm:pt-1">
+          <div className="flex-1 h-7 sm:h-8 rounded-lg sm:rounded-xl bg-slate-200/80 dark:bg-neutral-800" />
+          <div className="w-7 sm:w-8 h-7 sm:h-8 rounded-lg sm:rounded-xl bg-slate-200/80 dark:bg-neutral-800" />
         </div>
       </div>
     </div>
@@ -44,6 +46,7 @@ export function SearchResults({
   results,
   searchData,
   savedIds,
+  videoProgressData,
   onSave,
   onUnsave,
   onWatch,
@@ -57,6 +60,7 @@ export function SearchResults({
   results: Playlist[];
   searchData?: SearchResult;
   savedIds: Set<string>;
+  videoProgressData?: any;
   onSave: (pl: Playlist) => void;
   onUnsave: (id: string) => void;
   onWatch: (pl: Playlist) => void;
@@ -114,6 +118,7 @@ export function SearchResults({
                 pl={pl}
                 rank={i + 1}
                 savedIds={savedIds}
+                videoProgressData={videoProgressData}
                 onSave={onSave}
                 onUnsave={onUnsave}
                 onWatch={onWatch}

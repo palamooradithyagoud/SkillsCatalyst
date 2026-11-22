@@ -433,6 +433,7 @@ export default function LearningPage() {
             results={results}
             searchData={searchData}
             savedIds={savedIds}
+            videoProgressData={videoProgressData}
             onSave={(p) => saveMut.mutate(p)}
             onUnsave={(id) => unsaveMut.mutate(id)}
             onWatch={(p) => handleOpenPlayer(p)}
