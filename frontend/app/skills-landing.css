@@ -112,7 +112,337 @@
 
 
 
-/* ── Fixed Floating Top Navigation Bar ── */
+/* ── Precision Top Navigation Bar (Dual-State: 84px Transparent Top & 980x62 Pill on Scroll) ── */
+.scNavFixedHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  width: 100%;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scDesktopNav {
+  pointer-events: auto;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: 84px;
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  padding: 0 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  transform: translateY(0);
+  will-change: transform, max-width, height, background-color, border-radius, box-shadow;
+  transition: max-width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.5s ease,
+              border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s ease,
+              box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              backdrop-filter 0.5s ease,
+              -webkit-backdrop-filter 0.5s ease;
+}
+
+/* Scrolled state: Odette 980x62 Pill (Width: 980px, Height: 62px, Radius: 9999px, Offset: translateY(16px), Padding: 0 7px 0 26px, Fill: #121212, Blur: 20px, Border: 1px rgba(255,255,255,0.12), Shadow: 0 10px 30px rgba(0,0,0,0.5)) */
+.scDesktopNav.scDesktopNavScrolled {
+  width: calc(100% - 32px) !important;
+  max-width: 980px !important;
+  height: 62px !important;
+  transform: translateY(16px) !important;
+  padding: 0 7px 0 26px !important;
+  background-color: rgba(18, 18, 18, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+@media (max-width: 860px) {
+  .scDesktopNav {
+    padding: 0 20px !important;
+    height: 72px !important;
+    border: none !important;
+    border-bottom: none !important;
+  }
+
+  .scDesktopNav.scDesktopNavScrolled {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    height: 58px !important;
+    transform: translateY(12px) !important;
+    padding: 0 6px 0 16px !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+}
+
+/* ── Uiverse.io Button by KINGFRESS (Zero Glow, Zero Border) ── */
+.uiverse-kingfress-btn {
+  font-family: inherit;
+  font-weight: bold;
+  color: #ffffff !important;
+  background-color: #171717 !important;
+  padding: 0.65em 1.35em !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px !important;
+  position: relative !important;
+  cursor: pointer;
+  overflow: hidden !important;
+  isolation: isolate;
+  user-select: none;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.uiverse-kingfress-btn > span:not(:nth-child(6)),
+.uiverse-kingfress-btn > .bubble-span {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  height: 30px !important;
+  width: 30px !important;
+  background-color: #d5ff38 !important;
+  border-radius: 50% !important;
+  transition: transform 0.6s ease;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.uiverse-kingfress-btn > span:nth-child(6),
+.uiverse-kingfress-btn > .bubble-content {
+  position: relative !important;
+  z-index: 10 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+  transition: color 0.35s ease;
+}
+
+.uiverse-kingfress-btn > span:nth-child(1),
+.uiverse-kingfress-btn > .bubble-span:nth-child(1) {
+  transform: translate(-3.3em, -4em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(2),
+.uiverse-kingfress-btn > .bubble-span:nth-child(2) {
+  transform: translate(-6em, 1.3em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(3),
+.uiverse-kingfress-btn > .bubble-span:nth-child(3) {
+  transform: translate(-0.2em, 1.8em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(4),
+.uiverse-kingfress-btn > .bubble-span:nth-child(4) {
+  transform: translate(3.5em, 1.4em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(5),
+.uiverse-kingfress-btn > .bubble-span:nth-child(5) {
+  transform: translate(3.5em, -3.8em);
+}
+
+/* Expansion on hover, active (press / click / touch), and focus-visible */
+.uiverse-kingfress-btn:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:active > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:hover > .bubble-span,
+.uiverse-kingfress-btn:active > .bubble-span,
+.uiverse-kingfress-btn:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(5.5);
+  transition: transform 1.5s ease;
+}
+
+/* Wide variant for full-width buttons */
+.uiverse-kingfress-btn.uiverse-wide:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:active > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:hover > .bubble-span,
+.uiverse-kingfress-btn.uiverse-wide:active > .bubble-span,
+.uiverse-kingfress-btn.uiverse-wide:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(9.5);
+  transition: transform 1.5s ease;
+}
+
+/* Hover and active color transitions - Zero glow, Zero border */
+.uiverse-kingfress-btn:hover,
+.uiverse-kingfress-btn:active,
+.uiverse-kingfress-btn:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.uiverse-kingfress-btn:hover > span:nth-child(6),
+.uiverse-kingfress-btn:active > span:nth-child(6),
+.uiverse-kingfress-btn:focus-visible > span:nth-child(6),
+.uiverse-kingfress-btn:hover > .bubble-content,
+.uiverse-kingfress-btn:active > .bubble-content,
+.uiverse-kingfress-btn:focus-visible > .bubble-content {
+  color: #000000 !important;
+}
+
+.uiverse-kingfress-btn:hover > span:nth-child(6) *,
+.uiverse-kingfress-btn:active > span:nth-child(6) *,
+.uiverse-kingfress-btn:focus-visible > span:nth-child(6) *,
+.uiverse-kingfress-btn:hover > .bubble-content *,
+.uiverse-kingfress-btn:active > .bubble-content *,
+.uiverse-kingfress-btn:focus-visible > .bubble-content * {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.uiverse-kingfress-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* ── Inverse Variant: Sign Up (Acid Lime Base -> Dark Charcoal on Hover, Zero Glow, Zero Border) ── */
+.uiverse-kingfress-inverse-btn {
+  font-family: inherit;
+  font-weight: bold;
+  color: #000000 !important;
+  background-color: #d5ff38 !important;
+  padding: 0.65em 1.35em !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px !important;
+  position: relative !important;
+  cursor: pointer;
+  overflow: hidden !important;
+  isolation: isolate;
+  user-select: none;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.uiverse-kingfress-inverse-btn > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn > .bubble-span {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  height: 30px !important;
+  width: 30px !important;
+  background-color: #171717 !important;
+  border-radius: 50% !important;
+  transition: transform 0.6s ease;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(6),
+.uiverse-kingfress-inverse-btn > .bubble-content {
+  position: relative !important;
+  z-index: 10 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  color: #000000;
+  transition: color 0.35s ease;
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(1),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(1) {
+  transform: translate(-3.3em, -4em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(2),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(2) {
+  transform: translate(-6em, 1.3em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(3),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(3) {
+  transform: translate(-0.2em, 1.8em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(4),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(4) {
+  transform: translate(3.5em, 1.4em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(5),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(5) {
+  transform: translate(3.5em, -3.8em);
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:active > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:hover > .bubble-span,
+.uiverse-kingfress-inverse-btn:active > .bubble-span,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(5.5);
+  transition: transform 1.5s ease;
+}
+
+.uiverse-kingfress-inverse-btn:hover,
+.uiverse-kingfress-inverse-btn:active,
+.uiverse-kingfress-inverse-btn:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:active > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:focus-visible > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:hover > .bubble-content,
+.uiverse-kingfress-inverse-btn:active > .bubble-content,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-content {
+  color: #ffffff !important;
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:active > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:focus-visible > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:hover > .bubble-content *,
+.uiverse-kingfress-inverse-btn:active > .bubble-content *,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-content * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.uiverse-kingfress-inverse-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* ── Fixed Floating Top Navigation Bar (Legacy Fallback) ── */
 .scDesktopNavFixed {
   position: fixed;
   top: 0;

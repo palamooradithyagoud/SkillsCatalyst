@@ -102,9 +102,10 @@ export default function LandingNavbar({ solid = false }: LandingNavbarProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 35) {
+      const y = window.scrollY;
+      if (y > 55) {
         setIsScrolled(true);
-      } else {
+      } else if (y < 20) {
         setIsScrolled(false);
       }
     };
@@ -152,155 +153,163 @@ export default function LandingNavbar({ solid = false }: LandingNavbarProps) {
 
   return (
     <>
-      {/* ── Fixed Floating Top Navigation Bar (Morphs into unified pill on scroll / solid mode) ── */}
-      <nav className={`scDesktopNavFixed ${effectiveScrolled ? "scNavFixedScrolled" : ""}`}>
-        <div className={`scDesktopNavContainer ${effectiveScrolled ? "scNavContainerScrolled" : ""}`}>
-          {/* White pill backdrop that smoothly fades in upon scrolling / solid mode */}
+      {/* ── Precision Top Navigation Bar (Dual-State: 84px Transparent Top, 980x62 Pill on Scroll) ── */}
+      <header className="scNavFixedHeader">
+        <nav
+          className={`scDesktopNav ${effectiveScrolled ? "scDesktopNavScrolled" : ""}`}
+          aria-label="Main Website Navigation"
+        >
+          {/* Left: Brand with official white logo */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 text-white hover:opacity-90 transition-opacity cursor-pointer select-none group"
+              aria-label="SkillsCatalyst Home"
+            >
+              <Image
+                src="/logo_white_v2.png"
+                alt="SkillsCatalyst Logo"
+                width={28}
+                height={28}
+                priority
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain group-hover:scale-105 transition-transform shrink-0"
+              />
+              <span className={`text-white font-black tracking-[-0.025em] transition-all duration-300 ${effectiveScrolled ? "text-[16.5px] sm:text-[18px]" : "text-[18px] sm:text-[20px]"}`}>
+                SkillsCatalyst
+              </span>
+            </Link>
+          </div>
+
+          {/* Center: Clean Text Navigation Links (Matching Image 1) */}
           <div
-            className={`scNavScrolledBackdrop ${effectiveScrolled ? "scNavScrolledBackdropActive" : ""}`}
-            aria-hidden="true"
-          />
-
-          {/* Navigation Items Row */}
-          <div className={`scNavbarContentRow ${effectiveScrolled ? "scNavbarContentRowScrolled" : ""}`}>
-            {/* Left: Brand Logo Area (Switches to compact square icon on scroll / solid mode) */}
-            <div
-              className={`scNavBrandArea ${effectiveScrolled ? "scNavBrandAreaScrolled" : ""}`}
-              onClick={() => router.push("/")}
-              role="button"
-              tabIndex={0}
-            >
-              {/* Full Brand Logo & Title (Top View) */}
-              <div className={`scBrandFull ${effectiveScrolled ? "scBrandFullHidden" : ""}`}>
-                <Image
-                  src="/logo_white_v2.png"
-                  alt="SkillsCatalyst Logo"
-                  width={40}
-                  height={40}
-                  priority
-                  className="scNavBrandLogo"
-                />
-                <span className="scNavBrandTitle">SkillsCatalyst</span>
-              </div>
-
-              {/* Compact Square Badge Icon + Brand Name (Scrolled / Solid View) */}
-              <div className={`scBrandCompact ${effectiveScrolled ? "scBrandCompactVisible" : ""}`}>
-                <div className="scCompactLogoSquare">
-                  <Image
-                    src="/logo_white_v2.png"
-                    alt="SkillsCatalyst Logo Icon"
-                    width={24}
-                    height={24}
-                    priority
-                    className="scCompactLogoImg"
-                  />
-                </div>
-                <span className="scNavBrandTitle scNavBrandTitleScrolled">SkillsCatalyst</span>
-              </div>
-            </div>
-
-            {/* Center: White Pill Navigation Bar with Buttons */}
-            <div
-              className={`scNavCenterBar ${effectiveScrolled ? "scNavCenterBarScrolled" : ""}`}
-              aria-label="Main Navigation"
-            >
-              {NAV_ITEMS.map((item) => {
-                const isOpen = activeDropdown === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    className="scNavItemWrapper"
-                    onMouseEnter={() => setActiveDropdown(item.id)}
-                    onMouseLeave={() => setActiveDropdown(null)}
+            className="hidden md:flex items-center gap-6 lg:gap-8 relative"
+            aria-label="Main Navigation"
+          >
+            {NAV_ITEMS.map((item) => {
+              const isOpen = activeDropdown === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className="relative"
+                  onMouseEnter={() => setActiveDropdown(item.id)}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleNavPillClick(item)}
+                    className={`text-[14px] font-medium tracking-[-0.01em] transition-colors cursor-pointer py-2 ${
+                      isOpen ? "text-white font-semibold" : "text-white/80 hover:text-white"
+                    }`}
+                    aria-expanded={isOpen}
                   >
-                    <button
-                      type="button"
-                      onClick={() => handleNavPillClick(item)}
-                      className="scNavPillBtn"
-                      aria-expanded={isOpen}
-                    >
-                      <span>{item.label}</span>
-                      <NavChevronIcon
-                        isOpen={isOpen}
-                        className={`scNavChevron ${isOpen ? "scNavChevronOpen" : ""}`}
-                      />
-                    </button>
+                    {item.label}
+                  </button>
 
-                    <AnimatePresence>
-                      {isOpen && (
-                        item.id === "features" ? (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                            transition={{ duration: 0.18, ease: "easeOut" }}
-                            className="relative"
-                          >
-                            <FeaturesMegaMenu onItemClick={() => setActiveDropdown(null)} />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            className="scNavDropdown"
-                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                            transition={{ duration: 0.16, ease: "easeOut" }}
-                          >
-                            {item.items.map((subItem) => (
-                              <button
-                                key={subItem.title}
-                                type="button"
-                                onClick={() => handleDropdownItemClick(item.id, subItem.title)}
-                                className="scDropdownItem cursor-pointer"
-                              >
-                                <span className="scDropdownItemTitle">{subItem.title}</span>
-                                <span className="scDropdownItemDesc">{subItem.description}</span>
-                              </button>
-                            ))}
-                          </motion.div>
-                        )
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
+                  <AnimatePresence>
+                    {isOpen && (
+                      item.id === "features" ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                          transition={{ duration: 0.16, ease: "easeOut" }}
+                          className="relative"
+                        >
+                          <FeaturesMegaMenu onItemClick={() => setActiveDropdown(null)} />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          className="scNavDropdown"
+                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                          transition={{ duration: 0.16, ease: "easeOut" }}
+                        >
+                          {item.items.map((subItem) => (
+                            <button
+                              key={subItem.title}
+                              type="button"
+                              onClick={() => handleDropdownItemClick(item.id, subItem.title)}
+                              className="scDropdownItem cursor-pointer"
+                            >
+                              <span className="scDropdownItemTitle">{subItem.title}</span>
+                              <span className="scDropdownItemDesc">{subItem.description}</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
 
-            {/* Right: Login & Signup Buttons (Desktop only) */}
-            <div className={`scNavRightActions ${effectiveScrolled ? "scNavRightActionsScrolled" : ""}`}>
-              <button
-                id="desktop-nav-login"
-                type="button"
-                onClick={handleNavigateToLogin}
-                className={effectiveScrolled ? "scNavLoginBtn scNavLoginBtnScrolled" : "scNavLoginBtn"}
-              >
-                Log In
-              </button>
-              <button
-                id="desktop-nav-signup"
-                type="button"
-                onClick={handleNavigateToSignUp}
-                className={effectiveScrolled ? "scNavSignUpBtn scNavSignUpBtnScrolled" : "scNavSignUpBtn"}
-              >
-                Sign Up
-              </button>
-            </div>
+          {/* Right: Log In (Dark Charcoal -> Acid Lime) & Sign Up (Acid Lime -> Dark Charcoal) */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <button
+              id="desktop-nav-login"
+              type="button"
+              onClick={handleNavigateToLogin}
+              className="uiverse-kingfress-btn hidden sm:inline-flex items-center justify-center font-bold text-[13.5px] sm:text-[14px] px-4 sm:px-5 py-2.5 rounded-full cursor-pointer transition-all active:scale-[0.98] whitespace-nowrap"
+            >
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span className="bubble-content">Log In</span>
+            </button>
+
+            <button
+              id="desktop-nav-signup"
+              type="button"
+              onClick={handleNavigateToSignUp}
+              className="uiverse-kingfress-inverse-btn hidden md:inline-flex items-center justify-center font-bold text-[13.5px] sm:text-[14px] px-4 sm:px-5 py-2.5 rounded-full cursor-pointer transition-all active:scale-[0.98] whitespace-nowrap"
+            >
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span aria-hidden="true" className="bubble-span" />
+              <span className="bubble-content">
+                <span>Sign Up</span>
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0 -mr-0.5"
+                  aria-hidden="true"
+                >
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
+                </svg>
+              </span>
+            </button>
 
             {/* Mobile 3-Lines Hamburger Button */}
             <button
               id="mobile-nav-hamburger"
               type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="scMobileMenuBtn"
-              aria-label="Open mobile navigation menu"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-white hover:text-white/80 transition-colors cursor-pointer flex items-center justify-center -mr-1"
+              aria-label="Toggle mobile navigation menu"
+              aria-expanded={isMobileMenuOpen}
             >
-              <span className="scMobileMenuLine" />
-              <span className="scMobileMenuLine" />
-              <span className="scMobileMenuLine" />
+              <div className="w-5 h-4 flex flex-col justify-between items-end">
+                <span className={`h-0.5 bg-white rounded-full transition-all duration-300 ${isMobileMenuOpen ? "w-5 rotate-45 translate-y-1.5" : "w-5"}`} />
+                <span className={`h-0.5 bg-white rounded-full transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : "w-4"}`} />
+                <span className={`h-0.5 bg-white rounded-full transition-all duration-300 ${isMobileMenuOpen ? "w-5 -rotate-45 -translate-y-2" : "w-5"}`} />
+              </div>
             </button>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </header>
 
       {/* Mobile Top-to-Down Kinetic Navigation (GSAP Staggered Layer Cascade) */}
       <LandingKineticMobileNav

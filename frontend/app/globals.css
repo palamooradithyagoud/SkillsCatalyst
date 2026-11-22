@@ -1224,4 +1224,251 @@ input:-webkit-autofill:active {
   }
 }
 
+/* ── Uiverse.io Button by KINGFRESS (Zero Glow, Zero Border) ── */
+.uiverse-kingfress-btn {
+  font-family: inherit;
+  font-weight: bold;
+  color: #ffffff !important;
+  background-color: #171717 !important;
+  padding: 0.65em 1.35em !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px !important;
+  position: relative !important;
+  cursor: pointer;
+  overflow: hidden !important;
+  isolation: isolate;
+  user-select: none;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.uiverse-kingfress-btn > span:not(:nth-child(6)),
+.uiverse-kingfress-btn > .bubble-span {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  height: 30px !important;
+  width: 30px !important;
+  background-color: #d5ff38 !important;
+  border-radius: 50% !important;
+  transition: transform 0.6s ease;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.uiverse-kingfress-btn > span:nth-child(6),
+.uiverse-kingfress-btn > .bubble-content {
+  position: relative !important;
+  z-index: 10 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  color: #ffffff;
+  transition: color 0.35s ease;
+}
+
+.uiverse-kingfress-btn > span:nth-child(1),
+.uiverse-kingfress-btn > .bubble-span:nth-child(1) {
+  transform: translate(-3.3em, -4em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(2),
+.uiverse-kingfress-btn > .bubble-span:nth-child(2) {
+  transform: translate(-6em, 1.3em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(3),
+.uiverse-kingfress-btn > .bubble-span:nth-child(3) {
+  transform: translate(-0.2em, 1.8em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(4),
+.uiverse-kingfress-btn > .bubble-span:nth-child(4) {
+  transform: translate(3.5em, 1.4em);
+}
+
+.uiverse-kingfress-btn > span:nth-child(5),
+.uiverse-kingfress-btn > .bubble-span:nth-child(5) {
+  transform: translate(3.5em, -3.8em);
+}
+
+/* Expansion on hover, active (press / click / touch), and focus-visible */
+.uiverse-kingfress-btn:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:active > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-btn:hover > .bubble-span,
+.uiverse-kingfress-btn:active > .bubble-span,
+.uiverse-kingfress-btn:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(5.5);
+  transition: transform 1.5s ease;
+}
+
+/* Wide variant for full-width buttons */
+.uiverse-kingfress-btn.uiverse-wide:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:active > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-btn.uiverse-wide:hover > .bubble-span,
+.uiverse-kingfress-btn.uiverse-wide:active > .bubble-span,
+.uiverse-kingfress-btn.uiverse-wide:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(9.5);
+  transition: transform 1.5s ease;
+}
+
+/* Hover and active color transitions - Zero glow, Zero border */
+.uiverse-kingfress-btn:hover,
+.uiverse-kingfress-btn:active,
+.uiverse-kingfress-btn:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.uiverse-kingfress-btn:hover > span:nth-child(6),
+.uiverse-kingfress-btn:active > span:nth-child(6),
+.uiverse-kingfress-btn:focus-visible > span:nth-child(6),
+.uiverse-kingfress-btn:hover > .bubble-content,
+.uiverse-kingfress-btn:active > .bubble-content,
+.uiverse-kingfress-btn:focus-visible > .bubble-content {
+  color: #000000 !important;
+}
+
+.uiverse-kingfress-btn:hover > span:nth-child(6) *,
+.uiverse-kingfress-btn:active > span:nth-child(6) *,
+.uiverse-kingfress-btn:focus-visible > span:nth-child(6) *,
+.uiverse-kingfress-btn:hover > .bubble-content *,
+.uiverse-kingfress-btn:active > .bubble-content *,
+.uiverse-kingfress-btn:focus-visible > .bubble-content * {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.uiverse-kingfress-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* ── Inverse Variant: Sign Up (Acid Lime Base -> Dark Charcoal on Hover, Zero Glow, Zero Border) ── */
+.uiverse-kingfress-inverse-btn {
+  font-family: inherit;
+  font-weight: bold;
+  color: #000000 !important;
+  background-color: #d5ff38 !important;
+  padding: 0.65em 1.35em !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px !important;
+  position: relative !important;
+  cursor: pointer;
+  overflow: hidden !important;
+  isolation: isolate;
+  user-select: none;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.uiverse-kingfress-inverse-btn > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn > .bubble-span {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+  height: 30px !important;
+  width: 30px !important;
+  background-color: #171717 !important;
+  border-radius: 50% !important;
+  transition: transform 0.6s ease;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(6),
+.uiverse-kingfress-inverse-btn > .bubble-content {
+  position: relative !important;
+  z-index: 10 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  color: #000000;
+  transition: color 0.35s ease;
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(1),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(1) {
+  transform: translate(-3.3em, -4em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(2),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(2) {
+  transform: translate(-6em, 1.3em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(3),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(3) {
+  transform: translate(-0.2em, 1.8em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(4),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(4) {
+  transform: translate(3.5em, 1.4em);
+}
+
+.uiverse-kingfress-inverse-btn > span:nth-child(5),
+.uiverse-kingfress-inverse-btn > .bubble-span:nth-child(5) {
+  transform: translate(3.5em, -3.8em);
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:active > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:focus-visible > span:not(:nth-child(6)),
+.uiverse-kingfress-inverse-btn:hover > .bubble-span,
+.uiverse-kingfress-inverse-btn:active > .bubble-span,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-span {
+  transform: translate(-50%, -50%) scale(5.5);
+  transition: transform 1.5s ease;
+}
+
+.uiverse-kingfress-inverse-btn:hover,
+.uiverse-kingfress-inverse-btn:active,
+.uiverse-kingfress-inverse-btn:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:active > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:focus-visible > span:nth-child(6),
+.uiverse-kingfress-inverse-btn:hover > .bubble-content,
+.uiverse-kingfress-inverse-btn:active > .bubble-content,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-content {
+  color: #ffffff !important;
+}
+
+.uiverse-kingfress-inverse-btn:hover > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:active > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:focus-visible > span:nth-child(6) *,
+.uiverse-kingfress-inverse-btn:hover > .bubble-content *,
+.uiverse-kingfress-inverse-btn:active > .bubble-content *,
+.uiverse-kingfress-inverse-btn:focus-visible > .bubble-content * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.uiverse-kingfress-inverse-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
 

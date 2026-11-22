@@ -436,9 +436,14 @@ export default function LandingKineticMobileNav({
                   onClose();
                   onNavigateToLogin();
                 }}
-                className="scNavLoginBtn"
+                className="uiverse-kingfress-btn flex-1 py-3 text-center justify-center font-bold text-sm rounded-full"
               >
-                Log In
+                <span aria-hidden="true" className="bubble-span" />
+                <span aria-hidden="true" className="bubble-span" />
+                <span aria-hidden="true" className="bubble-span" />
+                <span aria-hidden="true" className="bubble-span" />
+                <span aria-hidden="true" className="bubble-span" />
+                <span className="bubble-content">Log In</span>
               </button>
               <button
                 id="mobile-kinetic-signup"
