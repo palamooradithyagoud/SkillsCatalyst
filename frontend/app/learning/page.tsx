@@ -289,8 +289,15 @@ export default function LearningPage() {
       {/* ── Mobile Only: Learning Skills Hero Banner (Full-bleed rectangle fitting the screen) ── */}
       <div className="block md:hidden -mx-3.5 sm:-mx-6 -mt-3.5 sm:-mt-6 mb-4">
         <LearningSkillsBanner
-          onExplore={() => {
+          onExplore={(category) => {
             setActiveSection("explore");
+            if (category === "Programming Languages") {
+              setQuery("Python");
+              handleSearch("Python");
+            } else if (category === "Web Development") {
+              setQuery("React");
+              handleSearch("React");
+            }
             const el = document.getElementById("learning-search-input");
             el?.focus();
             el?.scrollIntoView({ behavior: "smooth", block: "center" });
