@@ -9,7 +9,7 @@ import {
 import {
   classifyDeploymentEnvironment,
   resolveRedirectOrigin,
-} from "@/app/auth/callback/route";
+} from "@/lib/authRedirect";
 
 describe("SYS-05: Test Reliability & Clean-Environment Initialization Suite", () => {
   const originalEnv = { ...process.env };

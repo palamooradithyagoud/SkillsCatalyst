@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { validatePassword, validateEmail } from '@/lib/validation';
-import { sanitizeNextPath } from '@/app/auth/callback/route';
+import { sanitizeNextPath } from '@/lib/authRedirect';
 
 describe('Password Recovery Test Suite', () => {
 

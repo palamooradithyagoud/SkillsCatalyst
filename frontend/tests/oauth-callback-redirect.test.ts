@@ -6,8 +6,8 @@ import {
   classifyDeploymentEnvironment,
   validateAndNormalizeOrigin,
   resolveRedirectOrigin,
-  GET,
-} from '@/app/auth/callback/route';
+} from '@/lib/authRedirect';
+import { GET } from '@/app/auth/callback/route';
 
 describe('SYS-04: OAuth Callback Redirect Security Suite', () => {
   const originalEnv = { ...process.env };

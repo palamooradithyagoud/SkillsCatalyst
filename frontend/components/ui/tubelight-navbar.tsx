@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export interface NavItem {
   name: string;
   url: string;
-  icon: LucideIcon | React.ComponentType<any>;
+  icon: React.ElementType;
   badge?: string | number;
 }
 
@@ -103,17 +103,17 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
             >
               <div className="relative flex items-center justify-center w-7 h-7">
                 {item.name === "Home" ? (
-                  <Icon
-                    size={22}
-                    strokeWidth={isActive ? 2.5 : 1.9}
-                    active={isActive}
-                    className={cn(
+                  React.createElement(Icon as React.ComponentType<any>, {
+                    size: 22,
+                    strokeWidth: isActive ? 2.5 : 1.9,
+                    active: isActive,
+                    className: cn(
                       "transition-all duration-200",
                       isActive
                         ? "text-[#D5FF38] fill-transparent"
                         : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
-                    )}
-                  />
+                    ),
+                  })
                 ) : (
                   <Icon
                     size={22}
