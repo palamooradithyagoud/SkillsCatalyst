@@ -123,10 +123,14 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     // Verify profile avatar card has corner radius of 10px exactly
     assert.ok(mobileNavSrc.includes("rounded-[10px]"), "Mobile profile avatar card must have corner radius rounded-[10px]");
 
-    // Verify mobile notification bell routes to full page /notifications and transforms to X
+    // Verify mobile notification bell routes to full page /notifications and transforms to ArchedCloseIcon
     assert.ok(mobileNavSrc.includes("router.push(\"/notifications\")"), "Mobile notification bell must route to /notifications");
     assert.ok(mobileNavSrc.includes("isNotifications"), "Mobile notification button must check isNotifications");
-    assert.ok(mobileNavSrc.includes("<X size={21}"), "Mobile notification icon must transform into X icon on /notifications");
+    assert.ok(mobileNavSrc.includes("ArchedCloseIcon"), "Mobile notification icon must render ArchedCloseIcon on /notifications");
+    assert.ok(mobileNavSrc.includes("borderColor=\"#3A3D46\""), "ArchedCloseIcon must use dark charcoal border lines");
+    assert.ok(mobileNavSrc.includes("fillColor=\"#20222A\""), "ArchedCloseIcon must fill interior with dark charcoal");
+    assert.ok(mobileNavSrc.includes("xColor=\"#D5FF38\""), "ArchedCloseIcon must use #D5FF38 acid lime for X");
+    assert.ok(mobileNavSrc.includes("self-end"), "ArchedCloseIcon must align to navbar bottom line");
   });
 
   it("9. verifies /notifications full page exists with zero purple, zero glass back, and zero blue", () => {
@@ -161,5 +165,22 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     // Filter button & preferences modal
     assert.ok(pageSrc.includes("SlidersHorizontal"), "Notifications page must include the filter button");
     assert.ok(pageSrc.includes("NotificationPreferencesModal"), "Notifications page must render preferences modal");
+  });
+
+  it("10. verifies NotificationPreferencesModal removed unnecessary icons & subtitle text, keeping only Streaks, Hackathons, and Scholarships", () => {
+    const modalPath = path.resolve(__dirname, "../components/notifications/NotificationPreferencesModal.tsx");
+    assert.ok(fs.existsSync(modalPath), "NotificationPreferencesModal.tsx must exist");
+    const modalSrc = fs.readFileSync(modalPath, "utf-8");
+
+    // Clean simplified toggle labels
+    assert.ok(modalSrc.includes(">Streaks</span>"), "Preferences modal must keep Streaks");
+    assert.ok(modalSrc.includes(">Hackathons</span>"), "Preferences modal must keep Hackathons");
+    assert.ok(modalSrc.includes(">Scholarships</span>"), "Preferences modal must keep Scholarships");
+
+    // Removed wordy subtitles
+    assert.ok(!modalSrc.includes("At-risk streak alerts"), "Must remove unnecessary streak description text");
+    assert.ok(!modalSrc.includes("Alerts when new competitions"), "Must remove unnecessary hackathons description text");
+    assert.ok(!modalSrc.includes("Targeted eligibility updates"), "Must remove unnecessary scholarships description text");
+    assert.ok(!modalSrc.includes("Manage alerts, triggers, and browser Web Push"), "Must remove unnecessary header description text");
   });
 });

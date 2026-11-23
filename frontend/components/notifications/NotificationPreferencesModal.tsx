@@ -4,11 +4,6 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
-  Flame,
-  Calendar,
-  GraduationCap,
-  Bell,
-  Check,
   Send,
   Loader2,
   ShieldCheck,
@@ -127,19 +122,9 @@ export default function NotificationPreferencesModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#18191E] border border-white/10 text-white flex items-center justify-center shrink-0">
-              <Bell className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 id="notif-pref-title" className="text-base font-bold text-white leading-tight">
-                Notification Preferences
-              </h3>
-              <p className="text-[11px] text-neutral-400 mt-0.5">
-                Manage alerts, triggers, and browser Web Push
-              </p>
-            </div>
-          </div>
+          <h3 id="notif-pref-title" className="text-base font-bold text-white leading-tight">
+            Notification Preferences
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -150,19 +135,11 @@ export default function NotificationPreferencesModal({
           </button>
         </div>
 
-        {/* Toggles */}
+        {/* Toggles: Streaks, Hackathons, Scholarships */}
         <div className="flex flex-col gap-2.5">
-          {/* 1. Streak */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
-            <div className="flex items-center gap-3 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
-                <Flame className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white leading-snug">Daily Streak Reminders</p>
-                <p className="text-xs text-neutral-400">At-risk streak alerts and milestone badges (max 1/day)</p>
-              </div>
-            </div>
+          {/* 1. Streaks */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
+            <span className="text-sm font-bold text-white">Streaks</span>
             <button
               type="button"
               onClick={() => handleToggle("streak_enabled")}
@@ -179,17 +156,9 @@ export default function NotificationPreferencesModal({
             </button>
           </div>
 
-          {/* 2. Events */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
-            <div className="flex items-center gap-3 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                <Calendar className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white leading-snug">New Events & Hackathons</p>
-                <p className="text-xs text-neutral-400">Alerts when new competitions and workshops are published</p>
-              </div>
-            </div>
+          {/* 2. Hackathons */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
+            <span className="text-sm font-bold text-white">Hackathons</span>
             <button
               type="button"
               onClick={() => handleToggle("events_enabled")}
@@ -207,16 +176,8 @@ export default function NotificationPreferencesModal({
           </div>
 
           {/* 3. Scholarships */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
-            <div className="flex items-center gap-3 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
-                <GraduationCap className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white leading-snug">New Scholarships</p>
-                <p className="text-xs text-neutral-400">Targeted eligibility updates and financial aid grants</p>
-              </div>
-            </div>
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#18191E] border border-white/10 transition-colors">
+            <span className="text-sm font-bold text-white">Scholarships</span>
             <button
               type="button"
               onClick={() => handleToggle("scholarships_enabled")}

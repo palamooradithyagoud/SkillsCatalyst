@@ -42,6 +42,7 @@ import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import CareerDownbar from "@/components/career/CareerDownbar";
 import ProfileDownbar from "@/components/profile/ProfileDownbar";
 import DashboardMobileDock from "@/components/dashboard/DashboardMobileDock";
+import ArchedCloseIcon from "@/components/icons/ArchedCloseIcon";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
 
@@ -241,9 +242,9 @@ function MobileNavContent() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 h-full">
             {/* Notification Bell / Close Button & Dropdown */}
-            <div className="relative mr-1.5 sm:mr-2">
+            <div className={`relative mr-1.5 sm:mr-2 ${isNotifications ? "self-end -mb-[1px]" : ""}`}>
               <button
                 type="button"
                 id="mobile-notifications-button"
@@ -259,12 +260,14 @@ function MobileNavContent() {
                   }
                 }}
                 aria-label={isNotifications ? "Close notifications" : "Open notifications"}
-                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer text-slate-300 hover:text-white"
+                className={`relative flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
+                  isNotifications ? "self-end" : "w-9 h-9 sm:w-10 sm:h-10 text-slate-400 hover:text-white"
+                }`}
               >
                 {isNotifications ? (
-                  <X size={21} strokeWidth={2.2} className="transition-transform active:rotate-90 text-white" />
+                  <ArchedCloseIcon size={44} borderColor="#3A3D46" fillColor="#20222A" xColor="#D5FF38" className="transition-transform active:scale-95" />
                 ) : (
-                  <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12 text-slate-400 hover:text-white" />
+                  <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12" />
                 )}
                 {!isNotifications && unreadCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-rose-500 rounded-full ring-1.5 ring-white dark:ring-black shadow-xs">
@@ -285,7 +288,7 @@ function MobileNavContent() {
               type="button"
               onClick={() => router.push("/profile")}
               aria-label="User Profile"
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 self-center rounded-[10px] ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer`}
             >
               <span>{userInitial}</span>
             </button>
