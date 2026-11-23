@@ -38,7 +38,6 @@ import ExploreIcon from "@/components/icons/ExploreIcon";
 import Home3DIcon from "@/components/icons/Home3DIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
-import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import CareerDownbar from "@/components/career/CareerDownbar";
 import ProfileDownbar from "@/components/profile/ProfileDownbar";
 import DashboardMobileDock from "@/components/dashboard/DashboardMobileDock";
@@ -57,15 +56,6 @@ const navItems = [
   { name: "Analytics", href: "/analytics", icon: BarChart3, desc: "Detailed performance" },
   { name: "Support & Help", href: "/support", icon: LifeBuoy, desc: "Customer desk & policies" },
   { name: "Profile", href: "/profile", icon: UserIcon, desc: "Account & settings" },
-];
-
-const mobileNavItems: NavItem[] = [
-  { name: "Home", url: "/dashboard", icon: Home3DIcon },
-  { name: "SkillBits", url: "/skillbits", icon: Clapperboard },
-  { name: "Career", url: "/roadmaps", icon: Briefcase },
-  { name: "Explore", url: "/explore", icon: Compass },
-  { name: "AI Mentor", url: "/ai-mentor", icon: Bot },
-  { name: "Profile", url: "/profile", icon: User },
 ];
 
 const bottomBarItems = [
@@ -250,14 +240,10 @@ function MobileNavContent() {
                 type="button"
                 id="mobile-notifications-button"
                 onClick={() => {
-                  setIsNotificationOpen(!isNotificationOpen);
+                  router.push("/notifications");
                 }}
                 aria-label="Open notifications"
-                className={`relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
-                  isNotificationOpen
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-neutral-300 dark:hover:text-white"
-                }`}
+                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer text-slate-600 hover:text-slate-900 dark:text-neutral-300 dark:hover:text-white"
               >
                 <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12" />
                 {unreadCount > 0 && (
@@ -268,8 +254,8 @@ function MobileNavContent() {
               </button>
 
               <NotificationPanel
-                isOpen={isNotificationOpen}
-                onClose={() => setIsNotificationOpen(false)}
+                isOpen={false}
+                onClose={() => {}}
                 align="mobile"
               />
             </div>
@@ -302,18 +288,9 @@ function MobileNavContent() {
         <ProfileDownbar className="md:hidden" />
       )}
 
-      {/* ── Mobile Floating Pill Dock (MAIN DASHBOARD ONLY) ── */}
-      {isDashboard && !isHideBottomBar && (
+      {/* ── Mobile Floating Pill Dock (Universal Modern Dock: Replaces old navbar completely) ── */}
+      {!isHideBottomBar && !isCareerGroup && !isProfileGroup && (
         <DashboardMobileDock className="md:hidden" />
-      )}
-
-      {/* ── Mobile Navigation Bar for all other non-dashboard pages ── */}
-      {!isDashboard && !isHideBottomBar && !isCareerGroup && (
-        <NavBar
-          items={mobileNavItems}
-          userInitial={userInitial}
-          className="md:hidden"
-        />
       )}
     </>
   );

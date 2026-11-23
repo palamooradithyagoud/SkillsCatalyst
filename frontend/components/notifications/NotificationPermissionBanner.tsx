@@ -87,7 +87,7 @@ export default function NotificationPermissionBanner() {
 
   if (justSubscribed) {
     return (
-      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-sm w-[calc(100vw-2rem)] bg-[#10110E]/95 border border-[#24271F] backdrop-blur-xl rounded-2xl p-4 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
+      <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-sm w-[calc(100vw-2rem)] bg-[#10110E] border border-[#24271F] rounded-2xl p-4 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
         <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shrink-0 border border-[#d5ff38]/40 shadow-xs">
           <CheckCircle2 className="w-5 h-5 text-[#d5ff38]" />
         </div>
@@ -103,7 +103,7 @@ export default function NotificationPermissionBanner() {
     <div
       role="region"
       aria-label="Notification Permission"
-      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-md w-[calc(100vw-2rem)] bg-white/95 dark:bg-[#10110E]/95 border border-zinc-200 dark:border-[#24271F] backdrop-blur-xl rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden relative"
+      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 max-w-md w-[calc(100vw-2rem)] bg-white dark:bg-[#10110E] border border-zinc-200 dark:border-[#24271F] rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-4 duration-200 overflow-hidden relative"
     >
       {/* Top delicate acid lime accent line */}
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-[#d5ff38]/60 to-transparent" />

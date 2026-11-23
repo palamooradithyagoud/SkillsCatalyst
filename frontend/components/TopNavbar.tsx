@@ -233,8 +233,8 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
             aria-expanded={isNotificationOpen}
             className={`relative p-1.5 rounded-lg transition-colors cursor-pointer group ${
               isNotificationOpen
-                ? "text-[#5227FF] bg-[#5227FF]/10 dark:bg-[#5227FF]/20"
-                : "text-slate-600 dark:text-neutral-300 hover:text-[#5227FF] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-900"
+                ? "text-slate-900 dark:text-white bg-slate-100 dark:bg-neutral-900"
+                : "text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-900"
             }`}
           >
             <Bell

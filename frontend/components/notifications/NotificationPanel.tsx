@@ -55,15 +55,15 @@ export default function NotificationPanel({
 
   const containerClasses =
     align === "mobile"
-      ? "fixed top-14 left-3 right-3 sm:left-auto sm:right-4 sm:w-92 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
-      : "absolute right-0 top-[46px] w-80 sm:w-92 bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-xl shadow-slate-900/10 z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100";
+      ? "fixed top-14 left-3 right-3 sm:left-auto sm:right-4 sm:w-92 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-[#121318] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150"
+      : "absolute right-0 top-[46px] w-80 sm:w-92 bg-white dark:bg-[#121318] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100";
 
   return (
     <>
-      {/* Backdrop for outside clicks */}
+      {/* Backdrop for outside clicks - Solid dark, Zero Glass */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/10 dark:bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-40 bg-black/70 dark:bg-black/85"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -77,17 +77,17 @@ export default function NotificationPanel({
           aria-label="Notifications panel"
         >
           {/* Header */}
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-extrabold text-slate-900 dark:text-white">
                 Notifications
               </span>
               {unreadCount > 0 ? (
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-[#5227FF]/10 text-[#5227FF] dark:bg-[#5227FF]/25 dark:text-purple-300 rounded-full">
+                <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#D5FF38] text-black rounded-full">
                   {unreadCount} new
                 </span>
               ) : (
-                <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-neutral-900 dark:text-neutral-400 rounded-full">
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-[#18191E] dark:text-neutral-400 rounded-full">
                   Caught up
                 </span>
               )}
@@ -98,7 +98,7 @@ export default function NotificationPanel({
                 <button
                   type="button"
                   onClick={markAllAsRead}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#5227FF] hover:text-[#431ce0] dark:text-purple-400 transition-colors cursor-pointer mr-1"
+                  className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white hover:text-black dark:hover:text-[#D5FF38] transition-colors cursor-pointer mr-1"
                   title="Mark all notifications as read"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export default function NotificationPanel({
               <button
                 type="button"
                 onClick={() => setIsPreferencesOpen(true)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#18191E] transition-colors cursor-pointer"
                 title="Notification preferences"
                 aria-label="Notification preferences"
               >
@@ -117,7 +117,7 @@ export default function NotificationPanel({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#18191E] transition-colors cursor-pointer"
                 aria-label="Close notifications"
               >
                 <X className="w-4 h-4" />
@@ -127,13 +127,13 @@ export default function NotificationPanel({
 
           {/* Filter Tabs (only shown when notifications exist) */}
           {notifications.length > 0 && (
-            <div className="px-3 pt-2 pb-1.5 flex items-center gap-1 bg-slate-50/70 dark:bg-black border-b border-slate-100 dark:border-neutral-800">
+            <div className="px-3 pt-2 pb-1.5 flex items-center gap-1 bg-slate-50 dark:bg-[#0E0F12] border-b border-slate-100 dark:border-white/10">
               <button
                 type="button"
                 onClick={() => setFilter("all")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filter === "all"
-                    ? "bg-white dark:bg-neutral-900 text-slate-900 dark:text-white shadow-2xs"
+                    ? "bg-[#D5FF38] text-black font-extrabold shadow-2xs"
                     : "text-slate-500 hover:text-slate-800 dark:hover:text-neutral-300"
                 }`}
               >
@@ -144,7 +144,7 @@ export default function NotificationPanel({
                 onClick={() => setFilter("unread")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filter === "unread"
-                    ? "bg-white dark:bg-neutral-900 text-slate-900 dark:text-white shadow-2xs"
+                    ? "bg-[#D5FF38] text-black font-extrabold shadow-2xs"
                     : "text-slate-500 hover:text-slate-800 dark:hover:text-neutral-300"
                 }`}
               >
@@ -154,10 +154,10 @@ export default function NotificationPanel({
           )}
 
           {/* Notifications List */}
-          <div className="max-h-84 overflow-y-auto divide-y divide-slate-100 dark:divide-neutral-800">
+          <div className="max-h-84 overflow-y-auto divide-y divide-slate-100 dark:divide-white/10">
             {filteredNotifications.length === 0 ? (
               <div className="py-10 px-6 text-center flex flex-col items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-neutral-900 flex items-center justify-center text-slate-400 mb-2.5">
+                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#18191E] flex items-center justify-center text-slate-400 mb-2.5">
                   <Bell className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -170,23 +170,23 @@ export default function NotificationPanel({
             ) : (
               filteredNotifications.map((notif) => {
                 let Icon = Bell;
-                let iconColors = "bg-[#5227FF]/10 text-[#5227FF] dark:bg-[#5227FF]/20 dark:text-purple-400";
+                let iconColors = "bg-slate-200 text-slate-800 dark:bg-neutral-800 dark:text-neutral-200 border border-white/5";
 
                 if (notif.type === "streak") {
                   Icon = Flame;
-                  iconColors = "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400";
+                  iconColors = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
                 } else if (notif.type === "event") {
                   Icon = Rocket;
-                  iconColors = "bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400";
+                  iconColors = "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
                 } else if (notif.type === "scholarship") {
                   Icon = GraduationCap;
-                  iconColors = "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400";
+                  iconColors = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
                 } else if (notif.type === "mentor") {
                   Icon = Bot;
-                  iconColors = "bg-sky-500/10 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400";
+                  iconColors = "bg-[#D5FF38]/15 text-[#D5FF38] border border-[#D5FF38]/25";
                 } else if (notif.type === "resume") {
                   Icon = FileText;
-                  iconColors = "bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400";
+                  iconColors = "bg-slate-200 text-slate-800 dark:bg-neutral-800 dark:text-neutral-200 border border-white/5";
                 }
 
                 return (
@@ -194,8 +194,8 @@ export default function NotificationPanel({
                     key={notif.id}
                     className={`group relative w-full p-3 flex items-start gap-3 transition-colors ${
                       !notif.isRead
-                        ? "bg-[#5227FF]/[0.03] dark:bg-[#5227FF]/[0.06] hover:bg-slate-100/80 dark:hover:bg-neutral-900"
-                        : "hover:bg-slate-50 dark:hover:bg-neutral-900"
+                        ? "bg-slate-100/60 dark:bg-[#18191E]/50 hover:bg-slate-100 dark:hover:bg-[#18191E]"
+                        : "hover:bg-slate-50 dark:hover:bg-[#18191E]/30"
                     }`}
                   >
                     <button
@@ -220,7 +220,7 @@ export default function NotificationPanel({
                             {notif.title}
                           </p>
                           {!notif.isRead && (
-                            <span className="w-2 h-2 rounded-full bg-[#5227FF] shrink-0" />
+                            <span className="w-2 h-2 rounded-full bg-[#D5FF38] shrink-0" />
                           )}
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
@@ -250,12 +250,21 @@ export default function NotificationPanel({
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-black flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 px-2 font-medium">SkillsCatalyst Alerts</span>
+          <div className="p-2 border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-[#0E0F12] flex items-center justify-between text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push("/notifications");
+              }}
+              className="text-slate-700 dark:text-neutral-300 hover:text-black dark:hover:text-[#D5FF38] font-bold px-2 py-1 rounded transition-colors cursor-pointer"
+            >
+              View all notifications →
+            </button>
             <button
               type="button"
               onClick={() => setIsPreferencesOpen(true)}
-              className="text-[#5227FF] hover:text-[#431ce0] dark:text-purple-400 font-semibold px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1"
+              className="text-slate-900 dark:text-white hover:text-black dark:hover:text-[#D5FF38] font-bold px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1"
             >
               <SlidersHorizontal className="w-3 h-3" />
               <span>Preferences</span>

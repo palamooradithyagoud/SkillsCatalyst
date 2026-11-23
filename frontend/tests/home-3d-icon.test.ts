@@ -41,12 +41,12 @@ describe("Home 3D Icon Transition & Mobile View Verification Suite", () => {
     assert.ok(content.includes("active={active}"), "Must pass active status to icon");
   });
 
-  it("verifies MobileNav and NavBar use Home3DIcon with zero glow", () => {
+  it("verifies MobileNav and DashboardMobileDock use Home3DIcon with zero glow", () => {
     const mobileNavPath = path.join(process.cwd(), "components", "MobileNav.tsx");
     const navContent = fs.readFileSync(mobileNavPath, "utf-8");
 
     assert.ok(navContent.includes("Home3DIcon"), "MobileNav must import Home3DIcon");
-    assert.ok(navContent.includes('{ name: "Home", url: "/dashboard", icon: Home3DIcon }'), "mobileNavItems must wire Home3DIcon");
+    assert.ok(navContent.includes("DashboardMobileDock"), "MobileNav must use DashboardMobileDock with Home3DIcon");
 
     const navBarPath = path.join(process.cwd(), "components", "ui", "tubelight-navbar.tsx");
     const barContent = fs.readFileSync(navBarPath, "utf-8");

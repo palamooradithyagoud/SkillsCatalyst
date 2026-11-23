@@ -47,14 +47,14 @@ describe("Dashboard Mobile Dock (Capsule + FAB) Suite", () => {
     assert.ok(content.includes("md:hidden"), "Must be hidden on desktop views");
   });
 
-  it("verifies MobileNav strictly restricts DashboardMobileDock to main dashboard only", () => {
+  it("verifies MobileNav renders modern DashboardMobileDock and has completely removed old NavBar", () => {
     const mobileNavPath = path.join(process.cwd(), "components", "MobileNav.tsx");
     assert.ok(fs.existsSync(mobileNavPath), "MobileNav.tsx must exist on disk");
     const content = fs.readFileSync(mobileNavPath, "utf-8");
 
     assert.ok(content.includes("DashboardMobileDock"), "MobileNav must import DashboardMobileDock");
-    assert.ok(content.includes("isDashboard"), "MobileNav must identify isDashboard route");
-    assert.ok(content.includes("{isDashboard && !isHideBottomBar && ("), "Must strictly render DashboardMobileDock only when isDashboard");
-    assert.ok(content.includes("{!isDashboard && !isHideBottomBar && !isCareerGroup && ("), "Non-dashboard pages must continue using standard NavBar");
+    assert.ok(!content.includes("<NavBar"), "MobileNav must completely remove old NavBar");
+    assert.ok(!content.includes("tubelight-navbar"), "MobileNav must not import old tubelight-navbar");
+    assert.ok(content.includes("<DashboardMobileDock"), "MobileNav must render modern DashboardMobileDock");
   });
 });

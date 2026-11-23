@@ -122,5 +122,35 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
 
     // Verify profile avatar card has corner radius of 10px exactly
     assert.ok(mobileNavSrc.includes("rounded-[10px]"), "Mobile profile avatar card must have corner radius rounded-[10px]");
+
+    // Verify mobile notification bell routes to full page /notifications
+    assert.ok(mobileNavSrc.includes("router.push(\"/notifications\")"), "Mobile notification bell must route to /notifications");
+  });
+
+  it("9. verifies /notifications full page exists with zero purple, zero glass back, and zero blue", () => {
+    const pagePath = path.resolve(__dirname, "../app/notifications/page.tsx");
+    assert.ok(fs.existsSync(pagePath), "frontend/app/notifications/page.tsx must exist");
+    const pageSrc = fs.readFileSync(pagePath, "utf-8");
+
+    // Zero purple color
+    assert.ok(!pageSrc.includes("#5227FF"), "Notifications page must not use purple #5227FF");
+    assert.ok(!pageSrc.includes("#A855F7"), "Notifications page must not use purple #A855F7");
+    assert.ok(!pageSrc.includes("text-purple-"), "Notifications page must not use text-purple");
+    assert.ok(!pageSrc.includes("bg-purple-"), "Notifications page must not use bg-purple");
+    assert.ok(!pageSrc.includes("bg-indigo-"), "Notifications page must not use bg-indigo");
+
+    // Zero blue color
+    assert.ok(!pageSrc.includes("bg-blue-"), "Notifications page must not use bg-blue");
+    assert.ok(!pageSrc.includes("text-blue-"), "Notifications page must not use text-blue");
+    assert.ok(!pageSrc.includes("bg-sky-"), "Notifications page must not use bg-sky");
+    assert.ok(!pageSrc.includes("text-sky-"), "Notifications page must not use text-sky");
+    assert.ok(!pageSrc.includes("bg-cyan-"), "Notifications page must not use bg-cyan");
+
+    // Zero glass back
+    assert.ok(!pageSrc.includes("backdrop-blur"), "Notifications page must not use glass backdrop-blur");
+
+    // Must have back navigation and preferences modal
+    assert.ok(pageSrc.includes("router.back()"), "Notifications page must support back navigation");
+    assert.ok(pageSrc.includes("NotificationPreferencesModal"), "Notifications page must render preferences modal");
   });
 });
