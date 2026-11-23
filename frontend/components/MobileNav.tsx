@@ -19,6 +19,7 @@ import {
   User,
   Search,
   Bell,
+  X,
   LifeBuoy,
   GraduationCap,
   Newspaper,
@@ -194,6 +195,7 @@ function MobileNavContent() {
   const isDashboard = pathname === "/dashboard" || pathname === "/";
 
   const isProfile = pathname === "/profile";
+  const isNotifications = pathname === "/notifications";
 
   const isCareerGroup =
     pathname.startsWith("/career") ||
@@ -226,7 +228,13 @@ function MobileNavContent() {
     <>
       {/* ── Mobile Native Top App Bar (Hidden on full-screen SkillBits reels or when explicitly hidden) ── */}
       {!pathname.startsWith("/skillbits") && !isHideAppBars && (
-        <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 bg-white/15 dark:bg-black/25 border-b border-white/30 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 text-slate-900 dark:text-white transition-all duration-200 shadow-[inset_0_-1px_1px_rgba(255,255,255,0.4),0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_-1px_1px_rgba(255,255,255,0.1),0_4px_30px_rgba(0,0,0,0.3)]">
+        <header
+          className={`md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4 text-slate-900 dark:text-white transition-all duration-200 ${
+            isNotifications
+              ? "bg-black border-b border-white/10"
+              : "bg-white/15 dark:bg-black/25 border-b border-white/30 dark:border-white/10 backdrop-blur-xl backdrop-saturate-160 shadow-[inset_0_-1px_1px_rgba(255,255,255,0.4),0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_-1px_1px_rgba(255,255,255,0.1),0_4px_30px_rgba(0,0,0,0.3)]"
+          }`}
+        >
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center">
               <SkillsCatalystLogo size="sm" showText={false} animated />
@@ -234,19 +242,31 @@ function MobileNavContent() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Notification Bell Button & Dropdown */}
+            {/* Notification Bell / Close Button & Dropdown */}
             <div className="relative mr-1.5 sm:mr-2">
               <button
                 type="button"
                 id="mobile-notifications-button"
                 onClick={() => {
-                  router.push("/notifications");
+                  if (isNotifications) {
+                    if (window.history.length > 1) {
+                      router.back();
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  } else {
+                    router.push("/notifications");
+                  }
                 }}
-                aria-label="Open notifications"
-                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer text-slate-600 hover:text-slate-900 dark:text-neutral-300 dark:hover:text-white"
+                aria-label={isNotifications ? "Close notifications" : "Open notifications"}
+                className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer text-slate-300 hover:text-white"
               >
-                <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12" />
-                {unreadCount > 0 && (
+                {isNotifications ? (
+                  <X size={21} strokeWidth={2.2} className="transition-transform active:rotate-90 text-white" />
+                ) : (
+                  <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12 text-slate-400 hover:text-white" />
+                )}
+                {!isNotifications && unreadCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-rose-500 rounded-full ring-1.5 ring-white dark:ring-black shadow-xs">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>

@@ -123,14 +123,23 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     // Verify profile avatar card has corner radius of 10px exactly
     assert.ok(mobileNavSrc.includes("rounded-[10px]"), "Mobile profile avatar card must have corner radius rounded-[10px]");
 
-    // Verify mobile notification bell routes to full page /notifications
+    // Verify mobile notification bell routes to full page /notifications and transforms to X
     assert.ok(mobileNavSrc.includes("router.push(\"/notifications\")"), "Mobile notification bell must route to /notifications");
+    assert.ok(mobileNavSrc.includes("isNotifications"), "Mobile notification button must check isNotifications");
+    assert.ok(mobileNavSrc.includes("<X size={21}"), "Mobile notification icon must transform into X icon on /notifications");
   });
 
   it("9. verifies /notifications full page exists with zero purple, zero glass back, and zero blue", () => {
     const pagePath = path.resolve(__dirname, "../app/notifications/page.tsx");
     assert.ok(fs.existsSync(pagePath), "frontend/app/notifications/page.tsx must exist");
     const pageSrc = fs.readFileSync(pagePath, "utf-8");
+
+    // Pure black background, no white page background
+    assert.ok(pageSrc.includes("bg-black"), "Notifications page must use pure black background");
+    assert.ok(!pageSrc.includes("bg-white"), "Notifications page must not use white background");
+
+    // Zero emoji and zero card box around empty state
+    assert.ok(!pageSrc.includes("🎉"), "Notifications page must not use party popper emoji");
 
     // Zero purple color
     assert.ok(!pageSrc.includes("#5227FF"), "Notifications page must not use purple #5227FF");
@@ -149,8 +158,8 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     // Zero glass back
     assert.ok(!pageSrc.includes("backdrop-blur"), "Notifications page must not use glass backdrop-blur");
 
-    // Must have back navigation and preferences modal
-    assert.ok(pageSrc.includes("router.back()"), "Notifications page must support back navigation");
+    // Filter button & preferences modal
+    assert.ok(pageSrc.includes("SlidersHorizontal"), "Notifications page must include the filter button");
     assert.ok(pageSrc.includes("NotificationPreferencesModal"), "Notifications page must render preferences modal");
   });
 });
