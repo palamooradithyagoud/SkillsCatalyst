@@ -116,5 +116,11 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     assert.ok(!buttonHtml.includes("backdrop-blur-xl"), "Mobile notification bell must not have backdrop-blur card effect");
     assert.ok(!buttonHtml.includes("bg-white/20"), "Mobile notification bell must not have card background");
     assert.ok(!buttonHtml.includes("dark:bg-white/10"), "Mobile notification bell must not have dark card background");
+
+    // Ensure notification bell does NOT turn acid lime (#D5FF38)
+    assert.ok(!buttonHtml.includes("#D5FF38"), "Mobile notification bell must NOT turn into acid lime (#D5FF38)");
+
+    // Verify profile avatar card has corner radius of 10px exactly
+    assert.ok(mobileNavSrc.includes("rounded-[10px]"), "Mobile profile avatar card must have corner radius rounded-[10px]");
   });
 });

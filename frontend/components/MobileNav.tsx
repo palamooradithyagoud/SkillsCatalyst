@@ -243,9 +243,9 @@ function MobileNavContent() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Notification Bell Button & Dropdown */}
-            <div className="relative">
+            <div className="relative mr-1.5 sm:mr-2">
               <button
                 type="button"
                 id="mobile-notifications-button"
@@ -255,8 +255,8 @@ function MobileNavContent() {
                 aria-label="Open notifications"
                 className={`relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                   isNotificationOpen
-                    ? "text-[#D5FF38]"
-                    : "text-slate-700 hover:text-black dark:text-slate-200 dark:hover:text-[#D5FF38]"
+                    ? "text-slate-900 dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-neutral-300 dark:hover:text-white"
                 }`}
               >
                 <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12" />
@@ -279,7 +279,7 @@ function MobileNavContent() {
               type="button"
               onClick={() => router.push("/profile")}
               aria-label="User Profile"
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] ${avatarTheme.bg} ${avatarTheme.text} border ${avatarTheme.border} flex items-center justify-center font-black text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer`}
             >
               <span>{userInitial}</span>
             </button>
