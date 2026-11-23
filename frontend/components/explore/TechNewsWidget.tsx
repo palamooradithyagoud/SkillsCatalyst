@@ -103,7 +103,7 @@ export default function TechNewsWidget() {
             onClick={loadFeed}
             title="Refresh stories feed"
             aria-label="Refresh stories feed"
-            className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#18191F] hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-300 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl bg-slate-100 dark:bg-[#1D1D1D] hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-neutral-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-purple-600" : ""}`} />
           </button>
@@ -115,7 +115,7 @@ export default function TechNewsWidget() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[340px] rounded-2xl bg-slate-100 dark:bg-[#18191F] border border-slate-200 dark:border-neutral-800 animate-pulse p-4 flex flex-col justify-between"
+                className="h-[340px] rounded-2xl bg-slate-100 dark:bg-[#1D1D1D] border border-slate-200 dark:border-white/[0.08] animate-pulse p-4 flex flex-col justify-between"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-neutral-800" />
@@ -145,7 +145,7 @@ export default function TechNewsWidget() {
             </button>
           </div>
         ) : filteredStories.length === 0 ? (
-          <div className="p-8 sm:p-12 rounded-2xl bg-white dark:bg-[#18191F] border border-dashed border-slate-200 dark:border-neutral-800 text-center space-y-3">
+          <div className="p-8 sm:p-12 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-dashed border-slate-200 dark:border-white/[0.08] text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
               <Newspaper className="w-6 h-6" />
             </div>
@@ -171,7 +171,7 @@ export default function TechNewsWidget() {
                   whileHover={{ y: -4, scale: 1.01 }}
                   transition={{ type: "spring", stiffness: 350, damping: 25 }}
                   onClick={() => openStoryViewer(story.sourceIdx, story.storyIdx)}
-                  className="group relative h-[360px] sm:h-[380px] rounded-2xl overflow-hidden bg-slate-900 dark:bg-[#18191F] border border-slate-200/80 dark:border-neutral-800 shadow-sm hover:shadow-2xl transition-all flex flex-col justify-between cursor-pointer select-none"
+                  className="group relative h-[360px] sm:h-[380px] rounded-2xl overflow-hidden bg-slate-900 dark:bg-[#1D1D1D] border border-slate-200/80 dark:border-white/[0.08] shadow-sm hover:shadow-2xl transition-all flex flex-col justify-between cursor-pointer select-none"
                 >
                   {/* Background Cover Image / Futuristic Visual */}
                   <div className="absolute inset-0 z-0">
