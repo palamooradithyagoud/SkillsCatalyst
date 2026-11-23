@@ -149,6 +149,35 @@ export default function ProfilePage() {
     } catch {}
   }, []);
 
+  // Listen to external triggers for settings modal from ProfileDownbar
+  useEffect(() => {
+    const handleOpen = () => setIsMobileSettingsOpen(true);
+    const handleClose = () => setIsMobileSettingsOpen(false);
+    window.addEventListener("open-profile-settings", handleOpen);
+    window.addEventListener("close-profile-settings", handleClose);
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("settings") === "open" || window.location.hash === "#settings") {
+        setIsMobileSettingsOpen(true);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("open-profile-settings", handleOpen);
+      window.removeEventListener("close-profile-settings", handleClose);
+    };
+  }, []);
+
+  // Sync settings state to ProfileDownbar
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("profile-settings-state-change", {
+        detail: { isOpen: isMobileSettingsOpen },
+      })
+    );
+  }, [isMobileSettingsOpen]);
+
 
   // ── Master Profile State ──────────────────────────────────────────────────
   const [profileData, setProfileData] = useState<CompleteProfileData>({
@@ -323,9 +352,13 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (activeModal === "resume_preview" || isMobileSettingsOpen) {
+    if (activeModal === "resume_preview") {
       document.body.setAttribute("data-hide-bottombar", "true");
       document.body.setAttribute("data-hide-appbars", "true");
+      document.body.style.overflow = "hidden";
+    } else if (isMobileSettingsOpen) {
+      document.body.setAttribute("data-hide-appbars", "true");
+      document.body.removeAttribute("data-hide-bottombar");
       document.body.style.overflow = "hidden";
     } else {
       document.body.removeAttribute("data-hide-bottombar");
@@ -1526,7 +1559,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="max-w-md mx-auto w-full px-4 py-3 space-y-3.5 pb-16 flex-1 flex flex-col justify-between">
+            <div className="max-w-md mx-auto w-full px-4 py-3 space-y-3.5 pb-28 flex-1 flex flex-col justify-between">
               <div className="space-y-3.5">
                 {/* 1. User Profile Summary Card */}
                 <div

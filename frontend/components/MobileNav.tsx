@@ -39,6 +39,7 @@ import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
 import CareerDownbar from "@/components/career/CareerDownbar";
+import ProfileDownbar from "@/components/profile/ProfileDownbar";
 import DashboardMobileDock from "@/components/dashboard/DashboardMobileDock";
 import { useNotifications } from "@/contexts/NotificationContext";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
@@ -201,6 +202,8 @@ function MobileNavContent() {
 
   const isDashboard = pathname === "/dashboard" || pathname === "/";
 
+  const isProfile = pathname === "/profile";
+
   const isCareerGroup =
     pathname.startsWith("/career") ||
     pathname.startsWith("/roadmaps") ||
@@ -208,15 +211,20 @@ function MobileNavContent() {
     pathname.startsWith("/practice") ||
     pathname.startsWith("/analytics");
 
+  const isProfileGroup =
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/settings");
+
   // Hide standard bottom navigation bar inside explore (which has dedicated explore dock),
-  // career group (which has dedicated CareerDownbar dock), active video player, practice subviews,
-  // roadmap detail view, resume active scan/workspace, edit profile page, SkillBits reels
+  // career group (which has dedicated CareerDownbar dock), profile suite (which has dedicated ProfileDownbar),
+  // active video player, practice subviews, roadmap detail view, resume active scan/workspace, SkillBits reels
   const isHideBottomBar =
     isExplicitlyHidden ||
     isRoadmapDetail ||
     isResumeActive ||
     pathname.startsWith("/explore") ||
     isCareerGroup ||
+    isProfileGroup ||
     pathname.startsWith("/skillbits") ||
     (pathname === "/learning" && isLearningPlayer) ||
     (pathname === "/practice" && isPracticeSubView) ||
@@ -287,6 +295,11 @@ function MobileNavContent() {
         !isExplicitlyHidden && (
           <CareerDownbar className="md:hidden" />
         )}
+
+      {/* ── Profile Suite Downbar Dock (Matches Image 2: Back, My Profile, Edit Profile, Settings) ── */}
+      {isProfileGroup && !isResumeActive && !isExplicitlyHidden && (
+        <ProfileDownbar className="md:hidden" />
+      )}
 
       {/* ── Mobile Floating Pill Dock (MAIN DASHBOARD ONLY) ── */}
       {isDashboard && !isHideBottomBar && (

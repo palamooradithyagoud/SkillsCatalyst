@@ -294,14 +294,6 @@ function EditProfileContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Hide mobile downbar when on this page
-  useEffect(() => {
-    document.body.setAttribute("data-hide-bottombar", "true");
-    return () => {
-      document.body.removeAttribute("data-hide-bottombar");
-    };
-  }, []);
-
   // Load profile data
   useEffect(() => {
     async function load() {
@@ -522,6 +514,18 @@ function EditProfileContent() {
 
   return (
     <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-4 pb-32 sm:pb-36 px-3.5 sm:px-4">
+      {/* ── Top Header with Back to Profile ── */}
+      <div className="flex items-center justify-between pt-1">
+        <button
+          type="button"
+          onClick={() => router.push("/profile")}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Profile</span>
+        </button>
+      </div>
+
       {/* ── Top User Profile Header (Zero Blue: Signature Purple Avatar) ── */}
       <div className="flex items-center gap-3.5 pt-1">
         {/* Purple Monogram Avatar with Camera Badge (No Blue!) */}
@@ -2116,69 +2120,6 @@ function EditProfileContent() {
         )}
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* ── DOWNSIDE FLOATING DOCK (Elevated Floating Glassmorphism Bar) ─── */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="fixed bottom-6 sm:bottom-7 left-0 right-0 md:left-[260px] z-50 pointer-events-none flex items-center justify-center px-4">
-        <motion.div
-          initial={{ y: 30, opacity: 0, scale: 0.95 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="pointer-events-auto flex items-center gap-2.5 sm:gap-3"
-        >
-          {/* Circular Floating Back Button (Requested by User) */}
-          <button
-            type="button"
-            onClick={() => router.push("/profile")}
-            title="Back to Profile"
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-[#18191F] shadow-md border border-slate-200/90 dark:border-neutral-800 flex items-center justify-center text-slate-700 dark:text-neutral-200 hover:text-[#D5FF38] hover:border-slate-300 dark:hover:border-neutral-700 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
-            aria-label="Back to Profile"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-
-          {/* Floating Pill Action Dock */}
-          <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-[#18191F] shadow-md border border-slate-200/90 dark:border-neutral-800 rounded-full py-1.5 px-3 sm:px-4">
-            <Link
-              href="/profile"
-              className="flex items-center gap-1.5 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-xs font-semibold"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-bold">My Profile</span>
-            </Link>
-
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D5FF38] text-black font-extrabold text-xs shadow-none">
-              <Edit3 className="w-3.5 h-3.5 text-black" />
-              <span className="text-[11px] font-extrabold capitalize">{activeTab}</span>
-              <span className="text-[10px] font-black opacity-80">({liveCompletion.totalPercent}%)</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (activeTab === "personal") {
-                  handleSavePersonal();
-                } else if (activeTab === "career") {
-                  handleSaveCareer();
-                } else if (activeTab === "coding") {
-                  handleSaveCoding();
-                } else if (activeTab === "skills") {
-                  showToast("Skills list is saved!");
-                } else if (activeTab === "languages") {
-                  showToast("Languages updated!");
-                } else {
-                  showToast("Profile section updated!");
-                }
-              }}
-              disabled={savingPersonal || savingCareer || savingCoding}
-              className="flex items-center gap-1.5 bg-[#D5FF38] hover:bg-[#c2ea2f] text-black text-xs font-black px-4 sm:px-5 py-2 rounded-full shadow-none hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <Save className="w-3.5 h-3.5 text-black" />
-              <span>{savingPersonal || savingCareer || savingCoding ? "Saving..." : "Save"}</span>
-            </button>
-          </div>
-        </motion.div>
-      </div>
     </div>
   );
 }
