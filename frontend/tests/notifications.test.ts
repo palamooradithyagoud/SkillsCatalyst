@@ -101,4 +101,20 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     assert.ok(appShellSrc.includes("<NotificationProvider>"), "AppShell must wrap with <NotificationProvider>");
     assert.ok(appShellSrc.includes("<NotificationPermissionBanner"), "AppShell must render <NotificationPermissionBanner");
   });
+
+  it("8. verifies MobileNav notification button has no background card or border wrapper", () => {
+    const mobileNavPath = path.resolve(__dirname, "../components/MobileNav.tsx");
+    const mobileNavSrc = fs.readFileSync(mobileNavPath, "utf-8");
+
+    // Extract mobile-notifications-button section
+    const buttonMatch = mobileNavSrc.match(/id="mobile-notifications-button"[\s\S]*?>/);
+    assert.ok(buttonMatch, "mobile-notifications-button must exist in MobileNav.tsx");
+    const buttonHtml = buttonMatch[0];
+
+    // Ensure it does not have the old rounded card / squircle background classes
+    assert.ok(!buttonHtml.includes("rounded-2xl"), "Mobile notification bell must not have rounded-2xl card wrapper");
+    assert.ok(!buttonHtml.includes("backdrop-blur-xl"), "Mobile notification bell must not have backdrop-blur card effect");
+    assert.ok(!buttonHtml.includes("bg-white/20"), "Mobile notification bell must not have card background");
+    assert.ok(!buttonHtml.includes("dark:bg-white/10"), "Mobile notification bell must not have dark card background");
+  });
 });

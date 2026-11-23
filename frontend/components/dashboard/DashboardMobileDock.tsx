@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home,
   Film,
   Briefcase,
   Compass,
@@ -16,6 +15,7 @@ import {
   BookOpen,
   X,
 } from "lucide-react";
+import Home3DIcon from "@/components/icons/Home3DIcon";
 
 interface DockItem {
   id: string;
@@ -25,7 +25,7 @@ interface DockItem {
 }
 
 const DOCK_ITEMS: DockItem[] = [
-  { id: "home", name: "Home", url: "/dashboard", icon: Home },
+  { id: "home", name: "Home", url: "/dashboard", icon: Home3DIcon },
   { id: "skillbits", name: "SkillBits", url: "/skillbits", icon: Film },
   { id: "career", name: "Career", url: "/career", icon: Briefcase },
   { id: "explore", name: "Explore", url: "/explore", icon: Compass },
@@ -166,16 +166,26 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                     : "text-white/70 hover:text-white dark:text-neutral-300 dark:hover:text-white"
                 }`}
               >
-                <Icon
-                  size={21}
-                  className={`transition-colors ${
-                    active
-                      ? item.id === "home"
-                        ? "fill-[#D5FF38] stroke-[#D5FF38] stroke-[1.5]"
-                        : "stroke-[#D5FF38] stroke-[2.4]"
-                      : "stroke-[2.1] stroke-current fill-none"
-                  }`}
-                />
+                {item.id === "home" ? (
+                  <Icon
+                    size={21}
+                    active={active}
+                    className={`transition-colors ${
+                      active
+                        ? "stroke-[#D5FF38] text-[#D5FF38]"
+                        : "stroke-[2.1] stroke-current fill-none text-white/70 hover:text-white dark:text-neutral-300 dark:hover:text-white"
+                    }`}
+                  />
+                ) : (
+                  <Icon
+                    size={21}
+                    className={`transition-colors ${
+                      active
+                        ? "stroke-[#D5FF38] stroke-[2.4]"
+                        : "stroke-[2.1] stroke-current fill-none"
+                    }`}
+                  />
+                )}
                 <span
                   className={`text-[10.5px] tracking-tight leading-tight mt-0.5 select-none transition-colors ${
                     active

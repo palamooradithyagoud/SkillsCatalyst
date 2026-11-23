@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export interface NavItem {
   name: string;
   url: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<any>;
   badge?: string | number;
 }
 
@@ -102,16 +102,30 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
               )}
             >
               <div className="relative flex items-center justify-center w-7 h-7">
-                <Icon
-                  size={22}
-                  strokeWidth={isActive ? 2.5 : 1.9}
-                  className={cn(
-                    "transition-all duration-200",
-                    isActive
-                      ? "fill-[#10110E] text-[#D5FF38] drop-shadow-[0_0_8px_rgba(213,255,56,0.35)]"
-                      : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
-                  )}
-                />
+                {item.name === "Home" ? (
+                  <Icon
+                    size={22}
+                    strokeWidth={isActive ? 2.5 : 1.9}
+                    active={isActive}
+                    className={cn(
+                      "transition-all duration-200",
+                      isActive
+                        ? "text-[#D5FF38] fill-transparent"
+                        : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
+                    )}
+                  />
+                ) : (
+                  <Icon
+                    size={22}
+                    strokeWidth={isActive ? 2.5 : 1.9}
+                    className={cn(
+                      "transition-all duration-200",
+                      isActive
+                        ? "text-[#D5FF38] fill-transparent"
+                        : "text-slate-600 dark:text-slate-400 hover:text-white fill-transparent"
+                    )}
+                  />
+                )}
 
                 {/* Optional notification / activity badge */}
                 {item.badge && (
@@ -121,11 +135,11 @@ export function NavBar({ items, userInitial = "AD", className }: NavBarProps) {
                 )}
               </div>
 
-              {/* ── Active Gliding Indicator Dot (Acid Lime Glow) ── */}
+              {/* ── Active Gliding Indicator Dot (Acid Lime, No Glow) ── */}
               {isActive && (
                 <motion.div
                   layoutId="instagramActiveDot"
-                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-[#D5FF38] shadow-[0_0_6px_rgba(213,255,56,0.8)]"
+                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-[#D5FF38]"
                   transition={{
                     type: "spring",
                     stiffness: 450,

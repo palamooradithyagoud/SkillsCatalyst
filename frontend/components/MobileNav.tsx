@@ -35,6 +35,7 @@ import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
+import Home3DIcon from "@/components/icons/Home3DIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import { NavBar, type NavItem } from "@/components/ui/tubelight-navbar";
@@ -59,7 +60,7 @@ const navItems = [
 ];
 
 const mobileNavItems: NavItem[] = [
-  { name: "Home", url: "/dashboard", icon: Home },
+  { name: "Home", url: "/dashboard", icon: Home3DIcon },
   { name: "SkillBits", url: "/skillbits", icon: Clapperboard },
   { name: "Career", url: "/roadmaps", icon: Briefcase },
   { name: "Explore", url: "/explore", icon: Compass },
@@ -252,15 +253,15 @@ function MobileNavContent() {
                   setIsNotificationOpen(!isNotificationOpen);
                 }}
                 aria-label="Open notifications"
-                className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl border backdrop-blur-xl flex items-center justify-center shadow-xs transition-all active:scale-95 cursor-pointer ${
+                className={`relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
                   isNotificationOpen
-                    ? "bg-[#D5FF38]/20 text-black dark:text-[#D5FF38] border-[#D5FF38]/40"
-                    : "bg-white/20 hover:bg-white/35 dark:bg-white/10 dark:hover:bg-white/15 border-white/40 dark:border-white/15 text-slate-800 dark:text-slate-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                    ? "text-[#D5FF38]"
+                    : "text-slate-700 hover:text-black dark:text-slate-200 dark:hover:text-[#D5FF38]"
                 }`}
               >
-                <Bell size={18} strokeWidth={2.2} className="transition-transform active:rotate-12" />
+                <Bell size={21} strokeWidth={2} className="transition-transform active:rotate-12" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-xs">
+                  <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-rose-500 rounded-full ring-1.5 ring-white dark:ring-black shadow-xs">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
