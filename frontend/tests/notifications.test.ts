@@ -183,4 +183,28 @@ describe("Notifications System & Desktop/Mobile Parity Suite", () => {
     assert.ok(!modalSrc.includes("Targeted eligibility updates"), "Must remove unnecessary scholarships description text");
     assert.ok(!modalSrc.includes("Manage alerts, triggers, and browser Web Push"), "Must remove unnecessary header description text");
   });
+
+  it("11. verifies NotificationPermissionBanner implements the 'Stay in the Loop!' modal matching Image 2", () => {
+    const bannerPath = path.resolve(__dirname, "../components/notifications/NotificationPermissionBanner.tsx");
+    assert.ok(fs.existsSync(bannerPath), "NotificationPermissionBanner.tsx must exist");
+    const bannerSrc = fs.readFileSync(bannerPath, "utf-8");
+
+    // Title with acid lime Loop!
+    assert.ok(bannerSrc.includes("Stay in the"), "Must have 'Stay in the' title");
+    assert.ok(bannerSrc.includes("text-[#D5FF38]\">Loop!</span>"), "Must highlight 'Loop!' in acid lime #D5FF38");
+
+    // Mascot image reference
+    assert.ok(bannerSrc.includes("penguin_loop_prompt.png"), "Must use penguin mascot image");
+
+    // Notifications & Location switches
+    assert.ok(bannerSrc.includes("Notifications"), "Must have Notifications row");
+    assert.ok(bannerSrc.includes("Location"), "Must have Location row");
+    assert.ok(bannerSrc.includes("notificationsEnabled"), "Must manage notificationsEnabled state");
+    assert.ok(bannerSrc.includes("locationEnabled"), "Must manage locationEnabled state");
+
+    // Primary CTA and Secondary dismiss
+    assert.ok(bannerSrc.includes("Continue"), "Must have Continue button");
+    assert.ok(bannerSrc.includes("Not now"), "Must have Not now button");
+    assert.ok(bannerSrc.includes("rounded-[32px]"), "Card must use rounded-[32px]");
+  });
 });
