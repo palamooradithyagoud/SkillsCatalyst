@@ -143,16 +143,17 @@ export default function NotificationPermissionBanner() {
       className="fixed inset-0 z-50 flex flex-col justify-end items-center px-4 pb-6 sm:pb-12 sm:justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
     >
       {/* ── Modal Card Container ── */}
-      <div className="relative w-full max-w-[390px] sm:max-w-[420px] bg-[#16171B] border border-white/[0.08] rounded-[32px] sm:rounded-[36px] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.95)] text-white animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-[390px] sm:max-w-[420px] bg-[#16171B] border border-white/[0.08] rounded-[32px] sm:rounded-[36px] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.95)] text-white overflow-visible animate-in zoom-in-95 duration-300">
         {/* ── 3D Penguin Mascot peeking over the top border ── */}
-        <div className="absolute -top-[148px] sm:-top-[160px] left-1/2 -translate-x-1/2 w-[260px] sm:w-[280px] pointer-events-none select-none z-20">
+        <div className="absolute -top-[142px] sm:-top-[155px] left-1/2 -translate-x-1/2 w-[260px] sm:w-[280px] pointer-events-none select-none z-30 flex justify-center">
           <Image
             src="/images/dashboard/penguin_loop_prompt.png"
             alt="SkillsCatalyst Mascot"
             width={884}
             height={550}
-            className="w-full h-auto object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]"
+            unoptimized
             priority
+            className="w-full h-auto object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]"
           />
         </div>
 
