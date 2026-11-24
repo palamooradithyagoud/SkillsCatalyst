@@ -140,12 +140,12 @@ export default function NotificationPermissionBanner() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="stay-in-loop-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+      className="fixed inset-0 z-50 flex flex-col justify-end items-center px-4 pb-6 sm:pb-12 sm:justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
     >
       {/* ── Modal Card Container ── */}
-      <div className="relative w-full max-w-[350px] sm:max-w-[380px] bg-[#141519] border border-white/10 rounded-[32px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9)] text-white mt-20 sm:mt-24 animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-[390px] sm:max-w-[420px] bg-[#16171B] border border-white/[0.08] rounded-[32px] sm:rounded-[36px] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.95)] text-white animate-in zoom-in-95 duration-300">
         {/* ── 3D Penguin Mascot peeking over the top border ── */}
-        <div className="absolute -top-[128px] sm:-top-[138px] left-1/2 -translate-x-1/2 w-[220px] sm:w-[240px] pointer-events-none select-none z-20">
+        <div className="absolute -top-[148px] sm:-top-[160px] left-1/2 -translate-x-1/2 w-[260px] sm:w-[280px] pointer-events-none select-none z-20">
           <Image
             src="/images/dashboard/penguin_loop_prompt.png"
             alt="SkillsCatalyst Mascot"
@@ -160,26 +160,26 @@ export default function NotificationPermissionBanner() {
         <div className="text-center pt-2 select-none">
           <h2
             id="stay-in-loop-title"
-            className="text-2xl sm:text-[26px] font-black text-white tracking-tight leading-tight"
+            className="text-2xl sm:text-[27px] font-black text-white tracking-tight leading-tight"
           >
             Stay in the <span className="text-[#D5FF38]">Loop!</span>
           </h2>
-          <p className="text-xs sm:text-[13px] text-neutral-400 mt-2 leading-relaxed px-1">
+          <p className="text-xs sm:text-[13px] text-neutral-400 mt-2 leading-relaxed px-1 max-w-[340px] mx-auto">
             Allow notifications and location to get timely updates, track your progress and never miss out!
           </p>
         </div>
 
         {/* ── Options Stack ── */}
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-3.5">
           {/* Row 1: Notifications */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#1C1D22] border border-white/5 transition-colors">
-            <div className="flex items-center gap-3 pr-2 min-w-0">
-              <div className="w-11 h-11 rounded-xl bg-[#252730] border border-white/5 flex items-center justify-center shrink-0 shadow-xs">
-                <Bell className="w-5 h-5 text-[#D5FF38] fill-[#D5FF38]" />
+          <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
+            <div className="flex items-center gap-3.5 pr-2 min-w-0">
+              <div className="w-12 h-12 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
+                <Bell className="w-6 h-6 text-[#D5FF38] fill-[#D5FF38]" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-white tracking-tight">Notifications</p>
-                <p className="text-[11px] text-neutral-400 leading-tight mt-0.5 truncate">
+                <p className="text-[11px] sm:text-xs text-neutral-400 leading-snug mt-0.5">
                   Get important updates, reminders and more.
                 </p>
               </div>
@@ -192,12 +192,12 @@ export default function NotificationPermissionBanner() {
               aria-checked={notificationsEnabled}
               aria-label="Toggle notifications permission"
               onClick={() => setNotificationsEnabled((prev) => !prev)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
-                notificationsEnabled ? "bg-[#D5FF38]" : "bg-neutral-700"
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
+                notificationsEnabled ? "bg-[#D5FF38]" : "bg-[#353742]"
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
                   notificationsEnabled ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -205,14 +205,17 @@ export default function NotificationPermissionBanner() {
           </div>
 
           {/* Row 2: Location */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#1C1D22] border border-white/5 transition-colors">
-            <div className="flex items-center gap-3 pr-2 min-w-0">
-              <div className="w-11 h-11 rounded-xl bg-[#252730] border border-white/5 flex items-center justify-center shrink-0 shadow-xs">
-                <MapPin className="w-5 h-5 text-[#D5FF38] stroke-[2.4]" />
+          <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
+            <div className="flex items-center gap-3.5 pr-2 min-w-0">
+              <div className="w-12 h-12 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
+                <div className="relative flex flex-col items-center justify-center w-6 h-6">
+                  <MapPin className="w-5 h-5 text-[#D5FF38] stroke-[2.4] -mb-0.5" />
+                  <div className="w-3.5 h-1 rounded-full border-[1.5px] border-[#D5FF38]" />
+                </div>
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-white tracking-tight">Location</p>
-                <p className="text-[11px] text-neutral-400 leading-tight mt-0.5 truncate">
+                <p className="text-[11px] sm:text-xs text-neutral-400 leading-snug mt-0.5">
                   Get personalized content and location-based insights.
                 </p>
               </div>
@@ -225,12 +228,12 @@ export default function NotificationPermissionBanner() {
               aria-checked={locationEnabled}
               aria-label="Toggle location permission"
               onClick={() => setLocationEnabled((prev) => !prev)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
-                locationEnabled ? "bg-[#D5FF38]" : "bg-neutral-700"
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
+                locationEnabled ? "bg-[#D5FF38]" : "bg-[#353742]"
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
                   locationEnabled ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -239,34 +242,34 @@ export default function NotificationPermissionBanner() {
         </div>
 
         {/* ── Primary Action: Continue Button ── */}
-        <div className="mt-5">
+        <div className="mt-6">
           <button
             type="button"
             onClick={handleContinue}
             disabled={isSubmitting}
-            className="w-full py-3.5 px-5 rounded-full bg-[#D5FF38] text-black font-black text-sm flex items-center justify-center gap-1.5 shadow-lg shadow-[#D5FF38]/20 hover:bg-[#cbf526] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-full bg-[#D5FF38] text-black font-extrabold text-[15px] sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#D5FF38]/20 hover:bg-[#cbf526] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-black" />
+                <Loader2 className="w-5 h-5 animate-spin text-black" />
                 <span>Saving preferences...</span>
               </>
             ) : (
               <>
                 <span>Continue</span>
-                <ChevronRight className="w-4 h-4 stroke-[3]" />
+                <ChevronRight className="w-5 h-5 stroke-[3]" />
               </>
             )}
           </button>
         </div>
 
         {/* ── Secondary Action: Not Now Button ── */}
-        <div className="mt-2.5 text-center">
+        <div className="mt-3 text-center">
           <button
             type="button"
             onClick={handleDismiss}
             disabled={isSubmitting}
-            className="text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer py-1.5 px-3"
+            className="text-xs sm:text-[13px] font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer py-1.5 px-4"
           >
             Not now
           </button>
