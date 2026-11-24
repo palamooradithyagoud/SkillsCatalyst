@@ -140,12 +140,15 @@ export default function NotificationPermissionBanner() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="stay-in-loop-title"
-      className="fixed inset-0 z-50 flex flex-col justify-end items-center px-4 pb-6 sm:pb-12 sm:justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleDismiss();
+      }}
+      className="fixed inset-0 z-50 flex flex-col justify-end items-center px-4 pb-6 sm:pb-8 sm:justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 overflow-y-auto"
     >
       {/* ── Modal Card Container ── */}
-      <div className="relative w-full max-w-[390px] sm:max-w-[420px] bg-[#16171B] border border-white/[0.08] rounded-[32px] sm:rounded-[36px] p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.95)] text-white overflow-visible animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-[380px] sm:max-w-[400px] bg-[#16171B] border border-white/[0.08] rounded-[32px] p-5 sm:p-6 shadow-[0_25px_70px_rgba(0,0,0,0.95)] text-white overflow-visible animate-in zoom-in-95 duration-300 sm:translate-y-10 md:translate-y-12">
         {/* ── 3D Penguin Mascot peeking over the top border ── */}
-        <div className="absolute -top-[142px] sm:-top-[155px] left-1/2 -translate-x-1/2 w-[260px] sm:w-[280px] pointer-events-none select-none z-30 flex justify-center">
+        <div className="absolute -top-[136px] sm:-top-[144px] left-1/2 -translate-x-1/2 w-[250px] sm:w-[270px] pointer-events-none select-none z-30 flex justify-center">
           <Image
             src="/images/dashboard/penguin_loop_prompt.png"
             alt="SkillsCatalyst Mascot"
@@ -158,25 +161,25 @@ export default function NotificationPermissionBanner() {
         </div>
 
         {/* ── Header: Title & Subtitle ── */}
-        <div className="text-center pt-2 select-none">
+        <div className="text-center pt-1 select-none">
           <h2
             id="stay-in-loop-title"
-            className="text-2xl sm:text-[27px] font-black text-white tracking-tight leading-tight"
+            className="text-2xl sm:text-[25px] font-black text-white tracking-tight leading-tight"
           >
             Stay in the <span className="text-[#D5FF38]">Loop!</span>
           </h2>
-          <p className="text-xs sm:text-[13px] text-neutral-400 mt-2 leading-relaxed px-1 max-w-[340px] mx-auto">
+          <p className="text-xs sm:text-[13px] text-neutral-400 mt-1.5 leading-relaxed px-1 max-w-[320px] mx-auto">
             Allow notifications and location to get timely updates, track your progress and never miss out!
           </p>
         </div>
 
         {/* ── Options Stack ── */}
-        <div className="mt-6 space-y-3.5">
+        <div className="mt-5 space-y-3">
           {/* Row 1: Notifications */}
-          <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
-            <div className="flex items-center gap-3.5 pr-2 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
-                <Bell className="w-6 h-6 text-[#D5FF38] fill-[#D5FF38]" />
+          <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
+            <div className="flex items-center gap-3 pr-2 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
+                <Bell className="w-5 h-5 text-[#D5FF38] fill-[#D5FF38]" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-white tracking-tight">Notifications</p>
@@ -206,9 +209,9 @@ export default function NotificationPermissionBanner() {
           </div>
 
           {/* Row 2: Location */}
-          <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
-            <div className="flex items-center gap-3.5 pr-2 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
+          <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1E2026] border border-white/[0.06] transition-colors">
+            <div className="flex items-center gap-3 pr-2 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-[#282A33] border border-white/[0.04] flex items-center justify-center shrink-0 shadow-xs">
                 <div className="relative flex flex-col items-center justify-center w-6 h-6">
                   <MapPin className="w-5 h-5 text-[#D5FF38] stroke-[2.4] -mb-0.5" />
                   <div className="w-3.5 h-1 rounded-full border-[1.5px] border-[#D5FF38]" />
@@ -243,12 +246,12 @@ export default function NotificationPermissionBanner() {
         </div>
 
         {/* ── Primary Action: Continue Button ── */}
-        <div className="mt-6">
+        <div className="mt-5">
           <button
             type="button"
             onClick={handleContinue}
             disabled={isSubmitting}
-            className="w-full py-4 px-6 rounded-full bg-[#D5FF38] text-black font-extrabold text-[15px] sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#D5FF38]/20 hover:bg-[#cbf526] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-3.5 px-5 rounded-full bg-[#D5FF38] text-black font-extrabold text-sm sm:text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[#D5FF38]/20 hover:bg-[#cbf526] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -265,12 +268,12 @@ export default function NotificationPermissionBanner() {
         </div>
 
         {/* ── Secondary Action: Not Now Button ── */}
-        <div className="mt-3 text-center">
+        <div className="mt-2.5 text-center">
           <button
             type="button"
             onClick={handleDismiss}
             disabled={isSubmitting}
-            className="text-xs sm:text-[13px] font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer py-1.5 px-4"
+            className="text-xs sm:text-[13px] font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer py-1 px-3"
           >
             Not now
           </button>
