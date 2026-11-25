@@ -9,6 +9,16 @@ import {
   UserPen,
   Settings,
 } from "lucide-react";
+import {
+  DOWNBAR_NAV_CLASS,
+  DOWNBAR_CIRCLE_SIZE_CLASS,
+  DOWNBAR_PILL_BASE_CLASS,
+  DOWNBAR_TAB_CLASS,
+  DOWNBAR_ICON_SIZE_CLASS,
+  DOWNBAR_LABEL_CLASS,
+  DOWNBAR_BACK_ICON_CLASS,
+  DOWNBAR_BACK_LABEL_CLASS,
+} from "@/components/mobile/downbarStyles";
 
 export type ProfileTabId = "profile" | "edit" | "settings";
 
@@ -136,9 +146,9 @@ export default function ProfileDownbar({
       data-bottom-nav="true"
       data-profile-downbar="true"
       suppressHydrationWarning
-      className={`md:hidden fixed bottom-3 inset-x-2 sm:inset-x-3 z-50 max-w-lg mx-auto flex items-center justify-center gap-2 transition-all pb-[env(safe-area-inset-bottom,0px)] ${className}`}
+      className={`md:hidden ${DOWNBAR_NAV_CLASS} z-50 ${className}`}
     >
-      {/* ── Circular Glass Back Button (Matches Image 2) ── */}
+      {/* ── Circular Glass Back Button (Matches Dashboard, Career & Explore Downbar Scale) ── */}
       <motion.button
         type="button"
         whileTap={{ scale: 0.92 }}
@@ -146,16 +156,16 @@ export default function ProfileDownbar({
         onClick={handleBack}
         aria-label="Back to Dashboard"
         suppressHydrationWarning
-        className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-white dark:bg-[#16171B] border border-black/10 dark:border-white/15 backdrop-blur-2xl shadow-[0_10px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center text-neutral-800 dark:text-neutral-200 hover:text-black dark:hover:text-white transition-all duration-200 cursor-pointer shrink-0 select-none group"
+        className={`${DOWNBAR_CIRCLE_SIZE_CLASS} bg-white dark:bg-[#16171B] border border-black/10 dark:border-white/15 backdrop-blur-2xl shadow-[0_10px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center text-neutral-800 dark:text-neutral-200 hover:text-black dark:hover:text-white transition-all duration-200 cursor-pointer select-none group`}
       >
-        <CircleArrowLeft className="w-5 h-5 text-neutral-800 dark:text-neutral-200 group-hover:text-black dark:group-hover:text-white transition-colors stroke-[2]" />
-        <span className="text-[8.5px] sm:text-[9.5px] font-extrabold tracking-tight text-neutral-700 dark:text-neutral-400 group-hover:text-black dark:group-hover:text-white mt-0.5 leading-none">
+        <CircleArrowLeft className={`${DOWNBAR_BACK_ICON_CLASS} text-neutral-800 dark:text-neutral-200 group-hover:text-black dark:group-hover:text-white transition-colors stroke-[2]`} />
+        <span className={`${DOWNBAR_BACK_LABEL_CLASS} text-neutral-700 dark:text-neutral-400 group-hover:text-black dark:group-hover:text-white`}>
           Back
         </span>
       </motion.button>
 
       {/* ── Main Pill Dock (ONLY Back, My Profile, Edit Profile, Settings) ── */}
-      <div className="flex-1 max-w-[320px] sm:max-w-[350px] rounded-full bg-white dark:bg-[#16171B] border border-black/10 dark:border-white/15 backdrop-blur-2xl shadow-[0_10px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)] px-3 py-1.5 sm:px-4 sm:py-2 flex items-center justify-around gap-1.5 sm:gap-2">
+      <div className={`${DOWNBAR_PILL_BASE_CLASS} bg-white dark:bg-[#16171B] border border-black/10 dark:border-white/15 backdrop-blur-2xl shadow-[0_10px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)]`}>
         {PROFILE_TABS.map((tab) => {
           const isActive = currentActiveTab === tab.id;
           const Icon = tab.icon;
@@ -169,7 +179,7 @@ export default function ProfileDownbar({
               onClick={() => handleTabClick(tab.id)}
               suppressHydrationWarning
               aria-label={tab.label}
-              className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1 sm:px-4 sm:py-1 rounded-full text-xs whitespace-nowrap transition-all duration-200 cursor-pointer select-none group active:scale-95 ${
+              className={`${DOWNBAR_TAB_CLASS} flex-col ${
                 isActive
                   ? "text-[#D5FF38] font-black"
                   : "text-neutral-700 dark:text-neutral-400 hover:text-black dark:hover:text-white"
@@ -181,7 +191,7 @@ export default function ProfileDownbar({
                 className="shrink-0 flex items-center justify-center"
               >
                 <Icon
-                  className={`w-5 h-5 transition-colors ${
+                  className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                     isActive
                       ? tab.id === "profile"
                         ? "text-[#D5FF38] fill-[#D5FF38] stroke-[2]"
@@ -192,10 +202,10 @@ export default function ProfileDownbar({
               </motion.div>
 
               <span
-                className={`text-[9.5px] sm:text-[10.5px] leading-tight transition-colors ${
+                className={`${DOWNBAR_LABEL_CLASS} transition-colors ${
                   isActive
                     ? "text-[#D5FF38] font-black"
-                    : "text-neutral-700 dark:text-neutral-400 font-bold group-hover:text-black dark:group-hover:text-white"
+                    : "text-neutral-700 dark:text-neutral-400 font-semibold group-hover:text-black dark:group-hover:text-white"
                 }`}
               >
                 {tab.label}

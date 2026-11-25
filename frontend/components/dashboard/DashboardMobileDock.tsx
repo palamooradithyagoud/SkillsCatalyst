@@ -16,6 +16,14 @@ import {
   X,
 } from "lucide-react";
 import Home3DIcon from "@/components/icons/Home3DIcon";
+import {
+  DOWNBAR_NAV_CLASS,
+  DOWNBAR_CIRCLE_SIZE_CLASS,
+  DOWNBAR_PILL_BASE_CLASS,
+  DOWNBAR_TAB_CLASS,
+  DOWNBAR_ICON_SIZE_CLASS,
+  DOWNBAR_LABEL_CLASS,
+} from "@/components/mobile/downbarStyles";
 
 interface DockItem {
   id: string;
@@ -147,10 +155,12 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
       <nav
         aria-label="Dashboard Mobile Navigation"
         data-bottom-nav="true"
-        className={`md:hidden fixed bottom-5 inset-x-0 z-40 flex items-center justify-center gap-3 px-4 pointer-events-none select-none pb-[env(safe-area-inset-bottom,0px)] ${className}`}
+        className={`md:hidden ${DOWNBAR_NAV_CLASS} z-40 ${className}`}
       >
         {/* Elongated Capsule Pill with Glassmorphism Transparent Blur */}
-        <div className="pointer-events-auto flex-1 max-w-[320px] h-[62px] rounded-full bg-black/45 dark:bg-black/55 backdrop-blur-2xl backdrop-saturate-180 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_12px_36px_rgba(0,0,0,0.5)] flex items-center justify-around px-2 py-1 transition-all">
+        <div
+          className={`${DOWNBAR_PILL_BASE_CLASS} bg-black/45 dark:bg-black/55 backdrop-blur-2xl backdrop-saturate-180 border border-white/25 dark:border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_12px_36px_rgba(0,0,0,0.5)] transition-all`}
+        >
           {DOCK_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isCurrentActive(item);
@@ -160,7 +170,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                 key={item.id}
                 href={item.url}
                 aria-label={item.name}
-                className={`group flex flex-col items-center justify-center flex-1 py-1 transition-transform active:scale-95 ${
+                className={`${DOWNBAR_TAB_CLASS} flex-col ${
                   active
                     ? "text-[#D5FF38]"
                     : "text-white/70 hover:text-white dark:text-neutral-300 dark:hover:text-white"
@@ -168,9 +178,9 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
               >
                 {item.id === "home" ? (
                   <Icon
-                    size={21}
+                    size={20}
                     active={active}
-                    className={`transition-colors ${
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       active
                         ? "stroke-[#D5FF38] text-[#D5FF38]"
                         : "stroke-[2.1] stroke-current fill-none text-white/70 hover:text-white dark:text-neutral-300 dark:hover:text-white"
@@ -178,8 +188,8 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                   />
                 ) : (
                   <Icon
-                    size={21}
-                    className={`transition-colors ${
+                    size={20}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       active
                         ? "stroke-[#D5FF38] stroke-[2.4]"
                         : "stroke-[2.1] stroke-current fill-none"
@@ -187,7 +197,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                   />
                 )}
                 <span
-                  className={`text-[10.5px] tracking-tight leading-tight mt-0.5 select-none transition-colors ${
+                  className={`${DOWNBAR_LABEL_CLASS} select-none transition-colors ${
                     active
                       ? "font-extrabold text-[#D5FF38]"
                       : "font-semibold text-white/70 group-hover:text-white dark:text-neutral-300 dark:group-hover:text-white"
@@ -206,13 +216,13 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
           onClick={() => setIsActionsOpen(!isActionsOpen)}
           aria-label="Quick Actions"
           aria-expanded={isActionsOpen}
-          className="pointer-events-auto w-14 h-14 rounded-full bg-[#D5FF38] hover:bg-[#c8f526] text-black flex items-center justify-center shadow-md border border-black/10 dark:border-white/10 active:scale-95 transition-all shrink-0 cursor-pointer"
+          className={`${DOWNBAR_CIRCLE_SIZE_CLASS} bg-[#D5FF38] hover:bg-[#c8f526] text-black flex items-center justify-center shadow-md border border-black/10 dark:border-white/10 active:scale-95 transition-all cursor-pointer`}
         >
           <motion.div
             animate={{ rotate: isActionsOpen ? 45 : 0 }}
             transition={{ type: "spring", damping: 15, stiffness: 250 }}
           >
-            <Plus size={26} strokeWidth={2.8} />
+            <Plus className="w-6 h-6 sm:w-[26px] sm:h-[26px]" strokeWidth={2.8} />
           </motion.div>
         </button>
       </nav>

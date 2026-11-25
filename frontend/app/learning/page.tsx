@@ -234,7 +234,7 @@ export default function LearningPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-6xl mx-auto space-y-5 pb-28 sm:pb-12"
+      className="max-w-6xl mx-auto space-y-5 pb-28 md:pb-12"
     >
       {/* ── Toast Notification ── */}
       <AnimatePresence>
