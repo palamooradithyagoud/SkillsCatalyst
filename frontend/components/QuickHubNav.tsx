@@ -213,10 +213,11 @@ export default function QuickHubNav() {
               >
                 <div className="w-[54px] h-[54px] xs:w-[60px] xs:h-[60px] rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center p-1 transition-transform duration-300 group-hover/item:scale-108">
                   <Image
-                    src="/images/hub/dsa_sheets_3d.png"
+                    src="/images/hub/dsa_sheets_3d.png?v=2"
                     alt="DSA Sheets 3D Checklist"
                     width={54}
                     height={54}
+                    unoptimized
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   />
@@ -350,10 +351,11 @@ export default function QuickHubNav() {
               <div className="w-15 h-15 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center group-hover:scale-108 transition-all duration-300">
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
-                    src="/images/hub/dsa_sheets_3d.png"
+                    src="/images/hub/dsa_sheets_3d.png?v=2"
                     alt="DSA Sheets 3D Checklist"
                     width={72}
                     height={72}
+                    unoptimized
                     priority
                     className="w-full h-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:scale-105"
                   />

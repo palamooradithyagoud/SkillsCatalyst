@@ -11,7 +11,6 @@ import {
   Target,
   Briefcase,
   Sparkles,
-  BarChart3,
   Code2,
   Flame,
   Zap,
@@ -37,6 +36,7 @@ import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import Home3DIcon from "@/components/icons/Home3DIcon";
+import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import SkillsCatalystLogo from "@/components/SkillsCatalystLogo";
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import CareerDownbar from "@/components/career/CareerDownbar";
@@ -55,7 +55,7 @@ const navItems = [
   { name: "Practice", href: "/practice", icon: Target, desc: "Aptitude & company questions" },
   { name: "Career", href: "/career", icon: Briefcase, desc: "AI resume analysis" },
   { name: "Explore", href: "/explore", icon: ExploreIcon, desc: "Trending skills & tools" },
-  { name: "Analytics", href: "/analytics", icon: BarChart3, desc: "Detailed performance" },
+  { name: "Analytics", href: "/analytics", icon: AnalyticsIcon, desc: "Detailed performance" },
   { name: "Support & Help", href: "/support", icon: LifeBuoy, desc: "Customer desk & policies" },
   { name: "Profile", href: "/profile", icon: UserIcon, desc: "Account & settings" },
 ];

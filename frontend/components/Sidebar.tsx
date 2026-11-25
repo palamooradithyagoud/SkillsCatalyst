@@ -15,7 +15,6 @@ import {
   Newspaper,
   Briefcase,
   Bot,
-  BarChart3,
   User,
   Headset,
   LogOut,
@@ -31,6 +30,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 
 export type NavItemData = {
   id: string;
@@ -157,7 +157,7 @@ export default function Sidebar() {
       id: "analytics",
       title: "Analytics",
       href: "/analytics",
-      icon: BarChart3,
+      icon: AnalyticsIcon,
     },
   ];
 

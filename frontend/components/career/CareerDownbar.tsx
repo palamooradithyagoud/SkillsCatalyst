@@ -9,9 +9,9 @@ import {
   BookOpen,
   Target,
   Briefcase,
-  BarChart3,
   ArrowLeft,
 } from "lucide-react";
+import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import {
   DOWNBAR_NAV_CLASS,
   DOWNBAR_CIRCLE_SIZE_CLASS,
@@ -66,7 +66,7 @@ export const CAREER_TABS: CareerTabItem[] = [
     id: "analytics",
     label: "Analytics",
     href: "/analytics",
-    icon: BarChart3,
+    icon: AnalyticsIcon,
     activeColor: "text-[#D5FF38]",
   },
 ];
@@ -186,11 +186,20 @@ export default function CareerDownbar({
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className="shrink-0 flex items-center justify-center"
               >
-                <Icon
-                  className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
-                    isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
-                  }`}
-                />
+                {tab.id === "analytics" ? (
+                  <AnalyticsIcon
+                    active={isActive}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                ) : (
+                  <Icon
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                )}
               </motion.div>
 
               <span className={`${DOWNBAR_LABEL_CLASS} transition-colors ${

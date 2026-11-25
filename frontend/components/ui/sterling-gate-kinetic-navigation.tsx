@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
+import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import {
   LayoutGrid,
   BookOpen,
@@ -12,7 +13,6 @@ import {
   Target,
   Briefcase,
   Compass,
-  BarChart3,
   User,
   ChevronRight,
   LifeBuoy,
@@ -147,7 +147,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Analytics",
     subtitle: "Readiness & Performance",
     href: "/analytics",
-    icon: BarChart3,
+    icon: AnalyticsIcon,
     accentColor: "rgba(139, 92, 246, 0.2)",
   },
   {

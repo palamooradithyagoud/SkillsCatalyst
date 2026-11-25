@@ -8,7 +8,6 @@ import {
   Map,
   Target,
   Briefcase,
-  BarChart3,
   Code2,
   Telescope,
   Film,
@@ -19,6 +18,7 @@ import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import BookIcon from "@/components/icons/BookIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
+import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import { useAuth } from "@/lib/auth";
 
 export default function MobileQuickDock() {
@@ -92,7 +92,7 @@ export default function MobileQuickDock() {
       id: "analytics",
       name: "Analytics",
       href: "/analytics",
-      icon: BarChart3,
+      icon: AnalyticsIcon,
       desc: "Metrics",
     },
     {
