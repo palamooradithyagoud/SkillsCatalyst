@@ -12,12 +12,12 @@ import {
 } from "@/components/mobile/downbarStyles";
 
 describe("Unified Mobile & Tablet Downbar UX Sizing Suite", () => {
-  it("defines UX-compliant dimensions for mobile (56px / 48dp+) and tablet (60px)", () => {
-    assert.ok(DOWNBAR_NAV_CLASS.includes("bottom-4 sm:bottom-5"), "Bottom clearance must match mobile/tablet UX rhythm");
-    assert.ok(DOWNBAR_CIRCLE_SIZE_CLASS.includes("w-14 h-14 sm:w-[60px] sm:h-[60px]"), "Side circle button must be 56px mobile / 60px tablet");
-    assert.ok(DOWNBAR_PILL_BASE_CLASS.includes("h-14 sm:h-[60px]"), "Main pill height must match 56px mobile / 60px tablet");
-    assert.ok(DOWNBAR_ICON_SIZE_CLASS.includes("w-5 h-5 sm:w-[22px] sm:h-[22px]"), "Tab icons must stay 20px mobile / 22px tablet");
-    assert.ok(DOWNBAR_LABEL_CLASS.includes("text-[9.5px] sm:text-[10.5px]"), "Tab labels must stay crisp >=9.5px mobile / 10.5px tablet");
+  it("defines compact UX-compliant dimensions for mobile (48px / 48dp) and tablet (54px)", () => {
+    assert.ok(DOWNBAR_NAV_CLASS.includes("bottom-3.5 sm:bottom-5"), "Bottom clearance must match compact mobile/tablet UX rhythm");
+    assert.ok(DOWNBAR_CIRCLE_SIZE_CLASS.includes("w-12 h-12 sm:w-[54px] sm:h-[54px]"), "Side circle button must be 48px mobile / 54px tablet");
+    assert.ok(DOWNBAR_PILL_BASE_CLASS.includes("h-12 sm:h-[54px]"), "Main pill height must match 48px mobile / 54px tablet");
+    assert.ok(DOWNBAR_ICON_SIZE_CLASS.includes("w-[17px] h-[17px] sm:w-[19px] sm:h-[19px]"), "Tab icons must stay compact 17px mobile / 19px tablet");
+    assert.ok(DOWNBAR_LABEL_CLASS.includes("text-[8.5px] sm:text-[10px]"), "Tab labels must fit cleanly without clipping across all tabs");
     assert.ok(DOWNBAR_TAB_CLASS.includes("h-full"), "Tabs must fill full pill vertical touch target");
   });
 

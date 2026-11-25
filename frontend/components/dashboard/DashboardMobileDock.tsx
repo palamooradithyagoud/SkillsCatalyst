@@ -178,7 +178,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
               >
                 {item.id === "home" ? (
                   <Icon
-                    size={20}
+                    size={17}
                     active={active}
                     className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       active
@@ -188,7 +188,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                   />
                 ) : (
                   <Icon
-                    size={20}
+                    size={17}
                     className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       active
                         ? "stroke-[#D5FF38] stroke-[2.4]"
@@ -222,7 +222,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
             animate={{ rotate: isActionsOpen ? 45 : 0 }}
             transition={{ type: "spring", damping: 15, stiffness: 250 }}
           >
-            <Plus className="w-6 h-6 sm:w-[26px] sm:h-[26px]" strokeWidth={2.8} />
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.6} />
           </motion.div>
         </button>
       </nav>
