@@ -10,12 +10,13 @@ import {
   Briefcase,
   Code2,
   Telescope,
-  Film,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import BookIcon from "@/components/icons/BookIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
+import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
@@ -50,14 +51,14 @@ export default function MobileQuickDock() {
       id: "skillbits",
       name: "SkillBits",
       href: "/skillbits",
-      icon: Film,
+      icon: SkillBitsIcon,
       desc: "Reels",
     },
     {
       id: "learning",
       name: "Learning",
       href: "/learning",
-      icon: BookIcon,
+      icon: LearnIcon,
       desc: "Playlists",
     },
     {

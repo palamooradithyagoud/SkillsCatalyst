@@ -1,59 +1,58 @@
 "use client";
 
-import React, { forwardRef, useId } from "react";
-import type { AnimatedIconHandle, AnimatedIconProps } from "./types";
+import React, { forwardRef } from "react";
+import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import type { AnimatedIconHandle } from "./types";
 
-const ExploreIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
-  ({ className = "", size = 22 }, ref) => {
-    const rawId = useId();
-    const cleanId = rawId.replace(/:/g, "");
-    const telescopeGradId = `telescopeGrad-${cleanId}`;
-    const tripodGradId = `tripodGrad-${cleanId}`;
+export interface ExploreIconProps {
+  size?: number;
+  active?: boolean;
+  className?: string;
+  strokeWidth?: number;
+  onClick?: () => void;
+}
+
+/**
+ * Clean outline Explore icon: open-crescent magnifying glass framing a 4-point rounded star.
+ * Uses currentColor when inactive and #D5FF38 when active, with strict zero glow.
+ */
+const ExploreIcon = forwardRef<AnimatedIconHandle, ExploreIconProps>(
+  ({ size = 18, active: propActive, className = "", strokeWidth = 2.1, onClick }, _ref) => {
+    const pathname = usePathname();
+    const isActive = propActive !== undefined ? propActive : pathname.startsWith("/explore");
+    const strokeColor = isActive ? "#D5FF38" : "currentColor";
 
     return (
-      <div className={`IconContainer select-none ${className}`} style={{ width: `${size}px`, height: `${size}px` }}>
-        {/* 1. Telescope SVG */}
+      <motion.div
+        onClick={onClick}
+        whileTap={{ scale: 0.88 }}
+        animate={isActive ? { scale: 1.06 } : { scale: 1 }}
+        transition={{ type: "spring", stiffness: 380, damping: 24 }}
+        className="inline-flex items-center justify-center shrink-0 select-none"
+        style={{ filter: "none" }}
+      >
         <svg
-          className="telescope"
-          viewBox="0 0 24 14"
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
           fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className={`transition-colors duration-200 ${className}`}
+          style={{ filter: "none" }}
         >
-          <defs>
-            <linearGradient id={telescopeGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="50%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#e879f9" />
-            </linearGradient>
-          </defs>
-          {/* Segment 1: Eyepiece Section (Left) */}
-          <rect x="1" y="4" width="4" height="6" rx="1" fill={`url(#${telescopeGradId})`} />
-          {/* Segment 2: Middle Barrel Section */}
-          <rect x="5.5" y="2.5" width="5" height="9" rx="1" fill={`url(#${telescopeGradId})`} />
-          {/* Segment 3: Objective Lens Section (Right) */}
-          <rect x="11" y="1" width="12" height="12" rx="2" fill={`url(#${telescopeGradId})`} />
+          {/* Nestled 4-point sparkle/star on left */}
+          <path d="M 6.5 6.5 Q 7.45 9.55 10.5 10.5 Q 7.45 11.45 6.5 14.5 Q 5.55 11.45 2.5 10.5 Q 5.55 9.55 6.5 6.5 Z" />
+          {/* Open magnifying-glass crescent ring */}
+          <path d="M 9.4 4.1 A 7.25 7.25 0 1 1 9.4 16.9" />
+          {/* Diagonal handle */}
+          <path d="M 17.9 15.6 L 21.2 19.0" />
         </svg>
-
-        {/* 2. Tripod Stand SVG */}
-        <svg
-          className="tripod"
-          viewBox="0 0 24 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id={tripodGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a5b4fc" />
-              <stop offset="100%" stopColor="#c084fc" />
-            </linearGradient>
-          </defs>
-          <g stroke={`url(#${tripodGradId})`} strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="1" x2="3" y2="15" />
-            <line x1="12" y1="1" x2="12" y2="15" />
-            <line x1="12" y1="1" x2="21" y2="15" />
-          </g>
-        </svg>
-      </div>
+      </motion.div>
     );
   }
 );

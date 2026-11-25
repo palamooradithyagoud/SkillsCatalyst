@@ -6,12 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Map,
-  BookOpen,
   Target,
   Briefcase,
   ArrowLeft,
 } from "lucide-react";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
 import {
   DOWNBAR_NAV_CLASS,
   DOWNBAR_CIRCLE_SIZE_CLASS,
@@ -45,7 +45,7 @@ export const CAREER_TABS: CareerTabItem[] = [
     id: "learn",
     label: "Learn",
     href: "/learning",
-    icon: BookOpen,
+    icon: LearnIcon,
     activeColor: "text-[#D5FF38]",
   },
   {
@@ -188,6 +188,13 @@ export default function CareerDownbar({
               >
                 {tab.id === "analytics" ? (
                   <AnalyticsIcon
+                    active={isActive}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                ) : tab.id === "learn" ? (
+                  <LearnIcon
                     active={isActive}
                     className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"

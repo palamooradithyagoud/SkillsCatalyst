@@ -13,17 +13,15 @@ export interface HomeMotionIconProps {
 }
 
 /**
- * Animated 2D Motion Home Icon for mobile view.
- * Displays the 2D front house from Image 1 with clean rounded borders.
- * On click / when active:
- *  - Borders smoothly transition from black/neutral to Acid Lime (#D5FF38) with ZERO glow.
- *  - Plays a snappy, lively spring motion transition (tilt angle, squish, hop, and door bounce).
+ * Animated filled rounded-house Home icon with arched doorway cutout.
+ * - Inactive: cleanly filled using `currentColor`.
+ * - Active / Clicked: fills with Acid Lime (#D5FF38) and plays a snappy
+ *   spring motion transition with strict zero glow.
  */
 export default function HomeMotionIcon({
-  size = 22,
+  size = 17,
   active: propActive,
   className = "",
-  strokeWidth = 2.2,
   onClick,
 }: HomeMotionIconProps) {
   const pathname = usePathname();
@@ -35,8 +33,8 @@ export default function HomeMotionIcon({
     if (onClick) onClick();
   };
 
-  // Color: Acid Lime (#D5FF38) when active, dark/current when inactive. Zero glow!
-  const strokeColor = isActive ? "#D5FF38" : "currentColor";
+  // Filled with Acid Lime (#D5FF38) when active, solid currentColor when inactive. Zero glow!
+  const fillColor = isActive ? "#D5FF38" : "currentColor";
 
   return (
     <motion.div
@@ -70,43 +68,20 @@ export default function HomeMotionIcon({
         height={size}
         viewBox="0 0 24 24"
         fill="none"
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
         aria-hidden="true"
         className={`overflow-visible select-none transition-colors duration-200 ${className}`}
         style={{ filter: "none" }}
       >
-        {/* ── 2D House Pentagonal Outer Outline (Image 1) ── */}
+        {/* ── Filled Rounded House with Arched Doorway Cutout ── */}
         <motion.path
-          d="M 4.5 19.5 L 4.5 9.8 L 12 3.5 L 19.5 9.8 L 19.5 19.5 Z"
+          d="M 10.6 4.1 Q 12 3.1 13.4 4.1 L 19.1 7.9 Q 20.5 8.9 20.5 10.6 L 20.5 18.0 Q 20.5 20.5 18.0 20.5 L 15.4 20.5 Q 14.6 20.5 14.6 19.7 L 14.6 14.8 A 2.6 2.6 0 0 0 9.4 14.8 L 9.4 19.7 Q 9.4 20.5 8.6 20.5 L 6.0 20.5 Q 3.5 20.5 3.5 18.0 L 3.5 10.6 Q 3.5 8.9 4.9 7.9 Z"
+          strokeWidth={0.5}
+          strokeLinejoin="round"
           animate={{
-            stroke: strokeColor,
+            fill: fillColor,
+            stroke: fillColor,
           }}
           transition={{ duration: 0.2 }}
-        />
-
-        {/* ── Center Arched Doorway with Elastic Spring Micro-Lift ── */}
-        <motion.path
-          d="M 9.5 19.5 L 9.5 13.5 C 9.5 11.5 14.5 11.5 14.5 13.5 L 14.5 19.5"
-          animate={
-            isActive
-              ? {
-                  stroke: strokeColor,
-                  scaleY: [1, 1.15, 0.94, 1],
-                  originY: 0.85,
-                }
-              : {
-                  stroke: strokeColor,
-                  scaleY: 1,
-                }
-          }
-          transition={{
-            duration: 0.4,
-            ease: [0.34, 1.56, 0.64, 1],
-            delay: 0.04,
-          }}
         />
       </svg>
     </motion.div>

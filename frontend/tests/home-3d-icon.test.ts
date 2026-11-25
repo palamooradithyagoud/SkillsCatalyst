@@ -4,21 +4,22 @@ import fs from "node:fs";
 import path from "node:path";
 import Home3DIcon from "@/components/icons/Home3DIcon";
 
-describe("Home 3D Icon Transition & Mobile View Verification Suite", () => {
+describe("Home Filled Icon Transition & Mobile View Verification Suite", () => {
   it("verifies Home3DIcon exists and is a valid React functional component", () => {
     assert.ok(Home3DIcon, "Home3DIcon default export must exist");
     assert.strictEqual(typeof Home3DIcon, "function", "Home3DIcon must be a React component function");
   });
 
-  it("verifies HomeMotionIcon source code implements 2D motion transition with Acid Lime and zero glow", () => {
+  it("verifies HomeMotionIcon source code renders filled rounded house with arched doorway, Acid Lime active state, and zero glow", () => {
     const iconPath = path.join(process.cwd(), "components", "icons", "Home3DIcon.tsx");
     assert.ok(fs.existsSync(iconPath), "frontend/components/icons/Home3DIcon.tsx must exist on disk");
 
     const content = fs.readFileSync(iconPath, "utf-8");
 
-    // Must define 2D house outline and doorway (Image 1)
-    assert.ok(content.includes("M 4.5 19.5 L 4.5 9.8 L 12 3.5"), "Must define 2D house outline matching Image 1");
-    assert.ok(content.includes("M 9.5 19.5 L 9.5 13.5"), "Must define arched doorway matching Image 1");
+    // Must define filled rounded house silhouette with arched doorway cutout
+    assert.ok(content.includes("M 10.6 4.1 Q 12 3.1 13.4 4.1"), "Must define rounded roof house contour");
+    assert.ok(content.includes("A 2.6 2.6 0 0 0 9.4 14.8"), "Must define arched doorway cutout");
+    assert.ok(content.includes("fill: fillColor"), "Must fill the home icon smoothly");
 
     // Must implement spring motion animation (scale, rotate tilt, hop)
     assert.ok(content.includes("rotate: [0, -9, 4, -2, 0]"), "Must implement playful spring tilt motion");
@@ -32,7 +33,7 @@ describe("Home 3D Icon Transition & Mobile View Verification Suite", () => {
     assert.strictEqual(content.includes("drop-shadow"), false, "Must not contain drop-shadow glow");
   });
 
-  it("verifies DashboardMobileDock uses Home3DIcon without glow or solid fill", () => {
+  it("verifies DashboardMobileDock uses filled Home3DIcon without glow", () => {
     const dockPath = path.join(process.cwd(), "components", "dashboard", "DashboardMobileDock.tsx");
     const content = fs.readFileSync(dockPath, "utf-8");
 

@@ -5,17 +5,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Film,
-  Briefcase,
-  Compass,
   Plus,
   Bot,
   ListTodo,
   Target,
-  BookOpen,
   X,
 } from "lucide-react";
 import Home3DIcon from "@/components/icons/Home3DIcon";
+import CatalogIcon from "@/components/icons/CatalogIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
+import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
+import ExploreIcon from "@/components/icons/ExploreIcon";
 import {
   DOWNBAR_NAV_CLASS,
   DOWNBAR_CIRCLE_SIZE_CLASS,
@@ -34,9 +34,9 @@ interface DockItem {
 
 const DOCK_ITEMS: DockItem[] = [
   { id: "home", name: "Home", url: "/dashboard", icon: Home3DIcon },
-  { id: "skillbits", name: "SkillBits", url: "/skillbits", icon: Film },
-  { id: "career", name: "Career", url: "/career", icon: Briefcase },
-  { id: "explore", name: "Explore", url: "/explore", icon: Compass },
+  { id: "skillbits", name: "SkillBits", url: "/skillbits", icon: SkillBitsIcon },
+  { id: "catalog", name: "Catalog", url: "/roadmaps", icon: CatalogIcon },
+  { id: "explore", name: "Explore", url: "/explore", icon: ExploreIcon },
 ];
 
 const QUICK_ACTIONS = [
@@ -62,7 +62,7 @@ const QUICK_ACTIONS = [
     title: "Learning Tracks",
     desc: "Structured video tracks & playlists",
     url: "/learning",
-    icon: BookOpen,
+    icon: LearnIcon,
   },
 ];
 
@@ -75,7 +75,7 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
     if (item.url === "/dashboard") {
       return pathname === "/dashboard" || pathname === "/";
     }
-    if (item.id === "career") {
+    if (item.id === "catalog" || item.id === "career") {
       return pathname.startsWith("/career") || pathname.startsWith("/roadmaps");
     }
     return pathname.startsWith(item.url);
@@ -182,8 +182,41 @@ export default function DashboardMobileDock({ className = "" }: { className?: st
                     active={active}
                     className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       active
-                        ? "stroke-[#D5FF38] text-[#D5FF38]"
-                        : "stroke-[2.1] stroke-current fill-none text-white/70 hover:text-white dark:text-neutral-300 dark:hover:text-white"
+                        ? "text-[#D5FF38]"
+                        : "text-white/75 group-hover:text-white dark:text-neutral-300 dark:group-hover:text-white"
+                    }`}
+                  />
+                ) : item.id === "skillbits" ? (
+                  <SkillBitsIcon
+                    size={17}
+                    active={active}
+                    strokeWidth={active ? 2.3 : 2.1}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      active
+                        ? "text-[#D5FF38]"
+                        : "text-white/70 group-hover:text-white dark:text-neutral-300 dark:group-hover:text-white"
+                    }`}
+                  />
+                ) : item.id === "catalog" ? (
+                  <CatalogIcon
+                    size={17}
+                    active={active}
+                    strokeWidth={active ? 2.1 : 1.85}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      active
+                        ? "text-[#D5FF38]"
+                        : "text-white/70 group-hover:text-white dark:text-neutral-300 dark:group-hover:text-white"
+                    }`}
+                  />
+                ) : item.id === "explore" ? (
+                  <ExploreIcon
+                    size={17}
+                    active={active}
+                    strokeWidth={active ? 2.3 : 2.1}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      active
+                        ? "text-[#D5FF38]"
+                        : "text-white/70 group-hover:text-white dark:text-neutral-300 dark:group-hover:text-white"
                     }`}
                   />
                 ) : (

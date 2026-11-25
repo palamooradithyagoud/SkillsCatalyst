@@ -6,19 +6,19 @@ import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
+import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
+import ExploreIcon from "@/components/icons/ExploreIcon";
 import {
   LayoutGrid,
-  BookOpen,
   Map,
   Target,
   Briefcase,
-  Compass,
   User,
   ChevronRight,
   LifeBuoy,
   LogOut,
   Sparkles,
-  Film,
   Crown,
   Calendar,
   ListTodo,
@@ -93,7 +93,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "SkillBits",
     subtitle: "Bite-Sized Video Reels",
     href: "/skillbits",
-    icon: Film,
+    icon: SkillBitsIcon,
     accentColor: "rgba(168, 85, 247, 0.2)",
   },
   {
@@ -102,7 +102,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Learning",
     subtitle: "Curated Playlists & Tracks",
     href: "/learning",
-    icon: BookOpen,
+    icon: LearnIcon,
     accentColor: "rgba(168, 85, 247, 0.2)",
   },
   {
@@ -138,7 +138,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Explore Hub",
     subtitle: "Trending Skills & Grants",
     href: "/explore",
-    icon: Compass,
+    icon: ExploreIcon,
     accentColor: "rgba(16, 185, 129, 0.2)",
   },
   {

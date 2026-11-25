@@ -6,8 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
-  Film,
-  BookOpen,
   Map,
   Target,
   Calendar,
@@ -31,6 +29,8 @@ import {
 import { useAuth } from "@/lib/auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
+import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
 
 export type NavItemData = {
   id: string;
@@ -121,7 +121,7 @@ export default function Sidebar() {
       id: "skillbits",
       title: "SkillBits",
       href: "/skillbits",
-      icon: Film,
+      icon: SkillBitsIcon,
     },
     {
       id: "events",
@@ -167,7 +167,7 @@ export default function Sidebar() {
       id: "learning",
       title: "Learn",
       href: "/learning",
-      icon: BookOpen,
+      icon: LearnIcon,
     },
     {
       id: "roadmaps",

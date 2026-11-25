@@ -10,16 +10,26 @@ describe("Dashboard Mobile Dock (Capsule + FAB) Suite", () => {
     assert.strictEqual(typeof DashboardMobileDock, "function", "DashboardMobileDock must be a component function");
   });
 
-  it("verifies DashboardMobileDock source implements capsule pill with Career & Explore, and acid lime FAB", () => {
+  it("verifies DashboardMobileDock source implements capsule pill with Catalog (linking to Roadmaps) & Explore, and acid lime FAB", () => {
     const dockPath = path.join(process.cwd(), "components", "dashboard", "DashboardMobileDock.tsx");
     assert.ok(fs.existsSync(dockPath), "DashboardMobileDock.tsx must exist on disk");
     const content = fs.readFileSync(dockPath, "utf-8");
 
-    // Must define core navigation items for SkillsCatalyst: Home, SkillBits, Career, Explore
+    // Must define core navigation items for SkillsCatalyst: Home, SkillBits, Catalog -> /roadmaps, Explore
     assert.ok(content.includes("/dashboard"), "Must link to /dashboard (Home)");
     assert.ok(content.includes("/skillbits"), "Must link to /skillbits (SkillBits)");
-    assert.ok(content.includes("/career"), "Must link to /career (Career)");
+    assert.ok(content.includes('name: "Catalog"'), "Must display Catalog instead of Career in the dock");
+    assert.ok(content.includes("CatalogIcon"), "Must use the custom CatalogIcon grid+star icon");
+    assert.ok(content.includes('url: "/roadmaps"'), "Catalog must route directly to /roadmaps first");
     assert.ok(content.includes("/explore"), "Must link to /explore (Explore)");
+
+    // CatalogIcon must use clean white/currentColor outline strokes only (3 rounded squares + 4-point star, zero purple fill)
+    const catalogIconPath = path.join(process.cwd(), "components", "icons", "CatalogIcon.tsx");
+    const catalogIconSrc = fs.readFileSync(catalogIconPath, "utf-8");
+    assert.ok(catalogIconSrc.includes('fill="none"'), "CatalogIcon must use outline strokes only");
+    assert.ok(catalogIconSrc.includes("<rect"), "CatalogIcon must render the 3 rounded squares");
+    assert.ok(catalogIconSrc.includes("17.5 13.7"), "CatalogIcon must render the 4-point star");
+    assert.ok(!catalogIconSrc.includes("#9333EA") && !catalogIconSrc.includes("#A855F7") && !catalogIconSrc.includes("#7C3AED"), "CatalogIcon must not use purple fills");
 
     // Must render vertical icon + label layout with acid lime active highlight (#D5FF38), zero pink
     assert.ok(content.includes("#D5FF38"), "Must highlight active item in acid lime #D5FF38");

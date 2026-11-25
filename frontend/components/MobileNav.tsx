@@ -24,8 +24,6 @@ import {
   Newspaper,
   Calendar,
   BookOpen,
-  Compass,
-  Film,
   Bot,
   ListTodo,
 } from "lucide-react";
@@ -33,6 +31,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
+import LearnIcon from "@/components/icons/LearnIcon";
+import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import Home3DIcon from "@/components/icons/Home3DIcon";
@@ -49,8 +49,8 @@ import NotificationPanel from "@/components/notifications/NotificationPanel";
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, desc: "Overview & metrics" },
   { name: "To-Do List", href: "/tasks", icon: ListTodo, desc: "Personal study & task checklist" },
-  { name: "SkillBits", href: "/skillbits", icon: Film, desc: "Bite-sized video reels" },
-  { name: "Learning", href: "/learning", icon: BookIcon, desc: "Playlists & learning tracks" },
+  { name: "SkillBits", href: "/skillbits", icon: SkillBitsIcon, desc: "Bite-sized video reels" },
+  { name: "Learning", href: "/learning", icon: LearnIcon, desc: "Playlists & learning tracks" },
   { name: "Roadmaps", href: "/roadmaps", icon: Map, desc: "Interactive career tracks" },
   { name: "Practice", href: "/practice", icon: Target, desc: "Aptitude & company questions" },
   { name: "Career", href: "/career", icon: Briefcase, desc: "AI resume analysis" },
@@ -62,8 +62,8 @@ const navItems = [
 
 const bottomBarItems = [
   { name: "Home", href: "/dashboard", icon: LayoutGrid },
-  { name: "SkillBits", href: "/skillbits", icon: Film },
-  { name: "Learn", href: "/learning", icon: BookIcon },
+  { name: "SkillBits", href: "/skillbits", icon: SkillBitsIcon },
+  { name: "Learn", href: "/learning", icon: LearnIcon },
   { name: "AI Mentor", href: "/ai-mentor", icon: Bot },
   { name: "Practice", href: "/practice", icon: Target },
   { name: "Explore", href: "/explore", icon: ExploreIcon },
