@@ -2,23 +2,17 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  CheckCircle2,
-  Check,
   ChevronDown,
   ChevronRight,
   ExternalLink,
   BookOpen,
-  Sparkles,
-  Layers,
   Search,
   Clock,
   Play,
   HelpCircle,
   Inbox,
-  Zap,
   Swords,
 } from "lucide-react";
 import InteractivePracticeAccordionCard from "./InteractivePracticeAccordionCard";
@@ -73,10 +67,8 @@ export interface CheckpointItem {
   index: number;
   title: string;
   subtitle?: string;
-  isCompleted: boolean;
-  isCurrentTarget: boolean;
+  isCurrentTarget?: boolean;
   nodesCount: number;
-  completedNodesCount: number;
 }
 
 export interface SubtopicTopic {
@@ -110,15 +102,7 @@ export interface RoadmapCurriculumViewProps {
   growth?: string;
   color?: string;
   checkpoints: CheckpointItem[];
-  progressPct: number;
-  doneCount: number;
-  totalCount: number;
-  isEnrolled: boolean;
-  onEnroll: () => void;
   onBack: () => void;
-  onToggleCheckpoint: (checkpoint: CheckpointItem) => void;
-  onToggleSubtopic?: (subtopicId: string, nodeName: string) => void;
-  completedSubtopics?: Record<string, boolean>;
   getSubtopicsForNode?: (nodeName: string, roadmapId?: string) => NodeTreeBranches;
 }
 
@@ -126,25 +110,13 @@ export default function RoadmapCurriculumView({
   roadmapTitle,
   roadmapId,
   category,
-  ratings = "4.9 Rating",
-  salary,
-  growth,
   color = "#3776AB",
   checkpoints,
-  progressPct,
-  doneCount,
-  totalCount,
-  isEnrolled,
-  onEnroll,
   onBack,
-  onToggleCheckpoint,
-  onToggleSubtopic,
-  completedSubtopics = {},
   getSubtopicsForNode,
 }: RoadmapCurriculumViewProps) {
   const router = useRouter();
   const [searchFilter, setSearchFilter] = useState("");
-  const [filterMode, setFilterMode] = useState<"all" | "completed" | "remaining">("all");
   const [viewMode, setViewMode] = useState<"tree" | "modules">("tree");
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
     [checkpoints[0]?.id || ""]: true,
@@ -171,8 +143,6 @@ export default function RoadmapCurriculumView({
 
   const filteredCheckpoints = useMemo(() => {
     return checkpoints.filter((cp) => {
-      if (filterMode === "completed" && !cp.isCompleted) return false;
-      if (filterMode === "remaining" && cp.isCompleted) return false;
       if (searchFilter.trim()) {
         const q = searchFilter.toLowerCase();
         const matchTitle = cp.title.toLowerCase().includes(q);
@@ -181,7 +151,7 @@ export default function RoadmapCurriculumView({
       }
       return true;
     });
-  }, [checkpoints, filterMode, searchFilter]);
+  }, [checkpoints, searchFilter]);
 
   const isPython = roadmapId === "python-mastery" || roadmapId.includes("python");
 
@@ -327,50 +297,9 @@ export default function RoadmapCurriculumView({
                 </div>
               </div>
             </div>
-
-            {/* Card 3: Round Percentage */}
-            <div className="shrink lg:flex-1 lg:max-w-[220px] rounded-2xl bg-white p-3.5 lg:p-4 text-black shadow-md border border-slate-100 flex flex-col justify-between">
-              <div className="text-slate-500 font-extrabold text-[11px] uppercase tracking-wider mb-2.5">
-                PROGRESS
-              </div>
-
-              <div className="my-auto flex flex-col items-center justify-center py-1">
-                <div className="relative flex items-center justify-center w-18 h-18 lg:w-20 lg:h-20">
-                  <svg className="w-18 h-18 lg:w-20 lg:h-20 -rotate-90" viewBox="0 0 36 36">
-                    <path
-                      className="text-slate-100"
-                      strokeWidth="3.5"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                    <path
-                      className="text-[#7d26cd] transition-all duration-500"
-                      strokeDasharray={`${progressPct}, 100`}
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center justify-center text-center">
-                    <span className="text-base lg:text-lg font-black text-black leading-none">
-                      {progressPct}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-1.5 border-t border-dashed border-slate-200 text-center">
-                <span className="text-xs font-bold text-slate-600 block truncate">
-                  {doneCount} / {totalCount} Done
-                </span>
-              </div>
-            </div>
           </div>
 
-          {/* ── MOBILE ONLY: Row 1 (Black + White side-by-side) & Row 2 (Progress + Quiz/Gamification side-by-side) ── */}
+          {/* ── MOBILE ONLY: Row 1 (Black + White side-by-side) & Row 2 (Quiz + Gamification) ── */}
           <div className="pt-2.5 border-t border-black/15 flex flex-col gap-2 sm:gap-2.5 lg:hidden">
             {/* Mobile Row 1: Black Card (IN ROADMAP) & White Card (YOU GET) Side-by-Side */}
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
@@ -428,78 +357,34 @@ export default function RoadmapCurriculumView({
               </div>
             </div>
 
-            {/* Mobile Row 2: Progress Card & Beside that Quiz + Gamification Cards */}
+            {/* Mobile Row 2: Quiz & Gamification Cards */}
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-              {/* Left Column: Progress Card (Moved to downside) */}
-              <div className="rounded-xl bg-white p-2.5 sm:p-3 text-black shadow-md border border-slate-100 flex flex-col justify-between h-[138px]">
-                <div className="text-slate-500 font-extrabold text-[10px] uppercase tracking-wider">
-                  PROGRESS
+              {/* Quiz Mini Card: Black */}
+              <div
+                onClick={() => router.push("/practice")}
+                className="bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
+                  <QuizBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
                 </div>
-
-                <div className="my-auto flex flex-col items-center justify-center py-0.5">
-                  <div className="relative flex items-center justify-center w-13 h-13 sm:w-15 sm:h-15">
-                    <svg className="w-13 h-13 sm:w-15 sm:h-15 -rotate-90" viewBox="0 0 36 36">
-                      <path
-                        className="text-slate-100"
-                        strokeWidth="3.5"
-                        stroke="currentColor"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                      <path
-                        className="text-[#7d26cd] transition-all duration-500"
-                        strokeDasharray={`${progressPct}, 100`}
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        stroke="currentColor"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                    </svg>
-                    <div className="absolute flex flex-col items-center justify-center text-center">
-                      <span className="text-sm sm:text-base font-black text-black leading-none">
-                        {progressPct}%
-                      </span>
-                    </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
+                    Topic Quiz
                   </div>
-                </div>
-
-                <div className="pt-1 border-t border-dashed border-slate-200 text-center">
-                  <span className="text-[9.5px] font-bold text-slate-600 block truncate">
-                    {doneCount} / {totalCount} Done
-                  </span>
                 </div>
               </div>
 
-              {/* Right Column: Beside Progress -> Quiz & Gamification Cards (Black background) */}
-              <div className="flex flex-col justify-between gap-1.5 sm:gap-2 h-[138px]">
-                {/* Quiz Mini Card: Black */}
-                <div
-                  onClick={() => router.push("/practice")}
-                  className="flex-1 bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] via-[#6D28D9] to-[#4C1D95] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
-                    <QuizBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
-                      Topic Quiz
-                    </div>
-                  </div>
+              {/* Gamification Mini Card: Black */}
+              <div
+                onClick={() => router.push("/practice")}
+                className="bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
+                  <GamificationBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
                 </div>
-
-                {/* Gamification Mini Card: Black */}
-                <div
-                  onClick={() => router.push("/practice")}
-                  className="flex-1 bg-black rounded-xl p-2.5 flex items-center gap-2.5 shadow-md border border-white/10 active:scale-95 transition-all cursor-pointer overflow-hidden hover:border-white/20"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-1.5 flex items-center justify-center shrink-0 shadow-xs ring-2 ring-purple-900/60 relative">
-                    <GamificationBadgeIcon className="w-4.5 h-4.5 drop-shadow-xs" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
-                      Gamification
-                    </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-black text-white leading-tight truncate">
+                    Gamification
                   </div>
                 </div>
               </div>
@@ -509,24 +394,6 @@ export default function RoadmapCurriculumView({
 
         {/* ── MOBILE ONLY: Action Buttons Bar downside ── */}
         <div className="p-3 bg-[#101523] border-t border-white/10 lg:hidden flex items-center gap-2.5 w-full">
-          <button
-            type="button"
-            onClick={onEnroll}
-            className="flex-1 py-2.5 px-3 rounded-xl bg-[#FACC15] hover:bg-[#FDE047] active:bg-[#EAB308] text-slate-950 font-black text-xs tracking-tight flex items-center justify-center gap-1.5 shadow-md shadow-amber-400/20 active:scale-95 transition-all cursor-pointer truncate"
-          >
-            {isEnrolled ? (
-              <>
-                <Check className="w-3.5 h-3.5 stroke-[3] shrink-0" />
-                <span className="truncate">Enrolled</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-3.5 h-3.5 fill-slate-950 stroke-slate-950 shrink-0" />
-                <span className="truncate">Enroll</span>
-              </>
-            )}
-          </button>
-
           <button
             type="button"
             onClick={() => router.push("/practice")}
@@ -539,11 +406,7 @@ export default function RoadmapCurriculumView({
 
         {/* ── DESKTOP ONLY: Right Section with full interactive practice card & downside buttons ── */}
         <div className="w-full lg:w-[410px] xl:w-[460px] 2xl:w-[490px] shrink-0 self-stretch hidden lg:flex flex-col bg-[#101523] border-l border-white/10">
-          <InteractivePracticeAccordionCard
-            className="w-full h-full"
-            isEnrolled={isEnrolled}
-            onEnroll={onEnroll}
-          />
+          <InteractivePracticeAccordionCard className="w-full h-full" />
         </div>
       </div>
 
@@ -553,9 +416,6 @@ export default function RoadmapCurriculumView({
           roadmapTitle={roadmapTitle}
           roadmapId={roadmapId}
           checkpoints={checkpoints}
-          completedSubtopics={completedSubtopics}
-          onToggleCheckpoint={onToggleCheckpoint}
-          onToggleSubtopic={onToggleSubtopic}
           getSubtopicsForNode={getSubtopicsForNode}
           color={color}
         />
@@ -599,46 +459,12 @@ export default function RoadmapCurriculumView({
               roadmapTitle={roadmapTitle}
               roadmapId={roadmapId}
               checkpoints={checkpoints}
-              completedSubtopics={completedSubtopics}
-              onToggleCheckpoint={onToggleCheckpoint}
-              onToggleSubtopic={onToggleSubtopic}
               getSubtopicsForNode={getSubtopicsForNode}
               color={color}
             />
           ) : (
             <div className="space-y-4 pt-1">
               <div className="flex items-center justify-end gap-2 flex-wrap">
-                {/* Filter Chips & Expand Controls */}
-                <div className="flex items-center bg-slate-100 rounded-xl p-0.5 text-xs font-semibold text-slate-600">
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode("all")}
-                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                      filterMode === "all" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
-                    }`}
-                  >
-                    All ({checkpoints.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode("completed")}
-                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                      filterMode === "completed" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
-                    }`}
-                  >
-                    Done ({doneCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode("remaining")}
-                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                      filterMode === "remaining" ? "bg-white text-slate-900 shadow-2xs" : "hover:text-slate-900"
-                    }`}
-                  >
-                    Remaining ({totalCount - doneCount})
-                  </button>
-                </div>
-
                 <button
                   type="button"
                   onClick={expandAll}
@@ -678,32 +504,15 @@ export default function RoadmapCurriculumView({
                   return (
                     <div
                       key={cp.id}
-                      className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                        cp.isCompleted
-                          ? "bg-slate-50/70 border-slate-200"
-                          : "bg-white border-slate-200/90 hover:border-slate-300 shadow-xs"
-                      }`}
+                      className="rounded-2xl border transition-all duration-200 overflow-hidden bg-white border-slate-200/90 hover:border-slate-300 shadow-xs"
                     >
                       {/* Module Header Row */}
                       <div className="p-4 sm:p-5 flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                          {/* Status / Toggle Completion Button */}
-                          <button
-                            type="button"
-                            onClick={() => onToggleCheckpoint(cp)}
-                            title={cp.isCompleted ? "Mark incomplete" : "Mark module completed"}
-                            className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all cursor-pointer shrink-0 mt-0.5 ${
-                              cp.isCompleted
-                                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs"
-                                : "border-2 border-slate-300 hover:border-slate-500 text-slate-500 bg-white"
-                            }`}
-                          >
-                            {cp.isCompleted ? (
-                              <Check className="w-4 h-4 stroke-[3]" />
-                            ) : (
-                              <span className="text-[11px] font-bold">{cp.index + 1}</span>
-                            )}
-                          </button>
+                          {/* Module Index Badge */}
+                          <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border-2 border-slate-300 text-slate-500 bg-white">
+                            <span className="text-[11px] font-bold">{cp.index + 1}</span>
+                          </div>
 
                           {/* Title & Subtitle */}
                           <div
@@ -711,13 +520,7 @@ export default function RoadmapCurriculumView({
                             onClick={() => toggleExpand(cp.id)}
                           >
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3
-                                className={`text-sm sm:text-base font-bold transition-colors ${
-                                  cp.isCompleted
-                                    ? "text-slate-600 line-through decoration-slate-300"
-                                    : "text-slate-900 hover:text-blue-600"
-                                }`}
-                              >
+                              <h3 className="text-sm sm:text-base font-bold transition-colors text-slate-900 hover:text-blue-600">
                                 {cp.title}
                               </h3>
                               {allTopics.length > 0 && (
@@ -770,45 +573,16 @@ export default function RoadmapCurriculumView({
                                   )}
 
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    {group.topics.map((topic) => {
-                                      const isTopicDone = !!completedSubtopics[topic.id];
-
-                                      return (
-                                        <div
-                                          key={topic.id}
-                                          className={`p-3 rounded-xl border transition-all flex items-start gap-3 ${
-                                            isTopicDone
-                                              ? "bg-emerald-50/30 border-emerald-200"
-                                              : "bg-white border-slate-200/80 hover:border-slate-300"
-                                          }`}
-                                        >
-                                          {/* Topic Checkbox */}
-                                          {onToggleSubtopic && (
-                                            <button
-                                              type="button"
-                                              onClick={() => onToggleSubtopic(topic.id, cp.title)}
-                                              className={`w-4 h-4 rounded-md mt-0.5 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                                                isTopicDone
-                                                  ? "bg-emerald-500 text-white"
-                                                  : "border border-slate-300 hover:border-slate-500 bg-white"
-                                              }`}
-                                              title={isTopicDone ? "Mark incomplete" : "Mark topic done"}
-                                            >
-                                              {isTopicDone && <Check className="w-3 h-3 stroke-[3]" />}
-                                            </button>
-                                          )}
-
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                              <span
-                                                className={`text-xs font-bold ${
-                                                  isTopicDone
-                                                    ? "text-slate-600 line-through decoration-slate-300"
-                                                    : "text-slate-900"
-                                                }`}
-                                              >
-                                                {topic.name}
-                                              </span>
+                                    {group.topics.map((topic) => (
+                                      <div
+                                        key={topic.id}
+                                        className="p-3 rounded-xl border transition-all flex items-start gap-3 bg-white border-slate-200/80 hover:border-slate-300"
+                                      >
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-xs font-bold text-slate-900">
+                                              {topic.name}
+                                            </span>
 
                                               {topic.isRecommended && (
                                                 <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">
@@ -856,15 +630,14 @@ export default function RoadmapCurriculumView({
                                             )}
                                           </div>
                                         </div>
-                                      );
-                                    })}
+                                    ))}
                                   </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
                             <div className="text-xs text-slate-500 py-2">
-                              Complete this core milestone to advance your roadmap progress.
+                              Explore the topics in this module.
                             </div>
                           )}
                         </div>

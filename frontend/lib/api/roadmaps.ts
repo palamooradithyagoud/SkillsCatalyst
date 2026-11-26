@@ -1,4 +1,3 @@
-import { supabase } from "@/lib/supabase";
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
 
 export interface RoadmapTier {
@@ -47,115 +46,23 @@ export async function generateRoadmap(skill: string): Promise<RoadmapData | null
 }
 
 export async function fetchActiveRoadmap() {
-  try {
-    const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      const res = await apiFetch(`${API_BASE}/api/dashboard/active-roadmap`, {
-        headers: { ...authHeaders },
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json) return json;
-      }
-    }
-  } catch (error) {
-    console.warn("Backend fetchActiveRoadmap failed, using local/supabase fallback:", error);
-  }
-
-  return await getFallbackActiveRoadmapData();
+  return { has_active_roadmap: false } as const;
 }
 
 export async function removeEnrolledRoadmap(roadmapId: string) {
   const normId = normalizeRoadmapId(roadmapId);
-  try {
-    const authHeaders = await getAuthHeaders();
-    if (authHeaders.Authorization) {
-      await apiFetch(`${API_BASE}/api/dashboard/active-roadmap/${encodeURIComponent(normId)}`, {
-        method: "DELETE",
-        headers: { ...authHeaders },
-      });
-    }
-  } catch (e) {
-    console.warn("Backend removeEnrolledRoadmap failed:", e);
-  }
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      const userId = session.user.id;
-      const { data: userRows } = await supabase
-        .from("roadmap_progress")
-        .select("id, roadmap_id")
-        .eq("user_id", userId);
-
-      if (userRows && userRows.length > 0) {
-        const targetClean = roadmapId.toLowerCase().replace(/-/g, " ").trim();
-        const idsToDelete = userRows
-          .filter((row: any) => {
-            const rawRid = row.roadmap_id || "";
-            const rowNorm = normalizeRoadmapId(rawRid);
-            const rowClean = rawRid.toLowerCase().replace(/-/g, " ").trim();
-            return (
-              rowNorm === normId ||
-              rawRid.toLowerCase() === roadmapId.toLowerCase() ||
-              rawRid.toLowerCase() === normId ||
-              rowClean.includes(targetClean) ||
-              targetClean.includes(rowClean)
-            );
-          })
-          .map((row: any) => row.id);
-
-        if (idsToDelete.length > 0) {
-          await supabase
-            .from("roadmap_progress")
-            .delete()
-            .in("id", idsToDelete);
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("Supabase removeEnrolledRoadmap failed:", err);
-  }
-
   if (typeof window !== "undefined") {
     try {
-      const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps") || "[]";
-      const removedList: string[] = JSON.parse(rawRemoved);
-      if (!removedList.includes(normId)) {
-        removedList.push(normId);
-        localStorage.setItem("skillscatalyst_removed_roadmaps", JSON.stringify(removedList));
-      }
-
       const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
       if (rawActive) {
         const parsed = JSON.parse(rawActive);
-        const activeNorm = normalizeRoadmapId(parsed?.id || parsed?.title);
-        if (activeNorm === normId) {
+        if (normalizeRoadmapId(parsed?.id || parsed?.title) === normId) {
           localStorage.removeItem("skillscatalyst_active_roadmap");
         }
       }
-
-      const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
-      if (rawEnrolled) {
-        const list = JSON.parse(rawEnrolled);
-        const filtered = list.filter((item: any) => normalizeRoadmapId(item.id || item.title) !== normId);
-        localStorage.setItem("skillscatalyst_enrolled_roadmaps", JSON.stringify(filtered));
-      }
-
-      const rawNodes = localStorage.getItem("skillscatalyst_roadmap_completed_nodes");
-      if (rawNodes) {
-        const nodesMap = JSON.parse(rawNodes);
-        const updatedMap: Record<string, boolean> = {};
-        for (const [key, val] of Object.entries(nodesMap)) {
-          const firstDash = key.indexOf("-");
-          const keyRid = firstDash > 0 ? key.substring(0, firstDash) : key;
-          if (normalizeRoadmapId(keyRid) !== normId) {
-            updatedMap[key] = val as boolean;
-          }
-        }
-        localStorage.setItem("skillscatalyst_roadmap_completed_nodes", JSON.stringify(updatedMap));
-      }
+      localStorage.removeItem("skillscatalyst_enrolled_roadmaps");
+      localStorage.removeItem("skillscatalyst_roadmap_completed_nodes");
+      localStorage.removeItem("skillscatalyst_removed_roadmaps");
     } catch {}
   }
 
@@ -208,130 +115,7 @@ export function normalizeRoadmapId(rawId: string): string {
 }
 
 export async function getFallbackActiveRoadmapData() {
-  let userId: string | null = null;
-  let rmData: any[] = [];
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.id) {
-      userId = session.user.id;
-      const { data } = await supabase
-        .from("roadmap_progress")
-        .select("roadmap_id, node_id, node_title, status, completed_at")
-        .eq("user_id", userId)
-        .order("completed_at", { ascending: false });
-      if (data) rmData = data;
-    }
-  } catch {}
-
-  let localActiveTitle = "";
-  let localActiveId = "";
-  let localEnrolled: any[] = [];
-  let localCompletedMap: Record<string, boolean> = {};
-
-  let localRemovedList: string[] = [];
-  if (typeof window !== "undefined") {
-    try {
-      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
-      if (rawActive) {
-        const parsed = JSON.parse(rawActive);
-        if (parsed?.title) localActiveTitle = parsed.title;
-        if (parsed?.id) localActiveId = parsed.id;
-      }
-      const rawEnrolled = localStorage.getItem("skillscatalyst_enrolled_roadmaps");
-      if (rawEnrolled) localEnrolled = JSON.parse(rawEnrolled);
-      const rawNodes = localStorage.getItem("skillscatalyst_roadmap_completed_nodes");
-      if (rawNodes) localCompletedMap = JSON.parse(rawNodes);
-      const rawRemoved = localStorage.getItem("skillscatalyst_removed_roadmaps");
-      if (rawRemoved) localRemovedList = JSON.parse(rawRemoved);
-    } catch {}
-  }
-
-  const groups: Record<string, { completedNodes: string[]; lastActivity: string }> = {};
-  const orderedIds: string[] = [];
-
-  const addRidGroup = (rawRid: string, activityTime = new Date().toISOString()) => {
-    if (!rawRid) return null;
-    const rid = normalizeRoadmapId(rawRid);
-    if (localRemovedList.includes(rid)) return null;
-    if (!groups[rid]) {
-      groups[rid] = { completedNodes: [], lastActivity: activityTime };
-      orderedIds.push(rid);
-    }
-    return rid;
-  };
-
-  for (const r of rmData) {
-    const rawRid = r.roadmap_id;
-    if (!rawRid) continue;
-    const rid = addRidGroup(rawRid, r.completed_at || new Date().toISOString());
-    if (rid && r.status === "completed" && r.node_id !== "_roadmap_started") {
-      const nid = r.node_id || r.node_title;
-      if (nid && !groups[rid].completedNodes.includes(nid)) {
-        groups[rid].completedNodes.push(nid);
-      }
-    }
-  }
-
-  if (localActiveId) addRidGroup(localActiveId);
-  for (const e of localEnrolled) {
-    if (e?.id) addRidGroup(e.id);
-  }
-
-  // Aggregate local completed nodes
-  for (const [key, isDone] of Object.entries(localCompletedMap)) {
-    if (!isDone) continue;
-    const firstDash = key.indexOf("-");
-    if (firstDash > 0) {
-      const rawRid = key.substring(0, firstDash);
-      const nid = key.substring(firstDash + 1);
-      const rid = addRidGroup(rawRid);
-      if (rid && nid && !groups[rid].completedNodes.includes(nid)) {
-        groups[rid].completedNodes.push(nid);
-      }
-    }
-  }
-
-  if (orderedIds.length === 0) {
-    return { has_active_roadmap: false };
-  }
-
-  const roadmaps = orderedIds.map((rid) => {
-    const g = groups[rid];
-    const meta = getRoadmapMeta(rid, g.completedNodes);
-    const completedCount = g.completedNodes.length;
-    const title = meta.name || localActiveTitle || rid;
-    const total = meta.total || 20;
-    const pct = total > 0 ? Math.min(100, Math.round((completedCount / total) * 100)) : 0;
-
-    return {
-      roadmap_id: rid,
-      title: title,
-      progress_percent: pct,
-      completed_milestones: completedCount,
-      total_milestones: total,
-      current_module: null,
-      next_module: {
-        id: meta.nextTopic,
-        title: meta.nextTopic,
-      },
-      last_activity_at: g.lastActivity,
-    };
-  });
-
-  const first = roadmaps[0];
-
-  return {
-    has_active_roadmap: true,
-    roadmaps,
-    roadmap_id: first.roadmap_id,
-    title: first.title,
-    progress_percent: first.progress_percent,
-    completed_milestones: first.completed_milestones,
-    total_milestones: first.total_milestones,
-    current_module: first.current_module,
-    next_module: first.next_module,
-    last_activity_at: first.last_activity_at,
-  };
+  return { has_active_roadmap: false } as const;
 }
 
 export function getActivePlaylistTotal(): number {

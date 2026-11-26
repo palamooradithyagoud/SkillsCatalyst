@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { API_BASE, apiFetch, getAuthHeaders } from "./client";
-import { getActivePlaylistTotal, getFallbackActiveRoadmapData } from "./roadmaps";
+import { getActivePlaylistTotal } from "./roadmaps";
 
 export async function fetchDashboardData() {
   try {
@@ -26,15 +26,16 @@ export async function fetchDashboardData() {
 
 async function mergeLocalDashboardMetrics(backendData: any) {
   if (!backendData || !backendData.metrics) return backendData;
-  if (!backendData.metrics.roadmapProgress?.roadmaps) {
-    const activeRm = await getFallbackActiveRoadmapData();
-    if (activeRm && activeRm.roadmaps) {
-      backendData.metrics.roadmapProgress = {
-        ...backendData.metrics.roadmapProgress,
-        roadmaps: activeRm.roadmaps,
-      };
-    }
-  }
+  backendData.metrics.roadmapProgress = {
+    has_active_roadmap: false,
+    roadmaps: [],
+    count: 0,
+    percentage: 0,
+    subtitle: "No active roadmap",
+    roadmapName: "",
+    nextTopic: "",
+    roadmapId: null,
+  };
   return backendData;
 }
 
@@ -43,7 +44,6 @@ async function getFallbackDashboardData() {
   let totalVideos = 0;
   let completedCount = 0;
   let resumeScore = 0;
-  let roadmapCount = 0;
   let streakDays = 0;
   let userName = "Learner";
   let userId = "";
@@ -94,17 +94,6 @@ async function getFallbackDashboardData() {
         }
       }
 
-      // Query active roadmap and completed roadmap nodes
-      const { data: rmData } = await supabase
-        .from("roadmap_progress")
-        .select("roadmap_id, node_id, status")
-        .eq("user_id", userId);
-
-      if (rmData && rmData.length > 0) {
-        const completedNodes = rmData.filter((r: any) => r.status === "completed" && r.node_id !== "_roadmap_started");
-        roadmapCount = completedNodes.length;
-      }
-
       // Query streak days from user_progress
       const { data: progRow } = await supabase
         .from("user_progress")
@@ -118,20 +107,6 @@ async function getFallbackDashboardData() {
     }
   } catch (e) {
     console.warn("Supabase dashboard fallback error:", e);
-  }
-
-  // Parse active roadmap from localStorage if present
-  let localActiveRoadmapName = "";
-  if (typeof window !== "undefined") {
-    try {
-      const rawActive = localStorage.getItem("skillscatalyst_active_roadmap");
-      if (rawActive) {
-        const parsed = JSON.parse(rawActive);
-        if (parsed?.title) {
-          localActiveRoadmapName = parsed.title;
-        }
-      }
-    } catch {}
   }
 
   // Guest / unauthenticated fallback only: do not leak guest scores into authenticated accounts
@@ -157,11 +132,7 @@ async function getFallbackDashboardData() {
   const pct = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
   const subtitle = totalVideos > 0 ? `${completedCount}/${totalVideos} videos completed` : `${completedCount} video${completedCount !== 1 ? "s" : ""} completed`;
 
-  const roadmapPct = roadmapCount > 0 ? Math.min(100, Math.round((roadmapCount / 20) * 100)) : 0;
-  const roadmapSubtitle = roadmapCount > 0 ? `${roadmapCount} topic${roadmapCount !== 1 ? "s" : ""} completed` : "0 topics completed";
   const resumeSubtitle = resumeScore > 0 ? `ATS Score: ${resumeScore}/100` : "No upload yet";
-
-  const activeRm = await getFallbackActiveRoadmapData();
 
   return {
     user: {
@@ -177,14 +148,14 @@ async function getFallbackDashboardData() {
         subtitle: subtitle,
       },
       roadmapProgress: {
-        has_active_roadmap: activeRm.has_active_roadmap,
-        roadmaps: activeRm.roadmaps || [],
-        count: activeRm.completed_milestones ?? roadmapCount,
-        percentage: activeRm.progress_percent ?? 0,
-        subtitle: activeRm.title ? `Following: ${activeRm.title}` : "No active roadmap",
-        roadmapName: activeRm.title,
-        nextTopic: activeRm.next_module?.title || "",
-        roadmapId: activeRm.roadmap_id,
+        has_active_roadmap: false,
+        roadmaps: [],
+        count: 0,
+        percentage: 0,
+        subtitle: "No active roadmap",
+        roadmapName: "",
+        nextTopic: "",
+        roadmapId: null,
       },
       resumeReadiness: {
         percentage: resumeScore,

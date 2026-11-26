@@ -2,29 +2,18 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Zap, Swords, Check } from "lucide-react";
+import { Swords } from "lucide-react";
 
 export interface InteractivePracticeAccordionCardProps {
   className?: string;
-  isEnrolled?: boolean;
-  onEnroll?: () => void;
   onEnterArena?: () => void;
 }
 
 export default function InteractivePracticeAccordionCard({
   className = "",
-  isEnrolled = false,
-  onEnroll,
   onEnterArena,
 }: InteractivePracticeAccordionCardProps) {
   const router = useRouter();
-
-  const handleEnroll = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onEnroll) {
-      onEnroll();
-    }
-  };
 
   const handleEnterArena = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -126,27 +115,8 @@ export default function InteractivePracticeAccordionCard({
         </div>
       </div>
 
-      {/* Downside Action Buttons: Yellow Enroll & Pink Enter the Arena */}
+      {/* Downside Action Button: Enter the Arena */}
       <div className="pt-1.5 sm:pt-2.5 lg:pt-3 flex items-center gap-2 sm:gap-3 w-full">
-        {/* Yellow Button: Enroll */}
-        <button
-          type="button"
-          onClick={handleEnroll}
-          className="flex-1 py-2.5 sm:py-3 lg:py-3.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-[#FACC15] hover:bg-[#FDE047] active:bg-[#EAB308] text-slate-950 font-black text-xs sm:text-sm tracking-tight flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-amber-400/20 active:scale-95 transition-all cursor-pointer truncate"
-        >
-          {isEnrolled ? (
-            <>
-              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3] shrink-0" />
-              <span className="truncate">Enrolled</span>
-            </>
-          ) : (
-            <>
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-slate-950 stroke-slate-950 shrink-0" />
-              <span className="truncate">Enroll</span>
-            </>
-          )}
-        </button>
-
         {/* Pink Button: Enter the Arena */}
         <button
           type="button"

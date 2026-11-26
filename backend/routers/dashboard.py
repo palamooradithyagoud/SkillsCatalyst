@@ -222,105 +222,17 @@ def _build_roadmap_item(rid: str, completed_set: set, last_timestamp: str = None
 
 
 def get_active_roadmap_data(user_id: str) -> dict:
-    if not is_valid_uuid(user_id):
-        return {"has_active_roadmap": False}
-    sb = get_supabase()
-    if not sb:
-        return {"has_active_roadmap": False}
-
-    try:
-        res_roadmap = (
-            sb.table("roadmap_progress")
-            .select("roadmap_id, node_id, node_title, status, completed_at")
-            .eq("user_id", user_id)
-            .order("completed_at", desc=True)
-            .execute()
-        )
-
-        if not res_roadmap.data or len(res_roadmap.data) == 0:
-            return {"has_active_roadmap": False}
-
-        roadmap_groups = {}
-        ordered_rids = []
-        timestamps = {}
-
-        for r in res_roadmap.data:
-            raw_rid = r.get("roadmap_id")
-            if not raw_rid:
-                continue
-            norm_rid = _normalize_rid(raw_rid)
-            if norm_rid not in roadmap_groups:
-                roadmap_groups[norm_rid] = set()
-                ordered_rids.append(norm_rid)
-                timestamps[norm_rid] = r.get("completed_at")
-            nid = r.get("node_id") or r.get("node_title")
-            st = r.get("status")
-            if nid and nid != "_roadmap_started" and st == "completed":
-                roadmap_groups[norm_rid].add(nid)
-
-        if not ordered_rids:
-            return {"has_active_roadmap": False}
-
-        active_items = []
-        for rid in ordered_rids:
-            item = _build_roadmap_item(rid, roadmap_groups.get(rid, set()), timestamps.get(rid))
-            active_items.append(item)
-
-        first = active_items[0]
-        return {
-            "has_active_roadmap": True,
-            "roadmaps": active_items,
-            "roadmap_id": first.get("roadmap_id"),
-            "title": first.get("title"),
-            "progress_percent": first.get("progress_percent", 0),
-            "completed_milestones": first.get("completed_milestones", 0),
-            "total_milestones": first.get("total_milestones", 20),
-            "current_module": first.get("current_module"),
-            "next_module": first.get("next_module"),
-            "last_activity_at": first.get("last_activity_at")
-        }
-    except Exception as e:
-        logger.error(f"Error getting active roadmap data for user: {type(e).__name__}")
-        return {"has_active_roadmap": False}
+    return {"has_active_roadmap": False}
 
 
 @router.get("/active-roadmap")
 def get_active_roadmap_endpoint(user_id: str = Depends(get_current_user_id)):
-    return get_active_roadmap_data(user_id)
+    return {"has_active_roadmap": False}
 
 
 @router.delete("/active-roadmap/{roadmap_id}")
 def delete_active_roadmap_endpoint(roadmap_id: str, user_id: str = Depends(get_current_user_id)):
-    if not is_valid_uuid(user_id):
-        return {"success": False, "message": "Invalid user ID"}
-    sb = get_supabase()
-    if not sb:
-        return {"success": False, "message": "Database error"}
-    try:
-        norm_id = _normalize_rid(roadmap_id)
-        target_clean = roadmap_id.lower().replace("-", " ").strip()
-        res = sb.table("roadmap_progress").select("id, roadmap_id").eq("user_id", user_id).execute()
-        if res.data:
-            ids_to_delete = []
-            for r in res.data:
-                raw_rid = r.get("roadmap_id") or ""
-                raw_norm = _normalize_rid(raw_rid)
-                raw_clean = raw_rid.lower().replace("-", " ").strip()
-                if (
-                    raw_norm == norm_id
-                    or raw_rid.lower() == roadmap_id.lower()
-                    or norm_id in raw_rid.lower()
-                    or raw_norm in target_clean
-                    or target_clean in raw_clean
-                    or raw_clean in target_clean
-                ):
-                    ids_to_delete.append(r["id"])
-            if ids_to_delete:
-                sb.table("roadmap_progress").delete().in_("id", ids_to_delete).execute()
-        return {"success": True, "message": f"Removed roadmap {roadmap_id}"}
-    except Exception as e:
-        logger.error(f"Error removing roadmap '{roadmap_id}': {type(e).__name__}")
-        return {"success": False, "message": str(e)}
+    return {"success": True, "message": f"Removed roadmap {roadmap_id}"}
 
 
 def _fetch_learning_metrics(sb, user_id: str) -> Tuple[int, int, int]:
@@ -514,7 +426,6 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         f_academic = _DASHBOARD_EXECUTOR.submit(_fetch_academic_profile, sb, user_id)
         f_prog = _DASHBOARD_EXECUTOR.submit(_fetch_user_progress, sb, user_id)
         f_resume = _DASHBOARD_EXECUTOR.submit(_fetch_resume_score, sb, user_id)
-        f_roadmap = _DASHBOARD_EXECUTOR.submit(get_active_roadmap_data, user_id)
 
         try:
             saved_playlists_count, total_videos, completed_count = f_learn.result()
@@ -556,25 +467,12 @@ def get_dashboard_data(user_id: str = Depends(get_current_user_id)):
         except Exception as e:
             logger.error(f"Dashboard resume score retrieval error: {type(e).__name__}")
 
-        try:
-            active_rm = f_roadmap.result()
-        except Exception as e:
-            logger.error(f"Dashboard roadmap progress retrieval error: {type(e).__name__}")
-            active_rm = {"has_active_roadmap": False}
-    else:
-        active_rm = get_active_roadmap_data(user_id)
-    if active_rm.get("has_active_roadmap"):
-        roadmap_completed_count = active_rm.get("completed_milestones", 0)
-        roadmap_pct = active_rm.get("progress_percent", 0)
-        active_roadmap_name = active_rm.get("title", "")
-        next_topic = active_rm.get("next_module", {}).get("title", "")
-        roadmap_subtitle = f"Following: {active_roadmap_name}"
-    else:
-        roadmap_completed_count = 0
-        roadmap_pct = 0
-        active_roadmap_name = ""
-        next_topic = ""
-        roadmap_subtitle = "No active roadmap"
+    active_rm = {"has_active_roadmap": False}
+    roadmap_completed_count = 0
+    roadmap_pct = 0
+    active_roadmap_name = ""
+    next_topic = ""
+    roadmap_subtitle = "No active roadmap"
 
     if total_videos > 0:
         if completed_count > total_videos:

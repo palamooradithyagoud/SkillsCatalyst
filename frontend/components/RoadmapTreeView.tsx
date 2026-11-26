@@ -1,16 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Folder,
   FolderOpen,
   FileCode2,
-  Check,
-  CheckCircle2,
   ExternalLink,
   Search,
-  Sparkles,
   ChevronRight,
   BookOpen,
   Layers,
@@ -34,25 +30,15 @@ export interface RoadmapTreeViewProps {
   roadmapTitle: string;
   roadmapId: string;
   checkpoints: CheckpointItem[];
-  completedSubtopics?: Record<string, boolean>;
-  onToggleCheckpoint?: (cp: CheckpointItem) => void;
-  onToggleSubtopic?: (subtopicId: string, nodeName: string) => void;
   getSubtopicsForNode?: (nodeName: string, roadmapId?: string) => any;
   color?: string;
 }
 
 export default function RoadmapTreeView({
-  roadmapTitle,
   roadmapId,
   checkpoints,
-  completedSubtopics = {},
-  onToggleCheckpoint,
-  onToggleSubtopic,
   getSubtopicsForNode,
-  color = "#3776AB",
 }: RoadmapTreeViewProps) {
-  const router = useRouter();
-
   // Search filter
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -160,16 +146,6 @@ export default function RoadmapTreeView({
 
   const collapseAll = () => {
     setOpenFolders({});
-  };
-
-  const currentTopicDone = selectedState.topic
-    ? !!completedSubtopics[selectedState.topic.id]
-    : false;
-
-  const handleToggleCurrentTopic = () => {
-    if (selectedState.topic && onToggleSubtopic) {
-      onToggleSubtopic(selectedState.topic.id, selectedState.checkpoint.title);
-    }
   };
 
   // Find next topic in sequence
@@ -284,12 +260,6 @@ export default function RoadmapTreeView({
               {filteredModules.map(({ checkpoint: cp, topics }) => {
                 const folderId = `tree-folder-${cp.id}`;
                 const isOpen = !!openFolders[cp.id];
-                const isSelectedModule = selectedState.checkpoint.id === cp.id;
-                const completedInModule = topics.filter(
-                  (t) => !!completedSubtopics[t.id]
-                ).length;
-                const isModuleAllDone =
-                  topics.length > 0 && completedInModule === topics.length;
 
                 return (
                   <li key={cp.id} className="tree-item">
@@ -307,22 +277,15 @@ export default function RoadmapTreeView({
                       <span className="truncate flex-1 font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">
                         {cp.title}
                       </span>
-                      {isModuleAllDone ? (
-                        <span className="text-emerald-500 font-bold text-xs shrink-0" title="All topics completed">
-                          ✓
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 dark:text-zinc-500 shrink-0 font-normal">
-                          {completedInModule}/{topics.length}
-                        </span>
-                      )}
+                      <span className="text-[10px] text-slate-400 dark:text-zinc-500 shrink-0 font-normal">
+                        {topics.length}
+                      </span>
                     </label>
 
                     <div className="tree-children-wrapper">
                       <div className="tree-children">
                         <ul>
                           {topics.map((topic) => {
-                            const isTopicDone = !!completedSubtopics[topic.id];
                             const isSelected = selectedState.topic?.id === topic.id;
 
                             return (
@@ -341,11 +304,7 @@ export default function RoadmapTreeView({
                                   }}
                                   title={topic.name}
                                 >
-                                  {isTopicDone ? (
-                                    <CheckCircle2 className="icon text-emerald-500 stroke-[2.5]" />
-                                  ) : (
-                                    <FileCode2 className="icon text-blue-500/80" />
-                                  )}
+                                  <FileCode2 className="icon text-blue-500/80" />
                                   <span className="truncate flex-1 text-xs">
                                     {topic.name}
                                   </span>
@@ -544,29 +503,6 @@ export default function RoadmapTreeView({
             </div>
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              {/* Mark as Completed Button (downside) */}
-              <button
-                type="button"
-                onClick={handleToggleCurrentTopic}
-                className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 ${
-                  currentTopicDone
-                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                    : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
-                }`}
-              >
-                {currentTopicDone ? (
-                  <>
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Topic Completed</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Mark as Completed</span>
-                  </>
-                )}
-              </button>
-
               {/* Next Topic Button */}
               <button
                 type="button"
