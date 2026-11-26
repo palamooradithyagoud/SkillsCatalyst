@@ -26,7 +26,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   module,
   completed,
   pending,
-  progressLabel = "Progress",
+  progressLabel: _progressLabel = "Progress",
   outerBackground: _outerBackground,
   cardBackground = "#D1FAE5",
   className = "",
@@ -36,7 +36,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 340, height: 195 });
 
-  // Measure container dimensions dynamically so the SVG path fills 100% of any card size
+  // Measure container dimensions dynamically so the cutout and typography scale cleanly across every size
   useEffect(() => {
     if (!containerRef.current) return;
     const el = containerRef.current;
@@ -81,31 +81,55 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       ? module
       : "135 Pending";
 
-  const W = Math.max(dimensions.width, 160);
+  const W = Math.max(dimensions.width, 150);
   const H = Math.max(dimensions.height, 150);
-  const R = 24; // standard corner radius for top-right, bottom-right, bottom-left
 
-  // ── Exact C1-Continuous Concave Round Cutout Geometry ──
-  // Scoop center at (48, 48), scoop radius 48, with 12px tangent fillets into the top & left edges.
-  // The path dynamically spans from (0, 0) to (W, H) to fill 100% of the card area seamlessly.
+  const isCompact = W < 245;
+  const isMedium = W >= 245 && W < 310;
+  const R = isCompact ? 20 : 24;
+
+  // Responsive C1-continuous cutout radius scaled via exact 3-4-5 tangent geometry
+  const scoopR = isCompact
+    ? Math.round(Math.max(29, Math.min(34, W * 0.19)))
+    : isMedium
+    ? 40
+    : 48;
+  const cutSpan = scoopR * 2;
+  const fillet = Number((scoopR * 0.25).toFixed(2));
+  const ptNear = Number((scoopR * 0.4).toFixed(2));
+  const ptFar = Number((scoopR * 1.8).toFixed(2));
+
   const cardPath =
-    `M 96 0 ` +
+    `M ${cutSpan} 0 ` +
     `L ${W - R} 0 ` +
     `A ${R} ${R} 0 0 1 ${W} ${R} ` +
     `L ${W} ${H - R} ` +
     `A ${R} ${R} 0 0 1 ${W - R} ${H} ` +
     `L ${R} ${H} ` +
     `A ${R} ${R} 0 0 1 0 ${H - R} ` +
-    `L 0 96 ` +
-    `A 12 12 0 0 1 19.2 86.4 ` +
-    `A 48 48 0 0 0 86.4 19.2 ` +
-    `A 12 12 0 0 1 96 0 ` +
+    `L 0 ${cutSpan} ` +
+    `A ${fillet} ${fillet} 0 0 1 ${ptNear} ${ptFar} ` +
+    `A ${scoopR} ${scoopR} 0 0 0 ${ptFar} ${ptNear} ` +
+    `A ${fillet} ${fillet} 0 0 1 ${cutSpan} 0 ` +
     `Z`;
 
-  // Ring arc calculations (Radius 26 inside 76x76 dial, centered at 38, 38)
+  // Nested white progress dial inside the scaled cutout
+  const dialMargin = isCompact ? 6 : isMedium ? 8 : 10;
+  const dialSize = cutSpan - dialMargin * 2;
+
+  // Ring arc calculations (scaled inside SVG viewBox 0..76)
   const arcRadius = 26;
   const circumference = 2 * Math.PI * arcRadius;
   const strokeDashoffset = circumference - (clampedProgress / 100) * circumference;
+
+  // Top-right zone (beside the dial): Completed & Pending badges anchored cleanly without text truncation
+  const topMetaLeft = cutSpan + (isCompact ? 0 : isMedium ? 6 : 14);
+  const topMetaRight = isCompact ? 6 : isMedium ? 12 : 20;
+  const topMetaTop = isCompact ? Math.round(cutSpan * 0.5) : isMedium ? 32 : 26;
+
+  // Bottom full-width zone: Video / Course title (clears mobile carousel dots cleanly)
+  const bottomSide = isCompact ? 12 : isMedium ? 16 : 22;
+  const bottomOffset = isCompact ? 22 : 18;
 
   return (
     <div
@@ -138,22 +162,26 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       <div
         style={{
           position: "absolute",
-          left: "10px",
-          top: "10px",
-          width: "76px",
-          height: "76px",
+          left: `${dialMargin}px`,
+          top: `${dialMargin}px`,
+          width: `${dialSize}px`,
+          height: `${dialSize}px`,
           boxShadow: "0 4px 14px rgba(30, 17, 53, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06)",
         }}
         className="rounded-full bg-white flex items-center justify-center z-10 transition-transform group-hover:scale-105"
       >
-        <svg className="w-[76px] h-[76px] -rotate-90" viewBox="0 0 76 76">
-          {/* Soft light track for progress ring */}
+        <svg
+          style={{ width: `${dialSize}px`, height: `${dialSize}px` }}
+          className="-rotate-90"
+          viewBox="0 0 76 76"
+        >
+          {/* Soft neutral track for progress ring */}
           <circle
             cx="38"
             cy="38"
             r={arcRadius}
             fill="none"
-            stroke="#E9D5FF"
+            stroke="#E2E8F0"
             strokeWidth="5.5"
           />
           {/* Active Bold Black Progress Arc */}
@@ -171,68 +199,94 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           />
         </svg>
         {/* Bold Black Progress Percentage */}
-        <span className="absolute inset-0 flex items-center justify-center text-[14px] sm:text-[15px] font-black text-black tracking-tight font-sans">
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-black text-black tracking-tight font-sans ${
+            isCompact ? "text-[11px]" : isMedium ? "text-[13px]" : "text-[15px] md:text-[17px]"
+          }`}
+        >
           {Math.round(clampedProgress)}%
         </span>
       </div>
 
-      {/* ── Top-Right Header: Tag & Course Title ── */}
+      {/* ── Top-Right Slot: Completed & Pending Status Rows (lowered cleanly beside dial at larger size) ── */}
       <div
         style={{
           position: "absolute",
-          top: "14px",
-          right: "18px",
-          left: "98px",
+          top: `${topMetaTop}px`,
+          left: `${topMetaLeft}px`,
+          right: `${topMetaRight}px`,
         }}
-        className="flex flex-col items-end text-right z-10 pointer-events-none"
-      >
-        <span className="text-[10px] sm:text-[11.5px] font-black tracking-wide uppercase text-slate-900 leading-tight">
-          {progressLabel}
-        </span>
-        <h3
-          title={title}
-          className="text-[13.5px] sm:text-[15.5px] md:text-[16.5px] font-black text-slate-950 tracking-tight leading-snug line-clamp-2 mt-0.5 sm:mt-1"
-        >
-          {title}
-        </h3>
-      </div>
-
-      {/* ── Bottom-Left Status: Completed & Pending Badges ── */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "16px",
-          left: "18px",
-        }}
-        className="flex flex-col gap-1.5 sm:gap-2 z-10 pointer-events-none"
+        className={`flex flex-col items-start justify-start z-10 pointer-events-none overflow-hidden min-w-0 ${
+          isCompact ? "gap-1.5" : isMedium ? "gap-2" : "gap-2.5"
+        }`}
       >
         {/* Completed Row */}
-        <div className="flex items-center gap-2 text-slate-950 font-black text-[12px] sm:text-[13px] leading-tight">
-          <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full border-[2.2px] border-slate-950 flex items-center justify-center shrink-0">
+        <div
+          className={`flex items-center text-slate-950 font-extrabold sm:font-black tracking-tight leading-tight min-w-0 max-w-full ${
+            isCompact ? "gap-1 text-[10.5px]" : isMedium ? "gap-2 text-[13px]" : "gap-3 text-[17px] lg:text-[19px]"
+          }`}
+        >
+          <div
+            className={`rounded-full border-slate-950 flex items-center justify-center shrink-0 ${
+              isCompact ? "w-3.5 h-3.5 border-[1.8px]" : isMedium ? "w-4.5 h-4.5 border-[2.1px]" : "w-6 h-6 border-[2.5px]"
+            }`}
+          >
             <svg
-              className="w-2.5 h-2.5 sm:w-2.8 sm:h-2.8 stroke-slate-950 stroke-[3]"
+              className={`stroke-slate-950 stroke-[3] ${isCompact ? "w-2 h-2" : isMedium ? "w-3 h-3" : "w-3.5 h-3.5"}`}
               viewBox="0 0 24 24"
               fill="none"
             >
               <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="truncate">{displayCompleted}</span>
+          <span className="whitespace-nowrap">{displayCompleted}</span>
         </div>
 
         {/* Pending Row */}
-        <div className="flex items-center gap-2 text-slate-950 font-black text-[12px] sm:text-[13px] leading-tight">
-          <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full border-[2.2px] border-slate-950 flex items-center justify-center shrink-0">
+        <div
+          className={`flex items-center text-slate-950 font-extrabold sm:font-black tracking-tight leading-tight min-w-0 max-w-full ${
+            isCompact ? "gap-1 text-[10.5px]" : isMedium ? "gap-2 text-[13px]" : "gap-3 text-[17px] lg:text-[19px]"
+          }`}
+        >
+          <div
+            className={`rounded-full border-slate-950 flex items-center justify-center shrink-0 ${
+              isCompact ? "w-3.5 h-3.5 border-[1.8px]" : isMedium ? "w-4.5 h-4.5 border-[2.1px]" : "w-6 h-6 border-[2.5px]"
+            }`}
+          >
             <svg
-              className="w-2.5 h-2.5 sm:w-2.8 sm:h-2.8 stroke-slate-950 stroke-[2.8]"
+              className={`stroke-slate-950 stroke-[2.8] ${isCompact ? "w-2 h-2" : isMedium ? "w-3 h-3" : "w-3.5 h-3.5"}`}
               viewBox="0 0 24 24"
               fill="none"
             >
               <path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="truncate">{displayPending}</span>
+          <span className="whitespace-nowrap">{displayPending}</span>
         </div>
+      </div>
+
+      {/* ── Bottom Full-Width Slot: Video / Course Title (plenty of horizontal space across all screens) ── */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: `${bottomOffset}px`,
+          left: `${bottomSide}px`,
+          right: `${bottomSide}px`,
+        }}
+        className="flex flex-col items-start justify-end z-10 pointer-events-none overflow-hidden min-w-0"
+      >
+        <h3
+          title={title}
+          className={`w-full max-w-full overflow-hidden text-left font-black text-slate-950 tracking-tight break-words line-clamp-2 ${
+            isCompact
+              ? "text-[12.5px] leading-[1.22]"
+              : isMedium
+              ? "text-[14.5px] leading-snug"
+              : "text-[18px] lg:text-[20px] leading-snug"
+          }`}
+        >
+          {title}
+        </h3>
       </div>
     </div>
   );
