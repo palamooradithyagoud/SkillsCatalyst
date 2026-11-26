@@ -2,7 +2,11 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { SKILL_ROADMAPS, CAREER_ROADMAPS } from "@/data/roadmaps";
+import {
+  SKILL_ROADMAPS,
+  CAREER_ROADMAPS,
+  ROADMAP_CARDS,
+} from "@/data/roadmaps";
 import {
   fetchActiveRoadmap,
   getFallbackActiveRoadmapData,
@@ -14,19 +18,55 @@ function readFrontend(relPath: string): string {
   return fs.readFileSync(path.join(FRONTEND_ROOT, relPath), "utf8");
 }
 
-describe("Roadmaps Content & Enrollment/Progress Removal", () => {
-  it("clears all skill and career roadmap catalog content", () => {
-    assert.strictEqual(SKILL_ROADMAPS.length, 0);
-    assert.strictEqual(CAREER_ROADMAPS.length, 0);
+describe("Roadmaps Showcase Card, Data & System Cleanup", () => {
+  it("provides generic data-driven ROADMAP_CARDS starting with UI/UX Designer", () => {
+    assert.ok(ROADMAP_CARDS.length >= 1, "ROADMAP_CARDS should contain card data");
+    const uiux = ROADMAP_CARDS.find((c) => c.id === "ui-ux-designer");
+    assert.ok(uiux, "ui-ux-designer card entry must exist");
+    assert.strictEqual(uiux.titleAccent, "UI/UX");
+    assert.strictEqual(uiux.titlePrimary, "Designer");
+    assert.strictEqual(uiux.ctaLabel, "Explore Roadmap");
+    assert.strictEqual(uiux.imageSrc, "/images/roadmaps/ui-ux-designer.png");
+    assert.strictEqual(uiux.metrics.length, 3);
+
+    const publicImgPath = path.join(
+      FRONTEND_ROOT,
+      "public",
+      uiux.imageSrc.replace(/^\//, "")
+    );
+    assert.ok(
+      fs.existsSync(publicImgPath),
+      "UI/UX Designer illustration PNG must exist in public/images/roadmaps/"
+    );
   });
 
-  it("keeps the /roadmaps page shell without curriculum content, enrolling, or progress UI", () => {
-    const roadmapsPage = readFrontend("app/roadmaps/page.tsx");
-    assert.ok(roadmapsPage.includes("Developer Roadmaps"));
-    assert.ok(roadmapsPage.includes("Roadmaps Content Coming Soon"));
+  it("keeps RoadmapSpotlightCard compact, top-aligned, and strictly data-driven with zero hardcoded card copy", () => {
+    const cardComponent = readFrontend("components/roadmaps/RoadmapSpotlightCard.tsx");
+    assert.ok(!cardComponent.includes("badgeLabel"), "Must not render the top Roadmap badge pill");
+    assert.ok(!cardComponent.includes("line-clamp-3"), "Must not clip description text with line-clamp");
+    assert.ok(!cardComponent.includes("UI/UX"), "Must not hardcode UI/UX");
+    assert.ok(!cardComponent.includes("Designer"), "Must not hardcode Designer");
+    assert.ok(!cardComponent.includes("29 Units"), "Must not hardcode 29 Units");
+    assert.ok(!cardComponent.includes("4 Projects"), "Must not hardcode 4 Projects");
+    assert.ok(!cardComponent.includes("Beginner"), "Must not hardcode Beginner");
+    assert.ok(
+      !cardComponent.includes("Explore Roadmap"),
+      "Must not hardcode Explore Roadmap CTA"
+    );
+    assert.ok(
+      !cardComponent.includes("ui-ux-designer"),
+      "Must not hardcode asset path"
+    );
+  });
 
+  it("keeps legacy skill/career syllabus arrays cleared and removes enrolling/progress UI", () => {
+    assert.strictEqual(SKILL_ROADMAPS.length, 0);
+    assert.strictEqual(CAREER_ROADMAPS.length, 0);
+
+    const roadmapsPage = readFrontend("app/roadmaps/page.tsx");
+    assert.ok(roadmapsPage.includes("ROADMAP_CARDS"));
+    assert.ok(roadmapsPage.includes("RoadmapSpotlightCard"));
     assert.ok(!roadmapsPage.includes("SKILL_ROADMAPS"));
-    assert.ok(!roadmapsPage.includes("CAREER_ROADMAPS"));
     assert.ok(!roadmapsPage.includes("RoadmapDetailView"));
     assert.ok(!roadmapsPage.includes("RoadmapCurriculumView"));
     assert.ok(!roadmapsPage.includes("handleEnroll"));
@@ -42,23 +82,6 @@ describe("Roadmaps Content & Enrollment/Progress Removal", () => {
     assert.ok(carousel.includes('"/roadmaps"'));
     assert.ok(carousel.includes("Road"));
     assert.ok(carousel.includes("maps"));
-  });
-
-  it("removes enrolling and progress controls from roadmap helper views", () => {
-    const accordion = readFrontend("components/InteractivePracticeAccordionCard.tsx");
-    assert.ok(!accordion.includes("onEnroll"));
-    assert.ok(!accordion.includes("isEnrolled"));
-    assert.ok(!accordion.includes(">Enroll<"));
-
-    const curriculum = readFrontend("components/RoadmapCurriculumView.tsx");
-    assert.ok(!curriculum.includes("onEnroll"));
-    assert.ok(!curriculum.includes("isEnrolled"));
-    assert.ok(!curriculum.includes("PROGRESS"));
-    assert.ok(!curriculum.includes("progressPct"));
-
-    const tree = readFrontend("components/RoadmapTreeView.tsx");
-    assert.ok(!tree.includes("Mark as Completed"));
-    assert.ok(!tree.includes("completedSubtopics"));
   });
 
   it("disables active roadmap and progress sync in roadmap/dashboard APIs", async () => {
