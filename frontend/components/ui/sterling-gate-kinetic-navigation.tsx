@@ -9,11 +9,11 @@ import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
 import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
+import RoadmapsIcon from "@/components/icons/RoadmapsIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
+import CareerIcon from "@/components/icons/CareerIcon";
 import {
   LayoutGrid,
-  Map,
-  Target,
-  Briefcase,
   User,
   ChevronRight,
   LifeBuoy,
@@ -111,7 +111,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Roadmaps",
     subtitle: "Interactive Career Tracks",
     href: "/roadmaps",
-    icon: Map,
+    icon: RoadmapsIcon,
     accentColor: "rgba(59, 130, 246, 0.2)",
   },
   {
@@ -120,7 +120,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Practice",
     subtitle: "Aptitude & Coding Drills",
     href: "/practice",
-    icon: Target,
+    icon: PracticeIcon,
     accentColor: "rgba(236, 72, 153, 0.2)",
   },
   {
@@ -129,7 +129,7 @@ const defaultFeatures: NavFeatureItem[] = [
     title: "Career",
     subtitle: "AI Resume & ATS Review",
     href: "/career",
-    icon: Briefcase,
+    icon: CareerIcon,
     accentColor: "rgba(234, 179, 8, 0.2)",
   },
   {

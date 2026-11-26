@@ -8,7 +8,6 @@ import {
   Plus,
   Bot,
   ListTodo,
-  Target,
   X,
 } from "lucide-react";
 import Home3DIcon from "@/components/icons/Home3DIcon";
@@ -16,6 +15,7 @@ import CatalogIcon from "@/components/icons/CatalogIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
 import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
 import {
   DOWNBAR_NAV_CLASS,
   DOWNBAR_CIRCLE_SIZE_CLASS,
@@ -56,7 +56,7 @@ const QUICK_ACTIONS = [
     title: "Daily Practice",
     desc: "Company questions & aptitude tests",
     url: "/practice",
-    icon: Target,
+    icon: PracticeIcon,
   },
   {
     title: "Learning Tracks",

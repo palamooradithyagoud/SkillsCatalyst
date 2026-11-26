@@ -4,14 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Map,
-  Target,
-  Briefcase,
-  ArrowLeft,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
+import RoadmapsIcon from "@/components/icons/RoadmapsIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
+import CareerIcon from "@/components/icons/CareerIcon";
 import {
   DOWNBAR_NAV_CLASS,
   DOWNBAR_CIRCLE_SIZE_CLASS,
@@ -38,7 +36,7 @@ export const CAREER_TABS: CareerTabItem[] = [
     id: "roadmaps",
     label: "Roadmaps",
     href: "/roadmaps",
-    icon: Map,
+    icon: RoadmapsIcon,
     activeColor: "text-[#D5FF38]",
   },
   {
@@ -52,14 +50,14 @@ export const CAREER_TABS: CareerTabItem[] = [
     id: "practice",
     label: "Practice",
     href: "/practice",
-    icon: Target,
+    icon: PracticeIcon,
     activeColor: "text-[#D5FF38]",
   },
   {
     id: "placement",
     label: "Placement",
     href: "/career",
-    icon: Briefcase,
+    icon: CareerIcon,
     activeColor: "text-[#D5FF38]",
   },
   {
@@ -195,6 +193,27 @@ export default function CareerDownbar({
                   />
                 ) : tab.id === "learn" ? (
                   <LearnIcon
+                    active={isActive}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                ) : tab.id === "roadmaps" ? (
+                  <RoadmapsIcon
+                    active={isActive}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                ) : tab.id === "practice" ? (
+                  <PracticeIcon
+                    active={isActive}
+                    className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
+                      isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"
+                    }`}
+                  />
+                ) : tab.id === "placement" ? (
+                  <CareerIcon
                     active={isActive}
                     className={`${DOWNBAR_ICON_SIZE_CLASS} transition-colors ${
                       isActive ? "text-[#D5FF38]" : "text-neutral-400 group-hover:text-white group-active:text-[#D5FF38]"

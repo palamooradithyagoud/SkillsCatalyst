@@ -5,9 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
-  Map,
-  Target,
-  Briefcase,
   Code2,
   Telescope,
 } from "lucide-react";
@@ -17,6 +14,9 @@ import ThreeDSquircleTile from "@/components/ThreeDSquircleTile";
 import BookIcon from "@/components/icons/BookIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
 import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
+import RoadmapsIcon from "@/components/icons/RoadmapsIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
+import CareerIcon from "@/components/icons/CareerIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
@@ -65,21 +65,21 @@ export default function MobileQuickDock() {
       id: "roadmaps",
       name: "Roadmaps",
       href: "/roadmaps",
-      icon: Map,
+      icon: RoadmapsIcon,
       desc: "Tracks",
     },
     {
       id: "practice",
       name: "Practice",
       href: "/practice",
-      icon: Target,
+      icon: PracticeIcon,
       desc: "Coding",
     },
     {
       id: "career",
       name: "Career",
       href: "/career",
-      icon: Briefcase,
+      icon: CareerIcon,
       desc: "Resume",
     },
     {

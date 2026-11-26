@@ -7,9 +7,6 @@ import {
   Home,
   Clapperboard,
   LayoutGrid,
-  Map,
-  Target,
-  Briefcase,
   Sparkles,
   Code2,
   Flame,
@@ -33,6 +30,9 @@ import { useAuth } from "@/lib/auth";
 import BookIcon from "@/components/icons/BookIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
 import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
+import RoadmapsIcon from "@/components/icons/RoadmapsIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
+import CareerIcon from "@/components/icons/CareerIcon";
 import UserIcon from "@/components/icons/UserIcon";
 import ExploreIcon from "@/components/icons/ExploreIcon";
 import Home3DIcon from "@/components/icons/Home3DIcon";
@@ -51,9 +51,9 @@ const navItems = [
   { name: "To-Do List", href: "/tasks", icon: ListTodo, desc: "Personal study & task checklist" },
   { name: "SkillBits", href: "/skillbits", icon: SkillBitsIcon, desc: "Bite-sized video reels" },
   { name: "Learning", href: "/learning", icon: LearnIcon, desc: "Playlists & learning tracks" },
-  { name: "Roadmaps", href: "/roadmaps", icon: Map, desc: "Interactive career tracks" },
-  { name: "Practice", href: "/practice", icon: Target, desc: "Aptitude & company questions" },
-  { name: "Career", href: "/career", icon: Briefcase, desc: "AI resume analysis" },
+  { name: "Roadmaps", href: "/roadmaps", icon: RoadmapsIcon, desc: "Interactive career tracks" },
+  { name: "Practice", href: "/practice", icon: PracticeIcon, desc: "Aptitude & company questions" },
+  { name: "Career", href: "/career", icon: CareerIcon, desc: "AI resume analysis" },
   { name: "Explore", href: "/explore", icon: ExploreIcon, desc: "Trending skills & tools" },
   { name: "Analytics", href: "/analytics", icon: AnalyticsIcon, desc: "Detailed performance" },
   { name: "Support & Help", href: "/support", icon: LifeBuoy, desc: "Customer desk & policies" },
@@ -65,7 +65,7 @@ const bottomBarItems = [
   { name: "SkillBits", href: "/skillbits", icon: SkillBitsIcon },
   { name: "Learn", href: "/learning", icon: LearnIcon },
   { name: "AI Mentor", href: "/ai-mentor", icon: Bot },
-  { name: "Practice", href: "/practice", icon: Target },
+  { name: "Practice", href: "/practice", icon: PracticeIcon },
   { name: "Explore", href: "/explore", icon: ExploreIcon },
 ];
 

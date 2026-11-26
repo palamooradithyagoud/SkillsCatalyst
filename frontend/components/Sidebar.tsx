@@ -6,12 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
-  Map,
-  Target,
   Calendar,
   GraduationCap,
   Newspaper,
-  Briefcase,
   Bot,
   User,
   Headset,
@@ -31,6 +28,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import AnalyticsIcon from "@/components/icons/AnalyticsIcon";
 import LearnIcon from "@/components/icons/LearnIcon";
 import SkillBitsIcon from "@/components/icons/SkillBitsIcon";
+import RoadmapsIcon from "@/components/icons/RoadmapsIcon";
+import PracticeIcon from "@/components/icons/PracticeIcon";
 
 export type NavItemData = {
   id: string;
@@ -173,13 +172,13 @@ export default function Sidebar() {
       id: "roadmaps",
       title: "Roadmaps",
       href: "/roadmaps",
-      icon: Map,
+      icon: RoadmapsIcon,
     },
     {
       id: "practice",
       title: "Practice",
       href: "/practice",
-      icon: Target,
+      icon: PracticeIcon,
     },
     {
       id: "resume-prep",
