@@ -60,6 +60,7 @@ interface NodeFrame {
   pillY: number;
   labelMaxW: number;
   labelSide: "left" | "right";
+  loopRightOut?: boolean;
 }
 
 interface PathSegment {
@@ -169,12 +170,18 @@ function buildRoundedPolylinePath(points: Array<{ x: number; y: number }>, radiu
   return cmds.join(" ");
 }
 
-const MOBILE_WAVE_STOPS: ReadonlyArray<{
+const MOBILE_SERPENTINE_STOPS: ReadonlyArray<{
   ratio: number;
-  labelSide: "left" | "right";
+  loopRightOut?: boolean;
 }> = [
-  { ratio: 0.02, labelSide: "right" },
-  { ratio: 0.98, labelSide: "left" },
+  { ratio: 0.0 },
+  { ratio: 0.48 },
+  { ratio: 1.0 },
+  { ratio: 0.12, loopRightOut: true },
+  { ratio: 0.28 },
+  { ratio: 0.6 },
+  { ratio: 0.04, loopRightOut: true },
+  { ratio: 0.24 },
 ];
 
 const WIDE_WAVE_STOPS: ReadonlyArray<{
@@ -257,38 +264,69 @@ export default function RoadmapFlowchartTree({
     const isMobile = W < 540;
     const isTablet = W >= 540 && W < 780;
 
-    const tileSize = isMicro ? 48 : isMobile ? 56 : isTablet ? 66 : 76;
-    const rowH = isMicro ? 108 : isMobile ? 118 : isTablet ? 138 : 152;
+    const tileSize = isMicro ? 46 : isMobile ? 52 : isTablet ? 66 : 76;
+    const normalRowH = isMicro ? 92 : isMobile ? 98 : isTablet ? 138 : 152;
+    const loopRowH = isMicro ? 132 : 144;
+    const loopClearance = isMicro ? 20 : 22;
     const strokeWidth = isMobile ? 8 : isTablet ? 9 : 10;
-    const leftEdgeX = isMicro ? 16 : isMobile ? 18 : isTablet ? 28 : 44;
-    const rightEdgeX = W - leftEdgeX;
-    const topPad = isMobile ? 18 : isTablet ? 24 : 28;
-    const rCorner = isMicro ? 18 : isMobile ? 24 : isTablet ? 24 : 30;
+    const leftEdgeX = isMicro ? 14 : isMobile ? 18 : isTablet ? 28 : 44;
+    const rightEdgeX = isMobile ? W - (isMicro ? 10 : 14) : W - leftEdgeX;
+    const topPad = isMobile ? 16 : isTablet ? 24 : 28;
+    const rCorner = isMicro ? 16 : isMobile ? 20 : isTablet ? 24 : 30;
 
     const pillGap = isMobile ? 5 : 6;
-    const pillHalf = isMobile ? 14 : 18;
-    const labelGap = isMicro ? 11 : isMobile ? 13 : isTablet ? 18 : 20;
+    const pillHalf = isMobile ? 13 : 18;
+    const labelGap = isMicro ? 10 : isMobile ? 12 : isTablet ? 18 : 20;
+    const mobileLabelReserve = isMicro ? 112 : 132;
 
     const minTileX = leftEdgeX + pillGap + pillHalf;
-    const maxTileX = Math.max(minTileX, rightEdgeX - pillGap - pillHalf - tileSize);
+    const maxTileX = isMobile
+      ? Math.max(minTileX + 40, rightEdgeX - tileSize - labelGap - mobileLabelReserve)
+      : Math.max(minTileX, rightEdgeX - pillGap - pillHalf - tileSize);
     const horizontalSpan = Math.max(0, maxTileX - minTileX);
 
-    const waveStops = isMobile ? MOBILE_WAVE_STOPS : WIDE_WAVE_STOPS;
+    let cursorY = topPad;
 
     const frames: NodeFrame[] = flattenedNodes.map((node, idx) => {
-      const waveStop = waveStops[idx % waveStops.length];
+      if (idx > 0) {
+        const prevLoop =
+          isMobile &&
+          MOBILE_SERPENTINE_STOPS[(idx - 1) % MOBILE_SERPENTINE_STOPS.length]
+            .loopRightOut;
+        cursorY += prevLoop ? loopRowH : normalRowH;
+      }
 
-      const tileX = Math.round(minTileX + waveStop.ratio * horizontalSpan);
-      const tileY = topPad + idx * rowH;
+      if (isMobile) {
+        const stop = MOBILE_SERPENTINE_STOPS[idx % MOBILE_SERPENTINE_STOPS.length];
+        const tileX = Math.round(minTileX + stop.ratio * horizontalSpan);
+        const tileY = cursorY;
+        const pillX = tileX - pillGap;
+        const pillY = tileY + tileSize / 2;
+        const labelMaxW = Math.max(108, rightEdgeX - (tileX + tileSize + labelGap));
 
+        return {
+          node,
+          tileX,
+          tileY,
+          tileSize,
+          pillX,
+          pillY,
+          labelMaxW,
+          labelSide: "right",
+          loopRightOut: stop.loopRightOut,
+        };
+      }
+
+      const stop = WIDE_WAVE_STOPS[idx % WIDE_WAVE_STOPS.length];
+      const tileX = Math.round(minTileX + stop.ratio * horizontalSpan);
+      const tileY = cursorY;
       const pillX =
-        waveStop.labelSide === "left"
+        stop.labelSide === "left"
           ? tileX + tileSize + pillGap
           : tileX - pillGap;
       const pillY = tileY + tileSize / 2;
-
       const labelMaxW =
-        waveStop.labelSide === "left"
+        stop.labelSide === "left"
           ? Math.max(120, tileX - labelGap - leftEdgeX)
           : Math.max(120, rightEdgeX - (tileX + tileSize + labelGap));
 
@@ -300,23 +338,38 @@ export default function RoadmapFlowchartTree({
         pillX,
         pillY,
         labelMaxW,
-        labelSide: waveStop.labelSide,
+        labelSide: stop.labelSide,
       };
     });
 
     const segments: PathSegment[] = [];
+    const detourX = rightEdgeX - (isMicro ? 14 : 18);
 
     for (let i = 0; i < frames.length - 1; i++) {
       const curr = frames[i];
       const next = frames[i + 1];
-      const midY = Math.round((curr.pillY + next.pillY) / 2);
 
-      const pts = [
-        { x: curr.pillX, y: curr.pillY },
-        { x: curr.pillX, y: midY },
-        { x: next.pillX, y: midY },
-        { x: next.pillX, y: next.pillY },
-      ];
+      let pts: Array<{ x: number; y: number }>;
+      if (isMobile && curr.loopRightOut) {
+        const topRailY = Math.round(curr.tileY + curr.tileSize + loopClearance);
+        const botRailY = Math.round(next.tileY - loopClearance);
+        pts = [
+          { x: curr.pillX, y: curr.pillY },
+          { x: curr.pillX, y: topRailY },
+          { x: detourX, y: topRailY },
+          { x: detourX, y: botRailY },
+          { x: next.pillX, y: botRailY },
+          { x: next.pillX, y: next.pillY },
+        ];
+      } else {
+        const midY = Math.round((curr.pillY + next.pillY) / 2);
+        pts = [
+          { x: curr.pillX, y: curr.pillY },
+          { x: curr.pillX, y: midY },
+          { x: next.pillX, y: midY },
+          { x: next.pillX, y: next.pillY },
+        ];
+      }
 
       segments.push({
         id: `seg-${curr.node.lesson.number}-${next.node.lesson.number}`,
@@ -332,7 +385,8 @@ export default function RoadmapFlowchartTree({
       });
     }
 
-    const totalH = topPad + frames.length * rowH + 18;
+    const totalH =
+      frames.length > 0 ? frames[frames.length - 1].tileY + tileSize + 56 : topPad;
 
     if (frames.length > 0) {
       const last = frames[frames.length - 1];

@@ -90,7 +90,8 @@ describe("Roadmaps Showcase Card, Lesson Catalog & System Cleanup", () => {
     const tree = readFrontend("components/roadmaps/RoadmapFlowchartTree.tsx");
     assert.ok(tree.includes("[background-image:radial-gradient("), "Must preserve the dot-grid canvas background");
     assert.ok(tree.includes("max-w-[1080px]"), "Must utilize full laptop canvas width bilaterally");
-    assert.ok(tree.includes("MOBILE_WAVE_STOPS"), "Must use bilateral alternating serpentine stops on mobile dimensions");
+    assert.ok(tree.includes("MOBILE_SERPENTINE_STOPS"), "Must use right-labeled serpentine stops with right-margin U-loops on mobile");
+    assert.ok(tree.includes("loopRightOut"), "Must include dramatic right-side U-turn loops matching the mobile reference design");
     assert.ok(tree.includes("WIDE_WAVE_STOPS"), "Must alternate bilateral left/right serpentine stops on wide viewports");
     assert.ok(tree.includes("getTotalLength"), "Must measure SVG segment path lengths for progressive scroll line reveal");
     assert.ok(tree.includes("strokeDashoffset"), "Must progressively animate path stroke reveal along scroll");
