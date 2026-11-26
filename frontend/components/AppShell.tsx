@@ -24,7 +24,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const isEditProfile = pathname.startsWith("/settings/edit") || pathname.startsWith("/profile/edit");
   const isSkillBits = pathname.startsWith("/skillbits");
-  const isCareer = pathname.startsWith("/career");
+  const isCareer =
+    pathname.startsWith("/career") ||
+    (pathname.startsWith("/roadmaps/") && pathname !== "/roadmaps");
 
   return (
     <PricingModalProvider>

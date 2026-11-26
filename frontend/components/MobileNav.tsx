@@ -12,6 +12,7 @@ import {
   Flame,
   Zap,
   ChevronRight,
+  ArrowLeft,
   User,
   Search,
   Bell,
@@ -197,6 +198,9 @@ function MobileNavContent() {
 
   const isProfile = pathname === "/profile";
   const isNotifications = pathname === "/notifications";
+  const isRoadmapSubpage =
+    pathname.startsWith("/roadmaps/") && pathname !== "/roadmaps";
+  const isActiveRoadmapView = isRoadmapDetail || isRoadmapSubpage;
 
   const isCareerGroup =
     pathname.startsWith("/career") ||
@@ -214,7 +218,7 @@ function MobileNavContent() {
   // active video player, practice subviews, roadmap detail view, resume active scan/workspace, SkillBits reels
   const isHideBottomBar =
     isExplicitlyHidden ||
-    isRoadmapDetail ||
+    isActiveRoadmapView ||
     isResumeActive ||
     pathname.startsWith("/explore") ||
     isCareerGroup ||
@@ -237,9 +241,21 @@ function MobileNavContent() {
           }`}
         >
           <div className="flex items-center gap-2">
-            <Link href="/dashboard" className="flex items-center">
-              <SkillsCatalystLogo size="sm" showText={false} animated />
-            </Link>
+            {isActiveRoadmapView ? (
+              <button
+                type="button"
+                onClick={() => router.push("/roadmaps")}
+                aria-label="Back to Roadmaps"
+                className="inline-flex items-center justify-center gap-1.5 px-3 h-9 rounded-[10px] bg-slate-100/80 dark:bg-white/[0.08] border border-slate-200/80 dark:border-white/[0.12] text-slate-800 dark:text-white hover:bg-slate-200/80 dark:hover:bg-white/[0.14] text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
+                <span>Back</span>
+              </button>
+            ) : (
+              <Link href="/dashboard" className="flex items-center">
+                <SkillsCatalystLogo size="sm" showText={false} animated />
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 h-full">
@@ -300,7 +316,7 @@ function MobileNavContent() {
       {isCareerGroup &&
         !isLearningPlayer &&
         !isPracticeSubView &&
-        !isRoadmapDetail &&
+        !isActiveRoadmapView &&
         !isResumeActive &&
         !isExplicitlyHidden && (
           <CareerDownbar className="md:hidden" />
