@@ -9,6 +9,7 @@ import {
   Calendar,
   GraduationCap,
   Newspaper,
+  Flame,
   Bot,
   User,
   Headset,
@@ -141,6 +142,12 @@ export default function Sidebar() {
       icon: Newspaper,
     },
     {
+      id: "trending",
+      title: "Trending",
+      href: "/explore?tab=trending",
+      icon: Flame,
+    },
+    {
       id: "ai-mentor",
       title: "AI Mentor",
       href: "/ai-mentor",
@@ -254,6 +261,9 @@ export default function Sidebar() {
     }
     if (item.id === "news") {
       return pathname === "/explore" && currentExploreTab === "news";
+    }
+    if (item.id === "trending") {
+      return pathname === "/explore" && currentExploreTab === "trending";
     }
     if (item.id === "ai-mentor") {
       return pathname.startsWith("/ai-mentor");

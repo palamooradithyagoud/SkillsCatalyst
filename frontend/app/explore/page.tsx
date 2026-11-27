@@ -7,6 +7,7 @@ import TechNewsWidget from "@/components/explore/TechNewsWidget";
 import EventsWidget from "@/components/explore/EventsWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
 import TrendingJobReadyCard from "@/components/explore/TrendingJobReadyCard";
+import TrendingSearchesSection from "@/components/explore/TrendingSearchesSection";
 
 function ExplorePageContent() {
   const router = useRouter();
@@ -69,7 +70,12 @@ function ExplorePageContent() {
       {activeTab === "news" && <TechNewsWidget />}
 
       {/* ── 4. Trending ── */}
-      {activeTab === "trending" && <TrendingJobReadyCard />}
+      {activeTab === "trending" && (
+        <div className="space-y-6 sm:space-y-8">
+          <TrendingJobReadyCard />
+          <TrendingSearchesSection />
+        </div>
+      )}
 
       {/* ── Mobile Downbar Dock (Hidden on Desktop) ── */}
       <ExploreDownbar
