@@ -6,6 +6,7 @@ import ScholarshipsWidget from "@/components/explore/ScholarshipsWidget";
 import TechNewsWidget from "@/components/explore/TechNewsWidget";
 import EventsWidget from "@/components/explore/EventsWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
+import TrendingJobReadyCard from "@/components/explore/TrendingJobReadyCard";
 
 function ExplorePageContent() {
   const router = useRouter();
@@ -68,18 +69,7 @@ function ExplorePageContent() {
       {activeTab === "news" && <TechNewsWidget />}
 
       {/* ── 4. Trending ── */}
-      {activeTab === "trending" && (
-        <div className="max-w-5xl mx-auto p-8 sm:p-12 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-dashed border-slate-200 dark:border-white/[0.08] text-center">
-          <div className="space-y-1 max-w-sm mx-auto">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              No Trending Items Found
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
-              Trending topics and curated tracks will appear here once added.
-            </p>
-          </div>
-        </div>
-      )}
+      {activeTab === "trending" && <TrendingJobReadyCard />}
 
       {/* ── Mobile Downbar Dock (Hidden on Desktop) ── */}
       <ExploreDownbar
