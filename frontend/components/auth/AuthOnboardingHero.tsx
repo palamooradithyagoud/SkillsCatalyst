@@ -191,6 +191,7 @@ export default function AuthOnboardingHero() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleGoToSlide(idx)}
+                suppressHydrationWarning
                 className={`transition-all duration-300 rounded-full cursor-pointer shadow-none ${
                   isActive
                     ? "w-8 h-2 bg-white"

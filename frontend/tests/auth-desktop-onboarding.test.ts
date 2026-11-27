@@ -81,4 +81,22 @@ describe("Desktop Auth Onboarding Hero Suite", () => {
     assert.ok(loginContent.includes("<AuthOnboardingHero />"), "Must render <AuthOnboardingHero />");
     assert.strictEqual(loginContent.includes("<InteractiveCharacter"), false, "Penguins must not be rendered on login page");
   });
+
+  it("adds suppressHydrationWarning to slide indicators and Forgot password button to guard against browser fdprocessedid injection", () => {
+    const heroContent = fs
+      .readFileSync(path.join(process.cwd(), "components", "auth", "AuthOnboardingHero.tsx"), "utf-8")
+      .replace(/\r\n/g, "\n");
+    const loginContent = fs
+      .readFileSync(path.join(process.cwd(), "app", "login", "page.tsx"), "utf-8")
+      .replace(/\r\n/g, "\n");
+
+    assert.ok(
+      heroContent.includes("onClick={() => handleGoToSlide(idx)}\n                suppressHydrationWarning"),
+      "Slide indicator buttons must suppress browser fdprocessedid hydration mismatches"
+    );
+    assert.ok(
+      loginContent.includes('onClick={() => switchMode("forgot")}\n                              suppressHydrationWarning'),
+      "Forgot password button must suppress browser fdprocessedid hydration mismatches"
+    );
+  });
 });

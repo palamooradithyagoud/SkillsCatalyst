@@ -745,6 +745,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot")}
+                    suppressHydrationWarning
                     className="w-full py-3.5 px-4 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] text-black font-extrabold text-xs transition-all cursor-pointer"
                   >
                     Request New Reset Link
@@ -752,6 +753,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("signin")}
+                    suppressHydrationWarning
                     className="w-full text-center text-xs text-white/60 hover:text-white font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -1025,6 +1027,7 @@ export default function LoginPage() {
                             <button
                               type="button"
                               onClick={() => switchMode("forgot")}
+                              suppressHydrationWarning
                               className="text-white/70 hover:text-[#D5FF38] font-medium transition-colors cursor-pointer"
                             >
                               Forgot password?
