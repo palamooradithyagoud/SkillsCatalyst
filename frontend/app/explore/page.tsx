@@ -54,7 +54,13 @@ function ExplorePageContent() {
     if (typeof document !== "undefined") {
       document.body.setAttribute("data-explore-tab", tab);
     }
-    router.replace(`/explore?tab=${tab}`, { scroll: false });
+    const nextUrl = `/explore?tab=${tab}`;
+    if (typeof window !== "undefined" && window.location.pathname === "/explore") {
+      // Shallow history sync prevents full RSC + middleware round-trips on client tab switches
+      window.history.replaceState(window.history.state, "", nextUrl);
+    } else {
+      router.replace(nextUrl, { scroll: false });
+    }
   };
 
   return (

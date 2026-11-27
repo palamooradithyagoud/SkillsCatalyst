@@ -315,7 +315,13 @@ export default function Sidebar() {
       <Link
         key={item.id}
         href={item.href}
+        prefetch={false}
         title={!open ? item.title : undefined}
+        onMouseEnter={() => {
+          if (!item.onClick && item.href !== "#" && !item.href.startsWith("/explore")) {
+            router.prefetch(item.href);
+          }
+        }}
         onClick={(e) => {
           if (item.onClick) {
             e.preventDefault();
@@ -327,6 +333,10 @@ export default function Sidebar() {
               window.dispatchEvent(
                 new CustomEvent("explore-tab-change", { detail: tab })
               );
+              if (window.location.pathname === "/explore") {
+                e.preventDefault();
+                window.history.replaceState(window.history.state, "", item.href);
+              }
             }
           } else if (item.href.includes("prep=")) {
             const prep = item.href.split("prep=")[1] || "";

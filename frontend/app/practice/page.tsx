@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
-import PracticeTopicDrawer from "@/components/PracticeTopicDrawer";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   fetchPracticeCompanies,
   fetchCompanyQuestions,
@@ -24,17 +25,47 @@ import { PracticeHeader } from "@/components/practice/PracticeHeader";
 import { PracticeHeroCard } from "@/components/practice/PracticeHeroCard";
 import { PracticeModeCards } from "@/components/practice/PracticeModeCards";
 import { PenguinDSASheetCard } from "@/components/practice/PenguinDSASheetCard";
-import { PenguinDSASheetView } from "@/components/practice/PenguinDSASheetView";
 import { ShradhaDSASheetCard } from "@/components/practice/ShradhaDSASheetCard";
-import { ShradhaDSASheetView } from "@/components/practice/ShradhaDSASheetView";
 import { StriverA2ZDSASheetCard } from "@/components/practice/StriverA2ZDSASheetCard";
-import { StriverA2ZDSASheetView } from "@/components/practice/StriverA2ZDSASheetView";
-import { BeginnerDSATree } from "@/components/practice/BeginnerDSATree";
-import { BeginnerRoadmapCard } from "@/components/practice/BeginnerRoadmapCard";
-import { CompanyControlsPanel } from "@/components/practice/CompanyControlsPanel";
-import { CompanyProgressTracker } from "@/components/practice/CompanyProgressTracker";
-import { CompanyQuestionFilters } from "@/components/practice/CompanyQuestionFilters";
-import { QuestionListTable } from "@/components/practice/QuestionListTable";
+
+// Code-split heavy practice sheets, tree view, topic drawer, and company bank out of initial /practice chunk
+const PracticeTopicDrawer = dynamic(() => import("@/components/PracticeTopicDrawer"), { ssr: false });
+const PenguinDSASheetView = dynamic(
+  () => import("@/components/practice/PenguinDSASheetView").then((m) => m.PenguinDSASheetView),
+  { ssr: false }
+);
+const ShradhaDSASheetView = dynamic(
+  () => import("@/components/practice/ShradhaDSASheetView").then((m) => m.ShradhaDSASheetView),
+  { ssr: false }
+);
+const StriverA2ZDSASheetView = dynamic(
+  () => import("@/components/practice/StriverA2ZDSASheetView").then((m) => m.StriverA2ZDSASheetView),
+  { ssr: false }
+);
+const BeginnerDSATree = dynamic(
+  () => import("@/components/practice/BeginnerDSATree").then((m) => m.BeginnerDSATree),
+  { ssr: false }
+);
+const BeginnerRoadmapCard = dynamic(
+  () => import("@/components/practice/BeginnerRoadmapCard").then((m) => m.BeginnerRoadmapCard),
+  { ssr: false }
+);
+const CompanyControlsPanel = dynamic(
+  () => import("@/components/practice/CompanyControlsPanel").then((m) => m.CompanyControlsPanel),
+  { ssr: false }
+);
+const CompanyProgressTracker = dynamic(
+  () => import("@/components/practice/CompanyProgressTracker").then((m) => m.CompanyProgressTracker),
+  { ssr: false }
+);
+const CompanyQuestionFilters = dynamic(
+  () => import("@/components/practice/CompanyQuestionFilters").then((m) => m.CompanyQuestionFilters),
+  { ssr: false }
+);
+const QuestionListTable = dynamic(
+  () => import("@/components/practice/QuestionListTable").then((m) => m.QuestionListTable),
+  { ssr: false }
+);
 import { useSubscription } from "@/hooks/useSubscription";
 import { PremiumLockCard } from "@/components/premium";
 
@@ -138,12 +169,11 @@ function PracticeContent() {
     }
   }, [searchParams, selectedMode]);
 
-  const [companiesList, setCompaniesList] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>(() => {
     if (urlCompany) return urlCompany.toLowerCase();
     return "google";
   });
-  const [companySearchInput, setCompanySearchInput] = useState<string>("" );
+  const [companySearchInput, setCompanySearchInput] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<QuestionPeriod>(() => {
     if (urlPeriod) return urlPeriod as QuestionPeriod;
     if (urlCompany) return "thirty-days";
@@ -180,13 +210,14 @@ function PracticeContent() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
   const [selectedStatus, setSelectedStatus] = useState<PracticeStatus>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const [activePracticeTopic, setActivePracticeTopic] = useState<string | null>(null);
-
-  const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [loadingQuestions, setLoadingQuestions] = useState<boolean>(false);
-  const [loadingCompanies, setLoadingCompanies] = useState<boolean>(false);
   const [limit, setLimit] = useState<number>(100);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearchQuery(searchQuery.trim()), 180);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   // Solved state and Supabase persistence hook
   const {
@@ -196,59 +227,55 @@ function PracticeContent() {
     toggleDrawerProblem,
   } = usePracticeSolvedState(userId);
 
-  // Fetch company list from backend CSV repository
-  useEffect(() => {
-    async function loadCompanies() {
-      setLoadingCompanies(true);
+  // Cached company list across visits
+  const companiesQuery = useQuery<string[]>({
+    queryKey: ["practice", "companies"],
+    queryFn: async () => {
       const list = await fetchPracticeCompanies();
-      if (list && list.length > 0) {
-        setCompaniesList(list);
-      } else {
-        setCompaniesList(TOP_COMPANIES);
-      }
-      setLoadingCompanies(false);
-    }
-    loadCompanies();
-  }, []);
+      return list && list.length > 0 ? list : TOP_COMPANIES;
+    },
+    staleTime: 5 * 60 * 1000,
+    placeholderData: TOP_COMPANIES,
+  });
 
-  // Fetch questions for selected company & filters
-  useEffect(() => {
-    let isCancelled = false;
+  const companiesList = companiesQuery.data ?? TOP_COMPANIES;
 
-    async function loadQuestions() {
-      if (selectedMode !== "company") return;
-      setLoadingQuestions(true);
-
+  // Cached questions query (only runs when company mode is active)
+  const questionsQuery = useQuery<{ questions: PracticeQuestion[]; total: number }>({
+    queryKey: [
+      "practice",
+      "questions",
+      selectedCompany,
+      selectedPeriod,
+      selectedDifficulty,
+      debouncedSearchQuery,
+      limit,
+    ],
+    queryFn: async () => {
       const result = await fetchCompanyQuestions(
         selectedCompany,
         selectedPeriod,
         selectedDifficulty === "All" ? undefined : selectedDifficulty,
-        searchQuery.trim() || undefined,
+        debouncedSearchQuery || undefined,
         limit,
         0
       );
-
-      if (!isCancelled) {
-        if (result && Array.isArray(result.questions)) {
-          setQuestions(result.questions);
-          setTotalCount(result.total || result.questions.length);
-        } else {
-          setQuestions([]);
-          setTotalCount(0);
-        }
-        setLoadingQuestions(false);
+      if (result && Array.isArray(result.questions)) {
+        return {
+          questions: result.questions,
+          total: result.total || result.questions.length,
+        };
       }
-    }
+      return { questions: [], total: 0 };
+    },
+    enabled: selectedMode === "company",
+    staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
 
-    const timer = setTimeout(() => {
-      loadQuestions();
-    }, 200);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [selectedMode, selectedCompany, selectedPeriod, selectedDifficulty, searchQuery, limit]);
+  const questions = questionsQuery.data?.questions ?? [];
+  const totalCount = questionsQuery.data?.total ?? 0;
+  const loadingQuestions = questionsQuery.isFetching && !questionsQuery.data;
 
   // Filtered dropdown list of all 660+ companies
   const filteredCompaniesDropdown = useMemo(() => {

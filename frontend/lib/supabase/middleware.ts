@@ -1,4 +1,3 @@
-
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -9,6 +8,45 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
+
+  const pathname = request.nextUrl.pathname;
+
+  const isAuthPage = pathname === "/login";
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isExplicitProtectedRoute =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/") ||
+    pathname === "/learning" || pathname.startsWith("/learning/") ||
+    pathname === "/roadmaps" || pathname.startsWith("/roadmaps/") ||
+    pathname === "/skillbits" || pathname.startsWith("/skillbits/") ||
+    pathname === "/scholarships" || pathname.startsWith("/scholarships/") ||
+    pathname === "/tech-news" || pathname.startsWith("/tech-news/") ||
+    pathname === "/profile" || pathname.startsWith("/profile/") ||
+    pathname === "/settings" || pathname.startsWith("/settings/") ||
+    pathname === "/analytics" || pathname.startsWith("/analytics/") ||
+    pathname === "/certificates" || pathname.startsWith("/certificates/") ||
+    pathname === "/explore" || pathname.startsWith("/explore/") ||
+    pathname === "/resume-review" || pathname.startsWith("/resume-review/") ||
+    (pathname.startsWith("/career") && !pathname.startsWith("/career/resume-builder"));
+
+  // Fast path: public pages and API routes do not require middleware session verification
+  if (!isAdminRoute && !isExplicitProtectedRoute && !isAuthPage) {
+    return supabaseResponse;
+  }
+
+  // Fast path: without a Supabase session cookie, no user can be authenticated
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+
+  if (!hasAuthCookie) {
+    if (isAdminRoute || isExplicitProtectedRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables in middleware.");
@@ -36,54 +74,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid placing logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could cause users to be randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
-
-  const isAuthPage = pathname === "/login";
-  const isCallbackPage = pathname.startsWith("/auth/callback");
-  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
-  const isPublicRoute =
-    pathname === "/" ||
-    pathname === "/pricing" ||
-    pathname.startsWith("/pricing/") ||
-    pathname.startsWith("/ai-mentor") ||
-    pathname.startsWith("/privacy") ||
-    pathname.startsWith("/terms") ||
-    pathname.startsWith("/cookie") ||
-    pathname.startsWith("/support") ||
-    pathname.startsWith("/verify") ||
-    pathname.startsWith("/certificate-preview") ||
-    pathname.startsWith("/career/resume-builder") ||
-    pathname.startsWith("/practice") ||
-    pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml" ||
-    pathname === "/reset-password" ||
-    isAuthPage ||
-    isCallbackPage ||
-    pathname.startsWith("/api/");
-
-  const isExplicitProtectedRoute =
-    pathname === "/dashboard" || pathname.startsWith("/dashboard/") ||
-    pathname === "/learning" || pathname.startsWith("/learning/") ||
-    pathname === "/roadmaps" || pathname.startsWith("/roadmaps/") ||
-    pathname === "/skillbits" || pathname.startsWith("/skillbits/") ||
-    pathname === "/scholarships" || pathname.startsWith("/scholarships/") ||
-    pathname === "/tech-news" || pathname.startsWith("/tech-news/") ||
-    pathname === "/profile" || pathname.startsWith("/profile/") ||
-    pathname === "/settings" || pathname.startsWith("/settings/") ||
-    pathname === "/analytics" || pathname.startsWith("/analytics/") ||
-    pathname === "/certificates" || pathname.startsWith("/certificates/") ||
-    pathname === "/explore" || pathname.startsWith("/explore/") ||
-    pathname === "/resume-review" || pathname.startsWith("/resume-review/") ||
-    (pathname.startsWith("/career") && !pathname.startsWith("/career/resume-builder"));
-
-  // 1. Admin route protection: requires authenticated session with authoritative 'owner' role
+  // 1. Admin route protection: always verify authoritatively via getUser() on Supabase Auth server
   if (isAdminRoute) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
@@ -94,24 +90,28 @@ export async function updateSession(request: NextRequest) {
     const userRole = (user.app_metadata?.role || "").toString().toLowerCase();
     const isAuthorized = userRole === "owner" || userRole === "admin";
     if (!isAuthorized) {
-      // Authenticated student or non-admin attempting /admin: redirect to student dashboard (NEVER log out)
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);
     }
+
+    return supabaseResponse;
   }
 
+  // Verify JWT locally via cached ES256 JWKS (refreshes expiring tokens automatically, avoids remote network RTT per click)
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const hasVerifiedSession = Boolean(claimsData?.claims?.sub);
+
   // 2. Protected route check: if unauthenticated and trying to access private application routes
-  if (!user && isExplicitProtectedRoute) {
+  if (!hasVerifiedSession && isExplicitProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  // 2b. Recovery containment check: if an authenticated session is in recovery flow (sc_recovery_flow cookie is set),
-  // prevent navigating to protected app routes (e.g. dashboard, learning) until the password has been reset.
-  if (user && isExplicitProtectedRoute && request.cookies.get("sc_recovery_flow")?.value === "true") {
+  // 2b. Recovery containment check: contain active recovery sessions to password reset until completed
+  if (hasVerifiedSession && isExplicitProtectedRoute && request.cookies.get("sc_recovery_flow")?.value === "true") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("mode", "reset");
@@ -119,7 +119,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 3. If already authenticated and accessing login page, redirect to dashboard UNLESS in recovery reset mode
-  if (user && isAuthPage) {
+  if (hasVerifiedSession && isAuthPage) {
     const isRecoveryMode =
       request.nextUrl.searchParams.get("mode") === "reset" ||
       request.cookies.get("sc_recovery_flow")?.value === "true";

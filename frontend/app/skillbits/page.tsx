@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sparkles,
   Film,
@@ -47,66 +48,46 @@ export default function SkillBitsPage() {
     }
   }, [router]);
 
-  // Manual reload for try-again button
-  const reloadSkillBits = useCallback((topic?: string, difficulty?: string) => {
-    setLoading(true);
-    setError(null);
-    fetchStudentSkillBits({
-      topic: topic?.trim() || undefined,
-      difficulty: difficulty?.trim() || undefined,
-      limit: BATCH_SIZE,
-      offset: 0,
-    })
-      .then((res) => {
-        const items = res.items || [];
-        setSkillbits(items);
-        setHasMore(items.length >= BATCH_SIZE);
-        setActiveIndex(0);
-        if (containerRef.current) {
-          containerRef.current.scrollTop = 0;
-        }
-      })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
-        setError(msg);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const initialFeedQuery = useQuery({
+    queryKey: ["skillbits-feed", selectedTopic.trim(), selectedDifficulty.trim()],
+    queryFn: () =>
+      fetchStudentSkillBits({
+        topic: selectedTopic.trim() || undefined,
+        difficulty: selectedDifficulty.trim() || undefined,
+        limit: BATCH_SIZE,
+        offset: 0,
+      }),
+    staleTime: 60 * 1000,
+  });
 
+  // Sync cached or freshly fetched initial batch into local infinite-scroll state
   useEffect(() => {
-    let ignore = false;
-    fetchStudentSkillBits({
-      topic: selectedTopic.trim() || undefined,
-      difficulty: selectedDifficulty.trim() || undefined,
-      limit: BATCH_SIZE,
-      offset: 0,
-    })
-      .then((res) => {
-        if (!ignore) {
-          const items = res.items || [];
-          setSkillbits(items);
-          setHasMore(items.length >= BATCH_SIZE);
-          setActiveIndex(0);
-          setLoading(false);
-          if (containerRef.current) {
-            containerRef.current.scrollTop = 0;
-          }
-        }
-      })
-      .catch((err: unknown) => {
-        if (!ignore) {
-          const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
-          setError(msg);
-          setLoading(false);
-        }
-      });
+    if (initialFeedQuery.data) {
+      const items = initialFeedQuery.data.items || [];
+      setSkillbits(items);
+      setHasMore(items.length >= BATCH_SIZE);
+      setActiveIndex(0);
+      setError(null);
+      setLoading(false);
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
+    } else if (initialFeedQuery.isError) {
+      const err = initialFeedQuery.error;
+      const msg = err instanceof Error ? err.message : "Failed to load SkillBits.";
+      setError(msg);
+      setLoading(false);
+    } else if (initialFeedQuery.isLoading) {
+      setLoading(true);
+    }
+  }, [initialFeedQuery.data, initialFeedQuery.isError, initialFeedQuery.error, initialFeedQuery.isLoading]);
 
-    return () => {
-      ignore = true;
-    };
-  }, [selectedTopic, selectedDifficulty]);
+  // Manual reload for try-again button
+  const reloadSkillBits = useCallback(() => {
+    setError(null);
+    setLoading(true);
+    initialFeedQuery.refetch();
+  }, [initialFeedQuery]);
 
   // Filter handlers
   const handleDifficultyChange = (diff: string) => {
@@ -278,7 +259,7 @@ export default function SkillBitsPage() {
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button
-            onClick={() => reloadSkillBits(selectedTopic, selectedDifficulty)}
+            onClick={() => reloadSkillBits()}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Try Again
