@@ -211,6 +211,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    async function applySupabaseUser(supaUser: NonNullable<Session["user"]>): Promise<void> {
+      const isEmailProvider = supaUser.app_metadata?.provider === "email";
+      const isConfirmed = !!supaUser.email_confirmed_at;
+
+      if (isEmailProvider && !isConfirmed) {
+        if (mounted) {
+          setUnverifiedEmailState(supaUser.email || null);
+          clearSessionLocal();
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const userEmail = supaUser.email || "";
+      const userId = supaUser.id;
+      const userName =
+        supaUser.user_metadata?.full_name ||
+        supaUser.user_metadata?.name ||
+        userEmail.split("@")[0];
+
+      // Extract authoritative role from Supabase Auth app_metadata
+      const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
+      const role: UserRole = rawRole === "owner" ? "owner" : rawRole === "admin" ? "admin" : "student";
+
+      await setAndStoreSession(
+        userEmail,
+        userId,
+        userName,
+        true,
+        supaUser.created_at,
+        supaUser.last_sign_in_at,
+        false,
+        role
+      );
+      if (mounted) setIsLoading(false);
+    }
+
     // Proactively purge any legacy Supabase tokens from localStorage (migrating to SSR cookies)
     try {
       if (typeof window !== "undefined") {
@@ -224,62 +261,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
 
     async function initAuth() {
+      let hasLocalSession = false;
+
+      // Fast warm-up from SSR cookie session so authenticated UI never flashes Guest during remote verify
+      try {
+        const { data: localData } = await supabase.auth.getSession();
+        const localUser = localData?.session?.user;
+        if (localUser && mounted) {
+          hasLocalSession = true;
+          await applySupabaseUser(localUser);
+        }
+      } catch {}
+
       try {
         const { data, error } = await supabase.auth.getUser();
-        if (error || !data.user) {
-          if (mounted) {
-            clearSessionLocal();
-            setIsLoading(false);
-          }
+        if (data?.user && mounted) {
+          await applySupabaseUser(data.user);
           return;
         }
 
-        const supaUser = data.user;
+        const errStatus = (error as { status?: number } | null)?.status;
+        const errName = (error as { name?: string } | null)?.name;
+        const isExplicitAuthRejection =
+          !error ||
+          errStatus === 400 ||
+          errStatus === 401 ||
+          errStatus === 403 ||
+          errName === "AuthSessionMissingError";
 
-        if (supaUser && mounted) {
-          const isEmailProvider = supaUser.app_metadata?.provider === "email";
-          const isConfirmed = !!supaUser.email_confirmed_at;
-
-          if (isEmailProvider && !isConfirmed) {
-            // Unverified email account
-            setUnverifiedEmailState(supaUser.email || null);
-            clearSessionLocal();
-            setIsLoading(false);
-            return;
-          }
-
-          const userEmail = supaUser.email || "";
-          const userId = supaUser.id;
-          const userName =
-            supaUser.user_metadata?.full_name ||
-            supaUser.user_metadata?.name ||
-            userEmail.split("@")[0];
-
-          // Extract authoritative role from Supabase Auth app_metadata
-          const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
-          const role: UserRole = rawRole === "owner" ? "owner" : rawRole === "admin" ? "admin" : "student";
-
-          await setAndStoreSession(
-            userEmail,
-            userId,
-            userName,
-            true,
-            supaUser.created_at,
-            supaUser.last_sign_in_at,
-            false,
-            role
-          );
-          if (mounted) setIsLoading(false);
-          return;
+        if (mounted && (isExplicitAuthRejection || !hasLocalSession)) {
+          clearSessionLocal();
+          setIsLoading(false);
         }
+        return;
       } catch (err) {
         console.warn("Error checking Supabase auth session:", err);
-      }
-
-      // If no valid active Supabase OAuth / email session, clear any stale state
-      if (mounted) {
-        clearSessionLocal();
-        setIsLoading(false);
+        if (mounted && !hasLocalSession) {
+          clearSessionLocal();
+        }
+        if (mounted) setIsLoading(false);
       }
     }
 
@@ -292,39 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
 
       if (supaSession?.user) {
-        const supaUser = supaSession.user;
-        const isEmailProvider = supaUser.app_metadata?.provider === "email";
-        const isConfirmed = !!supaUser.email_confirmed_at;
-
-        if (isEmailProvider && !isConfirmed) {
-          setUnverifiedEmailState(supaUser.email || null);
-          clearSessionLocal();
-          setIsLoading(false);
-          return;
-        }
-
-        const userEmail = supaUser.email || "";
-        const userId = supaUser.id;
-        const userName =
-          supaUser.user_metadata?.full_name ||
-          supaUser.user_metadata?.name ||
-          userEmail.split("@")[0];
-
-        // Extract authoritative role from Supabase Auth app_metadata
-        const rawRole = (supaUser.app_metadata?.role || "").toString().toLowerCase();
-        const role: UserRole = rawRole === "owner" ? "owner" : rawRole === "admin" ? "admin" : "student";
-
-        await setAndStoreSession(
-          userEmail,
-          userId,
-          userName,
-          true,
-          supaUser.created_at,
-          supaUser.last_sign_in_at,
-          false,
-          role
-        );
-        setIsLoading(false);
+        await applySupabaseUser(supaSession.user);
       } else {
         clearSessionLocal();
         setIsLoading(false);

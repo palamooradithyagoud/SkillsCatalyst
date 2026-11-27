@@ -178,7 +178,7 @@ export function Component({
   const arrowTlRef = useRef<gsap.core.Timeline | null>(null);
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const router = useRouter();
-  const { session, logout } = useAuth();
+  const { session, isLoading, logout } = useAuth();
   const { isPremium, expiresAt } = useSubscription();
   const { openPricingModal } = usePricingModal();
 
@@ -400,8 +400,14 @@ export function Component({
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isMenuOpen]);
 
-  const userEmail = session?.email || "Guest User";
-  const userInitial = userEmail.split("@")[0].substring(0, 2).toUpperCase() || "AD";
+  const userEmail = session?.email || (isLoading ? "Loading account..." : "Guest User");
+  const userInitial = session?.name
+    ? session.name.split(/\s+/).filter(Boolean).map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+    : session?.email
+      ? session.email.split("@")[0].substring(0, 2).toUpperCase()
+      : isLoading
+        ? ".."
+        : "GU";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
   return (

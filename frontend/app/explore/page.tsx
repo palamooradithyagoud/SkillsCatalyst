@@ -36,8 +36,7 @@ import ScholarshipsWidget from "@/components/explore/ScholarshipsWidget";
 import TechNewsWidget from "@/components/explore/TechNewsWidget";
 import EventsWidget from "@/components/explore/EventsWidget";
 import ExploreDownbar, { ExploreTabId } from "@/components/explore/ExploreDownbar";
-import { fetchStudentEvents } from "@/lib/api/events";
-import type { EventItem } from "@/types/events";
+import { useStudentEvents } from "@/hooks/useStudentEvents";
 
 // Foundation items for Explore feed
 const AI_PICKS = [
@@ -185,8 +184,12 @@ function ExplorePageContent() {
   const [companyInput, setCompanyInput] = useState("");
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [hackathons, setHackathons] = useState<EventItem[]>([]);
-  const [loadingHackathons, setLoadingHackathons] = useState(true);
+
+  const { data: hackathonsData, isLoading: hackathonQueryLoading } = useStudentEvents({
+    is_hackathon: true,
+  });
+  const hackathons = hackathonsData?.events ?? [];
+  const loadingHackathons = hackathonQueryLoading && hackathons.length === 0;
 
   useEffect(() => {
     setMounted(true);
@@ -203,26 +206,6 @@ function ExplorePageContent() {
       document.body.style.overflow = "";
     };
   }, [isLangModalOpen]);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const res = await fetchStudentEvents({ is_hackathon: true });
-        if (active && res.events) {
-          setHackathons(res.events);
-        }
-      } catch {
-        // Silently handled
-      } finally {
-        if (active) setLoadingHackathons(false);
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const initialTab = (searchParams.get("tab") as ExploreTabId) || "events";
   const [activeTab, setActiveTab] = useState<ExploreTabId>(

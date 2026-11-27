@@ -16,5 +16,9 @@ describe("Dashboard Roadmaps Hero Card Suite", () => {
 
     const imgPath = path.join(process.cwd(), "public", "images", "hub", "roadmaps_hero.png");
     assert.ok(fs.existsSync(imgPath), "frontend/public/images/hub/roadmaps_hero.png must exist on disk");
+
+    assert.ok(!src.includes("CourseCard"), "Must not render playlist CourseCard progress tracking in the Roadmaps hub card");
+    assert.ok(!src.includes("fetchSavedPlaylists"), "Must not fetch or cycle saved playlist tracking slides");
+    assert.ok(!src.includes("Completed") && !src.includes("Pending"), "Must not display playlist Completed/Pending tracking counts");
   });
 });

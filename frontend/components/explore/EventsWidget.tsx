@@ -10,18 +10,66 @@ import {
   Calendar,
   MapPin,
   Users,
-  Clock,
   X,
-  ArrowUpRight,
-  Sparkles,
+  ArrowLeft,
+  ArrowRight,
   Search,
   Share2,
-  SlidersHorizontal,
   Filter,
   Check,
+  Globe,
 } from "lucide-react";
 import { useStudentEvents } from "@/hooks/useStudentEvents";
 import type { EventItem } from "@/types/events";
+
+function formatEventModeLabel(ev: EventItem): string {
+  if (ev.mode === "hybrid") return "Hybrid";
+  if (ev.category === "online" || ev.mode === "online") return "Online";
+  return "In-Person";
+}
+
+function splitPrizeDisplay(prizePool: string): { primary: string; suffix: string | null } {
+  const trimmed = prizePool.trim();
+  return {
+    primary: trimmed,
+    suffix: /prize/i.test(trimmed) ? null : "in prizes",
+  };
+}
+
+function getUtcCalendarBadge(d: string): { month: string; day: string } | null {
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return null;
+    return {
+      month: date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase(),
+      day: String(date.getUTCDate()),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function formatEventDateRange(startIso: string, endIso?: string | null): string {
+  try {
+    const start = new Date(startIso);
+    if (isNaN(start.getTime())) return startIso;
+    const fmt = (dt: Date) =>
+      dt.toLocaleDateString("en-US", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+      });
+    if (!endIso) return fmt(start);
+    const end = new Date(endIso);
+    if (isNaN(end.getTime())) return fmt(start);
+    return start.toISOString().slice(0, 10) === end.toISOString().slice(0, 10)
+      ? fmt(start)
+      : `${fmt(start)} – ${fmt(end)}`;
+  } catch {
+    return startIso;
+  }
+}
 
 function cleanEventDescription(text: string): string {
   if (!text) return "";
@@ -43,21 +91,73 @@ function cleanEventDescription(text: string): string {
     .trim();
 }
 
+const EVENTS_CACHE_KEY = "sc_cached_student_events_v1";
+
+const EVENT_FILTER_OPTIONS = [
+  { id: "all", label: "All Events" },
+  { id: "hackathons", label: "Hackathons" },
+  { id: "online", label: "Online Only" },
+  { id: "campus", label: "On Campus" },
+] as const;
+
 export default function EventsWidget() {
-  const { data, isLoading: loadingLiveEvents } = useStudentEvents();
-  const liveEvents = data?.events ?? [];
+  const { data, isLoading } = useStudentEvents();
+  const [cachedEvents, setCachedEvents] = useState<EventItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(EVENTS_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setCachedEvents(parsed);
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    if (data?.events && Array.isArray(data.events)) {
+      try {
+        localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(data.events));
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
+  }, [data?.events]);
+
+  const liveEvents = data?.events ?? cachedEvents;
+  const loadingLiveEvents = isLoading && liveEvents.length === 0;
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMode, setFilterMode] = useState<"all" | "hackathons" | "online" | "campus">("all");
   const [showFilterPills, setShowFilterPills] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [detailCopied, setDetailCopied] = useState(false);
 
-  const handleShare = async () => {
+  const handleShare = async (targetEvent?: EventItem | null) => {
+    const shareTitle = targetEvent
+      ? `${targetEvent.event_name} | SkillsCatalyst`
+      : "Discover Campus Events & Hackathons | SkillsCatalyst";
+    const shareUrl = targetEvent?.event_link || window.location.href;
+
+    const markCopied = () => {
+      if (targetEvent) {
+        setDetailCopied(true);
+        setTimeout(() => setDetailCopied(false), 2000);
+      } else {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    };
+
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "Discover Campus Events & Hackathons | SkillsCatalyst",
-          url: window.location.href,
+          title: shareTitle,
+          url: shareUrl,
         });
         return;
       } catch {
@@ -65,9 +165,8 @@ export default function EventsWidget() {
       }
     }
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(shareUrl);
+      markCopied();
     }
   };
 
@@ -100,14 +199,18 @@ export default function EventsWidget() {
     if (selectedEvent) {
       document.body.style.overflow = "hidden";
       document.body.setAttribute("data-hide-bottombar", "true");
+      document.body.setAttribute("data-hide-appbars", "true");
+      setDetailCopied(false);
       window.addEventListener("keydown", handleKeyDown);
     } else {
       document.body.style.overflow = "";
       document.body.removeAttribute("data-hide-bottombar");
+      document.body.removeAttribute("data-hide-appbars");
     }
     return () => {
       document.body.style.overflow = "";
       document.body.removeAttribute("data-hide-bottombar");
+      document.body.removeAttribute("data-hide-appbars");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedEvent, handleKeyDown]);
@@ -139,105 +242,56 @@ export default function EventsWidget() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* ── Top Hero (Mobile View Only: Matches Mobile Mockup) ── */}
+      {/* ── Top Hero (Mobile View Only: Dark Charcoal Surface) ── */}
       <div
         suppressHydrationWarning
-        className="md:hidden relative overflow-hidden rounded-[24px] sm:rounded-[36px] p-4.5 sm:p-8 border border-slate-200/80 shadow-[0_12px_45px_rgba(0,0,0,0.06)] space-y-3.5 sm:space-y-4"
+        className="md:hidden relative overflow-hidden rounded-[24px] sm:rounded-[36px] p-4.5 sm:p-8 border border-white/[0.08] shadow-[0_14px_38px_rgba(0,0,0,0.45)] space-y-3.5 sm:space-y-4"
         style={{
-          backgroundColor: "#FAF9F6", // Ivory base
+          backgroundColor: "#14171D",
           backgroundImage: `
-            radial-gradient(ellipse 70% 60% at 92% 10%, rgba(255, 174, 158, 0.5) 0%, transparent 65%),
-            radial-gradient(ellipse 65% 55% at 85% 50%, rgba(216, 180, 254, 0.45) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 60% at 72% 92%, rgba(186, 230, 253, 0.55) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 50% at 15% 90%, rgba(224, 242, 254, 0.4) 0%, transparent 55%)
+            radial-gradient(ellipse 75% 65% at 95% 5%, rgba(213, 255, 56, 0.11) 0%, transparent 62%),
+            radial-gradient(ellipse 65% 65% at 12% 95%, rgba(148, 163, 184, 0.09) 0%, transparent 60%),
+            linear-gradient(145deg, #1B1F27 0%, #14171D 52%, #0F1217 100%)
           `,
         }}
       >
-        {/* Layered Blurred Flowing Shapes (Coral, Lavender, Pale Blue) to create depth */}
+        {/* Subtle restrained ambient highlight in dark charcoal corner */}
         <motion.div
           animate={{
-            x: [0, 20, -12, 0],
-            y: [0, -16, 14, 0],
-            scale: [1, 1.1, 0.96, 1],
+            scale: [1, 1.08, 1],
+            opacity: [0.35, 0.5, 0.35],
           }}
           transition={{
-            duration: 11,
+            duration: 9,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute -top-20 -right-8 w-80 sm:w-92 h-80 sm:h-92 rounded-full bg-gradient-to-br from-[#FFA28B]/65 via-[#FF7582]/50 to-[#FF99AC]/40 blur-[60px] pointer-events-none"
-        />
-
-        <motion.div
-          animate={{
-            x: [0, -18, 15, 0],
-            y: [0, 16, -14, 0],
-            scale: [1, 0.94, 1.07, 1],
-          }}
-          transition={{
-            duration: 13,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.3,
-          }}
-          className="absolute top-6 right-12 w-72 sm:w-84 h-72 sm:h-84 rounded-full bg-gradient-to-tr from-[#DDD6FE]/70 via-[#C4B5FD]/55 to-[#E9D5FF]/45 blur-[60px] pointer-events-none"
-        />
-
-        <motion.div
-          animate={{
-            x: [0, 18, -14, 0],
-            y: [0, -12, 16, 0],
-            scale: [1, 1.08, 0.95, 1],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.6,
-          }}
-          className="absolute -bottom-16 right-4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-gradient-to-tl from-[#BAE6FD]/70 via-[#93C5FD]/50 to-[#E0E7FF]/40 blur-[64px] pointer-events-none"
-        />
-
-        {/* Ivory Foreground Wash for readable text and controls */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FAF9F6]/95 via-[#FAF9F6]/75 to-transparent pointer-events-none" />
-
-        {/* Ambient Warm Glow behind share button */}
-        <motion.div
-          animate={{
-            scale: [1, 1.12, 1],
-            opacity: [0.4, 0.55, 0.4],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute top-0 right-0 w-64 h-64 rounded-full bg-gradient-to-b from-[#FFD1C1]/60 to-[#DDD6FE]/50 blur-2xl pointer-events-none"
+          className="absolute -top-16 -right-12 w-56 h-56 rounded-full bg-[#D5FF38]/[0.08] blur-[52px] pointer-events-none"
         />
 
         {/* Top Row: Location Tag + Share Button */}
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF5A5F] shrink-0" />
-            <span className="text-xs sm:text-base font-extrabold text-slate-800 tracking-tight">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#D5FF38] shrink-0" />
+            <span className="text-xs sm:text-base font-bold text-neutral-300 tracking-tight">
               Events near you
             </span>
           </div>
 
           <button
             type="button"
-            onClick={handleShare}
+            onClick={() => handleShare()}
             aria-label="Share events"
             suppressHydrationWarning
-            className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#EEF2FF] hover:bg-[#E0E7FF] border border-white/80 shadow-xs flex items-center justify-center text-slate-700 transition-all active:scale-95 cursor-pointer relative"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#1E222B] hover:bg-[#272C37] border border-white/[0.1] shadow-xs flex items-center justify-center text-neutral-200 transition-all active:scale-95 cursor-pointer relative"
           >
             {copied ? (
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-[#D5FF38]" />
             ) : (
-              <Share2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700" />
+              <Share2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-neutral-200" />
             )}
             {copied && (
-              <span className="absolute -bottom-6 text-[10px] font-bold text-emerald-600 whitespace-nowrap">
+              <span className="absolute -bottom-6 text-[10px] font-bold text-[#D5FF38] whitespace-nowrap">
                 Link copied!
               </span>
             )}
@@ -246,43 +300,45 @@ export default function EventsWidget() {
 
         {/* Headline */}
         <div className="relative z-10 pt-0.5 sm:pt-1">
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
             Discover events
           </h1>
         </div>
 
         {/* Pill Search Bar */}
         <div className="relative z-10 space-y-2 pt-0.5 sm:pt-1">
-          <div className="flex items-center w-full min-w-0 bg-white rounded-full border border-slate-200/90 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-1.5 pl-3.5 sm:p-2 sm:pl-5 gap-2 sm:gap-3 transition-all focus-within:shadow-[0_8px_30px_rgba(99,102,241,0.12)] focus-within:border-indigo-300">
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0" />
+          <div className="flex items-center w-full min-w-0 bg-[#0B0D11] rounded-full border border-white/[0.1] shadow-[inset_0_1px_2px_rgba(0,0,0,0.45)] p-1.5 pl-3.5 sm:p-2 sm:pl-5 gap-2 sm:gap-3 transition-all focus-within:border-[#D5FF38]/55 focus-within:ring-1 focus-within:ring-[#D5FF38]/20">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Explore events"
               suppressHydrationWarning
-              className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none"
+              className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-semibold text-white placeholder:text-neutral-500 outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 suppressHydrationWarning
-                className="text-slate-400 hover:text-slate-600 p-1 shrink-0 cursor-pointer"
+                aria-label="Clear search"
+                className="text-neutral-400 hover:text-white p-1 shrink-0 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
-            <div className="h-5 sm:h-6 w-[1px] bg-slate-200 shrink-0 mx-0.5 sm:mx-1" />
+            <div className="h-5 sm:h-6 w-[1px] bg-white/[0.12] shrink-0 mx-0.5 sm:mx-1" />
             <button
               type="button"
               onClick={() => setShowFilterPills(!showFilterPills)}
               aria-label="Filter events"
               suppressHydrationWarning
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${showFilterPills || filterMode !== "all"
-                ? "bg-[#6366F1] text-white shadow-xs"
-                : "bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#5D5FEF]"
-                } active:scale-95`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                showFilterPills || filterMode !== "all"
+                  ? "bg-[#D5FF38] text-[#0D0F12] shadow-xs"
+                  : "bg-[#1E222B] hover:bg-[#272C37] text-neutral-200 border border-white/[0.08]"
+              } active:scale-95`}
             >
               <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
@@ -297,21 +353,17 @@ export default function EventsWidget() {
                 exit={{ opacity: 0, height: 0 }}
                 className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar"
               >
-                {[
-                  { id: "all", label: "All Events" },
-                  { id: "hackathons", label: "Hackathons" },
-                  { id: "online", label: "Online Only" },
-                  { id: "campus", label: "On Campus" },
-                ].map((f) => (
+                {EVENT_FILTER_OPTIONS.map((f) => (
                   <button
                     key={f.id}
                     type="button"
-                    onClick={() => setFilterMode(f.id as any)}
+                    onClick={() => setFilterMode(f.id)}
                     suppressHydrationWarning
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${filterMode === f.id
-                      ? "bg-[#6366F1] text-white shadow-xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      filterMode === f.id
+                        ? "bg-[#D5FF38] text-[#0D0F12] shadow-xs"
+                        : "bg-[#1E222B] text-neutral-300 hover:bg-[#272C37] hover:text-white border border-white/[0.08]"
+                    }`}
                   >
                     {f.label}
                   </button>
@@ -322,7 +374,7 @@ export default function EventsWidget() {
         </div>
       </div>
 
-      {/* ── Desktop View Search & Filter Bar (Matches Image 2) ── */}
+      {/* ── Desktop View Search & Filter Bar ── */}
       <div className="hidden md:block space-y-3">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
@@ -333,13 +385,14 @@ export default function EventsWidget() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search events"
               suppressHydrationWarning
-              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 outline-none focus:border-indigo-500 dark:focus:border-[#C084FC] transition-colors shadow-2xs"
+              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-[#121318] border border-slate-200 dark:border-neutral-800 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 outline-none focus:border-slate-400 dark:focus:border-[#D5FF38]/55 transition-colors shadow-2xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
                 suppressHydrationWarning
+                aria-label="Clear search"
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -352,10 +405,11 @@ export default function EventsWidget() {
             onClick={() => setShowFilterPills(!showFilterPills)}
             aria-label="Filter events"
             suppressHydrationWarning
-            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${showFilterPills || filterMode !== "all"
-              ? "bg-purple-600 text-white border-purple-600 shadow-xs"
-              : "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700 shadow-2xs"
-              } active:scale-95`}
+            className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+              showFilterPills || filterMode !== "all"
+                ? "bg-[#D5FF38] text-[#0D0F12] border-[#D5FF38] shadow-xs"
+                : "bg-white dark:bg-[#121318] border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700 shadow-2xs"
+            } active:scale-95`}
           >
             <Filter className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
@@ -370,21 +424,17 @@ export default function EventsWidget() {
               exit={{ opacity: 0, height: 0 }}
               className="flex items-center gap-2 pt-1 pb-0.5"
             >
-              {[
-                { id: "all", label: "All Events" },
-                { id: "hackathons", label: "Hackathons" },
-                { id: "online", label: "Online Only" },
-                { id: "campus", label: "On Campus" },
-              ].map((f) => (
+              {EVENT_FILTER_OPTIONS.map((f) => (
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => setFilterMode(f.id as any)}
+                  onClick={() => setFilterMode(f.id)}
                   suppressHydrationWarning
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterMode === f.id
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-neutral-700/80"
-                    }`}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filterMode === f.id
+                      ? "bg-[#D5FF38] text-[#0D0F12] shadow-xs"
+                      : "bg-slate-100 dark:bg-[#181B22] text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-white/[0.08]"
+                  }`}
                 >
                   {f.label}
                 </button>
@@ -410,7 +460,7 @@ export default function EventsWidget() {
           </span>
           <button
             type="button"
-            onClick={handleShare}
+            onClick={() => handleShare()}
             aria-label="Share events"
             suppressHydrationWarning
             className="hidden md:flex w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#181920] hover:bg-slate-200 dark:hover:bg-[#252630] border border-slate-200/80 dark:border-neutral-700/80 items-center justify-center text-slate-700 dark:text-neutral-200 transition-all active:scale-95 cursor-pointer relative"
@@ -449,288 +499,426 @@ export default function EventsWidget() {
                 setSearchQuery("");
                 setFilterMode("all");
               }}
-              className="text-xs font-bold text-purple-600 dark:text-[#C084FC] hover:underline cursor-pointer"
+              className="text-xs font-bold text-slate-800 dark:text-neutral-200 hover:underline cursor-pointer"
             >
               Reset filters
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
-          {filteredEvents.map((ev) => (
-            <div
-              key={ev.id}
-              onClick={() => setSelectedEvent(ev)}
-              className="rounded-xl sm:rounded-2xl bg-white dark:bg-[#18191F] border border-slate-200/90 dark:border-neutral-800 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group cursor-pointer shadow-2xs"
-            >
-              {/* Compact Banner Thumbnail */}
-              <div className="relative w-full h-24 sm:h-28 bg-slate-950 overflow-hidden">
-                {ev.banner_url ? (
-                  <Image
-                    src={ev.banner_url}
-                    alt={ev.event_name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-purple-900 to-indigo-900 flex items-center justify-center text-white/40">
-                    <Trophy className="w-6 h-6 sm:w-8 sm:h-8" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
+          {filteredEvents.map((ev, idx) => {
+            const summaryText = ev.description ? cleanEventDescription(ev.description) : "";
+            const modeLabel = formatEventModeLabel(ev);
+            const prizeInfo =
+              ev.prize_pool && ev.prize_pool.trim().length > 0
+                ? splitPrizeDisplay(ev.prize_pool)
+                : null;
 
-                {/* Floating Badges */}
-                <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10 flex-wrap">
-                  <span className="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-black/60 backdrop-blur-md text-white border border-white/20">
-                    {ev.category === "online" ? "Online" : "In-Person"}
-                  </span>
-                  {ev.is_hackathon && (
-                    <span className="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-amber-500 text-white shadow-2xs">
-                      Hackathon
-                    </span>
+            return (
+              <article
+                key={ev.id}
+                onClick={() => setSelectedEvent(ev)}
+                className="rounded-[16px] sm:rounded-[20px] bg-white dark:bg-[#111317] border border-slate-200/90 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] p-2.5 sm:p-3 shadow-sm dark:shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition-all flex flex-row items-stretch gap-3 sm:gap-3.5 group cursor-pointer"
+              >
+                {/* Rectangular Left Event Poster Frame (non-rounded, full banner fit) */}
+                <div className="relative w-[104px] sm:w-[162px] md:w-[152px] lg:w-[184px] min-h-[76px] sm:min-h-[98px] rounded-none bg-[#0B0D11] border border-slate-200/70 dark:border-white/[0.08] overflow-hidden shrink-0">
+                  {ev.banner_url ? (
+                    <>
+                      <Image
+                        src={ev.banner_url}
+                        alt=""
+                        fill
+                        aria-hidden="true"
+                        className="object-cover object-center scale-110 blur-md opacity-45 pointer-events-none select-none"
+                        unoptimized
+                      />
+                      <Image
+                        src={ev.banner_url}
+                        alt={ev.event_name}
+                        fill
+                        priority={idx === 0}
+                        className="z-10 object-contain object-center group-hover:scale-[1.03] transition-transform duration-500"
+                        unoptimized
+                      />
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-tr from-slate-800 to-slate-900 dark:from-[#1A1C24] dark:to-[#111318] flex items-center justify-center text-white/40">
+                      <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
                   )}
                 </div>
 
-                {ev.is_hackathon && ev.prize_pool && (
-                  <div className="absolute bottom-1.5 left-1.5 z-10 max-w-[90%]">
-                    <span className="text-[8px] sm:text-[10px] font-black text-purple-300 bg-black/75 backdrop-blur-md px-1.5 py-0.5 rounded border border-purple-400/40 inline-flex items-center gap-0.5 truncate">
-                      <Award className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 shrink-0" />
-                      <span className="truncate">{ev.prize_pool}</span>
-                    </span>
+                {/* Right Details Column */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+                  <div className="space-y-1">
+                    {/* Top Pills Row */}
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-slate-100 dark:bg-[#1E222B] text-slate-800 dark:text-white border border-slate-200/90 dark:border-white/[0.08]">
+                        {modeLabel}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold ${
+                          ev.is_hackathon
+                            ? "bg-[#D5FF38] text-[#0D0F12]"
+                            : "bg-slate-900 dark:bg-white text-white dark:text-[#0D0F12]"
+                        }`}
+                      >
+                        {ev.is_hackathon ? "Hackathon" : "Campus Event"}
+                      </span>
+                    </div>
+
+                    {/* Title & Summary */}
+                    <div className="space-y-0.5">
+                      <h3 className="text-sm sm:text-[15px] font-black text-slate-900 dark:text-white tracking-tight leading-snug line-clamp-2">
+                        {ev.event_name}
+                      </h3>
+                      {summaryText && (
+                        <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-neutral-400 leading-snug line-clamp-1">
+                          {summaryText}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Organizer & Date Row */}
+                    <div className="flex items-center gap-2 text-[11px] sm:text-xs pt-0.5">
+                      <span className="font-bold text-slate-900 dark:text-white truncate max-w-[110px] sm:max-w-[165px]">
+                        {ev.conducted_by_college}
+                      </span>
+                      <span
+                        className="w-px h-3 bg-slate-300 dark:bg-white/20 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-neutral-200 whitespace-nowrap">
+                        <Calendar
+                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 dark:text-neutral-300 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span>{formatDateShort(ev.start_date)}</span>
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
 
-              {/* Compact Info Body */}
-              <div className="p-2.5 sm:p-3.5 space-y-1 sm:space-y-2 flex-1 flex flex-col justify-between">
-                <div className="space-y-0.5 sm:space-y-1">
-                  <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-[#C084FC] transition-colors line-clamp-1 leading-snug">
-                    {ev.event_name}
-                  </h3>
-                  <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-neutral-400 truncate flex items-center gap-1">
-                    <span className="text-purple-600 dark:text-[#C084FC] shrink-0">🏛</span>
-                    <span className="truncate">{ev.conducted_by_college}</span>
-                  </p>
-                </div>
+                  {/* Bottom Prize / CTA Footer */}
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
+                    <div className="min-w-0 truncate">
+                      {prizeInfo ? (
+                        <div className="flex items-baseline gap-x-1 truncate">
+                          <span className="text-sm sm:text-[15px] font-black text-slate-900 dark:text-white tracking-tight">
+                            {prizeInfo.primary}
+                          </span>
+                          {prizeInfo.suffix && (
+                            <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-neutral-400 truncate">
+                              {prizeInfo.suffix}
+                            </span>
+                          )}
+                        </div>
+                      ) : ev.team_size ? (
+                        <span className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-neutral-300">
+                          Team: {ev.team_size}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-neutral-400">
+                          Registrations Open
+                        </span>
+                      )}
+                    </div>
 
-                <div className="pt-1.5 sm:pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[9px] sm:text-[11px]">
-                  <span className="text-slate-500 dark:text-neutral-400 font-medium flex items-center gap-1 truncate pr-1">
-                    <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
-                    <span className="truncate">
-                      {formatDateShort(ev.start_date)}
-                    </span>
-                  </span>
-                  <span className="text-purple-600 dark:text-[#C084FC] font-black flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
-                    <span>Details</span>
-                    <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(ev);
+                      }}
+                      className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#D5FF38] text-[#0D0F12] font-bold text-[11px] sm:text-xs inline-flex items-center gap-1 shadow-sm hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                    >
+                      <span>Details</span>
+                      <ArrowRight
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2] transition-transform duration-200 group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
 
       {/* ── Total Info Modal ── */}
       <AnimatePresence>
-        {selectedEvent && (
-          <div
-            className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-5 md:p-6 bg-black/70 backdrop-blur-md overflow-y-auto"
-            onClick={() => setSelectedEvent(null)}
-          >
+        {selectedEvent && (() => {
+          const calendarBadge = getUtcCalendarBadge(selectedEvent.start_date);
+          const dateRangeLabel = formatEventDateRange(selectedEvent.start_date, selectedEvent.end_date);
+          const modeLabel = formatEventModeLabel(selectedEvent);
+          const fallbackInitial = selectedEvent.event_name.trim().charAt(0).toUpperCase() || "E";
+          const locationText =
+            selectedEvent.location && selectedEvent.location.trim().length > 0
+              ? selectedEvent.location.trim()
+              : selectedEvent.category === "online" || selectedEvent.mode === "online"
+                ? "Online Event"
+                : selectedEvent.mode === "hybrid"
+                  ? "Hybrid Event"
+                  : "On Campus / Venue TBA";
+
+          return (
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 20 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] bg-white dark:bg-[#18191F] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-neutral-800 my-0 sm:my-auto"
+              key={selectedEvent.id}
+              role="dialog"
+              aria-modal="true"
+              aria-label={selectedEvent.event_name}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed inset-0 z-[80] bg-white dark:bg-[#0B0D11] text-slate-900 dark:text-white overflow-y-auto"
             >
-              {/* Mobile Drag Indicator */}
-              <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-neutral-700 mx-auto mt-2.5 mb-0.5 sm:hidden shrink-0" />
-
-              {/* Modal Header: Clean, Uncluttered, Separated from Poster */}
-              <div className="px-4 py-3 sm:p-5 border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-[#18191F] flex items-start justify-between gap-3 shrink-0">
-                <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0 pr-1">
-                  {/* Badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {selectedEvent.is_hackathon ? (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-amber-500 text-white shadow-2xs uppercase tracking-wider">
-                        Hackathon
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-purple-600 text-white shadow-2xs uppercase tracking-wider">
-                        Campus Event
-                      </span>
-                    )}
-                    <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-purple-50 dark:bg-[#121318] text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-neutral-700">
-                      {selectedEvent.category === "online" ? "🌐 Online" : "📍 In-Person"}
-                    </span>
-                    {selectedEvent.mode && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold bg-slate-100 dark:bg-[#121318] text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-neutral-700 capitalize">
-                        {selectedEvent.mode}
-                      </span>
-                    )}
-                    {selectedEvent.is_hackathon && selectedEvent.prize_pool && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-purple-950/60 text-purple-300 border border-purple-800/60 flex items-center gap-1">
-                        <Award className="w-3 h-3 text-amber-500" />
-                        <span>Prize Pool: {selectedEvent.prize_pool}</span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Title & Conducting College */}
-                  <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-snug">
-                    {selectedEvent.event_name}
-                  </h3>
-                  <p className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-neutral-400 flex items-center gap-1 truncate">
-                    <span className="text-purple-600 dark:text-[#C084FC] shrink-0">🏛</span>
-                    <span className="truncate">{selectedEvent.conducted_by_college}</span>
-                  </p>
-                </div>
-
-                {/* Close Button */}
+              {/* Desktop Editorial Header (Img 2: Top-left Back + Top-right Website & Share) */}
+              <div className="hidden md:flex max-w-5xl mx-auto px-6 lg:px-10 pt-6 pb-4 items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#121318] hover:bg-slate-200 dark:hover:bg-[#20222A] text-slate-600 dark:text-neutral-300 flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5"
-                  aria-label="Close details"
+                  aria-label="Back to events"
+                  className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/[0.08] flex items-center justify-center text-slate-700 dark:text-neutral-300 transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-              </div>
 
-              {/* Scrollable Content Body */}
-              <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3.5 sm:space-y-4 flex-1 text-slate-800 dark:text-neutral-200">
-                {/* Poster Display (Clean frame, full image visible) */}
-                {selectedEvent.banner_url && (
-                  <div className="relative w-full h-44 sm:h-52 bg-slate-950 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-neutral-800">
-                    <Image
-                      src={selectedEvent.banner_url}
-                      alt={selectedEvent.event_name}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
-                )}
-
-                {/* Highlights Grid */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-2.5 text-xs">
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
-                      <span>Event Dates</span>
-                    </span>
-                    <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs leading-snug">
-                      {formatDate(selectedEvent.start_date)}
-                      {" – "}
-                      {formatDate(selectedEvent.end_date)}
-                    </span>
-                  </div>
-
-                  {selectedEvent.registration_deadline ? (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span>Register By</span>
-                      </span>
-                      <span className="font-black text-amber-700 dark:text-amber-300 block text-[11px] sm:text-xs leading-snug">
-                        {formatDate(selectedEvent.registration_deadline)}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
-                        <span>Registration</span>
-                      </span>
-                      <span className="font-black text-purple-700 dark:text-purple-300 block text-[11px] sm:text-xs leading-snug">
-                        Open Now
-                      </span>
-                    </div>
-                  )}
-
-                  {selectedEvent.team_size && (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                        <Users className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                        <span>Team Size</span>
-                      </span>
-                      <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs leading-snug">
-                        {selectedEvent.team_size}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                      <Trophy className="w-3 h-3 text-purple-600 dark:text-[#C084FC] shrink-0" />
-                      <span>Format</span>
-                    </span>
-                    <span className="font-black text-slate-900 dark:text-white block text-[11px] sm:text-xs capitalize leading-snug">
-                      {selectedEvent.category} {selectedEvent.mode ? `• ${selectedEvent.mode}` : ""}
-                    </span>
-                  </div>
-
-                  {selectedEvent.location && (
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 space-y-1 col-span-2">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-red-500 shrink-0" />
-                        <span>Venue / Location</span>
-                      </span>
-                      <span className="font-semibold text-slate-800 dark:text-neutral-200 block text-[11px] sm:text-xs leading-relaxed">
-                        {selectedEvent.location}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* About Description (Sanitized & Clean) */}
-                {selectedEvent.description && (
-                  <div className="space-y-1.5">
-                    <h4 className="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-neutral-400 uppercase tracking-wider">
-                      About the Event
-                    </h4>
-                    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#121318] border border-slate-200/80 dark:border-neutral-700 text-xs sm:text-[13px] text-slate-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line font-medium">
-                      {cleanEventDescription(selectedEvent.description)}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Sticky Modal Footer */}
-              <div className="p-3 sm:px-5 bg-white dark:bg-[#18191F] border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between gap-2.5 shrink-0">
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-purple-600 dark:text-purple-300 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-                  <span className="hidden sm:inline">Registrations Open</span>
-                  <span className="sm:hidden">Open</span>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedEvent(null)}
-                    className="px-3 py-2 rounded-xl border border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-[#20222A] text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Close
-                  </button>
-
+                <div className="flex items-center gap-2">
                   <a
                     href={selectedEvent.event_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm hover:shadow-purple-500/20 transition-all cursor-pointer whitespace-nowrap"
+                    aria-label="Open event website"
+                    className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/[0.08] flex items-center justify-center text-slate-600 dark:text-neutral-300 transition-colors"
                   >
-                    <span>Register Now</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    <Globe className="w-[18px] h-[18px]" />
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => handleShare(selectedEvent)}
+                    aria-label="Share event"
+                    className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/[0.08] flex items-center justify-center text-slate-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                  >
+                    {detailCopied ? (
+                      <Check className="w-[18px] h-[18px] text-emerald-500" />
+                    ) : (
+                      <Share2 className="w-[18px] h-[18px]" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Responsive Content */}
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 md:pt-2 pb-16">
+                <div className="grid grid-cols-1 md:grid-cols-[minmax(0,340px)_1fr] lg:grid-cols-[400px_1fr] gap-6 md:gap-10 lg:gap-12 items-start">
+                  {/* Left Poster Visual (Img 2 Desktop Square/Card, Img 3 Mobile with Floating Top Controls) */}
+                  <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-[22px] sm:rounded-[26px] overflow-hidden bg-[#11141B] border border-slate-200/80 dark:border-white/[0.08] shadow-xl shrink-0">
+                    {/* Mobile Top Floating Controls inside Poster (Img 3) */}
+                    <div className="md:hidden absolute top-3.5 inset-x-3.5 z-20 flex items-center justify-between pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEvent(null)}
+                        aria-label="Back to events"
+                        className="pointer-events-auto w-9 h-9 rounded-full bg-white/85 dark:bg-black/55 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-slate-900 dark:text-white shadow-sm active:scale-95 transition-transform cursor-pointer"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                      </button>
+
+                      <div className="pointer-events-auto flex items-center gap-2">
+                        <a
+                          href={selectedEvent.event_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Open event website"
+                          className="w-9 h-9 rounded-full bg-white/85 dark:bg-black/55 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-slate-900 dark:text-white shadow-sm active:scale-95 transition-transform"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleShare(selectedEvent)}
+                          aria-label="Share event"
+                          className="w-9 h-9 rounded-full bg-white/85 dark:bg-black/55 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-slate-900 dark:text-white shadow-sm active:scale-95 transition-transform cursor-pointer"
+                        >
+                          {detailCopied ? (
+                            <Check className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <Share2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedEvent.banner_url ? (
+                      <>
+                        <Image
+                          src={selectedEvent.banner_url}
+                          alt=""
+                          fill
+                          aria-hidden="true"
+                          className="object-cover object-center scale-110 blur-xl opacity-50 pointer-events-none select-none"
+                          unoptimized
+                        />
+                        <Image
+                          src={selectedEvent.banner_url}
+                          alt={selectedEvent.event_name}
+                          fill
+                          className="z-10 object-contain object-center"
+                          unoptimized
+                        />
+                      </>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#2B6BF3] to-[#3B42F6] flex items-center justify-center select-none">
+                        <span className="text-6xl sm:text-7xl font-black text-white tracking-tight">
+                          {fallbackInitial}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Details Column (Img 2 Desktop / Below Poster on Img 3 Mobile) */}
+                  <div className="flex flex-col items-start space-y-5 md:pt-2 min-w-0">
+                    {/* Mode & Hackathon Pills */}
+                    <div className="flex items-center flex-wrap gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                        {modeLabel}
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                          selectedEvent.is_hackathon
+                            ? "bg-[#D5FF38] text-[#0D0F12]"
+                            : "bg-slate-100 dark:bg-white/[0.08] text-slate-700 dark:text-neutral-200 border border-slate-200 dark:border-white/[0.1]"
+                        }`}
+                      >
+                        {selectedEvent.is_hackathon ? "Hackathon" : "Campus Event"}
+                      </span>
+                    </div>
+
+                    {/* Title & Host */}
+                    <div className="space-y-1.5 w-full">
+                      <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+                        {selectedEvent.event_name}
+                      </h1>
+                      <p className="text-sm font-medium text-slate-500 dark:text-neutral-400">
+                        Hosted by{" "}
+                        <span className="text-slate-900 dark:text-white font-bold">
+                          {selectedEvent.conducted_by_college}
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Stacked Calendar Badge + Dates Row */}
+                    <div className="flex items-center gap-3.5">
+                      {calendarBadge && (
+                        <div className="w-11 h-11 rounded-xl border border-slate-200/90 dark:border-white/[0.12] bg-slate-50 dark:bg-[#14171D] overflow-hidden flex flex-col items-center justify-center shrink-0 shadow-2xs">
+                          <span className="w-full py-0.5 text-[9px] font-black tracking-wider text-center bg-slate-200/80 dark:bg-white/[0.08] text-slate-600 dark:text-neutral-300 leading-none">
+                            {calendarBadge.month}
+                          </span>
+                          <span className="text-[15px] font-black text-slate-900 dark:text-white leading-tight mt-0.5">
+                            {calendarBadge.day}
+                          </span>
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug">
+                          {dateRangeLabel}
+                        </div>
+                        <div className="text-xs sm:text-[13px] font-medium text-slate-500 dark:text-neutral-400 mt-0.5">
+                          {selectedEvent.registration_deadline
+                            ? `Register by ${formatDate(selectedEvent.registration_deadline)}`
+                            : "Registrations Open"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Primary & Secondary Actions */}
+                    <div className="flex items-center flex-wrap gap-3 pt-1">
+                      <a
+                        href={selectedEvent.event_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-[#D5FF38] text-white dark:text-[#0D0F12] font-extrabold text-sm inline-flex items-center gap-2 shadow-sm hover:brightness-105 active:scale-[0.98] transition-all"
+                      >
+                        <ExternalLink className="w-4 h-4 stroke-[2.2]" />
+                        <span>Register</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => handleShare(selectedEvent)}
+                        className="px-4 py-2.5 rounded-full bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.07] text-slate-700 dark:text-neutral-200 border border-slate-200/90 dark:border-white/[0.12] font-bold text-sm inline-flex items-center gap-2 transition-all cursor-pointer"
+                      >
+                        {detailCopied ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-500" />
+                            <span>Link Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-4 h-4" />
+                            <span>Share</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Details Section (Location, Prize, Team Size & Description) */}
+                <div className="mt-10 pt-8 border-t border-slate-200/80 dark:border-white/[0.08] space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span>Location</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1.5">
+                        {locationText}
+                      </p>
+                    </div>
+
+                    {selectedEvent.prize_pool && (
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 shrink-0" />
+                          <span>Prize Pool</span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1.5">
+                          {selectedEvent.prize_pool}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedEvent.team_size && (
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 shrink-0" />
+                          <span>Team Size</span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1.5">
+                          {selectedEvent.team_size}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedEvent.description && (
+                    <div className="max-w-3xl space-y-2.5">
+                      <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
+                        About the Event
+                      </h2>
+                      <div className="text-sm sm:text-[15px] text-slate-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line font-normal">
+                        {cleanEventDescription(selectedEvent.description)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
-          </div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

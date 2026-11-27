@@ -184,14 +184,14 @@ function MobileNavContent() {
     };
   }, [pathname, exploreTab]);
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || isLoading) {
     return null;
   }
 
   const userEmail = session?.email || "Guest User";
   const userInitial = session?.name
     ? session.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
-    : userEmail.split("@")[0].substring(0, 2).toUpperCase() || "PA";
+    : userEmail.split("@")[0].substring(0, 2).toUpperCase() || "GU";
   const avatarTheme = getPaleAvatarTheme(userInitial);
 
   const isDashboard = pathname === "/dashboard" || pathname === "/";

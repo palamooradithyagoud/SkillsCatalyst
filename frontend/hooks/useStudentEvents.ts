@@ -5,7 +5,7 @@
  * and eliminate visual flickering/reloads during page transitions.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchStudentEvents, EventFilterParams, EventListResponse } from "@/lib/api/events";
 
 export function useStudentEvents(params?: EventFilterParams) {
@@ -13,9 +13,15 @@ export function useStudentEvents(params?: EventFilterParams) {
   const hackathonKey = params?.is_hackathon !== undefined ? String(params.is_hackathon) : "all";
   const searchKey = params?.search?.trim() ?? "";
 
-  return useQuery<EventListResponse>({
+  return useQuery<EventListResponse, Error, EventListResponse>({
     queryKey: ["events", "student", categoryKey, hackathonKey, searchKey],
-    queryFn: () => fetchStudentEvents(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes fresh client cache
+    queryFn: (): Promise<EventListResponse> => fetchStudentEvents(params),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 1,
+    placeholderData: keepPreviousData,
   });
 }

@@ -27,7 +27,7 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
   const router = useRouter();
-  const { session, logout, isOwner, isAdmin, appMode, setAppMode } = useAuth();
+  const { session, isLoading, logout, isOwner, isAdmin, appMode, setAppMode } = useAuth();
   const { unreadCount } = useNotifications();
 
   const [activeWorkspace, setActiveWorkspace] = useState("SkillsCatalyst");
@@ -69,17 +69,18 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [session?.user_id]);
 
-  const userDisplayName = session?.name || "Adithya goud Palamoor";
-  
-  // Generate user initials (defaults to 'AG' as shown in the screenshot)
+  const userDisplayName = session?.name || session?.email?.split("@")[0] || (isLoading ? "Loading account..." : "Guest User");
+
   const userInitials = React.useMemo(() => {
-    if (!session?.name && !session?.email) return "AG";
-    const parts = (session?.name || session?.email?.split("@")[0] || "AG").trim().split(" ");
+    if (!session?.name && !session?.email) {
+      return isLoading ? ".." : "GU";
+    }
+    const parts = (session?.name || session?.email?.split("@")[0] || "").trim().split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-    return (parts[0].slice(0, 2)).toUpperCase() || "AG";
-  }, [session]);
+    return (parts[0]?.slice(0, 2) || "GU").toUpperCase();
+  }, [session, isLoading]);
 
   const handleSearchClick = () => {
     if (onOpenSearch) {
@@ -280,7 +281,9 @@ export default function TopNavbar({ onOpenSearch }: TopNavbarProps) {
               <div className="absolute right-0 top-[46px] w-60 bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-xl shadow-slate-900/10 z-50 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100">
                 <div className="px-3 py-2 border-b border-slate-100 dark:border-neutral-800 text-left">
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{userDisplayName}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-neutral-400 truncate">{session?.email || "learner@skillscatalyst.in"}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-neutral-400 truncate">
+                    {session?.email || (isLoading ? "Verifying session..." : "Guest session")}
+                  </p>
                 </div>
 
                 {/* Workspace Mode Switcher Segment (Strictly for Owner and Admin) */}
