@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import StreakCelebrationModal from "@/components/auth/StreakCelebrationModal";
+import StreakCelebrationModal, { buildWeeklyStreakCalendar } from "@/components/auth/StreakCelebrationModal";
 import AnimatedFlameMascot from "@/components/auth/AnimatedFlameMascot";
 
 describe("Streak Celebration Modal (Img 1 -> Img 3 Code Mascot) Suite", () => {
@@ -30,7 +30,7 @@ describe("Streak Celebration Modal (Img 1 -> Img 3 Code Mascot) Suite", () => {
   it("verifies StreakCelebrationModal uses createPortal and integrates AnimatedFlameMascot", () => {
     const modalPath = path.join(process.cwd(), "components", "auth", "StreakCelebrationModal.tsx");
     assert.ok(fs.existsSync(modalPath), "StreakCelebrationModal.tsx must exist on disk");
-    const content = fs.readFileSync(modalPath, "utf-8");
+    const content = fs.readFileSync(modalPath, "utf-8").replace(/\r\n/g, "\n");
 
     // Img 1: Warm orange background and cute face
     assert.ok(content.includes("#FE851C"), "Must use #FE851C warm orange background for Image 1");
@@ -50,11 +50,43 @@ describe("Streak Celebration Modal (Img 1 -> Img 3 Code Mascot) Suite", () => {
     assert.ok(content.includes("min-h-[100dvh]"), "Must support full-screen takeover on mobile");
     assert.ok(content.includes("lg:max-w-") && content.includes("lg:rounded-"), "Must render as centered floating card on laptop view");
 
-    // Interactive button & progression (Must use clean white button)
-    assert.ok(content.includes("Continue to Dashboard"), "Must have Continue to Dashboard action button");
-    assert.ok(content.includes("bg-white hover:bg-neutral-100 text-black"), "Phase 2 button must be clean white with black text");
+    // Dark charcoal backside + acid lime calendar & CTA in Phase 2 (no Skip or Continue to Dashboard)
+    assert.ok(content.includes("bg-[#14171D]"), "Phase 2 backside must use dark charcoal #14171D");
+    assert.ok(content.includes("bg-[#1B1F27]"), "Phase 2 calendar card must use dark charcoal #1B1F27");
+    assert.ok(content.includes("#D5FF38"), "Phase 2 calendar and CTA must use acid lime #D5FF38");
+    assert.ok(content.includes('phase === "flame" &&'), "Bottom Continue button must only show on Phase 2");
+    assert.ok(content.includes("<span>Continue</span>"), "Phase 2 button must use Continue rather than Continue to Dashboard");
+    assert.ok(!content.includes("Continue to Dashboard"), "Continue to Dashboard label must be removed");
+    assert.ok(!/\bSkip\b/.test(content), "Skip button must be removed");
     assert.ok(!content.includes("Streak Active"), "Top-left Streak Active text badge must be removed");
     assert.ok(!content.includes("redirectTimer"), "Auto-redirect timer must be removed so modal never disappears without pressing continue");
+  });
+
+  it("computes the Monday-Sunday weekly calendar dynamically for the current streak", () => {
+    // Friday Nov 27, 2026 with 18-day streak -> Mon..Fri completed, Sat 28 & Sun 29 upcoming
+    const cal = buildWeeklyStreakCalendar(18, new Date(2026, 10, 27));
+    assert.strictEqual(cal.days.length, 7);
+    assert.deepStrictEqual(
+      cal.days.map((d) => d.label),
+      ["M", "T", "W", "T", "F", "S", "S"]
+    );
+    assert.strictEqual(cal.streakStartCol, 0);
+    assert.strictEqual(cal.streakSpan, 5);
+    assert.strictEqual(cal.days[4].isToday, true);
+    assert.strictEqual(cal.days[4].isCompleted, true);
+    assert.strictEqual(cal.days[5].dayNumber, 28);
+    assert.strictEqual(cal.days[5].isCompleted, false);
+    assert.strictEqual(cal.days[6].dayNumber, 29);
+    assert.strictEqual(cal.days[6].isCompleted, false);
+
+    // Mid-week 2-day streak -> only Thu & Fri completed
+    const partial = buildWeeklyStreakCalendar(2, new Date(2026, 10, 27));
+    assert.strictEqual(partial.streakStartCol, 3);
+    assert.strictEqual(partial.streakSpan, 2);
+    assert.strictEqual(partial.days[2].dayNumber, 25);
+    assert.strictEqual(partial.days[2].isCompleted, false);
+    assert.strictEqual(partial.days[3].isCompleted, true);
+    assert.strictEqual(partial.days[4].isCompleted, true);
   });
 
   it("verifies login page integrates StreakCelebrationModal upon successful login", () => {

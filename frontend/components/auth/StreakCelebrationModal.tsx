@@ -1,10 +1,63 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Flame } from "lucide-react";
+import { ArrowRight, Check, Flame } from "lucide-react";
 import AnimatedFlameMascot from "./AnimatedFlameMascot";
+
+export interface WeeklyCalendarDay {
+  label: string;
+  dayNumber: number;
+  isToday: boolean;
+  isFuture: boolean;
+  isCompleted: boolean;
+}
+
+export interface WeeklyStreakCalendar {
+  days: WeeklyCalendarDay[];
+  streakStartCol: number;
+  streakSpan: number;
+}
+
+const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+/** Builds the Monday-Sunday streak calendar strip for the week containing `referenceDate`. */
+export function buildWeeklyStreakCalendar(
+  streakDays: number,
+  referenceDate: Date = new Date()
+): WeeklyStreakCalendar {
+  const safeStreak = Math.max(0, Math.floor(Number.isFinite(streakDays) ? streakDays : 0));
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth();
+  const dayOfMonth = referenceDate.getDate();
+  const todayIdx = (referenceDate.getDay() + 6) % 7;
+
+  const days: WeeklyCalendarDay[] = WEEKDAY_LABELS.map((label, idx) => {
+    const cellDate = new Date(year, month, dayOfMonth - todayIdx + idx);
+    const isToday = idx === todayIdx;
+    const isFuture = idx > todayIdx;
+    const daysAgo = todayIdx - idx;
+    const isCompleted = !isFuture && daysAgo < safeStreak;
+
+    return {
+      label,
+      dayNumber: cellDate.getDate(),
+      isToday,
+      isFuture,
+      isCompleted,
+    };
+  });
+
+  if (safeStreak <= 0) {
+    return { days, streakStartCol: todayIdx, streakSpan: 0 };
+  }
+
+  const streakStartCol = Math.max(0, todayIdx - (safeStreak - 1));
+  const streakSpan = todayIdx - streakStartCol + 1;
+
+  return { days, streakStartCol, streakSpan };
+}
 
 interface StreakCelebrationModalProps {
   streakDays: number;
@@ -22,6 +75,11 @@ export default function StreakCelebrationModal({
   const [isBlinking, setIsBlinking] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const weeklyCalendar = useMemo(
+    () => buildWeeklyStreakCalendar(streakDays),
+    [streakDays]
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -48,7 +106,7 @@ export default function StreakCelebrationModal({
       setTimeout(() => setIsCelebrating(false), 1700);
     }, 1400);
 
-    // Indefinite hold: Modal NEVER closes automatically without user clicking Continue or Skip
+    // Indefinite hold: Modal stays open until the user clicks Continue
     return () => {
       clearTimeout(blinkTimer);
       clearTimeout(morphTimer);
@@ -81,51 +139,17 @@ export default function StreakCelebrationModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.92, opacity: 0 }}
           transition={{ type: "spring", damping: 26, stiffness: 320 }}
-          className={`w-full h-full min-h-[100dvh] lg:min-h-0 lg:h-auto lg:max-w-[400px] lg:min-h-[580px] lg:rounded-[36px] relative flex flex-col justify-between overflow-hidden shadow-2xl transition-colors duration-700 ${
+          className={`w-full h-full min-h-[100dvh] lg:min-h-0 lg:h-auto lg:max-w-[400px] lg:min-h-[600px] lg:rounded-[36px] relative flex flex-col justify-between overflow-hidden shadow-2xl transition-colors duration-700 ${
             phase === "face"
               ? "bg-[#FE851C]"
-              : "bg-[#0d0702] border-0 lg:border lg:border-white/10"
+              : "bg-[#14171D] border-0 lg:border lg:border-white/[0.08]"
           }`}
-          style={
-            phase === "flame"
-              ? {
-                  background:
-                    "radial-gradient(ellipse at 50% 38%, rgba(255, 140, 30, 0.25) 0%, rgba(28, 14, 4, 0.96) 55%, #0a0501 100%)",
-                }
-              : undefined
-          }
         >
-          {/* ── Ambient Radial Warmth Glow behind Code Flame in Phase 2 ── */}
-          {phase === "flame" && (
-            <div
-              className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 36%, rgba(255, 120, 0, 0.35) 0%, rgba(255, 75, 0, 0.12) 48%, transparent 70%)",
-              }}
-            />
-          )}
-
-          {/* ── TOP HEADER / SKIP (Clean header without streak badge) ── */}
-          <div className="relative z-10 w-full flex items-center justify-end p-6 pt-10 sm:pt-6">
-            <button
-              type="button"
-              onClick={onContinue}
-              className={`text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
-                phase === "face"
-                  ? "text-white/80 hover:text-white hover:bg-black/10"
-                  : "text-white/60 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Skip
-            </button>
-          </div>
-
-          {/* ── CENTER AREA: Morph from Image 1 (Cute Face) to Code Flame Mascot ── */}
-          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
+          {/* ── CENTER AREA: Morph from Phase 1 (Welcome Face) to Phase 2 (Dark Charcoal Flame + Calendar) ── */}
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-8 sm:pt-7 pb-4">
             <AnimatePresence mode="wait">
               {phase === "face" ? (
-                /* ── PHASE 1: Full Orange Screen with Adorable Kawaii Face ── */
+                /* ── PHASE 1: Warm Orange Welcome Back Splash ── */
                 <motion.div
                   key="face-stage"
                   initial={{ opacity: 0, scale: 0.85 }}
@@ -186,7 +210,7 @@ export default function StreakCelebrationModal({
                   </motion.p>
                 </motion.div>
               ) : (
-                /* ── PHASE 2: Code Vector Flame Mascot with Streak Counter ── */
+                /* ── PHASE 2: Dark Charcoal Flame Mascot + Weekly Streak Calendar (Acid Lime & Dark Charcoal) ── */
                 <motion.div
                   key="flame-stage"
                   initial={{ opacity: 0, scale: 0.7, y: 20 }}
@@ -199,14 +223,14 @@ export default function StreakCelebrationModal({
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#e0914c] mb-1"
+                    className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#D5FF38] mb-1"
                   >
                     Keep it going
                   </motion.p>
 
                   {/* 100% Code-Driven Animated Flame Mascot */}
                   <div
-                    className="relative flex items-center justify-center my-2 cursor-pointer"
+                    className="relative flex items-center justify-center my-1 cursor-pointer"
                     onClick={() => {
                       setIsCelebrating(true);
                       setTimeout(() => setIsCelebrating(false), 1700);
@@ -214,7 +238,7 @@ export default function StreakCelebrationModal({
                     title="Tap to celebrate"
                   >
                     <AnimatedFlameMascot
-                      size={210}
+                      size={175}
                       celebrating={isCelebrating}
                     />
                   </div>
@@ -224,41 +248,101 @@ export default function StreakCelebrationModal({
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.25 }}
-                    className="mt-3 space-y-1.5 w-full"
+                    className="mt-2 space-y-1.5 w-full"
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <Flame className="w-8 h-8 text-[#FF7A00] fill-[#FF7A00] animate-bounce" />
-                      <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                      <Flame className="w-7 h-7 sm:w-8 sm:h-8 text-[#FF7A00] fill-[#FF7A00] animate-bounce" />
+                      <h2 className="text-3xl sm:text-[34px] font-black text-white tracking-tight">
                         {streakDays} Day Streak!
                       </h2>
                     </div>
 
-                    <p className="text-sm text-neutral-300 max-w-[280px] mx-auto leading-relaxed pt-1">
+                    <p className="text-xs sm:text-sm text-neutral-300 max-w-[280px] mx-auto leading-relaxed pt-0.5">
                       {streakDays === 1
                         ? "Great job checking in today! Build your habit by practicing daily."
                         : "You're on fire! Keep showing up to unlock higher badges and level up."}
                     </p>
+                  </motion.div>
+
+                  {/* ── Weekly Streak Calendar Card (Dark Charcoal + Acid Lime) ── */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.32 }}
+                    className="mt-5 w-full rounded-[22px] bg-[#1B1F27] border border-white/[0.08] px-3 py-3.5 sm:px-4 sm:py-4"
+                  >
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 items-center text-center">
+                      {weeklyCalendar.days.map((day, idx) => (
+                        <span
+                          key={`${day.label}-${idx}`}
+                          className={`text-[11px] font-extrabold tracking-wide ${
+                            day.isToday ? "text-white" : "text-neutral-400"
+                          }`}
+                        >
+                          {day.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Checkmarks / Date Circles with Connected Acid Lime Streak Capsule */}
+                    <div className="relative mt-2.5 h-9 sm:h-10 grid grid-cols-7 items-center">
+                      {weeklyCalendar.streakSpan >= 1 && (
+                        <div
+                          className="absolute inset-y-0 rounded-full bg-[#D5FF38]/15 border border-[#D5FF38]/20 pointer-events-none transition-all duration-300"
+                          style={{
+                            left: `${(weeklyCalendar.streakStartCol / 7) * 100}%`,
+                            width: `${(weeklyCalendar.streakSpan / 7) * 100}%`,
+                          }}
+                        />
+                      )}
+
+                      {weeklyCalendar.days.map((day, idx) => (
+                        <div
+                          key={`${day.label}-${day.dayNumber}-${idx}`}
+                          className="relative z-10 flex items-center justify-center"
+                        >
+                          {day.isToday && day.isCompleted ? (
+                            <span
+                              aria-label={`Today (${day.dayNumber}) completed`}
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D5FF38] text-[#10110E] flex items-center justify-center shadow-[0_0_16px_rgba(213,255,56,0.28)]"
+                            >
+                              <Check className="w-4 h-4 stroke-[3]" />
+                            </span>
+                          ) : day.isCompleted ? (
+                            <span
+                              aria-label={`Day ${day.dayNumber} completed`}
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full text-[#D5FF38] flex items-center justify-center"
+                            >
+                              <Check className="w-4 h-4 stroke-[2.75]" />
+                            </span>
+                          ) : (
+                            <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#242833] text-neutral-300 text-xs font-bold flex items-center justify-center tabular-nums">
+                              {day.dayNumber}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* ── BOTTOM ACTION AREA: Pure White Button (Clean & High Contrast) ── */}
-          <div className="relative z-10 w-full p-6 pb-10 sm:pb-6">
-            <button
-              type="button"
-              onClick={onContinue}
-              className={`w-full py-4 px-6 rounded-full font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98 ${
-                phase === "face"
-                  ? "bg-white text-[#FE851C] hover:bg-white/95"
-                  : "bg-white hover:bg-neutral-100 text-black shadow-white/10 active:bg-neutral-200"
-              }`}
-            >
-              <span>Continue to Dashboard</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
+          {/* ── BOTTOM ACTION AREA (Phase 2 Only): Acid Lime Continue Button keeping user here ── */}
+          {phase === "flame" && (
+            <div className="relative z-10 w-full px-6 pb-8 sm:pb-6 pt-2">
+              <button
+                type="button"
+                onClick={onContinue}
+                className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-[#D5FF38] hover:bg-[#c6f028] active:bg-[#b8e022] text-[#10110E] font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-[#D5FF38]/15 active:scale-[0.98]"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
