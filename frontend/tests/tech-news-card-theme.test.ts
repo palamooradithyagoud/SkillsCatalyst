@@ -37,5 +37,7 @@ describe("Tech News Card Theme & Parity with Learn Card Suite", () => {
     assert.ok(src.includes("dark:bg-[#1D1D1D]"), "TechNewsWidget must use dark:bg-[#1D1D1D]");
     assert.ok(src.includes("dark:border-white/[0.08]"), "TechNewsWidget must use dark:border-white/[0.08]");
     assert.ok(!src.includes("#18191F"), "TechNewsWidget must not contain old #18191F");
+    assert.ok(!src.includes("<Newspaper"), "TechNewsWidget empty state must not render the removed Newspaper purple icon");
+    assert.ok(!src.includes("bg-purple-900/30"), "TechNewsWidget empty state must not render the purple icon container");
   });
 });

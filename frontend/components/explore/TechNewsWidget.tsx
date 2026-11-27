@@ -10,7 +10,6 @@ import {
   Play,
   ArrowRight,
   RefreshCw,
-  Newspaper,
 } from "lucide-react";
 import type { GroupedTechNewsSource } from "@/types/tech_news";
 import { fetchStudentTechNews } from "@/lib/api/tech_news";
@@ -145,10 +144,7 @@ export default function TechNewsWidget() {
             </button>
           </div>
         ) : filteredStories.length === 0 ? (
-          <div className="p-8 sm:p-12 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-dashed border-slate-200 dark:border-white/[0.08] text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
-              <Newspaper className="w-6 h-6" />
-            </div>
+          <div className="p-8 sm:p-12 rounded-2xl bg-white dark:bg-[#1D1D1D] border border-dashed border-slate-200 dark:border-white/[0.08] text-center">
             <div className="space-y-1 max-w-sm mx-auto">
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                 No Active Stories Found
