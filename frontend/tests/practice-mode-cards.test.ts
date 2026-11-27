@@ -13,5 +13,7 @@ describe("PracticeModeCards Palette Distinction Suite", () => {
     assert.ok(src.includes("text-white"), "Beginner Coding Roadmap header text must stay crisp white on #6A3FEA");
     assert.ok(src.includes("bg-[#C4B5FD]"), "Company Questions card must use soft pastel lilac #C4B5FD");
     assert.ok(src.includes("text-[#10110E]"), "Company Questions header text must remain obsidian #10110E on soft lilac");
+    assert.ok(src.includes("sm:hidden"), "Mobile view must render compact pill rows for Beginner and Company Questions");
+    assert.ok(src.includes("hidden sm:grid"), "Desktop/tablet view must preserve the 2-tone split grid cards");
   });
 });
